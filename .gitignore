@@ -18,6 +18,7 @@ backups
 
 # Others
 logs
+draft
 *.log
 .cache
 temp
