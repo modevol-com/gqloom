@@ -2,7 +2,7 @@ import { test } from "vitest";
 import { string, object } from "yup";
 import { field, query, resolver } from "../src/resolver";
 
-test("resolver", () => {
+test("yup resolver", () => {
 	const User = object({
 		id: string().required(),
 		name: string().required(),

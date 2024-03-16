@@ -3,7 +3,12 @@
 	"organizeImports": {
 		"enabled": true
 	},
+	"formatter": {
+		"ignore": ["node_modules/**/*"],
+		"enabled": true
+	},
 	"linter": {
+		"ignore": ["node_modules/**/*"],
 		"enabled": true,
 		"rules": {
 			"recommended": true,
