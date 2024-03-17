@@ -1,1 +1,1 @@
-import { GraphQLType } from "graphql";
+import { GraphQLType } from "graphql"

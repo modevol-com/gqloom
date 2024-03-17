@@ -1,22 +1,22 @@
-import type { MayPromise } from "@gqloom/core";
-import type { ZodType, input, output } from "zod";
+import type { MayPromise } from "@gqloom/core"
+import type { ZodType, input, output } from "zod"
 
-type InputEntries = Record<string, ZodType<any, any, any>>;
+type InputEntries = Record<string, ZodType<any, any, any>>
 
 type InferInputEntries<T extends InputEntries> = {
-	[K in keyof T]: output<T[K]>;
-};
+	[K in keyof T]: output<T[K]>
+}
 
 interface OperationOptions<
 	TOutput extends ZodType<any, any, any>,
 	TInput extends InputEntries | undefined,
 > {
-	input?: TInput;
+	input?: TInput
 	resolve: (
 		input: TInput extends undefined
 			? undefined
 			: InferInputEntries<NonNullable<TInput>>,
-	) => MayPromise<output<TOutput>>;
+	) => MayPromise<output<TOutput>>
 }
 
 interface OperationOptionsWithParent<
@@ -24,13 +24,13 @@ interface OperationOptionsWithParent<
 	TOutput extends ZodType<any, any, any>,
 	TInput extends InputEntries | undefined,
 > {
-	input?: TInput;
+	input?: TInput
 	resolve: (
 		parent: output<TParent>,
 		input: TInput extends undefined
 			? undefined
 			: InferInputEntries<NonNullable<TInput>>,
-	) => MayPromise<output<TOutput>>;
+	) => MayPromise<output<TOutput>>
 }
 
 interface Operation<
@@ -38,10 +38,10 @@ interface Operation<
 	TOutput extends ZodType<any, any, any>,
 	TInput extends InputEntries | undefined = undefined,
 > {
-	(parent: TParent, input: TInput): MayPromise<TOutput>;
+	(parent: TParent, input: TInput): MayPromise<TOutput>
 	options: {
-		input: TInput;
-	};
+		input: TInput
+	}
 }
 
 export function field<
@@ -58,7 +58,7 @@ export function field<
 	output<TOutput>,
 	TInput extends undefined ? undefined : InferInputEntries<NonNullable<TInput>>
 > {
-	return 0 as any;
+	return 0 as any
 }
 
 export function query<
@@ -74,7 +74,7 @@ export function query<
 	output<TOutput>,
 	TInput extends undefined ? undefined : InferInputEntries<NonNullable<TInput>>
 > {
-	return 0 as any;
+	return 0 as any
 }
 
 export function mutation<
@@ -90,7 +90,7 @@ export function mutation<
 	output<TOutput>,
 	TInput extends undefined ? undefined : InferInputEntries<NonNullable<TInput>>
 > {
-	return 0 as any;
+	return 0 as any
 }
 
 export function resolver<TParentSchema extends ZodType<any, any, any>>(

@@ -1,22 +1,22 @@
-import type { MayPromise } from "@gqloom/core";
-import type { Schema, InferType } from "yup";
+import type { MayPromise } from "@gqloom/core"
+import type { InferType, Schema } from "yup"
 
-type InputEntries = Record<string, Schema>;
+type InputEntries = Record<string, Schema>
 
 type InferInputEntries<T extends InputEntries> = {
-	[K in keyof T]: InferType<T[K]>;
-};
+	[K in keyof T]: InferType<T[K]>
+}
 
 interface OperationOptions<
 	TOutput extends Schema,
 	TInput extends InputEntries | undefined,
 > {
-	input?: TInput;
+	input?: TInput
 	resolve: (
 		input: TInput extends undefined
 			? undefined
 			: InferInputEntries<NonNullable<TInput>>,
-	) => MayPromise<InferType<TOutput>>;
+	) => MayPromise<InferType<TOutput>>
 }
 
 interface OperationOptionsWithParent<
@@ -24,13 +24,13 @@ interface OperationOptionsWithParent<
 	TOutput extends Schema,
 	TInput extends InputEntries | undefined,
 > {
-	input?: TInput;
+	input?: TInput
 	resolve: (
 		parent: InferType<TParent>,
 		input: TInput extends undefined
 			? undefined
 			: InferInputEntries<NonNullable<TInput>>,
-	) => MayPromise<InferType<TOutput>>;
+	) => MayPromise<InferType<TOutput>>
 }
 
 interface Operation<
@@ -38,10 +38,10 @@ interface Operation<
 	TOutput extends Schema,
 	TInput extends InputEntries | undefined = undefined,
 > {
-	(parent: TParent, input: TInput): MayPromise<TOutput>;
+	(parent: TParent, input: TInput): MayPromise<TOutput>
 	options: {
-		input: TInput;
-	};
+		input: TInput
+	}
 }
 
 export function field<
@@ -58,7 +58,7 @@ export function field<
 	InferType<TOutput>,
 	TInput extends undefined ? undefined : InferInputEntries<NonNullable<TInput>>
 > {
-	return 0 as any;
+	return 0 as any
 }
 
 export function query<
@@ -70,7 +70,7 @@ export function query<
 		| (() => MayPromise<InferType<TOutput>>)
 		| OperationOptions<TOutput, TInput>,
 ): Operation<any, InferType<TOutput>, TInput> {
-	return 0 as any;
+	return 0 as any
 }
 
 export function mutation<
@@ -82,7 +82,7 @@ export function mutation<
 		| (() => MayPromise<InferType<TOutput>>)
 		| OperationOptions<TOutput, TInput>,
 ): Operation<any, InferType<TOutput>, TInput> {
-	return 0 as any;
+	return 0 as any
 }
 
 export function resolver<
