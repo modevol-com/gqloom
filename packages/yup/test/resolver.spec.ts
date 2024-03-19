@@ -1,6 +1,6 @@
 import { test } from "vitest"
 import { object, string } from "yup"
-import { field, query, resolver } from "../src/resolver"
+import { field, query, resolver } from "../src/resolver0"
 
 test("yup resolver", () => {
 	const User = object({

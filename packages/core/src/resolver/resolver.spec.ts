@@ -6,12 +6,12 @@ import {
 	GraphQLString,
 } from "graphql"
 import { test } from "vitest"
-import { fabric } from "./fabric"
+import { type GraphQLFabric, fabric } from "./fabric"
 import {
-	baseField as field,
-	baseMutation as mutation,
-	baseQuery as query,
-	baseResolver as resolver,
+	fabricField as field,
+	fabricMutation as mutation,
+	fabricQuery as query,
+	fabricResolver as resolver,
 } from "./resolver"
 
 test("base resolver", () => {
@@ -22,7 +22,7 @@ test("base resolver", () => {
 	}
 
 	const Giraffe = fabric<IGiraffe>(
-		new GraphQLObjectType<IGiraffe>({
+		new GraphQLObjectType({
 			name: "Giraffe",
 			fields: {
 				name: { type: new GraphQLNonNull(GraphQLString) },
@@ -33,7 +33,7 @@ test("base resolver", () => {
 	)
 
 	const GiraffeInput = fabric<Partial<IGiraffe>>(
-		new GraphQLObjectType<Partial<IGiraffe>>({
+		new GraphQLObjectType({
 			name: "GiraffeInput",
 			fields: {
 				name: { type: GraphQLString },
@@ -43,7 +43,24 @@ test("base resolver", () => {
 		}),
 	)
 
+	const createGiraffe = mutation(Giraffe, {
+		input: { data: GiraffeInput },
+		resolve: ({ data }) => ({
+			name: data.name ?? "Giraffe",
+			birthday: data.birthday ?? new Date(),
+			heightInMeters: data.heightInMeters ?? 5,
+		}),
+	})
+
 	const simpleGiraffeResolver = resolver({
+		createGiraffe: createGiraffe,
+	})
+
+	const giraffeResolver = resolver(Giraffe, {
+		age: field(fabric<number>(GraphQLInt), async (giraffe) => {
+			return new Date().getFullYear() - giraffe.birthday.getFullYear()
+		}),
+
 		giraffe: query(Giraffe, {
 			input: { name: fabric<string>(GraphQLString) },
 			resolve: ({ name }) => ({
@@ -52,29 +69,15 @@ test("base resolver", () => {
 				heightInMeters: 5,
 			}),
 		}),
-	})
-
-	const giraffeResolver = resolver(Giraffe, {
-		age: field(fabric<number>(GraphQLInt), (giraffe) => {
-			return new Date().getFullYear() - giraffe.birthday.getFullYear()
-		}),
 
 		greeting: field(fabric<string>(GraphQLString), {
-			input: { name: fabric<string>(GraphQLString) },
-			resolve: (giraffe, { name }) =>
-				`Hello, ${name}! My name is ${giraffe.name}.`,
+			input: { myName: fabric<string>(GraphQLString) },
+			resolve: (giraffe, { myName }) =>
+				`Hello, ${myName}! My name is ${giraffe.name}.`,
 		}),
-
-		createGiraffe: mutation(Giraffe, {
-			input: GiraffeInput,
-			resolve: (input) => ({
-				name: input.name ?? "Giraffe",
-				birthday: input.birthday ?? new Date(),
-				heightInMeters: input.heightInMeters ?? 5,
-			}),
-		}),
+		createGiraffe,
 	})
 
-	giraffeResolver.createGiraffe.resolve({})
-	simpleGiraffeResolver.giraffe.resolve({ name: "Giraffe" })
+	giraffeResolver.giraffe.resolve({ name: "Giraffe" })
+	simpleGiraffeResolver.createGiraffe.resolve({ data: {} })
 })

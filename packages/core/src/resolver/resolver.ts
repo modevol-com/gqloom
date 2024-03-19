@@ -1,22 +1,27 @@
-import { isType } from "graphql"
-import type { IsAny, MayPromise } from "../utils"
+import { getResolverArgs, type IsAny, type MayPromise } from "../utils"
 import type {
 	GraphQLFabric,
 	GraphQLFabricInput,
 	GraphQLFabricOutput,
 } from "./fabric"
+import type {
+	BaseFieldBuilder,
+	BaseOperationBuilder,
+	BaseResolverBuilder,
+	ResolverOptions,
+} from "./types"
 
 /**
  * Input entries for creating a GraphQL operation.
  */
-export type FabricInputEntries =
+export type BaseInputEntries =
 	| Record<string, GraphQLFabric<any, any>>
 	| GraphQLFabric<any, any>
 
 /**
  * Infer input entries from a GraphQLFabric.
  */
-export type InferFabricInputEntries<T extends FabricInputEntries | undefined> =
+export type InferBaseInputEntries<T extends BaseInputEntries | undefined> =
 	T extends GraphQLFabric<infer TInput, any>
 		? TInput
 		: T extends undefined
@@ -24,25 +29,21 @@ export type InferFabricInputEntries<T extends FabricInputEntries | undefined> =
 		  : {
 					[K in keyof T]: T[K] extends GraphQLFabric<any, any>
 						? GraphQLFabricInput<T[K]>
-						: never
+						: T[K]
 			  }
-
-export interface ResolverOptions {
-	middleware?: ((next: () => void) => void)[]
-}
 
 /**
  * Options for creating a GraphQL operation.
  */
 export interface OperationOptions<
 	TOutput extends GraphQLFabric<any, any>,
-	TInput extends FabricInputEntries | undefined = undefined,
+	TInput extends BaseInputEntries | undefined = undefined,
 > extends ResolverOptions {
 	input?: TInput
 	resolve: (
 		input: TInput extends undefined
 			? undefined
-			: InferFabricInputEntries<NonNullable<TInput>>,
+			: InferBaseInputEntries<NonNullable<TInput>>,
 	) => MayPromise<GraphQLFabricOutput<TOutput>>
 }
 
@@ -52,14 +53,14 @@ export interface OperationOptions<
 export interface OperationOptionsWithParent<
 	TParent extends GraphQLFabric<any, any>,
 	TOutput extends GraphQLFabric<any, any>,
-	TInput extends FabricInputEntries | undefined = undefined,
+	TInput extends BaseInputEntries | undefined = undefined,
 > extends ResolverOptions {
 	input?: TInput
 	resolve: (
 		parent: GraphQLFabricOutput<TParent>,
 		input: TInput extends undefined
 			? undefined
-			: InferFabricInputEntries<NonNullable<TInput>>,
+			: InferBaseInputEntries<NonNullable<TInput>>,
 	) => MayPromise<GraphQLFabricOutput<TOutput>>
 }
 
@@ -69,17 +70,17 @@ export interface OperationOptionsWithParent<
 export interface OperationOrField<
 	TParent extends GraphQLFabric<any, any> | undefined,
 	TOutput extends GraphQLFabric<any, any>,
-	TInput extends FabricInputEntries | undefined = undefined,
+	TInput extends BaseInputEntries | undefined = undefined,
 > {
 	type: "query" | "mutation" | "field" | "subscription"
 	resolve: IsAny<TParent> extends true
 		? (
-				input: InferFabricInputEntries<TInput>,
+				input: InferBaseInputEntries<TInput>,
 		  ) => MayPromise<GraphQLFabricOutput<TOutput>>
 		: TParent extends GraphQLFabric<any, any>
 		  ? (
 					parent: GraphQLFabricOutput<TParent>,
-					input: InferFabricInputEntries<TInput>,
+					input: InferBaseInputEntries<TInput>,
 			  ) => MayPromise<GraphQLFabricOutput<TOutput>>
 		  : (input: TInput) => MayPromise<GraphQLFabricOutput<TOutput>>
 	input: TInput
@@ -88,7 +89,7 @@ export interface OperationOrField<
 
 export interface Operation<
 	TOutput extends GraphQLFabric<any, any>,
-	TInput extends FabricInputEntries | undefined = undefined,
+	TInput extends BaseInputEntries | undefined = undefined,
 > extends OperationOrField<any, TOutput, TInput> {
 	type: "query" | "mutation" | "subscription"
 }
@@ -96,9 +97,9 @@ export interface Operation<
 export function baseField<
 	TParent extends GraphQLFabric<any, any>,
 	TOutput extends GraphQLFabric<any, any>,
-	TInput extends FabricInputEntries | undefined = undefined,
+	TInput extends BaseInputEntries | undefined = undefined,
 >(
-	outputSchema: TOutput,
+	output: TOutput,
 	resolveOrOptions:
 		| ((
 				parent: GraphQLFabricOutput<TParent>,
@@ -110,9 +111,9 @@ export function baseField<
 
 export function baseQuery<
 	TOutput extends GraphQLFabric<any, any>,
-	TInput extends FabricInputEntries | undefined = undefined,
+	TInput extends BaseInputEntries | undefined = undefined,
 >(
-	outputSchema: TOutput,
+	output: TOutput,
 	resolveOrOptions:
 		| (() => MayPromise<GraphQLFabricOutput<TOutput>>)
 		| OperationOptions<TOutput, TInput>,
@@ -122,9 +123,9 @@ export function baseQuery<
 
 export function baseMutation<
 	TOutput extends GraphQLFabric<any, any>,
-	TInput extends FabricInputEntries | undefined = undefined,
+	TInput extends BaseInputEntries | undefined = undefined,
 >(
-	outputSchema: TOutput,
+	output: TOutput,
 	resolveOrOptions:
 		| (() => MayPromise<GraphQLFabricOutput<TOutput>>)
 		| OperationOptions<TOutput, TInput>,
@@ -139,20 +140,20 @@ export function baseMutation<
  */
 export function baseResolver<
 	TParent extends GraphQLFabric<any, any>,
-	TOperation extends Record<string, OperationOrField<TParent, any, any>>,
+	TOperations extends Record<string, OperationOrField<TParent, any, any>>,
 >(
 	parent: TParent,
-	operationOrFields: TOperation,
+	operationOrFields: TOperations,
 	options?: ResolverOptions,
-): TOperation
+): TOperations
 
 /**
  * Create a resolver.
  * @param operations the query or mutations to resolve
  */
 export function baseResolver<
-	TOperation extends Record<string, Operation<any, any>>,
->(operations: TOperation, options?: ResolverOptions): TOperation
+	TOperations extends Record<string, Operation<any, any>>,
+>(operations: TOperations, options?: ResolverOptions): TOperations
 
 export function baseResolver(
 	arg1:
@@ -165,18 +166,27 @@ export function baseResolver(
 	return operations
 }
 
-export function getResolverArgs([arg1, arg2, arg3]: [
-	arg1:
-		| GraphQLFabric<any, any>
-		| Record<string, OperationOrField<any, any, any>>,
-	arg2?: Record<string, OperationOrField<any, any, any>> | ResolverOptions,
-	arg3?: ResolverOptions,
-]) {
-	const parent = isType(arg1.type) ? arg1 : undefined
-	const operations = (parent != null ? arg2 : arg1) as Record<
-		string,
-		OperationOrField<any, any, any>
-	>
-	const options = parent != null ? arg3 : (arg2 as ResolverOptions | undefined)
-	return { parent, operations, options }
-}
+export type GraphQLFabricIOPaths = [
+	input: "_types.input",
+	output: "_types.output",
+]
+
+export const fabricQuery: BaseOperationBuilder<
+	GraphQLFabric<any, any>,
+	GraphQLFabricIOPaths
+> = 0 as any
+
+export const fabricMutation: BaseOperationBuilder<
+	GraphQLFabric<any, any>,
+	GraphQLFabricIOPaths
+> = 0 as any
+
+export const fabricField: BaseFieldBuilder<
+	GraphQLFabric<any, any>,
+	GraphQLFabricIOPaths
+> = 0 as any
+
+export const fabricResolver: BaseResolverBuilder<
+	GraphQLFabric<any, any>,
+	GraphQLFabricIOPaths
+> = 0 as any

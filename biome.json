@@ -17,6 +17,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"style": {
+				"useShorthandFunctionType": "off"
+			},
 			"suspicious": {
 				"noExplicitAny": "off"
 			}
