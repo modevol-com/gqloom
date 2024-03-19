@@ -6,7 +6,7 @@ import {
 	GraphQLString,
 } from "graphql"
 import { test } from "vitest"
-import { type GraphQLFabric, fabric } from "./fabric"
+import { fabric } from "./fabric"
 import {
 	fabricField as field,
 	fabricMutation as mutation,

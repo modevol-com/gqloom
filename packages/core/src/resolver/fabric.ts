@@ -23,12 +23,6 @@ export interface GraphQLFabric<TOutput, TInput> {
 	_types?: { input: TInput; output: TOutput }
 }
 
-export type GraphQLFabricOutput<TFabric extends GraphQLFabric<any, any>> =
-	NonNullable<TFabric["_types"]>["output"]
-
-export type GraphQLFabricInput<TFabric extends GraphQLFabric<any, any>> =
-	NonNullable<TFabric["_types"]>["input"]
-
 /**
  * Create a GraphQLFabric Object.
  */
