@@ -1,31 +1,27 @@
 import type { GraphQLFabric } from "./fabric"
-import type {
-	BaseFieldBuilder,
-	BaseOperationBuilder,
-	BaseResolverBuilder,
-} from "./types"
+import type { FieldWeaver, OperationWeaver, ResolverWeaver } from "./types"
 
 export type GraphQLFabricIOPaths = [
 	input: "_types.input",
 	output: "_types.output",
 ]
 
-export const fabricQuery: BaseOperationBuilder<
+export const fabricQuery: OperationWeaver<
 	GraphQLFabric<any, any>,
 	GraphQLFabricIOPaths
 > = 0 as any
 
-export const fabricMutation: BaseOperationBuilder<
+export const fabricMutation: OperationWeaver<
 	GraphQLFabric<any, any>,
 	GraphQLFabricIOPaths
 > = 0 as any
 
-export const fabricField: BaseFieldBuilder<
+export const fabricField: FieldWeaver<
 	GraphQLFabric<any, any>,
 	GraphQLFabricIOPaths
 > = 0 as any
 
-export const fabricResolver: BaseResolverBuilder<
+export const fabricResolver: ResolverWeaver<
 	GraphQLFabric<any, any>,
 	GraphQLFabricIOPaths
 > = 0 as any

@@ -1,4 +1,4 @@
-import type { InferPropertyType, IsAny, MayPromise } from "../utils"
+import type { InferPropertyType, MayPromise } from "../utils"
 
 export type SchemaIOPaths = [inputPath: string, outputPath: string]
 
@@ -97,7 +97,7 @@ export interface OperationOptions<
 	) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
 }
 
-export interface BaseOperationBuilder<
+export interface OperationWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 > {
@@ -128,7 +128,7 @@ export interface FieldOptions<
 	) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
 }
 
-export interface BaseFieldBuilder<
+export interface FieldWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 > {
@@ -146,7 +146,7 @@ export interface BaseFieldBuilder<
 	): OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput>
 }
 
-export interface BaseResolverBuilder<
+export interface ResolverWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 > {

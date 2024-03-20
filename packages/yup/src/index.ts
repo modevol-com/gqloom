@@ -1,7 +1,6 @@
-import type { GraphQLFabric, InferSchemaIO } from "@gqloom/core"
+import { createResolverWeavers, type GraphQLFabric } from "@gqloom/core"
 import { GraphQLString } from "graphql"
 import type { InferType, Schema } from "yup"
-import { object, date, string, number } from "yup"
 
 export class YupFabric<TSchema extends Schema>
 	implements GraphQLFabric<InferType<TSchema>, InferType<TSchema>>
@@ -18,23 +17,15 @@ export class YupFabric<TSchema extends Schema>
 	}
 }
 
-export function fabric<TSchema extends Schema>(
+export type YupSchemaIOPaths = ["__outputType", "__outputType"]
+
+export function yupFabric<TSchema extends Schema>(
 	schema: TSchema,
 ): YupFabric<TSchema> {
 	return new YupFabric(schema)
 }
 
-type YupSchemaIOPaths = ["__outputType", "__outputType"]
-
-type InferYupSchemaIO<TSchema extends Schema> = InferSchemaIO<
-	TSchema,
+export const { query, mutation, field, resolver } = createResolverWeavers<
+	Schema,
 	YupSchemaIOPaths
->
-
-const Giraffe = object({
-	name: string().required(),
-	birthday: date().required(),
-	heightInMeters: number().required(),
-})
-
-type IGiraffe = InferYupSchemaIO<typeof Giraffe>
+>(yupFabric)
