@@ -2,7 +2,7 @@ import { isType } from "graphql"
 import type {
 	GraphQLFabric,
 	OperationOptions,
-	OperationOptionsWithParent,
+	FieldOptions,
 	OperationOrField,
 	ResolverOptions,
 } from ".."
@@ -26,8 +26,8 @@ export function getResolverArgs([arg1, arg2, arg3]: [
 export function getOperationOptions(
 	resolveOrOptions:
 		| ((parent: any) => any)
-		| OperationOptions<any, any>
-		| OperationOptionsWithParent<any, any, any>,
+		| OperationOptions<any, any, any>
+		| FieldOptions<any, any, any, any>,
 ) {
 	if (typeof resolveOrOptions === "function") {
 		return { resolve: resolveOrOptions }
