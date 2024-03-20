@@ -53,10 +53,10 @@ test("base resolver", () => {
 	})
 
 	const simpleGiraffeResolver = resolver({
-		createGiraffe: createGiraffe,
+		createGiraffe,
 	})
 
-	const giraffeResolver = resolver(Giraffe, {
+	const giraffeResolver = resolver.of(Giraffe, {
 		age: field(fabric<number>(GraphQLInt), async (giraffe) => {
 			return new Date().getFullYear() - giraffe.birthday.getFullYear()
 		}),
@@ -75,9 +75,24 @@ test("base resolver", () => {
 			resolve: (giraffe, { myName }) =>
 				`Hello, ${myName}! My name is ${giraffe.name}.`,
 		}),
-		createGiraffe,
+
+		createGiraffe: mutation(Giraffe, {
+			input: { data: GiraffeInput },
+			resolve: ({ data }) => ({
+				name: data.name ?? "Giraffe",
+				birthday: data.birthday ?? new Date(),
+				heightInMeters: data.heightInMeters ?? 5,
+			}),
+		}),
 	})
 
+	const giraffe: IGiraffe = {
+		name: "Giraffe",
+		birthday: new Date(),
+		heightInMeters: 5,
+	}
+
 	giraffeResolver.giraffe.resolve({ name: "Giraffe" })
+	giraffeResolver.age.resolve(giraffe, { name: "Giraffe" })
 	simpleGiraffeResolver.createGiraffe.resolve({ data: {} })
 })

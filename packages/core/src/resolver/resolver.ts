@@ -6,22 +6,26 @@ export type GraphQLFabricIOPaths = [
 	output: "_types.output",
 ]
 
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+type AnyGraphQLFabric = GraphQLFabric<any, any>
+
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+const notImplemented: any = 0
+
 export const fabricQuery: OperationWeaver<
-	GraphQLFabric<any, any>,
+	AnyGraphQLFabric,
 	GraphQLFabricIOPaths
-> = 0 as any
+> = notImplemented
 
 export const fabricMutation: OperationWeaver<
-	GraphQLFabric<any, any>,
+	AnyGraphQLFabric,
 	GraphQLFabricIOPaths
-> = 0 as any
+> = notImplemented
 
-export const fabricField: FieldWeaver<
-	GraphQLFabric<any, any>,
-	GraphQLFabricIOPaths
-> = 0 as any
+export const fabricField: FieldWeaver<AnyGraphQLFabric, GraphQLFabricIOPaths> =
+	notImplemented
 
 export const fabricResolver: ResolverWeaver<
-	GraphQLFabric<any, any>,
+	AnyGraphQLFabric,
 	GraphQLFabricIOPaths
-> = 0 as any
+> = notImplemented

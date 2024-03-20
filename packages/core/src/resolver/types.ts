@@ -10,8 +10,6 @@ export type InferSchemaO<TSchema, TIOPaths extends SchemaIOPaths> = NonNullable<
 	InferPropertyType<TSchema, TIOPaths[1]>
 >
 
-export type SchemaIO = [input: any, output: any]
-
 export type InferSchemaIO<TSchema, TIOPaths extends SchemaIOPaths> = [
 	input: InferSchemaI<TSchema, TIOPaths>,
 	output: InferSchemaO<TSchema, TIOPaths>,
@@ -22,7 +20,7 @@ export interface ResolverOptions {
 }
 
 export type InferInputEntriesI<
-	TInputEntries extends Record<string, any> | undefined,
+	TInputEntries extends Record<string, unknown> | undefined,
 	TSchemaIOPaths extends SchemaIOPaths,
 > = TInputEntries extends undefined
 	? undefined
@@ -31,7 +29,7 @@ export type InferInputEntriesI<
 	  }
 
 export type InferInputEntriesO<
-	TInputEntries extends Record<string, any> | undefined,
+	TInputEntries extends Record<string, unknown> | undefined,
 	TSchemaIOPaths extends SchemaIOPaths,
 > = TInputEntries extends undefined
 	? undefined
@@ -39,18 +37,31 @@ export type InferInputEntriesO<
 			[K in keyof TInputEntries]: InferSchemaO<TInputEntries[K], TSchemaIOPaths>
 	  }
 
+export type OperationType = "query" | "mutation" | "subscription"
+
+export type OperationOrFieldType = OperationType | "field"
+
 /**
  * Operation or Field for resolver.
  */
 export interface OperationOrField<
-	_TSchemaIOPaths extends SchemaIOPaths,
-	_TParent,
+	TSchemaIOPaths extends SchemaIOPaths,
+	TParent,
 	TOutput,
-	TInput extends Record<string, any> | undefined = undefined,
+	TInput extends Record<string, unknown> | undefined = undefined,
+	TType extends OperationOrFieldType = OperationOrFieldType,
 > {
-	type: "query" | "mutation" | "field" | "subscription"
+	type: TType
 	input: TInput
 	output: TOutput
+	resolve: TType extends "field"
+		? (
+				parent: InferSchemaO<TParent, TSchemaIOPaths>,
+				input: InferInputEntriesI<TInput, TSchemaIOPaths>,
+		  ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
+		: (
+				input: InferInputEntriesI<TInput, TSchemaIOPaths>,
+		  ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
 }
 
 /**
@@ -59,13 +70,14 @@ export interface OperationOrField<
 export interface Operation<
 	TSchemaIOPaths extends SchemaIOPaths,
 	TOutput,
-	TInput extends Record<string, any> | undefined = undefined,
-> extends OperationOrField<TSchemaIOPaths, any, TOutput, TInput> {
-	type: "query" | "mutation" | "subscription"
-	resolve: (
-		input: InferInputEntriesI<TInput, TSchemaIOPaths>,
-	) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
-}
+	TInput extends Record<string, unknown> | undefined = undefined,
+> extends OperationOrField<
+		TSchemaIOPaths,
+		unknown,
+		TOutput,
+		TInput,
+		"query" | "mutation" | "subscription"
+	> {}
 
 /**
  * Field for resolver.
@@ -74,7 +86,7 @@ export interface Field<
 	TSchemaIOPaths extends SchemaIOPaths,
 	TParent,
 	TOutput,
-	TInput extends Record<string, any> | undefined = undefined,
+	TInput extends Record<string, unknown> | undefined = undefined,
 > extends OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput> {
 	type: "field"
 	resolve: (
@@ -89,7 +101,7 @@ export interface Field<
 export interface OperationOptions<
 	TSchemaIOPaths extends SchemaIOPaths,
 	TOutput,
-	TInput extends Record<string, any> | undefined = undefined,
+	TInput extends Record<string, unknown> | undefined = undefined,
 > extends ResolverOptions {
 	input?: TInput
 	resolve: (
@@ -109,7 +121,8 @@ export interface OperationWeaver<
 		resolveOrOptions:
 			| (() => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>)
 			| OperationOptions<TSchemaIOPaths, TOutput, TInput>,
-	): Operation<TSchemaIOPaths, TOutput, TInput>
+		// biome-ignore lint/suspicious/noExplicitAny: allow any Parent
+	): OperationOrField<TSchemaIOPaths, any, TOutput, TInput, OperationType>
 }
 
 /**
@@ -119,7 +132,7 @@ export interface FieldOptions<
 	TSchemaIOPaths extends SchemaIOPaths,
 	TParent,
 	TOutput,
-	TInput extends Record<string, any> | undefined = undefined,
+	TInput extends Record<string, unknown> | undefined = undefined,
 > extends ResolverOptions {
 	input?: TInput
 	resolve: (
@@ -143,17 +156,18 @@ export interface FieldWeaver<
 					parent: InferSchemaO<TParent, TSchemaIOPaths>,
 			  ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>)
 			| FieldOptions<TSchemaIOPaths, TParent, TOutput, TInput>,
-	): OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput>
+	): OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput, "field">
 }
 
 export interface ResolverWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 > {
-	<
+	of<
 		TParent extends TBaseSchema,
 		TOperations extends Record<
 			string,
+			// biome-ignore lint/suspicious/noExplicitAny: allow any Output and Input
 			OperationOrField<TSchemaIOPaths, TParent, any, any>
 		>,
 	>(
@@ -162,7 +176,13 @@ export interface ResolverWeaver<
 		options?: ResolverOptions,
 	): TOperations
 
-	<TOperations extends Record<string, Operation<TSchemaIOPaths, any, any>>>(
+	<
+		TOperations extends Record<
+			string,
+			// biome-ignore lint/suspicious/noExplicitAny: allow any Output and Input
+			OperationOrField<TSchemaIOPaths, any, any, any, OperationType>
+		>,
+	>(
 		operations: TOperations,
 		options?: ResolverOptions,
 	): TOperations

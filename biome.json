@@ -21,7 +21,7 @@
 				"useShorthandFunctionType": "off"
 			},
 			"suspicious": {
-				"noExplicitAny": "off"
+				"noExplicitAny": "warn"
 			}
 		}
 	}

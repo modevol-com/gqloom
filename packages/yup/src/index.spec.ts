@@ -24,7 +24,7 @@ test("yup resolver", () => {
 		createGiraffe: createGiraffe,
 	})
 
-	const giraffeResolver = resolver(Giraffe, {
+	const giraffeResolver = resolver.of(Giraffe, {
 		age: field(number(), async (giraffe) => {
 			return new Date().getFullYear() - giraffe.birthday.getFullYear()
 		}),
