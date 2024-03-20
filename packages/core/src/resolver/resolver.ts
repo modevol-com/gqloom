@@ -1,13 +1,10 @@
-import type { GraphQLFabric } from "./fabric"
+import type { AnyGraphQLFabric, GraphQLFabric } from "./fabric"
 import type { FieldWeaver, OperationWeaver, ResolverWeaver } from "./types"
 
 export type GraphQLFabricIOPaths = [
 	input: "_types.input",
 	output: "_types.output",
 ]
-
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-type AnyGraphQLFabric = GraphQLFabric<any, any>
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 const notImplemented: any = 0

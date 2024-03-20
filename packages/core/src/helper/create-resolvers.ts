@@ -2,51 +2,54 @@ import type {
 	ResolverWeaver,
 	FieldWeaver,
 	OperationWeaver,
-	GraphQLFabric,
 	SchemaIOPaths,
+	AnyGraphQLFabric,
 } from "../resolver"
+
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+const notImplemented: any = 0
 
 export function createResolverWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 >(
-	converter: (schema: TBaseSchema) => GraphQLFabric<any, any>,
+	converter: (schema: TBaseSchema) => AnyGraphQLFabric,
 ): ResolverWeaver<TBaseSchema, TSchemaIOPaths> {
-	return 0 as any
+	return notImplemented
 }
 
 export function createFieldWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 >(
-	converter: (schema: TBaseSchema) => GraphQLFabric<any, any>,
+	converter: (schema: TBaseSchema) => AnyGraphQLFabric,
 ): FieldWeaver<TBaseSchema, TSchemaIOPaths> {
-	return 0 as any
+	return notImplemented
 }
 
 export function createQueryWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 >(
-	converter: (schema: TBaseSchema) => GraphQLFabric<any, any>,
+	converter: (schema: TBaseSchema) => AnyGraphQLFabric,
 ): OperationWeaver<TBaseSchema, TSchemaIOPaths> {
-	return 0 as any
+	return notImplemented
 }
 
 export function createMutationWeaver<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 >(
-	converter: (schema: TBaseSchema) => GraphQLFabric<any, any>,
+	converter: (schema: TBaseSchema) => AnyGraphQLFabric,
 ): OperationWeaver<TBaseSchema, TSchemaIOPaths> {
-	return 0 as any
+	return notImplemented
 }
 
 export function createResolverWeavers<
 	TBaseSchema,
 	TSchemaIOPaths extends SchemaIOPaths,
 >(
-	converter: (schema: TBaseSchema) => GraphQLFabric<any, any>,
+	converter: (schema: TBaseSchema) => AnyGraphQLFabric,
 ): {
 	query: OperationWeaver<TBaseSchema, TSchemaIOPaths>
 	mutation: OperationWeaver<TBaseSchema, TSchemaIOPaths>

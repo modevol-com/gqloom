@@ -23,6 +23,9 @@ export interface GraphQLFabric<TOutput, TInput> {
 	_types?: { input: TInput; output: TOutput }
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export type AnyGraphQLFabric = GraphQLFabric<any, any>
+
 /**
  * Create a GraphQLFabric Object.
  */
