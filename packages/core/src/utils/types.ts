@@ -18,5 +18,5 @@ export type InferPropertyType<
 		? InferPropertyType<NonNullable<T[K1]>, K2>
 		: never
 	: K extends keyof T
-	  ? NonNullable<T[K]>
+	  ? T[K]
 	  : never
