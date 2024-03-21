@@ -1,4 +1,4 @@
-import type { OperationOptions, FieldOptions } from ".."
+import type { FieldOptions, OperationOptions } from ".."
 
 export function getOperationOptions(
 	resolveOrOptions: // biome-ignore lint/suspicious/noExplicitAny: no need to check

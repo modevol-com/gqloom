@@ -1,4 +1,4 @@
-import { createResolverWeavers, type GraphQLFabric } from "@gqloom/core"
+import { type GraphQLFabric, createResolverWeavers } from "@gqloom/core"
 import { GraphQLString } from "graphql"
 import type { InferType, Schema } from "yup"
 

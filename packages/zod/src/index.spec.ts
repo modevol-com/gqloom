@@ -1,6 +1,6 @@
 import { test } from "vitest"
-import { query, field, resolver, mutation } from "./index"
 import { z } from "zod"
+import { field, mutation, query, resolver } from "./index"
 
 test("zod resolver", () => {
 	const Giraffe = z.object({

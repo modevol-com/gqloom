@@ -1,9 +1,9 @@
 import type {
-	ResolverWeaver,
 	FieldWeaver,
-	OperationWeaver,
-	SchemaIOPaths,
 	AnyGraphQLFabric,
+	OperationWeaver,
+	ResolverWeaver,
+	SchemaIOPaths,
 } from "../resolver"
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>

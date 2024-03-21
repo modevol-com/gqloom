@@ -1,6 +1,6 @@
 import { test } from "vitest"
-import { query, field, resolver, mutation } from "./index"
 import { date, number, object, string } from "yup"
+import { field, mutation, query, resolver } from "./index"
 
 test("yup resolver", () => {
 	const Giraffe = object({
