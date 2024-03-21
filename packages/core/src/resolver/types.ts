@@ -2,13 +2,15 @@ import type { InferPropertyType, MayPromise } from "../utils"
 
 export type SchemaIOPaths = [inputPath: string, outputPath: string]
 
-export type InferSchemaI<TSchema, TIOPaths extends SchemaIOPaths> = NonNullable<
-	InferPropertyType<TSchema, TIOPaths[0]>
->
+export type InferSchemaI<
+	TSchema,
+	TIOPaths extends SchemaIOPaths,
+> = InferPropertyType<TSchema, TIOPaths[0]>
 
-export type InferSchemaO<TSchema, TIOPaths extends SchemaIOPaths> = NonNullable<
-	InferPropertyType<TSchema, TIOPaths[1]>
->
+export type InferSchemaO<
+	TSchema,
+	TIOPaths extends SchemaIOPaths,
+> = InferPropertyType<TSchema, TIOPaths[1]>
 
 export type InferSchemaIO<TSchema, TIOPaths extends SchemaIOPaths> = [
 	input: InferSchemaI<TSchema, TIOPaths>,

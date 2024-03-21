@@ -30,7 +30,7 @@ test("yup resolver", () => {
 		}),
 
 		giraffe: query(Giraffe, {
-			input: { name: string() },
+			input: { name: string().required() },
 			resolve: ({ name }) => ({
 				name,
 				birthday: new Date(),
@@ -41,7 +41,7 @@ test("yup resolver", () => {
 		greeting: field(string(), {
 			input: { myName: string() },
 			resolve: (giraffe, { myName }) =>
-				`Hello, ${myName}! My name is ${giraffe.name}.`,
+				`Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
 		}),
 	})
 

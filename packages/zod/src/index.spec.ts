@@ -39,9 +39,9 @@ test("zod resolver", () => {
 		}),
 
 		greeting: field(z.string(), {
-			input: { myName: z.string().nullable() },
+			input: { myName: z.string().nullish() },
 			resolve: (giraffe, { myName }) =>
-				`Hello, ${myName}! My Pname is ${giraffe.name}.`,
+				`Hello, ${myName ?? "my friend"}! My Pname is ${giraffe.name}.`,
 		}),
 	})
 

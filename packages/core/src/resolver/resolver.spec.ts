@@ -71,9 +71,9 @@ test("base resolver", () => {
 		}),
 
 		greeting: field(fabric<string>(GraphQLString), {
-			input: { myName: fabric<string>(GraphQLString) },
+			input: { myName: fabric<string | undefined>(GraphQLString) },
 			resolve: (giraffe, { myName }) =>
-				`Hello, ${myName}! My name is ${giraffe.name}.`,
+				`Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
 		}),
 
 		createGiraffe: mutation(Giraffe, {
