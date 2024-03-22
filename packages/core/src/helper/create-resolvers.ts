@@ -6,7 +6,6 @@ import type {
 	SchemaIOPaths,
 } from "../resolver"
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 const notImplemented: any = 0
 
 export function createResolverWeaver<

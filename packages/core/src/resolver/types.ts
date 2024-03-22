@@ -123,7 +123,6 @@ export interface OperationWeaver<
 		resolveOrOptions:
 			| (() => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>)
 			| OperationOptions<TSchemaIOPaths, TOutput, TInput>,
-		// biome-ignore lint/suspicious/noExplicitAny: allow any Parent
 	): OperationOrField<TSchemaIOPaths, any, TOutput, TInput, OperationType>
 }
 
@@ -169,7 +168,6 @@ export interface ResolverWeaver<
 		TParent extends TBaseSchema,
 		TOperations extends Record<
 			string,
-			// biome-ignore lint/suspicious/noExplicitAny: allow any Output and Input
 			OperationOrField<TSchemaIOPaths, TParent, any, any>
 		>,
 	>(
@@ -181,7 +179,6 @@ export interface ResolverWeaver<
 	<
 		TOperations extends Record<
 			string,
-			// biome-ignore lint/suspicious/noExplicitAny: allow any Output and Input
 			OperationOrField<TSchemaIOPaths, any, any, any, OperationType>
 		>,
 	>(

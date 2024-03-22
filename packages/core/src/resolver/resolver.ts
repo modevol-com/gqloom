@@ -6,7 +6,6 @@ export type GraphQLFabricIOPaths = [
 	output: "_types.output",
 ]
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 const notImplemented: any = 0
 
 export const fabricQuery: OperationWeaver<
