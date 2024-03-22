@@ -70,19 +70,18 @@ describe("middleware", async () => {
 
 	it("should work with AsyncLocalStorage", async () => {
 		const asyncLocalStorage = new AsyncLocalStorage<{ cat: string }>()
-		const catProvider: Middleware = (next) => {
+		const provideCat: Middleware = (next) => {
 			return asyncLocalStorage.run({ cat: "meow" }, next)
 		}
 
-		const catMiddleware: Middleware = (next) => {
+		const consumeCat: Middleware = (next) => {
 			const cat = asyncLocalStorage.getStore()?.cat
 			expect(cat).toBe("meow")
 			return next()
 		}
 
-		const result = await applyMiddlewares([catProvider, catMiddleware], () => {
-			const cat = asyncLocalStorage.getStore()?.cat
-			return cat
+		const result = await applyMiddlewares([provideCat, consumeCat], () => {
+			return asyncLocalStorage.getStore()?.cat
 		})
 
 		expect(result).toBe("meow")
