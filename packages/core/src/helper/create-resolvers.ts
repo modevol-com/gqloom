@@ -1,6 +1,6 @@
 import type {
-	FieldWeaver,
 	AnyGraphQLFabric,
+	FieldWeaver,
 	OperationWeaver,
 	ResolverWeaver,
 	SchemaIOPaths,

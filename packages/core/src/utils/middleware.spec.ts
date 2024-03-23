@@ -1,6 +1,6 @@
-import { it, describe, expect } from "vitest"
-import { applyMiddlewares, type Middleware } from "./middleware"
 import { AsyncLocalStorage } from "node:async_hooks"
+import { describe, expect, it } from "vitest"
+import { type Middleware, applyMiddlewares } from "./middleware"
 
 describe("middleware", async () => {
 	it("should work", async () => {
@@ -10,7 +10,7 @@ describe("middleware", async () => {
 		expect(result).toBe(answer)
 	})
 
-	it("should call middlewares in order", async () => {
+	it("should be called in order", async () => {
 		const results: string[] = []
 		const middlewares: Middleware[] = [
 			(next) => {
