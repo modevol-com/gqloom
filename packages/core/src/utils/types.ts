@@ -11,12 +11,12 @@ export type IsAny<T> = 0 extends 1 & T ? true : false
  * ```
  */
 export type InferPropertyType<
-	T,
-	K extends string,
+  T,
+  K extends string,
 > = K extends `${infer K1}.${infer K2}`
-	? K1 extends keyof T
-		? InferPropertyType<NonNullable<T[K1]>, K2>
-		: never
-	: K extends keyof T
-	  ? T[K]
-	  : never
+  ? K1 extends keyof T
+    ? InferPropertyType<NonNullable<T[K1]>, K2>
+    : never
+  : K extends keyof T
+    ? T[K]
+    : never

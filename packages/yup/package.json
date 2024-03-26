@@ -1,19 +1,19 @@
 {
-	"name": "@gqloom/yup",
-	"version": "0.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"keywords": [],
-	"author": "xcfox",
-	"license": "MIT",
-	"peerDependencies": {
-		"yup": ">= 1.0.0"
-	},
-	"devDependencies": {
-		"yup": "^1.4.0",
-		"@gqloom/core": "workspace:*"
-	}
+  "name": "@gqloom/yup",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "xcfox",
+  "license": "MIT",
+  "peerDependencies": {
+    "yup": ">= 1.0.0"
+  },
+  "devDependencies": {
+    "yup": "^1.4.0",
+    "@gqloom/core": "workspace:*"
+  }
 }

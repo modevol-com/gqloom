@@ -1,23 +1,26 @@
 {
-	"name": "gqloom",
-	"version": "0.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"test": "vitest",
-		"format": "biome format . --write",
-		"lint": "biome lint --apply .",
-		"check": "biome check --apply ."
-	},
-	"keywords": [],
-	"author": "xcfox",
-	"license": "MIT",
-	"devDependencies": {
-		"@biomejs/biome": "1.6.1",
-		"@types/node": "^20.11.30",
-		"graphql": "^16.8.1",
-		"typescript": "^5.4.3",
-		"vite-node": "^1.3.1",
-		"vitest": "^1.3.1"
-	}
+  "name": "gqloom",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "format": "prettier . --write",
+    "lint": "eslint \"**/*.{ts,tsx}\" --fix"
+  },
+  "keywords": [],
+  "author": "xcfox",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "graphql": "^16.8.1",
+    "prettier": "3.2.5",
+    "typescript": "^5.4.3",
+    "vite-node": "^1.3.1",
+    "vitest": "^1.3.1"
+  }
 }
