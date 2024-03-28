@@ -4,28 +4,28 @@ import {
   ContextMemoryMapSymbol,
   createMemory,
   onlyMemory,
-  resolverArgsStorage,
+  resolverPayloadStorage,
   useContext,
   useMemoryMap,
-  useResolverArgs,
+  useResolverPayload,
 } from "./context"
 
 describe("context", () => {
   describe("useResolverArgs", () => {
     it("should return undefined if no resolver args are set", () => {
-      expect(useResolverArgs()).toBeUndefined()
+      expect(useResolverPayload()).toBeUndefined()
     })
 
     it("should return the resolver args", () => {
       const args = {} as any
-      resolverArgsStorage.run(args, () => {
-        expect(useResolverArgs()).toBe(args)
+      resolverPayloadStorage.run(args, () => {
+        expect(useResolverPayload()).toBe(args)
       })
     })
 
     it("should return undefined if only memory args are set", () => {
-      resolverArgsStorage.run(onlyMemory(), () => {
-        expect(useResolverArgs()).toBeUndefined()
+      resolverPayloadStorage.run(onlyMemory(), () => {
+        expect(useResolverPayload()).toBeUndefined()
       })
     })
   })
@@ -37,21 +37,21 @@ describe("context", () => {
 
     it("should return the context", () => {
       const args = { context: {} } as any
-      resolverArgsStorage.run(args, () => {
+      resolverPayloadStorage.run(args, () => {
         expect(useContext()).toBe(args.context)
       })
     })
 
     it("should return undefined if only memory args are set", () => {
-      resolverArgsStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemory(), () => {
         expect(useContext()).toBeUndefined()
       })
     })
 
     it("should be same context in useContext and useResolverArgs", () => {
       const args = { context: {} } as any
-      resolverArgsStorage.run(args, () => {
-        expect(useContext()).toBe(useResolverArgs()?.context)
+      resolverPayloadStorage.run(args, () => {
+        expect(useContext()).toBe(useResolverPayload()?.context)
       })
     })
   })
@@ -81,7 +81,7 @@ describe("memory", () => {
         times++
         return "🥭mango"
       })
-      resolverArgsStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemory(), () => {
         expect(times).toEqual(0)
         expect(memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -100,7 +100,7 @@ describe("memory", () => {
         return "🥭mango"
       })
 
-      resolverArgsStorage.run(onlyMemory(), async () => {
+      resolverPayloadStorage.run(onlyMemory(), async () => {
         expect(times).toEqual(0)
         expect(await memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -119,7 +119,7 @@ describe("memory", () => {
         return "🥭mango"
       })
 
-      resolverArgsStorage.run(onlyMemory(), async () => {
+      resolverPayloadStorage.run(onlyMemory(), async () => {
         expect(times).toEqual(0)
         expect(await memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -141,7 +141,7 @@ describe("memory", () => {
         return "🥭mango"
       })
 
-      resolverArgsStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemory(), () => {
         expect(times).toEqual(0)
         expect(memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -166,7 +166,7 @@ describe("memory", () => {
       expect(useFruit.exists()).toEqual(undefined)
       expect(useFruit.clear()).toEqual(undefined)
 
-      resolverArgsStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemory(), () => {
         expect(useFruit.exists()).toEqual(false)
         expect(useFruit.clear()).toEqual(false)
       })
@@ -182,21 +182,21 @@ describe("memory", () => {
       const map = new WeakMap()
       const args = { context: { [ContextMemoryMapSymbol]: map } } as any
 
-      resolverArgsStorage.run(args, () => {
+      resolverPayloadStorage.run(args, () => {
         expect(useMemoryMap()).toBe(map)
       })
     })
 
     it("should return the memory map from the context", () => {
       const args = { context: {} } as any
-      resolverArgsStorage.run(args, () => {
+      resolverPayloadStorage.run(args, () => {
         expect(useMemoryMap()).toBe(args.context[ContextMemoryMapSymbol])
       })
     })
 
     it("should return the memory map from the only memory args", () => {
       const memory = onlyMemory()
-      resolverArgsStorage.run(memory, () => {
+      resolverPayloadStorage.run(memory, () => {
         expect(useMemoryMap()).toBe(memory.memory)
       })
     })

@@ -2,15 +2,15 @@ import { AsyncLocalStorage } from "node:async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
 
 /**
- * Detailed arguments of the current resolver
+ * Detailed payload of the current resolver
  */
-export interface ResolverArgs<TContextType extends object = object> {
+export interface ResolverPayload<TContextType extends object = object> {
   /**
    * The previous object, which for a field on the root Query type is often not used.
    */
   root: any
   /**
-   * The arguments provided to the field in the GraphQL query.
+   * The payload provided to the field in the GraphQL query.
    */
   args: Record<string, any>
   /**
@@ -29,39 +29,39 @@ export interface ResolverArgs<TContextType extends object = object> {
 /**
  * Empty Resolver Arguments that only store the memory
  */
-export interface OnlyMemoryArgs {
+export interface OnlyMemoryPayload {
   memory: WeakMap<WeakKey, any>
   isMemory: true
 }
 
 /**
- * Create an empty memory arguments for the resolver
- * @returns the empty memory arguments
+ * Create an empty memory payload for the resolver
+ * @returns the empty memory payload
  */
-export function onlyMemory(): OnlyMemoryArgs {
+export function onlyMemory(): OnlyMemoryPayload {
   return { memory: new WeakMap(), isMemory: true }
 }
 
-export function isOnlyMemoryArgs(
-  args: ResolverArgs | OnlyMemoryArgs
-): args is OnlyMemoryArgs {
-  return (args as OnlyMemoryArgs).isMemory === true
+export function isOnlyMemoryPayload(
+  args: ResolverPayload | OnlyMemoryPayload
+): args is OnlyMemoryPayload {
+  return (args as OnlyMemoryPayload).isMemory === true
 }
 
 /**
- * the AsyncLocalStorage instance to store the resolver arguments
+ * the AsyncLocalStorage instance to store the resolver payload
  */
-export const resolverArgsStorage = new AsyncLocalStorage<
-  ResolverArgs | OnlyMemoryArgs
+export const resolverPayloadStorage = new AsyncLocalStorage<
+  ResolverPayload | OnlyMemoryPayload
 >()
 
 /**
- * use detailed arguments of the current resolver
- * @returns the resolver arguments
+ * use detailed payload of the current resolver
+ * @returns the resolver payload
  */
-export function useResolverArgs(): ResolverArgs | undefined {
-  const args = resolverArgsStorage.getStore()
-  if (args === undefined || isOnlyMemoryArgs(args)) return
+export function useResolverPayload(): ResolverPayload | undefined {
+  const args = resolverPayloadStorage.getStore()
+  if (args === undefined || isOnlyMemoryPayload(args)) return
   return args
 }
 
@@ -72,7 +72,7 @@ export function useResolverArgs(): ResolverArgs | undefined {
 export function useContext<TContextType extends object = object>():
   | TContextType
   | undefined {
-  const args = useResolverArgs()
+  const args = useResolverPayload()
   if (!args) return
   return args.context as TContextType
 }
@@ -81,9 +81,9 @@ export function useContext<TContextType extends object = object>():
  * use the MemoryMap of the current context
  */
 export function useMemoryMap(): WeakMap<WeakKey, any> | undefined {
-  const args = resolverArgsStorage.getStore()
+  const args = resolverPayloadStorage.getStore()
   if (args == null) return
-  if (isOnlyMemoryArgs(args)) return args.memory
+  if (isOnlyMemoryPayload(args)) return args.memory
   return ContextMemory.assignMemoryMap(args.context)
 }
 
@@ -98,6 +98,7 @@ interface ContextMemoryContainer {
 
 interface ContextMemoryOptions {
   getMemoryMap: () => WeakMap<WeakKey, any> | undefined
+  key: WeakKey
 }
 
 /**
@@ -110,9 +111,11 @@ export class ContextMemory<T> implements ContextMemoryOptions {
   ) {
     this.getter = getter
     this.getMemoryMap = options.getMemoryMap ?? useMemoryMap
+    this.key = options.key ?? this.getter
   }
 
   getMemoryMap: () => WeakMap<WeakKey, any> | undefined
+  readonly key: WeakKey
 
   /**
    * Get the value in memory or call the getter function
@@ -122,11 +125,11 @@ export class ContextMemory<T> implements ContextMemoryOptions {
     const map = this.getMemoryMap()
     if (!map) return this.getter()
 
-    if (!map.has(this.getter)) {
-      map.set(this.getter, this.getter())
+    if (!map.has(this.key)) {
+      map.set(this.key, this.getter())
     }
 
-    return map.get(this.getter)
+    return map.get(this.key)
   }
 
   /**
@@ -136,7 +139,7 @@ export class ContextMemory<T> implements ContextMemoryOptions {
   clear(): boolean | undefined {
     const map = this.getMemoryMap()
     if (!map) return
-    return map.delete(this.getter)
+    return map.delete(this.key)
   }
 
   /**
@@ -146,7 +149,7 @@ export class ContextMemory<T> implements ContextMemoryOptions {
   exists(): boolean | undefined {
     const map = this.getMemoryMap()
     if (!map) return
-    return map.has(this.getter)
+    return map.has(this.key)
   }
 
   /**
@@ -157,7 +160,7 @@ export class ContextMemory<T> implements ContextMemoryOptions {
   set(value: T): WeakMap<WeakKey, any> | undefined {
     const map = this.getMemoryMap()
     if (!map) return
-    return map.set(this.getter, value)
+    return map.set(this.key, value)
   }
 
   static assignMemoryMap(
