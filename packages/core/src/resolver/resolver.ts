@@ -1,5 +1,13 @@
+import { getOperationOptions, applyMiddlewares } from "../utils"
 import type { AnyGraphQLFabric } from "./fabric"
-import type { FieldWeaver, OperationWeaver, ResolverWeaver } from "./types"
+import type {
+  FieldWeaver,
+  OperationOptions,
+  OperationWeaver,
+  ResolvingOptions,
+  ResolverWeaver,
+  FieldOptions,
+} from "./types"
 
 export type GraphQLFabricIOPaths = [
   input: "_types.input",
@@ -8,18 +16,74 @@ export type GraphQLFabricIOPaths = [
 
 const notImplemented: any = 0
 
+function resolveForOperation(
+  options: OperationOptions<any, any, any>
+): (input: any, options?: ResolvingOptions) => Promise<any> {
+  return (input, resolvingOptions) => {
+    const middlewares = [
+      ...(resolvingOptions?.middlewares ?? []),
+      ...(options.middlewares ?? []),
+    ]
+    return applyMiddlewares(middlewares, () => {
+      // TODO: parse and memory input
+      return options.resolve(input)
+    })
+  }
+}
+
+function resolveForField(
+  options: FieldOptions<any, any, any, any>
+): (parent: any, input: any, options?: ResolvingOptions) => Promise<any> {
+  return (parent, input, resolvingOptions) => {
+    const middlewares = [
+      ...(resolvingOptions?.middlewares ?? []),
+      ...(options.middlewares ?? []),
+    ]
+    return applyMiddlewares(middlewares, () => {
+      // TODO: parse and memory input
+      return options.resolve(parent, input)
+    })
+  }
+}
+
 export const fabricQuery: OperationWeaver<
   AnyGraphQLFabric,
   GraphQLFabricIOPaths
-> = notImplemented
+> = (output, resolveOrOptions) => {
+  const options = getOperationOptions(resolveOrOptions)
+  return {
+    input: options.input,
+    output,
+    resolve: resolveForOperation(options),
+    type: "query",
+  }
+}
 
 export const fabricMutation: OperationWeaver<
   AnyGraphQLFabric,
   GraphQLFabricIOPaths
-> = notImplemented
+> = (output, resolveOrOptions) => {
+  const options = getOperationOptions(resolveOrOptions)
+  return {
+    input: options.input,
+    output,
+    resolve: resolveForOperation(options),
+    type: "mutation",
+  }
+}
 
-export const fabricField: FieldWeaver<AnyGraphQLFabric, GraphQLFabricIOPaths> =
-  notImplemented
+export const fabricField: FieldWeaver<
+  AnyGraphQLFabric,
+  GraphQLFabricIOPaths
+> = (output, resolveOrOptions) => {
+  const options = getOperationOptions<"field">(resolveOrOptions)
+  return {
+    input: options.input,
+    output,
+    resolve: resolveForField(options),
+    type: "field",
+  }
+}
 
 export const fabricResolver: ResolverWeaver<
   AnyGraphQLFabric,

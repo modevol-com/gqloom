@@ -1,4 +1,4 @@
-import type { InferPropertyType, MayPromise } from "../utils"
+import type { InferPropertyType, MayPromise, Middleware } from "../utils"
 
 export type SchemaIOPaths = [inputPath: string, outputPath: string]
 
@@ -18,8 +18,11 @@ export type InferSchemaIO<TSchema, TIOPaths extends SchemaIOPaths> = [
 ]
 
 export interface ResolverOptions {
-  middleware?: ((next: () => void) => void)[]
+  middlewares?: Middleware[]
 }
+
+export interface ResolvingOptions
+  extends Pick<ResolverOptions, "middlewares"> {}
 
 export type InferInputEntriesI<
   TInputEntries extends Record<string, unknown> | undefined,
@@ -59,11 +62,13 @@ export interface OperationOrField<
   resolve: TType extends "field"
     ? (
         parent: InferSchemaO<TParent, TSchemaIOPaths>,
-        input: InferInputEntriesI<TInput, TSchemaIOPaths>
-      ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
+        input: InferInputEntriesI<TInput, TSchemaIOPaths>,
+        options?: ResolvingOptions
+      ) => Promise<InferSchemaO<TOutput, TSchemaIOPaths>>
     : (
-        input: InferInputEntriesI<TInput, TSchemaIOPaths>
-      ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
+        input: InferInputEntriesI<TInput, TSchemaIOPaths>,
+        options?: ResolvingOptions
+      ) => Promise<InferSchemaO<TOutput, TSchemaIOPaths>>
 }
 
 /**
@@ -89,13 +94,7 @@ export interface Field<
   TParent,
   TOutput,
   TInput extends Record<string, unknown> | undefined = undefined,
-> extends OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput> {
-  type: "field"
-  resolve: (
-    parent: InferSchemaO<TParent, TSchemaIOPaths>,
-    input: InferInputEntriesI<TInput, TSchemaIOPaths>
-  ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
-}
+> extends OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput, "field"> {}
 
 /**
  * Options for creating a GraphQL operation.

@@ -44,10 +44,7 @@ export function createMutationWeaver<
   return notImplemented
 }
 
-export function createResolverWeavers<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
->(
+export function createLoom<TBaseSchema, TSchemaIOPaths extends SchemaIOPaths>(
   converter: (schema: TBaseSchema) => AnyGraphQLFabric
 ): {
   query: OperationWeaver<TBaseSchema, TSchemaIOPaths>
