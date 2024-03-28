@@ -9,7 +9,8 @@ import type {
   FieldOptions,
 } from "./types"
 
-export type GraphQLFabricIOPaths = [
+export type GraphQLFabricIO = [
+  object: AnyGraphQLFabric,
   input: "_types.input",
   output: "_types.output",
 ]
@@ -46,10 +47,10 @@ function resolveForField(
   }
 }
 
-export const fabricQuery: OperationWeaver<
-  AnyGraphQLFabric,
-  GraphQLFabricIOPaths
-> = (output, resolveOrOptions) => {
+export const fabricQuery: OperationWeaver<GraphQLFabricIO> = (
+  output,
+  resolveOrOptions
+) => {
   const options = getOperationOptions(resolveOrOptions)
   return {
     input: options.input,
@@ -59,10 +60,10 @@ export const fabricQuery: OperationWeaver<
   }
 }
 
-export const fabricMutation: OperationWeaver<
-  AnyGraphQLFabric,
-  GraphQLFabricIOPaths
-> = (output, resolveOrOptions) => {
+export const fabricMutation: OperationWeaver<GraphQLFabricIO> = (
+  output,
+  resolveOrOptions
+) => {
   const options = getOperationOptions(resolveOrOptions)
   return {
     input: options.input,
@@ -72,10 +73,10 @@ export const fabricMutation: OperationWeaver<
   }
 }
 
-export const fabricField: FieldWeaver<
-  AnyGraphQLFabric,
-  GraphQLFabricIOPaths
-> = (output, resolveOrOptions) => {
+export const fabricField: FieldWeaver<GraphQLFabricIO> = (
+  output,
+  resolveOrOptions
+) => {
   const options = getOperationOptions<"field">(resolveOrOptions)
   return {
     input: options.input,
@@ -85,7 +86,4 @@ export const fabricField: FieldWeaver<
   }
 }
 
-export const fabricResolver: ResolverWeaver<
-  AnyGraphQLFabric,
-  GraphQLFabricIOPaths
-> = notImplemented
+export const fabricResolver: ResolverWeaver<GraphQLFabricIO> = notImplemented

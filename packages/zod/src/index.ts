@@ -1,4 +1,4 @@
-import { type GraphQLFabric, createResolverWeavers } from "@gqloom/core"
+import { type GraphQLFabric, createLoom } from "@gqloom/core"
 import { GraphQLString } from "graphql"
 import type { Schema, input, output } from "zod"
 
@@ -17,7 +17,7 @@ export class ZodFabric<TSchema extends Schema>
   }
 }
 
-export type ZodSchemaIOPaths = ["_input", "_output"]
+export type ZodSchemaIO = [Schema, "_input", "_output"]
 
 export function zodFabric<TSchema extends Schema>(
   schema: TSchema
@@ -25,7 +25,5 @@ export function zodFabric<TSchema extends Schema>(
   return new ZodFabric(schema)
 }
 
-export const { query, mutation, field, resolver } = createResolverWeavers<
-  Schema,
-  ZodSchemaIOPaths
->(zodFabric)
+export const { query, mutation, field, resolver } =
+  createLoom<ZodSchemaIO>(zodFabric)

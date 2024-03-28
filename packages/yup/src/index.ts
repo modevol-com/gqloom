@@ -1,4 +1,4 @@
-import { type GraphQLFabric, createResolverWeavers } from "@gqloom/core"
+import { type GraphQLFabric, createLoom } from "@gqloom/core"
 import { GraphQLString } from "graphql"
 import type { InferType, Schema } from "yup"
 
@@ -17,7 +17,7 @@ export class YupFabric<TSchema extends Schema>
   }
 }
 
-export type YupSchemaIOPaths = ["__outputType", "__outputType"]
+export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
 
 export function yupFabric<TSchema extends Schema>(
   schema: TSchema
@@ -25,7 +25,5 @@ export function yupFabric<TSchema extends Schema>(
   return new YupFabric(schema)
 }
 
-export const { query, mutation, field, resolver } = createResolverWeavers<
-  Schema,
-  YupSchemaIOPaths
->(yupFabric)
+export const { query, mutation, field, resolver } =
+  createLoom<YupSchemaIO>(yupFabric)

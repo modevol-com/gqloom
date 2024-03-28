@@ -1,21 +1,20 @@
 import type { InferPropertyType, MayPromise, Middleware } from "../utils"
 
-export type SchemaIOPaths = [inputPath: string, outputPath: string]
+export type AbstractSchemaIO = [
+  baseSchema: object,
+  inputPath: string,
+  output: string,
+]
 
 export type InferSchemaI<
   TSchema,
-  TIOPaths extends SchemaIOPaths,
-> = InferPropertyType<TSchema, TIOPaths[0]>
+  TSchemaIO extends AbstractSchemaIO,
+> = InferPropertyType<TSchema, TSchemaIO[1]>
 
 export type InferSchemaO<
   TSchema,
-  TIOPaths extends SchemaIOPaths,
-> = InferPropertyType<TSchema, TIOPaths[1]>
-
-export type InferSchemaIO<TSchema, TIOPaths extends SchemaIOPaths> = [
-  input: InferSchemaI<TSchema, TIOPaths>,
-  output: InferSchemaO<TSchema, TIOPaths>,
-]
+  TSchemaIO extends AbstractSchemaIO,
+> = InferPropertyType<TSchema, TSchemaIO[2]>
 
 export interface ResolverOptions {
   middlewares?: Middleware[]
@@ -26,20 +25,20 @@ export interface ResolvingOptions
 
 export type InferInputEntriesI<
   TInputEntries extends Record<string, unknown> | undefined,
-  TSchemaIOPaths extends SchemaIOPaths,
+  TSchemaIO extends AbstractSchemaIO,
 > = TInputEntries extends undefined
   ? undefined
   : {
-      [K in keyof TInputEntries]: InferSchemaI<TInputEntries[K], TSchemaIOPaths>
+      [K in keyof TInputEntries]: InferSchemaI<TInputEntries[K], TSchemaIO>
     }
 
 export type InferInputEntriesO<
   TInputEntries extends Record<string, unknown> | undefined,
-  TSchemaIOPaths extends SchemaIOPaths,
+  TSchemaIO extends AbstractSchemaIO,
 > = TInputEntries extends undefined
   ? undefined
   : {
-      [K in keyof TInputEntries]: InferSchemaO<TInputEntries[K], TSchemaIOPaths>
+      [K in keyof TInputEntries]: InferSchemaO<TInputEntries[K], TSchemaIO>
     }
 
 export type OperationType = "query" | "mutation" | "subscription"
@@ -50,7 +49,7 @@ export type OperationOrFieldType = OperationType | "field"
  * Operation or Field for resolver.
  */
 export interface OperationOrField<
-  TSchemaIOPaths extends SchemaIOPaths,
+  TSchemaIO extends AbstractSchemaIO,
   TParent,
   TOutput,
   TInput extends Record<string, unknown> | undefined = undefined,
@@ -61,25 +60,25 @@ export interface OperationOrField<
   output: TOutput
   resolve: TType extends "field"
     ? (
-        parent: InferSchemaO<TParent, TSchemaIOPaths>,
-        input: InferInputEntriesI<TInput, TSchemaIOPaths>,
+        parent: InferSchemaO<TParent, TSchemaIO>,
+        input: InferInputEntriesI<TInput, TSchemaIO>,
         options?: ResolvingOptions
-      ) => Promise<InferSchemaO<TOutput, TSchemaIOPaths>>
+      ) => Promise<InferSchemaO<TOutput, TSchemaIO>>
     : (
-        input: InferInputEntriesI<TInput, TSchemaIOPaths>,
+        input: InferInputEntriesI<TInput, TSchemaIO>,
         options?: ResolvingOptions
-      ) => Promise<InferSchemaO<TOutput, TSchemaIOPaths>>
+      ) => Promise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
 /**
  * Operation for resolver.
  */
 export interface Operation<
-  TSchemaIOPaths extends SchemaIOPaths,
+  TSchemaIO extends AbstractSchemaIO,
   TOutput,
   TInput extends Record<string, unknown> | undefined = undefined,
 > extends OperationOrField<
-    TSchemaIOPaths,
+    TSchemaIO,
     unknown,
     TOutput,
     TInput,
@@ -90,84 +89,75 @@ export interface Operation<
  * Field for resolver.
  */
 export interface Field<
-  TSchemaIOPaths extends SchemaIOPaths,
+  TSchemaIO extends AbstractSchemaIO,
   TParent,
   TOutput,
   TInput extends Record<string, unknown> | undefined = undefined,
-> extends OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput, "field"> {}
+> extends OperationOrField<TSchemaIO, TParent, TOutput, TInput, "field"> {}
 
 /**
  * Options for creating a GraphQL operation.
  */
 export interface OperationOptions<
-  TSchemaIOPaths extends SchemaIOPaths,
+  TSchemaIO extends AbstractSchemaIO,
   TOutput,
   TInput extends Record<string, unknown> | undefined = undefined,
 > extends ResolverOptions {
   input?: TInput
   resolve: (
-    input: InferInputEntriesO<TInput, TSchemaIOPaths>
-  ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
+    input: InferInputEntriesO<TInput, TSchemaIO>
+  ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
-export interface OperationWeaver<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
-> {
+export interface OperationWeaver<TSchemaIO extends AbstractSchemaIO> {
   <
-    TOutput extends TBaseSchema,
-    TInput extends Record<string, TBaseSchema> | undefined = undefined,
+    TOutput extends TSchemaIO[0],
+    TInput extends Record<string, TSchemaIO[0]> | undefined = undefined,
   >(
     output: TOutput,
     resolveOrOptions:
-      | (() => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>)
-      | OperationOptions<TSchemaIOPaths, TOutput, TInput>
-  ): OperationOrField<TSchemaIOPaths, any, TOutput, TInput, OperationType>
+      | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
+      | OperationOptions<TSchemaIO, TOutput, TInput>
+  ): OperationOrField<TSchemaIO, any, TOutput, TInput, OperationType>
 }
 
 /**
  * Options for External Filed of existing GraphQL Object.
  */
 export interface FieldOptions<
-  TSchemaIOPaths extends SchemaIOPaths,
+  TSchemaIO extends AbstractSchemaIO,
   TParent,
   TOutput,
   TInput extends Record<string, unknown> | undefined = undefined,
 > extends ResolverOptions {
   input?: TInput
   resolve: (
-    parent: InferSchemaO<TParent, TSchemaIOPaths>,
-    input: InferInputEntriesO<TInput, TSchemaIOPaths>
-  ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>
+    parent: InferSchemaO<TParent, TSchemaIO>,
+    input: InferInputEntriesO<TInput, TSchemaIO>
+  ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
-export interface FieldWeaver<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
-> {
+export interface FieldWeaver<TSchemaIO extends AbstractSchemaIO> {
   <
-    TParent extends TBaseSchema,
-    TOutput extends TBaseSchema,
-    TInput extends Record<string, TBaseSchema> | undefined = undefined,
+    TParent extends TSchemaIO[0],
+    TOutput extends TSchemaIO[0],
+    TInput extends Record<string, TSchemaIO[0]> | undefined = undefined,
   >(
     output: TOutput,
     resolveOrOptions:
       | ((
-          parent: InferSchemaO<TParent, TSchemaIOPaths>
-        ) => MayPromise<InferSchemaO<TOutput, TSchemaIOPaths>>)
-      | FieldOptions<TSchemaIOPaths, TParent, TOutput, TInput>
-  ): OperationOrField<TSchemaIOPaths, TParent, TOutput, TInput, "field">
+          parent: InferSchemaO<TParent, TSchemaIO>
+        ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
+      | FieldOptions<TSchemaIO, TParent, TOutput, TInput>
+  ): OperationOrField<TSchemaIO, TParent, TOutput, TInput, "field">
 }
 
-export interface ResolverWeaver<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
-> {
+export interface ResolverWeaver<TSchemaIO extends AbstractSchemaIO> {
   of<
-    TParent extends TBaseSchema,
+    TParent extends TSchemaIO[0],
     TOperations extends Record<
       string,
-      OperationOrField<TSchemaIOPaths, TParent, any, any>
+      OperationOrField<TSchemaIO, TParent, any, any>
     >,
   >(
     parent: TParent,
@@ -178,7 +168,7 @@ export interface ResolverWeaver<
   <
     TOperations extends Record<
       string,
-      OperationOrField<TSchemaIOPaths, any, any, any, OperationType>
+      OperationOrField<TSchemaIO, any, any, any, OperationType>
     >,
   >(
     operations: TOperations,

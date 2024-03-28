@@ -3,59 +3,47 @@ import type {
   FieldWeaver,
   OperationWeaver,
   ResolverWeaver,
-  SchemaIOPaths,
+  AbstractSchemaIO,
 } from "../resolver"
 
 const notImplemented: any = 0
 
-export function createResolverWeaver<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
->(
-  _converter: (schema: TBaseSchema) => AnyGraphQLFabric
-): ResolverWeaver<TBaseSchema, TSchemaIOPaths> {
+export function createResolverWeaver<TSchemaIO extends AbstractSchemaIO>(
+  _converter: (schema: TSchemaIO[0]) => AnyGraphQLFabric
+): ResolverWeaver<TSchemaIO> {
   return notImplemented
 }
 
-export function createFieldWeaver<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
->(
-  _converter: (schema: TBaseSchema) => AnyGraphQLFabric
-): FieldWeaver<TBaseSchema, TSchemaIOPaths> {
+export function createFieldWeaver<TSchemaIO extends AbstractSchemaIO>(
+  _converter: (schema: TSchemaIO[0]) => AnyGraphQLFabric
+): FieldWeaver<TSchemaIO> {
   return notImplemented
 }
 
-export function createQueryWeaver<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
->(
-  _converter: (schema: TBaseSchema) => AnyGraphQLFabric
-): OperationWeaver<TBaseSchema, TSchemaIOPaths> {
+export function createQueryWeaver<TSchemaIO extends AbstractSchemaIO>(
+  _converter: (schema: TSchemaIO[0]) => AnyGraphQLFabric
+): OperationWeaver<TSchemaIO> {
   return notImplemented
 }
 
-export function createMutationWeaver<
-  TBaseSchema,
-  TSchemaIOPaths extends SchemaIOPaths,
->(
-  _converter: (schema: TBaseSchema) => AnyGraphQLFabric
-): OperationWeaver<TBaseSchema, TSchemaIOPaths> {
+export function createMutationWeaver<TSchemaIO extends AbstractSchemaIO>(
+  _converter: (schema: TSchemaIO[0]) => AnyGraphQLFabric
+): OperationWeaver<TSchemaIO> {
   return notImplemented
 }
 
-export function createLoom<TBaseSchema, TSchemaIOPaths extends SchemaIOPaths>(
-  converter: (schema: TBaseSchema) => AnyGraphQLFabric
+export function createLoom<TSchemaIO extends AbstractSchemaIO>(
+  converter: (schema: TSchemaIO[0]) => AnyGraphQLFabric
 ): {
-  query: OperationWeaver<TBaseSchema, TSchemaIOPaths>
-  mutation: OperationWeaver<TBaseSchema, TSchemaIOPaths>
-  field: FieldWeaver<TBaseSchema, TSchemaIOPaths>
-  resolver: ResolverWeaver<TBaseSchema, TSchemaIOPaths>
+  query: OperationWeaver<TSchemaIO>
+  mutation: OperationWeaver<TSchemaIO>
+  field: FieldWeaver<TSchemaIO>
+  resolver: ResolverWeaver<TSchemaIO>
 } {
   return {
-    query: createQueryWeaver<TBaseSchema, TSchemaIOPaths>(converter),
-    mutation: createMutationWeaver<TBaseSchema, TSchemaIOPaths>(converter),
-    field: createFieldWeaver<TBaseSchema, TSchemaIOPaths>(converter),
-    resolver: createResolverWeaver<TBaseSchema, TSchemaIOPaths>(converter),
+    query: createQueryWeaver<TSchemaIO>(converter),
+    mutation: createMutationWeaver<TSchemaIO>(converter),
+    field: createFieldWeaver<TSchemaIO>(converter),
+    resolver: createResolverWeaver<TSchemaIO>(converter),
   }
 }
