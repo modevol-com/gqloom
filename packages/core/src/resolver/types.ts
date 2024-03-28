@@ -1,9 +1,5 @@
 import type { InferPropertyType, MayPromise, Middleware } from "../utils"
-import type {
-  InferInputEntriesI,
-  InferInputEntriesO,
-  InputEntries,
-} from "./input"
+import type { InferInputI, InferInputO, InputSchema } from "./input"
 
 export type AbstractSchemaIO = [
   baseSchema: object,
@@ -39,7 +35,7 @@ export interface OperationOrField<
   TSchemaIO extends AbstractSchemaIO,
   TParent,
   TOutput,
-  TInput extends InputEntries<TSchemaIO[0]> = undefined,
+  TInput extends InputSchema<TSchemaIO[0]> = undefined,
   TType extends OperationOrFieldType = OperationOrFieldType,
 > {
   type: TType
@@ -48,11 +44,11 @@ export interface OperationOrField<
   resolve: TType extends "field"
     ? (
         parent: InferSchemaO<TParent, TSchemaIO>,
-        input: InferInputEntriesI<TInput, TSchemaIO>,
+        input: InferInputI<TInput, TSchemaIO>,
         options?: ResolvingOptions
       ) => Promise<InferSchemaO<TOutput, TSchemaIO>>
     : (
-        input: InferInputEntriesI<TInput, TSchemaIO>,
+        input: InferInputI<TInput, TSchemaIO>,
         options?: ResolvingOptions
       ) => Promise<InferSchemaO<TOutput, TSchemaIO>>
 }
@@ -63,7 +59,7 @@ export interface OperationOrField<
 export interface Operation<
   TSchemaIO extends AbstractSchemaIO,
   TOutput,
-  TInput extends InputEntries<TSchemaIO[0]> = undefined,
+  TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends OperationOrField<
     TSchemaIO,
     unknown,
@@ -79,7 +75,7 @@ export interface Field<
   TSchemaIO extends AbstractSchemaIO,
   TParent,
   TOutput,
-  TInput extends InputEntries<TSchemaIO[0]> = undefined,
+  TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends OperationOrField<TSchemaIO, TParent, TOutput, TInput, "field"> {}
 
 /**
@@ -88,18 +84,18 @@ export interface Field<
 export interface OperationOptions<
   TSchemaIO extends AbstractSchemaIO,
   TOutput,
-  TInput extends InputEntries<TSchemaIO[0]> = undefined,
+  TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends ResolverOptions {
   input?: TInput
   resolve: (
-    input: InferInputEntriesO<TInput, TSchemaIO>
+    input: InferInputO<TInput, TSchemaIO>
   ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
 export interface OperationWeaver<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
-    TInput extends InputEntries<TSchemaIO[0]> = undefined,
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
   >(
     output: TOutput,
     resolveOrOptions:
@@ -115,12 +111,12 @@ export interface FieldOptions<
   TSchemaIO extends AbstractSchemaIO,
   TParent,
   TOutput,
-  TInput extends InputEntries<TSchemaIO[0]> = undefined,
+  TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends ResolverOptions {
   input?: TInput
   resolve: (
     parent: InferSchemaO<TParent, TSchemaIO>,
-    input: InferInputEntriesO<TInput, TSchemaIO>
+    input: InferInputO<TInput, TSchemaIO>
   ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
@@ -128,7 +124,7 @@ export interface FieldWeaver<TSchemaIO extends AbstractSchemaIO> {
   <
     TParent extends TSchemaIO[0],
     TOutput extends TSchemaIO[0],
-    TInput extends InputEntries<TSchemaIO[0]> = undefined,
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
   >(
     output: TOutput,
     resolveOrOptions:
