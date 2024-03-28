@@ -12,8 +12,8 @@ test("zod resolver", () => {
   const GiraffeInput = Giraffe.partial()
 
   const createGiraffe = mutation(Giraffe, {
-    input: { data: GiraffeInput },
-    resolve: ({ data }) => ({
+    input: GiraffeInput,
+    resolve: (data) => ({
       name: data.name ?? "Giraffe",
       birthday: data.birthday ?? new Date(),
       heightInMeters: data.heightInMeters ?? 5,
@@ -46,5 +46,5 @@ test("zod resolver", () => {
   })
 
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
-  simpleGiraffeResolver.createGiraffe.resolve({ data: {} })
+  simpleGiraffeResolver.createGiraffe.resolve({})
 })

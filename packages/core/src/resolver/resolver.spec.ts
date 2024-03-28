@@ -44,8 +44,8 @@ test("base resolver", () => {
   )
 
   const createGiraffe = mutation(Giraffe, {
-    input: { data: GiraffeInput },
-    resolve: ({ data }) => ({
+    input: GiraffeInput,
+    resolve: (data) => ({
       name: data.name ?? "Giraffe",
       birthday: data.birthday ?? new Date(),
       heightInMeters: data.heightInMeters ?? 5,
@@ -77,8 +77,8 @@ test("base resolver", () => {
     }),
 
     createGiraffe: mutation(Giraffe, {
-      input: { data: GiraffeInput },
-      resolve: ({ data }) => ({
+      input: GiraffeInput,
+      resolve: (data) => ({
         name: data.name ?? "Giraffe",
         birthday: data.birthday ?? new Date(),
         heightInMeters: data.heightInMeters ?? 5,
@@ -94,5 +94,5 @@ test("base resolver", () => {
 
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
   giraffeResolver.age.resolve(giraffe, { name: "Giraffe" })
-  simpleGiraffeResolver.createGiraffe.resolve({ data: {} })
+  simpleGiraffeResolver.createGiraffe.resolve({})
 })
