@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   ContextMemory,
-  ContextMemoryMapSymbol,
+  CONTEXT_MEMORY_MAP_KEY,
   createMemory,
   onlyMemory,
   resolverPayloadStorage,
@@ -180,7 +180,7 @@ describe("memory", () => {
 
     it("should return the memory map", () => {
       const map = new WeakMap()
-      const args = { context: { [ContextMemoryMapSymbol]: map } } as any
+      const args = { context: { [CONTEXT_MEMORY_MAP_KEY]: map } } as any
 
       resolverPayloadStorage.run(args, () => {
         expect(useMemoryMap()).toBe(map)
@@ -190,7 +190,7 @@ describe("memory", () => {
     it("should return the memory map from the context", () => {
       const args = { context: {} } as any
       resolverPayloadStorage.run(args, () => {
-        expect(useMemoryMap()).toBe(args.context[ContextMemoryMapSymbol])
+        expect(useMemoryMap()).toBe(args.context[CONTEXT_MEMORY_MAP_KEY])
       })
     })
 

@@ -1,5 +1,6 @@
 import { getOperationOptions, applyMiddlewares } from "../utils"
 import type { AnyGraphQLFabric } from "./fabric"
+import { parseInput } from "./input"
 import type {
   FieldWeaver,
   OperationOptions,
@@ -25,10 +26,9 @@ function resolveForOperation(
       ...(resolvingOptions?.middlewares ?? []),
       ...(options.middlewares ?? []),
     ]
-    return applyMiddlewares(middlewares, () => {
-      // TODO: parse and memory input
-      return options.resolve(input)
-    })
+    return applyMiddlewares(middlewares, async () =>
+      options.resolve(await parseInput(options.input, input))
+    )
   }
 }
 
@@ -40,10 +40,9 @@ function resolveForField(
       ...(resolvingOptions?.middlewares ?? []),
       ...(options.middlewares ?? []),
     ]
-    return applyMiddlewares(middlewares, () => {
-      // TODO: parse and memory input
-      return options.resolve(parent, input)
-    })
+    return applyMiddlewares(middlewares, async () =>
+      options.resolve(parent, await parseInput(options.input, input))
+    )
   }
 }
 

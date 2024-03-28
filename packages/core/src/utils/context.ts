@@ -90,10 +90,10 @@ export function useMemoryMap(): WeakMap<WeakKey, any> | undefined {
 /**
  * The Symbol Key to assign a WeakMap to an object
  */
-export const ContextMemoryMapSymbol = Symbol("ContextMemory")
+export const CONTEXT_MEMORY_MAP_KEY = Symbol("ContextMemory")
 
 interface ContextMemoryContainer {
-  [ContextMemoryMapSymbol]?: WeakMap<WeakKey, any>
+  [CONTEXT_MEMORY_MAP_KEY]?: WeakMap<WeakKey, any>
 }
 
 interface ContextMemoryOptions {
@@ -166,8 +166,8 @@ export class ContextMemory<T> implements ContextMemoryOptions {
   static assignMemoryMap(
     target: ContextMemoryContainer
   ): WeakMap<WeakKey, any> {
-    target[ContextMemoryMapSymbol] ??= new WeakMap()
-    return target[ContextMemoryMapSymbol]
+    target[CONTEXT_MEMORY_MAP_KEY] ??= new WeakMap()
+    return target[CONTEXT_MEMORY_MAP_KEY]
   }
 }
 

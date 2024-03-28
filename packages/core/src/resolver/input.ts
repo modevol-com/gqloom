@@ -3,6 +3,8 @@ import type { MayPromise, ObjectOrNever } from "../utils"
 import type { AnyGraphQLFabric } from "./fabric"
 import type { InferSchemaI, InferSchemaO, AbstractSchemaIO } from "./types"
 
+export const PARSE_RESULT_KEY = Symbol("parse result key")
+
 export type InputSchema<TBaseSchema> =
   | TBaseSchema
   | Record<string, TBaseSchema>
@@ -37,12 +39,20 @@ export function parseInput(
   if (inputSchema === undefined) {
     return undefined
   }
-  if (isFabric(inputSchema)) {
-    if (typeof inputSchema.parse === "function") return inputSchema.parse(input)
-    return input
+
+  if (typeof input === "object" && PARSE_RESULT_KEY in input) {
+    // use cached result
+    return input[PARSE_RESULT_KEY]
   }
 
-  return parseInputEntries(inputSchema, input)
+  if (isFabric(inputSchema)) {
+    if (typeof inputSchema.parse === "function") {
+      return keepResult(input, inputSchema.parse(input))
+    }
+    return keepResult(input, input)
+  }
+
+  return keepResult(input, parseInputEntries(inputSchema, input))
 }
 
 async function parseInputEntries(
@@ -66,4 +76,27 @@ function isFabric(
   inputSchema: InputSchema<AnyGraphQLFabric>
 ): inputSchema is AnyGraphQLFabric {
   return isType(inputSchema?.type)
+}
+
+export function keepResult<T extends object>(
+  input: T,
+  result: any
+): T & { [PARSE_RESULT_KEY]: any } {
+  if (typeof input !== "object") return result
+  Object.defineProperty(input, PARSE_RESULT_KEY, {
+    value: result,
+    enumerable: false,
+    configurable: true,
+    writable: true,
+  })
+  return result
+}
+
+export function clearResultProperty<T extends object>(
+  input: T
+): T extends { [PARSE_RESULT_KEY]?: any }
+  ? Omit<T, typeof PARSE_RESULT_KEY>
+  : T {
+  delete (input as any)[PARSE_RESULT_KEY]
+  return input as any
 }
