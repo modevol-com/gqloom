@@ -1,6 +1,5 @@
-import { isType } from "graphql"
 import type { MayPromise, ObjectOrNever } from "../utils"
-import type { AnyGraphQLFabric } from "./fabric"
+import { isFabric, type AnyGraphQLFabric } from "./fabric"
 import type { InferSchemaI, InferSchemaO, AbstractSchemaIO } from "./types"
 
 export const PARSE_RESULT_KEY = Symbol("parse result key")
@@ -70,12 +69,6 @@ async function parseInputEntries(
     })
   )
   return result
-}
-
-function isFabric(
-  inputSchema: InputSchema<AnyGraphQLFabric>
-): inputSchema is AnyGraphQLFabric {
-  return isType(inputSchema?.type)
 }
 
 export function keepResult<T extends object>(

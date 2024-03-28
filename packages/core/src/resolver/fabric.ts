@@ -1,4 +1,4 @@
-import type { GraphQLType } from "graphql"
+import { isType, type GraphQLType } from "graphql"
 import type { MayPromise } from "../utils"
 
 /*
@@ -33,4 +33,8 @@ export function fabric<TOutput, TInput = TOutput>(
   parse?: (input: TInput) => MayPromise<TOutput>
 ): GraphQLFabric<TOutput, TInput> {
   return { type, parse }
+}
+
+export function isFabric(target: any): target is AnyGraphQLFabric {
+  return isType(target?.type)
 }
