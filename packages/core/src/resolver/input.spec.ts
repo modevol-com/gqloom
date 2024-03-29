@@ -16,7 +16,7 @@ describe("parseInput", () => {
     expect(await parseInput(undefined, {})).toBeUndefined()
   })
 
-  it("should be able to keep result", async () => {
+  it("should keep result", async () => {
     let parseTimes = 0
     const Giraffe = fabric<IGiraffe, Partial<IGiraffe>>(
       new GraphQLObjectType({
@@ -71,14 +71,14 @@ describe("parseInput", () => {
         return { name, birthday, heightInMeters }
       }
     )
-    it("should be able to accept undefined", async () => {
+    it("should accept undefined", async () => {
       const output1 = await parseInput(Giraffe, undefined)
       expect(output1.name).toBe("Tallulah")
       expect(output1.birthday).toBeInstanceOf(Date)
       expect(output1.heightInMeters).toBe(1.5)
     })
 
-    it("should be able to accept partial", async () => {
+    it("should accept partial", async () => {
       const Twiga: IGiraffe = {
         name: "Twiga",
         birthday: new Date(),
@@ -88,7 +88,7 @@ describe("parseInput", () => {
       expect(await parseInput(Giraffe, Twiga)).toEqual(Twiga)
     })
 
-    it("should be able to throw errors", () => {
+    it("should throw errors", () => {
       const nameVeryLong = "this is a very long name, and it should fail"
       expect(async () =>
         parseInput(Giraffe, { name: nameVeryLong })
@@ -118,14 +118,14 @@ describe("parseInput", () => {
       ),
     }
 
-    it("should be able to accept undefined", async () => {
+    it("should accept undefined", async () => {
       const output1 = await parseInput(Giraffe, undefined)
       expect(output1.name).toBe("Twiga")
       expect(output1.birthday).toBeInstanceOf(Date)
       expect(output1.heightInMeters).toBe(1.5)
     })
 
-    it("should be able to accept partial", async () => {
+    it("should accept partial", async () => {
       const Twiga: IGiraffe = {
         name: "Twiga",
         birthday: new Date(),
@@ -134,7 +134,7 @@ describe("parseInput", () => {
       expect(await parseInput(Giraffe, Twiga)).toEqual(Twiga)
     })
 
-    it("should be able to throw errors", () => {
+    it("should throw errors", () => {
       const nameVeryLong = "this is a very long name, and it should fail"
       expect(async () =>
         parseInput(Giraffe, { name: nameVeryLong })

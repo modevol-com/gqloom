@@ -164,6 +164,6 @@ export interface ResolverWeaver<TSchemaIO extends AbstractSchemaIO> {
     operations: TOperations,
     options?: ResolverOptions
   ): TOperations & {
-    [RESOLVER_OPTIONS_KEY]: ResolverOptions
+    [RESOLVER_OPTIONS_KEY]?: ResolverOptions
   }
 }

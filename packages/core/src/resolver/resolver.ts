@@ -94,13 +94,13 @@ export const fabricField: FieldWeaver<GraphQLFabricIO> = (
 
 function resolver(
   operations: Record<string, OperationOrField<AbstractSchemaIO, any, any, any>>,
-  options: ResolverOptionsWithParent<any>
+  options: ResolverOptionsWithParent<any> | undefined
 ) {
   const record: Record<
     string,
     OperationOrField<AbstractSchemaIO, any, any, any>
   > & {
-    [RESOLVER_OPTIONS_KEY]: ResolverOptionsWithParent<any>
+    [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent<any>
   } = {
     [RESOLVER_OPTIONS_KEY]: options,
   }
@@ -117,7 +117,7 @@ function resolver(
               ...operationOptions,
               middlewares: composeMiddlewares(
                 operationOptions?.middlewares,
-                options.middlewares
+                options?.middlewares
               ),
             })
         : (input: any, operationOptions: ResolvingOptions | undefined) =>
@@ -125,7 +125,7 @@ function resolver(
               ...operationOptions,
               middlewares: composeMiddlewares(
                 operationOptions?.middlewares,
-                options.middlewares
+                options?.middlewares
               ),
             })
 
