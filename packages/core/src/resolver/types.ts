@@ -1,4 +1,5 @@
 import type { InferPropertyType, MayPromise, Middleware } from "../utils"
+import type { RESOLVER_OPTIONS_KEY } from "./resolver"
 import type { InferInputI, InferInputO, InputSchema } from "./input"
 
 export type AbstractSchemaIO = [
@@ -19,6 +20,10 @@ export type InferSchemaO<
 
 export interface ResolverOptions {
   middlewares?: Middleware[]
+}
+
+export interface ResolverOptionsWithParent<T> extends ResolverOptions {
+  parent: T
 }
 
 export interface ResolvingOptions
@@ -146,7 +151,9 @@ export interface ResolverWeaver<TSchemaIO extends AbstractSchemaIO> {
     parent: TParent,
     operationOrFields: TOperations,
     options?: ResolverOptions
-  ): TOperations
+  ): TOperations & {
+    [RESOLVER_OPTIONS_KEY]: ResolverOptionsWithParent<TParent>
+  }
 
   <
     TOperations extends Record<
@@ -156,5 +163,7 @@ export interface ResolverWeaver<TSchemaIO extends AbstractSchemaIO> {
   >(
     operations: TOperations,
     options?: ResolverOptions
-  ): TOperations
+  ): TOperations & {
+    [RESOLVER_OPTIONS_KEY]: ResolverOptions
+  }
 }

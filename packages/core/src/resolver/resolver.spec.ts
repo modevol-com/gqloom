@@ -91,7 +91,6 @@ test("base resolver", () => {
     birthday: new Date(),
     heightInMeters: 5,
   }
-
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
   giraffeResolver.age.resolve(giraffe, { name: "Giraffe" })
   simpleGiraffeResolver.createGiraffe.resolve({})

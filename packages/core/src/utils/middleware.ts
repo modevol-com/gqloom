@@ -19,3 +19,15 @@ export function applyMiddlewares(
   }
   return next(0)
 }
+
+export function composeMiddlewares(
+  ...middlewareLists: (Middleware[] | undefined)[]
+): Middleware[] {
+  const list: Middleware[] = []
+  for (const middlewares of middlewareLists) {
+    if (middlewares != null) {
+      list.push(...middlewares)
+    }
+  }
+  return list
+}
