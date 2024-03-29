@@ -201,4 +201,39 @@ describe("resolver", () => {
     await giraffeResolver.age.resolve(Skyler, undefined)
     expect(callCount).toBeGreaterThanOrEqual(1)
   })
+
+  it("should call middlewares in order", async () => {
+    const logs: string[] = []
+    const queryMiddleware: Middleware = async (next) => {
+      logs.push("query middleware")
+      const result = await next()
+      logs.push("query middleware end")
+      return result
+    }
+    const resolveMiddleware: Middleware = async (next) => {
+      logs.push("resolve middleware")
+      const result = await next()
+      logs.push("resolve middleware end")
+      return result
+    }
+
+    const r1 = resolver(
+      {
+        hello: query(fabric<string>(GraphQLString), {
+          resolve: () => "world",
+          middlewares: [queryMiddleware],
+        }),
+      },
+      { middlewares: [resolveMiddleware] }
+    )
+
+    await r1.hello.resolve(undefined)
+
+    expect(logs).toEqual([
+      "resolve middleware",
+      "query middleware",
+      "query middleware end",
+      "resolve middleware end",
+    ])
+  })
 })
