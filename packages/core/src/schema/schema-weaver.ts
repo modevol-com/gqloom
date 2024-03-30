@@ -1,12 +1,8 @@
+import type { GraphQLDirective } from "graphql"
 import { GraphQLSchema } from "graphql"
-import type {
-  AnyGraphQLFabric,
-  GraphQLFabricIO,
-  OperationOrField,
-} from "../resolver"
+import type { AnyGraphQLFabric, OperationOrField } from "../resolver"
 
 type FabricQuery = OperationOrField<
-  GraphQLFabricIO,
   any,
   AnyGraphQLFabric,
   AnyGraphQLFabric,
@@ -14,7 +10,6 @@ type FabricQuery = OperationOrField<
 >
 
 type FabricMutation = OperationOrField<
-  GraphQLFabricIO,
   any,
   AnyGraphQLFabric,
   AnyGraphQLFabric,
@@ -22,7 +17,6 @@ type FabricMutation = OperationOrField<
 >
 
 type FabricSubscription = OperationOrField<
-  GraphQLFabricIO,
   any,
   AnyGraphQLFabric,
   AnyGraphQLFabric,
@@ -34,7 +28,11 @@ export class SchemaWeaver {
   mutations: Record<string, FabricMutation> = {}
   subscriptions: Record<string, FabricSubscription> = {}
 
-  toGraphQLSchema(): GraphQLSchema {
+  objectTypes: Record<string, AnyGraphQLFabric> = {}
+  otherTypes: AnyGraphQLFabric[] = []
+  directives: GraphQLDirective[] = []
+
+  weaveGraphQLSchema(): GraphQLSchema {
     return new GraphQLSchema({})
   }
 }
