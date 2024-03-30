@@ -230,7 +230,7 @@ export interface SubscriptionWeaver<TSchemaIO extends AbstractSchemaIO> {
   >(
     output: TOutput,
     subscribeOrOptions:
-      | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
+      | (() => MayPromise<AsyncIterator<InferSchemaO<TOutput, TSchemaIO>>>)
       | SubscriptionOptions<TSchemaIO, TOutput, TInput, TValue>
   ): Subscription<
     SchemaToFabric<TSchemaIO, TOutput>,
