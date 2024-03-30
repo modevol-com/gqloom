@@ -21,12 +21,12 @@ export function applyMiddlewares(
 }
 
 export function composeMiddlewares(
-  ...middlewareLists: (Middleware[] | undefined)[]
+  ...optionsWithMiddleWare: ({ middlewares?: Middleware[] } | undefined)[]
 ): Middleware[] {
   const list: Middleware[] = []
-  for (const middlewares of middlewareLists) {
-    if (middlewares != null) {
-      list.push(...middlewares)
+  for (const options of optionsWithMiddleWare) {
+    if (options?.middlewares != null) {
+      list.push(...options.middlewares)
     }
   }
   return list

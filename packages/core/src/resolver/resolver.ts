@@ -7,47 +7,17 @@ import {
 import { parseInput } from "./input"
 import type {
   FieldWeaver,
-  QueryMutationOptions,
   QueryMutationWeaver,
   ResolvingOptions,
   ResolverWeaver,
-  FieldOptions,
   OperationOrField,
   ResolverOptionsWithParent,
-  AnyGraphQLFabric,
   GraphQLFabricIO,
   SubscriptionWeaver,
+  Subscription,
 } from "./types"
 
 export const RESOLVER_OPTIONS_KEY = Symbol("resolver-options")
-
-function resolveForQueryMutation(
-  options: QueryMutationOptions<GraphQLFabricIO, any, AnyGraphQLFabric>
-): (input: any, options?: ResolvingOptions) => Promise<any> {
-  return (input, resolvingOptions) => {
-    const middlewares = composeMiddlewares(
-      resolvingOptions?.middlewares,
-      options.middlewares
-    )
-    return applyMiddlewares(middlewares, async () =>
-      options.resolve(await parseInput(options.input, input))
-    )
-  }
-}
-
-function resolveForField(
-  options: FieldOptions<GraphQLFabricIO, any, any, AnyGraphQLFabric>
-): (parent: any, input: any, options?: ResolvingOptions) => Promise<any> {
-  return (parent, input, resolvingOptions) => {
-    const middlewares = composeMiddlewares(
-      resolvingOptions?.middlewares,
-      options.middlewares
-    )
-    return applyMiddlewares(middlewares, async () =>
-      options.resolve(parent, await parseInput(options.input, input))
-    )
-  }
-}
 
 export const fabricQuery: QueryMutationWeaver<GraphQLFabricIO> = (
   output,
@@ -57,7 +27,10 @@ export const fabricQuery: QueryMutationWeaver<GraphQLFabricIO> = (
   return {
     input: options.input,
     output,
-    resolve: resolveForQueryMutation(options),
+    resolve: (input, extraOptions) =>
+      applyMiddlewares(composeMiddlewares(extraOptions, options), async () =>
+        options.resolve(await parseInput(options.input, input))
+      ),
     type: "query",
   }
 }
@@ -70,7 +43,10 @@ export const fabricMutation: QueryMutationWeaver<GraphQLFabricIO> = (
   return {
     input: options.input,
     output,
-    resolve: resolveForQueryMutation(options),
+    resolve: (input, extraOptions) =>
+      applyMiddlewares(composeMiddlewares(extraOptions, options), async () =>
+        options.resolve(await parseInput(options.input, input))
+      ),
     type: "mutation",
   }
 }
@@ -83,7 +59,10 @@ export const fabricField: FieldWeaver<GraphQLFabricIO> = (
   return {
     input: options.input,
     output,
-    resolve: resolveForField(options),
+    resolve: (parent, input, extraOptions) =>
+      applyMiddlewares(composeMiddlewares(extraOptions, options), async () =>
+        options.resolve(parent, await parseInput(options.input, input))
+      ),
     type: "field",
   }
 }
@@ -98,7 +77,10 @@ export const fabricSubscription: SubscriptionWeaver<GraphQLFabricIO> = (
   return {
     input: options.input,
     output,
-    subscribe: options.subscribe,
+    subscribe: (input, extraOptions) =>
+      applyMiddlewares(composeMiddlewares(extraOptions, options), async () =>
+        options.subscribe(await parseInput(options.input, input))
+      ),
     resolve: options.resolve ?? defaultSubscriptionResolve,
     type: "subscription",
   }
@@ -115,30 +97,37 @@ function resolver(
   }
 
   Object.entries(operations).forEach(([name, operation]) => {
-    const resolve =
-      operation.type === "field"
-        ? (
-            parent: any,
-            input: any,
-            operationOptions: ResolvingOptions | undefined
-          ) =>
-            operation.resolve(parent, input, {
-              ...operationOptions,
-              middlewares: composeMiddlewares(
-                operationOptions?.middlewares,
-                options?.middlewares
-              ),
-            })
-        : (input: any, operationOptions: ResolvingOptions | undefined) =>
-            operation.resolve(input, {
-              ...operationOptions,
-              middlewares: composeMiddlewares(
-                operationOptions?.middlewares,
-                options?.middlewares
-              ),
-            })
-
-    record[name] = { ...operation, resolve }
+    record[name] = (() => {
+      switch (operation.type) {
+        case "field":
+          return {
+            ...operation,
+            resolve: (parent, input, extraOptions) =>
+              operation.resolve(parent, input, {
+                ...extraOptions,
+                middlewares: composeMiddlewares(extraOptions, options),
+              }),
+          }
+        case "subscription":
+          return {
+            ...operation,
+            subscribe: (input, extraOptions) =>
+              (operation as Subscription<any, any, any>).subscribe(input, {
+                ...extraOptions,
+                middlewares: composeMiddlewares(extraOptions, options),
+              }),
+          }
+        default:
+          return {
+            ...operation,
+            resolve: (input: any, extraOptions: ResolvingOptions | undefined) =>
+              operation.resolve(input, {
+                ...extraOptions,
+                middlewares: composeMiddlewares(extraOptions, options),
+              }),
+          }
+      }
+    })()
   })
 
   return record
