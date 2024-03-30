@@ -1,6 +1,12 @@
 import type { MayPromise, ObjectOrNever } from "../utils"
-import { isFabric, type AnyGraphQLFabric } from "./fabric"
-import type { InferSchemaI, InferSchemaO, AbstractSchemaIO } from "./types"
+import { isFabric } from "./fabric"
+import type {
+  InferSchemaI,
+  InferSchemaO,
+  SchemaToFabric,
+  AbstractSchemaIO,
+  AnyGraphQLFabric,
+} from "./types"
 
 export const PARSE_RESULT_KEY = Symbol("parse result key")
 
@@ -8,6 +14,19 @@ export type InputSchema<TBaseSchema> =
   | TBaseSchema
   | Record<string, TBaseSchema>
   | undefined
+
+export type InputSchemaToFabric<
+  TSchemaIO extends AbstractSchemaIO,
+  TInput extends InputSchema<TSchemaIO[0]>,
+> = TInput extends undefined
+  ? undefined
+  : TInput extends TSchemaIO[0]
+    ? SchemaToFabric<TSchemaIO, TInput>
+    : {
+        [K in keyof TInput]: TInput[K] extends TSchemaIO[0]
+          ? SchemaToFabric<TSchemaIO, TInput[K]>
+          : never
+      }
 
 export type InferInputI<
   TInput extends object | undefined,

@@ -93,7 +93,7 @@ describe.skip("base resolver", () => {
     heightInMeters: 5,
   }
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
-  giraffeResolver.age.resolve(giraffe, { name: "Giraffe" })
+  giraffeResolver.age.resolve(giraffe, undefined)
   simpleGiraffeResolver.createGiraffe.resolve({})
 })
 

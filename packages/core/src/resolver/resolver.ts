@@ -3,7 +3,6 @@ import {
   applyMiddlewares,
   composeMiddlewares,
 } from "../utils"
-import type { AnyGraphQLFabric, GraphQLFabricIO } from "./fabric"
 import { parseInput } from "./input"
 import type {
   FieldWeaver,
@@ -13,8 +12,9 @@ import type {
   ResolverWeaver,
   FieldOptions,
   OperationOrField,
-  AbstractSchemaIO,
   ResolverOptionsWithParent,
+  AnyGraphQLFabric,
+  GraphQLFabricIO,
 } from "./types"
 
 export const RESOLVER_OPTIONS_KEY = Symbol("resolver-options")
@@ -87,13 +87,10 @@ export const fabricField: FieldWeaver<GraphQLFabricIO> = (
 }
 
 function resolver(
-  operations: Record<string, OperationOrField<AbstractSchemaIO, any, any, any>>,
+  operations: Record<string, OperationOrField<any, any, any>>,
   options: ResolverOptionsWithParent<any> | undefined
 ) {
-  const record: Record<
-    string,
-    OperationOrField<AbstractSchemaIO, any, any, any>
-  > & {
+  const record: Record<string, OperationOrField<any, any, any>> & {
     [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent<any>
   } = {
     [RESOLVER_OPTIONS_KEY]: options,
@@ -133,15 +130,9 @@ export const fabricResolver: ResolverWeaver<GraphQLFabricIO> = Object.assign(
   resolver as any,
   {
     of: ((parent, operations, options) =>
-      resolver(
-        operations as Record<
-          string,
-          OperationOrField<AbstractSchemaIO, any, any, any>
-        >,
-        {
-          ...options,
-          parent,
-        }
-      )) as ResolverWeaver<GraphQLFabricIO>["of"],
+      resolver(operations as Record<string, OperationOrField<any, any, any>>, {
+        ...options,
+        parent,
+      })) as ResolverWeaver<GraphQLFabricIO>["of"],
   }
 )
