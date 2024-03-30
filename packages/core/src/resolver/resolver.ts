@@ -103,44 +103,49 @@ function resolver(
   }
 
   Object.entries(operations).forEach(([name, operation]) => {
-    const composeMiddlewares = (
-      extraOptions: { middlewares?: Middleware[] } | undefined
-    ): Middleware[] => compose(extraOptions?.middlewares, options?.middlewares)
-
-    record[name] = (() => {
-      switch (operation.type) {
-        case "field":
-          return {
-            ...operation,
-            resolve: (parent, input, extraOptions) =>
-              operation.resolve(parent, input, {
-                ...extraOptions,
-                middlewares: composeMiddlewares(extraOptions),
-              }),
-          }
-        case "subscription":
-          return {
-            ...operation,
-            subscribe: (input, extraOptions) =>
-              (operation as Subscription<any, any, any>).subscribe(input, {
-                ...extraOptions,
-                middlewares: composeMiddlewares(extraOptions),
-              }),
-          }
-        default:
-          return {
-            ...operation,
-            resolve: (input: any, extraOptions: ResolvingOptions | undefined) =>
-              operation.resolve(input, {
-                ...extraOptions,
-                middlewares: composeMiddlewares(extraOptions),
-              }),
-          }
-      }
-    })()
+    record[name] = extraOptions(operation, options)
   })
 
   return record
+}
+
+function extraOptions<TOperation extends OperationOrField<any, any, any>>(
+  operation: TOperation,
+  options: ResolverOptionsWithParent<any> | undefined
+): TOperation {
+  const composeMiddlewares = (
+    extraOptions: { middlewares?: Middleware[] } | undefined
+  ): Middleware[] => compose(extraOptions?.middlewares, options?.middlewares)
+
+  switch (operation.type) {
+    case "field":
+      return {
+        ...operation,
+        resolve: (parent, input, extraOptions) =>
+          operation.resolve(parent, input, {
+            ...extraOptions,
+            middlewares: composeMiddlewares(extraOptions),
+          }),
+      }
+    case "subscription":
+      return {
+        ...operation,
+        subscribe: (input, extraOptions) =>
+          (operation as Subscription<any, any, any>).subscribe(input, {
+            ...extraOptions,
+            middlewares: composeMiddlewares(extraOptions),
+          }),
+      }
+    default:
+      return {
+        ...operation,
+        resolve: (input: any, extraOptions: ResolvingOptions | undefined) =>
+          operation.resolve(input, {
+            ...extraOptions,
+            middlewares: composeMiddlewares(extraOptions),
+          }),
+      }
+  }
 }
 
 export const fabricResolver: ResolverWeaver<GraphQLFabricIO> = Object.assign(
