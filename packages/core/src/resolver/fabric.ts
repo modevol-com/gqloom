@@ -23,6 +23,12 @@ export interface GraphQLFabric<TOutput, TInput> {
   _types?: { input: TInput; output: TOutput }
 }
 
+export type GraphQLFabricIO = [
+  object: AnyGraphQLFabric,
+  input: "_types.input",
+  output: "_types.output",
+]
+
 export type AnyGraphQLFabric = GraphQLFabric<any, any>
 
 /**

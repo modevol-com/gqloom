@@ -38,8 +38,8 @@ export type OperationOrFieldType = OperationType | "field"
  */
 export interface OperationOrField<
   TSchemaIO extends AbstractSchemaIO,
-  TParent,
-  TOutput,
+  TParent extends TSchemaIO[0],
+  TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
   TType extends OperationOrFieldType = OperationOrFieldType,
 > {
@@ -63,11 +63,11 @@ export interface OperationOrField<
  */
 export interface Operation<
   TSchemaIO extends AbstractSchemaIO,
-  TOutput,
+  TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends OperationOrField<
     TSchemaIO,
-    unknown,
+    any,
     TOutput,
     TInput,
     "query" | "mutation" | "subscription"
@@ -78,8 +78,8 @@ export interface Operation<
  */
 export interface Field<
   TSchemaIO extends AbstractSchemaIO,
-  TParent,
-  TOutput,
+  TParent extends TSchemaIO[0],
+  TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends OperationOrField<TSchemaIO, TParent, TOutput, TInput, "field"> {}
 
@@ -88,7 +88,7 @@ export interface Field<
  */
 export interface OperationOptions<
   TSchemaIO extends AbstractSchemaIO,
-  TOutput,
+  TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends ResolverOptions {
   input?: TInput
@@ -114,7 +114,7 @@ export interface OperationWeaver<TSchemaIO extends AbstractSchemaIO> {
  */
 export interface FieldOptions<
   TSchemaIO extends AbstractSchemaIO,
-  TParent,
+  TParent extends TSchemaIO[0],
   TOutput,
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
 > extends ResolverOptions {

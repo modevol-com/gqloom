@@ -3,7 +3,7 @@ import {
   applyMiddlewares,
   composeMiddlewares,
 } from "../utils"
-import type { AnyGraphQLFabric } from "./fabric"
+import type { AnyGraphQLFabric, GraphQLFabricIO } from "./fabric"
 import { parseInput } from "./input"
 import type {
   FieldWeaver,
@@ -16,12 +16,6 @@ import type {
   AbstractSchemaIO,
   ResolverOptionsWithParent,
 } from "./types"
-
-export type GraphQLFabricIO = [
-  object: AnyGraphQLFabric,
-  input: "_types.input",
-  output: "_types.output",
-]
 
 export const RESOLVER_OPTIONS_KEY = Symbol("resolver-options")
 
