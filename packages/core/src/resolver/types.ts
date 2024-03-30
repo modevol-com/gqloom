@@ -78,8 +78,9 @@ export interface ResolverOptionsWithParent<T> extends ResolverOptions {
   parent: T
 }
 
-export interface ResolvingOptions
-  extends Pick<ResolverOptions, "middlewares"> {}
+export interface ResolvingOptions extends Pick<ResolverOptions, "middlewares"> {
+  //TODO: applyMiddlewares
+}
 
 export type OperationType = "query" | "mutation" | "subscription"
 

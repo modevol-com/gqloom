@@ -20,13 +20,11 @@ export function applyMiddlewares(
   return next(0)
 }
 
-export function composeMiddlewares(
-  ...optionsWithMiddleWare: ({ middlewares?: Middleware[] } | undefined)[]
-): Middleware[] {
-  const list: Middleware[] = []
-  for (const options of optionsWithMiddleWare) {
-    if (options?.middlewares != null) {
-      list.push(...options.middlewares)
+export function compose<T>(...lists: (T[] | undefined)[]): T[] {
+  const list: T[] = []
+  for (const item of lists) {
+    if (item != null) {
+      list.push(...item)
     }
   }
   return list
