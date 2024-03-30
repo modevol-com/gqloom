@@ -12,6 +12,7 @@ import {
   fabricMutation as mutation,
   fabricQuery as query,
   fabricResolver as resolver,
+  fabricSubscription as subscription,
 } from "./resolver"
 import type { Middleware } from "../utils"
 
@@ -75,6 +76,20 @@ describe.skip("base resolver", () => {
       input: { myName: fabric<string | undefined>(GraphQLString) },
       resolve: (giraffe, { myName }) =>
         `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
+    }),
+
+    newGiraffe: subscription(Giraffe, {
+      input: GiraffeInput,
+      subscribe: async function* (data) {
+        yield data.name ?? ""
+      },
+      resolve: (name) => {
+        return {
+          name,
+          birthday: new Date(),
+          heightInMeters: 5,
+        }
+      },
     }),
 
     createGiraffe: mutation(Giraffe, {

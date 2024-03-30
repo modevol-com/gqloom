@@ -2,12 +2,13 @@ import {
   getOperationOptions,
   applyMiddlewares,
   composeMiddlewares,
+  getSubscriptionOptions,
 } from "../utils"
 import { parseInput } from "./input"
 import type {
   FieldWeaver,
-  OperationOptions,
-  OperationWeaver,
+  QueryMutationOptions,
+  QueryMutationWeaver,
   ResolvingOptions,
   ResolverWeaver,
   FieldOptions,
@@ -15,12 +16,13 @@ import type {
   ResolverOptionsWithParent,
   AnyGraphQLFabric,
   GraphQLFabricIO,
+  SubscriptionWeaver,
 } from "./types"
 
 export const RESOLVER_OPTIONS_KEY = Symbol("resolver-options")
 
-function resolveForOperation(
-  options: OperationOptions<GraphQLFabricIO, any, AnyGraphQLFabric>
+function resolveForQueryMutation(
+  options: QueryMutationOptions<GraphQLFabricIO, any, AnyGraphQLFabric>
 ): (input: any, options?: ResolvingOptions) => Promise<any> {
   return (input, resolvingOptions) => {
     const middlewares = composeMiddlewares(
@@ -47,7 +49,7 @@ function resolveForField(
   }
 }
 
-export const fabricQuery: OperationWeaver<GraphQLFabricIO> = (
+export const fabricQuery: QueryMutationWeaver<GraphQLFabricIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -55,12 +57,12 @@ export const fabricQuery: OperationWeaver<GraphQLFabricIO> = (
   return {
     input: options.input,
     output,
-    resolve: resolveForOperation(options),
+    resolve: resolveForQueryMutation(options),
     type: "query",
   }
 }
 
-export const fabricMutation: OperationWeaver<GraphQLFabricIO> = (
+export const fabricMutation: QueryMutationWeaver<GraphQLFabricIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -68,7 +70,7 @@ export const fabricMutation: OperationWeaver<GraphQLFabricIO> = (
   return {
     input: options.input,
     output,
-    resolve: resolveForOperation(options),
+    resolve: resolveForQueryMutation(options),
     type: "mutation",
   }
 }
@@ -83,6 +85,22 @@ export const fabricField: FieldWeaver<GraphQLFabricIO> = (
     output,
     resolve: resolveForField(options),
     type: "field",
+  }
+}
+
+export const defaultSubscriptionResolve = (source: any) => source
+
+export const fabricSubscription: SubscriptionWeaver<GraphQLFabricIO> = (
+  output,
+  subscribeOrOptions
+) => {
+  const options = getSubscriptionOptions(subscribeOrOptions)
+  return {
+    input: options.input,
+    output,
+    subscribe: options.subscribe,
+    resolve: options.resolve ?? defaultSubscriptionResolve,
+    type: "subscription",
   }
 }
 

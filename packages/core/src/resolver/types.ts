@@ -103,38 +103,28 @@ export interface OperationOrField<
         input: InferInputI<TInput, GraphQLFabricIO>,
         options?: ResolvingOptions
       ) => Promise<InferFabricO<TOutput>>
-    : (
+    : TType extends "subscription"
+      ? (
+          value: any,
+          input: InferInputI<TInput, GraphQLFabricIO>
+        ) => Promise<InferFabricO<TOutput>>
+      : (
+          input: InferInputI<TInput, GraphQLFabricIO>,
+          options?: ResolvingOptions
+        ) => Promise<InferFabricO<TOutput>>
+
+  subscribe?: TType extends "subscription"
+    ? (
         input: InferInputI<TInput, GraphQLFabricIO>,
         options?: ResolvingOptions
-      ) => Promise<InferFabricO<TOutput>>
+      ) => MayPromise<AsyncIterator<any>>
+    : undefined
 }
 
 /**
- * Operation for resolver.
+ * Options for creating a GraphQL Query or Mutation.
  */
-export interface Operation<
-  TOutput extends AnyGraphQLFabric,
-  TInput extends InputSchema<AnyGraphQLFabric> = undefined,
-> extends OperationOrField<
-    any,
-    TOutput,
-    TInput,
-    "query" | "mutation" | "subscription"
-  > {}
-
-/**
- * Field for resolver.
- */
-export interface Field<
-  TParent extends AnyGraphQLFabric,
-  TOutput extends AnyGraphQLFabric,
-  TInput extends InputSchema<AnyGraphQLFabric> = undefined,
-> extends OperationOrField<TParent, TOutput, TInput, "field"> {}
-
-/**
- * Options for creating a GraphQL operation.
- */
-export interface OperationOptions<
+export interface QueryMutationOptions<
   TSchemaIO extends AbstractSchemaIO,
   TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -145,7 +135,7 @@ export interface OperationOptions<
   ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
-export interface OperationWeaver<TSchemaIO extends AbstractSchemaIO> {
+export interface QueryMutationWeaver<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -153,12 +143,12 @@ export interface OperationWeaver<TSchemaIO extends AbstractSchemaIO> {
     output: TOutput,
     resolveOrOptions:
       | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
-      | OperationOptions<TSchemaIO, TOutput, TInput>
+      | QueryMutationOptions<TSchemaIO, TOutput, TInput>
   ): OperationOrField<
     any,
     SchemaToFabric<TSchemaIO, TOutput>,
     InputSchemaToFabric<TSchemaIO, TInput>,
-    OperationType
+    "query" | "mutation"
   >
 }
 
@@ -195,6 +185,57 @@ export interface FieldWeaver<TSchemaIO extends AbstractSchemaIO> {
     SchemaToFabric<TSchemaIO, TOutput>,
     InputSchemaToFabric<TSchemaIO, TInput>,
     "field"
+  >
+}
+
+/**
+ * Options for creating a GraphQL Subscription.
+ */
+export interface SubscriptionOptions<
+  TSchemaIO extends AbstractSchemaIO,
+  TOutput extends TSchemaIO[0],
+  TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  TValue = InferSchemaO<TOutput, TSchemaIO>,
+> extends ResolverOptions {
+  input?: TInput
+  subscribe: (
+    input: InferInputO<TInput, TSchemaIO>
+  ) => MayPromise<AsyncIterator<TValue>>
+  resolve?: (
+    value: TValue,
+    input: InferInputO<TInput, TSchemaIO>
+  ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
+}
+
+export interface Subscription<
+  TOutput extends AnyGraphQLFabric,
+  TInput extends InputSchema<AnyGraphQLFabric> = undefined,
+  TValue = InferFabricO<TOutput>,
+> extends OperationOrField<any, TOutput, TInput, "subscription"> {
+  resolve: (
+    value: TValue,
+    input: InferInputI<TInput, GraphQLFabricIO>
+  ) => Promise<InferFabricO<TOutput>>
+  subscribe: (
+    input: InferInputI<TInput, GraphQLFabricIO>,
+    options?: ResolvingOptions
+  ) => MayPromise<AsyncIterator<TValue>>
+}
+
+export interface SubscriptionWeaver<TSchemaIO extends AbstractSchemaIO> {
+  <
+    TOutput extends TSchemaIO[0],
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+    TValue = InferSchemaO<TOutput, TSchemaIO>,
+  >(
+    output: TOutput,
+    subscribeOrOptions:
+      | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
+      | SubscriptionOptions<TSchemaIO, TOutput, TInput, TValue>
+  ): Subscription<
+    SchemaToFabric<TSchemaIO, TOutput>,
+    InputSchemaToFabric<TSchemaIO, TInput>,
+    TValue
   >
 }
 
