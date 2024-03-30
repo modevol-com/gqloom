@@ -1,1 +1,1 @@
-export * from "./create-resolvers"
+export * from "./create-loom"
