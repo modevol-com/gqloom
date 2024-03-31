@@ -103,13 +103,15 @@ function resolver(
   }
 
   Object.entries(operations).forEach(([name, operation]) => {
-    record[name] = extraOptions(operation, options)
+    record[name] = extraOperationOptions(operation, options)
   })
 
   return record
 }
 
-function extraOptions<TOperation extends OperationOrField<any, any, any>>(
+function extraOperationOptions<
+  TOperation extends OperationOrField<any, any, any>,
+>(
   operation: TOperation,
   options: ResolverOptionsWithParent<any> | undefined
 ): TOperation {
