@@ -1,4 +1,3 @@
-import type { GraphQLDirective } from "graphql"
 import { GraphQLSchema } from "graphql"
 import type { AnyGraphQLFabric, OperationOrField } from "../resolver"
 
@@ -29,8 +28,7 @@ export class SchemaWeaver {
   subscriptions: Record<string, FabricSubscription> = {}
 
   objectTypes: Record<string, AnyGraphQLFabric> = {}
-  otherTypes: AnyGraphQLFabric[] = []
-  directives: GraphQLDirective[] = []
+  fields: Record<string, AnyGraphQLFabric> = {}
 
   weaveGraphQLSchema(): GraphQLSchema {
     return new GraphQLSchema({})
