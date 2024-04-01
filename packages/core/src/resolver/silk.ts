@@ -1,6 +1,7 @@
 import { type GraphQLType } from "graphql"
 import type { MayPromise } from "../utils"
 import type { AnyGraphQLSilk, GraphQLSilk } from "./types"
+import type { InputSchema } from "./input"
 
 /**
  * Create a GraphQLSilk Object.
@@ -12,6 +13,8 @@ export function silk<TOutput, TInput = TOutput>(
   return { getType: () => type, parse }
 }
 
-export function isSilk(target: any): target is AnyGraphQLSilk {
+export function isSilk(
+  target: InputSchema<AnyGraphQLSilk>
+): target is AnyGraphQLSilk {
   return typeof target?.getType === "function"
 }
