@@ -1,17 +1,17 @@
-import { isType, type GraphQLType } from "graphql"
+import { type GraphQLType } from "graphql"
 import type { MayPromise } from "../utils"
-import type { AnyGraphQLFabric, GraphQLFabric } from "./types"
+import type { AnyGraphQLSilk, GraphQLSilk } from "./types"
 
 /**
- * Create a GraphQLFabric Object.
+ * Create a GraphQLSilk Object.
  */
-export function fabric<TOutput, TInput = TOutput>(
+export function silk<TOutput, TInput = TOutput>(
   type: GraphQLType,
   parse?: (input: TInput) => MayPromise<TOutput>
-): GraphQLFabric<TOutput, TInput> {
+): GraphQLSilk<TOutput, TInput> {
   return { getType: () => type, parse }
 }
 
-export function isFabric(target: any): target is AnyGraphQLFabric {
-  return isType(target?.type)
+export function isSilk(target: any): target is AnyGraphQLSilk {
+  return typeof target?.getType === "function"
 }
