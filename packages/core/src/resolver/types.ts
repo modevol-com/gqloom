@@ -74,8 +74,10 @@ export interface ResolverOptions {
   middlewares?: Middleware[]
 }
 
-export interface ResolverOptionsWithParent<T> extends ResolverOptions {
-  parent: T
+export interface ResolverOptionsWithParent<
+  T extends AnyGraphQLFabric = AnyGraphQLFabric,
+> extends ResolverOptions {
+  parent?: T
 }
 
 export interface ResolvingOptions extends Pick<ResolverOptions, "middlewares"> {
@@ -252,7 +254,9 @@ export interface ResolverWeaver<TSchemaIO extends AbstractSchemaIO> {
     operationOrFields: TOperations,
     options?: ResolverOptions
   ): TOperations & {
-    [RESOLVER_OPTIONS_KEY]: ResolverOptionsWithParent<TParent>
+    [RESOLVER_OPTIONS_KEY]: ResolverOptionsWithParent<
+      SchemaToFabric<TSchemaIO, TParent>
+    >
   }
 
   <

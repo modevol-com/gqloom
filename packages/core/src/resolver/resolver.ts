@@ -92,12 +92,12 @@ export const fabricSubscription: SubscriptionWeaver<GraphQLFabricIO> = (
   }
 }
 
-function resolver(
+export function baseResolver(
   operations: Record<string, OperationOrField<any, any, any>>,
-  options: ResolverOptionsWithParent<any> | undefined
+  options: ResolverOptionsWithParent | undefined
 ) {
   const record: Record<string, OperationOrField<any, any, any>> & {
-    [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent<any>
+    [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
   } = {
     [RESOLVER_OPTIONS_KEY]: options,
   }
@@ -151,12 +151,12 @@ function extraOperationOptions<
 }
 
 export const fabricResolver: ResolverWeaver<GraphQLFabricIO> = Object.assign(
-  resolver as any,
+  baseResolver as ResolverWeaver<GraphQLFabricIO>,
   {
     of: ((parent, operations, options) =>
-      resolver(operations as Record<string, OperationOrField<any, any, any>>, {
-        ...options,
-        parent,
-      })) as ResolverWeaver<GraphQLFabricIO>["of"],
+      baseResolver(
+        operations as Record<string, OperationOrField<any, any, any>>,
+        { ...options, parent }
+      )) as ResolverWeaver<GraphQLFabricIO>["of"],
   }
 )
