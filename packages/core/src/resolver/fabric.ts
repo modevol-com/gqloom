@@ -9,7 +9,7 @@ export function fabric<TOutput, TInput = TOutput>(
   type: GraphQLType,
   parse?: (input: TInput) => MayPromise<TOutput>
 ): GraphQLFabric<TOutput, TInput> {
-  return { type, parse }
+  return { getType: () => type, parse }
 }
 
 export function isFabric(target: any): target is AnyGraphQLFabric {

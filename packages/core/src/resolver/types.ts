@@ -15,7 +15,7 @@ export interface GraphQLFabric<TOutput, TInput> {
   /**
    * GraphQL type for schema
    */
-  type: GraphQLType
+  getType(options: Record<string | symbol | number, any>): GraphQLType
 
   /**
    * validate and transform input to output
