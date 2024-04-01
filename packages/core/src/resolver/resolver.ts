@@ -7,20 +7,20 @@ import {
 } from "../utils"
 import { parseInput } from "./input"
 import type {
-  FieldWeaver,
-  QueryMutationWeaver,
+  FieldShuttle,
+  QueryMutationShuttle,
   ResolvingOptions,
-  ResolverWeaver,
+  ResolverShuttle,
   OperationOrField,
   ResolverOptionsWithParent,
   GraphQLFabricIO,
-  SubscriptionWeaver,
+  SubscriptionShuttle,
   Subscription,
 } from "./types"
 
 export const RESOLVER_OPTIONS_KEY = Symbol("resolver-options")
 
-export const fabricQuery: QueryMutationWeaver<GraphQLFabricIO> = (
+export const fabricQuery: QueryMutationShuttle<GraphQLFabricIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -37,7 +37,7 @@ export const fabricQuery: QueryMutationWeaver<GraphQLFabricIO> = (
   }
 }
 
-export const fabricMutation: QueryMutationWeaver<GraphQLFabricIO> = (
+export const fabricMutation: QueryMutationShuttle<GraphQLFabricIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -54,7 +54,7 @@ export const fabricMutation: QueryMutationWeaver<GraphQLFabricIO> = (
   }
 }
 
-export const fabricField: FieldWeaver<GraphQLFabricIO> = (
+export const fabricField: FieldShuttle<GraphQLFabricIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -74,7 +74,7 @@ export const fabricField: FieldWeaver<GraphQLFabricIO> = (
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const fabricSubscription: SubscriptionWeaver<GraphQLFabricIO> = (
+export const fabricSubscription: SubscriptionShuttle<GraphQLFabricIO> = (
   output,
   subscribeOrOptions
 ) => {
@@ -150,13 +150,13 @@ function extraOperationOptions<
   }
 }
 
-export const fabricResolver: ResolverWeaver<GraphQLFabricIO> = Object.assign(
-  baseResolver as ResolverWeaver<GraphQLFabricIO>,
+export const fabricResolver: ResolverShuttle<GraphQLFabricIO> = Object.assign(
+  baseResolver as ResolverShuttle<GraphQLFabricIO>,
   {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, OperationOrField<any, any, any>>,
         { ...options, parent }
-      )) as ResolverWeaver<GraphQLFabricIO>["of"],
+      )) as ResolverShuttle<GraphQLFabricIO>["of"],
   }
 )

@@ -138,7 +138,7 @@ export interface QueryMutationOptions<
   ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
-export interface QueryMutationWeaver<TSchemaIO extends AbstractSchemaIO> {
+export interface QueryMutationShuttle<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -171,7 +171,7 @@ export interface FieldOptions<
   ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
-export interface FieldWeaver<TSchemaIO extends AbstractSchemaIO> {
+export interface FieldShuttle<TSchemaIO extends AbstractSchemaIO> {
   <
     TParent extends TSchemaIO[0],
     TOutput extends TSchemaIO[0],
@@ -225,7 +225,7 @@ export interface Subscription<
   ) => MayPromise<AsyncIterator<TValue>>
 }
 
-export interface SubscriptionWeaver<TSchemaIO extends AbstractSchemaIO> {
+export interface SubscriptionShuttle<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -242,7 +242,7 @@ export interface SubscriptionWeaver<TSchemaIO extends AbstractSchemaIO> {
   >
 }
 
-export interface ResolverWeaver<TSchemaIO extends AbstractSchemaIO> {
+export interface ResolverShuttle<TSchemaIO extends AbstractSchemaIO> {
   of<
     TParent extends TSchemaIO[0],
     TOperations extends Record<

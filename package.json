@@ -6,7 +6,8 @@
   "scripts": {
     "test": "vitest",
     "format": "prettier . --write",
-    "lint": "eslint \"**/*.{ts,tsx}\" --fix"
+    "lint": "eslint \"**/*.{ts,tsx}\" --fix",
+    "check:type": "tsc --noEmit"
   },
   "keywords": [],
   "author": "xcfox",

@@ -46,5 +46,5 @@ test("zod resolver", () => {
   })
 
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
-  simpleGiraffeResolver.createGiraffe.input.type
+  simpleGiraffeResolver.createGiraffe.input
 })

@@ -1,9 +1,9 @@
-import type { SubscriptionWeaver, Subscription } from "../resolver"
+import type { SubscriptionShuttle, Subscription } from "../resolver"
 import {
   type AnyGraphQLFabric,
-  type FieldWeaver,
-  type QueryMutationWeaver,
-  type ResolverWeaver,
+  type FieldShuttle,
+  type QueryMutationShuttle,
+  type ResolverShuttle,
   type AbstractSchemaIO,
   type OperationOrField,
   baseResolver,
@@ -30,22 +30,22 @@ function toFabricInput(
   return record
 }
 
-export function createResolverWeaver<TSchemaIO extends AbstractSchemaIO>(
+export function createResolverShuttle<TSchemaIO extends AbstractSchemaIO>(
   toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric
-): ResolverWeaver<TSchemaIO> {
+): ResolverShuttle<TSchemaIO> {
   return Object.assign(baseResolver, {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, OperationOrField<any, any, any>>,
         { ...options, parent: toFabric(parent) }
-      )) as ResolverWeaver<TSchemaIO>["of"],
-  }) as ResolverWeaver<TSchemaIO>
+      )) as ResolverShuttle<TSchemaIO>["of"],
+  }) as ResolverShuttle<TSchemaIO>
 }
 
-export function createFieldWeaver<TSchemaIO extends AbstractSchemaIO>(
+export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
   toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): FieldWeaver<TSchemaIO> {
+): FieldShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions<"field">(resolveOrOptions)
     return fabricField(toFabric(output), {
@@ -55,10 +55,10 @@ export function createFieldWeaver<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createQueryWeaver<TSchemaIO extends AbstractSchemaIO>(
+export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
   toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): QueryMutationWeaver<TSchemaIO> {
+): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions)
     return fabricQuery(toFabric(output), {
@@ -68,10 +68,10 @@ export function createQueryWeaver<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createMutationWeaver<TSchemaIO extends AbstractSchemaIO>(
+export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
   toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): QueryMutationWeaver<TSchemaIO> {
+): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions)
     return fabricMutation(toFabric(output), {
@@ -81,10 +81,10 @@ export function createMutationWeaver<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createSubscriptionWeaver<TSchemaIO extends AbstractSchemaIO>(
+export function createSubscriptionShuttle<TSchemaIO extends AbstractSchemaIO>(
   toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): SubscriptionWeaver<TSchemaIO> {
+): SubscriptionShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getSubscriptionOptions(resolveOrOptions)
     return fabricSubscription(toFabric(output), {
@@ -98,17 +98,17 @@ export function createLoom<TSchemaIO extends AbstractSchemaIO>(
   toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): {
-  query: QueryMutationWeaver<TSchemaIO>
-  mutation: QueryMutationWeaver<TSchemaIO>
-  field: FieldWeaver<TSchemaIO>
-  resolver: ResolverWeaver<TSchemaIO>
-  subscription: SubscriptionWeaver<TSchemaIO>
+  query: QueryMutationShuttle<TSchemaIO>
+  mutation: QueryMutationShuttle<TSchemaIO>
+  field: FieldShuttle<TSchemaIO>
+  resolver: ResolverShuttle<TSchemaIO>
+  subscription: SubscriptionShuttle<TSchemaIO>
 } {
   return {
-    query: createQueryWeaver<TSchemaIO>(toFabric, isSchema),
-    mutation: createMutationWeaver<TSchemaIO>(toFabric, isSchema),
-    field: createFieldWeaver<TSchemaIO>(toFabric, isSchema),
-    resolver: createResolverWeaver<TSchemaIO>(toFabric),
-    subscription: createSubscriptionWeaver<TSchemaIO>(toFabric, isSchema),
+    query: createQueryShuttle<TSchemaIO>(toFabric, isSchema),
+    mutation: createMutationShuttle<TSchemaIO>(toFabric, isSchema),
+    field: createFieldShuttle<TSchemaIO>(toFabric, isSchema),
+    resolver: createResolverShuttle<TSchemaIO>(toFabric),
+    subscription: createSubscriptionShuttle<TSchemaIO>(toFabric, isSchema),
   }
 }
