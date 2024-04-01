@@ -6,13 +6,13 @@ import {
   GraphQLString,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { fabric } from "./fabric"
+import { silk } from "./silk"
 import {
-  fabricField as field,
-  fabricMutation as mutation,
-  fabricQuery as query,
-  fabricResolver as resolver,
-  fabricSubscription as subscription,
+  silkField as field,
+  silkMutation as mutation,
+  silkQuery as query,
+  silkResolver as resolver,
+  silkSubscription as subscription,
 } from "./resolver"
 import type { Middleware } from "../utils"
 
@@ -22,7 +22,7 @@ interface IGiraffe {
   heightInMeters: number
 }
 
-const Giraffe = fabric<IGiraffe>(
+const Giraffe = silk<IGiraffe>(
   new GraphQLObjectType({
     name: "Giraffe",
     fields: {
@@ -33,7 +33,7 @@ const Giraffe = fabric<IGiraffe>(
   })
 )
 
-const GiraffeInput = fabric<Partial<IGiraffe>>(
+const GiraffeInput = silk<Partial<IGiraffe>>(
   new GraphQLObjectType({
     name: "GiraffeInput",
     fields: {
@@ -59,12 +59,12 @@ describe.skip("base resolver", () => {
   })
 
   const giraffeResolver = resolver.of(Giraffe, {
-    age: field(fabric<number>(GraphQLInt), async (giraffe) => {
+    age: field(silk<number>(GraphQLInt), async (giraffe) => {
       return new Date().getFullYear() - giraffe.birthday.getFullYear()
     }),
 
     giraffe: query(Giraffe, {
-      input: { name: fabric<string>(GraphQLString) },
+      input: { name: silk<string>(GraphQLString) },
       resolve: ({ name }) => ({
         name,
         birthday: new Date(),
@@ -72,8 +72,8 @@ describe.skip("base resolver", () => {
       }),
     }),
 
-    greeting: field(fabric<string>(GraphQLString), {
-      input: { myName: fabric<string | undefined>(GraphQLString) },
+    greeting: field(silk<string>(GraphQLString), {
+      input: { myName: silk<string | undefined>(GraphQLString) },
       resolve: (giraffe, { myName }) =>
         `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
     }),
@@ -127,17 +127,17 @@ describe("resolver", () => {
   const giraffeResolver = resolver.of(
     Giraffe,
     {
-      age: field(fabric<number>(GraphQLInt), async (giraffe) => {
+      age: field(silk<number>(GraphQLInt), async (giraffe) => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
 
-      greeting: field(fabric<string>(GraphQLString), {
-        input: { myName: fabric<string | undefined>(GraphQLString) },
+      greeting: field(silk<string>(GraphQLString), {
+        input: { myName: silk<string | undefined>(GraphQLString) },
         resolve: (giraffe, { myName }) =>
           `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
       }),
 
-      nominalAge: field(fabric<number>(GraphQLInt), {
+      nominalAge: field(silk<number>(GraphQLInt), {
         middlewares: [async (next) => (await next()) + 1],
         resolve: async (giraffe) => {
           return new Date().getFullYear() - giraffe.birthday.getFullYear()
@@ -175,7 +175,7 @@ describe("resolver", () => {
     })
 
     it("should work with middlewares", async () => {
-      const numberSchema = fabric<number>(GraphQLFloat)
+      const numberSchema = silk<number>(GraphQLFloat)
 
       const middleware: Middleware = async (next) => {
         const result = await next()
@@ -234,7 +234,7 @@ describe("resolver", () => {
 
     const r1 = resolver(
       {
-        hello: query(fabric<string>(GraphQLString), {
+        hello: query(silk<string>(GraphQLString), {
           resolve: () => "world",
           middlewares: [queryMiddleware],
         }),

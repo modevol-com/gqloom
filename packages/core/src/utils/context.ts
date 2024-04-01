@@ -22,8 +22,8 @@ export interface ResolverPayload<TContextType extends object = object> {
    */
   info: GraphQLResolveInfo
 
-  // TODO: output fabric
-  // TODO: input fabric
+  // TODO: output silk
+  // TODO: input silk
 }
 
 /**

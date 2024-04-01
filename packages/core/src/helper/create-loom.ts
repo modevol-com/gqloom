@@ -1,101 +1,104 @@
 import type { SubscriptionShuttle, Subscription } from "../resolver"
 import {
-  type AnyGraphQLFabric,
+  type AnyGraphQLSilk,
   type FieldShuttle,
   type QueryMutationShuttle,
   type ResolverShuttle,
   type AbstractSchemaIO,
   type OperationOrField,
   baseResolver,
-  fabricField,
-  fabricQuery,
-  fabricMutation,
-  fabricSubscription,
+  silkField,
+  silkQuery,
+  silkMutation,
+  silkSubscription,
 } from "../resolver"
 import type { InputSchema } from "../resolver/input"
 import { getOperationOptions, getSubscriptionOptions } from "../utils"
 
-function toFabricInput(
+function toSilkInput(
   schema: any,
-  toFabric: (schema: any) => AnyGraphQLFabric,
+  toSilk: (schema: any) => AnyGraphQLSilk,
   isSchema: (schema: any) => boolean
-): InputSchema<AnyGraphQLFabric> {
-  if (isSchema(schema)) {
-    return toFabric(schema)
+): InputSchema<AnyGraphQLSilk> {
+  if (schema == null) {
+    return schema
   }
-  const record: Record<string, AnyGraphQLFabric> = {}
+  if (isSchema(schema)) {
+    return toSilk(schema)
+  }
+  const record: Record<string, AnyGraphQLSilk> = {}
   for (const [key, value] of Object.entries(schema)) {
-    record[key] = toFabric(value)
+    record[key] = toSilk(value)
   }
   return record
 }
 
 export function createResolverShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric
+  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk
 ): ResolverShuttle<TSchemaIO> {
   return Object.assign(baseResolver, {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, OperationOrField<any, any, any>>,
-        { ...options, parent: toFabric(parent) }
+        { ...options, parent: toSilk(parent) }
       )) as ResolverShuttle<TSchemaIO>["of"],
   }) as ResolverShuttle<TSchemaIO>
 }
 
 export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
+  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): FieldShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions<"field">(resolveOrOptions)
-    return fabricField(toFabric(output), {
+    return silkField(toSilk(output), {
       ...options,
-      input: toFabricInput(options.input, toFabric, isSchema),
+      input: toSilkInput(options.input, toSilk, isSchema),
     }) as OperationOrField<any, any, any, "field">
   }
 }
 
 export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
+  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions)
-    return fabricQuery(toFabric(output), {
+    return silkQuery(toSilk(output), {
       ...options,
-      input: toFabricInput(options.input, toFabric, isSchema),
+      input: toSilkInput(options.input, toSilk, isSchema),
     }) as OperationOrField<any, any, any, "query">
   }
 }
 
 export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
+  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions)
-    return fabricMutation(toFabric(output), {
+    return silkMutation(toSilk(output), {
       ...options,
-      input: toFabricInput(options.input, toFabric, isSchema),
+      input: toSilkInput(options.input, toSilk, isSchema),
     }) as OperationOrField<any, any, any, "mutation">
   }
 }
 
 export function createSubscriptionShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
+  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): SubscriptionShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getSubscriptionOptions(resolveOrOptions)
-    return fabricSubscription(toFabric(output), {
+    return silkSubscription(toSilk(output), {
       ...options,
-      input: toFabricInput(options.input, toFabric, isSchema),
+      input: toSilkInput(options.input, toSilk, isSchema),
     }) as Subscription<any, any, any>
   }
 }
 
 export function createLoom<TSchemaIO extends AbstractSchemaIO>(
-  toFabric: (schema: TSchemaIO[0]) => AnyGraphQLFabric,
+  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): {
   query: QueryMutationShuttle<TSchemaIO>
@@ -105,10 +108,10 @@ export function createLoom<TSchemaIO extends AbstractSchemaIO>(
   subscription: SubscriptionShuttle<TSchemaIO>
 } {
   return {
-    query: createQueryShuttle<TSchemaIO>(toFabric, isSchema),
-    mutation: createMutationShuttle<TSchemaIO>(toFabric, isSchema),
-    field: createFieldShuttle<TSchemaIO>(toFabric, isSchema),
-    resolver: createResolverShuttle<TSchemaIO>(toFabric),
-    subscription: createSubscriptionShuttle<TSchemaIO>(toFabric, isSchema),
+    query: createQueryShuttle<TSchemaIO>(toSilk, isSchema),
+    mutation: createMutationShuttle<TSchemaIO>(toSilk, isSchema),
+    field: createFieldShuttle<TSchemaIO>(toSilk, isSchema),
+    resolver: createResolverShuttle<TSchemaIO>(toSilk),
+    subscription: createSubscriptionShuttle<TSchemaIO>(toSilk, isSchema),
   }
 }

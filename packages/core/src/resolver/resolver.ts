@@ -13,14 +13,14 @@ import type {
   ResolverShuttle,
   OperationOrField,
   ResolverOptionsWithParent,
-  GraphQLFabricIO,
+  GraphQLSilkIO,
   SubscriptionShuttle,
   Subscription,
 } from "./types"
 
 export const RESOLVER_OPTIONS_KEY = Symbol("resolver-options")
 
-export const fabricQuery: QueryMutationShuttle<GraphQLFabricIO> = (
+export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -37,7 +37,7 @@ export const fabricQuery: QueryMutationShuttle<GraphQLFabricIO> = (
   }
 }
 
-export const fabricMutation: QueryMutationShuttle<GraphQLFabricIO> = (
+export const silkMutation: QueryMutationShuttle<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -54,7 +54,7 @@ export const fabricMutation: QueryMutationShuttle<GraphQLFabricIO> = (
   }
 }
 
-export const fabricField: FieldShuttle<GraphQLFabricIO> = (
+export const silkField: FieldShuttle<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -74,7 +74,7 @@ export const fabricField: FieldShuttle<GraphQLFabricIO> = (
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const fabricSubscription: SubscriptionShuttle<GraphQLFabricIO> = (
+export const silkSubscription: SubscriptionShuttle<GraphQLSilkIO> = (
   output,
   subscribeOrOptions
 ) => {
@@ -150,13 +150,13 @@ function extraOperationOptions<
   }
 }
 
-export const fabricResolver: ResolverShuttle<GraphQLFabricIO> = Object.assign(
-  baseResolver as ResolverShuttle<GraphQLFabricIO>,
+export const silkResolver: ResolverShuttle<GraphQLSilkIO> = Object.assign(
+  baseResolver as ResolverShuttle<GraphQLSilkIO>,
   {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, OperationOrField<any, any, any>>,
         { ...options, parent }
-      )) as ResolverShuttle<GraphQLFabricIO>["of"],
+      )) as ResolverShuttle<GraphQLSilkIO>["of"],
   }
 )

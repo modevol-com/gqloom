@@ -1,10 +1,10 @@
-import { type GraphQLFabric, createLoom } from "@gqloom/core"
+import { type GraphQLSilk, createLoom } from "@gqloom/core"
 import { GraphQLString } from "graphql"
 import type { Schema, input, output } from "zod"
 import { z } from "zod"
 
-export class ZodFabric<TSchema extends Schema>
-  implements GraphQLFabric<output<TSchema>, input<TSchema>>
+export class ZodSilk<TSchema extends Schema>
+  implements GraphQLSilk<output<TSchema>, input<TSchema>>
 {
   _types?: { input: input<TSchema>; output: output<TSchema> }
   constructor(public schema: TSchema) {}
@@ -20,14 +20,14 @@ export class ZodFabric<TSchema extends Schema>
 
 export type ZodSchemaIO = [Schema, "_input", "_output"]
 
-export function zodFabric<TSchema extends Schema>(
+export function zodSilk<TSchema extends Schema>(
   schema: TSchema
-): ZodFabric<TSchema> {
-  return new ZodFabric(schema)
+): ZodSilk<TSchema> {
+  return new ZodSilk(schema)
 }
 
 export const { query, mutation, field, resolver } = createLoom<ZodSchemaIO>(
-  zodFabric,
+  zodSilk,
   isZodSchema
 )
 

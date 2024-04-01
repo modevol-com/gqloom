@@ -1,10 +1,10 @@
-import { type GraphQLFabric, createLoom } from "@gqloom/core"
+import { type GraphQLSilk, createLoom } from "@gqloom/core"
 import { GraphQLString } from "graphql"
 import type { InferType, Schema } from "yup"
 import { isSchema } from "yup"
 
-export class YupFabric<TSchema extends Schema>
-  implements GraphQLFabric<InferType<TSchema>, InferType<TSchema>>
+export class YupSilk<TSchema extends Schema>
+  implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
 {
   _types?: { input: InferType<TSchema>; output: InferType<TSchema> }
   constructor(public schema: TSchema) {}
@@ -20,13 +20,13 @@ export class YupFabric<TSchema extends Schema>
 
 export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
 
-export function yupFabric<TSchema extends Schema>(
+export function yupSilk<TSchema extends Schema>(
   schema: TSchema
-): YupFabric<TSchema> {
-  return new YupFabric(schema)
+): YupSilk<TSchema> {
+  return new YupSilk(schema)
 }
 
 export const { query, mutation, field, resolver } = createLoom<YupSchemaIO>(
-  yupFabric,
+  yupSilk,
   isSchema
 )

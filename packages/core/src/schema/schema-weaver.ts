@@ -1,34 +1,29 @@
 import { GraphQLSchema } from "graphql"
-import type { AnyGraphQLFabric, OperationOrField } from "../resolver"
+import type { AnyGraphQLSilk, OperationOrField } from "../resolver"
 
-type FabricQuery = OperationOrField<
-  any,
-  AnyGraphQLFabric,
-  AnyGraphQLFabric,
-  "query"
->
+type SilkQuery = OperationOrField<any, AnyGraphQLSilk, AnyGraphQLSilk, "query">
 
-type FabricMutation = OperationOrField<
+type SilkMutation = OperationOrField<
   any,
-  AnyGraphQLFabric,
-  AnyGraphQLFabric,
+  AnyGraphQLSilk,
+  AnyGraphQLSilk,
   "mutation"
 >
 
-type FabricSubscription = OperationOrField<
+type SilkSubscription = OperationOrField<
   any,
-  AnyGraphQLFabric,
-  AnyGraphQLFabric,
+  AnyGraphQLSilk,
+  AnyGraphQLSilk,
   "subscription"
 >
 
 export class SchemaWeaver {
-  queries: Record<string, FabricQuery> = {}
-  mutations: Record<string, FabricMutation> = {}
-  subscriptions: Record<string, FabricSubscription> = {}
+  queries: Record<string, SilkQuery> = {}
+  mutations: Record<string, SilkMutation> = {}
+  subscriptions: Record<string, SilkSubscription> = {}
 
-  objectTypes: Record<string, AnyGraphQLFabric> = {}
-  fields: Record<string, AnyGraphQLFabric> = {}
+  objectTypes: Record<string, AnyGraphQLSilk> = {}
+  fields: Record<string, AnyGraphQLSilk> = {}
 
   weaveGraphQLSchema(): GraphQLSchema {
     return new GraphQLSchema({})

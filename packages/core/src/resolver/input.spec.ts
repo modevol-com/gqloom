@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { parseInput } from "./input"
-import { fabric } from "./fabric"
+import { silk } from "./silk"
 import {
   GraphQLObjectType,
   GraphQLNonNull,
@@ -18,7 +18,7 @@ describe("parseInput", () => {
 
   it("should keep result", async () => {
     let parseTimes = 0
-    const Giraffe = fabric<IGiraffe, Partial<IGiraffe>>(
+    const Giraffe = silk<IGiraffe, Partial<IGiraffe>>(
       new GraphQLObjectType({
         name: "Giraffe",
         fields: {
@@ -52,8 +52,8 @@ describe("parseInput", () => {
     expect(parseTimes).toBe(1)
   })
 
-  describe("should parse Fabric", () => {
-    const Giraffe = fabric<IGiraffe, Partial<IGiraffe>>(
+  describe("should parse Silk", () => {
+    const Giraffe = silk<IGiraffe, Partial<IGiraffe>>(
       new GraphQLObjectType({
         name: "Giraffe",
         fields: {
@@ -98,21 +98,21 @@ describe("parseInput", () => {
 
   describe("should parse Record", async () => {
     const Giraffe = {
-      name: fabric<string, string | undefined>(
+      name: silk<string, string | undefined>(
         GraphQLString,
         async (input = "Twiga") => {
           if (input.length > 10) throw new Error("Name too long")
           return input
         }
       ),
-      birthday: fabric<Date, Date | undefined>(
+      birthday: silk<Date, Date | undefined>(
         GraphQLString,
         async (input = new Date()) => {
           await new Promise((resolve) => setTimeout(resolve, 6))
           return input
         }
       ),
-      heightInMeters: fabric<number, number | undefined>(
+      heightInMeters: silk<number, number | undefined>(
         GraphQLFloat,
         (input = 1.5) => input
       ),

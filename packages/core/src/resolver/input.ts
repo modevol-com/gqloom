@@ -1,11 +1,11 @@
 import type { MayPromise, ObjectOrNever } from "../utils"
-import { isFabric } from "./fabric"
+import { isSilk } from "./silk"
 import type {
   InferSchemaI,
   InferSchemaO,
-  SchemaToFabric,
+  SchemaToSilk,
   AbstractSchemaIO,
-  AnyGraphQLFabric,
+  AnyGraphQLSilk,
 } from "./types"
 
 export const PARSE_RESULT_KEY = Symbol("parse result key")
@@ -15,16 +15,16 @@ export type InputSchema<TBaseSchema> =
   | Record<string, TBaseSchema>
   | undefined
 
-export type InputSchemaToFabric<
+export type InputSchemaToSilk<
   TSchemaIO extends AbstractSchemaIO,
   TInput extends InputSchema<TSchemaIO[0]>,
 > = TInput extends undefined
   ? undefined
   : TInput extends TSchemaIO[0]
-    ? SchemaToFabric<TSchemaIO, TInput>
+    ? SchemaToSilk<TSchemaIO, TInput>
     : {
         [K in keyof TInput]: TInput[K] extends TSchemaIO[0]
-          ? SchemaToFabric<TSchemaIO, TInput[K]>
+          ? SchemaToSilk<TSchemaIO, TInput[K]>
           : never
       }
 
@@ -51,7 +51,7 @@ export type InferInputO<
       }
 
 export function parseInput(
-  inputSchema: InputSchema<AnyGraphQLFabric>,
+  inputSchema: InputSchema<AnyGraphQLSilk>,
   input: any
 ): MayPromise<any> {
   if (inputSchema === undefined) {
@@ -63,7 +63,7 @@ export function parseInput(
     return input[PARSE_RESULT_KEY]
   }
 
-  if (isFabric(inputSchema)) {
+  if (isSilk(inputSchema)) {
     if (typeof inputSchema.parse === "function") {
       return keepResult(input, inputSchema.parse(input))
     }
@@ -74,7 +74,7 @@ export function parseInput(
 }
 
 async function parseInputEntries(
-  inputSchema: Record<string, AnyGraphQLFabric>,
+  inputSchema: Record<string, AnyGraphQLSilk>,
   input: any = {}
 ): Promise<Record<string, any>> {
   const result: Record<string, any> = {}
