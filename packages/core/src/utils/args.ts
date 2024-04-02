@@ -4,7 +4,8 @@ import type {
   OperationOrFieldType,
   OperationType,
   SubscriptionOptions,
-} from ".."
+  GraphQLFieldOptions,
+} from "../resolver/types"
 
 export function getOperationOptions<
   T extends OperationOrFieldType = OperationType,
@@ -28,4 +29,18 @@ export function getSubscriptionOptions(
     return { subscribe: subscribeOrOptions }
   }
   return subscribeOrOptions
+}
+
+export function getFieldOptions({
+  description,
+  deprecationReason,
+  extensions,
+  astNode,
+}: GraphQLFieldOptions): GraphQLFieldOptions {
+  return {
+    description,
+    deprecationReason,
+    extensions,
+    astNode,
+  }
 }

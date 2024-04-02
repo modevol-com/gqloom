@@ -6,7 +6,7 @@ import type {
   InputSchema,
   InputSchemaToSilk,
 } from "./input"
-import type { GraphQLType } from "graphql"
+import type { GraphQLFieldConfig, GraphQLOutputType } from "graphql"
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
@@ -15,7 +15,7 @@ export interface GraphQLSilk<TOutput, TInput> {
   /**
    * GraphQL type for schema
    */
-  getType(options: Record<string | symbol | number, any>): GraphQLType
+  getType(options: Record<string | symbol | number, any>): GraphQLOutputType
 
   /**
    * validate and transform input to output
@@ -88,6 +88,11 @@ export type OperationType = "query" | "mutation" | "subscription"
 
 export type OperationOrFieldType = OperationType | "field"
 
+export type GraphQLFieldOptions = Pick<
+  GraphQLFieldConfig<any, any>,
+  "description" | "deprecationReason" | "extensions" | "astNode"
+>
+
 /**
  * Operation or Field for resolver.
  */
@@ -96,7 +101,7 @@ export interface OperationOrField<
   TOutput extends AnyGraphQLSilk,
   TInput extends InputSchema<AnyGraphQLSilk> = undefined,
   TType extends OperationOrFieldType = OperationOrFieldType,
-> {
+> extends GraphQLFieldOptions {
   type: TType
   input: TInput
   output: TOutput
@@ -131,7 +136,8 @@ export interface QueryMutationOptions<
   TSchemaIO extends AbstractSchemaIO,
   TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
-> extends ResolverOptions {
+> extends ResolverOptions,
+    GraphQLFieldOptions {
   input?: TInput
   resolve: (
     input: InferInputO<TInput, TSchemaIO>
@@ -163,7 +169,8 @@ export interface FieldOptions<
   TParent extends TSchemaIO[0],
   TOutput,
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
-> extends ResolverOptions {
+> extends ResolverOptions,
+    GraphQLFieldOptions {
   input?: TInput
   resolve: (
     parent: InferSchemaO<TParent, TSchemaIO>,
@@ -199,7 +206,8 @@ export interface SubscriptionOptions<
   TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
   TValue = InferSchemaO<TOutput, TSchemaIO>,
-> extends ResolverOptions {
+> extends ResolverOptions,
+    GraphQLFieldOptions {
   input?: TInput
   subscribe: (
     input: InferInputO<TInput, TSchemaIO>

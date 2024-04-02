@@ -4,6 +4,7 @@ import {
   applyMiddlewares,
   compose,
   getSubscriptionOptions,
+  getFieldOptions,
 } from "../utils"
 import { parseInput } from "./input"
 import type {
@@ -26,6 +27,7 @@ export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
 ) => {
   const options = getOperationOptions(resolveOrOptions)
   return {
+    ...getFieldOptions(options),
     input: options.input,
     output,
     resolve: (input, extraOptions) =>
@@ -43,6 +45,7 @@ export const silkMutation: QueryMutationShuttle<GraphQLSilkIO> = (
 ) => {
   const options = getOperationOptions(resolveOrOptions)
   return {
+    ...getFieldOptions(options),
     input: options.input,
     output,
     resolve: (input, extraOptions) =>
@@ -60,6 +63,7 @@ export const silkField: FieldShuttle<GraphQLSilkIO> = (
 ) => {
   const options = getOperationOptions<"field">(resolveOrOptions)
   return {
+    ...getFieldOptions(options),
     input: options.input,
     output,
     resolve: (parent, input, extraOptions) =>
@@ -80,6 +84,7 @@ export const silkSubscription: SubscriptionShuttle<GraphQLSilkIO> = (
 ) => {
   const options = getSubscriptionOptions(subscribeOrOptions)
   return {
+    ...getFieldOptions(options),
     input: options.input,
     output,
     subscribe: (input, extraOptions) =>
@@ -101,6 +106,12 @@ export function baseResolver(
   } = {
     [RESOLVER_OPTIONS_KEY]: options,
   }
+  Object.defineProperty(record, RESOLVER_OPTIONS_KEY, {
+    enumerable: false,
+    configurable: true,
+    writable: true,
+    value: options,
+  })
 
   Object.entries(operations).forEach(([name, operation]) => {
     record[name] = extraOperationOptions(operation, options)
