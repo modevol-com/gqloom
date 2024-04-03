@@ -26,6 +26,7 @@ export class ExtraObjectType extends GraphQLObjectType {
 
   constructor(
     objectOrGetter:
+      | string
       | GraphQLObjectType
       | GraphQLObjectTypeConfig<any, any>
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
@@ -34,12 +35,14 @@ export class ExtraObjectType extends GraphQLObjectType {
       objectMap?: ExtraObjectType["objectMap"]
     } = {}
   ) {
-    const originObject =
+    const origin =
       typeof objectOrGetter === "function" ? objectOrGetter() : objectOrGetter
-    if (isObjectType(originObject)) {
-      super(originObject.toConfig())
+    if (isObjectType(origin)) {
+      super(origin.toConfig())
+    } else if (typeof origin === "string") {
+      super({ name: origin, fields: {} })
     } else {
-      super(originObject)
+      super(origin)
     }
     this.objectMap = options.objectMap
     this.optionsForGetType = options.optionsForGetType ?? {}
