@@ -13,3 +13,30 @@ export function mapValue<T, V>(
   }
   return result
 }
+
+// https://github.com/graphql/graphql-js/blob/main/src/jsutils/toObjMap.ts
+export function toObjMap<T>(
+  obj: Maybe<ReadOnlyObjMapLike<T>>
+): ReadOnlyObjMap<T> {
+  if (obj == null) {
+    return Object.create(null)
+  }
+
+  if (Object.getPrototypeOf(obj) === null) {
+    return obj
+  }
+
+  const map = Object.create(null)
+  for (const [key, value] of Object.entries(obj)) {
+    map[key] = value
+  }
+  return map
+}
+
+type Maybe<T> = null | undefined | T
+
+type ReadOnlyObjMapLike<T> = ReadOnlyObjMap<T> | { readonly [key: string]: T }
+
+interface ReadOnlyObjMap<T> {
+  readonly [key: string]: T
+}

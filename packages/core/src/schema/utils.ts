@@ -31,12 +31,21 @@ import { LocatableError, markErrorLocation } from "../utils/error"
 
 export function toFieldConfig(
   field: SilkOperationOrField,
-  options: Record<string | number | symbol, any> = {}
+  options: Record<string | number | symbol, any> = {},
+  objectMap?: Map<string, GraphQLObjectType>
 ): GraphQLFieldConfig<any, any> {
   try {
+    const outputType = (() => {
+      const gqlType = field.output.getType(options)
+      if (isObjectType(gqlType)) {
+        const gqlObject = objectMap?.get(gqlType.name)
+        if (gqlObject != null) return gqlObject
+      }
+      return gqlType
+    })()
     return {
       ...field,
-      type: field.output.getType(options),
+      type: outputType,
       args: inputToArgs(field.input, options),
       ...provideForResolve(field),
       ...provideForSubscribe(field),

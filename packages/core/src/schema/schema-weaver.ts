@@ -6,13 +6,7 @@ import type {
   InputSchema,
 } from "../resolver"
 import { RESOLVER_OPTIONS_KEY } from "../resolver"
-import type {
-  SilkQuery,
-  SilkMutation,
-  SilkSubscription,
-  SilkField,
-} from "./types"
-import { ObjectWeaver } from "./object-weaver"
+import { SilkObjectType } from "./object-weaver"
 
 type SilkResolver = Record<
   string,
@@ -21,25 +15,47 @@ type SilkResolver = Record<
   [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
 }
 
-export class SchemaWeaver {
-  protected queries = new Map<string, SilkQuery>()
-  protected mutations = new Map<string, SilkMutation>()
-  protected subscriptions = new Map<string, SilkSubscription>()
+interface SchemaWeaverParameters
+  extends Partial<
+    Record<"query" | "mutation" | "subscription", SilkObjectType>
+  > {}
 
-  protected objectWeavers = new Map<string, ObjectWeaver>()
+export class SchemaWeaver {
+  protected query: SilkObjectType
+  protected mutation: SilkObjectType
+  protected subscription: SilkObjectType
+
+  protected objectMap = new Map<string, SilkObjectType>()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
 
   weaveGraphQLSchema(): GraphQLSchema {
-    return new GraphQLSchema({})
+    const { query, mutation, subscription } = this
+    return new GraphQLSchema({ query, mutation, subscription })
+  }
+
+  constructor({ query, mutation, subscription }: SchemaWeaverParameters) {
+    this.query = query ?? new SilkObjectType({ name: "Query", fields: {} })
+    this.mutation =
+      mutation ?? new SilkObjectType({ name: "Mutation", fields: {} })
+    this.subscription =
+      subscription ?? new SilkObjectType({ name: "Subscription", fields: {} })
   }
 
   addResolver(resolver: SilkResolver) {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
-    const parentWeaver = (() => {
+    const parentSilkObject = (() => {
       if (parent == null) return undefined
       const gqlType = parent.getType(this.optionsForGetType)
-      if (isObjectType(gqlType)) return new ObjectWeaver(gqlType)
+      if (isObjectType(gqlType)) {
+        const { optionsForGetType, objectMap } = this
+        const silkObject = new SilkObjectType(gqlType, {
+          optionsForGetType,
+          objectMap,
+        })
+        this.objectMap.set(gqlType.name, silkObject)
+        return silkObject
+      }
       throw new Error(
         `${(gqlType as any)?.name ?? gqlType.toString()} is not an object type`
       )
@@ -48,32 +64,25 @@ export class SchemaWeaver {
     Object.entries(resolver).forEach(([name, operation]) => {
       if ((name as any) === RESOLVER_OPTIONS_KEY) return
       if (operation.type === "field") {
-        if (parentWeaver == null) return
-        parentWeaver.addField(name, operation as SilkField)
+        if (parentSilkObject == null) return
+        parentSilkObject.addField(name, operation)
       } else {
-        const map = this.getOperationMap(operation.type)
-        const existing = map.get(name)
-        if (existing && existing !== operation) {
-          throw new Error(`${operation.type} ${name} already exists`)
-        }
-        map.set(name, operation)
+        const silkObject = this.getOperationSilkObject(operation.type)
+        silkObject.addField(name, operation)
       }
     })
   }
 
-  protected getOperationMap(
+  protected getOperationSilkObject(
     type: "query" | "mutation" | "subscription"
-  ): Map<
-    string,
-    OperationOrField<any, AnyGraphQLSilk, InputSchema<AnyGraphQLSilk>>
-  > {
+  ): SilkObjectType {
     switch (type) {
       case "query":
-        return this.queries
+        return this.query
       case "mutation":
-        return this.mutations
+        return this.mutation
       case "subscription":
-        return this.subscriptions
+        return this.subscription
     }
   }
 }
