@@ -24,3 +24,9 @@ export type SilkField = OperationOrField<
   InputSchema<AnyGraphQLSilk>,
   "field"
 >
+
+export type SilkOperationOrField = OperationOrField<
+  any,
+  AnyGraphQLSilk,
+  InputSchema<AnyGraphQLSilk>
+>

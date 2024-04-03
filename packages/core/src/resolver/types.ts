@@ -11,7 +11,7 @@ import type { GraphQLFieldConfig, GraphQLOutputType } from "graphql"
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
  */
-export interface GraphQLSilk<TOutput, TInput> {
+export interface GraphQLSilk<TOutput, TInput> extends GraphQLFieldOptions {
   /**
    * GraphQL type for schema
    */
@@ -90,7 +90,7 @@ export type OperationOrFieldType = OperationType | "field"
 
 export type GraphQLFieldOptions = Pick<
   GraphQLFieldConfig<any, any>,
-  "description" | "deprecationReason" | "extensions" | "astNode"
+  "description" | "deprecationReason" | "extensions"
 >
 
 /**
