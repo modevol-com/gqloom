@@ -2,8 +2,20 @@ import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldResolver,
+  GraphQLInputFieldConfig,
   GraphQLInputType,
+  GraphQLObjectType,
   GraphQLOutputType,
+} from "graphql"
+import {
+  GraphQLInputObjectType,
+  GraphQLList,
+  GraphQLNonNull,
+  isInterfaceType,
+  isListType,
+  isNonNullType,
+  isObjectType,
+  isUnionType,
 } from "graphql"
 import type { ResolvingOptions } from "../resolver"
 import {
@@ -14,17 +26,24 @@ import {
 } from "../resolver"
 import type { SilkOperationOrField } from "./types"
 import { resolverPayloadStorage } from "../utils/context"
+import { mapValue } from "../utils/object"
+import { LocatableError, markErrorLocation } from "../utils/error"
 
 export function toFieldConfig(
   field: SilkOperationOrField,
   options: Record<string | number | symbol, any> = {}
 ): GraphQLFieldConfig<any, any> {
-  return {
-    ...field,
-    type: field.output.getType(options),
-    args: inputToArgs(field.input, options),
-    ...provideForResolve(field),
-    ...provideForSubscribe(field),
+  try {
+    return {
+      ...field,
+      type: field.output.getType(options),
+      args: inputToArgs(field.input, options),
+      ...provideForResolve(field),
+      ...provideForSubscribe(field),
+    }
+  } catch (error) {
+    markErrorLocation(error)
+    throw error
   }
 }
 
@@ -67,20 +86,66 @@ export function inputToArgs(
   options: Record<string | number | symbol, any> = {}
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined
-  if (isSilk(input)) return {}
+  if (isSilk(input)) {
+    const inputType = input.getType(options)
+    if (isObjectType(inputType)) {
+      return mapValue(inputType.toConfig().fields, toInputFieldConfig)
+    }
+    throw new LocatableError(
+      `Cannot convert ${inputType.toString()} to input type`
+    )
+  }
   const args: GraphQLFieldConfigArgumentMap = {}
   Object.entries(input).forEach(([name, field]) => {
-    args[name] = {
-      ...field,
-      type: ensureInputType(field.getType(options)),
+    try {
+      args[name] = {
+        ...field,
+        type: ensureInputType(field.getType(options)),
+      }
+    } catch (error) {
+      markErrorLocation(error, name)
+      throw error
     }
   })
   return args
 }
 
-// TODO
 export function ensureInputType(input: GraphQLOutputType): GraphQLInputType {
-  return input as GraphQLInputType
+  if (isInterfaceType(input))
+    throw new LocatableError("Cannot convert interface type to input type")
+  if (isUnionType(input))
+    throw new LocatableError("Cannot convert union type to input type")
+  if (isNonNullType(input)) {
+    return new GraphQLNonNull(ensureInputType(input.ofType))
+  }
+  if (isListType(input)) {
+    return new GraphQLList(ensureInputType(input.ofType))
+  }
+  if (isObjectType(input)) return toInputObjectType(input)
+  return input
+}
+
+export function toInputObjectType(
+  object: GraphQLObjectType
+): GraphQLInputObjectType {
+  const {
+    astNode: _,
+    extensionASTNodes: __,
+    fields,
+    ...config
+  } = object.toConfig()
+  return new GraphQLInputObjectType({
+    ...config,
+    fields: mapValue(fields, toInputFieldConfig),
+  })
+}
+
+function toInputFieldConfig({
+  astNode: _,
+  extensions: __,
+  ...config
+}: GraphQLFieldConfig<any, any>): GraphQLInputFieldConfig {
+  return { ...config, type: ensureInputType(config.type) }
 }
 
 export function mapToFieldConfig(

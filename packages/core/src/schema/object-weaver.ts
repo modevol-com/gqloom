@@ -1,12 +1,17 @@
+import type {
+  GraphQLFieldConfig,
+  GraphQLInputObjectType,
+  ThunkObjMap,
+} from "graphql"
 import { GraphQLObjectType } from "graphql"
-import { GraphQLInputObjectType } from "graphql"
 import type { SilkField } from "./types"
-import { mapToFieldConfig } from "./utils"
+import { mapToFieldConfig, toInputObjectType } from "./utils"
 
 export class ObjectWeaver {
   protected fields = new Map<string, SilkField>()
 
   protected originObject: GraphQLObjectType
+  protected finalObject?: GraphQLObjectType
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
 
@@ -21,23 +26,31 @@ export class ObjectWeaver {
       throw new Error(`Field ${name} already exists`)
     }
     this.fields.set(name, resolver)
+    this.finalObject = undefined
   }
 
   toGraphQLObjectType(): GraphQLObjectType {
+    if (this.finalObject) return this.finalObject
     if (this.fields.size === 0) return this.originObject
-    const config = this.originObject.toConfig()
-    const externalField = mapToFieldConfig(this.fields, this.optionsForGetType)
 
-    return new GraphQLObjectType({
-      ...config,
-      fields: { ...config.fields, ...externalField },
-    })
+    const config = this.originObject.toConfig()
+
+    const fields: ThunkObjMap<GraphQLFieldConfig<any, any, any>> = () => {
+      const externalField = mapToFieldConfig(
+        this.fields,
+        this.optionsForGetType
+      )
+      return {
+        ...config.fields,
+        ...externalField,
+      }
+    }
+
+    this.finalObject = new GraphQLObjectType({ ...config, fields })
+    return this.finalObject
   }
 
   toGraphQLInputObjectType(): GraphQLInputObjectType {
-    return new GraphQLInputObjectType({
-      name: "TODO",
-      fields: {},
-    })
+    return toInputObjectType(this.originObject)
   }
 }
