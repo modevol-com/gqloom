@@ -35,12 +35,10 @@ export function getFieldOptions({
   description,
   deprecationReason,
   extensions,
-  astNode,
 }: GraphQLFieldOptions): GraphQLFieldOptions {
   return {
     description,
     deprecationReason,
     extensions,
-    astNode,
   }
 }
