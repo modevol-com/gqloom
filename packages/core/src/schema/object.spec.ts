@@ -5,7 +5,7 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { ExtraObjectType } from "./object"
+import { ModifiableObjectType } from "./object"
 import { silk, silkField } from "../resolver"
 
 describe("printType", () => {
@@ -27,9 +27,9 @@ describe("printType", () => {
   })
 })
 
-describe("ExtraObjectType", () => {
+describe("ModifiableObjectType", () => {
   it("should weave object with Extra fields correctly", () => {
-    const Dog = new ExtraObjectType({ name: "Dog", fields: {} })
+    const Dog = new ModifiableObjectType({ name: "Dog", fields: {} })
     Dog.addField(
       "name",
       silkField(silk<string, string>(GraphQLString), () => "")

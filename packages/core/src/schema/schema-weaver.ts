@@ -6,7 +6,7 @@ import type {
   InputSchema,
 } from "../resolver"
 import { RESOLVER_OPTIONS_KEY } from "../resolver"
-import { ExtraObjectType } from "./object"
+import { ModifiableObjectType } from "./object"
 
 type SilkResolver = Record<
   string,
@@ -17,15 +17,15 @@ type SilkResolver = Record<
 
 interface SchemaWeaverParameters
   extends Partial<
-    Record<"query" | "mutation" | "subscription", ExtraObjectType>
+    Record<"query" | "mutation" | "subscription", ModifiableObjectType>
   > {}
 
 export class SchemaWeaver {
-  protected query: ExtraObjectType
-  protected mutation: ExtraObjectType
-  protected subscription: ExtraObjectType
+  protected query: ModifiableObjectType
+  protected mutation: ModifiableObjectType
+  protected subscription: ModifiableObjectType
 
-  protected objectMap = new Map<string, ExtraObjectType>()
+  protected objectMap = new Map<string, ModifiableObjectType>()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
 
@@ -35,11 +35,13 @@ export class SchemaWeaver {
   }
 
   constructor({ query, mutation, subscription }: SchemaWeaverParameters) {
-    this.query = query ?? new ExtraObjectType({ name: "Query", fields: {} })
+    this.query =
+      query ?? new ModifiableObjectType({ name: "Query", fields: {} })
     this.mutation =
-      mutation ?? new ExtraObjectType({ name: "Mutation", fields: {} })
+      mutation ?? new ModifiableObjectType({ name: "Mutation", fields: {} })
     this.subscription =
-      subscription ?? new ExtraObjectType({ name: "Subscription", fields: {} })
+      subscription ??
+      new ModifiableObjectType({ name: "Subscription", fields: {} })
   }
 
   addResolver(resolver: SilkResolver) {
@@ -49,7 +51,7 @@ export class SchemaWeaver {
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
         const { optionsForGetType, objectMap } = this
-        const extraObject = new ExtraObjectType(gqlType, {
+        const extraObject = new ModifiableObjectType(gqlType, {
           optionsForGetType,
           objectMap,
         })
@@ -75,7 +77,7 @@ export class SchemaWeaver {
 
   protected getOperationObject(
     type: "query" | "mutation" | "subscription"
-  ): ExtraObjectType {
+  ): ModifiableObjectType {
     switch (type) {
       case "query":
         return this.query
