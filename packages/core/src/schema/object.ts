@@ -17,7 +17,7 @@ import type { SilkOperationOrField } from "./types"
 import { mapToFieldConfig, toInputObjectType } from "./utils"
 import { mapValue, toObjMap } from "../utils"
 
-export class SilkObjectType extends GraphQLObjectType {
+export class ExtraObjectType extends GraphQLObjectType {
   protected fields = new Map<string, SilkOperationOrField>()
 
   protected optionsForGetType: Record<string | symbol | number, any>
@@ -30,8 +30,8 @@ export class SilkObjectType extends GraphQLObjectType {
       | GraphQLObjectTypeConfig<any, any>
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
     options: {
-      optionsForGetType?: SilkObjectType["optionsForGetType"]
-      objectMap?: SilkObjectType["objectMap"]
+      optionsForGetType?: ExtraObjectType["optionsForGetType"]
+      objectMap?: ExtraObjectType["objectMap"]
     } = {}
   ) {
     const originObject =
@@ -56,7 +56,7 @@ export class SilkObjectType extends GraphQLObjectType {
   override getFields(): GraphQLFieldMap<any, any> {
     const fields = super.getFields()
     const extraField = defineFieldMap(
-      mapToFieldConfig(this.fields, this.optionsForGetType)
+      mapToFieldConfig(this.fields, this.optionsForGetType, this.objectMap)
     )
     return {
       ...fields,

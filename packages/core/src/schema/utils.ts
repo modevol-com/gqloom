@@ -29,6 +29,20 @@ import { resolverPayloadStorage } from "../utils/context"
 import { mapValue } from "../utils/object"
 import { LocatableError, markErrorLocation } from "../utils/error"
 
+export function mapToFieldConfig(
+  map: Map<string, SilkOperationOrField>,
+  options: Record<string | number | symbol, any> = {},
+  objectMap?: Map<string, GraphQLObjectType>
+): Record<string, GraphQLFieldConfig<any, any>> {
+  const record: Record<string, GraphQLFieldConfig<any, any>> = {}
+
+  for (const [name, field] of map.entries()) {
+    record[name] = toFieldConfig(field, options, objectMap)
+  }
+
+  return record
+}
+
 export function toFieldConfig(
   field: SilkOperationOrField,
   options: Record<string | number | symbol, any> = {},
@@ -155,17 +169,4 @@ function toInputFieldConfig({
   ...config
 }: GraphQLFieldConfig<any, any>): GraphQLInputFieldConfig {
   return { ...config, type: ensureInputType(config.type) }
-}
-
-export function mapToFieldConfig(
-  map: Map<string, SilkOperationOrField>,
-  options: Record<string | number | symbol, any> = {}
-): Record<string, GraphQLFieldConfig<any, any>> {
-  const record: Record<string, GraphQLFieldConfig<any, any>> = {}
-
-  for (const [name, field] of map.entries()) {
-    record[name] = toFieldConfig(field, options)
-  }
-
-  return record
 }

@@ -6,7 +6,7 @@ import type {
   InputSchema,
 } from "../resolver"
 import { RESOLVER_OPTIONS_KEY } from "../resolver"
-import { SilkObjectType } from "./object-weaver"
+import { ExtraObjectType } from "./object"
 
 type SilkResolver = Record<
   string,
@@ -17,15 +17,15 @@ type SilkResolver = Record<
 
 interface SchemaWeaverParameters
   extends Partial<
-    Record<"query" | "mutation" | "subscription", SilkObjectType>
+    Record<"query" | "mutation" | "subscription", ExtraObjectType>
   > {}
 
 export class SchemaWeaver {
-  protected query: SilkObjectType
-  protected mutation: SilkObjectType
-  protected subscription: SilkObjectType
+  protected query: ExtraObjectType
+  protected mutation: ExtraObjectType
+  protected subscription: ExtraObjectType
 
-  protected objectMap = new Map<string, SilkObjectType>()
+  protected objectMap = new Map<string, ExtraObjectType>()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
 
@@ -35,26 +35,26 @@ export class SchemaWeaver {
   }
 
   constructor({ query, mutation, subscription }: SchemaWeaverParameters) {
-    this.query = query ?? new SilkObjectType({ name: "Query", fields: {} })
+    this.query = query ?? new ExtraObjectType({ name: "Query", fields: {} })
     this.mutation =
-      mutation ?? new SilkObjectType({ name: "Mutation", fields: {} })
+      mutation ?? new ExtraObjectType({ name: "Mutation", fields: {} })
     this.subscription =
-      subscription ?? new SilkObjectType({ name: "Subscription", fields: {} })
+      subscription ?? new ExtraObjectType({ name: "Subscription", fields: {} })
   }
 
   addResolver(resolver: SilkResolver) {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
-    const parentSilkObject = (() => {
+    const parentObject = (() => {
       if (parent == null) return undefined
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
         const { optionsForGetType, objectMap } = this
-        const silkObject = new SilkObjectType(gqlType, {
+        const extraObject = new ExtraObjectType(gqlType, {
           optionsForGetType,
           objectMap,
         })
-        this.objectMap.set(gqlType.name, silkObject)
-        return silkObject
+        this.objectMap.set(gqlType.name, extraObject)
+        return extraObject
       }
       throw new Error(
         `${(gqlType as any)?.name ?? gqlType.toString()} is not an object type`
@@ -64,18 +64,18 @@ export class SchemaWeaver {
     Object.entries(resolver).forEach(([name, operation]) => {
       if ((name as any) === RESOLVER_OPTIONS_KEY) return
       if (operation.type === "field") {
-        if (parentSilkObject == null) return
-        parentSilkObject.addField(name, operation)
+        if (parentObject == null) return
+        parentObject.addField(name, operation)
       } else {
-        const silkObject = this.getOperationSilkObject(operation.type)
-        silkObject.addField(name, operation)
+        const operationObject = this.getOperationObject(operation.type)
+        operationObject.addField(name, operation)
       }
     })
   }
 
-  protected getOperationSilkObject(
+  protected getOperationObject(
     type: "query" | "mutation" | "subscription"
-  ): SilkObjectType {
+  ): ExtraObjectType {
     switch (type) {
       case "query":
         return this.query
