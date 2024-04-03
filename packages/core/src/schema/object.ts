@@ -18,7 +18,7 @@ import { mapToFieldConfig, toInputObjectType } from "./utils"
 import { mapValue, toObjMap } from "../utils"
 
 export class ExtraObjectType extends GraphQLObjectType {
-  protected fields = new Map<string, SilkOperationOrField>()
+  protected extraFields = new Map<string, SilkOperationOrField>()
 
   protected optionsForGetType: Record<string | symbol | number, any>
 
@@ -46,17 +46,17 @@ export class ExtraObjectType extends GraphQLObjectType {
   }
 
   addField(name: string, resolver: SilkOperationOrField) {
-    const existing = this.fields.get(name)
+    const existing = this.extraFields.get(name)
     if (existing && existing !== resolver) {
       throw new Error(`Field ${name} already exists`)
     }
-    this.fields.set(name, resolver)
+    this.extraFields.set(name, resolver)
   }
 
   override getFields(): GraphQLFieldMap<any, any> {
     const fields = super.getFields()
     const extraField = defineFieldMap(
-      mapToFieldConfig(this.fields, this.optionsForGetType, this.objectMap)
+      mapToFieldConfig(this.extraFields, this.optionsForGetType, this.objectMap)
     )
     return {
       ...fields,
