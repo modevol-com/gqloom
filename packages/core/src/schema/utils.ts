@@ -144,9 +144,13 @@ export function ensureInputType(
   inputMap?: InputMap
 ): GraphQLInputType {
   if (isInterfaceType(output))
-    throw new LocatableError("Cannot convert interface type to input type")
+    throw new LocatableError(
+      `Cannot convert interface type ${output.name} to input type`
+    )
   if (isUnionType(output))
-    throw new LocatableError("Cannot convert union type to input type")
+    throw new LocatableError(
+      `Cannot convert union type ${output.name} to input type`
+    )
   if (isNonNullType(output)) {
     return new GraphQLNonNull(ensureInputType(output.ofType, inputMap))
   }
