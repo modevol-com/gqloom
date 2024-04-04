@@ -184,7 +184,12 @@ export function toInputObjectType(
 }
 
 function toInputFieldConfig(
-  { astNode: _, extensions: __, ...config }: GraphQLFieldConfig<any, any>,
+  {
+    astNode: _,
+    extensions: _1,
+    resolve: _2,
+    ...config
+  }: GraphQLFieldConfig<any, any>,
   inputMap?: InputMap
 ): GraphQLInputFieldConfig {
   return { ...config, type: ensureInputType(config.type, inputMap) }
