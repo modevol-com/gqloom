@@ -5,7 +5,7 @@ import type {
   GraphQLInputFieldConfig,
   GraphQLInputType,
   GraphQLObjectType,
-  GraphQLOutputType,
+  GraphQLType,
 } from "graphql"
 import {
   GraphQLInputObjectType,
@@ -48,10 +48,11 @@ export function mapToFieldConfig(
 
 export function toFieldConfig(
   field: SilkOperationOrField,
-  options: FieldConvertOptions = {}
+  fieldOptions: FieldConvertOptions = {},
+  resolvingOptions?: ResolvingOptions
 ): GraphQLFieldConfig<any, any> {
   try {
-    const { optionsForGetType = {}, objectMap } = options
+    const { optionsForGetType = {}, objectMap } = fieldOptions
     const outputType = (() => {
       const gqlType = field.output.getType(optionsForGetType)
       if (isObjectType(gqlType)) {
@@ -63,9 +64,9 @@ export function toFieldConfig(
     return {
       ...field,
       type: outputType,
-      args: inputToArgs(field.input, options),
-      ...provideForResolve(field),
-      ...provideForSubscribe(field),
+      args: inputToArgs(field.input, fieldOptions),
+      ...provideForResolve(field, resolvingOptions),
+      ...provideForSubscribe(field, resolvingOptions),
     }
   } catch (error) {
     markErrorLocation(error)
@@ -140,7 +141,7 @@ export function inputToArgs(
 }
 
 export function ensureInputType(
-  output: GraphQLOutputType,
+  output: GraphQLType,
   inputMap?: InputMap
 ): GraphQLInputType {
   if (isInterfaceType(output))
