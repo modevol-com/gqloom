@@ -13,27 +13,21 @@ import {
   isObjectType,
   resolveObjMapThunk,
 } from "graphql"
-import type { SilkOperationOrField } from "./types"
+import type { FieldConvertOptions, SilkOperationOrField } from "./types"
 import { mapToFieldConfig, toInputObjectType } from "./utils"
 import { mapValue, toObjMap } from "../utils"
 
 export class ModifiableObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
 
-  protected optionsForGetType: Record<string | symbol | number, any>
-
-  protected objectMap?: Map<string, GraphQLObjectType>
-
+  protected fieldOptions: FieldConvertOptions
   constructor(
     objectOrGetter:
       | string
       | GraphQLObjectType
       | GraphQLObjectTypeConfig<any, any>
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
-    options: {
-      optionsForGetType?: ModifiableObjectType["optionsForGetType"]
-      objectMap?: ModifiableObjectType["objectMap"]
-    } = {}
+    fieldOptions?: FieldConvertOptions
   ) {
     const origin =
       typeof objectOrGetter === "function" ? objectOrGetter() : objectOrGetter
@@ -44,8 +38,11 @@ export class ModifiableObjectType extends GraphQLObjectType {
     } else {
       super(origin)
     }
-    this.objectMap = options.objectMap
-    this.optionsForGetType = options.optionsForGetType ?? {}
+    this.fieldOptions = fieldOptions ?? {
+      optionsForGetType: {},
+      inputMap: new Map(),
+      objectMap: new Map(),
+    }
   }
 
   addField(name: string, resolver: SilkOperationOrField) {
@@ -59,7 +56,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
   override getFields(): GraphQLFieldMap<any, any> {
     const fields = super.getFields()
     const extraField = defineFieldMap(
-      mapToFieldConfig(this.extraFields, this.optionsForGetType, this.objectMap)
+      mapToFieldConfig(this.extraFields, this.fieldOptions)
     )
     return {
       ...fields,
@@ -68,7 +65,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
   }
 
   toGraphQLInputObjectType(): GraphQLInputObjectType {
-    return toInputObjectType(this)
+    return toInputObjectType(this, this.fieldOptions.inputMap)
   }
 }
 

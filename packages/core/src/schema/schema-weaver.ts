@@ -7,6 +7,7 @@ import type {
 } from "../resolver"
 import { RESOLVER_OPTIONS_KEY } from "../resolver"
 import { ModifiableObjectType } from "./object"
+import type { InputMap } from "./types"
 
 type SilkResolver = Record<
   string,
@@ -26,6 +27,7 @@ export class SchemaWeaver {
   protected subscription: ModifiableObjectType
 
   protected objectMap = new Map<string, ModifiableObjectType>()
+  protected inputMap: InputMap = new Map()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
 
@@ -50,10 +52,11 @@ export class SchemaWeaver {
       if (parent == null) return undefined
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
-        const { optionsForGetType, objectMap } = this
+        const { optionsForGetType, objectMap, inputMap } = this
         const extraObject = new ModifiableObjectType(gqlType, {
           optionsForGetType,
           objectMap,
+          inputMap,
         })
         this.objectMap.set(gqlType.name, extraObject)
         return extraObject
