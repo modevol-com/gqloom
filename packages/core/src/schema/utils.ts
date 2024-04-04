@@ -35,12 +35,13 @@ import { LocatableError, markErrorLocation } from "../utils/error"
 
 export function mapToFieldConfig(
   map: Map<string, SilkOperationOrField>,
-  options: FieldConvertOptions = {}
+  options: FieldConvertOptions = {},
+  resolvingOptions?: ResolvingOptions
 ): Record<string, GraphQLFieldConfig<any, any>> {
   const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
   for (const [name, field] of map.entries()) {
-    record[name] = toFieldConfig(field, options)
+    record[name] = toFieldConfig(field, options, resolvingOptions)
   }
 
   return record

@@ -1,11 +1,7 @@
 import type { GraphQLInputObjectType, GraphQLObjectType } from "graphql"
-import type { AnyGraphQLSilk, OperationOrField, InputSchema } from "../resolver"
+import type { OperationOrField } from "../resolver"
 
-export type SilkOperationOrField = OperationOrField<
-  any,
-  AnyGraphQLSilk,
-  InputSchema<AnyGraphQLSilk>
->
+export type SilkOperationOrField = OperationOrField<any, any, any, any>
 
 export type InputMap = Map<
   string,
