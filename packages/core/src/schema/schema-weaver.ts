@@ -1,6 +1,9 @@
 import { GraphQLSchema, isObjectType } from "graphql"
-import type { OperationOrField, ResolverOptionsWithParent } from "../resolver"
-import { RESOLVER_OPTIONS_KEY } from "../resolver"
+import {
+  type OperationOrField,
+  RESOLVER_OPTIONS_KEY,
+  type ResolverOptionsWithParent,
+} from "../resolver"
 import { ModifiableObjectType } from "./object"
 import type { InputMap } from "./types"
 

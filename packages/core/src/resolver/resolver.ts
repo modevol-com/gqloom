@@ -1,5 +1,5 @@
-import type { Middleware } from "../utils"
 import {
+  type Middleware,
   getOperationOptions,
   applyMiddlewares,
   compose,

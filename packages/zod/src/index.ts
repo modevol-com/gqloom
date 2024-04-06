@@ -1,7 +1,6 @@
 import { type GraphQLSilk, createLoom } from "@gqloom/core"
 import { GraphQLString } from "graphql"
-import type { Schema, input, output } from "zod"
-import { z } from "zod"
+import { z, type Schema, type input, type output } from "zod"
 
 export class ZodSilk<TSchema extends Schema>
   implements GraphQLSilk<output<TSchema>, input<TSchema>>

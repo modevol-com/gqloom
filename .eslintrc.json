@@ -29,7 +29,14 @@
     "no-unused-vars": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/consistent-type-definitions": "error", // Enforce declaring types using `interface` keyword for better TS performance.
-    "@typescript-eslint/consistent-type-imports": "warn",
+    "@typescript-eslint/consistent-type-imports": [
+      "warn",
+      {
+        "disallowTypeAnnotations": false,
+        "fixStyle": "inline-type-imports",
+        "prefer": "type-imports"
+      }
+    ],
     "@typescript-eslint/no-unused-vars": [
       "warn", // or "error"
       {

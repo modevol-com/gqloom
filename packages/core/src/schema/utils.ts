@@ -1,24 +1,22 @@
-import type {
-  GraphQLFieldConfig,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLFieldResolver,
-  GraphQLInputFieldConfig,
-  GraphQLInputType,
-  GraphQLObjectType,
-  GraphQLType,
-} from "graphql"
 import {
+  type GraphQLFieldConfig,
+  type GraphQLFieldConfigArgumentMap,
+  type GraphQLFieldResolver,
+  type GraphQLInputFieldConfig,
   GraphQLInputObjectType,
+  type GraphQLInputType,
   GraphQLList,
   GraphQLNonNull,
+  type GraphQLObjectType,
+  type GraphQLType,
   isInterfaceType,
   isListType,
   isNonNullType,
   isObjectType,
   isUnionType,
 } from "graphql"
-import type { ResolvingOptions } from "../resolver"
 import {
+  type ResolvingOptions,
   type AnyGraphQLSilk,
   type InputSchema,
   isSilk,
@@ -29,9 +27,12 @@ import type {
   InputMap,
   SilkOperationOrField,
 } from "./types"
-import { resolverPayloadStorage } from "../utils/context"
-import { mapValue } from "../utils/object"
-import { LocatableError, markErrorLocation } from "../utils/error"
+import {
+  resolverPayloadStorage,
+  mapValue,
+  LocatableError,
+  markErrorLocation,
+} from "../utils"
 
 export function mapToFieldConfig(
   map: Map<string, SilkOperationOrField>,

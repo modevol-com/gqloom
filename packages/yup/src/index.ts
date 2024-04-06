@@ -1,7 +1,6 @@
 import { type GraphQLSilk, createLoom } from "@gqloom/core"
 import { GraphQLString } from "graphql"
-import type { InferType, Schema } from "yup"
-import { isSchema } from "yup"
+import { isSchema, type InferType, type Schema } from "yup"
 
 export class YupSilk<TSchema extends Schema>
   implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>

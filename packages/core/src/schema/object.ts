@@ -1,13 +1,11 @@
-import type {
-  GraphQLArgument,
-  GraphQLFieldConfig,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLFieldMap,
-  GraphQLInputObjectType,
-  GraphQLObjectTypeConfig,
-  ThunkObjMap,
-} from "graphql"
 import {
+  type GraphQLArgument,
+  type GraphQLFieldConfig,
+  type GraphQLFieldConfigArgumentMap,
+  type GraphQLFieldMap,
+  type GraphQLInputObjectType,
+  type GraphQLObjectTypeConfig,
+  type ThunkObjMap,
   GraphQLObjectType,
   assertName,
   isObjectType,
