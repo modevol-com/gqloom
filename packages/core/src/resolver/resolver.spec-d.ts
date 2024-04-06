@@ -15,35 +15,35 @@ import {
   silkSubscription as subscription,
 } from "./resolver"
 
-interface IGiraffe {
-  name: string
-  birthday: Date
-  heightInMeters: number
-}
-
-const Giraffe = silk<IGiraffe>(
-  new GraphQLObjectType({
-    name: "Giraffe",
-    fields: {
-      name: { type: new GraphQLNonNull(GraphQLString) },
-      birthday: { type: new GraphQLNonNull(GraphQLString) },
-      heightInMeters: { type: new GraphQLNonNull(GraphQLFloat) },
-    },
-  })
-)
-
-const GiraffeInput = silk<Partial<IGiraffe>>(
-  new GraphQLObjectType({
-    name: "GiraffeInput",
-    fields: {
-      name: { type: GraphQLString },
-      birthday: { type: GraphQLString },
-      heightInMeters: { type: GraphQLFloat },
-    },
-  })
-)
-
 describe("resolver type", () => {
+  interface IGiraffe {
+    name: string
+    birthday: Date
+    heightInMeters: number
+  }
+
+  const Giraffe = silk<IGiraffe>(
+    new GraphQLObjectType({
+      name: "Giraffe",
+      fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        birthday: { type: new GraphQLNonNull(GraphQLString) },
+        heightInMeters: { type: new GraphQLNonNull(GraphQLFloat) },
+      },
+    })
+  )
+
+  const GiraffeInput = silk<Partial<IGiraffe>>(
+    new GraphQLObjectType({
+      name: "GiraffeInput",
+      fields: {
+        name: { type: GraphQLString },
+        birthday: { type: GraphQLString },
+        heightInMeters: { type: GraphQLFloat },
+      },
+    })
+  )
+
   describe("query and mutation", () => {
     it("should infer output and input type", () => {
       const simpleResolver = resolver({

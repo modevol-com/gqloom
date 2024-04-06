@@ -1,18 +1,10 @@
 import { GraphQLSchema, isObjectType } from "graphql"
-import type {
-  AnyGraphQLSilk,
-  OperationOrField,
-  ResolverOptionsWithParent,
-  InputSchema,
-} from "../resolver"
+import type { OperationOrField, ResolverOptionsWithParent } from "../resolver"
 import { RESOLVER_OPTIONS_KEY } from "../resolver"
 import { ModifiableObjectType } from "./object"
 import type { InputMap } from "./types"
 
-type SilkResolver = Record<
-  string,
-  OperationOrField<any, AnyGraphQLSilk, InputSchema<AnyGraphQLSilk>>
-> & {
+type SilkResolver = Record<string, OperationOrField<any, any, any, any>> & {
   [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
 }
 
@@ -22,9 +14,9 @@ interface SchemaWeaverParameters
   > {}
 
 export class SchemaWeaver {
-  protected query: ModifiableObjectType
-  protected mutation: ModifiableObjectType
-  protected subscription: ModifiableObjectType
+  protected query?: ModifiableObjectType
+  protected mutation?: ModifiableObjectType
+  protected subscription?: ModifiableObjectType
 
   protected objectMap = new Map<string, ModifiableObjectType>()
   protected inputMap: InputMap = new Map()
@@ -36,14 +28,10 @@ export class SchemaWeaver {
     return new GraphQLSchema({ query, mutation, subscription })
   }
 
-  constructor({ query, mutation, subscription }: SchemaWeaverParameters) {
-    this.query =
-      query ?? new ModifiableObjectType({ name: "Query", fields: {} })
-    this.mutation =
-      mutation ?? new ModifiableObjectType({ name: "Mutation", fields: {} })
-    this.subscription =
-      subscription ??
-      new ModifiableObjectType({ name: "Subscription", fields: {} })
+  constructor({ query, mutation, subscription }: SchemaWeaverParameters = {}) {
+    if (query != null) this.query = query
+    if (mutation != null) this.mutation = mutation
+    if (subscription != null) this.subscription = subscription
   }
 
   addResolver(resolver: SilkResolver) {
@@ -52,12 +40,7 @@ export class SchemaWeaver {
       if (parent == null) return undefined
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
-        const { optionsForGetType, objectMap, inputMap } = this
-        const extraObject = new ModifiableObjectType(gqlType, {
-          optionsForGetType,
-          objectMap,
-          inputMap,
-        })
+        const extraObject = new ModifiableObjectType(gqlType, this.fieldOptions)
         this.objectMap.set(gqlType.name, extraObject)
         return extraObject
       }
@@ -76,6 +59,7 @@ export class SchemaWeaver {
         operationObject.addField(name, operation)
       }
     })
+    return this
   }
 
   protected getOperationObject(
@@ -83,11 +67,28 @@ export class SchemaWeaver {
   ): ModifiableObjectType {
     switch (type) {
       case "query":
-        return this.query
+        if (this.query) return this.query
+        return (this.query = new ModifiableObjectType(
+          { name: "Query", fields: {} },
+          this.fieldOptions
+        ))
       case "mutation":
-        return this.mutation
+        if (this.mutation) return this.mutation
+        return (this.mutation = new ModifiableObjectType(
+          { name: "Mutation", fields: {} },
+          this.fieldOptions
+        ))
       case "subscription":
-        return this.subscription
+        if (this.subscription) return this.subscription
+        return (this.subscription = new ModifiableObjectType(
+          { name: "Subscription", fields: {} },
+          this.fieldOptions
+        ))
     }
+  }
+
+  protected get fieldOptions() {
+    const { optionsForGetType, objectMap, inputMap } = this
+    return { optionsForGetType, objectMap, inputMap }
   }
 }
