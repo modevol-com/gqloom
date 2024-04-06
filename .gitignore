@@ -8,6 +8,7 @@ server
 
 # Tests
 coverage
+*.vitest-temp.json
 
 # Backups
 backups

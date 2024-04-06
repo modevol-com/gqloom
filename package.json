@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest --typecheck",
     "format": "prettier . --write",
     "lint": "eslint \"**/*.{ts,tsx}\" --fix",
     "check:type": "tsc --noEmit"

@@ -12,7 +12,6 @@ import {
   silkMutation as mutation,
   silkQuery as query,
   silkResolver as resolver,
-  silkSubscription as subscription,
 } from "./resolver"
 import type { Middleware } from "../utils"
 
@@ -43,74 +42,6 @@ const GiraffeInput = silk<Partial<IGiraffe>>(
     },
   })
 )
-
-describe.skip("base resolver", () => {
-  const createGiraffe = mutation(Giraffe, {
-    input: GiraffeInput,
-    resolve: (data) => ({
-      name: data.name ?? "Giraffe",
-      birthday: data.birthday ?? new Date(),
-      heightInMeters: data.heightInMeters ?? 5,
-    }),
-  })
-
-  const simpleGiraffeResolver = resolver({
-    createGiraffe,
-  })
-
-  const giraffeResolver = resolver.of(Giraffe, {
-    age: field(silk<number>(GraphQLInt), async (giraffe) => {
-      return new Date().getFullYear() - giraffe.birthday.getFullYear()
-    }),
-
-    giraffe: query(Giraffe, {
-      input: { name: silk<string>(GraphQLString) },
-      resolve: ({ name }) => ({
-        name,
-        birthday: new Date(),
-        heightInMeters: 5,
-      }),
-    }),
-
-    greeting: field(silk<string>(GraphQLString), {
-      input: { myName: silk<string | undefined>(GraphQLString) },
-      resolve: (giraffe, { myName }) =>
-        `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
-    }),
-
-    newGiraffe: subscription(Giraffe, {
-      input: GiraffeInput,
-      subscribe: async function* (data) {
-        yield data.name ?? ""
-      },
-      resolve: (name) => {
-        return {
-          name,
-          birthday: new Date(),
-          heightInMeters: 5,
-        }
-      },
-    }),
-
-    createGiraffe: mutation(Giraffe, {
-      input: GiraffeInput,
-      resolve: (data) => ({
-        name: data.name ?? "Giraffe",
-        birthday: data.birthday ?? new Date(),
-        heightInMeters: data.heightInMeters ?? 5,
-      }),
-    }),
-  })
-
-  const giraffe: IGiraffe = {
-    name: "Giraffe",
-    birthday: new Date(),
-    heightInMeters: 5,
-  }
-  giraffeResolver.giraffe.resolve({ name: "Giraffe" })
-  giraffeResolver.age.resolve(giraffe, undefined)
-  simpleGiraffeResolver.createGiraffe.resolve({})
-})
 
 describe("resolver", () => {
   const Skyler: IGiraffe = {
