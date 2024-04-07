@@ -19,6 +19,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
 
   protected fieldOptions: FieldConvertOptions
+
   constructor(
     objectOrGetter:
       | string

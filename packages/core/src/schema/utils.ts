@@ -36,13 +36,12 @@ import {
 
 export function mapToFieldConfig(
   map: Map<string, SilkOperationOrField>,
-  options: FieldConvertOptions = {},
-  resolvingOptions?: ResolvingOptions
+  options: FieldConvertOptions = {}
 ): Record<string, GraphQLFieldConfig<any, any>> {
   const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
   for (const [name, field] of map.entries()) {
-    record[name] = toFieldConfig(field, options, resolvingOptions)
+    record[name] = toFieldConfig(field, options)
   }
 
   return record
@@ -50,11 +49,10 @@ export function mapToFieldConfig(
 
 export function toFieldConfig(
   field: SilkOperationOrField,
-  fieldOptions: FieldConvertOptions = {},
-  resolvingOptions?: ResolvingOptions
+  options: FieldConvertOptions = {}
 ): GraphQLFieldConfig<any, any> {
   try {
-    const { optionsForGetType = {}, objectMap } = fieldOptions
+    const { optionsForGetType = {}, objectMap } = options
     const outputType = (() => {
       const gqlType = field.output.getType(optionsForGetType)
       if (isObjectType(gqlType)) {
@@ -66,9 +64,9 @@ export function toFieldConfig(
     return {
       ...field,
       type: outputType,
-      args: inputToArgs(field.input, fieldOptions),
-      ...provideForResolve(field, resolvingOptions),
-      ...provideForSubscribe(field, resolvingOptions),
+      args: inputToArgs(field.input, options),
+      ...provideForResolve(field, options.optionsForResolving),
+      ...provideForSubscribe(field, options.optionsForResolving),
     }
   } catch (error) {
     markErrorLocation(error)

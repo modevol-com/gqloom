@@ -3,9 +3,11 @@ import {
   type OperationOrField,
   RESOLVER_OPTIONS_KEY,
   type ResolverOptionsWithParent,
+  type ResolvingOptions,
 } from "../resolver"
 import { ModifiableObjectType } from "./object"
 import type { InputMap } from "./types"
+import { type Middleware } from "../utils"
 
 type SilkResolver = Record<string, OperationOrField<any, any, any, any>> & {
   [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
@@ -25,8 +27,16 @@ export class SchemaWeaver {
   protected inputMap: InputMap = new Map()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
+  protected optionsForResolving?: ResolvingOptions
 
-  weaveGraphQLSchema(): GraphQLSchema {
+  public use(...middlewares: Middleware[]) {
+    this.optionsForResolving ??= { middlewares: [] }
+    this.optionsForResolving.middlewares ??= []
+    this.optionsForResolving.middlewares.push(...middlewares)
+    return this
+  }
+
+  public weaveGraphQLSchema(): GraphQLSchema {
     const { query, mutation, subscription } = this
     return new GraphQLSchema({ query, mutation, subscription })
   }
@@ -37,7 +47,7 @@ export class SchemaWeaver {
     if (subscription != null) this.subscription = subscription
   }
 
-  addResolver(resolver: SilkResolver) {
+  public addResolver(resolver: SilkResolver) {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
@@ -91,7 +101,7 @@ export class SchemaWeaver {
   }
 
   protected get fieldOptions() {
-    const { optionsForGetType, objectMap, inputMap } = this
-    return { optionsForGetType, objectMap, inputMap }
+    const { optionsForGetType, objectMap, inputMap, optionsForResolving } = this
+    return { optionsForGetType, objectMap, inputMap, optionsForResolving }
   }
 }
