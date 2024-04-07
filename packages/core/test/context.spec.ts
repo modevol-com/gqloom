@@ -8,6 +8,7 @@ import {
   SchemaWeaver,
   useResolverPayload,
   type ResolverPayload,
+  createMemory,
 } from "../src"
 import {
   GraphQLString,
@@ -15,6 +16,8 @@ import {
   execute,
   GraphQLObjectType,
   GraphQLInt,
+  type ExecutionResult,
+  GraphQLFloat,
 } from "graphql"
 
 describe("context integration", () => {
@@ -167,5 +170,110 @@ describe("context integration", () => {
 
   it("should available in resolve function", () => {
     expect(payloads.helloResolver).toBeDefined()
+  })
+})
+
+describe("memory integration", () => {
+  const NodeSilk = silk<{ value: number }>(
+    new GraphQLObjectType({
+      name: "Node",
+      fields: { value: { type: GraphQLFloat } },
+    })
+  )
+
+  let calledTime = 0
+  const useRandom = createMemory(() => {
+    calledTime++
+    return Math.random()
+  })
+  const memoried: number[] = []
+
+  const middleware: Middleware = (next) => {
+    memoried.push(useRandom())
+    return next()
+  }
+
+  const nodeResolver = resolver.of(
+    NodeSilk,
+    {
+      next: field(NodeSilk, () => {
+        const value = useRandom()
+        memoried.push(value)
+        return { value }
+      }),
+      node: query(NodeSilk, {
+        resolve: () => {
+          const value = useRandom()
+          memoried.push(value)
+          return { value }
+        },
+        middlewares: [middleware],
+      }),
+    },
+    { middlewares: [middleware] }
+  )
+
+  const schema = new SchemaWeaver()
+    .use(middleware)
+    .addResolver(nodeResolver)
+    .weaveGraphQLSchema()
+
+  const contextValue = {}
+
+  let result:
+    | undefined
+    | ExecutionResult<{ node: { value: number; next: { value: number } } }>
+
+  beforeAll(async () => {
+    ;(result as any) = await execute({
+      schema,
+      contextValue,
+      document: parse(/* GraphQL */ `
+        query {
+          node {
+            value
+            next {
+              value
+              next {
+                value
+              }
+            }
+          }
+        }
+      `),
+    })
+  })
+
+  it("should keep memory", () => {
+    expect(result?.data?.node.value).toEqual(result?.data?.node.next.value)
+    expect(memoried.length).toBeGreaterThanOrEqual(3)
+    expect(new Set(memoried).size).toEqual(1)
+  })
+
+  it("should available in resolver and middlewares", () => {
+    expect(calledTime).toEqual(1)
+  })
+
+  it("should get different value in different execute", () => {
+    const result2 = execute({
+      schema,
+      contextValue,
+      document: parse(/* GraphQL */ `
+        query {
+          node {
+            value
+            next {
+              value
+              next {
+                value
+              }
+            }
+          }
+        }
+      `),
+    }) as ExecutionResult<{ node: { value: number; next: { value: number } } }>
+
+    expect(result2.data?.node.value).toEqual(result2.data?.node.next.value)
+    expect(result2.data?.node.value).not.toEqual(result?.data?.node.value)
   })
 })
