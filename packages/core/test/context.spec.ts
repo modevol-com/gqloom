@@ -1,9 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest"
 import {
   type Middleware,
-  silkQuery as query,
-  silkResolver as resolver,
-  silkField as field,
+  loom,
   silk,
   SchemaWeaver,
   useResolverPayload,
@@ -19,6 +17,8 @@ import {
   type ExecutionResult,
   GraphQLFloat,
 } from "graphql"
+
+const { query, resolver, field } = loom
 
 describe("context integration", () => {
   const payloads = {} as Record<

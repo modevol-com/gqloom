@@ -171,3 +171,11 @@ export const silkResolver: ResolverShuttle<GraphQLSilkIO> = Object.assign(
       )) as ResolverShuttle<GraphQLSilkIO>["of"],
   }
 )
+
+export const loom = {
+  query: silkQuery,
+  resolver: silkResolver,
+  field: silkField,
+  subscription: silkSubscription,
+  mutation: silkMutation,
+}

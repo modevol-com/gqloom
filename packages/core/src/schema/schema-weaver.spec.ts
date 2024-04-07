@@ -9,13 +9,10 @@ import {
   GraphQLInt,
 } from "graphql"
 import { silk } from "../resolver"
-import {
-  silkField as field,
-  silkMutation as mutation,
-  silkQuery as query,
-  silkResolver as resolver,
-} from "../resolver"
+import { loom } from "../resolver"
 import { SchemaWeaver } from "./schema-weaver"
+
+const { resolver, query, mutation, field } = loom
 
 describe("SchemaWeaver", () => {
   it("should weave schema", () => {

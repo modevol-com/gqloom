@@ -7,13 +7,10 @@ import {
 } from "graphql"
 import { describe, expect, it } from "vitest"
 import { silk } from "./silk"
-import {
-  silkField as field,
-  silkMutation as mutation,
-  silkQuery as query,
-  silkResolver as resolver,
-} from "./resolver"
+import { loom } from "./resolver"
 import type { Middleware } from "../utils"
+
+const { resolver, query, mutation, field } = loom
 
 interface IGiraffe {
   name: string

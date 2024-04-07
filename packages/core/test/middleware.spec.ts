@@ -1,12 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest"
-import {
-  type Middleware,
-  silkQuery as query,
-  silkResolver as resolver,
-  silk,
-  SchemaWeaver,
-} from "../src"
+import { type Middleware, loom, silk, SchemaWeaver } from "../src"
 import { GraphQLString, parse, execute } from "graphql"
+
+const { query, resolver } = loom
 
 describe("middleware integration", () => {
   const logs: string[] = []

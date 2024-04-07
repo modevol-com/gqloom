@@ -7,13 +7,9 @@ import {
 } from "graphql"
 import { describe, expectTypeOf, it } from "vitest"
 import { silk } from "./silk"
-import {
-  silkField as field,
-  silkMutation as mutation,
-  silkQuery as query,
-  silkResolver as resolver,
-  silkSubscription as subscription,
-} from "./resolver"
+import { loom } from "./resolver"
+
+const { resolver, query, mutation, field, subscription } = loom
 
 describe("resolver type", () => {
   interface IGiraffe {
