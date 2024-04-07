@@ -70,13 +70,40 @@ describe("SchemaWeaver", () => {
           }
         },
       }),
-      createGiraffe: mutation(Giraffe, {
+      saveGiraffe: mutation(Giraffe, {
         input: GiraffeInput,
         resolve: (input) => {
           return {
             name: input.name ?? "Giraffe",
             birthday: input.birthday ?? new Date(),
             heightInMeters: input.heightInMeters ?? 5,
+          }
+        },
+      }),
+      updateGiraffe: mutation(Giraffe, {
+        input: { data: GiraffeInput },
+        resolve: ({ data }) => {
+          return {
+            name: data.name ?? "Giraffe",
+            birthday: data.birthday ?? new Date(),
+            heightInMeters: data.heightInMeters ?? 5,
+          }
+        },
+      }),
+      createGiraffe: mutation(Giraffe, {
+        input: silk<{ data: Partial<IGiraffe> }>(
+          new GraphQLObjectType({
+            name: "CreateGiraffeInput",
+            fields: {
+              data: { type: GiraffeInput.getType({}) },
+            },
+          })
+        ),
+        resolve: ({ data }) => {
+          return {
+            name: data.name ?? "Giraffe",
+            birthday: data.birthday ?? new Date(),
+            heightInMeters: data.heightInMeters ?? 5,
           }
         },
       }),
@@ -96,8 +123,16 @@ describe("SchemaWeaver", () => {
         name: String!
       }
 
+      input GiraffeInput {
+        birthday: String
+        heightInMeters: Float
+        name: String
+      }
+
       type Mutation {
-        createGiraffe(birthday: String, heightInMeters: Float, name: String): Giraffe
+        createGiraffe(data: GiraffeInput): Giraffe
+        saveGiraffe(birthday: String, heightInMeters: Float, name: String): Giraffe
+        updateGiraffe(data: GiraffeInput): Giraffe
       }
 
       type Query {
