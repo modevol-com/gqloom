@@ -26,7 +26,7 @@ describe("middleware integration", () => {
   }
   const simpleResolver = resolver(
     {
-      hello: query(silk<string>(GraphQLString), {
+      hello: query(silk(GraphQLString), {
         resolve: () => "hello GQLoom",
         middlewares: [operationMiddleware],
       }),

@@ -55,17 +55,17 @@ describe("resolver", () => {
   const giraffeResolver = resolver.of(
     Giraffe,
     {
-      age: field(silk<number>(GraphQLInt), async (giraffe) => {
+      age: field(silk(GraphQLInt), async (giraffe) => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
 
-      greeting: field(silk<string>(GraphQLString), {
-        input: { myName: silk<string | undefined>(GraphQLString) },
+      greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
+        input: { myName: silk(GraphQLString) },
         resolve: (giraffe, { myName }) =>
           `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
       }),
 
-      nominalAge: field(silk<number>(GraphQLInt), {
+      nominalAge: field(silk(GraphQLInt), {
         middlewares: [async (next) => (await next()) + 1],
         resolve: async (giraffe) => {
           return new Date().getFullYear() - giraffe.birthday.getFullYear()
@@ -103,7 +103,7 @@ describe("resolver", () => {
     })
 
     it("should work with middlewares", async () => {
-      const numberSchema = silk<number>(GraphQLFloat)
+      const numberSchema = silk(GraphQLFloat)
 
       const middleware: Middleware = async (next) => {
         const result = await next()
@@ -162,7 +162,7 @@ describe("resolver", () => {
 
     const r1 = resolver(
       {
-        hello: query(silk<string>(GraphQLString), {
+        hello: query(silk(GraphQLString), {
           resolve: () => "world",
           middlewares: [queryMiddleware],
         }),

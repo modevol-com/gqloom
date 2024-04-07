@@ -45,10 +45,10 @@ describe("SchemaWeaver", () => {
     )
 
     const simpleFieldResolver = resolver.of(Giraffe, {
-      age: field(silk<number>(GraphQLInt), async (giraffe) => {
+      age: field(silk(GraphQLInt), async (giraffe) => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
-      greeting: field(silk<string>(GraphQLString), {
+      greeting: field(silk(GraphQLString), {
         input: { myName: silk<string | undefined>(GraphQLString) },
         resolve: (giraffe, input) => {
           return `Hello, ${input.myName ?? "my friend"}! My name is ${giraffe.name}.`
@@ -58,10 +58,10 @@ describe("SchemaWeaver", () => {
 
     const simpleResolver = resolver({
       giraffe: query(Giraffe, {
-        input: { name: silk<string>(GraphQLString) },
+        input: { name: silk(GraphQLString) },
         resolve: (input) => {
           return {
-            name: input.name,
+            name: input.name ?? "what's your name?",
             birthday: new Date(),
             heightInMeters: 5,
           }

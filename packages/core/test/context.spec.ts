@@ -45,8 +45,8 @@ describe("context integration", () => {
   }
   const simpleResolver = resolver(
     {
-      hello: query(silk<string>(GraphQLString), {
-        input: { name: silk<string>(GraphQLString) },
+      hello: query(silk(GraphQLString), {
+        input: { name: silk(GraphQLString) },
         resolve: ({ name }) => {
           payloads.helloResolver = useResolverPayload()
           return `hello ${name}`
