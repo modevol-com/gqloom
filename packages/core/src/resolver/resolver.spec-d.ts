@@ -45,36 +45,40 @@ describe("resolver type", () => {
   )
 
   describe("query and mutation", () => {
-    it("should infer output and input type", () => {
-      const simpleResolver = resolver({
-        giraffe: query(Giraffe, {
-          input: { name: silk<string>(GraphQLString) },
-          resolve: (input) => {
+    const simpleResolver = resolver({
+      giraffe: query(Giraffe, {
+        input: { name: silk<string>(GraphQLString) },
+        resolve: (input) => {
+          it("should infer output type", () => {
             expectTypeOf(input).toEqualTypeOf<{ name: string }>()
-            return {
-              name: input.name,
-              birthday: new Date(),
-              heightInMeters: 5,
-            }
-          },
-        }),
-        createGiraffe: mutation(Giraffe, {
-          input: GiraffeInput,
-          resolve: (input) => {
+          })
+          return {
+            name: input.name,
+            birthday: new Date(),
+            heightInMeters: 5,
+          }
+        },
+      }),
+      createGiraffe: mutation(Giraffe, {
+        input: GiraffeInput,
+        resolve: (input) => {
+          it("should infer output type", () => {
             expectTypeOf(input).toEqualTypeOf<Partial<IGiraffe>>()
-            return {
-              name: input.name ?? "Giraffe",
-              birthday: input.birthday ?? new Date(),
-              heightInMeters: input.heightInMeters ?? 5,
-            }
-          },
-        }),
-      })
-
+          })
+          return {
+            name: input.name ?? "Giraffe",
+            birthday: input.birthday ?? new Date(),
+            heightInMeters: input.heightInMeters ?? 5,
+          }
+        },
+      }),
+    })
+    it("should infer output type", () => {
       expectTypeOf(
         simpleResolver.giraffe.resolve
       ).returns.resolves.toEqualTypeOf<IGiraffe>()
-
+    })
+    it("should infer input type", () => {
       expectTypeOf(simpleResolver.giraffe.resolve)
         .parameter(0)
         .toEqualTypeOf<{ name: string }>()
@@ -86,25 +90,33 @@ describe("resolver type", () => {
   })
 
   describe("field", () => {
-    it("should infer parent, output and input type", () => {
-      const simpleResolver = resolver.of(Giraffe, {
-        age: field(silk<number>(GraphQLInt), async (giraffe) => {
+    const simpleResolver = resolver.of(Giraffe, {
+      age: field(silk<number>(GraphQLInt), async (giraffe) => {
+        it("should infer parent type", () => {
           expectTypeOf(giraffe).toEqualTypeOf<IGiraffe>()
-          return new Date().getFullYear() - giraffe.birthday.getFullYear()
-        }),
-        greeting: field(silk<string>(GraphQLString), {
-          input: { myName: silk<string | undefined>(GraphQLString) },
-          resolve: (giraffe, input) => {
+        })
+        return new Date().getFullYear() - giraffe.birthday.getFullYear()
+      }),
+      greeting: field(silk<string>(GraphQLString), {
+        input: { myName: silk<string | undefined>(GraphQLString) },
+        resolve: (giraffe, input) => {
+          it("should infer parent type", () => {
             expectTypeOf(giraffe).toEqualTypeOf<IGiraffe>()
+          })
+          it("should infer input type", () => {
             expectTypeOf(input).toEqualTypeOf<{ myName: string | undefined }>()
-            return `Hello, ${input.myName ?? "my friend"}! My name is ${giraffe.name}.`
-          },
-        }),
-      })
+          })
+          return `Hello, ${input.myName ?? "my friend"}! My name is ${giraffe.name}.`
+        },
+      }),
+    })
+    it("should infer input type", () => {
       expectTypeOf(simpleResolver.age.resolve)
         .parameter(0)
         .toEqualTypeOf<IGiraffe>()
+    })
 
+    it("should infer output type", () => {
       expectTypeOf(
         simpleResolver.age.resolve
       ).returns.resolves.toEqualTypeOf<number>()
@@ -112,24 +124,28 @@ describe("resolver type", () => {
   })
 
   describe("subscription", () => {
-    it("should infer output, input and subscribing data type", () => {
-      const simpleResolver = resolver.of(Giraffe, {
-        newGiraffe: subscription(Giraffe, {
-          input: GiraffeInput,
-          subscribe: async function* (data) {
+    const simpleResolver = resolver.of(Giraffe, {
+      newGiraffe: subscription(Giraffe, {
+        input: GiraffeInput,
+        subscribe: async function* (data) {
+          it("should infer input type", () => {
             expectTypeOf(data).toEqualTypeOf<Partial<IGiraffe>>()
-            yield data.name ?? ""
-          },
-          resolve: (name) => {
+          })
+          yield data.name ?? ""
+        },
+        resolve: (name) => {
+          it("should infer subscribing data type", () => {
             expectTypeOf(name).toEqualTypeOf<string>()
-            return {
-              name,
-              birthday: new Date(),
-              heightInMeters: 5,
-            }
-          },
-        }),
-      })
+          })
+          return {
+            name,
+            birthday: new Date(),
+            heightInMeters: 5,
+          }
+        },
+      }),
+    })
+    it("should infer output type", () => {
       expectTypeOf(
         simpleResolver.newGiraffe.resolve
       ).returns.resolves.toEqualTypeOf<IGiraffe>()
