@@ -8,7 +8,7 @@ import {
 } from "../src"
 import { GraphQLString, parse, execute } from "graphql"
 
-describe("middleware", () => {
+describe("middleware integration", () => {
   const logs: string[] = []
   const operationMiddleware: Middleware = async (next) => {
     logs.push("operation Start")

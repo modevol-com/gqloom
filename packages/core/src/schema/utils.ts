@@ -84,11 +84,11 @@ function provideForResolve(
   const resolve: GraphQLFieldResolver<any, any> =
     field.type === "field"
       ? (root, args, context, info) =>
-          resolverPayloadStorage.run({ root, args, context, info }, () =>
+          resolverPayloadStorage.run({ root, args, context, info, field }, () =>
             field.resolve(root, args, options)
           )
       : (root, args, context, info) =>
-          resolverPayloadStorage.run({ root, args, context, info }, () =>
+          resolverPayloadStorage.run({ root, args, context, info, field }, () =>
             field.resolve(args, options)
           )
 
@@ -102,7 +102,7 @@ function provideForSubscribe(
   if (field?.subscribe == null) return
   return {
     subscribe: (root, args, context, info) =>
-      resolverPayloadStorage.run({ root, args, context, info }, () =>
+      resolverPayloadStorage.run({ root, args, context, info, field }, () =>
         field.subscribe?.(args, options)
       ),
   }

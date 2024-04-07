@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
+import { type OperationOrField } from "../resolver/types"
 
 /**
  * Detailed payload of the current resolver
@@ -22,8 +23,7 @@ export interface ResolverPayload<TContextType extends object = object> {
    */
   info: GraphQLResolveInfo
 
-  // TODO: output silk
-  // TODO: input silk
+  field: OperationOrField<any, any, any, any>
 }
 
 /**
@@ -43,9 +43,9 @@ export function onlyMemory(): OnlyMemoryPayload {
 }
 
 export function isOnlyMemoryPayload(
-  args: ResolverPayload | OnlyMemoryPayload
-): args is OnlyMemoryPayload {
-  return (args as OnlyMemoryPayload).isMemory === true
+  payload: ResolverPayload | OnlyMemoryPayload
+): payload is OnlyMemoryPayload {
+  return (payload as OnlyMemoryPayload).isMemory === true
 }
 
 /**
@@ -60,9 +60,9 @@ export const resolverPayloadStorage = new AsyncLocalStorage<
  * @returns the resolver payload
  */
 export function useResolverPayload(): ResolverPayload | undefined {
-  const args = resolverPayloadStorage.getStore()
-  if (args === undefined || isOnlyMemoryPayload(args)) return
-  return args
+  const payload = resolverPayloadStorage.getStore()
+  if (payload === undefined || isOnlyMemoryPayload(payload)) return
+  return payload
 }
 
 /**
@@ -72,19 +72,19 @@ export function useResolverPayload(): ResolverPayload | undefined {
 export function useContext<TContextType extends object = object>():
   | TContextType
   | undefined {
-  const args = useResolverPayload()
-  if (!args) return
-  return args.context as TContextType
+  const payload = useResolverPayload()
+  if (!payload) return
+  return payload.context as TContextType
 }
 
 /**
  * use the MemoryMap of the current context
  */
 export function useMemoryMap(): WeakMap<WeakKey, any> | undefined {
-  const args = resolverPayloadStorage.getStore()
-  if (args == null) return
-  if (isOnlyMemoryPayload(args)) return args.memory
-  return ContextMemory.assignMemoryMap(args.context)
+  const payload = resolverPayloadStorage.getStore()
+  if (payload == null) return
+  if (isOnlyMemoryPayload(payload)) return payload.memory
+  return ContextMemory.assignMemoryMap(payload.context)
 }
 
 /**
