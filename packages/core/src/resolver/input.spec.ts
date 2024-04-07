@@ -16,42 +16,6 @@ describe("parseInput", () => {
     expect(await parseInput(undefined, {})).toBeUndefined()
   })
 
-  it("should keep result", async () => {
-    let parseTimes = 0
-    const Giraffe = silk<IGiraffe, Partial<IGiraffe>>(
-      new GraphQLObjectType({
-        name: "Giraffe",
-        fields: {
-          name: { type: new GraphQLNonNull(GraphQLString) },
-          birthday: { type: new GraphQLNonNull(GraphQLString) },
-          heightInMeters: { type: new GraphQLNonNull(GraphQLFloat) },
-        },
-      }),
-      async ({
-        name = "Tallulah",
-        birthday = new Date(),
-        heightInMeters = Math.random(),
-      }) => {
-        parseTimes++
-        await new Promise((resolve) => setTimeout(resolve, 6))
-        return {
-          name,
-          birthday,
-          heightInMeters,
-        }
-      }
-    )
-
-    const input: Partial<IGiraffe> = {
-      name: "Kiyena",
-    }
-
-    const output1 = await parseInput(Giraffe, input)
-    const output2 = await parseInput(Giraffe, input)
-    expect(output1).toEqual(output2)
-    expect(parseTimes).toBe(1)
-  })
-
   describe("should parse Silk", () => {
     const Giraffe = silk<IGiraffe, Partial<IGiraffe>>(
       new GraphQLObjectType({

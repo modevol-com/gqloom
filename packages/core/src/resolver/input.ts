@@ -58,19 +58,14 @@ export function parseInput(
     return undefined
   }
 
-  if (typeof input === "object" && PARSE_RESULT_KEY in input) {
-    // use cached result
-    return input[PARSE_RESULT_KEY]
-  }
-
   if (isSilk(inputSchema)) {
     if (typeof inputSchema.parse === "function") {
-      return keepResult(input, inputSchema.parse(input))
+      return inputSchema.parse(input)
     }
-    return keepResult(input, input)
+    return input
   }
 
-  return keepResult(input, parseInputEntries(inputSchema, input))
+  return parseInputEntries(inputSchema, input)
 }
 
 async function parseInputEntries(
@@ -87,20 +82,6 @@ async function parseInputEntries(
       }
     })
   )
-  return result
-}
-
-export function keepResult<T extends object>(
-  input: T,
-  result: any
-): T & { [PARSE_RESULT_KEY]: any } {
-  if (typeof input !== "object") return result
-  Object.defineProperty(input, PARSE_RESULT_KEY, {
-    value: result,
-    enumerable: false,
-    configurable: true,
-    writable: true,
-  })
   return result
 }
 
