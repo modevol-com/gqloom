@@ -87,10 +87,17 @@ function provideForResolve(
           resolverPayloadStorage.run({ root, args, context, info, field }, () =>
             field.resolve(root, args, options)
           )
-      : (root, args, context, info) =>
-          resolverPayloadStorage.run({ root, args, context, info, field }, () =>
-            field.resolve(args, options)
-          )
+      : field.type === "subscription"
+        ? (root, args, context, info) =>
+            resolverPayloadStorage.run(
+              { root, args, context, info, field },
+              () => field.resolve(root, args)
+            )
+        : (root, args, context, info) =>
+            resolverPayloadStorage.run(
+              { root, args, context, info, field },
+              () => field.resolve(args, options)
+            )
 
   return { resolve }
 }
