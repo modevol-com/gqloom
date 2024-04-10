@@ -8,6 +8,7 @@ import {
   GraphQLObjectType,
   type GraphQLOutputType,
   type GraphQLFieldConfig,
+  GraphQLList,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -16,6 +17,7 @@ import {
   type Schema,
   type SchemaObjectDescription,
   type SchemaFieldDescription,
+  type SchemaInnerTypeDescription,
 } from "yup"
 
 export class YupSilk<TSchema extends Schema>
@@ -26,22 +28,16 @@ export class YupSilk<TSchema extends Schema>
 
   getType() {
     const description = this.schema.describe()
-    return YupSilk.getMayNullType(description)
+    return YupSilk.getWrappedType(description)
   }
 
-  static getMayNullType(description: SchemaFieldDescription) {
-    const ofType = YupSilk.getPropertyType(description)
-    if (
-      (description as SchemaDescription)?.nullable ||
-      (description as SchemaDescription)?.optional
-    )
-      return ofType
+  static getWrappedType(description: SchemaDescription) {
+    const ofType = YupSilk.getFieldType(description)
+    if (description.nullable || description.optional) return ofType
     return new GraphQLNonNull(ofType)
   }
 
-  static getPropertyType(
-    description: SchemaFieldDescription
-  ): GraphQLOutputType {
+  static getFieldType(description: SchemaDescription): GraphQLOutputType {
     switch (description.type) {
       case "string":
         return GraphQLString
@@ -65,17 +61,39 @@ export class YupSilk<TSchema extends Schema>
           description: description.meta?.description,
           fields: mapValue(
             (description as SchemaObjectDescription).fields,
-            (d) =>
-              ({
-                type: YupSilk.getMayNullType(d),
-                description: (d as SchemaDescription)?.meta?.description,
-              }) as GraphQLFieldConfig<any, any>
+            (fieldDescription) => {
+              const d = YupSilk.ensureSchemaDescription(fieldDescription)
+              return {
+                type: YupSilk.getWrappedType(d),
+                description: d?.meta?.description,
+              } as GraphQLFieldConfig<any, any>
+            }
           ),
         })
+      }
+      case "array": {
+        const innerType = (description as SchemaInnerTypeDescription).innerType
+        if (Array.isArray(innerType))
+          throw new Error("Array type cannot have multiple inner types")
+
+        if (innerType == null)
+          throw new Error("Array type must have an inner type")
+
+        return new GraphQLList(
+          YupSilk.getWrappedType(YupSilk.ensureSchemaDescription(innerType))
+        )
       }
       default:
         throw new Error(`yup type ${description.type} is not supported`)
     }
+  }
+
+  static ensureSchemaDescription(
+    description: SchemaFieldDescription
+  ): SchemaDescription {
+    if (description.type === "lazy")
+      throw new Error("lazy type is not supported")
+    return description as SchemaDescription
   }
 
   parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {

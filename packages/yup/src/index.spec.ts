@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { date, number, object, string, boolean } from "yup"
+import { date, number, object, string, boolean, array } from "yup"
 import { field, mutation, query, resolver, yupSilk } from "./index"
 import {
   GraphQLString,
@@ -9,6 +9,7 @@ import {
   GraphQLNonNull,
   printType,
   type GraphQLObjectType,
+  GraphQLList,
 } from "graphql"
 
 describe("YupSilk", () => {
@@ -37,19 +38,51 @@ describe("YupSilk", () => {
     expect(i).toMatchObject({ ofType: GraphQLInt })
   })
 
+  it("should handle array", () => {
+    const s = yupSilk(array().of(string())).getType()
+    expect(s).toBeInstanceOf(GraphQLList)
+    expect(s).toMatchObject({ ofType: GraphQLString })
+
+    const b = yupSilk(array().of(boolean())).getType()
+    expect(b).toBeInstanceOf(GraphQLList)
+    expect(b).toMatchObject({ ofType: GraphQLBoolean })
+
+    const f = yupSilk(array(number())).getType()
+    expect(f).toBeInstanceOf(GraphQLList)
+    expect(f).toMatchObject({ ofType: GraphQLFloat })
+
+    const i = yupSilk(array(number().integer())).getType()
+    expect(i).toBeInstanceOf(GraphQLList)
+    expect(i).toMatchObject({ ofType: GraphQLInt })
+  })
+
   it("should handle Object", () => {
     const Giraffe = object({
       name: string().required(),
       birthday: date().required(),
-      heightInMeters: number(),
-    }).label("Giraffe")
+      height: number().meta({
+        description: "The giraffe's height in meters",
+      }),
+      hobbies: array(string().required()),
+      friends: array(string()).required(),
+    })
+      .label("Giraffe")
+      .meta({
+        description: "A giraffe",
+      })
 
-    expect(printType(yupSilk(Giraffe).getType() as GraphQLObjectType))
-      .toMatchInlineSnapshot(`
-      "type Giraffe {
+    expect(
+      printType(yupSilk(Giraffe).getType() as GraphQLObjectType)
+    ).toMatchInlineSnapshot(`
+      """"A giraffe"""
+      type Giraffe {
         name: String!
         birthday: String!
-        heightInMeters: Float!
+
+        """The giraffe's height in meters"""
+        height: Float
+        hobbies: [String!]
+        friends: [String]!
       }"
     `)
   })
