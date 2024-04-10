@@ -137,4 +137,77 @@ describe("SchemaWeaver", () => {
       }"
     `)
   })
+
+  it("should avoid duplicate name", () => {
+    const Dog1 = silk<{ name: string }>(
+      new GraphQLObjectType({
+        name: "Dog",
+        fields: {
+          name: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      })
+    )
+    const Dog2 = silk<{ name: string }>(
+      new GraphQLObjectType({
+        name: "Dog",
+        fields: {
+          name: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      })
+    )
+
+    const dogResolver = resolver({
+      dog1: query(silk(GraphQLString), {
+        input: { dog: Dog1 },
+        resolve: ({ dog }) => dog.name,
+      }),
+      dog2: query(silk(GraphQLString), {
+        input: { dog: Dog2 },
+        resolve: ({ dog }) => dog.name,
+      }),
+    })
+
+    expect(() => {
+      new SchemaWeaver().addResolver(dogResolver).weaveGraphQLSchema()
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Schema must contain uniquely named types but contains multiple types named "Dog".]`
+    )
+  })
+
+  it("should work with unique object", () => {
+    const Dog1 = silk<{ name: string }>(
+      new GraphQLObjectType({
+        name: "Dog",
+        fields: {
+          name: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      })
+    )
+
+    const dogResolver = resolver({
+      dog1: query(silk(GraphQLString), {
+        input: { dog: Dog1 },
+        resolve: ({ dog }) => dog.name,
+      }),
+      dog2: query(silk(GraphQLString), {
+        input: { dog: Dog1 },
+        resolve: ({ dog }) => dog.name,
+      }),
+    })
+
+    expect(
+      printSchema(
+        new SchemaWeaver().addResolver(dogResolver).weaveGraphQLSchema()
+      )
+    ).toMatchInlineSnapshot(`
+      "type Query {
+        dog1(dog: Dog): String
+        dog2(dog: Dog): String
+      }
+
+      input Dog {
+        name: String!
+      }"
+    `)
+  })
 })

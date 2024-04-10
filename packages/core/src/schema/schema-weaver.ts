@@ -24,7 +24,7 @@ export class SchemaWeaver {
   protected subscription?: ModifiableObjectType
 
   protected objectMap = new Map<string, ModifiableObjectType>()
-  protected inputMap: InputMap = new Map()
+  protected inputMap: InputMap = new WeakMap()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
   protected optionsForResolving?: ResolvingOptions

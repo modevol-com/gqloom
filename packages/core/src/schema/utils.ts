@@ -173,12 +173,8 @@ export function toInputObjectType(
   object: GraphQLObjectType,
   inputMap?: InputMap
 ): GraphQLInputObjectType {
-  const existing = inputMap?.get(object.name)
-  if (existing != null) {
-    if (existing[0] !== object)
-      throw new LocatableError(`Input Type ${object.name} already exists`)
-    return existing[1]
-  }
+  const existing = inputMap?.get(object)
+  if (existing != null) return existing
 
   const {
     astNode: _,
@@ -191,7 +187,7 @@ export function toInputObjectType(
     fields: mapValue(fields, (it) => toInputFieldConfig(it, inputMap)),
   })
 
-  inputMap?.set(object.name, [object, input])
+  inputMap?.set(object, input)
   return input
 }
 

@@ -3,10 +3,7 @@ import type { OperationOrField, ResolvingOptions } from "../resolver"
 
 export type SilkOperationOrField = OperationOrField<any, any, any, any>
 
-export type InputMap = Map<
-  string,
-  [origin: GraphQLObjectType, input: GraphQLInputObjectType]
->
+export type InputMap = WeakMap<GraphQLObjectType, GraphQLInputObjectType>
 
 export interface FieldConvertOptions {
   optionsForGetType?: Record<string | number | symbol, any>
