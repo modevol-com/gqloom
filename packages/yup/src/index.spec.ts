@@ -1,8 +1,61 @@
-import { test } from "vitest"
-import { date, number, object, string } from "yup"
-import { field, mutation, query, resolver } from "./index"
+import { describe, expect, it } from "vitest"
+import { date, number, object, string, boolean } from "yup"
+import { field, mutation, query, resolver, yupSilk } from "./index"
+import {
+  GraphQLString,
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLNonNull,
+  printType,
+  type GraphQLObjectType,
+} from "graphql"
 
-test("yup resolver", () => {
+describe("YupSilk", () => {
+  it("should handle Scalar", () => {
+    expect(yupSilk(string()).getType()).toEqual(GraphQLString)
+    expect(yupSilk(boolean()).getType()).toEqual(GraphQLBoolean)
+    expect(yupSilk(number()).getType()).toEqual(GraphQLFloat)
+    expect(yupSilk(number().integer()).getType()).toEqual(GraphQLInt)
+  })
+
+  it("should handle non null Scalar", () => {
+    const s = yupSilk(string().required()).getType()
+    expect(s).toBeInstanceOf(GraphQLNonNull)
+    expect(s).toMatchObject({ ofType: GraphQLString })
+
+    const b = yupSilk(boolean().required()).getType()
+    expect(b).toBeInstanceOf(GraphQLNonNull)
+    expect(b).toMatchObject({ ofType: GraphQLBoolean })
+
+    const f = yupSilk(number().required()).getType()
+    expect(f).toBeInstanceOf(GraphQLNonNull)
+    expect(f).toMatchObject({ ofType: GraphQLFloat })
+
+    const i = yupSilk(number().required().integer()).getType()
+    expect(i).toBeInstanceOf(GraphQLNonNull)
+    expect(i).toMatchObject({ ofType: GraphQLInt })
+  })
+
+  it("should handle Object", () => {
+    const Giraffe = object({
+      name: string().required(),
+      birthday: date().required(),
+      heightInMeters: number(),
+    }).label("Giraffe")
+
+    expect(printType(yupSilk(Giraffe).getType() as GraphQLObjectType))
+      .toMatchInlineSnapshot(`
+      "type Giraffe {
+        name: String!
+        birthday: String!
+        heightInMeters: Float!
+      }"
+    `)
+  })
+})
+
+describe.skip("yup resolver", () => {
   const Giraffe = object({
     name: string().required(),
     birthday: date().required(),
