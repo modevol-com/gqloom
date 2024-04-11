@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { weaverScope, provideWeaverScope } from "./weaver-scope"
+import { weaverScope, provideWeaverScope, initScope } from "./weaver-scope"
 
 describe("weaverScope", () => {
   it("should get scope", () => {
@@ -10,7 +10,7 @@ describe("weaverScope", () => {
       expect(weaverScope.enumMap).toBeDefined()
       expect(weaverScope.interfaceMap).toBeDefined()
       expect(weaverScope.unionMap).toBeDefined()
-    }, undefined)
+    }, initScope())
   })
 
   it("should get undefined if not in scope", () => {
@@ -26,10 +26,10 @@ describe("weaverScope", () => {
 
     provideWeaverScope(() => {
       inputMap1 = weaverScope.inputMap
-    }, undefined)
+    }, initScope())
 
     provideWeaverScope(() => {
       expect(weaverScope.inputMap).not.toBe(inputMap1)
-    }, undefined)
+    }, initScope())
   })
 })

@@ -7,7 +7,7 @@ import {
 } from "../resolver"
 import { ModifiableObjectType } from "./object"
 import { type Middleware } from "../utils"
-import { provideWeaverScope, type WeaverScope } from "./weaver-scope"
+import { initScope, provideWeaverScope, type WeaverScope } from "./weaver-scope"
 
 type SilkResolver = Record<string, OperationOrField<any, any, any, any>> & {
   [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
@@ -23,13 +23,7 @@ export class SchemaWeaver {
   protected mutation?: ModifiableObjectType
   protected subscription?: ModifiableObjectType
 
-  protected scope: WeaverScope = {
-    objectMap: new WeakMap(),
-    inputMap: new WeakMap(),
-    enumMap: new WeakMap(),
-    interfaceMap: new WeakMap(),
-    unionMap: new WeakMap(),
-  }
+  protected scope: WeaverScope = initScope()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
   protected optionsForResolving?: ResolvingOptions

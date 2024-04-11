@@ -14,7 +14,7 @@ import {
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
 import { mapToFieldConfig, toInputObjectType } from "./input"
 import { mapValue, toObjMap } from "../utils"
-import { provideWeaverScope, type WeaverScope } from "./weaver-scope"
+import { initScope, provideWeaverScope, type WeaverScope } from "./weaver-scope"
 
 export class ModifiableObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
@@ -42,13 +42,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
     this.fieldOptions = fieldOptions ?? {
       optionsForGetType: {},
     }
-    this.scope = fieldOptions?.scope ?? {
-      objectMap: new WeakMap(),
-      inputMap: new WeakMap(),
-      enumMap: new WeakMap(),
-      interfaceMap: new WeakMap(),
-      unionMap: new WeakMap(),
-    }
+    this.scope = fieldOptions?.scope ?? initScope()
   }
 
   addField(name: string, resolver: SilkOperationOrField) {

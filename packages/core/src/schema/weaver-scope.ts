@@ -16,6 +16,16 @@ export interface WeaverScope {
 
 let ref: WeaverScope | undefined
 
+export function initScope() {
+  return {
+    objectMap: new WeakMap(),
+    inputMap: new WeakMap(),
+    enumMap: new WeakMap(),
+    interfaceMap: new WeakMap(),
+    unionMap: new WeakMap(),
+  }
+}
+
 export const weaverScope: Partial<WeaverScope> = {
   get objectMap() {
     return ref?.objectMap
