@@ -3,7 +3,6 @@ import {
   type GraphQLFieldConfig,
   type GraphQLFieldConfigArgumentMap,
   type GraphQLFieldMap,
-  type GraphQLInputObjectType,
   type GraphQLObjectTypeConfig,
   type ThunkObjMap,
   GraphQLObjectType,
@@ -12,7 +11,7 @@ import {
   resolveObjMapThunk,
 } from "graphql"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
-import { mapToFieldConfig, toInputObjectType } from "./input"
+import { mapToFieldConfig } from "./input"
 import { mapValue, toObjMap } from "../utils"
 import { initScope, provideWeaverScope, type WeaverScope } from "./weaver-scope"
 
@@ -64,10 +63,6 @@ export class ModifiableObjectType extends GraphQLObjectType {
       ...fields,
       ...extraField,
     }
-  }
-
-  toGraphQLInputObjectType(): GraphQLInputObjectType {
-    return toInputObjectType(this)
   }
 }
 
