@@ -10,7 +10,7 @@ import {
   type Schema,
   type InferType,
 } from "yup"
-import { field, mutation, query, resolver, yupSilk } from "./index"
+import { field, mutation, query, resolver, yupSilk } from "../src/index"
 import {
   GraphQLString,
   GraphQLBoolean,
@@ -164,7 +164,17 @@ describe("YupSilk", () => {
 
   it.todo("should handle union")
 
-  describe.todo("should avoid duplicate objects")
+  describe.todo("should avoid duplicate objects", () => {
+    it("should merge field from multiple resolver")
+
+    it("should avoid duplicate input")
+
+    it("should avoid duplicate enum")
+
+    it("should avoid duplicate interface")
+
+    it("should avoid duplicate union")
+  })
 })
 
 describe.skip("yup resolver", () => {
