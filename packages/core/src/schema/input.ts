@@ -49,7 +49,7 @@ export function toFieldConfig(
   options: FieldConvertOptions = {}
 ): GraphQLFieldConfig<any, any> {
   try {
-    const { optionsForGetType = {} } = options
+    const { optionsForGetType = {}, optionsForResolving } = options
     const outputType = (() => {
       const gqlType = field.output.getType(optionsForGetType)
       if (isObjectType(gqlType)) {
@@ -62,8 +62,8 @@ export function toFieldConfig(
       ...field,
       type: outputType,
       args: inputToArgs(field.input, options),
-      ...provideForResolve(field, options.optionsForResolving),
-      ...provideForSubscribe(field, options.optionsForResolving),
+      ...provideForResolve(field, optionsForResolving),
+      ...provideForSubscribe(field, optionsForResolving),
     }
   } catch (error) {
     markErrorLocation(error)
