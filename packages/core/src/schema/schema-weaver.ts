@@ -6,8 +6,8 @@ import {
   type ResolvingOptions,
 } from "../resolver"
 import { ModifiableObjectType } from "./object"
-import type { InputMap } from "./types"
 import { type Middleware } from "../utils"
+import { provideWeaverScope, type WeaverScope } from "./weaver-scope"
 
 type SilkResolver = Record<string, OperationOrField<any, any, any, any>> & {
   [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
@@ -23,8 +23,13 @@ export class SchemaWeaver {
   protected mutation?: ModifiableObjectType
   protected subscription?: ModifiableObjectType
 
-  protected objectMap = new Map<string, ModifiableObjectType>()
-  protected inputMap: InputMap = new WeakMap()
+  protected scope: WeaverScope = {
+    objectMap: new WeakMap(),
+    inputMap: new WeakMap(),
+    enumMap: new WeakMap(),
+    interfaceMap: new WeakMap(),
+    unionMap: new WeakMap(),
+  }
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
   protected optionsForResolving?: ResolvingOptions
@@ -48,13 +53,21 @@ export class SchemaWeaver {
   }
 
   public addResolver(resolver: SilkResolver) {
+    const answer = provideWeaverScope(
+      () => this.innerAddResolver(resolver),
+      this.scope
+    )
+    return answer
+  }
+
+  protected innerAddResolver(resolver: SilkResolver) {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
         const extraObject = new ModifiableObjectType(gqlType, this.fieldOptions)
-        this.objectMap.set(gqlType.name, extraObject)
+        this.scope.objectMap.set(gqlType, extraObject)
         return extraObject
       }
       throw new Error(
@@ -101,7 +114,7 @@ export class SchemaWeaver {
   }
 
   protected get fieldOptions() {
-    const { optionsForGetType, objectMap, inputMap, optionsForResolving } = this
-    return { optionsForGetType, objectMap, inputMap, optionsForResolving }
+    const { optionsForGetType, optionsForResolving, scope } = this
+    return { optionsForGetType, optionsForResolving, scope }
   }
 }

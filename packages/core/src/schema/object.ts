@@ -14,11 +14,13 @@ import {
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
 import { mapToFieldConfig, toInputObjectType } from "./utils"
 import { mapValue, toObjMap } from "../utils"
+import { provideWeaverScope, type WeaverScope } from "./weaver-scope"
 
 export class ModifiableObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
 
   protected fieldOptions: FieldConvertOptions
+  protected scope: WeaverScope
 
   constructor(
     objectOrGetter:
@@ -26,7 +28,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
       | GraphQLObjectType
       | GraphQLObjectTypeConfig<any, any>
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
-    fieldOptions?: FieldConvertOptions
+    fieldOptions?: FieldConvertOptions & { scope: WeaverScope }
   ) {
     const origin =
       typeof objectOrGetter === "function" ? objectOrGetter() : objectOrGetter
@@ -39,23 +41,30 @@ export class ModifiableObjectType extends GraphQLObjectType {
     }
     this.fieldOptions = fieldOptions ?? {
       optionsForGetType: {},
-      inputMap: new Map(),
-      objectMap: new Map(),
+    }
+    this.scope = fieldOptions?.scope ?? {
+      objectMap: new WeakMap(),
+      inputMap: new WeakMap(),
+      enumMap: new WeakMap(),
+      interfaceMap: new WeakMap(),
+      unionMap: new WeakMap(),
     }
   }
 
   addField(name: string, resolver: SilkOperationOrField) {
     const existing = this.extraFields.get(name)
     if (existing && existing !== resolver) {
-      throw new Error(`Field ${name} already exists`)
+      throw new Error(`Field ${name} already exists in ${this.name}`)
     }
     this.extraFields.set(name, resolver)
   }
 
   override getFields(): GraphQLFieldMap<any, any> {
     const fields = super.getFields()
-    const extraField = defineFieldMap(
-      mapToFieldConfig(this.extraFields, this.fieldOptions)
+    const extraField = provideWeaverScope(
+      () =>
+        defineFieldMap(mapToFieldConfig(this.extraFields, this.fieldOptions)),
+      this.scope
     )
     return {
       ...fields,
@@ -64,7 +73,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
   }
 
   toGraphQLInputObjectType(): GraphQLInputObjectType {
-    return toInputObjectType(this, this.fieldOptions.inputMap)
+    return toInputObjectType(this)
   }
 }
 

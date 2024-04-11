@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from "node:async_hooks"
+import { AsyncLocalStorage } from "async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
 import { type OperationOrField } from "../resolver/types"
 

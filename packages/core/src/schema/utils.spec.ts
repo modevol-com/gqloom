@@ -20,7 +20,6 @@ import {
   toInputObjectType,
   toFieldConfig,
 } from "./utils"
-import type { InputMap } from "./types"
 import {
   defaultSubscriptionResolve,
   silk,
@@ -29,6 +28,7 @@ import {
   silkQuery,
   silkSubscription,
 } from "../resolver"
+import { provideWeaverScope } from "./weaver-scope"
 
 describe("toInputObjectType", () => {
   const Dog = new GraphQLObjectType({
@@ -50,23 +50,9 @@ describe("toInputObjectType", () => {
   })
 
   it("should return same InputObjectType for same ObjectType", () => {
-    const map: InputMap = new Map()
-    expect(toInputObjectType(Dog, map)).toBe(toInputObjectType(Dog, map))
-  })
-
-  it("should throw if InputObjectType already exists", () => {
-    const Dog1 = new GraphQLObjectType({
-      name: "Dog",
-      fields: {
-        name: { type: GraphQLString },
-        age: { type: GraphQLInt },
-      },
+    provideWeaverScope(() => {
+      expect(toInputObjectType(Dog)).toBe(toInputObjectType(Dog))
     })
-    const map: InputMap = new Map()
-    expect(() => {
-      toInputObjectType(Dog, map)
-      toInputObjectType(Dog1, map)
-    }).toThrow("Input Type Dog already exists")
   })
 })
 

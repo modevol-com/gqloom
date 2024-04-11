@@ -22,17 +22,14 @@ import {
   isSilk,
   defaultSubscriptionResolve,
 } from "../resolver"
-import type {
-  FieldConvertOptions,
-  InputMap,
-  SilkOperationOrField,
-} from "./types"
+import type { FieldConvertOptions, SilkOperationOrField } from "./types"
 import {
   resolverPayloadStorage,
   mapValue,
   LocatableError,
   markErrorLocation,
 } from "../utils"
+import { weaverScope } from "./weaver-scope"
 
 export function mapToFieldConfig(
   map: Map<string, SilkOperationOrField>,
@@ -52,11 +49,11 @@ export function toFieldConfig(
   options: FieldConvertOptions = {}
 ): GraphQLFieldConfig<any, any> {
   try {
-    const { optionsForGetType = {}, objectMap } = options
+    const { optionsForGetType = {} } = options
     const outputType = (() => {
       const gqlType = field.output.getType(optionsForGetType)
       if (isObjectType(gqlType)) {
-        const gqlObject = objectMap?.get(gqlType.name)
+        const gqlObject = weaverScope.objectMap?.get(gqlType)
         if (gqlObject != null) return gqlObject
       }
       return gqlType
@@ -120,12 +117,12 @@ export function inputToArgs(
   options: FieldConvertOptions = {}
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined
-  const { optionsForGetType = {}, inputMap } = options
+  const { optionsForGetType = {} } = options
   if (isSilk(input)) {
     const inputType = input.getType(optionsForGetType)
     if (isObjectType(inputType)) {
       return mapValue(inputType.toConfig().fields, (it) =>
-        toInputFieldConfig(it, inputMap)
+        toInputFieldConfig(it)
       )
     }
     throw new LocatableError(
@@ -137,7 +134,7 @@ export function inputToArgs(
     try {
       args[name] = {
         ...field,
-        type: ensureInputType(field.getType(optionsForGetType), inputMap),
+        type: ensureInputType(field.getType(optionsForGetType)),
       }
     } catch (error) {
       markErrorLocation(error, name)
@@ -147,10 +144,7 @@ export function inputToArgs(
   return args
 }
 
-export function ensureInputType(
-  output: GraphQLType,
-  inputMap?: InputMap
-): GraphQLInputType {
+export function ensureInputType(output: GraphQLType): GraphQLInputType {
   if (isInterfaceType(output))
     throw new LocatableError(
       `Cannot convert interface type ${output.name} to input type`
@@ -160,20 +154,20 @@ export function ensureInputType(
       `Cannot convert union type ${output.name} to input type`
     )
   if (isNonNullType(output)) {
-    return new GraphQLNonNull(ensureInputType(output.ofType, inputMap))
+    return new GraphQLNonNull(ensureInputType(output.ofType))
   }
   if (isListType(output)) {
-    return new GraphQLList(ensureInputType(output.ofType, inputMap))
+    return new GraphQLList(ensureInputType(output.ofType))
   }
-  if (isObjectType(output)) return toInputObjectType(output, inputMap)
+  if (isObjectType(output)) return toInputObjectType(output)
   return output
 }
 
 export function toInputObjectType(
-  object: GraphQLObjectType,
-  inputMap?: InputMap
+  object: GraphQLObjectType
 ): GraphQLInputObjectType {
-  const existing = inputMap?.get(object)
+  const existing = weaverScope.inputMap?.get(object)
+  console.debug(`inputMap: `, weaverScope.inputMap, existing)
   if (existing != null) return existing
 
   const {
@@ -184,21 +178,18 @@ export function toInputObjectType(
   } = object.toConfig()
   const input = new GraphQLInputObjectType({
     ...config,
-    fields: mapValue(fields, (it) => toInputFieldConfig(it, inputMap)),
+    fields: mapValue(fields, (it) => toInputFieldConfig(it)),
   })
 
-  inputMap?.set(object, input)
+  weaverScope.inputMap?.set(object, input)
   return input
 }
 
-function toInputFieldConfig(
-  {
-    astNode: _,
-    extensions: _1,
-    resolve: _2,
-    ...config
-  }: GraphQLFieldConfig<any, any>,
-  inputMap?: InputMap
-): GraphQLInputFieldConfig {
-  return { ...config, type: ensureInputType(config.type, inputMap) }
+function toInputFieldConfig({
+  astNode: _,
+  extensions: _1,
+  resolve: _2,
+  ...config
+}: GraphQLFieldConfig<any, any>): GraphQLInputFieldConfig {
+  return { ...config, type: ensureInputType(config.type) }
 }
