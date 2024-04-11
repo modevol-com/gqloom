@@ -71,9 +71,8 @@ describe("YupSilk", () => {
         description: "A giraffe",
       })
 
-    expect(
-      printType(yupSilk(Giraffe).getType() as GraphQLObjectType)
-    ).toMatchInlineSnapshot(`
+    expect(printType(yupSilk(Giraffe).getType() as GraphQLObjectType))
+      .toMatchInlineSnapshot(`
       """"A giraffe"""
       type Giraffe {
         name: String!
@@ -86,6 +85,12 @@ describe("YupSilk", () => {
       }"
     `)
   })
+
+  it.todo("should handle enum")
+
+  it.todo("should handle interfere")
+
+  it.todo("should handle union")
 })
 
 describe.skip("yup resolver", () => {
