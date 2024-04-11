@@ -10,7 +10,7 @@ describe("weaverScope", () => {
       expect(weaverScope.enumMap).toBeDefined()
       expect(weaverScope.interfaceMap).toBeDefined()
       expect(weaverScope.unionMap).toBeDefined()
-    })
+    }, undefined)
   })
 
   it("should get undefined if not in scope", () => {
@@ -26,10 +26,10 @@ describe("weaverScope", () => {
 
     provideWeaverScope(() => {
       inputMap1 = weaverScope.inputMap
-    })
+    }, undefined)
 
     provideWeaverScope(() => {
       expect(weaverScope.inputMap).not.toBe(inputMap1)
-    })
+    }, undefined)
   })
 })

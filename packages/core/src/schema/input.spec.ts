@@ -19,7 +19,7 @@ import {
   inputToArgs,
   toInputObjectType,
   toFieldConfig,
-} from "./utils"
+} from "./input"
 import {
   defaultSubscriptionResolve,
   silk,
@@ -52,7 +52,7 @@ describe("toInputObjectType", () => {
   it("should return same InputObjectType for same ObjectType", () => {
     provideWeaverScope(() => {
       expect(toInputObjectType(Dog)).toBe(toInputObjectType(Dog))
-    })
+    }, undefined)
   })
 })
 

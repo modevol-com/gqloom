@@ -12,7 +12,7 @@ import {
   resolveObjMapThunk,
 } from "graphql"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
-import { mapToFieldConfig, toInputObjectType } from "./utils"
+import { mapToFieldConfig, toInputObjectType } from "./input"
 import { mapValue, toObjMap } from "../utils"
 import { provideWeaverScope, type WeaverScope } from "./weaver-scope"
 

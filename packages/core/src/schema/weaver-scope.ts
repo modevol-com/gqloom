@@ -34,15 +34,12 @@ export const weaverScope: Partial<WeaverScope> = {
   },
 }
 
-export function provideWeaverScope<T>(func: () => T, value?: WeaverScope): T {
+export function provideWeaverScope<T>(
+  func: () => T,
+  value: WeaverScope | undefined
+): T {
   const lastRef = ref
-  ref = value ?? {
-    objectMap: new WeakMap(),
-    inputMap: new WeakMap(),
-    enumMap: new WeakMap(),
-    interfaceMap: new WeakMap(),
-    unionMap: new WeakMap(),
-  }
+  ref = value
   const result = func()
   ref = lastRef
   return result
