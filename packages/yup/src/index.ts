@@ -9,6 +9,8 @@ import {
   type GraphQLOutputType,
   type GraphQLFieldConfig,
   GraphQLList,
+  GraphQLEnumType,
+  type GraphQLEnumValueConfigMap,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -19,6 +21,7 @@ import {
   type SchemaFieldDescription,
   type SchemaInnerTypeDescription,
 } from "yup"
+import { type GQLoomMetadata } from "./types"
 
 export * from "./types"
 
@@ -40,6 +43,9 @@ export class YupSilk<TSchema extends Schema>
   }
 
   static getFieldType(description: SchemaDescription): GraphQLOutputType {
+    const maybeEnum = YupSilk.getEnumType(description)
+    if (maybeEnum) return maybeEnum
+
     switch (description.type) {
       case "string":
         return GraphQLString
@@ -96,6 +102,38 @@ export class YupSilk<TSchema extends Schema>
     if (description.type === "lazy")
       throw new Error("lazy type is not supported")
     return description as SchemaDescription
+  }
+
+  static getEnumType(description: SchemaDescription): GraphQLEnumType | null {
+    if (!description.oneOf.length) return null
+
+    const meta: GQLoomMetadata | undefined = description.meta
+
+    const values: GraphQLEnumValueConfigMap = {}
+
+    if (meta?.enum) {
+      Object.entries(meta.enum).forEach(([key, value]) => {
+        if (typeof meta.enum?.[meta.enum[key]] === "number") return
+        values[key] = {
+          value,
+          description: meta?.enumValueDescriptions?.[key],
+        }
+      })
+    } else {
+      description.oneOf.forEach((value) => {
+        const key = String(value)
+        values[key] = {
+          value,
+          description: meta?.enumValueDescriptions?.[key],
+        }
+      })
+    }
+
+    return new GraphQLEnumType({
+      name: description.label ?? meta?.name ?? "",
+      description: meta?.description,
+      values,
+    })
   }
 
   parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {

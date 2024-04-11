@@ -1,5 +1,15 @@
-import { describe, expect, it } from "vitest"
-import { date, number, object, string, boolean, array } from "yup"
+import { describe, expect, expectTypeOf, it } from "vitest"
+import {
+  date,
+  number,
+  object,
+  string,
+  boolean,
+  array,
+  mixed,
+  type Schema,
+  type InferType,
+} from "yup"
 import { field, mutation, query, resolver, yupSilk } from "./index"
 import {
   GraphQLString,
@@ -8,8 +18,8 @@ import {
   GraphQLInt,
   GraphQLNonNull,
   printType,
-  type GraphQLObjectType,
   GraphQLList,
+  type GraphQLNamedType,
 } from "graphql"
 
 describe("YupSilk", () => {
@@ -71,8 +81,7 @@ describe("YupSilk", () => {
         description: "A giraffe",
       })
 
-    expect(printType(yupSilk(Giraffe).getType() as GraphQLObjectType))
-      .toMatchInlineSnapshot(`
+    expect(printYupSilk(Giraffe)).toMatchInlineSnapshot(`
       """"A giraffe"""
       type Giraffe {
         name: String!
@@ -86,11 +95,76 @@ describe("YupSilk", () => {
     `)
   })
 
-  it.todo("should handle enum")
+  it("should handle enum", () => {
+    const enumValueDescriptions = {
+      apple: "Apple is red",
+      banana: "Banana is yellow",
+      orange: "Orange is orange",
+    }
+    const fruitS = string()
+      .oneOf(["apple", "banana", "orange"])
+      .label("Fruit")
+      .meta({
+        description: "Some fruits you might like",
+        enumValueDescriptions,
+      })
+
+    type Fruit1 = InferType<typeof fruitS>
+    expectTypeOf<Fruit1>().toEqualTypeOf<
+      "apple" | "banana" | "orange" | undefined
+    >()
+
+    const fruitM = mixed<"apple" | "banana" | "orange">()
+      .oneOf(["apple", "banana", "orange"])
+      .label("Fruit")
+      .meta({
+        description: "Some fruits you might like",
+        enumValueDescriptions,
+      })
+
+    expectTypeOf<InferType<typeof fruitM>>().toEqualTypeOf<
+      "apple" | "banana" | "orange" | undefined
+    >()
+
+    enum Fruit {
+      apple,
+      banana,
+      orange,
+    }
+
+    const fruitE = mixed<Fruit>()
+      .oneOf(Object.values(Fruit) as Fruit[])
+      .label("Fruit")
+      .meta({
+        enum: Fruit,
+        description: "Some fruits you might like",
+        enumValueDescriptions,
+      })
+
+    expectTypeOf<InferType<typeof fruitE>>().toEqualTypeOf<Fruit | undefined>()
+
+    expect(printYupSilk(fruitM)).toEqual(printYupSilk(fruitS))
+    expect(printYupSilk(fruitE)).toEqual(printYupSilk(fruitM))
+    expect(printYupSilk(fruitE)).toMatchInlineSnapshot(`
+      """"Some fruits you might like"""
+      enum Fruit {
+        """Apple is red"""
+        apple
+
+        """Banana is yellow"""
+        banana
+
+        """Orange is orange"""
+        orange
+      }"
+    `)
+  })
 
   it.todo("should handle interfere")
 
   it.todo("should handle union")
+
+  describe.todo("should avoid duplicate objects")
 })
 
 describe.skip("yup resolver", () => {
@@ -139,3 +213,7 @@ describe.skip("yup resolver", () => {
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
   simpleGiraffeResolver.createGiraffe.resolve({})
 })
+
+function printYupSilk(schema: Schema): string {
+  return printType(yupSilk(schema).getType() as GraphQLNamedType)
+}
