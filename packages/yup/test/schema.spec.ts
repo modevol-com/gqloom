@@ -10,7 +10,14 @@ import {
   type Schema,
   type InferType,
 } from "yup"
-import { field, mutation, query, resolver, yupSilk } from "../src/index"
+import {
+  type GQLoomMetadata,
+  field,
+  mutation,
+  query,
+  resolver,
+  yupSilk,
+} from "../src/index"
 import {
   GraphQLString,
   GraphQLBoolean,
@@ -21,6 +28,10 @@ import {
   GraphQLList,
   type GraphQLNamedType,
 } from "graphql"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
 
 describe("YupSilk", () => {
   it("should handle Scalar", () => {
@@ -106,7 +117,7 @@ describe("YupSilk", () => {
       .label("Fruit")
       .meta({
         description: "Some fruits you might like",
-        enumValueDescriptions,
+        enumValues: enumValueDescriptions,
       })
 
     type Fruit1 = InferType<typeof fruitS>
@@ -119,7 +130,7 @@ describe("YupSilk", () => {
       .label("Fruit")
       .meta({
         description: "Some fruits you might like",
-        enumValueDescriptions,
+        enumValues: enumValueDescriptions,
       })
 
     expectTypeOf<InferType<typeof fruitM>>().toEqualTypeOf<
@@ -138,7 +149,7 @@ describe("YupSilk", () => {
       .meta({
         enum: Fruit,
         description: "Some fruits you might like",
-        enumValueDescriptions,
+        enumValues: enumValueDescriptions,
       })
 
     expectTypeOf<InferType<typeof fruitE>>().toEqualTypeOf<Fruit | undefined>()

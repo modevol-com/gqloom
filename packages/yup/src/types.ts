@@ -1,6 +1,8 @@
+import { type GraphQLEnumValueConfig } from "graphql"
+
 export interface GQLoomMetadata {
   name?: string
   description?: string
-  enumValueDescriptions?: Record<string, string>
   enum?: Record<string, any>
+  enumValues?: Record<string, string | GraphQLEnumValueConfig>
 }

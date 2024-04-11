@@ -63,7 +63,7 @@ export class YupSilk<TSchema extends Schema>
       case "date":
         return GraphQLString
       case "object": {
-        const name = description.label ?? description.meta?.name
+        const name = description.label ?? description.meta?.name ?? ""
         return new GraphQLObjectType({
           name,
           description: description.meta?.description,
@@ -114,18 +114,16 @@ export class YupSilk<TSchema extends Schema>
     if (meta?.enum) {
       Object.entries(meta.enum).forEach(([key, value]) => {
         if (typeof meta.enum?.[meta.enum[key]] === "number") return
-        values[key] = {
-          value,
-          description: meta?.enumValueDescriptions?.[key],
-        }
+        const config = meta?.enumValues?.[key]
+        if (typeof config === "object") values[key] = config
+        else values[key] = { value, description: config }
       })
     } else {
       description.oneOf.forEach((value) => {
         const key = String(value)
-        values[key] = {
-          value,
-          description: meta?.enumValueDescriptions?.[key],
-        }
+        const config = meta?.enumValues?.[key]
+        if (typeof config === "object") values[key] = config
+        else values[key] = { value, description: config }
       })
     }
 
