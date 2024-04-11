@@ -20,6 +20,8 @@ import {
   type SchemaInnerTypeDescription,
 } from "yup"
 
+export * from "./types"
+
 export class YupSilk<TSchema extends Schema>
   implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
 {
