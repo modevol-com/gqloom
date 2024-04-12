@@ -8,8 +8,6 @@ import type {
   AnyGraphQLSilk,
 } from "./types"
 
-export const PARSE_RESULT_KEY = Symbol("parse result key")
-
 export type InputSchema<TBaseSchema> =
   | TBaseSchema
   | Record<string, TBaseSchema>
@@ -83,13 +81,4 @@ async function parseInputEntries(
     })
   )
   return result
-}
-
-export function clearResultProperty<T extends object>(
-  input: T
-): T extends { [PARSE_RESULT_KEY]?: any }
-  ? Omit<T, typeof PARSE_RESULT_KEY>
-  : T {
-  delete (input as any)[PARSE_RESULT_KEY]
-  return input as any
 }
