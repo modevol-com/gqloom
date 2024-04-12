@@ -6,6 +6,7 @@ describe("weaverScope", () => {
     provideWeaverScope(() => {
       expect(weaverScope).toBeDefined()
       expect(weaverScope.inputMap).toBeDefined()
+      expect(weaverScope.modifiableObjectMap).toBeDefined()
       expect(weaverScope.objectMap).toBeDefined()
       expect(weaverScope.enumMap).toBeDefined()
       expect(weaverScope.interfaceMap).toBeDefined()
@@ -15,6 +16,7 @@ describe("weaverScope", () => {
 
   it("should get undefined if not in scope", () => {
     expect(weaverScope.inputMap).toBeUndefined()
+    expect(weaverScope.modifiableObjectMap).toBeUndefined()
     expect(weaverScope.objectMap).toBeUndefined()
     expect(weaverScope.enumMap).toBeUndefined()
     expect(weaverScope.interfaceMap).toBeUndefined()

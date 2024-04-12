@@ -53,7 +53,7 @@ export function toFieldConfig(
     const outputType = (() => {
       const gqlType = field.output.getType(optionsForGetType)
       if (isObjectType(gqlType)) {
-        const gqlObject = weaverScope.objectMap?.get(gqlType)
+        const gqlObject = weaverScope.modifiableObjectMap?.get(gqlType)
         if (gqlObject != null) return gqlObject
       }
       return gqlType

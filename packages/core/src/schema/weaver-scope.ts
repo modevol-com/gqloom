@@ -7,26 +7,31 @@ import {
 import { type ModifiableObjectType } from "./object"
 
 export interface WeaverScope {
-  objectMap: WeakMap<object, ModifiableObjectType>
-  inputMap: WeakMap<object, GraphQLInputObjectType>
-  enumMap: WeakMap<object, GraphQLEnumType>
-  interfaceMap: WeakMap<object, GraphQLInterfaceType>
-  unionMap: WeakMap<object, GraphQLUnionType>
+  modifiableObjectMap: Map<any, ModifiableObjectType>
+  objectMap: Map<any, ModifiableObjectType>
+  inputMap: Map<any, GraphQLInputObjectType>
+  enumMap: Map<any, GraphQLEnumType>
+  interfaceMap: Map<any, GraphQLInterfaceType>
+  unionMap: Map<any, GraphQLUnionType>
 }
 
 let ref: WeaverScope | undefined
 
-export function initScope() {
+export function initScope(): WeaverScope {
   return {
-    objectMap: new WeakMap(),
-    inputMap: new WeakMap(),
-    enumMap: new WeakMap(),
-    interfaceMap: new WeakMap(),
-    unionMap: new WeakMap(),
+    modifiableObjectMap: new Map(),
+    objectMap: new Map(),
+    inputMap: new Map(),
+    enumMap: new Map(),
+    interfaceMap: new Map(),
+    unionMap: new Map(),
   }
 }
 
 export const weaverScope: Partial<WeaverScope> = {
+  get modifiableObjectMap() {
+    return ref?.modifiableObjectMap
+  },
   get objectMap() {
     return ref?.objectMap
   },

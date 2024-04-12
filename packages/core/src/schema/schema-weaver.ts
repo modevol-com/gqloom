@@ -61,7 +61,7 @@ export class SchemaWeaver {
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
         const extraObject = new ModifiableObjectType(gqlType, this.fieldOptions)
-        this.scope.objectMap.set(gqlType, extraObject)
+        this.scope.modifiableObjectMap.set(gqlType, extraObject)
         return extraObject
       }
       throw new Error(
