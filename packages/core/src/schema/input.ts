@@ -23,12 +23,7 @@ import {
   defaultSubscriptionResolve,
 } from "../resolver"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
-import {
-  resolverPayloadStorage,
-  mapValue,
-  LocatableError,
-  markErrorLocation,
-} from "../utils"
+import { resolverPayloadStorage, mapValue, markErrorLocation } from "../utils"
 import { weaverScope } from "./weaver-scope"
 
 export function mapToFieldConfig(
@@ -125,9 +120,7 @@ export function inputToArgs(
         toInputFieldConfig(it)
       )
     }
-    throw new LocatableError(
-      `Cannot convert ${inputType.toString()} to input type`
-    )
+    throw new Error(`Cannot convert ${inputType.toString()} to input type`)
   }
   const args: GraphQLFieldConfigArgumentMap = {}
   Object.entries(input).forEach(([name, field]) => {
@@ -146,13 +139,11 @@ export function inputToArgs(
 
 export function ensureInputType(output: GraphQLType): GraphQLInputType {
   if (isInterfaceType(output))
-    throw new LocatableError(
+    throw new Error(
       `Cannot convert interface type ${output.name} to input type`
     )
   if (isUnionType(output))
-    throw new LocatableError(
-      `Cannot convert union type ${output.name} to input type`
-    )
+    throw new Error(`Cannot convert union type ${output.name} to input type`)
   if (isNonNullType(output)) {
     return new GraphQLNonNull(ensureInputType(output.ofType))
   }
@@ -167,7 +158,6 @@ export function toInputObjectType(
   object: GraphQLObjectType
 ): GraphQLInputObjectType {
   const existing = weaverScope.inputMap?.get(object)
-  console.debug(`inputMap: `, weaverScope.inputMap, existing)
   if (existing != null) return existing
 
   const {
