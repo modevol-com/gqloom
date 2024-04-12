@@ -177,7 +177,9 @@ describe("YupSilk", () => {
     const Fruit = object({
       name: string().required(),
       color: string().required(),
-      prize: number().required(),
+      prize: number()
+        .required()
+        .meta({ description: "How much do you want to win?" }),
     })
       .meta({ description: "Fruit Interface" })
       .label("Fruit")
@@ -217,6 +219,8 @@ describe("YupSilk", () => {
       interface Fruit {
         name: String!
         color: String!
+
+        """How much do you want to win?"""
         prize: Float!
       }"
     `)
@@ -226,6 +230,8 @@ describe("YupSilk", () => {
 
   describe.todo("should avoid duplicate objects", () => {
     it("should merge field from multiple resolver")
+
+    it("should avoid duplicate object")
 
     it("should avoid duplicate input")
 
