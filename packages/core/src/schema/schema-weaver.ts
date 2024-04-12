@@ -1,17 +1,9 @@
 import { GraphQLSchema, isObjectType } from "graphql"
-import {
-  type OperationOrField,
-  RESOLVER_OPTIONS_KEY,
-  type ResolverOptionsWithParent,
-  type ResolvingOptions,
-} from "../resolver"
+import { RESOLVER_OPTIONS_KEY, type ResolvingOptions } from "../resolver"
 import { ModifiableObjectType } from "./object"
 import { type Middleware } from "../utils"
 import { initScope, provideWeaverScope, type WeaverScope } from "./weaver-scope"
-
-type SilkResolver = Record<string, OperationOrField<any, any, any, any>> & {
-  [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
-}
+import { type SilkResolver } from "./types"
 
 interface SchemaWeaverParameters
   extends Partial<
@@ -46,7 +38,7 @@ export class SchemaWeaver {
     if (subscription != null) this.subscription = subscription
   }
 
-  public addResolver(resolver: SilkResolver) {
+  public add(resolver: SilkResolver) {
     const answer = provideWeaverScope(
       () => this.innerAddResolver(resolver),
       this.scope

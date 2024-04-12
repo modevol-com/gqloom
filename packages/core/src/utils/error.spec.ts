@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { markLocation } from "./error"
+import { markLocation, tryIn } from "./error"
 
 describe("markLocation", () => {
   it("should mark location", () => {
@@ -29,5 +29,18 @@ describe("markLocation", () => {
     expect(markLocation("[apple.banana] error", "orange", "peach")).toEqual(
       "[orange.peach.apple.banana] error"
     )
+  })
+})
+
+describe("tryIn", () => {
+  it("should return value when no error", () => {
+    expect(tryIn(() => 1, "banana")).toEqual(1)
+  })
+  it("should throw error when error", () => {
+    expect(() =>
+      tryIn(() => {
+        throw new Error("error")
+      }, "banana")
+    ).toThrow("[banana] error")
   })
 })

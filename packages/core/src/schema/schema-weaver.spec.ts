@@ -107,8 +107,8 @@ describe("SchemaWeaver", () => {
     })
 
     const schema = new SchemaWeaver()
-      .addResolver(simpleResolver)
-      .addResolver(simpleFieldResolver)
+      .add(simpleResolver)
+      .add(simpleFieldResolver)
       .weaveGraphQLSchema()
 
     expect(printSchema(lexicographicSortSchema(schema))).toMatchInlineSnapshot(`
@@ -168,7 +168,7 @@ describe("SchemaWeaver", () => {
     })
 
     expect(() => {
-      new SchemaWeaver().addResolver(dogResolver).weaveGraphQLSchema()
+      new SchemaWeaver().add(dogResolver).weaveGraphQLSchema()
     }).toThrowErrorMatchingInlineSnapshot(
       `[Error: Schema must contain uniquely named types but contains multiple types named "Dog".]`
     )
@@ -196,9 +196,7 @@ describe("SchemaWeaver", () => {
     })
 
     expect(
-      printSchema(
-        new SchemaWeaver().addResolver(dogResolver).weaveGraphQLSchema()
-      )
+      printSchema(new SchemaWeaver().add(dogResolver).weaveGraphQLSchema())
     ).toMatchInlineSnapshot(`
       "type Query {
         dog1(dog: Dog): String

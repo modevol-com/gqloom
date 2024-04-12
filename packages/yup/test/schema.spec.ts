@@ -27,7 +27,9 @@ import {
   printType,
   GraphQLList,
   type GraphQLNamedType,
+  printSchema,
 } from "graphql"
+import { SchemaWeaver, type SilkResolver } from "@gqloom/core"
 
 declare module "yup" {
   export interface CustomSchemaMetadata extends GQLoomMetadata {}
@@ -171,7 +173,54 @@ describe("YupSilk", () => {
     `)
   })
 
-  it.todo("should handle interfere")
+  it("should handle interfere", () => {
+    const Fruit = object({
+      name: string().required(),
+      color: string().required(),
+      prize: number().required(),
+    })
+      .meta({ description: "Fruit Interface" })
+      .label("Fruit")
+
+    const Orange = object({
+      name: string().required(),
+      color: string().required(),
+      prize: number().required(),
+    })
+      .meta({ interfaces: [Fruit] })
+      .label("Orange")
+
+    const simpleResolver = resolver({
+      orange: query(Orange, () => 0 as any),
+    })
+
+    expect(printYupSilk(Orange)).toMatchInlineSnapshot(`
+      "type Orange implements Fruit {
+        name: String!
+        color: String!
+        prize: Float!
+      }"
+    `)
+
+    expect(printResolver(simpleResolver)).toMatchInlineSnapshot(`
+      "type Query {
+        orange: Orange
+      }
+
+      type Orange implements Fruit {
+        name: String!
+        color: String!
+        prize: Float!
+      }
+
+      """Fruit Interface"""
+      interface Fruit {
+        name: String!
+        color: String!
+        prize: Float!
+      }"
+    `)
+  })
 
   it.todo("should handle union")
 
@@ -237,4 +286,9 @@ describe.skip("yup resolver", () => {
 
 function printYupSilk(schema: Schema): string {
   return printType(yupSilk(schema).getType() as GraphQLNamedType)
+}
+
+function printResolver(resolver: SilkResolver): string {
+  const schema = new SchemaWeaver().add(resolver).weaveGraphQLSchema()
+  return printSchema(schema)
 }

@@ -36,7 +36,7 @@ describe("middleware integration", () => {
 
   const schema = new SchemaWeaver()
     .use(globalMiddleware)
-    .addResolver(simpleResolver)
+    .add(simpleResolver)
     .weaveGraphQLSchema()
 
   beforeAll(async () => {

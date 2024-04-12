@@ -3,12 +3,13 @@ import {
   type GraphQLEnumType,
   type GraphQLInputObjectType,
   type GraphQLUnionType,
+  type GraphQLObjectType,
 } from "graphql"
 import { type ModifiableObjectType } from "./object"
 
 export interface WeaverScope {
   modifiableObjectMap: Map<any, ModifiableObjectType>
-  objectMap: Map<any, ModifiableObjectType>
+  objectMap: Map<any, GraphQLObjectType>
   inputMap: Map<any, GraphQLInputObjectType>
   enumMap: Map<any, GraphQLEnumType>
   interfaceMap: Map<any, GraphQLInterfaceType>

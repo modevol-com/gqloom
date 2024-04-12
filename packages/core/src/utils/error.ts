@@ -8,6 +8,14 @@ export function markErrorLocation<TError>(
   return error
 }
 
+export function tryIn<T>(func: () => T, ...locations: string[]): T {
+  try {
+    return func()
+  } catch (error) {
+    throw markErrorLocation(error, ...locations)
+  }
+}
+
 /**
  * mark message with location
  * @param message origin message

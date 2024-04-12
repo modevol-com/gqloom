@@ -1,4 +1,10 @@
-import { type GraphQLSilk, createLoom, mapValue } from "@gqloom/core"
+import {
+  type GraphQLSilk,
+  createLoom,
+  mapValue,
+  ensureInterfaceType,
+  weaverScope,
+} from "@gqloom/core"
 import {
   GraphQLString,
   GraphQLFloat,
@@ -11,6 +17,9 @@ import {
   GraphQLList,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
+  type ThunkReadonlyArray,
+  type GraphQLInterfaceType,
+  isObjectType,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -32,8 +41,15 @@ export class YupSilk<TSchema extends Schema>
   constructor(public schema: TSchema) {}
 
   getType() {
+    const existing = weaverScope.objectMap?.get(this.schema)
+    if (existing) return existing
+
     const description = this.schema.describe()
-    return YupSilk.getWrappedType(description)
+    const gqlType = YupSilk.getWrappedType(description)
+    if (isObjectType(gqlType)) {
+      weaverScope.objectMap?.set(this.schema, gqlType)
+    }
+    return gqlType
   }
 
   static getWrappedType(description: SchemaDescription) {
@@ -65,6 +81,10 @@ export class YupSilk<TSchema extends Schema>
       case "object": {
         const name = description.label ?? description.meta?.name ?? ""
         return new GraphQLObjectType({
+          isTypeOf: description.meta?.isTypeOf,
+          interfaces: YupSilk.ensureInterfaceTypes(
+            description.meta?.interfaces
+          ),
           name,
           description: description.meta?.description,
           fields: mapValue(
@@ -102,6 +122,17 @@ export class YupSilk<TSchema extends Schema>
     if (description.type === "lazy")
       throw new Error("lazy type is not supported")
     return description as SchemaDescription
+  }
+
+  static ensureInterfaceTypes(
+    thunkList: ThunkReadonlyArray<Schema> | undefined
+  ): ReadonlyArray<GraphQLInterfaceType> | undefined {
+    if (thunkList == null) return undefined
+    const list = typeof thunkList === "function" ? thunkList() : thunkList
+
+    return list.map((yupSchema) =>
+      ensureInterfaceType(new YupSilk(yupSchema).getType())
+    )
   }
 
   static getEnumType(description: SchemaDescription): GraphQLEnumType | null {

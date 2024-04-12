@@ -23,7 +23,12 @@ import {
   defaultSubscriptionResolve,
 } from "../resolver"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
-import { resolverPayloadStorage, mapValue, markErrorLocation } from "../utils"
+import {
+  resolverPayloadStorage,
+  mapValue,
+  markErrorLocation,
+  tryIn,
+} from "../utils"
 import { weaverScope } from "./weaver-scope"
 
 export function mapToFieldConfig(
@@ -124,15 +129,12 @@ export function inputToArgs(
   }
   const args: GraphQLFieldConfigArgumentMap = {}
   Object.entries(input).forEach(([name, field]) => {
-    try {
+    tryIn(() => {
       args[name] = {
         ...field,
         type: ensureInputType(field.getType(optionsForGetType)),
       }
-    } catch (error) {
-      markErrorLocation(error, name)
-      throw error
-    }
+    }, name)
   })
   return args
 }

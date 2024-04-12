@@ -78,8 +78,8 @@ describe("context integration", () => {
 
   const schema = new SchemaWeaver()
     .use(globalMiddleware)
-    .addResolver(simpleResolver)
-    .addResolver(nodeResolver)
+    .add(simpleResolver)
+    .add(nodeResolver)
     .weaveGraphQLSchema()
 
   const contextValue = {}
@@ -215,7 +215,7 @@ describe("memory integration", () => {
 
   const schema = new SchemaWeaver()
     .use(middleware)
-    .addResolver(nodeResolver)
+    .add(nodeResolver)
     .weaveGraphQLSchema()
 
   const contextValue = {}
