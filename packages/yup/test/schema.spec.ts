@@ -299,7 +299,41 @@ describe("YupSilk", () => {
       `)
     })
 
-    it.todo("should avoid duplicate object")
+    it("should avoid duplicate object", () => {
+      const Dog = object({
+        name: string().required(),
+        birthday: string().required(),
+      }).label("Dog")
+
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
+        dogs: query(array(Dog), () => [
+          { name: "Fido", birthday: "2012-12-12" },
+          { name: "Rover", birthday: "2012-12-12" },
+        ]),
+        mustDog: query(Dog.required(), () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        age: field(number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog
+          dogs: [Dog]
+          mustDog: Dog!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float
+        }"
+      `)
+    })
 
     it.todo("should avoid duplicate input")
 

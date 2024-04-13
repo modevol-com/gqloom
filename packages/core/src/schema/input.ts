@@ -23,55 +23,10 @@ import {
   defaultSubscriptionResolve,
 } from "../resolver"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
-import {
-  resolverPayloadStorage,
-  mapValue,
-  markErrorLocation,
-  tryIn,
-} from "../utils"
+import { resolverPayloadStorage, mapValue, tryIn } from "../utils"
 import { weaverContext } from "./weaver-context"
 
-export function mapToFieldConfig(
-  map: Map<string, SilkOperationOrField>,
-  options: FieldConvertOptions = {}
-): Record<string, GraphQLFieldConfig<any, any>> {
-  const record: Record<string, GraphQLFieldConfig<any, any>> = {}
-
-  for (const [name, field] of map.entries()) {
-    record[name] = toFieldConfig(field, options)
-  }
-
-  return record
-}
-
-export function toFieldConfig(
-  field: SilkOperationOrField,
-  options: FieldConvertOptions = {}
-): GraphQLFieldConfig<any, any> {
-  try {
-    const { optionsForGetType = {}, optionsForResolving } = options
-    const outputType = (() => {
-      const gqlType = field.output.getType(optionsForGetType)
-      if (isObjectType(gqlType)) {
-        const gqlObject = weaverContext.modifiableObjectMap?.get(gqlType)
-        if (gqlObject != null) return gqlObject
-      }
-      return gqlType
-    })()
-    return {
-      ...field,
-      type: outputType,
-      args: inputToArgs(field.input, options),
-      ...provideForResolve(field, optionsForResolving),
-      ...provideForSubscribe(field, optionsForResolving),
-    }
-  } catch (error) {
-    markErrorLocation(error)
-    throw error
-  }
-}
-
-function provideForResolve(
+export function provideForResolve(
   field: SilkOperationOrField,
   options?: ResolvingOptions
 ): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
@@ -99,7 +54,7 @@ function provideForResolve(
   return { resolve }
 }
 
-function provideForSubscribe(
+export function provideForSubscribe(
   field: SilkOperationOrField,
   options?: ResolvingOptions
 ): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {

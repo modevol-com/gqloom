@@ -14,12 +14,8 @@ import {
   GraphQLUnionType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import {
-  ensureInputType,
-  inputToArgs,
-  toInputObjectType,
-  toFieldConfig,
-} from "./input"
+import { ensureInputType, inputToArgs, toInputObjectType } from "./input"
+import { toFieldConfig } from "./object"
 import {
   defaultSubscriptionResolve,
   silk,

@@ -21,6 +21,7 @@ import {
   type GraphQLInterfaceType,
   isObjectType,
   GraphQLUnionType,
+  isUnionType,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -43,14 +44,8 @@ export class YupSilk<TSchema extends Schema>
   constructor(public schema: TSchema) {}
 
   getType() {
-    const existing = weaverContext.objectMap?.get(this.schema)
-    if (existing) return existing
-
     const description = this.schema.describe()
-    const gqlType = YupSilk.getWrappedType(description)
-    if (isObjectType(gqlType)) {
-      weaverContext.objectMap?.set(this.schema, gqlType)
-    }
+    const gqlType = YupSilk.getTypeByDescription(description)
     return gqlType
   }
 
@@ -58,7 +53,37 @@ export class YupSilk<TSchema extends Schema>
     return this.schema.validate(input)
   }
 
-  static getWrappedType(description: SchemaDescription) {
+  static getTypeByDescription(description: SchemaDescription) {
+    // use existing type first
+    switch (description.type) {
+      case "object": {
+        const name = description.meta?.name ?? description.label
+        if (!name) throw new Error("object type must have a name")
+        const existing = weaverContext.objectMap?.get(name)
+        if (existing) return existing
+        break
+      }
+      case "union": {
+        const name = description.meta?.name ?? description.label
+        if (!name) throw new Error("union type must have a name")
+        const existing = weaverContext.unionMap?.get(name)
+        if (existing) return existing
+        break
+      }
+    }
+
+    const gqlType = YupSilk.getNullableType(description)
+
+    // do not forget to keep the type
+    if (isObjectType(gqlType)) {
+      weaverContext.objectMap?.set(gqlType.name, gqlType)
+    } else if (isUnionType(gqlType)) {
+      weaverContext.unionMap?.set(gqlType.name, gqlType)
+    }
+    return gqlType
+  }
+
+  static getNullableType(description: SchemaDescription) {
     const ofType = YupSilk.getGraphQLType(description)
     if (description.nullable || description.optional) return ofType
     return new GraphQLNonNull(ofType)
@@ -85,7 +110,7 @@ export class YupSilk<TSchema extends Schema>
       case "date":
         return GraphQLString
       case "object": {
-        const name = description.label ?? description.meta?.name ?? ""
+        const name = description.meta?.name ?? description.label ?? ""
         return new GraphQLObjectType({
           isTypeOf: description.meta?.isTypeOf,
           interfaces: YupSilk.ensureInterfaceTypes(
@@ -98,7 +123,7 @@ export class YupSilk<TSchema extends Schema>
             (fieldDescription) => {
               const d = YupSilk.ensureSchemaDescription(fieldDescription)
               return {
-                type: YupSilk.getWrappedType(d),
+                type: YupSilk.getTypeByDescription(d),
                 description: d?.meta?.description,
               } as GraphQLFieldConfig<any, any>
             }
@@ -114,7 +139,9 @@ export class YupSilk<TSchema extends Schema>
           throw new Error("Array type must have an inner type")
 
         return new GraphQLList(
-          YupSilk.getWrappedType(YupSilk.ensureSchemaDescription(innerType))
+          YupSilk.getTypeByDescription(
+            YupSilk.ensureSchemaDescription(innerType)
+          )
         )
       }
 
@@ -125,11 +152,11 @@ export class YupSilk<TSchema extends Schema>
 
         const innerTypes = Array.isArray(innerType) ? innerType : [innerType]
 
-        const name = description.label ?? description.meta?.name ?? ""
+        const name = description.meta?.name ?? description.label ?? ""
 
         const types = () =>
           innerTypes.map((innerType) => {
-            const gqlType = YupSilk.getWrappedType(
+            const gqlType = YupSilk.getTypeByDescription(
               YupSilk.ensureSchemaDescription(innerType)
             )
             if (isObjectType(gqlType)) return gqlType
@@ -193,7 +220,7 @@ export class YupSilk<TSchema extends Schema>
     }
 
     return new GraphQLEnumType({
-      name: description.label ?? meta?.name ?? "",
+      name: meta?.name ?? description.label ?? "",
       description: meta?.description,
       values,
     })

@@ -8,7 +8,7 @@ import {
 import { type ModifiableObjectType } from "./object"
 
 export interface WeaverContext {
-  modifiableObjectMap: Map<any, ModifiableObjectType>
+  modifiableObjectMap: Map<GraphQLObjectType, ModifiableObjectType>
   objectMap: Map<any, GraphQLObjectType>
   inputMap: Map<any, GraphQLInputObjectType>
   enumMap: Map<any, GraphQLEnumType>

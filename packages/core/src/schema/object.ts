@@ -9,15 +9,18 @@ import {
   assertName,
   isObjectType,
   resolveObjMapThunk,
+  isListType,
+  GraphQLList,
 } from "graphql"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
-import { mapToFieldConfig } from "./input"
-import { mapValue, toObjMap } from "../utils"
+import { mapValue, markErrorLocation, toObjMap } from "../utils"
 import {
   initWeaverContext,
   provideWeaverContext,
+  weaverContext,
   type WeaverContext,
 } from "./weaver-context"
+import { inputToArgs, provideForResolve, provideForSubscribe } from "./input"
 
 export class ModifiableObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
@@ -67,6 +70,49 @@ export class ModifiableObjectType extends GraphQLObjectType {
       ...fields,
       ...extraField,
     }
+  }
+}
+
+export function mapToFieldConfig(
+  map: Map<string, SilkOperationOrField>,
+  options: FieldConvertOptions = {}
+): Record<string, GraphQLFieldConfig<any, any>> {
+  const record: Record<string, GraphQLFieldConfig<any, any>> = {}
+
+  for (const [name, field] of map.entries()) {
+    record[name] = toFieldConfig(field, options)
+  }
+
+  return record
+}
+
+export function toFieldConfig(
+  field: SilkOperationOrField,
+  options: FieldConvertOptions = {}
+): GraphQLFieldConfig<any, any> {
+  try {
+    const { optionsForGetType = {}, optionsForResolving } = options
+    const outputType = (() => {
+      const gqlType = field.output.getType(optionsForGetType)
+      if (isObjectType(gqlType)) {
+        const gqlObject = weaverContext.modifiableObjectMap?.get(gqlType)
+        if (gqlObject != null) return gqlObject
+      } else if (isListType(gqlType) && isObjectType(gqlType.ofType)) {
+        const existing = weaverContext.modifiableObjectMap?.get(gqlType.ofType)
+        if (existing != null) return new GraphQLList(existing)
+      }
+      return gqlType
+    })()
+    return {
+      ...field,
+      type: outputType,
+      args: inputToArgs(field.input, options),
+      ...provideForResolve(field, optionsForResolving),
+      ...provideForSubscribe(field, optionsForResolving),
+    }
+  } catch (error) {
+    markErrorLocation(error)
+    throw error
   }
 }
 
