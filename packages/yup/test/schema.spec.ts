@@ -80,7 +80,7 @@ describe("YupSilk", () => {
     expect(i).toMatchObject({ ofType: GraphQLInt })
   })
 
-  it("should handle Object", () => {
+  it("should handle object", () => {
     const Giraffe = object({
       name: string().required(),
       birthday: date().required(),
@@ -265,18 +265,49 @@ describe("YupSilk", () => {
     `)
   })
 
-  describe.todo("should avoid duplicate objects", () => {
-    it("should merge field from multiple resolver")
+  describe("should avoid duplicate", () => {
+    it("should merge field from multiple resolver", () => {
+      const Dog = object({
+        name: string().required(),
+        birthday: string().required(),
+      }).label("Dog")
 
-    it("should avoid duplicate object")
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
+        age: field(number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
 
-    it("should avoid duplicate input")
+      const r2 = resolver.of(Dog, {
+        greeting: field(string(), (dog) => {
+          return `Hello ${dog.name}`
+        }),
+      })
 
-    it("should avoid duplicate enum")
+      expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog
+        }
 
-    it("should avoid duplicate interface")
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float
+          greeting: String
+        }"
+      `)
+    })
 
-    it("should avoid duplicate union")
+    it.todo("should avoid duplicate object")
+
+    it.todo("should avoid duplicate input")
+
+    it.todo("should avoid duplicate enum")
+
+    it.todo("should avoid duplicate interface")
+
+    it.todo("should avoid duplicate union")
   })
 })
 
@@ -331,7 +362,10 @@ function printYupSilk(schema: Schema): string {
   return printType(yupSilk(schema).getType() as GraphQLNamedType)
 }
 
-function printResolver(resolver: SilkResolver): string {
-  const schema = new SchemaWeaver().add(resolver).weaveGraphQLSchema()
+function printResolver(...resolvers: SilkResolver[]): string {
+  const weaver = new SchemaWeaver()
+  for (const r of resolvers) weaver.add(r)
+
+  const schema = weaver.weaveGraphQLSchema()
   return printSchema(schema)
 }

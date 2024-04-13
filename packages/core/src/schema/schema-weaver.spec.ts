@@ -208,4 +208,47 @@ describe("SchemaWeaver", () => {
       }"
     `)
   })
+
+  it("should merge field from multiple resolver", () => {
+    const Dog = silk<{ name: string; birthday: string }>(
+      new GraphQLObjectType({
+        name: "Dog",
+        fields: {
+          name: { type: new GraphQLNonNull(GraphQLString) },
+          birthday: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      })
+    )
+    const r1 = resolver.of(Dog, {
+      dog: query(Dog, () => {
+        return {
+          name: "dog1",
+          birthday: "2020-01-01",
+        }
+      }),
+      age: field(silk(GraphQLInt), (dog) => {
+        return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+      }),
+    })
+
+    const r2 = resolver.of(Dog, {
+      greeting: field(silk(GraphQLString), (dog) => {
+        return `Hello ${dog.name}`
+      }),
+    })
+
+    const schema = new SchemaWeaver().add(r1).add(r2).weaveGraphQLSchema()
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog
+      }
+
+      type Dog {
+        name: String!
+        birthday: String!
+        age: Int
+        greeting: String
+      }"
+    `)
+  })
 })

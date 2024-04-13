@@ -40,18 +40,20 @@ export class SchemaWeaver {
 
   public add(resolver: SilkResolver) {
     const answer = provideWeaverScope(
-      () => this.innerAddResolver(resolver),
+      () => this.addResolver(resolver),
       this.scope
     )
     return answer
   }
 
-  protected innerAddResolver(resolver: SilkResolver) {
+  protected addResolver(resolver: SilkResolver) {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
+        const existing = this.scope.modifiableObjectMap.get(gqlType)
+        if (existing != null) return existing
         const extraObject = new ModifiableObjectType(gqlType, this.fieldOptions)
         this.scope.modifiableObjectMap.set(gqlType, extraObject)
         return extraObject
