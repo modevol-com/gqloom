@@ -307,10 +307,12 @@ describe("YupSilk", () => {
 
       const r1 = resolver.of(Dog, {
         dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-        dogs: query(array(Dog), () => [
-          { name: "Fido", birthday: "2012-12-12" },
-          { name: "Rover", birthday: "2012-12-12" },
-        ]),
+        dogs: query(array(Dog), {
+          resolve: () => [
+            { name: "Fido", birthday: "2012-12-12" },
+            { name: "Rover", birthday: "2012-12-12" },
+          ],
+        }),
         mustDog: query(Dog.required(), () => ({
           name: "",
           birthday: "2012-12-12",

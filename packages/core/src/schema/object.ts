@@ -11,6 +11,8 @@ import {
   resolveObjMapThunk,
   isListType,
   GraphQLList,
+  GraphQLNonNull,
+  isNonNullType,
 } from "graphql"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
 import { mapValue, markErrorLocation, toObjMap } from "../utils"
@@ -103,9 +105,20 @@ export function toFieldConfig(
       }
       return gqlType
     })()
+
+    const nullableType = (() => {
+      if (
+        (field.nonNull ?? field.output.nonNull) &&
+        !isNonNullType(outputType)
+      ) {
+        return new GraphQLNonNull(outputType)
+      }
+      return outputType
+    })()
+
     return {
       ...field,
-      type: outputType,
+      type: nullableType,
       args: inputToArgs(field.input, options),
       ...provideForResolve(field, optionsForResolving),
       ...provideForSubscribe(field, optionsForResolving),

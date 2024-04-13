@@ -87,10 +87,16 @@ export type OperationType = "query" | "mutation" | "subscription"
 
 export type OperationOrFieldType = OperationType | "field"
 
-export type GraphQLFieldOptions = Pick<
-  GraphQLFieldConfig<any, any>,
-  "description" | "deprecationReason" | "extensions"
->
+export interface GraphQLFieldOptions
+  extends Pick<
+    GraphQLFieldConfig<any, any>,
+    "description" | "deprecationReason" | "extensions"
+  > {
+  /**
+   * Whether the field is non-nullable.
+   */
+  nonNull?: boolean
+}
 
 /**
  * Operation or Field for resolver.

@@ -41,12 +41,17 @@ export class YupSilk<TSchema extends Schema>
   implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
 {
   _types?: { input: InferType<TSchema>; output: InferType<TSchema> }
-  constructor(public schema: TSchema) {}
+  schemaDescription: SchemaDescription
+  nonNull: boolean
+
+  constructor(public schema: TSchema) {
+    this.schemaDescription = schema.describe()
+    this.nonNull =
+      !this.schemaDescription.nullable && !this.schemaDescription.optional
+  }
 
   getType() {
-    const description = this.schema.describe()
-    const gqlType = YupSilk.getTypeByDescription(description)
-    return gqlType
+    return YupSilk.getTypeByDescription(this.schemaDescription)
   }
 
   parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {
