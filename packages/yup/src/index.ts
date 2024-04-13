@@ -52,6 +52,10 @@ export class YupSilk<TSchema extends Schema>
     return gqlType
   }
 
+  parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {
+    return this.schema.validate(input)
+  }
+
   static getWrappedType(description: SchemaDescription) {
     const ofType = YupSilk.getFieldType(description)
     if (description.nullable || description.optional) return ofType
@@ -163,10 +167,6 @@ export class YupSilk<TSchema extends Schema>
       description: meta?.description,
       values,
     })
-  }
-
-  parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {
-    return this.schema.cast(input)
   }
 }
 
