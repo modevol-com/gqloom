@@ -33,7 +33,7 @@ export class UnionSchema<
   extends Schema<TType, TContext, TDefault, TFlags>
   implements IUnionSchema<TType, TContext, TDefault, TFlags>
 {
-  public schemas: ReadonlyArray<Schema>
+  declare spec: UnionSchemaSpec
 
   constructor(schemas: ReadonlyArray<Schema>) {
     super({
@@ -43,53 +43,53 @@ export class UnionSchema<
         return schemas.some((schema) => schema.isType(value))
       },
     })
-    this.schemas = schemas
+  }
 
-    this.test({
-      name: "not nil",
-      test(value) {
-        console.log(value)
-        return value == null
-      },
-    })
+  cast(value: any, options: any) {
+    const targetSchema = this.findTargetSchemaSync(value)
+    if (targetSchema) return targetSchema.cast(value, options) as any
+    return super.cast(value, options) as any
+  }
 
-    this.cast = (value, options: any) => {
-      const targetSchema = this.findTargetSchemaSync(value)
-      if (targetSchema) return targetSchema.cast(value, options)
-      return super.cast(value, options)
-    }
+  async validate(...args: Parameters<Schema["validate"]>) {
+    const [value, options] = args
+    const targetSchema = await this.findTargetSchema(value)
+    if (targetSchema) return targetSchema.validate(value, options)
+    if (this.validateNil(value)) return value
 
-    this.validate = async (value, options) => {
-      const targetSchema = await this.findTargetSchema(value)
-      if (targetSchema) return targetSchema.validate(value, options)
-      if (this.validateNil(value)) return value
-      throw new ValidationError("Union validation failed", value)
-    }
+    const maybeDefault = this.getDefault()
+    if (maybeDefault) return maybeDefault
+    throw new ValidationError("Union validation failed", value)
+  }
 
-    this.validateSync = (value, options) => {
-      const targetSchema = this.findTargetSchemaSync(value)
-      if (targetSchema) return targetSchema.validateSync(value, options)
-      if (this.validateNil(value)) return value
-      throw new ValidationError("Union validation failed", value)
-    }
-    this.describe = (options) => {
-      const next = (options ? this.resolve(options) : this).clone()
-      const base = super.describe(options) as SchemaInnerTypeDescription
-      base.innerType = (
-        next.spec as unknown as { schemas: ReadonlyArray<Schema> }
-      ).schemas.map((schema, index) => {
-        let innerOptions = options
-        if (innerOptions?.value) {
-          innerOptions = {
-            ...innerOptions,
-            parent: innerOptions.value,
-            value: innerOptions.value[index],
-          }
+  validateSync(...args: Parameters<Schema["validateSync"]>) {
+    const [value, options] = args
+    const targetSchema = this.findTargetSchemaSync(value)
+    if (targetSchema) return targetSchema.validateSync(value, options)
+    if (this.validateNil(value)) return value
+    const maybeDefault = this.getDefault()
+    if (maybeDefault) return maybeDefault
+    throw new ValidationError("Union validation failed", value)
+  }
+
+  describe(...arg: Parameters<Schema["describe"]>) {
+    const [options] = arg
+    const next = (options ? this.resolve(options) : this).clone()
+    const base = super.describe(options) as SchemaInnerTypeDescription
+    base.innerType = (
+      next.spec as unknown as { schemas: ReadonlyArray<Schema> }
+    ).schemas.map((schema, index) => {
+      let innerOptions = options
+      if (innerOptions?.value) {
+        innerOptions = {
+          ...innerOptions,
+          parent: innerOptions.value,
+          value: innerOptions.value[index],
         }
-        return schema.describe(innerOptions)
-      })
-      return base
-    }
+      }
+      return schema.describe(innerOptions)
+    })
+    return base
   }
 
   validateNil(value: any) {
@@ -99,16 +99,24 @@ export class UnionSchema<
   }
 
   async findTargetSchema(value: any): Promise<Schema | undefined> {
-    for (const schema of this.schemas) {
+    if (value == null) return
+    for (const schema of this.spec.schemas) {
       if (await schema.isValid(value, { strict: true })) return schema
     }
   }
 
   findTargetSchemaSync(value: any): Schema | undefined {
-    for (const schema of this.schemas) {
+    if (value == null) return
+    for (const schema of this.spec.schemas) {
       if (schema.isValidSync(value, { strict: true })) return schema
     }
   }
+}
+
+type SchemaSpec = Schema<any>["spec"]
+
+interface UnionSchemaSpec extends SchemaSpec {
+  schemas: ReadonlyArray<Schema>
 }
 
 export interface IUnionSchema<
@@ -117,7 +125,7 @@ export interface IUnionSchema<
   TDefault = undefined,
   TFlags extends Flags = "",
 > extends Schema<TType, TContext, TDefault, TFlags> {
-  schemas: ReadonlyArray<Schema>
+  spec: UnionSchemaSpec
 
   findTargetSchema(value: any): Promise<Schema | undefined>
   findTargetSchemaSync(value: any): Schema | undefined

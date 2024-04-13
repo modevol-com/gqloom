@@ -20,6 +20,7 @@ import {
   type ThunkReadonlyArray,
   type GraphQLInterfaceType,
   isObjectType,
+  GraphQLUnionType,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -33,6 +34,7 @@ import {
 import { type GQLoomMetadata } from "./types"
 
 export * from "./types"
+export * from "./union"
 
 export class YupSilk<TSchema extends Schema>
   implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
@@ -57,12 +59,12 @@ export class YupSilk<TSchema extends Schema>
   }
 
   static getWrappedType(description: SchemaDescription) {
-    const ofType = YupSilk.getFieldType(description)
+    const ofType = YupSilk.getGraphQLType(description)
     if (description.nullable || description.optional) return ofType
     return new GraphQLNonNull(ofType)
   }
 
-  static getFieldType(description: SchemaDescription): GraphQLOutputType {
+  static getGraphQLType(description: SchemaDescription): GraphQLOutputType {
     const maybeEnum = YupSilk.getEnumType(description)
     if (maybeEnum) return maybeEnum
 
@@ -114,6 +116,34 @@ export class YupSilk<TSchema extends Schema>
         return new GraphQLList(
           YupSilk.getWrappedType(YupSilk.ensureSchemaDescription(innerType))
         )
+      }
+
+      case "union": {
+        const innerType = (description as SchemaInnerTypeDescription).innerType
+        if (innerType == null)
+          throw new Error("Union type must have inner types")
+
+        const innerTypes = Array.isArray(innerType) ? innerType : [innerType]
+
+        const name = description.label ?? description.meta?.name ?? ""
+
+        const types = () =>
+          innerTypes.map((innerType) => {
+            const gqlType = YupSilk.getWrappedType(
+              YupSilk.ensureSchemaDescription(innerType)
+            )
+            if (isObjectType(gqlType)) return gqlType
+            throw new Error(
+              `Union types ${name} can only contain objects, but got ${gqlType}`
+            )
+          })
+
+        return new GraphQLUnionType({
+          name,
+          types,
+          description: description.meta?.description,
+          resolveType: description.meta?.resolveType,
+        })
       }
       default:
         throw new Error(`yup type ${description.type} is not supported`)

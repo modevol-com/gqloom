@@ -17,6 +17,7 @@ import {
   query,
   resolver,
   yupSilk,
+  union,
 } from "../src/index"
 import {
   GraphQLString,
@@ -226,7 +227,43 @@ describe("YupSilk", () => {
     `)
   })
 
-  it.todo("should handle union")
+  it("should handle union", () => {
+    const Cat = object({
+      name: string().required(),
+      color: string().required(),
+    }).label("Cat")
+
+    const Dog = object({
+      name: string().required(),
+      height: number().required(),
+    }).label("Dog")
+
+    const Animal = union([Cat, Dog])
+      .label("Animal")
+      .meta({ description: "Do you love animals ?" })
+
+    const simpleResolver = resolver({
+      animal: query(Animal, () => 0 as any),
+    })
+    expect(printResolver(simpleResolver)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal
+      }
+
+      """Do you love animals ?"""
+      union Animal = Cat | Dog
+
+      type Cat {
+        name: String!
+        color: String!
+      }
+
+      type Dog {
+        name: String!
+        height: Float!
+      }"
+    `)
+  })
 
   describe.todo("should avoid duplicate objects", () => {
     it("should merge field from multiple resolver")

@@ -6,20 +6,18 @@ describe("union", () => {
   const Cat = object({
     name: string().required(),
     color: string().required(),
-  })
+  }).label("Cat")
   const Dog = object({
     name: string().required(),
     height: number().required(),
-  })
+  }).label("Dog")
   it("should handle DEFAULT", () => {
     const Animal = union([Cat, Dog])
       .required()
-      .default(() => {
-        return {
-          name: "Tom",
-          color: "white",
-        }
-      })
+      .default(() => ({
+        name: "Tom",
+        color: "white",
+      }))
 
     expect(Animal.validateSync(undefined)).toEqual({
       name: "Tom",
@@ -46,7 +44,7 @@ describe("union", () => {
   })
 
   it("should describe schema", () => {
-    const Animal = union([Cat, Dog])
+    const Animal = union([Cat, Dog]).label("Animal")
     expect(Animal.describe()).toMatchObject({
       type: "union",
       innerType: [

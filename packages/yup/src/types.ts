@@ -22,7 +22,7 @@ export interface GQLoomMetadata {
   isTypeOf?: GraphQLObjectTypeConfig<any, any>["isTypeOf"]
 
   /**
-   * For `interface`
+   * For `interface`, `union`
    *
    * Optionally provide a custom type resolver function. If one is not provided,
    * the default implementation will call `isTypeOf` on each implementing
