@@ -28,7 +28,7 @@ import {
   silkQuery,
   silkSubscription,
 } from "../resolver"
-import { initScope, provideWeaverScope } from "./weaver-scope"
+import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 describe("toInputObjectType", () => {
   const Dog = new GraphQLObjectType({
@@ -50,9 +50,9 @@ describe("toInputObjectType", () => {
   })
 
   it("should return same InputObjectType for same ObjectType", () => {
-    provideWeaverScope(() => {
+    provideWeaverContext(() => {
       expect(toInputObjectType(Dog)).toBe(toInputObjectType(Dog))
-    }, initScope())
+    }, initWeaverContext())
   })
 })
 

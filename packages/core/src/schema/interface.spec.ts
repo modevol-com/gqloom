@@ -6,7 +6,7 @@ import {
   GraphQLString,
   printType,
 } from "graphql"
-import { initScope, provideWeaverScope } from "./weaver-scope"
+import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 describe("ensureInterfaceType", () => {
   it("should handle interface type", () => {
@@ -42,9 +42,9 @@ describe("ensureInterfaceType", () => {
       name: "Dog",
       fields: { name: { type: GraphQLString } },
     })
-    provideWeaverScope(() => {
+    provideWeaverContext(() => {
       const result = ensureInterfaceType(objectType)
       expect(result).toBe(ensureInterfaceType(objectType))
-    }, initScope())
+    }, initWeaverContext())
   })
 })

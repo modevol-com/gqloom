@@ -3,7 +3,7 @@ import {
   createLoom,
   mapValue,
   ensureInterfaceType,
-  weaverScope,
+  weaverContext,
 } from "@gqloom/core"
 import {
   GraphQLString,
@@ -43,13 +43,13 @@ export class YupSilk<TSchema extends Schema>
   constructor(public schema: TSchema) {}
 
   getType() {
-    const existing = weaverScope.objectMap?.get(this.schema)
+    const existing = weaverContext.objectMap?.get(this.schema)
     if (existing) return existing
 
     const description = this.schema.describe()
     const gqlType = YupSilk.getWrappedType(description)
     if (isObjectType(gqlType)) {
-      weaverScope.objectMap?.set(this.schema, gqlType)
+      weaverContext.objectMap?.set(this.schema, gqlType)
     }
     return gqlType
   }

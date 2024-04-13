@@ -2,7 +2,11 @@ import { GraphQLSchema, isObjectType } from "graphql"
 import { RESOLVER_OPTIONS_KEY, type ResolvingOptions } from "../resolver"
 import { ModifiableObjectType } from "./object"
 import { type Middleware } from "../utils"
-import { initScope, provideWeaverScope, type WeaverScope } from "./weaver-scope"
+import {
+  initWeaverContext,
+  provideWeaverContext,
+  type WeaverContext,
+} from "./weaver-context"
 import { type SilkResolver } from "./types"
 
 interface SchemaWeaverParameters
@@ -15,7 +19,7 @@ export class SchemaWeaver {
   protected mutation?: ModifiableObjectType
   protected subscription?: ModifiableObjectType
 
-  protected scope: WeaverScope = initScope()
+  protected context: WeaverContext = initWeaverContext()
 
   protected optionsForGetType: Record<string | symbol | number, any> = {}
   protected optionsForResolving?: ResolvingOptions
@@ -39,9 +43,9 @@ export class SchemaWeaver {
   }
 
   public add(resolver: SilkResolver) {
-    const answer = provideWeaverScope(
+    const answer = provideWeaverContext(
       () => this.addResolver(resolver),
-      this.scope
+      this.context
     )
     return answer
   }
@@ -52,10 +56,10 @@ export class SchemaWeaver {
       if (parent == null) return undefined
       const gqlType = parent.getType(this.optionsForGetType)
       if (isObjectType(gqlType)) {
-        const existing = this.scope.modifiableObjectMap.get(gqlType)
+        const existing = this.context.modifiableObjectMap.get(gqlType)
         if (existing != null) return existing
         const extraObject = new ModifiableObjectType(gqlType, this.fieldOptions)
-        this.scope.modifiableObjectMap.set(gqlType, extraObject)
+        this.context.modifiableObjectMap.set(gqlType, extraObject)
         return extraObject
       }
       throw new Error(
@@ -102,7 +106,7 @@ export class SchemaWeaver {
   }
 
   protected get fieldOptions() {
-    const { optionsForGetType, optionsForResolving, scope } = this
-    return { optionsForGetType, optionsForResolving, scope }
+    const { optionsForGetType, optionsForResolving, context } = this
+    return { optionsForGetType, optionsForResolving, weaverContext: context }
   }
 }

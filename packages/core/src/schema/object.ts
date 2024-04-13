@@ -13,13 +13,17 @@ import {
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
 import { mapToFieldConfig } from "./input"
 import { mapValue, toObjMap } from "../utils"
-import { initScope, provideWeaverScope, type WeaverScope } from "./weaver-scope"
+import {
+  initWeaverContext,
+  provideWeaverContext,
+  type WeaverContext,
+} from "./weaver-context"
 
 export class ModifiableObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
 
   protected fieldOptions: FieldConvertOptions
-  protected scope: WeaverScope
+  protected weaverContext: WeaverContext
 
   constructor(
     objectOrGetter:
@@ -27,7 +31,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
       | GraphQLObjectType
       | GraphQLObjectTypeConfig<any, any>
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
-    fieldOptions?: FieldConvertOptions & { scope: WeaverScope }
+    fieldOptions?: FieldConvertOptions & { weaverContext: WeaverContext }
   ) {
     const origin =
       typeof objectOrGetter === "function" ? objectOrGetter() : objectOrGetter
@@ -41,7 +45,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
     this.fieldOptions = fieldOptions ?? {
       optionsForGetType: {},
     }
-    this.scope = fieldOptions?.scope ?? initScope()
+    this.weaverContext = fieldOptions?.weaverContext ?? initWeaverContext()
   }
 
   addField(name: string, resolver: SilkOperationOrField) {
@@ -54,10 +58,10 @@ export class ModifiableObjectType extends GraphQLObjectType {
 
   override getFields(): GraphQLFieldMap<any, any> {
     const fields = super.getFields()
-    const extraField = provideWeaverScope(
+    const extraField = provideWeaverContext(
       () =>
         defineFieldMap(mapToFieldConfig(this.extraFields, this.fieldOptions)),
-      this.scope
+      this.weaverContext
     )
     return {
       ...fields,

@@ -29,7 +29,7 @@ import {
   markErrorLocation,
   tryIn,
 } from "../utils"
-import { weaverScope } from "./weaver-scope"
+import { weaverContext } from "./weaver-context"
 
 export function mapToFieldConfig(
   map: Map<string, SilkOperationOrField>,
@@ -53,7 +53,7 @@ export function toFieldConfig(
     const outputType = (() => {
       const gqlType = field.output.getType(optionsForGetType)
       if (isObjectType(gqlType)) {
-        const gqlObject = weaverScope.modifiableObjectMap?.get(gqlType)
+        const gqlObject = weaverContext.modifiableObjectMap?.get(gqlType)
         if (gqlObject != null) return gqlObject
       }
       return gqlType
@@ -159,7 +159,7 @@ export function ensureInputType(output: GraphQLType): GraphQLInputType {
 export function toInputObjectType(
   object: GraphQLObjectType
 ): GraphQLInputObjectType {
-  const existing = weaverScope.inputMap?.get(object)
+  const existing = weaverContext.inputMap?.get(object)
   if (existing != null) return existing
 
   const {
@@ -173,7 +173,7 @@ export function toInputObjectType(
     fields: mapValue(fields, (it) => toInputFieldConfig(it)),
   })
 
-  weaverScope.inputMap?.set(object, input)
+  weaverContext.inputMap?.set(object, input)
   return input
 }
 

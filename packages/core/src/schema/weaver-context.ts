@@ -7,7 +7,7 @@ import {
 } from "graphql"
 import { type ModifiableObjectType } from "./object"
 
-export interface WeaverScope {
+export interface WeaverContext {
   modifiableObjectMap: Map<any, ModifiableObjectType>
   objectMap: Map<any, GraphQLObjectType>
   inputMap: Map<any, GraphQLInputObjectType>
@@ -16,9 +16,9 @@ export interface WeaverScope {
   unionMap: Map<any, GraphQLUnionType>
 }
 
-let ref: WeaverScope | undefined
+let ref: WeaverContext | undefined
 
-export function initScope(): WeaverScope {
+export function initWeaverContext(): WeaverContext {
   return {
     modifiableObjectMap: new Map(),
     objectMap: new Map(),
@@ -29,7 +29,7 @@ export function initScope(): WeaverScope {
   }
 }
 
-export const weaverScope: Partial<WeaverScope> = {
+export const weaverContext: Partial<WeaverContext> = {
   get modifiableObjectMap() {
     return ref?.modifiableObjectMap
   },
@@ -50,9 +50,9 @@ export const weaverScope: Partial<WeaverScope> = {
   },
 }
 
-export function provideWeaverScope<T>(
+export function provideWeaverContext<T>(
   func: () => T,
-  value: WeaverScope | undefined
+  value: WeaverContext | undefined
 ): T {
   const lastRef = ref
   ref = value

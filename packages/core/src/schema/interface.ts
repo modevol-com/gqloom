@@ -5,7 +5,7 @@ import {
   type GraphQLInterfaceTypeConfig,
   type GraphQLOutputType,
 } from "graphql"
-import { weaverScope } from "./weaver-scope"
+import { weaverContext } from "./weaver-context"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,
@@ -13,7 +13,7 @@ export function ensureInterfaceType(
 ): GraphQLInterfaceType {
   if (isInterfaceType(gqlType)) return gqlType
 
-  const existing = weaverScope.interfaceMap?.get(gqlType)
+  const existing = weaverContext.interfaceMap?.get(gqlType)
   if (existing != null) return existing
 
   if (!isObjectType(gqlType))
@@ -22,6 +22,6 @@ export function ensureInterfaceType(
   const { astNode: _, extensionASTNodes: _1, ...config } = gqlType.toConfig()
   const interfaceType = new GraphQLInterfaceType({ ...config, resolveType })
 
-  weaverScope.interfaceMap?.set(gqlType, interfaceType)
+  weaverContext.interfaceMap?.set(gqlType, interfaceType)
   return interfaceType
 }
