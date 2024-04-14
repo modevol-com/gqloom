@@ -13,7 +13,9 @@ export function ensureInterfaceType(
 ): GraphQLInterfaceType {
   if (isInterfaceType(gqlType)) return gqlType
 
-  const existing = weaverContext.interfaceMap?.get(gqlType)
+  const key = "name" in gqlType ? gqlType.name : gqlType
+
+  const existing = weaverContext.interfaceMap?.get(key)
   if (existing != null) return existing
 
   if (!isObjectType(gqlType))
@@ -22,6 +24,6 @@ export function ensureInterfaceType(
   const { astNode: _, extensionASTNodes: _1, ...config } = gqlType.toConfig()
   const interfaceType = new GraphQLInterfaceType({ ...config, resolveType })
 
-  weaverContext.interfaceMap?.set(gqlType, interfaceType)
+  weaverContext.interfaceMap?.set(key, interfaceType)
   return interfaceType
 }

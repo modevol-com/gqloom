@@ -400,7 +400,50 @@ describe("YupSilk", () => {
 
     it.todo("should avoid duplicate enum")
 
-    it.todo("should avoid duplicate interface")
+    it("should avoid duplicate interface", () => {
+      const Fruit = object({ color: string() }).label("Fruit")
+      const Orange = object({ color: string(), flavor: string() })
+        .label("Orange")
+        .meta({ interfaces: [Fruit] })
+
+      const Apple = object({ color: string(), flavor: string() })
+        .label("Apple")
+        .meta({ interfaces: [Fruit.clone()] })
+
+      const r1 = resolver({
+        apple: query(Apple, () => ({ flavor: "" })),
+        apples: query(array(Apple), () => []),
+        orange: query(Orange, () => ({ flavor: "" })),
+        oranges: query(array(Orange), () => []),
+        mustOrange: query(Orange.required(), () => ({ flavor: "" })),
+        mustOranges: query(array(Orange.required()), () => []),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          apple: Apple
+          apples: [Apple]
+          orange: Orange
+          oranges: [Orange]
+          mustOrange: Orange!
+          mustOranges: [Orange!]
+        }
+
+        type Apple implements Fruit {
+          color: String
+          flavor: String
+        }
+
+        interface Fruit {
+          color: String
+        }
+
+        type Orange implements Fruit {
+          color: String
+          flavor: String
+        }"
+      `)
+    })
 
     it("should avoid duplicate union", () => {
       const Apple = object({ flavor: string() }).label("Apple")
