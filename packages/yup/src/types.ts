@@ -3,8 +3,9 @@ import {
   type GraphQLEnumValueConfig,
   type GraphQLObjectTypeConfig,
   type GraphQLInterfaceTypeConfig,
+  type GraphQLOutputType,
 } from "graphql"
-import { type Schema } from "yup"
+import { type SchemaDescription, type Schema } from "yup"
 
 export interface GQLoomMetadata {
   name?: string
@@ -29,4 +30,10 @@ export interface GQLoomMetadata {
    * Object type.
    */
   resolveType?: GraphQLInterfaceTypeConfig<any, any>["resolveType"]
+}
+
+export interface YupWeaverOptions {
+  yupPresetGraphQLType?: (
+    description: SchemaDescription
+  ) => GraphQLOutputType | undefined
 }

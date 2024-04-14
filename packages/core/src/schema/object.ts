@@ -55,9 +55,7 @@ export class ModifiableObjectType extends GraphQLObjectType {
     } else {
       super(origin)
     }
-    this.fieldOptions = fieldOptions ?? {
-      optionsForGetType: {},
-    }
+    this.fieldOptions = fieldOptions ?? {}
     this.weaverContext = fieldOptions?.weaverContext ?? initWeaverContext()
   }
 

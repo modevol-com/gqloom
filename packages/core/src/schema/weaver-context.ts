@@ -14,6 +14,7 @@ export interface WeaverContext {
   enumMap: Map<any, GraphQLEnumType>
   interfaceMap: Map<any, GraphQLInterfaceType>
   unionMap: Map<any, GraphQLUnionType>
+  options: Record<string | symbol | number, any>
 }
 
 let ref: WeaverContext | undefined
@@ -26,6 +27,7 @@ export function initWeaverContext(): WeaverContext {
     enumMap: new Map(),
     interfaceMap: new Map(),
     unionMap: new Map(),
+    options: {},
   }
 }
 
@@ -47,6 +49,9 @@ export const weaverContext: Partial<WeaverContext> = {
   },
   get unionMap() {
     return ref?.unionMap
+  },
+  get options() {
+    return ref?.options
   },
 }
 

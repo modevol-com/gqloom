@@ -24,22 +24,17 @@ export class SchemaWeaver {
   protected optionsForGetType: Record<string | symbol | number, any> = {}
   protected optionsForResolving?: ResolvingOptions
 
+  constructor({ query, mutation, subscription }: SchemaWeaverParameters = {}) {
+    if (query != null) this.query = query
+    if (mutation != null) this.mutation = mutation
+    if (subscription != null) this.subscription = subscription
+  }
+
   public use(...middlewares: Middleware[]) {
     this.optionsForResolving ??= { middlewares: [] }
     this.optionsForResolving.middlewares ??= []
     this.optionsForResolving.middlewares.push(...middlewares)
     return this
-  }
-
-  public weaveGraphQLSchema(): GraphQLSchema {
-    const { query, mutation, subscription } = this
-    return new GraphQLSchema({ query, mutation, subscription })
-  }
-
-  constructor({ query, mutation, subscription }: SchemaWeaverParameters = {}) {
-    if (query != null) this.query = query
-    if (mutation != null) this.mutation = mutation
-    if (subscription != null) this.subscription = subscription
   }
 
   public add(resolver: SilkResolver) {
@@ -50,11 +45,23 @@ export class SchemaWeaver {
     return answer
   }
 
+  public setOptions<
+    TOptions extends object = Record<string | symbol | number, any>,
+  >(options: TOptions) {
+    Object.assign(this.context.options, options)
+    return this
+  }
+
+  public weaveGraphQLSchema(): GraphQLSchema {
+    const { query, mutation, subscription } = this
+    return new GraphQLSchema({ query, mutation, subscription })
+  }
+
   protected addResolver(resolver: SilkResolver) {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
-      const gqlType = parent.getType(this.optionsForGetType)
+      const gqlType = parent.getType()
       if (isObjectType(gqlType)) {
         const existing = this.context.modifiableObjectMap.get(gqlType)
         if (existing != null) return existing

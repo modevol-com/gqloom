@@ -34,7 +34,7 @@ import {
   type SchemaFieldDescription,
   type SchemaInnerTypeDescription,
 } from "yup"
-import { type GQLoomMetadata } from "./types"
+import { type YupWeaverOptions, type GQLoomMetadata } from "./types"
 
 export * from "./types"
 export * from "./union"
@@ -54,6 +54,10 @@ export class YupSilk<TSchema extends Schema>
 
   getType() {
     return YupSilk.getTypeByDescription(this.schemaDescription)
+  }
+
+  static get options(): YupWeaverOptions | undefined {
+    return weaverContext.options
   }
 
   parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {
@@ -114,6 +118,9 @@ export class YupSilk<TSchema extends Schema>
   }
 
   static getGraphQLType(description: SchemaDescription): GraphQLOutputType {
+    const presetType = YupSilk.options?.yupPresetGraphQLType?.(description)
+    if (presetType) return presetType
+
     const maybeEnum = YupSilk.getEnumType(description)
     if (maybeEnum) return maybeEnum
 
@@ -263,7 +270,5 @@ export function yupSilk<TSchema extends Schema>(
   return new YupSilk(schema)
 }
 
-export const { query, mutation, field, resolver } = createLoom<YupSchemaIO>(
-  yupSilk,
-  isSchema
-)
+export const yupLoom = createLoom<YupSchemaIO>(yupSilk, isSchema)
+export const { query, mutation, field, resolver } = yupLoom

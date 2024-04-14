@@ -14,7 +14,6 @@ export type SilkOperationOrField = OperationOrField<
 >
 
 export interface FieldConvertOptions {
-  optionsForGetType?: Record<string | number | symbol, any>
   optionsForResolving?: ResolvingOptions
 }
 
