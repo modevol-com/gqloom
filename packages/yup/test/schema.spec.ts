@@ -402,7 +402,36 @@ describe("YupSilk", () => {
 
     it.todo("should avoid duplicate interface")
 
-    it.todo("should avoid duplicate union")
+    it("should avoid duplicate union", () => {
+      const Apple = object({ flavor: string() }).label("Apple")
+      const Orange = object({ color: string() }).label("Orange")
+      const Fruit = union([Apple, Orange]).label("Fruit")
+
+      const r1 = resolver({
+        fruit: query(Fruit, () => ({ flavor: "" })),
+        fruits: query(array(Fruit), () => []),
+        mustFruit: query(Fruit.required(), () => ({ flavor: "" })),
+        mustFruits: query(array(Fruit.required()), () => []),
+      })
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit]
+          mustFruit: Fruit!
+          mustFruits: [Fruit!]
+        }
+
+        union Fruit = Apple | Orange
+
+        type Apple {
+          flavor: String
+        }
+
+        type Orange {
+          color: String
+        }"
+      `)
+    })
   })
 })
 
