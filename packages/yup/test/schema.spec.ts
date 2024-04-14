@@ -398,7 +398,30 @@ describe("YupSilk", () => {
       `)
     })
 
-    it.todo("should avoid duplicate enum")
+    it("should avoid duplicate enum", () => {
+      const Fruit = string().oneOf(["apple", "banana", "orange"]).label("Fruit")
+      const r1 = resolver({
+        fruit: query(Fruit, () => "apple" as const),
+        fruits: query(array(Fruit), () => []),
+        mustFruit: query(Fruit.required(), () => "apple" as const),
+        mustFruits: query(array(Fruit.required()), () => []),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit]
+          mustFruit: Fruit!
+          mustFruits: [Fruit!]
+        }
+
+        enum Fruit {
+          apple
+          banana
+          orange
+        }"
+      `)
+    })
 
     it("should avoid duplicate interface", () => {
       const Fruit = object({ color: string() }).label("Fruit")

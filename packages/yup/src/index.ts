@@ -23,6 +23,7 @@ import {
   GraphQLUnionType,
   isUnionType,
   isNonNullType,
+  isEnumType,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -60,22 +61,31 @@ export class YupSilk<TSchema extends Schema>
   }
 
   static getTypeByDescription(description: SchemaDescription) {
+    const name = description.meta?.name ?? description.label
+
     // use existing type first
     switch (description.type) {
       case "object": {
-        const name = description.meta?.name ?? description.label
         if (!name) throw new Error("object type must have a name")
         const existing = weaverContext.objectMap?.get(name)
         if (existing) return nullable(existing)
         break
       }
       case "union": {
-        const name = description.meta?.name ?? description.label
         if (!name) throw new Error("union type must have a name")
         const existing = weaverContext.unionMap?.get(name)
         if (existing) return nullable(existing)
         break
       }
+    }
+
+    if (YupSilk.isEnumType(description)) {
+      if (!name)
+        throw new Error(
+          `enum type ${description.oneOf.join("|")} must have a name`
+        )
+      const existing = weaverContext.enumMap?.get(name)
+      if (existing) return nullable(existing)
     }
 
     const gqlType = YupSilk.getGraphQLType(description)
@@ -85,6 +95,8 @@ export class YupSilk<TSchema extends Schema>
       weaverContext.objectMap?.set(gqlType.name, gqlType)
     } else if (isUnionType(gqlType)) {
       weaverContext.unionMap?.set(gqlType.name, gqlType)
+    } else if (isEnumType(gqlType)) {
+      weaverContext.enumMap?.set(gqlType.name, gqlType)
     }
     return nullable(gqlType)
 
@@ -208,8 +220,12 @@ export class YupSilk<TSchema extends Schema>
     )
   }
 
+  static isEnumType(description: SchemaDescription): boolean {
+    return description.oneOf.length > 0
+  }
+
   static getEnumType(description: SchemaDescription): GraphQLEnumType | null {
-    if (!description.oneOf.length) return null
+    if (!YupSilk.isEnumType(description)) return null
 
     const meta: GQLoomMetadata | undefined = description.meta
 
