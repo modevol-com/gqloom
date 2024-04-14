@@ -15,7 +15,7 @@ export interface GraphQLSilk<TOutput, TInput> extends GraphQLFieldOptions {
   /**
    * GraphQL type for schema
    */
-  getType(options: Record<string | symbol | number, any>): GraphQLOutputType
+  getType(): GraphQLOutputType
 
   /**
    * validate and transform input to output

@@ -13,16 +13,24 @@ import {
   GraphQLList,
   GraphQLNonNull,
   isNonNullType,
+  type GraphQLFieldResolver,
+  type GraphQLOutputType,
 } from "graphql"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
-import { mapValue, markErrorLocation, toObjMap } from "../utils"
+import {
+  mapValue,
+  markErrorLocation,
+  resolverPayloadStorage,
+  toObjMap,
+} from "../utils"
 import {
   initWeaverContext,
   provideWeaverContext,
   weaverContext,
   type WeaverContext,
 } from "./weaver-context"
-import { inputToArgs, provideForResolve, provideForSubscribe } from "./input"
+import { inputToArgs } from "./input"
+import { type ResolvingOptions, defaultSubscriptionResolve } from "../resolver"
 
 export class ModifiableObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
@@ -93,18 +101,8 @@ export function toFieldConfig(
   options: FieldConvertOptions = {}
 ): GraphQLFieldConfig<any, any> {
   try {
-    const { optionsForGetType = {}, optionsForResolving } = options
-    const outputType = (() => {
-      const gqlType = field.output.getType(optionsForGetType)
-      if (isObjectType(gqlType)) {
-        const gqlObject = weaverContext.modifiableObjectMap?.get(gqlType)
-        if (gqlObject != null) return gqlObject
-      } else if (isListType(gqlType) && isObjectType(gqlType.ofType)) {
-        const existing = weaverContext.modifiableObjectMap?.get(gqlType.ofType)
-        if (existing != null) return new GraphQLList(existing)
-      }
-      return gqlType
-    })()
+    const { optionsForResolving } = options
+    const outputType = getCacheType(field.output.getType())
 
     const nullableType = (() => {
       if (
@@ -119,13 +117,67 @@ export function toFieldConfig(
     return {
       ...field,
       type: nullableType,
-      args: inputToArgs(field.input, options),
+      args: inputToArgs(field.input),
       ...provideForResolve(field, optionsForResolving),
       ...provideForSubscribe(field, optionsForResolving),
     }
   } catch (error) {
     markErrorLocation(error)
     throw error
+  }
+}
+
+function getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
+  if (gqlType instanceof ModifiableObjectType) return gqlType
+  if (isObjectType(gqlType)) {
+    const gqlObject = weaverContext.modifiableObjectMap?.get(gqlType)
+    if (gqlObject != null) return gqlObject
+  } else if (isListType(gqlType)) {
+    return new GraphQLList(getCacheType(gqlType.ofType))
+  } else if (isNonNullType(gqlType)) {
+    return new GraphQLNonNull(getCacheType(gqlType.ofType))
+  }
+  return gqlType
+}
+
+function provideForResolve(
+  field: SilkOperationOrField,
+  options?: ResolvingOptions
+): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
+  if (field?.resolve == null) return
+  if (field.resolve === defaultSubscriptionResolve)
+    return { resolve: defaultSubscriptionResolve }
+  const resolve: GraphQLFieldResolver<any, any> =
+    field.type === "field"
+      ? (root, args, context, info) =>
+          resolverPayloadStorage.run({ root, args, context, info, field }, () =>
+            field.resolve(root, args, options)
+          )
+      : field.type === "subscription"
+        ? (root, args, context, info) =>
+            resolverPayloadStorage.run(
+              { root, args, context, info, field },
+              () => field.resolve(root, args)
+            )
+        : (root, args, context, info) =>
+            resolverPayloadStorage.run(
+              { root, args, context, info, field },
+              () => field.resolve(args, options)
+            )
+
+  return { resolve }
+}
+
+function provideForSubscribe(
+  field: SilkOperationOrField,
+  options?: ResolvingOptions
+): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
+  if (field?.subscribe == null) return
+  return {
+    subscribe: (root, args, context, info) =>
+      resolverPayloadStorage.run({ root, args, context, info, field }, () =>
+        field.subscribe?.(args, options)
+      ),
   }
 }
 

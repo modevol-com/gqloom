@@ -317,6 +317,7 @@ describe("YupSilk", () => {
           name: "",
           birthday: "2012-12-12",
         })),
+        mustDogs: query(array(Dog.required()), () => []),
         age: field(number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
@@ -327,6 +328,7 @@ describe("YupSilk", () => {
           dog: Dog
           dogs: [Dog]
           mustDog: Dog!
+          mustDogs: [Dog!]
         }
 
         type Dog {
@@ -337,7 +339,64 @@ describe("YupSilk", () => {
       `)
     })
 
-    it.todo("should avoid duplicate input")
+    it("should avoid duplicate input", () => {
+      const Dog = object({
+        name: string().required(),
+        birthday: string().required(),
+      })
+        .label("Dog")
+        .meta({ description: "Dog Type" })
+
+      const DogInput = Dog.clone().label("DogInput")
+
+      const r1 = resolver.of(Dog, {
+        unwrap: query(Dog, {
+          input: DogInput,
+          resolve: (data) => data,
+        }),
+        dog: query(Dog, {
+          input: { data: DogInput },
+          resolve: ({ data }) => data,
+        }),
+        dogs: query(array(Dog.required()), {
+          input: {
+            data: array(DogInput),
+            required: array(DogInput.required()),
+            names: array(string().required()),
+          },
+          resolve: ({ data }) => data,
+        }),
+        mustDog: query(Dog.required(), {
+          input: { data: DogInput.required() },
+          resolve: ({ data }) => data,
+        }),
+        age: field(number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          unwrap(name: String!, birthday: String!): Dog
+          dog(data: DogInput): Dog
+          dogs(data: [DogInput], required: [DogInput!], names: [String!]): [Dog!]
+          mustDog(data: DogInput!): Dog!
+        }
+
+        """Dog Type"""
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float
+        }
+
+        """Dog Type"""
+        input DogInput {
+          name: String!
+          birthday: String!
+        }"
+      `)
+    })
 
     it.todo("should avoid duplicate enum")
 

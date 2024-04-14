@@ -56,7 +56,9 @@ export function provideWeaverContext<T>(
 ): T {
   const lastRef = ref
   ref = value
-  const result = func()
-  ref = lastRef
-  return result
+  try {
+    return func()
+  } finally {
+    ref = lastRef
+  }
 }

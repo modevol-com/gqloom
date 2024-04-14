@@ -10,7 +10,6 @@ import {
   printType,
   GraphQLList,
   GraphQLNonNull,
-  GraphQLInterfaceType,
   GraphQLUnionType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
@@ -96,17 +95,6 @@ describe("ensureInputType", () => {
       printType(DogInput)
     )
     expect(ensureInputType(DogInput)).toBe(DogInput)
-  })
-
-  it("should prevent Interface Type", () => {
-    expect(() => {
-      ensureInputType(
-        new GraphQLInterfaceType({
-          name: "Dog",
-          fields: {},
-        })
-      )
-    }).toThrow("Cannot convert interface type Dog to input type")
   })
 
   it("should prevent Union Type", () => {

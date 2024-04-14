@@ -22,6 +22,7 @@ import {
   isObjectType,
   GraphQLUnionType,
   isUnionType,
+  isNonNullType,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -65,19 +66,19 @@ export class YupSilk<TSchema extends Schema>
         const name = description.meta?.name ?? description.label
         if (!name) throw new Error("object type must have a name")
         const existing = weaverContext.objectMap?.get(name)
-        if (existing) return existing
+        if (existing) return nullable(existing)
         break
       }
       case "union": {
         const name = description.meta?.name ?? description.label
         if (!name) throw new Error("union type must have a name")
         const existing = weaverContext.unionMap?.get(name)
-        if (existing) return existing
+        if (existing) return nullable(existing)
         break
       }
     }
 
-    const gqlType = YupSilk.getNullableType(description)
+    const gqlType = YupSilk.getGraphQLType(description)
 
     // do not forget to keep the type
     if (isObjectType(gqlType)) {
@@ -85,7 +86,13 @@ export class YupSilk<TSchema extends Schema>
     } else if (isUnionType(gqlType)) {
       weaverContext.unionMap?.set(gqlType.name, gqlType)
     }
-    return gqlType
+    return nullable(gqlType)
+
+    function nullable(ofType: GraphQLOutputType) {
+      if (description.nullable || description.optional) return ofType
+      if (isNonNullType(ofType)) return ofType
+      return new GraphQLNonNull(ofType)
+    }
   }
 
   static getNullableType(description: SchemaDescription) {
