@@ -1,15 +1,15 @@
-import { test } from "vitest"
-import { z } from "zod"
-import { field, mutation, query, resolver } from "./index"
+import { describe } from "vitest"
+import { object, string, date, number } from "yup"
+import { mutation, resolver, field, query } from "../src"
 
-test("zod resolver", () => {
-  const Giraffe = z.object({
-    name: z.string(),
-    birthday: z.date(),
-    heightInMeters: z.number(),
+describe.skip("yup resolver", () => {
+  const Giraffe = object({
+    name: string().required(),
+    birthday: date().required(),
+    heightInMeters: number().required(),
   })
 
-  const GiraffeInput = Giraffe.partial()
+  const GiraffeInput = object().concat(Giraffe).partial()
 
   const createGiraffe = mutation(Giraffe, {
     input: GiraffeInput,
@@ -25,12 +25,12 @@ test("zod resolver", () => {
   })
 
   const giraffeResolver = resolver.of(Giraffe, {
-    age: field(z.number(), async (giraffe) => {
+    age: field(number(), async (giraffe) => {
       return new Date().getFullYear() - giraffe.birthday.getFullYear()
     }),
 
     giraffe: query(Giraffe, {
-      input: { name: z.string() },
+      input: { name: string().required() },
       resolve: ({ name }) => ({
         name,
         birthday: new Date(),
@@ -38,13 +38,13 @@ test("zod resolver", () => {
       }),
     }),
 
-    greeting: field(z.string(), {
-      input: { myName: z.string().nullish() },
+    greeting: field(string(), {
+      input: { myName: string() },
       resolve: (giraffe, { myName }) =>
-        `Hello, ${myName ?? "my friend"}! My Pname is ${giraffe.name}.`,
+        `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
     }),
   })
 
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
-  simpleGiraffeResolver.createGiraffe.input
+  simpleGiraffeResolver.createGiraffe.resolve({})
 })
