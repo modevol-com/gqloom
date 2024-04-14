@@ -36,14 +36,14 @@ declare module "yup" {
 }
 
 describe("YupSilk", () => {
-  it("should handle Scalar", () => {
+  it("should handle scalar", () => {
     expect(yupSilk(string()).getType()).toEqual(GraphQLString)
     expect(yupSilk(boolean()).getType()).toEqual(GraphQLBoolean)
     expect(yupSilk(number()).getType()).toEqual(GraphQLFloat)
     expect(yupSilk(number().integer()).getType()).toEqual(GraphQLInt)
   })
 
-  it("should handle non null Scalar", () => {
+  it("should handle non null", () => {
     const s = yupSilk(string().required()).getType()
     expect(s).toBeInstanceOf(GraphQLNonNull)
     expect(s).toMatchObject({ ofType: GraphQLString })
