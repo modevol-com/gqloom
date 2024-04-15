@@ -56,12 +56,12 @@ export class YupSilk<TSchema extends Schema>
     return YupSilk.getTypeByDescription(this.schemaDescription)
   }
 
-  static get options(): YupWeaverOptions | undefined {
-    return weaverContext.options
-  }
-
   parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {
     return this.schema.validate(input)
+  }
+
+  static get options(): YupWeaverOptions | undefined {
+    return weaverContext.options
   }
 
   static getTypeByDescription(description: SchemaDescription) {
