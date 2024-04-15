@@ -8,8 +8,10 @@ import {
   GraphQLBoolean,
   GraphQLNonNull,
   isNonNullType,
+  GraphQLList,
 } from "graphql"
 import {
+  ZodArray,
   ZodBoolean,
   ZodDate,
   ZodNullable,
@@ -30,18 +32,26 @@ export class ZodSilk<TSchema extends Schema>
   constructor(public schema: TSchema) {}
 
   getType() {
+    return ZodSilk.getTypeBySchema(this.schema)
+  }
+
+  static getTypeBySchema(schema: Schema): GraphQLOutputType {
     const nullable = (ofType: GraphQLOutputType) => {
-      const isNonNull = !this.schema.isNullable() && !this.schema.isOptional()
+      const isNonNull = !schema.isNullable() && !schema.isOptional()
       if (!isNonNull) return ofType
       if (isNonNullType(ofType)) return ofType
       return new GraphQLNonNull(ofType)
     }
-    return nullable(ZodSilk.getGraphQLType(this.schema))
+    return nullable(ZodSilk.getGraphQLType(schema))
   }
 
   static getGraphQLType(schema: Schema): GraphQLOutputType {
     if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
       return ZodSilk.getGraphQLType(schema.unwrap())
+    }
+
+    if (schema instanceof ZodArray) {
+      return new GraphQLList(ZodSilk.getTypeBySchema(schema.element))
     }
 
     if (schema instanceof ZodString) {

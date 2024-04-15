@@ -8,6 +8,7 @@ import {
   GraphQLFloat,
   GraphQLBoolean,
   GraphQLNonNull,
+  GraphQLList,
 } from "graphql"
 
 describe("ZodSilk", () => {
@@ -35,7 +36,26 @@ describe("ZodSilk", () => {
     expect(zodSilk(z.string().optional()).getType()).toEqual(GraphQLString)
     expect(zodSilk(z.string().nullish()).getType()).toEqual(GraphQLString)
   })
-  it.todo("should handle array")
+  it("should handle array", () => {
+    expect(zodSilk(z.array(z.string())).getType()).toEqual(
+      new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
+    )
+    expect(zodSilk(z.string().array()).getType()).toEqual(
+      new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
+    )
+
+    expect(zodSilk(z.array(z.string()).optional()).getType()).toEqual(
+      new GraphQLList(new GraphQLNonNull(GraphQLString))
+    )
+
+    expect(zodSilk(z.array(z.string().nullable())).getType()).toEqual(
+      new GraphQLNonNull(new GraphQLList(GraphQLString))
+    )
+
+    expect(
+      zodSilk(z.array(z.string().nullable()).nullable()).getType()
+    ).toEqual(new GraphQLList(GraphQLString))
+  })
   it.todo("should handle object")
   it.todo("should handle enum")
   it.todo("should handle interfere")
