@@ -7,24 +7,34 @@ import {
   GraphQLInt,
   GraphQLFloat,
   GraphQLBoolean,
+  GraphQLNonNull,
 } from "graphql"
 
 describe("ZodSilk", () => {
   it("should handle scalar", () => {
-    expect(zodSilk(z.string()).getType()).toEqual(GraphQLString)
-    expect(zodSilk(z.number()).getType()).toEqual(GraphQLFloat)
-    expect(zodSilk(z.number().int()).getType()).toEqual(GraphQLInt)
-    expect(zodSilk(z.boolean()).getType()).toEqual(GraphQLBoolean)
-    expect(zodSilk(z.date()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.string().nullable()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.number().nullable()).getType()).toEqual(GraphQLFloat)
+    expect(zodSilk(z.number().int().nullable()).getType()).toEqual(GraphQLInt)
+    expect(zodSilk(z.boolean().nullable()).getType()).toEqual(GraphQLBoolean)
+    expect(zodSilk(z.date().nullable()).getType()).toEqual(GraphQLString)
 
-    expect(zodSilk(z.string().cuid()).getType()).toEqual(GraphQLID)
-    expect(zodSilk(z.string().cuid2()).getType()).toEqual(GraphQLID)
-    expect(zodSilk(z.string().ulid()).getType()).toEqual(GraphQLID)
-    expect(zodSilk(z.string().uuid()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().cuid().nullable()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().cuid2().nullable()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().ulid().nullable()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().uuid().nullable()).getType()).toEqual(GraphQLID)
 
-    expect(zodSilk(z.string().email()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.string().email().nullable()).getType()).toEqual(
+      GraphQLString
+    )
   })
-  it.todo("should handle non null")
+  it("should handle non null", () => {
+    expect(zodSilk(z.string()).getType()).toEqual(
+      new GraphQLNonNull(GraphQLString)
+    )
+    expect(zodSilk(z.string().nullable()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.string().optional()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.string().nullish()).getType()).toEqual(GraphQLString)
+  })
   it.todo("should handle array")
   it.todo("should handle object")
   it.todo("should handle enum")

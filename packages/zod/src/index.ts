@@ -6,11 +6,15 @@ import {
   GraphQLInt,
   GraphQLID,
   GraphQLBoolean,
+  GraphQLNonNull,
+  isNonNullType,
 } from "graphql"
 import {
   ZodBoolean,
   ZodDate,
+  ZodNullable,
   ZodNumber,
+  ZodOptional,
   ZodString,
   ZodType,
   type Schema,
@@ -26,10 +30,20 @@ export class ZodSilk<TSchema extends Schema>
   constructor(public schema: TSchema) {}
 
   getType() {
-    return ZodSilk.getGraphQLType(this.schema)
+    const nullable = (ofType: GraphQLOutputType) => {
+      const isNonNull = !this.schema.isNullable() && !this.schema.isOptional()
+      if (!isNonNull) return ofType
+      if (isNonNullType(ofType)) return ofType
+      return new GraphQLNonNull(ofType)
+    }
+    return nullable(ZodSilk.getGraphQLType(this.schema))
   }
 
   static getGraphQLType(schema: Schema): GraphQLOutputType {
+    if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
+      return ZodSilk.getGraphQLType(schema.unwrap())
+    }
+
     if (schema instanceof ZodString) {
       if (schema._def.checks.some((ch) => ZodIDKinds.includes(ch.kind)))
         return GraphQLID

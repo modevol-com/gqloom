@@ -111,12 +111,6 @@ export class YupSilk<TSchema extends Schema>
     }
   }
 
-  static getNullableType(description: SchemaDescription) {
-    const ofType = YupSilk.getGraphQLType(description)
-    if (description.nullable || description.optional) return ofType
-    return new GraphQLNonNull(ofType)
-  }
-
   static getGraphQLType(description: SchemaDescription): GraphQLOutputType {
     const presetType = YupSilk.options?.yupPresetGraphQLType?.(description)
     if (presetType) return presetType
