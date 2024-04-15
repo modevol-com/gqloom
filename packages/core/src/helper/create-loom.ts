@@ -1,6 +1,6 @@
 import type { SubscriptionShuttle, Subscription } from "../resolver"
 import {
-  type AnyGraphQLSilk,
+  type GraphQLSilk,
   type FieldShuttle,
   type QueryMutationShuttle,
   type ResolverShuttle,
@@ -17,16 +17,16 @@ import { getOperationOptions, getSubscriptionOptions } from "../utils"
 
 function toSilkInput(
   schema: any,
-  toSilk: (schema: any) => AnyGraphQLSilk,
+  toSilk: (schema: any) => GraphQLSilk,
   isSchema: (schema: any) => boolean
-): InputSchema<AnyGraphQLSilk> {
+): InputSchema<GraphQLSilk> {
   if (schema == null) {
     return schema
   }
   if (isSchema(schema)) {
     return toSilk(schema)
   }
-  const record: Record<string, AnyGraphQLSilk> = {}
+  const record: Record<string, GraphQLSilk> = {}
   for (const [key, value] of Object.entries(schema)) {
     record[key] = toSilk(value)
   }
@@ -34,7 +34,7 @@ function toSilkInput(
 }
 
 export function createResolverShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk
+  toSilk: (schema: TSchemaIO[0]) => GraphQLSilk
 ): ResolverShuttle<TSchemaIO> {
   return Object.assign(baseResolver, {
     of: ((parent, operations, options) =>
@@ -46,7 +46,7 @@ export function createResolverShuttle<TSchemaIO extends AbstractSchemaIO>(
 }
 
 export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
+  toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): FieldShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
@@ -59,7 +59,7 @@ export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
 }
 
 export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
+  toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
@@ -72,7 +72,7 @@ export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
 }
 
 export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
+  toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
@@ -85,7 +85,7 @@ export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
 }
 
 export function createSubscriptionShuttle<TSchemaIO extends AbstractSchemaIO>(
-  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
+  toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): SubscriptionShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
@@ -98,7 +98,7 @@ export function createSubscriptionShuttle<TSchemaIO extends AbstractSchemaIO>(
 }
 
 export function createLoom<TSchemaIO extends AbstractSchemaIO>(
-  toSilk: (schema: TSchemaIO[0]) => AnyGraphQLSilk,
+  toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): {
   query: QueryMutationShuttle<TSchemaIO>

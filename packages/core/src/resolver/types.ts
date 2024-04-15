@@ -11,7 +11,8 @@ import type { GraphQLFieldConfig, GraphQLOutputType } from "graphql"
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
  */
-export interface GraphQLSilk<TOutput, TInput> extends GraphQLFieldOptions {
+export interface GraphQLSilk<TOutput = any, TInput = any>
+  extends GraphQLFieldOptions {
   /**
    * GraphQL type for schema
    */
@@ -30,8 +31,6 @@ export interface GraphQLSilk<TOutput, TInput> extends GraphQLFieldOptions {
   _types?: { input: TInput; output: TOutput }
 }
 
-export type AnyGraphQLSilk = GraphQLSilk<any, any>
-
 export type AbstractSchemaIO = [
   baseSchema: object,
   inputPath: string,
@@ -39,16 +38,16 @@ export type AbstractSchemaIO = [
 ]
 
 export type GraphQLSilkIO = [
-  object: AnyGraphQLSilk,
+  object: GraphQLSilk,
   input: "_types.input",
   output: "_types.output",
 ]
 
-export type InferSilkI<T extends AnyGraphQLSilk> = NonNullable<
+export type InferSilkI<T extends GraphQLSilk> = NonNullable<
   T["_types"]
 >["input"]
 
-export type InferSilkO<T extends AnyGraphQLSilk> = NonNullable<
+export type InferSilkO<T extends GraphQLSilk> = NonNullable<
   T["_types"]
 >["output"]
 
@@ -74,9 +73,8 @@ export interface ResolverOptions {
   middlewares?: Middleware[]
 }
 
-export interface ResolverOptionsWithParent<
-  T extends AnyGraphQLSilk = AnyGraphQLSilk,
-> extends ResolverOptions {
+export interface ResolverOptionsWithParent<T extends GraphQLSilk = GraphQLSilk>
+  extends ResolverOptions {
   parent?: T
 }
 
@@ -102,9 +100,9 @@ export interface GraphQLFieldOptions
  * Operation or Field for resolver.
  */
 export interface OperationOrField<
-  TParent extends AnyGraphQLSilk,
-  TOutput extends AnyGraphQLSilk,
-  TInput extends InputSchema<AnyGraphQLSilk> = undefined,
+  TParent extends GraphQLSilk,
+  TOutput extends GraphQLSilk,
+  TInput extends InputSchema<GraphQLSilk> = undefined,
   TType extends OperationOrFieldType = OperationOrFieldType,
 > extends GraphQLFieldOptions {
   type: TType
@@ -224,8 +222,8 @@ export interface SubscriptionOptions<
 }
 
 export interface Subscription<
-  TOutput extends AnyGraphQLSilk,
-  TInput extends InputSchema<AnyGraphQLSilk> = undefined,
+  TOutput extends GraphQLSilk,
+  TInput extends InputSchema<GraphQLSilk> = undefined,
   TValue = InferSilkO<TOutput>,
 > extends OperationOrField<any, TOutput, TInput, "subscription"> {
   resolve: (

@@ -1,5 +1,5 @@
 import type {
-  AnyGraphQLSilk,
+  GraphQLSilk,
   OperationOrField,
   RESOLVER_OPTIONS_KEY,
   ResolverOptionsWithParent,
@@ -7,8 +7,8 @@ import type {
 } from "../resolver"
 
 export type SilkOperationOrField = OperationOrField<
-  AnyGraphQLSilk,
-  AnyGraphQLSilk,
+  GraphQLSilk,
+  GraphQLSilk,
   any,
   any
 >

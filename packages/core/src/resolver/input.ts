@@ -5,7 +5,7 @@ import type {
   InferSchemaO,
   SchemaToSilk,
   AbstractSchemaIO,
-  AnyGraphQLSilk,
+  GraphQLSilk,
 } from "./types"
 
 export type InputSchema<TBaseSchema> =
@@ -49,7 +49,7 @@ export type InferInputO<
       }
 
 export function parseInput(
-  inputSchema: InputSchema<AnyGraphQLSilk>,
+  inputSchema: InputSchema<GraphQLSilk>,
   input: any
 ): MayPromise<any> {
   if (inputSchema === undefined) {
@@ -67,7 +67,7 @@ export function parseInput(
 }
 
 async function parseInputEntries(
-  inputSchema: Record<string, AnyGraphQLSilk>,
+  inputSchema: Record<string, GraphQLSilk>,
   input: any = {}
 ): Promise<Record<string, any>> {
   const result: Record<string, any> = {}
