@@ -1,7 +1,29 @@
-import { describe, it } from "vitest"
+import { describe, expect, it } from "vitest"
+import { zodSilk } from "../src"
+import { z } from "zod"
+import {
+  GraphQLID,
+  GraphQLString,
+  GraphQLInt,
+  GraphQLFloat,
+  GraphQLBoolean,
+} from "graphql"
 
-describe.todo("ZodSilk", () => {
-  it.todo("should handle scalar")
+describe("ZodSilk", () => {
+  it("should handle scalar", () => {
+    expect(zodSilk(z.string()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.number()).getType()).toEqual(GraphQLFloat)
+    expect(zodSilk(z.number().int()).getType()).toEqual(GraphQLInt)
+    expect(zodSilk(z.boolean()).getType()).toEqual(GraphQLBoolean)
+    expect(zodSilk(z.date()).getType()).toEqual(GraphQLString)
+
+    expect(zodSilk(z.string().cuid()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().cuid2()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().ulid()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().uuid()).getType()).toEqual(GraphQLID)
+
+    expect(zodSilk(z.string().email()).getType()).toEqual(GraphQLString)
+  })
   it.todo("should handle non null")
   it.todo("should handle array")
   it.todo("should handle object")

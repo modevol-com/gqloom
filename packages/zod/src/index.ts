@@ -1,6 +1,23 @@
 import { type GraphQLSilk, createLoom } from "@gqloom/core"
-import { GraphQLString } from "graphql"
-import { z, type Schema, type input, type output } from "zod"
+import {
+  type GraphQLOutputType,
+  GraphQLString,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLID,
+  GraphQLBoolean,
+} from "graphql"
+import {
+  ZodBoolean,
+  ZodDate,
+  ZodNumber,
+  ZodString,
+  ZodType,
+  type Schema,
+  type input,
+  type output,
+} from "zod"
+import { ZodIDKinds } from "./constants"
 
 export class ZodSilk<TSchema extends Schema>
   implements GraphQLSilk<output<TSchema>, input<TSchema>>
@@ -9,7 +26,30 @@ export class ZodSilk<TSchema extends Schema>
   constructor(public schema: TSchema) {}
 
   getType() {
-    return GraphQLString
+    return ZodSilk.getGraphQLType(this.schema)
+  }
+
+  static getGraphQLType(schema: Schema): GraphQLOutputType {
+    if (schema instanceof ZodString) {
+      if (schema._def.checks.some((ch) => ZodIDKinds.includes(ch.kind)))
+        return GraphQLID
+      return GraphQLString
+    }
+
+    if (schema instanceof ZodNumber) {
+      if (schema.isInt) return GraphQLInt
+      return GraphQLFloat
+    }
+
+    if (schema instanceof ZodBoolean) {
+      return GraphQLBoolean
+    }
+
+    if (schema instanceof ZodDate) {
+      return GraphQLString
+    }
+
+    throw new Error(`zod type ${schema.constructor.name} is not supported`)
   }
 
   parse(input: input<TSchema>): Promise<output<TSchema>> {
@@ -31,5 +71,5 @@ export const { query, mutation, field, resolver } = createLoom<ZodSchemaIO>(
 )
 
 function isZodSchema(target: any): target is Schema {
-  return target instanceof z.ZodType
+  return target instanceof ZodType
 }
