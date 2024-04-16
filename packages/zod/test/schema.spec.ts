@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { zodSilk } from "../src"
-import { z } from "zod"
+import { type Schema, z } from "zod"
 import {
   GraphQLID,
   GraphQLString,
@@ -9,6 +9,9 @@ import {
   GraphQLBoolean,
   GraphQLNonNull,
   GraphQLList,
+  GraphQLObjectType,
+  printType,
+  type GraphQLNamedType,
 } from "graphql"
 
 describe("ZodSilk", () => {
@@ -56,7 +59,29 @@ describe("ZodSilk", () => {
       zodSilk(z.array(z.string().nullable()).nullable()).getType()
     ).toEqual(new GraphQLList(GraphQLString))
   })
-  it.todo("should handle object")
+  it("should handle object", () => {
+    expect("123").toMatchInlineSnapshot(`"123"`)
+
+    const Cat = z
+      .object({
+        name: z.string(),
+        age: z.number(),
+        loveFish: z.boolean().optional(),
+      })
+      .describe("Cat")
+
+    expect(
+      (zodSilk(Cat).getType() as GraphQLNonNull<any>).ofType
+    ).toBeInstanceOf(GraphQLObjectType)
+
+    expect(printZodSilk(Cat)).toMatchInlineSnapshot(`
+      "type Cat {
+        name: String!
+        age: Float!
+        loveFish: Boolean
+      }"
+    `)
+  })
   it.todo("should handle enum")
   it.todo("should handle interfere")
   it.todo("should handle union")
@@ -69,3 +94,9 @@ describe("ZodSilk", () => {
     it.todo("should avoid duplicate union")
   })
 })
+
+function printZodSilk(schema: Schema): string {
+  let gqlType = zodSilk(schema).getType()
+  while ("ofType" in gqlType) gqlType = gqlType.ofType
+  return printType(gqlType as GraphQLNamedType)
+}

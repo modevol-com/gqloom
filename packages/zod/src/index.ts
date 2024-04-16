@@ -1,4 +1,4 @@
-import { type GraphQLSilk, createLoom } from "@gqloom/core"
+import { type GraphQLSilk, createLoom, mapValue } from "@gqloom/core"
 import {
   type GraphQLOutputType,
   GraphQLString,
@@ -9,6 +9,7 @@ import {
   GraphQLNonNull,
   isNonNullType,
   GraphQLList,
+  GraphQLObjectType,
 } from "graphql"
 import {
   ZodArray,
@@ -16,7 +17,9 @@ import {
   ZodDate,
   ZodNullable,
   ZodNumber,
+  ZodObject,
   ZodOptional,
+  type ZodRawShape,
   ZodString,
   ZodType,
   type Schema,
@@ -24,6 +27,7 @@ import {
   type output,
 } from "zod"
 import { ZodIDKinds } from "./constants"
+import { parseFieldConfig, parseObjectConfig } from "./utils"
 
 export class ZodSilk<TSchema extends Schema>
   implements GraphQLSilk<output<TSchema>, input<TSchema>>
@@ -71,6 +75,20 @@ export class ZodSilk<TSchema extends Schema>
 
     if (schema instanceof ZodDate) {
       return GraphQLString
+    }
+
+    if (schema instanceof ZodObject) {
+      if (!schema.description) throw new Error("Object must have a name")
+      const configFromDescription = parseObjectConfig(schema.description)
+      return new GraphQLObjectType({
+        ...configFromDescription,
+        fields: mapValue(schema.shape as ZodRawShape, (field) => {
+          return {
+            type: ZodSilk.getTypeBySchema(field),
+            ...parseFieldConfig(field.description),
+          }
+        }),
+      })
     }
 
     throw new Error(`zod type ${schema.constructor.name} is not supported`)

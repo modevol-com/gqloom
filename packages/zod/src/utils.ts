@@ -27,8 +27,11 @@ export function parseObjectConfig(
 }
 
 export function parseFieldConfig(
-  input: string
-): Pick<GraphQLFieldConfig<any, any>, "description" | "extensions"> {
+  input: string | undefined
+):
+  | Pick<GraphQLFieldConfig<any, any>, "description" | "extensions">
+  | undefined {
+  if (!input) return undefined
   const directiveMatches = Array.from(input.matchAll(directiveRegex))
   const extractedDirectives = directiveMatches.map((match) => match[0])
 
