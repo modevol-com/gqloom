@@ -6,8 +6,8 @@ import {
   GraphQLString,
 } from "graphql"
 import { describe, expectTypeOf, it } from "vitest"
-import { silk } from "./silk"
-import { loom } from "./resolver"
+import { silk } from "../src/resolver/silk"
+import { loom } from "../src/resolver/resolver"
 
 const { resolver, query, mutation, field, subscription } = loom
 
