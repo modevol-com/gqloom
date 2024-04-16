@@ -28,7 +28,7 @@ export class SchemaWeaver {
 
   protected context: WeaverContext = initWeaverContext()
 
-  protected optionsForResolving?: ResolvingOptions
+  protected resolverOptions?: ResolvingOptions
 
   constructor({
     query,
@@ -43,9 +43,9 @@ export class SchemaWeaver {
   }
 
   public use(...middlewares: Middleware[]) {
-    this.optionsForResolving ??= { middlewares: [] }
-    this.optionsForResolving.middlewares ??= []
-    this.optionsForResolving.middlewares.push(...middlewares)
+    this.resolverOptions ??= {}
+    this.resolverOptions.middlewares ??= []
+    this.resolverOptions.middlewares.push(...middlewares)
     return this
   }
 
@@ -125,7 +125,7 @@ export class SchemaWeaver {
   }
 
   protected get fieldOptions() {
-    const { optionsForResolving, context } = this
-    return { optionsForResolving, weaverContext: context }
+    const { resolverOptions, context } = this
+    return { resolverOptions, weaverContext: context }
   }
 }

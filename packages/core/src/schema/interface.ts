@@ -14,13 +14,13 @@ export function ensureInterfaceType(
 ): GraphQLInterfaceType {
   if (isInterfaceType(gqlType)) return gqlType
 
-  const key = "name" in gqlType ? gqlType.name : gqlType
+  if (!isObjectType(gqlType))
+    throw new Error(`${gqlType.toString()} is not a object`)
+
+  const key = gqlType
 
   const existing = weaverContext.interfaceMap?.get(key)
   if (existing != null) return existing
-
-  if (!isObjectType(gqlType))
-    throw new Error(`${gqlType.toString()} is not a object`)
 
   const { astNode, extensionASTNodes: _1, ...config } = gqlType.toConfig()
   const interfaceType = new GraphQLInterfaceType({

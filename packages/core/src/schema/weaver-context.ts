@@ -9,11 +9,14 @@ import { type LoomObjectType } from "./object"
 
 export interface WeaverContext {
   modifiableObjectMap: Map<GraphQLObjectType, LoomObjectType>
-  objectMap: Map<any, GraphQLObjectType>
-  inputMap: Map<any, GraphQLInputObjectType>
-  enumMap: Map<any, GraphQLEnumType>
-  interfaceMap: Map<any, GraphQLInterfaceType>
-  unionMap: Map<any, GraphQLUnionType>
+  objectMap: Map<string, GraphQLObjectType>
+  inputMap: Map<
+    GraphQLObjectType | GraphQLInterfaceType,
+    GraphQLInputObjectType
+  >
+  interfaceMap: Map<GraphQLObjectType, GraphQLInterfaceType>
+  enumMap: Map<string, GraphQLEnumType>
+  unionMap: Map<string, GraphQLUnionType>
   options: Record<string | symbol | number, any>
 }
 
@@ -31,29 +34,34 @@ export function initWeaverContext(): WeaverContext {
   }
 }
 
-export const weaverContext: Partial<WeaverContext> = {
-  get modifiableObjectMap() {
-    return ref?.modifiableObjectMap
-  },
-  get objectMap() {
-    return ref?.objectMap
-  },
-  get inputMap() {
-    return ref?.inputMap
-  },
-  get enumMap() {
-    return ref?.enumMap
-  },
-  get interfaceMap() {
-    return ref?.interfaceMap
-  },
-  get unionMap() {
-    return ref?.unionMap
-  },
-  get options() {
-    return ref?.options
-  },
-}
+export const weaverContext: Partial<WeaverContext & { value: WeaverContext }> =
+  {
+    get modifiableObjectMap() {
+      return ref?.modifiableObjectMap
+    },
+    get objectMap() {
+      return ref?.objectMap
+    },
+    get inputMap() {
+      return ref?.inputMap
+    },
+    get enumMap() {
+      return ref?.enumMap
+    },
+    get interfaceMap() {
+      return ref?.interfaceMap
+    },
+    get unionMap() {
+      return ref?.unionMap
+    },
+    get options() {
+      return ref?.options
+    },
+
+    get value() {
+      return ref
+    },
+  }
 
 export function provideWeaverContext<T>(
   func: () => T,

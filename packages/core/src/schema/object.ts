@@ -17,7 +17,7 @@ import {
   type GraphQLOutputType,
   type GraphQLField,
 } from "graphql"
-import type { FieldConvertOptions, SilkOperationOrField } from "./types"
+import type { SilkOperationOrField } from "./types"
 import {
   mapValue,
   markErrorLocation,
@@ -38,16 +38,21 @@ import { extractDirectives } from "./directive"
 export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
 
-  protected fieldOptions: FieldConvertOptions
   protected weaverContext: WeaverContext
-
+  protected resolverOptions?: ResolvingOptions
   constructor(
     objectOrGetter:
       | string
       | GraphQLObjectType
       | GraphQLObjectTypeConfig<any, any>
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
-    fieldOptions?: FieldConvertOptions & { weaverContext: WeaverContext }
+    {
+      weaverContext,
+      resolverOptions,
+    }: {
+      weaverContext?: WeaverContext
+      resolverOptions?: ResolvingOptions
+    } = {}
   ) {
     const origin =
       typeof objectOrGetter === "function" ? objectOrGetter() : objectOrGetter
@@ -66,8 +71,8 @@ export class LoomObjectType extends GraphQLObjectType {
     const directives = extractDirectives(config)
     super({ ...config, astNode: createObjectTypeNode(config.name, directives) })
 
-    this.fieldOptions = fieldOptions ?? {}
-    this.weaverContext = fieldOptions?.weaverContext ?? initWeaverContext()
+    this.resolverOptions = resolverOptions
+    this.weaverContext = weaverContext ?? initWeaverContext()
   }
 
   addField(name: string, resolver: SilkOperationOrField) {
@@ -88,7 +93,9 @@ export class LoomObjectType extends GraphQLObjectType {
     )
     const extraField = provideWeaverContext(
       () =>
-        defineFieldMap(mapToFieldConfig(this.extraFields, this.fieldOptions)),
+        defineFieldMap(
+          mapToFieldConfig(this.extraFields, this.resolverOptions)
+        ),
       this.weaverContext
     )
     return {
@@ -100,12 +107,12 @@ export class LoomObjectType extends GraphQLObjectType {
 
 export function mapToFieldConfig(
   map: Map<string, SilkOperationOrField>,
-  options: FieldConvertOptions = {}
+  resolverOptions?: ResolvingOptions
 ): Record<string, GraphQLFieldConfig<any, any>> {
   const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
   for (const [name, field] of map.entries()) {
-    record[name] = toFieldConfig(name, field, options)
+    record[name] = toFieldConfig(name, field, resolverOptions)
   }
 
   return record
@@ -114,32 +121,32 @@ export function mapToFieldConfig(
 export function toFieldConfig(
   name: string,
   field: SilkOperationOrField,
-  options: FieldConvertOptions = {}
+  resolverOptions?: ResolvingOptions
 ): GraphQLFieldConfig<any, any> {
   try {
-    const { optionsForResolving } = options
-    const outputType = getCacheType(field.output.getType())
+    let outputType = getCacheType(field.output.getType())
 
-    const nullableType = (() => {
-      if (
-        (field.nonNull ?? field.output.nonNull) &&
-        !isNonNullType(outputType)
-      ) {
-        return new GraphQLNonNull(outputType)
-      }
-      return outputType
-    })()
+    if (isObjectType(outputType)) {
+      outputType.astNode ??= createObjectTypeNode(
+        outputType.name,
+        extractDirectives(outputType)
+      )
+    }
+
+    if ((field.nonNull ?? field.output.nonNull) && !isNonNullType(outputType)) {
+      outputType = new GraphQLNonNull(outputType)
+    }
 
     // AST node has to be manually created in order to define directives
     const directives = extractDirectives(field)
 
     return {
       ...extract(field),
-      astNode: createFieldNode(name, nullableType, directives),
-      type: nullableType,
+      astNode: createFieldNode(name, outputType, directives),
+      type: outputType,
       args: inputToArgs(field.input),
-      ...provideForResolve(field, optionsForResolving),
-      ...provideForSubscribe(field, optionsForResolving),
+      ...provideForResolve(field, resolverOptions),
+      ...provideForSubscribe(field, resolverOptions),
     }
   } catch (error) {
     throw markErrorLocation(error)
@@ -173,7 +180,7 @@ function getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
 
 function provideForResolve(
   field: SilkOperationOrField,
-  options?: ResolvingOptions
+  resolverOptions?: ResolvingOptions
 ): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
   if (field?.resolve == null) return
   if (field.resolve === defaultSubscriptionResolve)
@@ -182,7 +189,7 @@ function provideForResolve(
     field.type === "field"
       ? (root, args, context, info) =>
           resolverPayloadStorage.run({ root, args, context, info, field }, () =>
-            field.resolve(root, args, options)
+            field.resolve(root, args, resolverOptions)
           )
       : field.type === "subscription"
         ? (root, args, context, info) =>
@@ -193,7 +200,7 @@ function provideForResolve(
         : (root, args, context, info) =>
             resolverPayloadStorage.run(
               { root, args, context, info, field },
-              () => field.resolve(args, options)
+              () => field.resolve(args, resolverOptions)
             )
 
   return { resolve }
@@ -201,13 +208,13 @@ function provideForResolve(
 
 function provideForSubscribe(
   field: SilkOperationOrField,
-  options?: ResolvingOptions
+  resolverOptions?: ResolvingOptions
 ): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
   if (field?.subscribe == null) return
   return {
     subscribe: (root, args, context, info) =>
       resolverPayloadStorage.run({ root, args, context, info, field }, () =>
-        field.subscribe?.(args, options)
+        field.subscribe?.(args, resolverOptions)
       ),
   }
 }
