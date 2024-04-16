@@ -55,7 +55,7 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodString) {
-      if (schema._def.checks.some((ch) => ZodIDKinds.includes(ch.kind)))
+      if (schema._def.checks.some((ch) => ZodIDKinds.has(ch.kind)))
         return GraphQLID
       return GraphQLString
     }
