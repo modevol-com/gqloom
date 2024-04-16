@@ -15,6 +15,8 @@ export interface GQLoomMetadata {
 
   interfaces?: ThunkReadonlyArray<Schema>
 
+  extension?: Record<string | number | symbol, any>
+
   /**
    * For `object`
    *
