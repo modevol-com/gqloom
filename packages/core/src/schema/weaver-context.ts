@@ -5,10 +5,10 @@ import {
   type GraphQLUnionType,
   type GraphQLObjectType,
 } from "graphql"
-import { type ModifiableObjectType } from "./object"
+import { type LoomObjectType } from "./object"
 
 export interface WeaverContext {
-  modifiableObjectMap: Map<GraphQLObjectType, ModifiableObjectType>
+  modifiableObjectMap: Map<GraphQLObjectType, LoomObjectType>
   objectMap: Map<any, GraphQLObjectType>
   inputMap: Map<any, GraphQLInputObjectType>
   enumMap: Map<any, GraphQLEnumType>

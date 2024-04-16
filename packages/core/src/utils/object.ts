@@ -33,6 +33,10 @@ export function toObjMap<T>(
   return map
 }
 
+export function notNullish<T>(x: T | undefined | null): x is T {
+  return x != null
+}
+
 type Maybe<T> = null | undefined | T
 
 type ReadOnlyObjMapLike<T> = ReadOnlyObjMap<T> | { readonly [key: string]: T }

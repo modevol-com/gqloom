@@ -193,7 +193,10 @@ describe("toFieldConfig", () => {
   const IntSilk = silk<number, number>(GraphQLInt)
 
   it("should work with Field", () => {
-    const fieldConfig = toFieldConfig(silkField(StringSilk, () => ""))
+    const fieldConfig = toFieldConfig(
+      "",
+      silkField(StringSilk, () => "")
+    )
     expect(fieldConfig).toHaveProperty("type", GraphQLString)
     expect(fieldConfig).toHaveProperty("resolve")
     expect(fieldConfig).not.toHaveProperty("subscribe")
@@ -201,6 +204,7 @@ describe("toFieldConfig", () => {
 
   it("should work with Subscription", () => {
     const fieldConfig = toFieldConfig(
+      "",
       silkSubscription(StringSilk, async function* () {
         yield ""
       })
@@ -211,14 +215,20 @@ describe("toFieldConfig", () => {
   })
 
   it("should work with Query", () => {
-    const fieldConfig = toFieldConfig(silkQuery(StringSilk, () => ""))
+    const fieldConfig = toFieldConfig(
+      "",
+      silkQuery(StringSilk, () => "")
+    )
     expect(fieldConfig).toHaveProperty("type", GraphQLString)
     expect(fieldConfig).toHaveProperty("resolve")
     expect(fieldConfig).not.toHaveProperty("subscribe")
   })
 
   it("should work with Mutation", () => {
-    const fieldConfig = toFieldConfig(silkMutation(StringSilk, () => ""))
+    const fieldConfig = toFieldConfig(
+      "",
+      silkMutation(StringSilk, () => "")
+    )
     expect(fieldConfig).toHaveProperty("type", GraphQLString)
     expect(fieldConfig).toHaveProperty("resolve")
     expect(fieldConfig).not.toHaveProperty("subscribe")
@@ -230,6 +240,7 @@ describe("toFieldConfig", () => {
       return n + 1
     })
     const fieldConfig = toFieldConfig(
+      "",
       silkQuery(IntSilk, {
         input: { n: PlusOneSilk },
         resolve: ({ n }) => n,
@@ -242,6 +253,7 @@ describe("toFieldConfig", () => {
   it("should provide Resolver Payload", async () => {
     let rootRef: any
     const fieldConfig = toFieldConfig(
+      "",
       silkField(IntSilk, {
         resolve: (root) => {
           rootRef = root

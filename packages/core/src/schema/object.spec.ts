@@ -5,7 +5,7 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { ModifiableObjectType } from "./object"
+import { LoomObjectType } from "./object"
 import { silk, silkField } from "../resolver"
 
 describe("printType", () => {
@@ -27,9 +27,9 @@ describe("printType", () => {
   })
 })
 
-describe("ModifiableObjectType", () => {
+describe("LoomObjectType", () => {
   it("should weave object with Extra fields correctly", () => {
-    const Dog = new ModifiableObjectType({ name: "Dog", fields: {} })
+    const Dog = new LoomObjectType({ name: "Dog", fields: {} })
     Dog.addField(
       "name",
       silkField(silk<string, string>(GraphQLString), () => "")

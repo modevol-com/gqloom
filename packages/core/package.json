@@ -6,6 +6,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "peerDependencies": {
+    "graphql": "^16.0.0 || ^17.0.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

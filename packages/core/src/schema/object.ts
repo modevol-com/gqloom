@@ -15,6 +15,7 @@ import {
   isNonNullType,
   type GraphQLFieldResolver,
   type GraphQLOutputType,
+  type GraphQLField,
 } from "graphql"
 import type { FieldConvertOptions, SilkOperationOrField } from "./types"
 import {
@@ -31,8 +32,10 @@ import {
 } from "./weaver-context"
 import { inputToArgs } from "./input"
 import { type ResolvingOptions, defaultSubscriptionResolve } from "../resolver"
+import { createFieldNode, createObjectTypeNode } from "./definition-node"
+import { extractDirectives } from "./directive"
 
-export class ModifiableObjectType extends GraphQLObjectType {
+export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkOperationOrField>()
 
   protected fieldOptions: FieldConvertOptions
@@ -48,13 +51,21 @@ export class ModifiableObjectType extends GraphQLObjectType {
   ) {
     const origin =
       typeof objectOrGetter === "function" ? objectOrGetter() : objectOrGetter
-    if (isObjectType(origin)) {
-      super(origin.toConfig())
-    } else if (typeof origin === "string") {
-      super({ name: origin, fields: {} })
-    } else {
-      super(origin)
-    }
+
+    const config: GraphQLObjectTypeConfig<any, any> = (() => {
+      if (isObjectType(origin)) {
+        return origin.toConfig()
+      } else if (typeof origin === "string") {
+        return { name: origin, fields: {} }
+      } else {
+        return origin
+      }
+    })()
+
+    // AST node has to be manually created in order to define directives
+    const directives = extractDirectives(config)
+    super({ ...config, astNode: createObjectTypeNode(config.name, directives) })
+
     this.fieldOptions = fieldOptions ?? {}
     this.weaverContext = fieldOptions?.weaverContext ?? initWeaverContext()
   }
@@ -68,7 +79,13 @@ export class ModifiableObjectType extends GraphQLObjectType {
   }
 
   override getFields(): GraphQLFieldMap<any, any> {
-    const fields = super.getFields()
+    const fields = mapValue<GraphQLField<any, any>, GraphQLField<any, any>>(
+      super.getFields(),
+      (f, name) => ({
+        ...f,
+        astNode: createFieldNode(name, f.type, extractDirectives(f)),
+      })
+    )
     const extraField = provideWeaverContext(
       () =>
         defineFieldMap(mapToFieldConfig(this.extraFields, this.fieldOptions)),
@@ -88,13 +105,14 @@ export function mapToFieldConfig(
   const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
   for (const [name, field] of map.entries()) {
-    record[name] = toFieldConfig(field, options)
+    record[name] = toFieldConfig(name, field, options)
   }
 
   return record
 }
 
 export function toFieldConfig(
+  name: string,
   field: SilkOperationOrField,
   options: FieldConvertOptions = {}
 ): GraphQLFieldConfig<any, any> {
@@ -112,21 +130,36 @@ export function toFieldConfig(
       return outputType
     })()
 
+    // AST node has to be manually created in order to define directives
+    const directives = extractDirectives(field)
+
     return {
-      ...field,
+      ...extract(field),
+      astNode: createFieldNode(name, nullableType, directives),
       type: nullableType,
       args: inputToArgs(field.input),
       ...provideForResolve(field, optionsForResolving),
       ...provideForSubscribe(field, optionsForResolving),
     }
   } catch (error) {
-    markErrorLocation(error)
-    throw error
+    throw markErrorLocation(error)
+  }
+}
+
+function extract({
+  deprecationReason,
+  description,
+  extensions,
+}: SilkOperationOrField): Partial<GraphQLFieldConfig<any, any>> {
+  return {
+    description,
+    deprecationReason,
+    extensions,
   }
 }
 
 function getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
-  if (gqlType instanceof ModifiableObjectType) return gqlType
+  if (gqlType instanceof LoomObjectType) return gqlType
   if (isObjectType(gqlType)) {
     const gqlObject = weaverContext.modifiableObjectMap?.get(gqlType)
     if (gqlObject != null) return gqlObject

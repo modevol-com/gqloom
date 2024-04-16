@@ -1,6 +1,11 @@
-import { GraphQLSchema, isObjectType } from "graphql"
+import {
+  type GraphQLNamedType,
+  GraphQLSchema,
+  isObjectType,
+  type GraphQLSchemaConfig,
+} from "graphql"
 import { RESOLVER_OPTIONS_KEY, type ResolvingOptions } from "../resolver"
-import { ModifiableObjectType } from "./object"
+import { LoomObjectType } from "./object"
 import { type Middleware } from "../utils"
 import {
   initWeaverContext,
@@ -11,23 +16,30 @@ import { type SilkResolver } from "./types"
 
 interface SchemaWeaverParameters
   extends Partial<
-    Record<"query" | "mutation" | "subscription", ModifiableObjectType>
-  > {}
+      Record<"query" | "mutation" | "subscription", LoomObjectType>
+    >,
+    Pick<GraphQLSchemaConfig, "types"> {}
 
 export class SchemaWeaver {
-  protected query?: ModifiableObjectType
-  protected mutation?: ModifiableObjectType
-  protected subscription?: ModifiableObjectType
+  protected query?: LoomObjectType
+  protected mutation?: LoomObjectType
+  protected subscription?: LoomObjectType
+  protected types?: GraphQLNamedType[] | null
 
   protected context: WeaverContext = initWeaverContext()
 
-  protected optionsForGetType: Record<string | symbol | number, any> = {}
   protected optionsForResolving?: ResolvingOptions
 
-  constructor({ query, mutation, subscription }: SchemaWeaverParameters = {}) {
+  constructor({
+    query,
+    mutation,
+    subscription,
+    types,
+  }: SchemaWeaverParameters = {}) {
     if (query != null) this.query = query
     if (mutation != null) this.mutation = mutation
     if (subscription != null) this.subscription = subscription
+    if (types != null) this.types = types.slice()
   }
 
   public use(...middlewares: Middleware[]) {
@@ -53,8 +65,8 @@ export class SchemaWeaver {
   }
 
   public weaveGraphQLSchema(): GraphQLSchema {
-    const { query, mutation, subscription } = this
-    return new GraphQLSchema({ query, mutation, subscription })
+    const { query, mutation, subscription, types } = this
+    return new GraphQLSchema({ query, mutation, subscription, types })
   }
 
   protected addResolver(resolver: SilkResolver) {
@@ -65,7 +77,7 @@ export class SchemaWeaver {
       if (isObjectType(gqlType)) {
         const existing = this.context.modifiableObjectMap.get(gqlType)
         if (existing != null) return existing
-        const extraObject = new ModifiableObjectType(gqlType, this.fieldOptions)
+        const extraObject = new LoomObjectType(gqlType, this.fieldOptions)
         this.context.modifiableObjectMap.set(gqlType, extraObject)
         return extraObject
       }
@@ -89,23 +101,23 @@ export class SchemaWeaver {
 
   protected getOperationObject(
     type: "query" | "mutation" | "subscription"
-  ): ModifiableObjectType {
+  ): LoomObjectType {
     switch (type) {
       case "query":
         if (this.query) return this.query
-        return (this.query = new ModifiableObjectType(
+        return (this.query = new LoomObjectType(
           { name: "Query", fields: {} },
           this.fieldOptions
         ))
       case "mutation":
         if (this.mutation) return this.mutation
-        return (this.mutation = new ModifiableObjectType(
+        return (this.mutation = new LoomObjectType(
           { name: "Mutation", fields: {} },
           this.fieldOptions
         ))
       case "subscription":
         if (this.subscription) return this.subscription
-        return (this.subscription = new ModifiableObjectType(
+        return (this.subscription = new LoomObjectType(
           { name: "Subscription", fields: {} },
           this.fieldOptions
         ))
@@ -113,7 +125,7 @@ export class SchemaWeaver {
   }
 
   protected get fieldOptions() {
-    const { optionsForGetType, optionsForResolving, context } = this
-    return { optionsForGetType, optionsForResolving, weaverContext: context }
+    const { optionsForResolving, context } = this
+    return { optionsForResolving, weaverContext: context }
   }
 }

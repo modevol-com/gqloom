@@ -18,6 +18,7 @@ import {
 import { type GraphQLSilk, type InputSchema, isSilk } from "../resolver"
 import { mapValue, tryIn } from "../utils"
 import { weaverContext } from "./weaver-context"
+import { ensureInputObjectNode, ensureInputValueNode } from "./definition-node"
 
 export function inputToArgs(
   input: InputSchema<GraphQLSilk>
@@ -78,13 +79,15 @@ export function toInputObjectType(
   if (existing != null) return existing
 
   const {
-    astNode: _,
+    astNode,
     extensionASTNodes: __,
     fields,
     ...config
   } = object.toConfig()
+
   const input = new GraphQLInputObjectType({
     ...config,
+    astNode: ensureInputObjectNode(astNode),
     fields: mapValue(fields, (it) => toInputFieldConfig(it)),
   })
 
@@ -93,10 +96,14 @@ export function toInputObjectType(
 }
 
 function toInputFieldConfig({
-  astNode: _,
+  astNode,
   extensions: _1,
   resolve: _2,
   ...config
 }: GraphQLFieldConfig<any, any>): GraphQLInputFieldConfig {
-  return { ...config, type: ensureInputType(config.type) }
+  return {
+    ...config,
+    astNode: ensureInputValueNode(astNode),
+    type: ensureInputType(config.type),
+  }
 }
