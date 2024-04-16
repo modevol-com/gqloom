@@ -46,10 +46,7 @@ export class LoomObjectType extends GraphQLObjectType {
       | GraphQLObjectType
       | GraphQLObjectTypeConfig<any, any>
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
-    {
-      weaverContext,
-      resolverOptions,
-    }: {
+    options: {
       weaverContext?: WeaverContext
       resolverOptions?: ResolvingOptions
     } = {}
@@ -71,8 +68,8 @@ export class LoomObjectType extends GraphQLObjectType {
     const directives = extractDirectives(config)
     super({ ...config, astNode: createObjectTypeNode(config.name, directives) })
 
-    this.resolverOptions = resolverOptions
-    this.weaverContext = weaverContext ?? initWeaverContext()
+    this.resolverOptions = options.resolverOptions
+    this.weaverContext = options.weaverContext ?? initWeaverContext()
   }
 
   addField(name: string, resolver: SilkOperationOrField) {
@@ -189,7 +186,7 @@ export class LoomObjectType extends GraphQLObjectType {
       const gqlObject = this.weaverContext.loomObjectMap.get(gqlType)
       if (gqlObject != null) return gqlObject
 
-      const loomObject = new LoomObjectType(gqlType)
+      const loomObject = new LoomObjectType(gqlType, this.options)
       this.weaverContext.loomObjectMap.set(gqlType, loomObject)
       return loomObject
     } else if (isListType(gqlType)) {
@@ -198,6 +195,11 @@ export class LoomObjectType extends GraphQLObjectType {
       return new GraphQLNonNull(this.getCacheType(gqlType.ofType))
     }
     return gqlType
+  }
+
+  get options() {
+    const { resolverOptions, weaverContext } = this
+    return { resolverOptions, weaverContext }
   }
 }
 
