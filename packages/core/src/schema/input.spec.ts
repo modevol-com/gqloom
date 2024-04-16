@@ -14,15 +14,7 @@ import {
 } from "graphql"
 import { describe, expect, it } from "vitest"
 import { ensureInputType, inputToArgs, toInputObjectType } from "./input"
-import { toFieldConfig } from "./object"
-import {
-  defaultSubscriptionResolve,
-  silk,
-  silkField,
-  silkMutation,
-  silkQuery,
-  silkSubscription,
-} from "../resolver"
+import { silk } from "../resolver"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 describe("toInputObjectType", () => {
@@ -185,84 +177,5 @@ describe("inputToArgs", () => {
     expect(() => inputToArgs(IntSilk)).toThrow(
       "Cannot convert Int to input type"
     )
-  })
-})
-
-describe("toFieldConfig", () => {
-  const StringSilk = silk<string, string>(GraphQLString)
-  const IntSilk = silk<number, number>(GraphQLInt)
-
-  it("should work with Field", () => {
-    const fieldConfig = toFieldConfig(
-      "",
-      silkField(StringSilk, () => "")
-    )
-    expect(fieldConfig).toHaveProperty("type", GraphQLString)
-    expect(fieldConfig).toHaveProperty("resolve")
-    expect(fieldConfig).not.toHaveProperty("subscribe")
-  })
-
-  it("should work with Subscription", () => {
-    const fieldConfig = toFieldConfig(
-      "",
-      silkSubscription(StringSilk, async function* () {
-        yield ""
-      })
-    )
-    expect(fieldConfig).toHaveProperty("type", GraphQLString)
-    expect(fieldConfig).toHaveProperty("subscribe")
-    expect(fieldConfig).toHaveProperty("resolve", defaultSubscriptionResolve)
-  })
-
-  it("should work with Query", () => {
-    const fieldConfig = toFieldConfig(
-      "",
-      silkQuery(StringSilk, () => "")
-    )
-    expect(fieldConfig).toHaveProperty("type", GraphQLString)
-    expect(fieldConfig).toHaveProperty("resolve")
-    expect(fieldConfig).not.toHaveProperty("subscribe")
-  })
-
-  it("should work with Mutation", () => {
-    const fieldConfig = toFieldConfig(
-      "",
-      silkMutation(StringSilk, () => "")
-    )
-    expect(fieldConfig).toHaveProperty("type", GraphQLString)
-    expect(fieldConfig).toHaveProperty("resolve")
-    expect(fieldConfig).not.toHaveProperty("subscribe")
-  })
-
-  it("should parse input", async () => {
-    const PlusOneSilk = silk<number, number>(GraphQLInt, async (n) => {
-      await new Promise((ok) => setTimeout(ok, 6))
-      return n + 1
-    })
-    const fieldConfig = toFieldConfig(
-      "",
-      silkQuery(IntSilk, {
-        input: { n: PlusOneSilk },
-        resolve: ({ n }) => n,
-      })
-    )
-    const n = Math.floor(Math.random() * 100)
-    expect(await fieldConfig.resolve?.(0, { n }, {}, {} as any)).toBe(n + 1)
-  })
-
-  it("should provide Resolver Payload", async () => {
-    let rootRef: any
-    const fieldConfig = toFieldConfig(
-      "",
-      silkField(IntSilk, {
-        resolve: (root) => {
-          rootRef = root
-          return 0
-        },
-      })
-    )
-    const root = { n: 1 }
-    await fieldConfig.resolve?.(root, {}, {}, {} as any)
-    expect(rootRef).toBe(root)
   })
 })

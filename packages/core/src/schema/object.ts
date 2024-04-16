@@ -27,7 +27,6 @@ import {
 import {
   initWeaverContext,
   provideWeaverContext,
-  weaverContext,
   type WeaverContext,
 } from "./weaver-context"
 import { inputToArgs } from "./input"
@@ -36,10 +35,11 @@ import { createFieldNode, createObjectTypeNode } from "./definition-node"
 import { extractDirectives } from "./directive"
 
 export class LoomObjectType extends GraphQLObjectType {
-  protected extraFields = new Map<string, SilkOperationOrField>()
+  public extraFields = new Map<string, SilkOperationOrField>()
 
-  protected weaverContext: WeaverContext
-  protected resolverOptions?: ResolvingOptions
+  public weaverContext: WeaverContext
+  public resolverOptions?: ResolvingOptions
+
   constructor(
     objectOrGetter:
       | string
@@ -92,10 +92,7 @@ export class LoomObjectType extends GraphQLObjectType {
       })
     )
     const extraField = provideWeaverContext(
-      () =>
-        defineFieldMap(
-          mapToFieldConfig(this.extraFields, this.resolverOptions)
-        ),
+      () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
     )
     return {
@@ -103,53 +100,107 @@ export class LoomObjectType extends GraphQLObjectType {
       ...extraField,
     }
   }
-}
 
-export function mapToFieldConfig(
-  map: Map<string, SilkOperationOrField>,
-  resolverOptions?: ResolvingOptions
-): Record<string, GraphQLFieldConfig<any, any>> {
-  const record: Record<string, GraphQLFieldConfig<any, any>> = {}
+  mapToFieldConfig(
+    map: Map<string, SilkOperationOrField>
+  ): Record<string, GraphQLFieldConfig<any, any>> {
+    const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
-  for (const [name, field] of map.entries()) {
-    record[name] = toFieldConfig(name, field, resolverOptions)
+    for (const [name, field] of map.entries()) {
+      record[name] = this.toFieldConfig(name, field)
+    }
+
+    return record
   }
 
-  return record
-}
+  toFieldConfig(
+    name: string,
+    field: SilkOperationOrField
+  ): GraphQLFieldConfig<any, any> {
+    try {
+      let outputType = this.getCacheType(field.output.getType())
 
-export function toFieldConfig(
-  name: string,
-  field: SilkOperationOrField,
-  resolverOptions?: ResolvingOptions
-): GraphQLFieldConfig<any, any> {
-  try {
-    let outputType = getCacheType(field.output.getType())
+      if (isObjectType(outputType)) {
+        outputType.astNode ??= createObjectTypeNode(
+          outputType.name,
+          extractDirectives(outputType)
+        )
+      }
 
-    if (isObjectType(outputType)) {
-      outputType.astNode ??= createObjectTypeNode(
-        outputType.name,
-        extractDirectives(outputType)
-      )
+      if (
+        (field.nonNull ?? field.output.nonNull) &&
+        !isNonNullType(outputType)
+      ) {
+        outputType = new GraphQLNonNull(outputType)
+      }
+
+      // AST node has to be manually created in order to define directives
+      const directives = extractDirectives(field)
+
+      return {
+        ...extract(field),
+        astNode: createFieldNode(name, outputType, directives),
+        type: outputType,
+        args: inputToArgs(field.input),
+        ...this.provideForResolve(field),
+        ...this.provideForSubscribe(field),
+      }
+    } catch (error) {
+      throw markErrorLocation(error)
     }
+  }
 
-    if ((field.nonNull ?? field.output.nonNull) && !isNonNullType(outputType)) {
-      outputType = new GraphQLNonNull(outputType)
-    }
+  provideForResolve(
+    field: SilkOperationOrField
+  ): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
+    if (field?.resolve == null) return
+    if (field.resolve === defaultSubscriptionResolve)
+      return { resolve: defaultSubscriptionResolve }
+    const resolve: GraphQLFieldResolver<any, any> =
+      field.type === "field"
+        ? (root, args, context, info) =>
+            resolverPayloadStorage.run(
+              { root, args, context, info, field },
+              () => field.resolve(root, args, this.resolverOptions)
+            )
+        : field.type === "subscription"
+          ? (root, args, context, info) =>
+              resolverPayloadStorage.run(
+                { root, args, context, info, field },
+                () => field.resolve(root, args)
+              )
+          : (root, args, context, info) =>
+              resolverPayloadStorage.run(
+                { root, args, context, info, field },
+                () => field.resolve(args, this.resolverOptions)
+              )
 
-    // AST node has to be manually created in order to define directives
-    const directives = extractDirectives(field)
+    return { resolve }
+  }
 
+  provideForSubscribe(
+    field: SilkOperationOrField
+  ): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
+    if (field?.subscribe == null) return
     return {
-      ...extract(field),
-      astNode: createFieldNode(name, outputType, directives),
-      type: outputType,
-      args: inputToArgs(field.input),
-      ...provideForResolve(field, resolverOptions),
-      ...provideForSubscribe(field, resolverOptions),
+      subscribe: (root, args, context, info) =>
+        resolverPayloadStorage.run({ root, args, context, info, field }, () =>
+          field.subscribe?.(args, this.resolverOptions)
+        ),
     }
-  } catch (error) {
-    throw markErrorLocation(error)
+  }
+
+  protected getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
+    if (gqlType instanceof LoomObjectType) return gqlType
+    if (isObjectType(gqlType)) {
+      const gqlObject = this.weaverContext.modifiableObjectMap?.get(gqlType)
+      if (gqlObject != null) return gqlObject
+    } else if (isListType(gqlType)) {
+      return new GraphQLList(this.getCacheType(gqlType.ofType))
+    } else if (isNonNullType(gqlType)) {
+      return new GraphQLNonNull(this.getCacheType(gqlType.ofType))
+    }
+    return gqlType
   }
 }
 
@@ -162,60 +213,6 @@ function extract({
     description,
     deprecationReason,
     extensions,
-  }
-}
-
-function getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
-  if (gqlType instanceof LoomObjectType) return gqlType
-  if (isObjectType(gqlType)) {
-    const gqlObject = weaverContext.modifiableObjectMap?.get(gqlType)
-    if (gqlObject != null) return gqlObject
-  } else if (isListType(gqlType)) {
-    return new GraphQLList(getCacheType(gqlType.ofType))
-  } else if (isNonNullType(gqlType)) {
-    return new GraphQLNonNull(getCacheType(gqlType.ofType))
-  }
-  return gqlType
-}
-
-function provideForResolve(
-  field: SilkOperationOrField,
-  resolverOptions?: ResolvingOptions
-): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
-  if (field?.resolve == null) return
-  if (field.resolve === defaultSubscriptionResolve)
-    return { resolve: defaultSubscriptionResolve }
-  const resolve: GraphQLFieldResolver<any, any> =
-    field.type === "field"
-      ? (root, args, context, info) =>
-          resolverPayloadStorage.run({ root, args, context, info, field }, () =>
-            field.resolve(root, args, resolverOptions)
-          )
-      : field.type === "subscription"
-        ? (root, args, context, info) =>
-            resolverPayloadStorage.run(
-              { root, args, context, info, field },
-              () => field.resolve(root, args)
-            )
-        : (root, args, context, info) =>
-            resolverPayloadStorage.run(
-              { root, args, context, info, field },
-              () => field.resolve(args, resolverOptions)
-            )
-
-  return { resolve }
-}
-
-function provideForSubscribe(
-  field: SilkOperationOrField,
-  resolverOptions?: ResolvingOptions
-): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
-  if (field?.subscribe == null) return
-  return {
-    subscribe: (root, args, context, info) =>
-      resolverPayloadStorage.run({ root, args, context, info, field }, () =>
-        field.subscribe?.(args, resolverOptions)
-      ),
   }
 }
 

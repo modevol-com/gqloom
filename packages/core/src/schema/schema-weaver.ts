@@ -21,14 +21,14 @@ interface SchemaWeaverParameters
     Pick<GraphQLSchemaConfig, "types"> {}
 
 export class SchemaWeaver {
-  protected query?: LoomObjectType
-  protected mutation?: LoomObjectType
-  protected subscription?: LoomObjectType
-  protected types?: GraphQLNamedType[] | null
+  public query?: LoomObjectType
+  public mutation?: LoomObjectType
+  public subscription?: LoomObjectType
+  public types?: GraphQLNamedType[] | null
 
-  protected context: WeaverContext = initWeaverContext()
+  public context: WeaverContext = initWeaverContext()
 
-  protected resolverOptions?: ResolvingOptions
+  public resolverOptions?: ResolvingOptions
 
   constructor({
     query,
