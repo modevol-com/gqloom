@@ -34,7 +34,7 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
 export type AbstractSchemaIO = [
   baseSchema: object,
   inputPath: string,
-  output: string,
+  outputPath: string,
 ]
 
 export type GraphQLSilkIO = [
