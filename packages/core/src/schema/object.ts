@@ -101,7 +101,7 @@ export class LoomObjectType extends GraphQLObjectType {
     }
   }
 
-  mapToFieldConfig(
+  protected mapToFieldConfig(
     map: Map<string, SilkOperationOrField>
   ): Record<string, GraphQLFieldConfig<any, any>> {
     const record: Record<string, GraphQLFieldConfig<any, any>> = {}
@@ -119,13 +119,6 @@ export class LoomObjectType extends GraphQLObjectType {
   ): GraphQLFieldConfig<any, any> {
     try {
       let outputType = this.getCacheType(field.output.getType())
-
-      if (isObjectType(outputType)) {
-        outputType.astNode ??= createObjectTypeNode(
-          outputType.name,
-          extractDirectives(outputType)
-        )
-      }
 
       if (
         (field.nonNull ?? field.output.nonNull) &&
@@ -150,7 +143,7 @@ export class LoomObjectType extends GraphQLObjectType {
     }
   }
 
-  provideForResolve(
+  protected provideForResolve(
     field: SilkOperationOrField
   ): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
     if (field?.resolve == null) return
@@ -178,7 +171,7 @@ export class LoomObjectType extends GraphQLObjectType {
     return { resolve }
   }
 
-  provideForSubscribe(
+  protected provideForSubscribe(
     field: SilkOperationOrField
   ): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
     if (field?.subscribe == null) return
@@ -193,8 +186,12 @@ export class LoomObjectType extends GraphQLObjectType {
   protected getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
     if (gqlType instanceof LoomObjectType) return gqlType
     if (isObjectType(gqlType)) {
-      const gqlObject = this.weaverContext.modifiableObjectMap?.get(gqlType)
+      const gqlObject = this.weaverContext.loomObjectMap.get(gqlType)
       if (gqlObject != null) return gqlObject
+
+      const loomObject = new LoomObjectType(gqlType)
+      this.weaverContext.loomObjectMap.set(gqlType, loomObject)
+      return loomObject
     } else if (isListType(gqlType)) {
       return new GraphQLList(this.getCacheType(gqlType.ofType))
     } else if (isNonNullType(gqlType)) {

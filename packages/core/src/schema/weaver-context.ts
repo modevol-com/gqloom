@@ -8,7 +8,7 @@ import {
 import { type LoomObjectType } from "./object"
 
 export interface WeaverContext {
-  modifiableObjectMap: Map<GraphQLObjectType, LoomObjectType>
+  loomObjectMap: Map<GraphQLObjectType, LoomObjectType>
   objectMap: Map<string, GraphQLObjectType>
   inputMap: Map<
     GraphQLObjectType | GraphQLInterfaceType,
@@ -24,7 +24,7 @@ let ref: WeaverContext | undefined
 
 export function initWeaverContext(): WeaverContext {
   return {
-    modifiableObjectMap: new Map(),
+    loomObjectMap: new Map(),
     objectMap: new Map(),
     inputMap: new Map(),
     enumMap: new Map(),
@@ -36,8 +36,8 @@ export function initWeaverContext(): WeaverContext {
 
 export const weaverContext: Partial<WeaverContext & { value: WeaverContext }> =
   {
-    get modifiableObjectMap() {
-      return ref?.modifiableObjectMap
+    get loomObjectMap() {
+      return ref?.loomObjectMap
     },
     get objectMap() {
       return ref?.objectMap

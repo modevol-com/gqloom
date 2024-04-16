@@ -13,7 +13,7 @@ import {
   GraphQLUnionType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { ensureInputType, inputToArgs, toInputObjectType } from "./input"
+import { ensureInputType, inputToArgs, ensureInputObjectType } from "./input"
 import { silk } from "../resolver"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
@@ -26,7 +26,7 @@ describe("toInputObjectType", () => {
     },
   })
   it("should convert ObjectType to InputObjectType", () => {
-    const DogInput = toInputObjectType(Dog)
+    const DogInput = ensureInputObjectType(Dog)
     expect(isInputObjectType(DogInput)).toBe(true)
     expect(printType(DogInput)).toMatchInlineSnapshot(`
       "input Dog {
@@ -38,7 +38,7 @@ describe("toInputObjectType", () => {
 
   it("should return same InputObjectType for same ObjectType", () => {
     provideWeaverContext(() => {
-      expect(toInputObjectType(Dog)).toBe(toInputObjectType(Dog))
+      expect(ensureInputObjectType(Dog)).toBe(ensureInputObjectType(Dog))
     }, initWeaverContext())
   })
 })

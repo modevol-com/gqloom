@@ -2,7 +2,7 @@ import { type GraphQLFieldExtensions } from "graphql"
 
 export const GQLOOM_DIRECTIVES_KEY = "gqloom_directives"
 
-export function gqloomDirectives(...directives: string[]) {
+export function directives(...directives: string[]) {
   return { [GQLOOM_DIRECTIVES_KEY]: directives }
 }
 

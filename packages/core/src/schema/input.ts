@@ -14,11 +14,18 @@ import {
   isObjectType,
   isUnionType,
   type GraphQLInterfaceType,
+  isInputObjectType,
 } from "graphql"
 import { type GraphQLSilk, type InputSchema, isSilk } from "../resolver"
 import { mapValue, tryIn } from "../utils"
 import { weaverContext } from "./weaver-context"
-import { ensureInputObjectNode, ensureInputValueNode } from "./definition-node"
+import {
+  createFieldNode,
+  createObjectTypeNode,
+  ensureInputObjectNode,
+  ensureInputValueNode,
+} from "./definition-node"
+import { extractDirectives } from "./directive"
 
 export function inputToArgs(
   input: InputSchema<GraphQLSilk>
@@ -68,18 +75,20 @@ export function ensureInputType(
     return new GraphQLList(ensureInputType(gqlType.ofType))
   }
   if (isObjectType(gqlType) || isInterfaceType(gqlType))
-    return toInputObjectType(gqlType)
+    return ensureInputObjectType(gqlType)
   return gqlType
 }
 
-export function toInputObjectType(
-  object: GraphQLObjectType | GraphQLInterfaceType
+export function ensureInputObjectType(
+  object: GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType
 ): GraphQLInputObjectType {
+  if (isInputObjectType(object)) return withDirective(object)
+
   const existing = weaverContext.inputMap?.get(object)
-  if (existing != null) return existing
+  if (existing != null) return withDirective(existing)
 
   const {
-    astNode,
+    astNode: _,
     extensionASTNodes: __,
     fields,
     ...config
@@ -87,23 +96,33 @@ export function toInputObjectType(
 
   const input = new GraphQLInputObjectType({
     ...config,
-    astNode: ensureInputObjectNode(astNode),
     fields: mapValue(fields, (it) => toInputFieldConfig(it)),
   })
 
   weaverContext.inputMap?.set(object, input)
-  return input
+  return withDirective(input)
 }
 
 function toInputFieldConfig({
-  astNode,
-  extensions: _1,
-  resolve: _2,
+  astNode: _,
+  resolve: _1,
   ...config
 }: GraphQLFieldConfig<any, any>): GraphQLInputFieldConfig {
-  return {
-    ...config,
-    astNode: ensureInputValueNode(astNode),
-    type: ensureInputType(config.type),
-  }
+  return { ...config, type: ensureInputType(config.type) }
+}
+
+function withDirective(
+  gqlType: GraphQLInputObjectType
+): GraphQLInputObjectType {
+  gqlType.astNode ??= ensureInputObjectNode(
+    createObjectTypeNode(gqlType.name, extractDirectives(gqlType))
+  )
+
+  Object.entries(gqlType.getFields()).forEach(([name, field]) => {
+    field.astNode ??= ensureInputValueNode(
+      createFieldNode(name, field.type, extractDirectives(field))
+    )
+  })
+
+  return gqlType
 }

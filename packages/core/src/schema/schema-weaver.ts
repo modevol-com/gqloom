@@ -75,10 +75,10 @@ export class SchemaWeaver {
       if (parent == null) return undefined
       const gqlType = parent.getType()
       if (isObjectType(gqlType)) {
-        const existing = this.context.modifiableObjectMap.get(gqlType)
+        const existing = this.context.loomObjectMap.get(gqlType)
         if (existing != null) return existing
         const extraObject = new LoomObjectType(gqlType, this.fieldOptions)
-        this.context.modifiableObjectMap.set(gqlType, extraObject)
+        this.context.loomObjectMap.set(gqlType, extraObject)
         return extraObject
       }
       throw new Error(

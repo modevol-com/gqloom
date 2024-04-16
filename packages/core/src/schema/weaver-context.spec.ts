@@ -10,7 +10,7 @@ describe("weaverContext", () => {
     provideWeaverContext(() => {
       expect(weaverContext).toBeDefined()
       expect(weaverContext.inputMap).toBeDefined()
-      expect(weaverContext.modifiableObjectMap).toBeDefined()
+      expect(weaverContext.loomObjectMap).toBeDefined()
       expect(weaverContext.objectMap).toBeDefined()
       expect(weaverContext.enumMap).toBeDefined()
       expect(weaverContext.interfaceMap).toBeDefined()
@@ -20,7 +20,7 @@ describe("weaverContext", () => {
 
   it("should get undefined if not in context", () => {
     expect(weaverContext.inputMap).toBeUndefined()
-    expect(weaverContext.modifiableObjectMap).toBeUndefined()
+    expect(weaverContext.loomObjectMap).toBeUndefined()
     expect(weaverContext.objectMap).toBeUndefined()
     expect(weaverContext.enumMap).toBeUndefined()
     expect(weaverContext.interfaceMap).toBeUndefined()
