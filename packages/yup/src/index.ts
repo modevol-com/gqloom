@@ -53,7 +53,7 @@ export class YupSilk<TSchema extends Schema>
   }
 
   getType() {
-    return YupSilk.getTypeByDescription(this.schemaDescription)
+    return YupSilk.toNullableGraphQLType(this.schemaDescription)
   }
 
   parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {
@@ -64,7 +64,7 @@ export class YupSilk<TSchema extends Schema>
     return weaverContext.options
   }
 
-  static getTypeByDescription(description: SchemaDescription) {
+  static toNullableGraphQLType(description: SchemaDescription) {
     const name = description.meta?.name ?? description.label
 
     // use existing type first
@@ -92,7 +92,7 @@ export class YupSilk<TSchema extends Schema>
       if (existing) return nullable(existing)
     }
 
-    const gqlType = YupSilk.getGraphQLType(description)
+    const gqlType = YupSilk.toGraphQLType(description)
 
     // do not forget to keep the type
     if (isObjectType(gqlType)) {
@@ -111,7 +111,7 @@ export class YupSilk<TSchema extends Schema>
     }
   }
 
-  static getGraphQLType(description: SchemaDescription): GraphQLOutputType {
+  static toGraphQLType(description: SchemaDescription): GraphQLOutputType {
     const presetType = YupSilk.options?.yupPresetGraphQLType?.(description)
     if (presetType) return presetType
 
@@ -148,7 +148,7 @@ export class YupSilk<TSchema extends Schema>
             (fieldDescription) => {
               const d = YupSilk.ensureSchemaDescription(fieldDescription)
               return {
-                type: YupSilk.getTypeByDescription(d),
+                type: YupSilk.toNullableGraphQLType(d),
                 description: d?.meta?.description,
               } as GraphQLFieldConfig<any, any>
             }
@@ -164,7 +164,7 @@ export class YupSilk<TSchema extends Schema>
           throw new Error("Array type must have an inner type")
 
         return new GraphQLList(
-          YupSilk.getTypeByDescription(
+          YupSilk.toNullableGraphQLType(
             YupSilk.ensureSchemaDescription(innerType)
           )
         )
@@ -180,7 +180,7 @@ export class YupSilk<TSchema extends Schema>
         const name = description.meta?.name ?? description.label ?? ""
 
         const types = innerTypes.map((innerType) => {
-          const gqlType = YupSilk.getTypeByDescription(
+          const gqlType = YupSilk.toNullableGraphQLType(
             YupSilk.ensureSchemaDescription(innerType)
           )
           if (isObjectType(gqlType)) return gqlType
