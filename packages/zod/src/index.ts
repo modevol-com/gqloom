@@ -12,6 +12,8 @@ import {
   GraphQLObjectType,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
+  GraphQLUnionType,
+  isObjectType,
 } from "graphql"
 import {
   ZodArray,
@@ -30,6 +32,8 @@ import {
   ZodEnum,
   ZodNativeEnum,
   type EnumLike,
+  ZodUnion,
+  type ZodTypeAny,
 } from "zod"
 import { ZodIDKinds } from "./constants"
 import { parseFieldConfig, parseObjectConfig } from "./utils"
@@ -41,26 +45,26 @@ export class ZodSilk<TSchema extends Schema>
   constructor(public schema: TSchema) {}
 
   getType() {
-    return ZodSilk.getTypeBySchema(this.schema)
+    return ZodSilk.toNullableGraphQLType(this.schema)
   }
 
-  static getTypeBySchema(schema: Schema): GraphQLOutputType {
+  static toNullableGraphQLType(schema: Schema): GraphQLOutputType {
     const nullable = (ofType: GraphQLOutputType) => {
       const isNonNull = !schema.isNullable() && !schema.isOptional()
       if (!isNonNull) return ofType
       if (isNonNullType(ofType)) return ofType
       return new GraphQLNonNull(ofType)
     }
-    return nullable(ZodSilk.getGraphQLType(schema))
+    return nullable(ZodSilk.toGraphQLType(schema))
   }
 
-  static getGraphQLType(schema: Schema): GraphQLOutputType {
+  static toGraphQLType(schema: Schema): GraphQLOutputType {
     if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
-      return ZodSilk.getGraphQLType(schema.unwrap())
+      return ZodSilk.toGraphQLType(schema.unwrap())
     }
 
     if (schema instanceof ZodArray) {
-      return new GraphQLList(ZodSilk.getTypeBySchema(schema.element))
+      return new GraphQLList(ZodSilk.toNullableGraphQLType(schema.element))
     }
 
     if (schema instanceof ZodString) {
@@ -89,7 +93,7 @@ export class ZodSilk<TSchema extends Schema>
         ...configFromDescription,
         fields: mapValue(schema.shape as ZodRawShape, (field) => {
           return {
-            type: ZodSilk.getTypeBySchema(field),
+            type: ZodSilk.toNullableGraphQLType(field),
             ...parseFieldConfig(field.description),
           }
         }),
@@ -113,6 +117,22 @@ export class ZodSilk<TSchema extends Schema>
       }
 
       return new GraphQLEnumType({ name, description, values })
+    }
+
+    if (schema instanceof ZodUnion) {
+      if (!schema.description) throw new Error("Union must have a name")
+      const types = (schema.options as ZodTypeAny[]).map((s) => {
+        const gqlType = ZodSilk.toGraphQLType(s)
+        if (isObjectType(gqlType)) return gqlType
+        throw new Error(
+          `Union types ${name} can only contain objects, but got ${gqlType}`
+        )
+      })
+
+      return new GraphQLUnionType({
+        ...parseObjectConfig(schema.description),
+        types,
+      })
     }
 
     throw new Error(`zod type ${schema.constructor.name} is not supported`)

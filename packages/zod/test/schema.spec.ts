@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { zodSilk } from "../src"
+import { query, resolver, zodSilk } from "../src"
 import { type Schema, z } from "zod"
 import {
   GraphQLID,
@@ -12,7 +12,9 @@ import {
   GraphQLObjectType,
   printType,
   type GraphQLNamedType,
+  printSchema,
 } from "graphql"
+import { SchemaWeaver, type SilkResolver } from "@gqloom/core"
 
 describe("ZodSilk", () => {
   it("should handle scalar", () => {
@@ -106,7 +108,50 @@ describe("ZodSilk", () => {
     `)
   })
   it.todo("should handle interfere")
-  it.todo("should handle union")
+
+  it("should handle union", () => {
+    const Cat = z
+      .object({
+        name: z.string(),
+        age: z.number(),
+        loveFish: z.boolean().optional(),
+      })
+      .describe("Cat")
+
+    const Dog = z
+      .object({
+        name: z.string(),
+        age: z.number(),
+        loveBone: z.boolean().optional(),
+      })
+      .describe("Dog")
+
+    const Animal = z.union([Cat, Dog]).describe("Animal")
+    const r = resolver({
+      animal: query(Animal, () => 0 as any),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        name: String!
+        age: Float!
+        loveFish: Boolean
+      }
+
+      type Dog {
+        name: String!
+        age: Float!
+        loveBone: Boolean
+      }"
+    `)
+  })
+
   describe.todo("should avoid duplicate", () => {
     it.todo("should merge field from multiple resolver")
     it.todo("should avoid duplicate object")
@@ -121,4 +166,12 @@ function printZodSilk(schema: Schema): string {
   let gqlType = zodSilk(schema).getType()
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
+}
+
+function printResolver(...resolvers: SilkResolver[]): string {
+  const weaver = new SchemaWeaver()
+  for (const r of resolvers) weaver.add(r)
+
+  const schema = weaver.weaveGraphQLSchema()
+  return printSchema(schema)
 }

@@ -179,16 +179,15 @@ export class YupSilk<TSchema extends Schema>
 
         const name = description.meta?.name ?? description.label ?? ""
 
-        const types = () =>
-          innerTypes.map((innerType) => {
-            const gqlType = YupSilk.getTypeByDescription(
-              YupSilk.ensureSchemaDescription(innerType)
-            )
-            if (isObjectType(gqlType)) return gqlType
-            throw new Error(
-              `Union types ${name} can only contain objects, but got ${gqlType}`
-            )
-          })
+        const types = innerTypes.map((innerType) => {
+          const gqlType = YupSilk.getTypeByDescription(
+            YupSilk.ensureSchemaDescription(innerType)
+          )
+          if (isObjectType(gqlType)) return gqlType
+          throw new Error(
+            `Union types ${name} can only contain objects, but got ${gqlType}`
+          )
+        })
 
         return new GraphQLUnionType({
           name,
