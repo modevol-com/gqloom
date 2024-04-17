@@ -10,6 +10,8 @@ import {
   isNonNullType,
   GraphQLList,
   GraphQLObjectType,
+  GraphQLEnumType,
+  type GraphQLEnumValueConfigMap,
 } from "graphql"
 import {
   ZodArray,
@@ -25,6 +27,9 @@ import {
   type Schema,
   type input,
   type output,
+  ZodEnum,
+  ZodNativeEnum,
+  type EnumLike,
 } from "zod"
 import { ZodIDKinds } from "./constants"
 import { parseFieldConfig, parseObjectConfig } from "./utils"
@@ -89,6 +94,25 @@ export class ZodSilk<TSchema extends Schema>
           }
         }),
       })
+    }
+
+    if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
+      if (!schema.description) throw new Error("Enum must have a name")
+      const { name, description } = parseObjectConfig(schema.description)
+      const values: GraphQLEnumValueConfigMap = {}
+
+      if ("options" in schema) {
+        for (const value of schema.options as string[]) {
+          values[value] = { value }
+        }
+      } else {
+        Object.entries(schema.enum as EnumLike).forEach(([key, value]) => {
+          if (typeof schema.enum?.[schema.enum[key]] === "number") return
+          values[key] = { value }
+        })
+      }
+
+      return new GraphQLEnumType({ name, description, values })
     }
 
     throw new Error(`zod type ${schema.constructor.name} is not supported`)

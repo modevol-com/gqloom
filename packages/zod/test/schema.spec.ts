@@ -60,8 +60,6 @@ describe("ZodSilk", () => {
     ).toEqual(new GraphQLList(GraphQLString))
   })
   it("should handle object", () => {
-    expect("123").toMatchInlineSnapshot(`"123"`)
-
     const Cat = z
       .object({
         name: z.string(),
@@ -82,7 +80,31 @@ describe("ZodSilk", () => {
       }"
     `)
   })
-  it.todo("should handle enum")
+
+  it("should handle enum", () => {
+    const fruitZ = z
+      .enum(["apple", "banana", "orange"])
+      .describe("Fruit: Some fruits you might like")
+    enum Fruit {
+      apple,
+      banana,
+      orange,
+    }
+    const fruitN = z
+      .nativeEnum(Fruit)
+      .describe("Fruit: Some fruits you might like")
+
+    expect(printZodSilk(fruitN)).toEqual(printZodSilk(fruitZ))
+
+    expect(printZodSilk(fruitZ)).toMatchInlineSnapshot(`
+      """"Some fruits you might like"""
+      enum Fruit {
+        apple
+        banana
+        orange
+      }"
+    `)
+  })
   it.todo("should handle interfere")
   it.todo("should handle union")
   describe.todo("should avoid duplicate", () => {
