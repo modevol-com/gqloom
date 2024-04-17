@@ -15,6 +15,7 @@ import {
   printSchema,
 } from "graphql"
 import { SchemaWeaver, type SilkResolver } from "@gqloom/core"
+import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 
 describe("ZodSilk", () => {
   it("should handle scalar", () => {
@@ -150,6 +151,62 @@ describe("ZodSilk", () => {
         loveBone: Boolean
       }"
     `)
+  })
+
+  it("should handle discriminated union", () => {
+    const Cat = z
+      .object({
+        __typename: z.literal("Cat"),
+        name: z.string(),
+        age: z.number(),
+        loveFish: z.boolean().optional(),
+      })
+      .describe("Cat")
+
+    const Dog = z
+      .object({
+        __typename: z.literal("Dog"),
+        name: z.string(),
+        age: z.number(),
+        loveBone: z.boolean().optional(),
+      })
+      .describe("Dog")
+
+    const Animal = z
+      .discriminatedUnion("__typename", [Cat, Dog])
+      .describe("Animal")
+
+    const r = resolver({
+      animal: query(Animal, () => 0 as any),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        __typename: String!
+        name: String!
+        age: Float!
+        loveFish: Boolean
+      }
+
+      type Dog {
+        __typename: String!
+        name: String!
+        age: Float!
+        loveBone: Boolean
+      }"
+    `)
+
+    const resolveTypeBase = resolveTypeByDiscriminatedUnion(Animal)
+    const resolveType = (data: z.infer<typeof Animal>) =>
+      resolveTypeBase(data, {} as any, {} as any, {} as any)
+    expect(resolveType({ __typename: "Cat", name: "", age: 6 })).toEqual("Cat")
+    expect(resolveType({ __typename: "Dog", name: "", age: 6 })).toEqual("Dog")
   })
 
   describe.todo("should avoid duplicate", () => {

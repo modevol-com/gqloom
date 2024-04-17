@@ -1,5 +1,10 @@
 import { directives as defineDirectives } from "@gqloom/core"
-import { type GraphQLFieldConfig, type GraphQLObjectTypeConfig } from "graphql"
+import {
+  type GraphQLTypeResolver,
+  type GraphQLFieldConfig,
+  type GraphQLObjectTypeConfig,
+} from "graphql"
+import { type ZodDiscriminatedUnion, type ZodObject } from "zod"
 
 const directiveRegex = /@\w+(\(.*?\))?/g
 
@@ -40,5 +45,17 @@ export function parseFieldConfig(
   return {
     description: inputWithoutDirectives.trim(),
     extensions: defineDirectives(...extractedDirectives),
+  }
+}
+
+export function resolveTypeByDiscriminatedUnion(
+  schema: ZodDiscriminatedUnion<string, ZodObject<any>[]>
+): GraphQLTypeResolver<any, any> {
+  return (data) => {
+    const discriminatorValue: string = data[schema.discriminator]
+    const option = schema.optionsMap.get(discriminatorValue)
+    if (!option?.description) return undefined
+    const { name } = parseObjectConfig(option.description)
+    return name
   }
 }

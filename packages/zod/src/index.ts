@@ -34,9 +34,15 @@ import {
   type EnumLike,
   ZodUnion,
   type ZodTypeAny,
+  ZodDiscriminatedUnion,
+  ZodLiteral,
 } from "zod"
 import { ZodIDKinds } from "./constants"
-import { parseFieldConfig, parseObjectConfig } from "./utils"
+import {
+  parseFieldConfig,
+  parseObjectConfig,
+  resolveTypeByDiscriminatedUnion,
+} from "./utils"
 
 export class ZodSilk<TSchema extends Schema>
   implements GraphQLSilk<output<TSchema>, input<TSchema>>
@@ -70,6 +76,10 @@ export class ZodSilk<TSchema extends Schema>
     if (schema instanceof ZodString) {
       if (schema._def.checks.some((ch) => ZodIDKinds.has(ch.kind)))
         return GraphQLID
+      return GraphQLString
+    }
+
+    if (schema instanceof ZodLiteral) {
       return GraphQLString
     }
 
@@ -119,7 +129,7 @@ export class ZodSilk<TSchema extends Schema>
       return new GraphQLEnumType({ name, description, values })
     }
 
-    if (schema instanceof ZodUnion) {
+    if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
       if (!schema.description) throw new Error("Union must have a name")
       const types = (schema.options as ZodTypeAny[]).map((s) => {
         const gqlType = ZodSilk.toGraphQLType(s)
@@ -130,8 +140,12 @@ export class ZodSilk<TSchema extends Schema>
       })
 
       return new GraphQLUnionType({
-        ...parseObjectConfig(schema.description),
+        resolveType:
+          schema instanceof ZodDiscriminatedUnion
+            ? resolveTypeByDiscriminatedUnion(schema)
+            : undefined,
         types,
+        ...parseObjectConfig(schema.description),
       })
     }
 
