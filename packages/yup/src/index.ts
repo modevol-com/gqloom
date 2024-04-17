@@ -52,7 +52,7 @@ export class YupSilk<TSchema extends Schema>
       !this.schemaDescription.nullable && !this.schemaDescription.optional
   }
 
-  getType() {
+  getGraphQLType() {
     return YupSilk.toNullableGraphQLType(this.schemaDescription)
   }
 
@@ -216,7 +216,7 @@ export class YupSilk<TSchema extends Schema>
     const list = typeof thunkList === "function" ? thunkList() : thunkList
 
     return list.map((yupSchema) =>
-      ensureInterfaceType(new YupSilk(yupSchema).getType())
+      ensureInterfaceType(new YupSilk(yupSchema).getGraphQLType())
     )
   }
 

@@ -73,7 +73,7 @@ export class SchemaWeaver {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
-      const gqlType = parent.getType()
+      const gqlType = parent.getGraphQLType()
       if (isObjectType(gqlType)) {
         const existing = this.context.loomObjectMap.get(gqlType)
         if (existing != null) return existing

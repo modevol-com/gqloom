@@ -19,47 +19,69 @@ import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 
 describe("ZodSilk", () => {
   it("should handle scalar", () => {
-    expect(zodSilk(z.string().nullable()).getType()).toEqual(GraphQLString)
-    expect(zodSilk(z.number().nullable()).getType()).toEqual(GraphQLFloat)
-    expect(zodSilk(z.number().int().nullable()).getType()).toEqual(GraphQLInt)
-    expect(zodSilk(z.boolean().nullable()).getType()).toEqual(GraphQLBoolean)
-    expect(zodSilk(z.date().nullable()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.string().nullable()).getGraphQLType()).toEqual(
+      GraphQLString
+    )
+    expect(zodSilk(z.number().nullable()).getGraphQLType()).toEqual(
+      GraphQLFloat
+    )
+    expect(zodSilk(z.number().int().nullable()).getGraphQLType()).toEqual(
+      GraphQLInt
+    )
+    expect(zodSilk(z.boolean().nullable()).getGraphQLType()).toEqual(
+      GraphQLBoolean
+    )
+    expect(zodSilk(z.date().nullable()).getGraphQLType()).toEqual(GraphQLString)
 
-    expect(zodSilk(z.string().cuid().nullable()).getType()).toEqual(GraphQLID)
-    expect(zodSilk(z.string().cuid2().nullable()).getType()).toEqual(GraphQLID)
-    expect(zodSilk(z.string().ulid().nullable()).getType()).toEqual(GraphQLID)
-    expect(zodSilk(z.string().uuid().nullable()).getType()).toEqual(GraphQLID)
+    expect(zodSilk(z.string().cuid().nullable()).getGraphQLType()).toEqual(
+      GraphQLID
+    )
+    expect(zodSilk(z.string().cuid2().nullable()).getGraphQLType()).toEqual(
+      GraphQLID
+    )
+    expect(zodSilk(z.string().ulid().nullable()).getGraphQLType()).toEqual(
+      GraphQLID
+    )
+    expect(zodSilk(z.string().uuid().nullable()).getGraphQLType()).toEqual(
+      GraphQLID
+    )
 
-    expect(zodSilk(z.string().email().nullable()).getType()).toEqual(
+    expect(zodSilk(z.string().email().nullable()).getGraphQLType()).toEqual(
       GraphQLString
     )
   })
   it("should handle non null", () => {
-    expect(zodSilk(z.string()).getType()).toEqual(
+    expect(zodSilk(z.string()).getGraphQLType()).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(zodSilk(z.string().nullable()).getType()).toEqual(GraphQLString)
-    expect(zodSilk(z.string().optional()).getType()).toEqual(GraphQLString)
-    expect(zodSilk(z.string().nullish()).getType()).toEqual(GraphQLString)
+    expect(zodSilk(z.string().nullable()).getGraphQLType()).toEqual(
+      GraphQLString
+    )
+    expect(zodSilk(z.string().optional()).getGraphQLType()).toEqual(
+      GraphQLString
+    )
+    expect(zodSilk(z.string().nullish()).getGraphQLType()).toEqual(
+      GraphQLString
+    )
   })
   it("should handle array", () => {
-    expect(zodSilk(z.array(z.string())).getType()).toEqual(
+    expect(zodSilk(z.array(z.string())).getGraphQLType()).toEqual(
       new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
     )
-    expect(zodSilk(z.string().array()).getType()).toEqual(
+    expect(zodSilk(z.string().array()).getGraphQLType()).toEqual(
       new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
     )
 
-    expect(zodSilk(z.array(z.string()).optional()).getType()).toEqual(
+    expect(zodSilk(z.array(z.string()).optional()).getGraphQLType()).toEqual(
       new GraphQLList(new GraphQLNonNull(GraphQLString))
     )
 
-    expect(zodSilk(z.array(z.string().nullable())).getType()).toEqual(
+    expect(zodSilk(z.array(z.string().nullable())).getGraphQLType()).toEqual(
       new GraphQLNonNull(new GraphQLList(GraphQLString))
     )
 
     expect(
-      zodSilk(z.array(z.string().nullable()).nullable()).getType()
+      zodSilk(z.array(z.string().nullable()).nullable()).getGraphQLType()
     ).toEqual(new GraphQLList(GraphQLString))
   })
   it("should handle object", () => {
@@ -72,7 +94,7 @@ describe("ZodSilk", () => {
       .describe("Cat")
 
     expect(
-      (zodSilk(Cat).getType() as GraphQLNonNull<any>).ofType
+      (zodSilk(Cat).getGraphQLType() as GraphQLNonNull<any>).ofType
     ).toBeInstanceOf(GraphQLObjectType)
 
     expect(printZodSilk(Cat)).toMatchInlineSnapshot(`
@@ -220,7 +242,7 @@ describe("ZodSilk", () => {
 })
 
 function printZodSilk(schema: Schema): string {
-  let gqlType = zodSilk(schema).getType()
+  let gqlType = zodSilk(schema).getGraphQLType()
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
 }

@@ -16,7 +16,7 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
   /**
    * GraphQL type for schema
    */
-  getType(): GraphQLOutputType
+  getGraphQLType(): GraphQLOutputType
 
   /**
    * validate and transform input to output

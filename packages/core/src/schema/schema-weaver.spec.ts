@@ -92,7 +92,7 @@ describe("SchemaWeaver", () => {
           new GraphQLObjectType({
             name: "CreateGiraffeInput",
             fields: {
-              data: { type: GiraffeInput.getType() },
+              data: { type: GiraffeInput.getGraphQLType() },
             },
           })
         ),

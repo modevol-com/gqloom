@@ -115,7 +115,7 @@ export class LoomObjectType extends GraphQLObjectType {
     field: SilkOperationOrField
   ): GraphQLFieldConfig<any, any> {
     try {
-      let outputType = this.getCacheType(field.output.getType())
+      let outputType = this.getCacheType(field.output.getGraphQLType())
 
       if (
         (field.nonNull ?? field.output.nonNull) &&

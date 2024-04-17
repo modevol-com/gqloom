@@ -28,13 +28,13 @@ export function silk<TOutput, TInput = TOutput>(
   type: GraphQLOutputType,
   parse?: (input: TInput) => MayPromise<TOutput>
 ): GraphQLSilk<TOutput, TInput> {
-  return { getType: () => type, parse }
+  return { getGraphQLType: () => type, parse }
 }
 
 export function isSilk(
   target: InputSchema<GraphQLSilk>
 ): target is GraphQLSilk {
-  return typeof target?.getType === "function"
+  return typeof target?.getGraphQLType === "function"
 }
 
 type InferScalarInternal<T extends GraphQLScalarType> =

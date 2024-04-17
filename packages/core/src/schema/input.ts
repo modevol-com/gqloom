@@ -32,7 +32,7 @@ export function inputToArgs(
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined
   if (isSilk(input)) {
-    const inputType = input.getType()
+    const inputType = input.getGraphQLType()
     if (isObjectType(inputType)) {
       return mapValue(inputType.toConfig().fields, (it) =>
         toInputFieldConfig(it)
@@ -56,8 +56,8 @@ export function ensureInputType(
   silkOrType: GraphQLType | GraphQLSilk
 ): GraphQLInputType {
   const gqlType = (() => {
-    if ("getType" in silkOrType) {
-      const ofType = silkOrType.getType()
+    if ("getGraphQLType" in silkOrType) {
+      const ofType = silkOrType.getGraphQLType()
 
       if (silkOrType.nonNull && !isNonNullType(ofType))
         return new GraphQLNonNull(ofType)

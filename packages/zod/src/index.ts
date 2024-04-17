@@ -50,7 +50,7 @@ export class ZodSilk<TSchema extends Schema>
   _types?: { input: input<TSchema>; output: output<TSchema> }
   constructor(public schema: TSchema) {}
 
-  getType() {
+  getGraphQLType() {
     return ZodSilk.toNullableGraphQLType(this.schema)
   }
 
