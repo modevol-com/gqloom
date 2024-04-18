@@ -65,33 +65,6 @@ export class YupSilk<TSchema extends Schema>
   }
 
   static toNullableGraphQLType(description: SchemaDescription) {
-    const name = description.meta?.name ?? description.label
-
-    // use existing type first
-    switch (description.type) {
-      case "object": {
-        if (!name) throw new Error("object type must have a name")
-        const existing = weaverContext.objectMap?.get(name)
-        if (existing) return nullable(existing)
-        break
-      }
-      case "union": {
-        if (!name) throw new Error("union type must have a name")
-        const existing = weaverContext.unionMap?.get(name)
-        if (existing) return nullable(existing)
-        break
-      }
-    }
-
-    if (YupSilk.isEnumType(description)) {
-      if (!name)
-        throw new Error(
-          `enum type ${description.oneOf.join("|")} must have a name`
-        )
-      const existing = weaverContext.enumMap?.get(name)
-      if (existing) return nullable(existing)
-    }
-
     const gqlType = YupSilk.toGraphQLType(description)
 
     // do not forget to keep the type
@@ -135,7 +108,10 @@ export class YupSilk<TSchema extends Schema>
       case "date":
         return GraphQLString
       case "object": {
-        const name = description.meta?.name ?? description.label ?? ""
+        const name = description.meta?.name ?? description.label
+        if (!name) throw new Error("object type must have a name")
+        const existing = weaverContext.objectMap?.get(name)
+        if (existing) return existing
         return new GraphQLObjectType({
           isTypeOf: description.meta?.isTypeOf,
           interfaces: YupSilk.ensureInterfaceTypes(
@@ -177,7 +153,10 @@ export class YupSilk<TSchema extends Schema>
 
         const innerTypes = Array.isArray(innerType) ? innerType : [innerType]
 
-        const name = description.meta?.name ?? description.label ?? ""
+        const name = description.meta?.name ?? description.label
+        if (!name) throw new Error("union type must have a name")
+        const existing = weaverContext.unionMap?.get(name)
+        if (existing) return existing
 
         const types = innerTypes.map((innerType) => {
           const gqlType = YupSilk.toNullableGraphQLType(
@@ -226,8 +205,15 @@ export class YupSilk<TSchema extends Schema>
 
   static getEnumType(description: SchemaDescription): GraphQLEnumType | null {
     if (!YupSilk.isEnumType(description)) return null
-
     const meta: GQLoomMetadata | undefined = description.meta
+
+    const name = meta?.name ?? description.label
+    if (!name)
+      throw new Error(
+        `enum type ${description.oneOf.join("|")} must have a name`
+      )
+    const existing = weaverContext.enumMap?.get(name)
+    if (existing) return existing
 
     const values: GraphQLEnumValueConfigMap = {}
 

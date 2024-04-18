@@ -3,6 +3,7 @@ import {
   createLoom,
   mapValue,
   ensureInterfaceType,
+  weaverContext,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -25,6 +26,8 @@ import {
   type GraphQLFieldConfig,
   type GraphQLInterfaceType,
   isInterfaceType,
+  isUnionType,
+  isEnumType,
 } from "graphql"
 import {
   ZodArray,
@@ -76,7 +79,18 @@ export class ZodSilk<TSchema extends Schema>
       if (isNonNullType(ofType)) return ofType
       return new GraphQLNonNull(ofType)
     }
-    return nullable(ZodSilk.toGraphQLType(schema))
+
+    const gqlType = ZodSilk.toGraphQLType(schema)
+
+    // do not forget to keep the type
+    if (isObjectType(gqlType)) {
+      weaverContext.objectMap?.set(gqlType.name, gqlType)
+    } else if (isUnionType(gqlType)) {
+      weaverContext.unionMap?.set(gqlType.name, gqlType)
+    } else if (isEnumType(gqlType)) {
+      weaverContext.enumMap?.set(gqlType.name, gqlType)
+    }
+    return nullable(gqlType)
   }
 
   static toGraphQLType(schema: Schema): GraphQLOutputType {
@@ -114,6 +128,10 @@ export class ZodSilk<TSchema extends Schema>
     if (schema instanceof ZodObject) {
       const { name, ...config } = ZodSilk.getObjectConfig(schema)
       if (!name) throw new Error("Object must have a name")
+
+      const existing = weaverContext.objectMap?.get(name)
+      if (existing) return existing
+
       return new GraphQLObjectType({
         name,
         fields: mapValue(schema.shape as ZodRawShape, (field) => {
@@ -129,6 +147,10 @@ export class ZodSilk<TSchema extends Schema>
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
       const { name, ...config } = ZodSilk.getEnumConfig(schema)
       if (!name) throw new Error("Enum must have a name")
+
+      const existing = weaverContext.enumMap?.get(name)
+      if (existing) return existing
+
       const values: GraphQLEnumValueConfigMap = {}
 
       if ("options" in schema) {
@@ -148,6 +170,10 @@ export class ZodSilk<TSchema extends Schema>
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
       const { name, ...config } = ZodSilk.getUnionConfig(schema)
       if (!name) throw new Error("Enum must have a name")
+
+      const existing = weaverContext.unionMap?.get(name)
+      if (existing) return existing
+
       const types = (schema.options as ZodTypeAny[]).map((s) => {
         const gqlType = ZodSilk.toGraphQLType(s)
         if (isObjectType(gqlType)) return gqlType

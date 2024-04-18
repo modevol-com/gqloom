@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { objectType, query, resolver, zodSilk } from "../src"
+import { field, objectType, query, resolver, zodSilk } from "../src"
 import { type Schema, z } from "zod"
 import {
   GraphQLID,
@@ -272,8 +272,40 @@ describe("ZodSilk", () => {
     expect(resolveType({ __typename: "Dog", name: "", age: 6 })).toEqual("Dog")
   })
 
-  describe.todo("should avoid duplicate", () => {
-    it.todo("should merge field from multiple resolver")
+  describe("should avoid duplicate", () => {
+    it("should merge field from multiple resolver", () => {
+      const Dog = z
+        .object({
+          name: z.string(),
+          birthday: z.string(),
+        })
+        .describe("Dog")
+
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
+        age: field(z.number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      const r2 = resolver.of(Dog, {
+        greeting: field(z.string(), (dog) => {
+          return `Hello ${dog.name}`
+        }),
+      })
+      expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+          greeting: String!
+        }"
+      `)
+    })
     it.todo("should avoid duplicate object")
     it.todo("should avoid duplicate input")
     it.todo("should avoid duplicate enum")
