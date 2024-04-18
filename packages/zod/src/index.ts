@@ -50,7 +50,7 @@ import {
   ZodLiteral,
   type ZodSchema,
 } from "zod"
-import { ZodIDKinds } from "./constants"
+import { ZodIDKinds } from "./utils"
 import {
   resolveTypeByDiscriminatedUnion,
   parseObjectConfig,
@@ -204,7 +204,7 @@ export class ZodSilk<TSchema extends Schema>
     item: GraphQLInterfaceType | ZodObject<any>
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = ZodSilk.toGraphQLType(item)
+    const gqlType = weaverContext.memo(ZodSilk.toGraphQLType(item))
 
     return ensureInterfaceType(gqlType)
   }

@@ -441,8 +441,55 @@ describe("ZodSilk", () => {
       `)
     })
 
-    it("should avoid duplicate interface", () => {})
-    it.todo("should avoid duplicate union")
+    it("should avoid duplicate interface", () => {
+      const Fruit = z.object({ color: z.string().optional() }).describe("Fruit")
+      const Orange = objectType(
+        { name: "Orange", interfaces: [Fruit] },
+        z.object({ color: z.string().optional(), flavor: z.string() })
+      )
+
+      const Apple = objectType(
+        { name: "Apple", interfaces: [Fruit] },
+        z.object({
+          color: z.string().optional(),
+          flavor: z.string().optional(),
+        })
+      )
+      const r1 = resolver({
+        apple: query(Apple.optional(), () => ({ flavor: "" })),
+        apples: query(z.array(Apple.optional()).optional(), () => []),
+        orange: query(Orange.optional(), () => ({ flavor: "" })),
+        oranges: query(z.array(Orange.nullable()), () => []),
+        mustOrange: query(Orange, () => ({ flavor: "" })),
+        mustOranges: query(z.array(Orange), () => []),
+      })
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          apple: Apple
+          apples: [Apple]
+          orange: Orange
+          oranges: [Orange]!
+          mustOrange: Orange!
+          mustOranges: [Orange!]!
+        }
+
+        type Apple implements Fruit {
+          color: String
+          flavor: String
+        }
+
+        interface Fruit {
+          color: String
+        }
+
+        type Orange implements Fruit {
+          color: String
+          flavor: String!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate union", () => {})
   })
 })
 

@@ -22,7 +22,7 @@ export interface WeaverContext {
   enumMap: Map<string, GraphQLEnumType>
   unionMap: Map<string, GraphQLUnionType>
   options: Record<string | symbol | number, any>
-  memo(gqlType: GraphQLOutputType): void
+  memo<T extends GraphQLOutputType>(gqlType: T): T
 }
 
 let ref: WeaverContext | undefined
@@ -44,6 +44,7 @@ export function initWeaverContext(): WeaverContext {
       } else if (isEnumType(gqlType)) {
         weaverContext.enumMap?.set(gqlType.name, gqlType)
       }
+      return gqlType
     },
   }
 }
@@ -76,8 +77,8 @@ export const weaverContext: Partial<
   get value() {
     return ref
   },
-  memo(gqlType: GraphQLOutputType) {
-    return ref?.memo(gqlType)
+  memo(gqlType) {
+    return ref?.memo(gqlType) ?? gqlType
   },
 }
 

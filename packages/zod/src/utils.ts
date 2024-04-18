@@ -4,7 +4,7 @@ import {
   type GraphQLFieldConfig,
   type GraphQLObjectTypeConfig,
 } from "graphql"
-import { type ZodDiscriminatedUnion, type ZodObject } from "zod"
+import { ZodStringCheck, type ZodDiscriminatedUnion, type ZodObject } from "zod"
 
 const directiveRegex = /@\w+(\(.*?\))?/g
 
@@ -59,3 +59,9 @@ export function resolveTypeByDiscriminatedUnion(
     return name
   }
 }
+export const ZodIDKinds: Set<ZodStringCheck["kind"]> = new Set([
+  "cuid",
+  "cuid2",
+  "ulid",
+  "uuid",
+])
