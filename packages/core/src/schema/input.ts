@@ -32,7 +32,8 @@ export function inputToArgs(
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined
   if (isSilk(input)) {
-    const inputType = input.getGraphQLType()
+    let inputType = input.getGraphQLType()
+    if (isNonNullType(inputType)) inputType = inputType.ofType
     if (isObjectType(inputType)) {
       return mapValue(inputType.toConfig().fields, (it) =>
         toInputFieldConfig(it)

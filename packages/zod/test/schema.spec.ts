@@ -349,9 +349,99 @@ describe("ZodSilk", () => {
         }"
       `)
     })
-    it.todo("should avoid duplicate input")
-    it.todo("should avoid duplicate enum")
-    it.todo("should avoid duplicate interface")
+    it("should avoid duplicate input", () => {
+      const Dog = z
+        .object({
+          name: z.string(),
+          birthday: z.string(),
+        })
+        .describe("Dog: Does the dog love fish?")
+
+      const DogInput = Dog.describe("DogInput")
+
+      const DataInput = z
+        .object({
+          dog: DogInput,
+        })
+        .describe("DataInput")
+
+      const r1 = resolver.of(Dog, {
+        unwrap: query(Dog, {
+          input: DogInput,
+          resolve: (data) => data,
+        }),
+        dog: query(Dog, {
+          input: { data: DogInput },
+          resolve: ({ data }) => data,
+        }),
+        dogs: query(z.array(Dog), {
+          input: {
+            data: z.array(DogInput),
+            required: z.array(DogInput),
+            names: z.array(z.string()),
+          },
+          resolve: ({ data }) => data,
+        }),
+        mustDog: query(Dog.required(), {
+          input: { data: DataInput },
+          resolve: ({ data }) => data.dog,
+        }),
+        age: field(z.number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          unwrap(name: String!, birthday: String!): Dog!
+          dog(data: DogInput!): Dog!
+          dogs(data: [DogInput!]!, required: [DogInput!]!, names: [String!]!): [Dog!]!
+          mustDog(data: DataInput!): Dog!
+        }
+
+        """Does the dog love fish?"""
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }
+
+        input DogInput {
+          name: String!
+          birthday: String!
+        }
+
+        input DataInput {
+          dog: DogInput!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate enum", () => {
+      const Fruit = z.enum(["apple", "banana", "orange"]).describe("Fruit")
+      const r1 = resolver({
+        fruit: query(Fruit.optional(), () => "apple" as const),
+        fruits: query(z.array(Fruit.optional()), () => []),
+        mustFruit: query(Fruit, () => "apple" as const),
+        mustFruits: query(z.array(Fruit), () => []),
+      })
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit]!
+          mustFruit: Fruit!
+          mustFruits: [Fruit!]!
+        }
+
+        enum Fruit {
+          apple
+          banana
+          orange
+        }"
+      `)
+    })
+
+    it("should avoid duplicate interface", () => {})
     it.todo("should avoid duplicate union")
   })
 })

@@ -57,7 +57,6 @@ export const weaverContext: Partial<WeaverContext & { value: WeaverContext }> =
     get options() {
       return ref?.options
     },
-
     get value() {
       return ref
     },

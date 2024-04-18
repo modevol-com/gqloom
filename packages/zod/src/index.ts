@@ -243,7 +243,9 @@ export class ZodSilk<TSchema extends Schema>
   ): Partial<GraphQLFieldConfig<any, any>> {
     const fromMetadata = metadataCollector.fields.get(schema)
     const fromDescription = schema.description
-      ? parseFieldConfig(schema.description)
+      ? schema instanceof ZodObject
+        ? parseObjectConfig(schema.description)
+        : parseFieldConfig(schema.description)
       : undefined
     return { ...fromMetadata, ...fromDescription }
   }
