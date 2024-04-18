@@ -3,10 +3,60 @@ import {
   type GraphQLTypeResolver,
   type GraphQLFieldConfig,
   type GraphQLObjectTypeConfig,
+  type GraphQLEnumTypeConfig,
+  type GraphQLUnionTypeConfig,
 } from "graphql"
-import { type ZodDiscriminatedUnion, type ZodObject } from "zod"
+import {
+  type ZodEnum,
+  type ZodNativeEnum,
+  type ZodDiscriminatedUnion,
+  type ZodObject,
+  type ZodUnion,
+  type ZodSchema,
+} from "zod"
+import { metadataCollector } from "./metadata-collector"
 
 const directiveRegex = /@\w+(\(.*?\))?/g
+
+export function getObjectConfig(
+  schema: ZodObject<any>
+): Partial<GraphQLObjectTypeConfig<any, any>> {
+  const fromMetadata = metadataCollector.objects.get(schema)
+  const fromDescription = schema.description
+    ? parseObjectConfig(schema.description)
+    : undefined
+  return { ...fromMetadata, ...fromDescription }
+}
+
+export function getEnumConfig(
+  schema: ZodEnum<any> | ZodNativeEnum<any>
+): Partial<GraphQLEnumTypeConfig> {
+  const fromMetadata = metadataCollector.enums.get(schema)
+  const fromDescription = schema.description
+    ? parseObjectConfig(schema.description)
+    : undefined
+  return { ...fromMetadata, ...fromDescription }
+}
+
+export function getUnionConfig(
+  schema: ZodDiscriminatedUnion<any, any> | ZodUnion<any>
+): Partial<GraphQLUnionTypeConfig<any, any>> {
+  const fromMetadata = metadataCollector.unions.get(schema)
+  const fromDescription = schema.description
+    ? parseObjectConfig(schema.description)
+    : undefined
+  return { ...fromMetadata, ...fromDescription }
+}
+
+export function getFieldConfig(
+  schema: ZodSchema
+): Partial<GraphQLFieldConfig<any, any>> {
+  const fromMetadata = metadataCollector.fields.get(schema)
+  const fromDescription = schema.description
+    ? parseObjectConfig(schema.description)
+    : undefined
+  return { ...fromMetadata, ...fromDescription }
+}
 
 export function parseObjectConfig(
   input: string

@@ -39,8 +39,10 @@ import {
 } from "zod"
 import { ZodIDKinds } from "./constants"
 import {
-  parseFieldConfig,
-  parseObjectConfig,
+  getEnumConfig,
+  getObjectConfig,
+  getUnionConfig,
+  getFieldConfig,
   resolveTypeByDiscriminatedUnion,
 } from "./utils"
 
@@ -97,22 +99,23 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodObject) {
-      if (!schema.description) throw new Error("Object must have a name")
-      const configFromDescription = parseObjectConfig(schema.description)
+      const { name, ...config } = getObjectConfig(schema)
+      if (!name) throw new Error("Object must have a name")
       return new GraphQLObjectType({
-        ...configFromDescription,
+        name,
         fields: mapValue(schema.shape as ZodRawShape, (field) => {
           return {
             type: ZodSilk.toNullableGraphQLType(field),
-            ...parseFieldConfig(field.description),
+            ...getFieldConfig(field),
           }
         }),
+        ...config,
       })
     }
 
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
-      if (!schema.description) throw new Error("Enum must have a name")
-      const { name, description } = parseObjectConfig(schema.description)
+      const { name, ...config } = getEnumConfig(schema)
+      if (!name) throw new Error("Enum must have a name")
       const values: GraphQLEnumValueConfigMap = {}
 
       if ("options" in schema) {
@@ -126,11 +129,12 @@ export class ZodSilk<TSchema extends Schema>
         })
       }
 
-      return new GraphQLEnumType({ name, description, values })
+      return new GraphQLEnumType({ name, values, ...config })
     }
 
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
-      if (!schema.description) throw new Error("Union must have a name")
+      const { name, ...config } = getUnionConfig(schema)
+      if (!name) throw new Error("Enum must have a name")
       const types = (schema.options as ZodTypeAny[]).map((s) => {
         const gqlType = ZodSilk.toGraphQLType(s)
         if (isObjectType(gqlType)) return gqlType
@@ -145,7 +149,8 @@ export class ZodSilk<TSchema extends Schema>
             ? resolveTypeByDiscriminatedUnion(schema)
             : undefined,
         types,
-        ...parseObjectConfig(schema.description),
+        name,
+        ...config,
       })
     }
 
