@@ -489,7 +489,37 @@ describe("ZodSilk", () => {
       `)
     })
 
-    it("should avoid duplicate union", () => {})
+    it("should avoid duplicate union", () => {
+      const Apple = z.object({ flavor: z.string() }).describe("Apple")
+      const Orange = z.object({ color: z.string() }).describe("Orange")
+      const Fruit = z.union([Apple, Orange]).describe("Fruit")
+
+      const r1 = resolver({
+        fruit: query(Fruit.optional(), () => ({ flavor: "" })),
+        fruits: query(z.array(Fruit.optional()), () => []),
+        mustFruit: query(Fruit, () => ({ flavor: "" })),
+        mustFruits: query(z.array(Fruit), () => []),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit]!
+          mustFruit: Fruit!
+          mustFruits: [Fruit!]!
+        }
+
+        union Fruit = Apple | Orange
+
+        type Apple {
+          flavor: String!
+        }
+
+        type Orange {
+          color: String!
+        }"
+      `)
+    })
   })
 })
 
