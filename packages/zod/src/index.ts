@@ -1,4 +1,9 @@
-import { type GraphQLSilk, createLoom, mapValue } from "@gqloom/core"
+import {
+  type GraphQLSilk,
+  createLoom,
+  mapValue,
+  ensureInterfaceType,
+} from "@gqloom/core"
 import {
   type GraphQLOutputType,
   GraphQLString,
@@ -14,6 +19,12 @@ import {
   type GraphQLEnumValueConfigMap,
   GraphQLUnionType,
   isObjectType,
+  type GraphQLObjectTypeConfig,
+  type GraphQLEnumTypeConfig,
+  type GraphQLUnionTypeConfig,
+  type GraphQLFieldConfig,
+  type GraphQLInterfaceType,
+  isInterfaceType,
 } from "graphql"
 import {
   ZodArray,
@@ -36,15 +47,17 @@ import {
   type ZodTypeAny,
   ZodDiscriminatedUnion,
   ZodLiteral,
+  type ZodSchema,
 } from "zod"
 import { ZodIDKinds } from "./constants"
 import {
-  getEnumConfig,
-  getObjectConfig,
-  getUnionConfig,
-  getFieldConfig,
   resolveTypeByDiscriminatedUnion,
+  parseObjectConfig,
+  parseFieldConfig,
 } from "./utils"
+import { metadataCollector } from "./metadata-collector"
+
+export * from "./metadata-collector"
 
 export class ZodSilk<TSchema extends Schema>
   implements GraphQLSilk<output<TSchema>, input<TSchema>>
@@ -99,14 +112,14 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodObject) {
-      const { name, ...config } = getObjectConfig(schema)
+      const { name, ...config } = ZodSilk.getObjectConfig(schema)
       if (!name) throw new Error("Object must have a name")
       return new GraphQLObjectType({
         name,
         fields: mapValue(schema.shape as ZodRawShape, (field) => {
           return {
             type: ZodSilk.toNullableGraphQLType(field),
-            ...getFieldConfig(field),
+            ...ZodSilk.getFieldConfig(field),
           }
         }),
         ...config,
@@ -114,7 +127,7 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
-      const { name, ...config } = getEnumConfig(schema)
+      const { name, ...config } = ZodSilk.getEnumConfig(schema)
       if (!name) throw new Error("Enum must have a name")
       const values: GraphQLEnumValueConfigMap = {}
 
@@ -133,7 +146,7 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
-      const { name, ...config } = getUnionConfig(schema)
+      const { name, ...config } = ZodSilk.getUnionConfig(schema)
       if (!name) throw new Error("Enum must have a name")
       const types = (schema.options as ZodTypeAny[]).map((s) => {
         const gqlType = ZodSilk.toGraphQLType(s)
@@ -155,6 +168,58 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     throw new Error(`zod type ${schema.constructor.name} is not supported`)
+  }
+
+  protected static getObjectConfig(
+    schema: ZodObject<any>
+  ): Partial<GraphQLObjectTypeConfig<any, any>> {
+    const fromMetadata = metadataCollector.objects.get(schema)
+    const fromDescription = schema.description
+      ? parseObjectConfig(schema.description)
+      : undefined
+    const interfaces = fromMetadata?.interfaces?.map(
+      ZodSilk.ensureInterfaceType
+    )
+    return { ...fromMetadata, ...fromDescription, interfaces }
+  }
+
+  protected static ensureInterfaceType(
+    item: GraphQLInterfaceType | ZodObject<any>
+  ): GraphQLInterfaceType {
+    if (isInterfaceType(item)) return item
+    const gqlType = ZodSilk.toGraphQLType(item)
+
+    return ensureInterfaceType(gqlType)
+  }
+
+  protected static getEnumConfig(
+    schema: ZodEnum<any> | ZodNativeEnum<any>
+  ): Partial<GraphQLEnumTypeConfig> {
+    const fromMetadata = metadataCollector.enums.get(schema)
+    const fromDescription = schema.description
+      ? parseObjectConfig(schema.description)
+      : undefined
+    return { ...fromMetadata, ...fromDescription }
+  }
+
+  protected static getUnionConfig(
+    schema: ZodDiscriminatedUnion<any, any> | ZodUnion<any>
+  ): Partial<GraphQLUnionTypeConfig<any, any>> {
+    const fromMetadata = metadataCollector.unions.get(schema)
+    const fromDescription = schema.description
+      ? parseObjectConfig(schema.description)
+      : undefined
+    return { ...fromMetadata, ...fromDescription }
+  }
+
+  protected static getFieldConfig(
+    schema: ZodSchema
+  ): Partial<GraphQLFieldConfig<any, any>> {
+    const fromMetadata = metadataCollector.fields.get(schema)
+    const fromDescription = schema.description
+      ? parseFieldConfig(schema.description)
+      : undefined
+    return { ...fromMetadata, ...fromDescription }
   }
 
   parse(input: input<TSchema>): Promise<output<TSchema>> {

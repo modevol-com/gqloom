@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { query, resolver, zodSilk } from "../src"
+import { objectType, query, resolver, zodSilk } from "../src"
 import { type Schema, z } from "zod"
 import {
   GraphQLID,
@@ -130,7 +130,48 @@ describe("ZodSilk", () => {
       }"
     `)
   })
-  it.todo("should handle interfere")
+
+  it("should handle interfere", () => {
+    const Fruit = z
+      .object({
+        name: z.string(),
+        color: z.string(),
+        prize: z.number(),
+      })
+      .describe("Fruit: Some fruits you might like")
+
+    const Orange = objectType(
+      { name: "Origin", interfaces: [Fruit] },
+      z.object({
+        name: z.string(),
+        color: z.string(),
+        prize: z.number(),
+      })
+    )
+
+    const r = resolver({
+      orange: query(Orange, () => 0 as any),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        orange: Origin!
+      }
+
+      type Origin implements Fruit {
+        name: String!
+        color: String!
+        prize: Float!
+      }
+
+      """Some fruits you might like"""
+      interface Fruit {
+        name: String!
+        color: String!
+        prize: Float!
+      }"
+    `)
+  })
 
   it("should handle union", () => {
     const Cat = z

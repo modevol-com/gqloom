@@ -3,6 +3,7 @@ import {
   type GraphQLEnumTypeConfig,
   type GraphQLFieldConfig,
   type GraphQLObjectTypeConfig,
+  type GraphQLInterfaceType,
 } from "graphql"
 import {
   type ZodSchema,
@@ -11,18 +12,24 @@ import {
   type ZodNativeEnum,
   type ZodUnion,
   type ZodDiscriminatedUnion,
+  type ZodRawShape,
 } from "zod"
 
-type ObjectConfig = Omit<GraphQLObjectTypeConfig<any, any>, "fields"> &
-  Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields">>
+interface ObjectConfig
+  extends Omit<GraphQLObjectTypeConfig<any, any>, "fields" | "interfaces">,
+    Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields">> {
+  interfaces?: (ZodObject<ZodRawShape> | GraphQLInterfaceType)[]
+}
 
-type FieldConfig = Partial<GraphQLFieldConfig<any, any>>
+interface FieldConfig extends Partial<GraphQLFieldConfig<any, any>> {}
 
-type EnumConfig = Omit<GraphQLEnumTypeConfig, "values"> &
-  Partial<Pick<GraphQLEnumTypeConfig, "values">>
+interface EnumConfig
+  extends Omit<GraphQLEnumTypeConfig, "values">,
+    Partial<Pick<GraphQLEnumTypeConfig, "values">> {}
 
-type UnionConfig = Omit<GraphQLUnionTypeConfig<any, any>, "types"> &
-  Partial<Pick<GraphQLUnionTypeConfig<any, any>, "types">>
+interface UnionConfig
+  extends Omit<GraphQLUnionTypeConfig<any, any>, "types">,
+    Partial<Pick<GraphQLUnionTypeConfig<any, any>, "types">> {}
 
 export function objectType<T extends ZodObject<any>>(
   config: ObjectConfig,
