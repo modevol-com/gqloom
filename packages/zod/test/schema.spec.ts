@@ -306,7 +306,49 @@ describe("ZodSilk", () => {
         }"
       `)
     })
-    it.todo("should avoid duplicate object")
+    it("should avoid duplicate object", () => {
+      const Dog = z
+        .object({
+          name: z.string(),
+          birthday: z.string(),
+        })
+        .describe("Dog")
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog.optional(), () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        dogs: query(z.array(Dog.nullable()), {
+          resolve: () => [
+            { name: "Fido", birthday: "2012-12-12" },
+            { name: "Rover", birthday: "2012-12-12" },
+          ],
+        }),
+        mustDog: query(Dog, () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        mustDogs: query(z.array(Dog), () => []),
+        age: field(z.number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog
+          dogs: [Dog]!
+          mustDog: Dog!
+          mustDogs: [Dog!]!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }"
+      `)
+    })
     it.todo("should avoid duplicate input")
     it.todo("should avoid duplicate enum")
     it.todo("should avoid duplicate interface")
