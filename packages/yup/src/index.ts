@@ -21,9 +21,7 @@ import {
   type GraphQLInterfaceType,
   isObjectType,
   GraphQLUnionType,
-  isUnionType,
   isNonNullType,
-  isEnumType,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -67,14 +65,7 @@ export class YupSilk<TSchema extends Schema>
   static toNullableGraphQLType(description: SchemaDescription) {
     const gqlType = YupSilk.toGraphQLType(description)
 
-    // do not forget to keep the type
-    if (isObjectType(gqlType)) {
-      weaverContext.objectMap?.set(gqlType.name, gqlType)
-    } else if (isUnionType(gqlType)) {
-      weaverContext.unionMap?.set(gqlType.name, gqlType)
-    } else if (isEnumType(gqlType)) {
-      weaverContext.enumMap?.set(gqlType.name, gqlType)
-    }
+    weaverContext.memo(gqlType)
     return nullable(gqlType)
 
     function nullable(ofType: GraphQLOutputType) {

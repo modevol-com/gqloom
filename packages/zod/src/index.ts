@@ -26,8 +26,6 @@ import {
   type GraphQLFieldConfig,
   type GraphQLInterfaceType,
   isInterfaceType,
-  isUnionType,
-  isEnumType,
 } from "graphql"
 import {
   ZodArray,
@@ -82,14 +80,7 @@ export class ZodSilk<TSchema extends Schema>
 
     const gqlType = ZodSilk.toGraphQLType(schema)
 
-    // do not forget to keep the type
-    if (isObjectType(gqlType)) {
-      weaverContext.objectMap?.set(gqlType.name, gqlType)
-    } else if (isUnionType(gqlType)) {
-      weaverContext.unionMap?.set(gqlType.name, gqlType)
-    } else if (isEnumType(gqlType)) {
-      weaverContext.enumMap?.set(gqlType.name, gqlType)
-    }
+    weaverContext.memo(gqlType)
     return nullable(gqlType)
   }
 
