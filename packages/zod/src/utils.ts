@@ -4,7 +4,11 @@ import {
   type GraphQLFieldConfig,
   type GraphQLObjectTypeConfig,
 } from "graphql"
-import { ZodStringCheck, type ZodDiscriminatedUnion, type ZodObject } from "zod"
+import {
+  type ZodStringCheck,
+  type ZodDiscriminatedUnion,
+  type ZodObject,
+} from "zod"
 
 const directiveRegex = /@\w+(\(.*?\))?/g
 
