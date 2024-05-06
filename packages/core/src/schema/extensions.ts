@@ -1,28 +1,30 @@
 import { type GraphQLFieldExtensions } from "graphql"
 
-export const GQLOOM_DIRECTIVES_KEY = "gqloom"
+export const GQLOOM_EXTENSIONS_KEY = "gqloom"
+
+export interface GQLoomExtension {
+  directives?: string[]
+  defaultValue?: any
+}
+
+export function gqloomExtension(extension: GQLoomExtension) {
+  return { [GQLOOM_EXTENSIONS_KEY]: extension }
+}
 
 export function directives(...directives: string[]) {
   if (!directives.length) return undefined
-  return { [GQLOOM_DIRECTIVES_KEY]: directives }
+  return gqloomExtension({ directives })
 }
 
-export function extractDirectives({
+export function extractGqloomExtension({
   extensions,
 }: {
   extensions?:
     | Readonly<GraphQLFieldExtensions<any, any, any>>
     | null
     | undefined
-}): string[] | undefined {
-  const directives = extensions?.[GQLOOM_DIRECTIVES_KEY] as
-    | string[]
-    | string
-    | undefined
-
-  if (typeof directives === "string") {
-    return [directives]
-  }
-
-  return directives
+}): GQLoomExtension {
+  return (
+    (extensions?.[GQLOOM_EXTENSIONS_KEY] as GQLoomExtension | undefined) ?? {}
+  )
 }

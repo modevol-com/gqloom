@@ -5,7 +5,7 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from "graphql"
-import { directives } from "./extensions"
+import { gqloomExtension } from "./extensions"
 import { SchemaWeaver } from "./schema-weaver"
 import { loom, silk } from "../resolver"
 import { ensureInterfaceType } from "./interface"
@@ -20,7 +20,7 @@ describe("directive", () => {
     fields: {
       color: { type: GraphQLString },
     },
-    extensions: directives('@loom(value: "woo")'),
+    extensions: gqloomExtension({ directives: ['@loom(value: "woo")'] }),
   })
 
   const Cat = new GraphQLObjectType({
@@ -28,11 +28,11 @@ describe("directive", () => {
     fields: {
       color: {
         type: GraphQLString,
-        extensions: directives('@loom(value: "woo")'),
+        extensions: gqloomExtension({ directives: ['@loom(value: "woo")'] }),
       },
     },
     interfaces: [Animal].map((it) => ensureInterfaceType(it)),
-    extensions: directives('@loom(value: "woo")'),
+    extensions: gqloomExtension({ directives: ['@loom(value: "woo")'] }),
   })
 
   const CatInput = new GraphQLObjectType({
@@ -40,10 +40,10 @@ describe("directive", () => {
     fields: {
       color: {
         type: GraphQLString,
-        extensions: directives('@loom(value: "woo")'),
+        extensions: gqloomExtension({ directives: ['@loom(value: "woo")'] }),
       },
     },
-    extensions: directives('@loom(value: "woo")'),
+    extensions: gqloomExtension({ directives: ['@loom(value: "woo")'] }),
   })
 
   interface IFruit {

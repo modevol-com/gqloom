@@ -25,7 +25,7 @@ import {
   ensureInputObjectNode,
   ensureInputValueNode,
 } from "./definition-node"
-import { extractDirectives } from "./extensions"
+import { extractGqloomExtension } from "./extensions"
 
 export function inputToArgs(
   input: InputSchema<GraphQLSilk>
@@ -116,12 +116,19 @@ function withDirective(
   gqlType: GraphQLInputObjectType
 ): GraphQLInputObjectType {
   gqlType.astNode ??= ensureInputObjectNode(
-    createObjectTypeNode(gqlType.name, extractDirectives(gqlType))
+    createObjectTypeNode(
+      gqlType.name,
+      extractGqloomExtension(gqlType).directives
+    )
   )
 
   Object.entries(gqlType.getFields()).forEach(([name, field]) => {
     field.astNode ??= ensureInputValueNode(
-      createFieldNode(name, field.type, extractDirectives(field))
+      createFieldNode(
+        name,
+        field.type,
+        extractGqloomExtension(field).directives
+      )
     )
   })
 

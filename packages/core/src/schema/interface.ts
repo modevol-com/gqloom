@@ -11,7 +11,7 @@ import {
   createObjectTypeNode,
   ensureInterfaceNode,
 } from "./definition-node"
-import { extractDirectives } from "./extensions"
+import { extractGqloomExtension } from "./extensions"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,
@@ -36,14 +36,17 @@ export function ensureInterfaceType(
 
 function withDirective(gqlType: GraphQLInterfaceType): GraphQLInterfaceType {
   gqlType.astNode ??= ensureInterfaceNode(
-    createObjectTypeNode(gqlType.name, extractDirectives(gqlType))
+    createObjectTypeNode(
+      gqlType.name,
+      extractGqloomExtension(gqlType).directives
+    )
   )
 
   Object.entries(gqlType.getFields()).forEach(([name, field]) => {
     field.astNode ??= createFieldNode(
       name,
       field.type,
-      extractDirectives(field)
+      extractGqloomExtension(field).directives
     )
   })
 

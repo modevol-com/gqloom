@@ -32,7 +32,7 @@ import {
 import { inputToArgs } from "./input"
 import { type ResolvingOptions, defaultSubscriptionResolve } from "../resolver"
 import { createFieldNode, createObjectTypeNode } from "./definition-node"
-import { extractDirectives } from "./extensions"
+import { extractGqloomExtension } from "./extensions"
 
 export class LoomObjectType extends GraphQLObjectType {
   public extraFields = new Map<string, SilkOperationOrField>()
@@ -65,7 +65,7 @@ export class LoomObjectType extends GraphQLObjectType {
     })()
 
     // AST node has to be manually created in order to define directives
-    const directives = extractDirectives(config)
+    const { directives } = extractGqloomExtension(config)
     super({ ...config, astNode: createObjectTypeNode(config.name, directives) })
 
     this.resolverOptions = options.resolverOptions
@@ -85,7 +85,11 @@ export class LoomObjectType extends GraphQLObjectType {
       super.getFields(),
       (f, name) => ({
         ...f,
-        astNode: createFieldNode(name, f.type, extractDirectives(f)),
+        astNode: createFieldNode(
+          name,
+          f.type,
+          extractGqloomExtension(f).directives
+        ),
       })
     )
     const extraField = provideWeaverContext(
@@ -125,7 +129,7 @@ export class LoomObjectType extends GraphQLObjectType {
       }
 
       // AST node has to be manually created in order to define directives
-      const directives = extractDirectives(field)
+      const { directives } = extractGqloomExtension(field)
 
       return {
         ...extract(field),
