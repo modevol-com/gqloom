@@ -1,4 +1,5 @@
 import { type GraphQLFieldExtensions } from "graphql"
+import { deepMerge } from "../utils"
 
 export const GQLOOM_EXTENSIONS_KEY = "gqloom"
 
@@ -27,4 +28,14 @@ export function extractGqloomExtension({
   return (
     (extensions?.[GQLOOM_EXTENSIONS_KEY] as GQLoomExtension | undefined) ?? {}
   )
+}
+
+export function mergeExtensions(
+  ...extensionsList: (
+    | Readonly<GraphQLFieldExtensions<any, any, any>>
+    | null
+    | undefined
+  )[]
+): GraphQLFieldExtensions<any, any, any> {
+  return deepMerge(...extensionsList)
 }

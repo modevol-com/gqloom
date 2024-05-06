@@ -4,6 +4,7 @@ import {
   mapValue,
   ensureInterfaceType,
   weaverContext,
+  mergeExtensions,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -197,7 +198,15 @@ export class ZodSilk<TSchema extends Schema>
     const interfaces = fromMetadata?.interfaces?.map(
       ZodSilk.ensureInterfaceType
     )
-    return { ...fromMetadata, ...fromDescription, interfaces }
+    return {
+      ...fromMetadata,
+      ...fromDescription,
+      interfaces,
+      extensions: mergeExtensions(
+        fromMetadata?.extensions,
+        fromDescription?.extensions
+      ),
+    }
   }
 
   protected static ensureInterfaceType(
@@ -216,7 +225,14 @@ export class ZodSilk<TSchema extends Schema>
     const fromDescription = schema.description
       ? parseObjectConfig(schema.description)
       : undefined
-    return { ...fromMetadata, ...fromDescription }
+    return {
+      ...fromMetadata,
+      ...fromDescription,
+      extensions: mergeExtensions(
+        fromMetadata?.extensions,
+        fromDescription?.extensions
+      ),
+    }
   }
 
   protected static getUnionConfig(
@@ -226,7 +242,14 @@ export class ZodSilk<TSchema extends Schema>
     const fromDescription = schema.description
       ? parseObjectConfig(schema.description)
       : undefined
-    return { ...fromMetadata, ...fromDescription }
+    return {
+      ...fromMetadata,
+      ...fromDescription,
+      extensions: mergeExtensions(
+        fromMetadata?.extensions,
+        fromDescription?.extensions
+      ),
+    }
   }
 
   protected static getFieldConfig(
@@ -238,7 +261,14 @@ export class ZodSilk<TSchema extends Schema>
         ? parseObjectConfig(schema.description)
         : parseFieldConfig(schema.description)
       : undefined
-    return { ...fromMetadata, ...fromDescription }
+    return {
+      ...fromMetadata,
+      ...fromDescription,
+      extensions: mergeExtensions(
+        fromMetadata?.extensions,
+        fromDescription?.extensions
+      ),
+    }
   }
 
   parse(input: input<TSchema>): Promise<output<TSchema>> {

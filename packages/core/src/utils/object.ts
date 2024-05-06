@@ -37,6 +37,32 @@ export function notNullish<T>(x: T | undefined | null): x is T {
   return x != null
 }
 
+export function deepMerge<T extends Record<string, any>>(
+  ...objects: (T | null | undefined)[]
+): T {
+  const result = {} as any
+
+  for (const obj of objects) {
+    if (obj == null) continue
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== null && typeof value === "object") {
+        if (Array.isArray(value)) {
+          if (!Array.isArray(result[key])) {
+            result[key] = []
+          }
+          result[key] = [...result[key], ...value]
+        } else {
+          result[key] = deepMerge(result[key] as any, value)
+        }
+      } else {
+        result[key] = value
+      }
+    }
+  }
+
+  return result
+}
+
 type Maybe<T> = null | undefined | T
 
 type ReadOnlyObjMapLike<T> = ReadOnlyObjMap<T> | { readonly [key: string]: T }
