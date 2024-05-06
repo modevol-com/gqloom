@@ -28,6 +28,7 @@ import {
   GraphQLList,
   type GraphQLNamedType,
   printSchema,
+  GraphQLScalarType,
 } from "graphql"
 import { SchemaWeaver, type SilkResolver } from "@gqloom/core"
 
@@ -35,12 +36,22 @@ declare module "yup" {
   export interface CustomSchemaMetadata extends GQLoomMetadata {}
 }
 
+const GraphQLDate = new GraphQLScalarType({
+  name: "Date",
+})
+
 describe("YupSilk", () => {
   it("should handle scalar", () => {
     expect(yupSilk(string()).getGraphQLType()).toEqual(GraphQLString)
     expect(yupSilk(boolean()).getGraphQLType()).toEqual(GraphQLBoolean)
     expect(yupSilk(number()).getGraphQLType()).toEqual(GraphQLFloat)
     expect(yupSilk(number().integer()).getGraphQLType()).toEqual(GraphQLInt)
+  })
+
+  it("should handle custom type", () => {
+    expect(
+      yupSilk(date().meta({ type: () => GraphQLDate })).getGraphQLType()
+    ).toEqual(GraphQLDate)
   })
 
   it("should handle non null", () => {
@@ -59,6 +70,14 @@ describe("YupSilk", () => {
     const i = yupSilk(number().required().integer()).getGraphQLType()
     expect(i).toBeInstanceOf(GraphQLNonNull)
     expect(i).toMatchObject({ ofType: GraphQLInt })
+
+    const d = yupSilk(
+      date()
+        .meta({ type: () => GraphQLDate })
+        .required()
+    ).getGraphQLType()
+    expect(d).toBeInstanceOf(GraphQLNonNull)
+    expect(d).toMatchObject({ ofType: GraphQLDate })
   })
 
   it("should handle array", () => {
@@ -77,12 +96,20 @@ describe("YupSilk", () => {
     const i = yupSilk(array(number().integer())).getGraphQLType()
     expect(i).toBeInstanceOf(GraphQLList)
     expect(i).toMatchObject({ ofType: GraphQLInt })
+
+    const d = yupSilk(
+      array(date().meta({ type: () => GraphQLDate }))
+    ).getGraphQLType()
+    expect(d).toBeInstanceOf(GraphQLList)
+    expect(d).toMatchObject({ ofType: GraphQLDate })
   })
 
   it("should handle object", () => {
     const Giraffe = object({
       name: string().required(),
-      birthday: date().required(),
+      birthday: date()
+        .meta({ type: () => GraphQLDate })
+        .required(),
       height: number().meta({
         description: "The giraffe's height in meters",
       }),
@@ -98,7 +125,7 @@ describe("YupSilk", () => {
       """"A giraffe"""
       type Giraffe {
         name: String!
-        birthday: String!
+        birthday: Date!
 
         """The giraffe's height in meters"""
         height: Float

@@ -76,6 +76,9 @@ export class YupSilk<TSchema extends Schema>
   }
 
   static toGraphQLType(description: SchemaDescription): GraphQLOutputType {
+    const customType = description.meta?.type
+    if (customType) return customType()
+
     const presetType = YupSilk.options?.yupPresetGraphQLType?.(description)
     if (presetType) return presetType
 

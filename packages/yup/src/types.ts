@@ -17,6 +17,8 @@ export interface GQLoomMetadata {
 
   extension?: Record<string | number | symbol, any>
 
+  type?: () => GraphQLOutputType
+
   /**
    * For `object`
    *
