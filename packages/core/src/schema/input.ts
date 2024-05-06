@@ -25,7 +25,7 @@ import {
   ensureInputObjectNode,
   ensureInputValueNode,
 } from "./definition-node"
-import { extractDirectives } from "./directive"
+import { extractDirectives } from "./extensions"
 
 export function inputToArgs(
   input: InputSchema<GraphQLSilk>

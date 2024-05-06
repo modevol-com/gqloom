@@ -5,7 +5,7 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from "graphql"
-import { directives } from "./directive"
+import { directives } from "./extensions"
 import { SchemaWeaver } from "./schema-weaver"
 import { loom, silk } from "../resolver"
 import { ensureInterfaceType } from "./interface"

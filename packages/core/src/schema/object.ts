@@ -32,7 +32,7 @@ import {
 import { inputToArgs } from "./input"
 import { type ResolvingOptions, defaultSubscriptionResolve } from "../resolver"
 import { createFieldNode, createObjectTypeNode } from "./definition-node"
-import { extractDirectives } from "./directive"
+import { extractDirectives } from "./extensions"
 
 export class LoomObjectType extends GraphQLObjectType {
   public extraFields = new Map<string, SilkOperationOrField>()

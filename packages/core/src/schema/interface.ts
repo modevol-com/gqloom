@@ -11,7 +11,7 @@ import {
   createObjectTypeNode,
   ensureInterfaceNode,
 } from "./definition-node"
-import { extractDirectives } from "./directive"
+import { extractDirectives } from "./extensions"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,
