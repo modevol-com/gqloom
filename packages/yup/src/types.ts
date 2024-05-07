@@ -4,6 +4,8 @@ import {
   type GraphQLObjectTypeConfig,
   type GraphQLInterfaceTypeConfig,
   type GraphQLOutputType,
+  type GraphQLObjectTypeExtensions,
+  type GraphQLFieldExtensions,
 } from "graphql"
 import { type SchemaDescription, type Schema } from "yup"
 
@@ -15,7 +17,9 @@ export interface GQLoomMetadata {
 
   interfaces?: ThunkReadonlyArray<Schema>
 
-  extension?: Record<string | number | symbol, any>
+  extension?:
+    | GraphQLObjectTypeExtensions
+    | GraphQLFieldExtensions<any, any, any>
 
   type?: () => GraphQLOutputType
 

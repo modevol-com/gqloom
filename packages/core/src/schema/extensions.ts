@@ -1,4 +1,7 @@
-import { type GraphQLFieldExtensions } from "graphql"
+import {
+  type GraphQLObjectTypeExtensions,
+  type GraphQLFieldExtensions,
+} from "graphql"
 import { deepMerge } from "../utils"
 
 export interface GQLoomExtensions {
@@ -23,7 +26,9 @@ export function extractGqloomExtension({
   extensions,
 }: {
   extensions?:
-    | Readonly<GraphQLFieldExtensions<any, any, any>>
+    | Readonly<
+        GraphQLFieldExtensions<any, any, any> | GraphQLObjectTypeExtensions
+      >
     | null
     | undefined
 }): GQLoomExtension {
@@ -32,7 +37,9 @@ export function extractGqloomExtension({
 
 export function mergeExtensions(
   ...extensionsList: (
-    | Readonly<GraphQLFieldExtensions<any, any, any>>
+    | Readonly<
+        GraphQLFieldExtensions<any, any, any> | GraphQLObjectTypeExtensions
+      >
     | null
     | undefined
   )[]

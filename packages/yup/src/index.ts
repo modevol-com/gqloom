@@ -4,6 +4,7 @@ import {
   mapValue,
   ensureInterfaceType,
   weaverContext,
+  mergeExtensions,
 } from "@gqloom/core"
 import {
   GraphQLString,
@@ -37,7 +38,7 @@ import { type YupWeaverOptions, type GQLoomMetadata } from "./types"
 export * from "./types"
 export * from "./union"
 
-export class YupSilk<TSchema extends Schema>
+export class YupSilk<TSchema extends Schema<any, any, any, any>>
   implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
 {
   _types?: { input: InferType<TSchema>; output: InferType<TSchema> }
@@ -112,12 +113,20 @@ export class YupSilk<TSchema extends Schema>
             description.meta?.interfaces
           ),
           name,
+          extensions: mergeExtensions(
+            { gqloom: { defaultValue: description.default } },
+            description.meta?.extension
+          ),
           description: description.meta?.description,
           fields: mapValue(
             (description as SchemaObjectDescription).fields,
             (fieldDescription) => {
               const d = YupSilk.ensureSchemaDescription(fieldDescription)
               return {
+                extensions: mergeExtensions(
+                  { gqloom: { defaultValue: d.default } },
+                  d.meta?.extension
+                ),
                 type: YupSilk.toNullableGraphQLType(d),
                 description: d?.meta?.description,
               } as GraphQLFieldConfig<any, any>
@@ -237,7 +246,7 @@ export class YupSilk<TSchema extends Schema>
 
 export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
 
-export function yupSilk<TSchema extends Schema>(
+export function yupSilk<TSchema extends Schema<any, any, any, any>>(
   schema: TSchema
 ): YupSilk<TSchema> {
   return new YupSilk(schema)

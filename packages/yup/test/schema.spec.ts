@@ -29,11 +29,23 @@ import {
   type GraphQLNamedType,
   printSchema,
   GraphQLScalarType,
+  type GraphQLObjectType,
 } from "graphql"
-import { SchemaWeaver, type SilkResolver } from "@gqloom/core"
+import {
+  type GQLoomExtensions,
+  SchemaWeaver,
+  type SilkResolver,
+} from "@gqloom/core"
 
 declare module "yup" {
   export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+
+declare module "graphql" {
+  export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
+
+  export interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any>
+    extends GQLoomExtensions {}
 }
 
 const GraphQLDate = new GraphQLScalarType({
@@ -46,6 +58,39 @@ describe("YupSilk", () => {
     expect(yupSilk(boolean()).getGraphQLType()).toEqual(GraphQLBoolean)
     expect(yupSilk(number()).getGraphQLType()).toEqual(GraphQLFloat)
     expect(yupSilk(number().integer()).getGraphQLType()).toEqual(GraphQLInt)
+  })
+
+  it("should keep default value in extensions", () => {
+    const objectType = object({
+      foo: string().optional().default("foo"),
+    }).label("ObjectType")
+
+    const objectSilk = yupSilk(objectType)
+    const objectGqlType = objectSilk.getGraphQLType() as GraphQLObjectType
+
+    expect(objectGqlType.getFields().foo).toMatchObject({
+      extensions: {
+        gqloom: { defaultValue: "foo" },
+      },
+    })
+
+    const fooGetter = () => "foo"
+
+    const objectE1Type = object({
+      foo: string()
+        .optional()
+        .default("foo")
+        .meta({ extension: { gqloom: { defaultValue: fooGetter } } }),
+    }).label("ObjectType")
+
+    const objectE1Silk = yupSilk(objectE1Type)
+    const objectE1GqlType = objectE1Silk.getGraphQLType() as GraphQLObjectType
+
+    expect(objectE1GqlType.getFields().foo).toMatchObject({
+      extensions: {
+        gqloom: { defaultValue: fooGetter },
+      },
+    })
   })
 
   it("should handle custom type", () => {
