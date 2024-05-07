@@ -5,6 +5,7 @@ import {
   ensureInterfaceType,
   weaverContext,
   mergeExtensions,
+  type GQLoomExtensions,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -50,6 +51,7 @@ import {
   ZodDiscriminatedUnion,
   ZodLiteral,
   type ZodSchema,
+  ZodDefault,
 } from "zod"
 import { ZodIDKinds } from "./utils"
 import {
@@ -85,12 +87,21 @@ export class ZodSilk<TSchema extends Schema>
     return nullable(gqlType)
   }
 
-  static toGraphQLType(schema: Schema): GraphQLOutputType {
+  static toGraphQLType(
+    schema: Schema,
+    extensions?: GQLoomExtensions
+  ): GraphQLOutputType {
     const customType = metadataCollector.fields.get(schema)?.type
     if (customType) return customType
 
     if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
       return ZodSilk.toGraphQLType(schema.unwrap())
+    }
+
+    if (schema instanceof ZodDefault) {
+      return ZodSilk.toGraphQLType(schema._def.innerType, {
+        gqloom: { defaultValue: schema._def.defaultValue },
+      })
     }
 
     if (schema instanceof ZodArray) {
@@ -130,12 +141,14 @@ export class ZodSilk<TSchema extends Schema>
       return new GraphQLObjectType({
         name,
         fields: mapValue(schema.shape as ZodRawShape, (field) => {
+          const fieldConfig = ZodSilk.getFieldConfig(field)
           return {
             type: ZodSilk.toNullableGraphQLType(field),
-            ...ZodSilk.getFieldConfig(field),
+            ...fieldConfig,
           }
         }),
         ...config,
+        extensions: mergeExtensions(config.extensions, extensions),
       })
     }
 
@@ -159,7 +172,12 @@ export class ZodSilk<TSchema extends Schema>
         })
       }
 
-      return new GraphQLEnumType({ name, values, ...config })
+      return new GraphQLEnumType({
+        name,
+        values,
+        ...config,
+        extensions: mergeExtensions(config.extensions, extensions),
+      })
     }
 
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
@@ -185,6 +203,7 @@ export class ZodSilk<TSchema extends Schema>
         types,
         name,
         ...config,
+        extensions: mergeExtensions(config.extensions, extensions),
       })
     }
 
@@ -258,6 +277,13 @@ export class ZodSilk<TSchema extends Schema>
   protected static getFieldConfig(
     schema: ZodSchema
   ): Partial<GraphQLFieldConfig<any, any>> {
+    const fromDefault = (() => {
+      if (schema instanceof ZodDefault) {
+        return {
+          gqloom: { defaultValue: schema._def.defaultValue },
+        } as GQLoomExtensions
+      }
+    })()
     const fromMetadata = metadataCollector.fields.get(schema)
     const fromDescription = schema.description
       ? schema instanceof ZodObject
@@ -265,11 +291,12 @@ export class ZodSilk<TSchema extends Schema>
         : parseFieldConfig(schema.description)
       : undefined
     return {
-      ...fromMetadata,
       ...fromDescription,
+      ...fromMetadata,
       extensions: mergeExtensions(
-        fromMetadata?.extensions,
-        fromDescription?.extensions
+        fromDefault,
+        fromDescription?.extensions,
+        fromMetadata?.extensions
       ),
     }
   }

@@ -5,15 +5,15 @@ import {
 import { deepMerge } from "../utils"
 
 export interface GQLoomExtensions {
-  gqloom?: GQLoomExtension
+  gqloom?: GQLoomExtensionAttribute
 }
 
-export interface GQLoomExtension {
+export interface GQLoomExtensionAttribute {
   directives?: string[]
   defaultValue?: any
 }
 
-export function gqloomExtensions(extension: GQLoomExtension) {
+export function gqloomExtensions(extension: GQLoomExtensionAttribute) {
   return { gqloom: extension }
 }
 
@@ -31,14 +31,16 @@ export function extractGqloomExtension({
       >
     | null
     | undefined
-}): GQLoomExtension {
-  return (extensions?.gqloom as GQLoomExtension | undefined) ?? {}
+}): GQLoomExtensionAttribute {
+  return (extensions?.gqloom as GQLoomExtensionAttribute | undefined) ?? {}
 }
 
 export function mergeExtensions(
   ...extensionsList: (
     | Readonly<
-        GraphQLFieldExtensions<any, any, any> | GraphQLObjectTypeExtensions
+        | GraphQLFieldExtensions<any, any, any>
+        | GraphQLObjectTypeExtensions
+        | GQLoomExtensions
       >
     | null
     | undefined

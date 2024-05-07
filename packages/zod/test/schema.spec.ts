@@ -15,8 +15,19 @@ import {
   printSchema,
   GraphQLScalarType,
 } from "graphql"
-import { SchemaWeaver, type SilkResolver } from "@gqloom/core"
+import {
+  type GQLoomExtensions,
+  SchemaWeaver,
+  type SilkResolver,
+} from "@gqloom/core"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
+
+declare module "graphql" {
+  export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
+
+  export interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any>
+    extends GQLoomExtensions {}
+}
 
 const GraphQLDate = new GraphQLScalarType<Date, string>({
   name: "Date",
@@ -33,9 +44,9 @@ describe("ZodSilk", () => {
     expect(zodSilk(z.number().int().nullable()).getGraphQLType()).toEqual(
       GraphQLInt
     )
-    expect(zodSilk(z.boolean().nullable()).getGraphQLType()).toEqual(
-      GraphQLBoolean
-    )
+    expect(
+      zodSilk(z.boolean().default(false).nullable()).getGraphQLType()
+    ).toEqual(GraphQLBoolean)
     expect(zodSilk(z.date().nullable()).getGraphQLType()).toEqual(GraphQLString)
 
     expect(zodSilk(z.string().cuid().nullable()).getGraphQLType()).toEqual(
@@ -54,6 +65,24 @@ describe("ZodSilk", () => {
     expect(zodSilk(z.string().email().nullable()).getGraphQLType()).toEqual(
       GraphQLString
     )
+  })
+
+  it("should keep default value in extensions", () => {
+    const objectType = z
+      .object({
+        foo: z.string().default("foo"),
+      })
+      .describe("ObjectType")
+      .optional()
+
+    const objectGqlType = zodSilk(
+      objectType
+    ).getGraphQLType() as GraphQLObjectType
+
+    const extensions = objectGqlType.getFields().foo.extensions
+
+    expect(extensions.gqloom?.defaultValue).toEqual(expect.any(Function))
+    expect(extensions.gqloom?.defaultValue?.()).toEqual("foo")
   })
 
   it("should handle custom type", () => {
