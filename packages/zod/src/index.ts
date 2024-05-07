@@ -86,6 +86,9 @@ export class ZodSilk<TSchema extends Schema>
   }
 
   static toGraphQLType(schema: Schema): GraphQLOutputType {
+    const customType = metadataCollector.fields.get(schema)?.type
+    if (customType) return customType
+
     if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
       return ZodSilk.toGraphQLType(schema.unwrap())
     }

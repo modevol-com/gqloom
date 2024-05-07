@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { field, objectType, query, resolver, zodSilk } from "../src"
+import { field, fieldType, objectType, query, resolver, zodSilk } from "../src"
 import { type Schema, z } from "zod"
 import {
   GraphQLID,
@@ -13,9 +13,14 @@ import {
   printType,
   type GraphQLNamedType,
   printSchema,
+  GraphQLScalarType,
 } from "graphql"
 import { SchemaWeaver, type SilkResolver } from "@gqloom/core"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
+
+const GraphQLDate = new GraphQLScalarType<Date, string>({
+  name: "Date",
+})
 
 describe("ZodSilk", () => {
   it("should handle scalar", () => {
@@ -50,6 +55,15 @@ describe("ZodSilk", () => {
       GraphQLString
     )
   })
+
+  it("should handle custom type", () => {
+    expect(
+      zodSilk(
+        fieldType({ type: GraphQLDate }, z.date().optional())
+      ).getGraphQLType()
+    ).toEqual(GraphQLDate)
+  })
+
   it("should handle non null", () => {
     expect(zodSilk(z.string()).getGraphQLType()).toEqual(
       new GraphQLNonNull(GraphQLString)
