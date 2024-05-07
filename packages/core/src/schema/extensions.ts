@@ -1,20 +1,22 @@
 import { type GraphQLFieldExtensions } from "graphql"
 import { deepMerge } from "../utils"
 
-export const GQLOOM_EXTENSIONS_KEY = "gqloom"
+export interface GQLoomExtensions {
+  gqloom?: GQLoomExtension
+}
 
 export interface GQLoomExtension {
   directives?: string[]
   defaultValue?: any
 }
 
-export function gqloomExtension(extension: GQLoomExtension) {
-  return { [GQLOOM_EXTENSIONS_KEY]: extension }
+export function gqloomExtensions(extension: GQLoomExtension) {
+  return { gqloom: extension }
 }
 
 export function directives(...directives: string[]) {
   if (!directives.length) return undefined
-  return gqloomExtension({ directives })
+  return gqloomExtensions({ directives })
 }
 
 export function extractGqloomExtension({
@@ -25,9 +27,7 @@ export function extractGqloomExtension({
     | null
     | undefined
 }): GQLoomExtension {
-  return (
-    (extensions?.[GQLOOM_EXTENSIONS_KEY] as GQLoomExtension | undefined) ?? {}
-  )
+  return (extensions?.gqloom as GQLoomExtension | undefined) ?? {}
 }
 
 export function mergeExtensions(
