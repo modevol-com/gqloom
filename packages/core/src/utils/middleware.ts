@@ -11,7 +11,7 @@ export function applyMiddlewares(
   resolveFunction: () => MayPromise<ResolveResult>
 ): Promise<ResolveResult> {
   const next = async (index: number): Promise<unknown> => {
-    if (index === middlewares.length) {
+    if (index >= middlewares.length) {
       return resolveFunction()
     }
     const middleware = middlewares[index]
