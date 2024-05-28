@@ -10,7 +10,7 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "yup": ">= 1.0.0"
+    "@mikro-orm/core": ">= 6.0.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",

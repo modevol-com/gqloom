@@ -52,10 +52,6 @@ importers:
         version: 16.8.1
 
   packages/mikro-orm:
-    dependencies:
-      yup:
-        specifier: '>= 1.0.0'
-        version: 1.4.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
