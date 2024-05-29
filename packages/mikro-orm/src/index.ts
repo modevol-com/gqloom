@@ -44,7 +44,7 @@ export class MikroSilk<TEntity>
     return gqlType
 
     function list(gqlType: GraphQLOutputType) {
-      if (property.array) return new GraphQLList(gqlType)
+      if (property.array) return new GraphQLList(new GraphQLNonNull(gqlType))
       return gqlType
     }
 

@@ -29,7 +29,7 @@ describe("MikroSilk", () => {
         title: String!
         isPublished: Boolean!
         price: Float
-        tags: [String]!
+        tags: [String!]!
       }"
     `)
   })
