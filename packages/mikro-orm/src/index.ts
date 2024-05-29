@@ -1,5 +1,6 @@
-import { mapValue, type GraphQLSilk } from "@gqloom/core"
+import { type GraphQLSilk } from "@gqloom/core"
 import {
+  ReferenceKind,
   type EntityProperty,
   type EntitySchema,
   type RequiredEntityData,
@@ -22,12 +23,21 @@ export class MikroSilk<TEntity>
   _types?: { output: TEntity; input: RequiredEntityData<TEntity> }
 
   getGraphQLType() {
+    const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
+    const properties = this.schema.init().meta.properties
+
+    for (const [key, value] of Object.entries(properties) as [
+      string,
+      EntityProperty,
+    ][]) {
+      const field = MikroSilk.propertyToField(value)
+      if (field == null) continue
+      fields[key] = field
+    }
+
     return new GraphQLObjectType({
       name: this.schema.meta.className,
-      fields: mapValue(
-        this.schema.init().meta.properties,
-        MikroSilk.propertyToField
-      ),
+      fields,
     })
   }
 
@@ -35,13 +45,17 @@ export class MikroSilk<TEntity>
 
   static propertyToField(
     property: EntityProperty
-  ): GraphQLFieldConfig<any, any> {
+  ): GraphQLFieldConfig<any, any> | undefined {
     const type = MikroSilk.propertyGraphQLType(property)
+    if (type == null) return undefined
     return { type }
   }
 
-  static propertyGraphQLType(property: EntityProperty): GraphQLOutputType {
+  static propertyGraphQLType(
+    property: EntityProperty
+  ): GraphQLOutputType | undefined {
     let gqlType = MikroSilk.propertyGraphQLTypeInner(property)
+    if (gqlType == null) return
     gqlType = list(gqlType)
     gqlType = nonNull(gqlType)
     return gqlType
@@ -58,7 +72,11 @@ export class MikroSilk<TEntity>
     }
   }
 
-  static propertyGraphQLTypeInner(property: EntityProperty): GraphQLOutputType {
+  static propertyGraphQLTypeInner(
+    property: EntityProperty
+  ): GraphQLOutputType | undefined {
+    if (property.kind !== ReferenceKind.SCALAR) return
+
     switch (MikroSilk.extractSimpleType(property.type)) {
       case "string":
         return GraphQLString

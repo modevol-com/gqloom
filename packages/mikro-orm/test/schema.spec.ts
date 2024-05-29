@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { type GraphQLObjectType, printType } from "graphql"
 import { mikroSilk } from "../src"
-import { EntitySchema } from "@mikro-orm/core"
+import { EntitySchema, type Ref } from "@mikro-orm/core"
 
 const nullable = true
 
@@ -11,7 +11,20 @@ describe("MikroSilk", () => {
     isPublished: boolean
     price: number
     tags: string[]
+    author: Ref<IAuthor>
   }
+
+  interface IAuthor {
+    name: string
+  }
+
+  const AuthorSchema = new EntitySchema<IAuthor>({
+    name: "Author",
+    properties: {
+      name: { type: "string" },
+    },
+  })
+
   const BookSchema = new EntitySchema<IBook>({
     name: "Book",
     properties: {
@@ -19,6 +32,7 @@ describe("MikroSilk", () => {
       isPublished: { type: Boolean },
       price: { type: "number", nullable },
       tags: { type: "string[]", array: true },
+      author: { entity: () => AuthorSchema, kind: "m:1", ref: true },
     },
   })
 
