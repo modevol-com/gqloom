@@ -19,7 +19,7 @@ describe("MikroSilk", () => {
         title: { type: "string" },
         isPublished: { type: "boolean" },
         price: { type: "number", nullable },
-        tags: { type: "string", array: true },
+        tags: { type: "string[]", array: true },
       },
     })
 

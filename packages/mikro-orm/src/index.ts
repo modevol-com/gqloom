@@ -24,7 +24,10 @@ export class MikroSilk<TEntity>
   getGraphQLType() {
     return new GraphQLObjectType({
       name: this.schema.meta.className,
-      fields: mapValue(this.schema.meta.properties, MikroSilk.propertyToField),
+      fields: mapValue(
+        this.schema.init().meta.properties,
+        MikroSilk.propertyToField
+      ),
     })
   }
 
@@ -44,7 +47,8 @@ export class MikroSilk<TEntity>
     return gqlType
 
     function list(gqlType: GraphQLOutputType) {
-      if (property.array) return new GraphQLList(new GraphQLNonNull(gqlType))
+      if (property.type.endsWith("[]"))
+        return new GraphQLList(new GraphQLNonNull(gqlType))
       return gqlType
     }
 
@@ -55,7 +59,7 @@ export class MikroSilk<TEntity>
   }
 
   static propertyGraphQLTypeInner(property: EntityProperty): GraphQLOutputType {
-    switch (property.type) {
+    switch (MikroSilk.extractSimpleType(property.type)) {
       case "string":
         return GraphQLString
       case "double":
@@ -74,6 +78,11 @@ export class MikroSilk<TEntity>
       default:
         return GraphQLString
     }
+  }
+
+  // mikro-orm Platform.extractSimpleType
+  static extractSimpleType(type: string): EntityProperty["type"] {
+    return type.toLowerCase().match(/[^(), ]+/)![0]
   }
 }
 
