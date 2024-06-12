@@ -109,3 +109,5 @@ export function mikroSilk<TEntity>(
 ): MikroSilk<TEntity> {
   return new MikroSilk(schema)
 }
+
+export * from "./entity-schema"
