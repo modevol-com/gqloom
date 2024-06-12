@@ -2,6 +2,7 @@ import {
   type InferSilkO,
   type GraphQLSilk,
   type InferSilkI,
+  mapValue,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -15,11 +16,26 @@ import {
   type Collection,
   type OptionalProps,
   type EntityName,
+  type EntitySchemaMetadata,
+  type EntityProperty,
 } from "@mikro-orm/core"
-import { GraphQLObjectType } from "graphql"
+import {
+  GraphQLObjectType,
+  type GraphQLOutputType,
+  GraphQLNonNull,
+  GraphQLList,
+  GraphQLString,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLScalarType,
+} from "graphql"
+import { type GqloomMikroFieldExtensions } from "./types"
 
 export function defineEntitySchema<TSilk extends GraphQLSilk<object, any>>(
-  silk: TSilk
+  silk: TSilk,
+  options?: EntitySchemaMetadata<SilkEntity<TSilk>>
 ): EntitySchema<InferSilkO<TSilk>>
 export function defineEntitySchema<
   TSilk extends GraphQLSilk<any, any>,
@@ -29,19 +45,140 @@ export function defineEntitySchema<
   >,
 >(
   silk: TSilk,
-  relationships: TRelationships
+  relationships: TRelationships,
+  options?: EntitySchemaMetadata<SilkEntity<TSilk>>
 ): SilkEntitySchema<TSilk, TRelationships>
 export function defineEntitySchema(
   silk: GraphQLSilk<any, any>,
-  relationships?: Record<string, RelationshipProperty<any, object>>
+  relationshipsOrOptions?:
+    | Record<string, RelationshipProperty<any, object>>
+    | EntitySchemaMetadata<any>,
+  options?: EntitySchemaMetadata<any>
 ): EntitySchema {
   const gqlType = silk.getGraphQLType()
   if (!(gqlType instanceof GraphQLObjectType))
     throw new Error("Only object type can be converted to entity schema")
 
+  let relationships: Record<string, RelationshipProperty<any, object>> = {}
+
+  if (isRelationshipProperties(relationshipsOrOptions)) {
+    relationships = relationshipsOrOptions
+  } else {
+    options = relationshipsOrOptions
+  }
+
   return new EntitySchema({
     name: gqlType.name,
+    properties: {
+      ...toProperties(gqlType),
+      ...relationships,
+    },
+    ...options,
   })
+}
+
+type TypeProperty = Exclude<
+  EntitySchemaProperty<any, any>,
+  | {
+      kind:
+        | ReferenceKind.MANY_TO_ONE
+        | "m:1"
+        | ReferenceKind.ONE_TO_ONE
+        | "1:1"
+        | ReferenceKind.ONE_TO_MANY
+        | "1:m"
+        | ReferenceKind.MANY_TO_MANY
+        | "m:n"
+        | ReferenceKind.EMBEDDED
+        | "embedded"
+    }
+  | { enum: true }
+  | { entity: string | (() => EntityName<any>) }
+>
+
+function toProperties(
+  gqlType: GraphQLObjectType
+): Record<string, EntitySchemaProperty<any, any>> {
+  return mapValue(gqlType.getFields(), (field) => {
+    const extensions = field.extensions as GqloomMikroFieldExtensions
+    return {
+      ...toTypeProperty(field.type),
+      ...extensions.mikro,
+    } as EntitySchemaProperty<any, any>
+  })
+}
+
+function getGraphQLScalarType(
+  gqlType: GraphQLScalarType<any, any>
+): EntityProperty["type"] {
+  switch (gqlType) {
+    case GraphQLString:
+      return "string"
+    case GraphQLFloat:
+      return "float"
+    case GraphQLInt:
+      return "int"
+    case GraphQLBoolean:
+      return "boolean"
+    case GraphQLID:
+      return "string"
+    default:
+      return "string"
+  }
+}
+
+function toTypeProperty(
+  wrappedType: GraphQLOutputType,
+  options?: Partial<TypeProperty> & { isList?: boolean }
+): TypeProperty {
+  let nullable = true
+  let isList = false
+  let type = options?.type
+
+  const gqlType = unwrap(wrappedType)
+
+  if (type == null) {
+    let simpleType: EntityProperty["type"]
+    if (gqlType instanceof GraphQLScalarType) {
+      simpleType = getGraphQLScalarType(gqlType)
+    } else if (gqlType instanceof GraphQLObjectType) {
+      simpleType = "json"
+    } else {
+      simpleType = "string"
+    }
+    type = isList ? `${simpleType}[]` : simpleType
+  }
+  return {
+    type,
+    nullable,
+    ...options,
+  }
+
+  function unwrap(t: GraphQLOutputType) {
+    if (t instanceof GraphQLNonNull) {
+      nullable = false
+      return unwrap(t.ofType)
+    }
+    if (t instanceof GraphQLList) {
+      isList = true
+      return unwrap(t.ofType)
+    }
+    return t
+  }
+}
+
+function isRelationshipProperties(
+  relationshipsOrOptions:
+    | Record<string, RelationshipProperty<any, object>>
+    | EntitySchemaMetadata<any>
+    | undefined
+): relationshipsOrOptions is Record<string, RelationshipProperty<any, object>> {
+  if (relationshipsOrOptions === undefined) return false
+  const firstValue = Object.values(relationshipsOrOptions)[0]
+  if ("kind" in firstValue) {
+    if (Object.values(ReferenceKind).includes(firstValue["kind"])) return true
+  }
+  return false
 }
 
 export type SilkEntity<TSilk extends GraphQLSilk<any, any>> =
