@@ -103,7 +103,7 @@ function toProperties(
     const extensions = field.extensions as GqloomMikroFieldExtensions
     return {
       ...toTypeProperty(field.type),
-      ...extensions.mikro,
+      ...extensions.mikroProperty,
     } as EntitySchemaProperty<any, any>
   })
 }
