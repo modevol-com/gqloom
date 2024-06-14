@@ -28,7 +28,7 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
    *
    * @internal
    */
-  _types?: { input: TInput; output: TOutput }
+  readonly _types?: { readonly input: TInput; readonly output: TOutput }
 }
 
 export type AbstractSchemaIO = [
