@@ -3,6 +3,7 @@ import {
   type GraphQLSilk,
   type InferSilkI,
   mapValue,
+  notNullish,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -18,6 +19,7 @@ import {
   type EntityName,
   type EntitySchemaMetadata,
   type EntityProperty,
+  type EventArgs,
 } from "@mikro-orm/core"
 import {
   GraphQLObjectType,
@@ -36,7 +38,7 @@ import { type GqloomMikroFieldExtensions } from "./types"
 export function defineEntitySchema<TSilk extends GraphQLSilk<object, any>>(
   silk: TSilk,
   options?: EntitySchemaMetadata<SilkEntity<TSilk>>
-): EntitySchema<InferSilkO<TSilk>>
+): EntitySchema<SilkEntity<TSilk>>
 export function defineEntitySchema<
   TSilk extends GraphQLSilk<any, any>,
   TRelationships extends Record<
@@ -74,6 +76,24 @@ export function defineEntitySchema(
       ...relationships,
     },
     ...options,
+    hooks: {
+      ...options?.hooks,
+      onInit: [
+        ({ entity }: EventArgs<any>) => {
+          if (silk.parse == null) return
+          const pureEntity = Object.fromEntries(
+            Object.entries(entity).filter(([, value]) => value !== undefined)
+          )
+          const parsed = silk.parse(pureEntity)
+          if (parsed !== undefined) {
+            Object.assign(entity, parsed)
+          }
+        },
+        ...(Array.isArray(options?.hooks?.onInit)
+          ? options.hooks.onInit
+          : [options?.hooks?.onInit].filter(notNullish)),
+      ],
+    },
   })
 }
 

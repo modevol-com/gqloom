@@ -11,9 +11,9 @@ import {
   printType,
 } from "graphql"
 import { type GqloomMikroFieldExtensions } from "../src/types"
-import { describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it } from "vitest"
 import { defineEntitySchema, mikroSilk } from "../src"
-import { MikroORM } from "@mikro-orm/core"
+import { MikroORM, RequestContext } from "@mikro-orm/core"
 import { defineConfig } from "@mikro-orm/better-sqlite"
 
 declare module "graphql" {
@@ -22,7 +22,7 @@ declare module "graphql" {
 }
 
 interface GiraffeI {
-  id?: string
+  id?: string | number
   name: string
   age?: number
   height: number
@@ -36,7 +36,7 @@ const Giraffe = silk<Required<GiraffeI>, GiraffeI>(
     fields: {
       id: {
         type: new GraphQLNonNull(GraphQLID),
-        extensions: { mikroProperty: { primary: true } },
+        extensions: { mikroProperty: { primary: true, columnType: "INTEGER" } },
       },
       name: { type: new GraphQLNonNull(GraphQLString) },
       age: { type: new GraphQLNonNull(GraphQLInt) },
@@ -49,13 +49,15 @@ const Giraffe = silk<Required<GiraffeI>, GiraffeI>(
       },
     },
   }),
-  (input) => ({
-    id: Math.random().toString(36).slice(-5),
-    age: Math.floor(Math.random() * 30),
-    isMale: Math.random() > 0.5,
-    hobbies: [],
-    ...input,
-  })
+  (input) => {
+    return {
+      id: increasingId(),
+      age: 2,
+      isMale: true,
+      hobbies: [],
+      ...input,
+    }
+  }
 )
 
 const GiraffeSchema = defineEntitySchema(Giraffe)
@@ -63,7 +65,8 @@ const ORMConfig = defineConfig({
   entities: [GiraffeSchema],
   dbName: ":memory:",
 })
-describe("entity-schema", () => {
+
+describe("Entity Schema", () => {
   it("should create a schema", () => {
     expect(GiraffeSchema.meta).toMatchInlineSnapshot(`
       EntityMetadata {
@@ -73,14 +76,18 @@ describe("entity-schema", () => {
         "className": "Giraffe",
         "concurrencyCheckKeys": Set {},
         "filters": {},
-        "hooks": {},
+        "hooks": {
+          "onInit": [
+            [Function],
+          ],
+        },
         "indexes": [],
         "name": "Giraffe",
         "primaryKeys": [],
         "properties": {
           "age": {
             "nullable": false,
-            "type": "int",
+            "type": "integer",
           },
           "height": {
             "nullable": false,
@@ -91,6 +98,7 @@ describe("entity-schema", () => {
             "type": "string[]",
           },
           "id": {
+            "columnType": "INTEGER",
             "nullable": false,
             "primary": true,
             "type": "string",
@@ -119,7 +127,7 @@ describe("entity-schema", () => {
       .toMatchInlineSnapshot(`
       "pragma foreign_keys = off;
 
-      create table \`giraffe\` (\`id\` text not null, \`name\` text not null, \`age\` integer not null, \`height\` real not null, \`is_male\` integer not null, \`hobbies\` text not null, primary key (\`id\`));
+      create table \`giraffe\` (\`id\` integer not null primary key autoincrement, \`name\` text not null, \`age\` integer not null, \`height\` real not null, \`is_male\` integer not null, \`hobbies\` text not null);
 
       pragma foreign_keys = on;
       "
@@ -146,3 +154,77 @@ describe("entity-schema", () => {
     `)
   })
 })
+
+describe("Entity Manager", () => {
+  let orm = {} as MikroORM
+  beforeAll(async () => {
+    orm = await MikroORM.init(ORMConfig)
+    await orm.getSchemaGenerator().updateSchema()
+  })
+
+  it("should be able to create, find, update, delete", async () => {
+    // create
+    const g1 = await RequestContext.create(orm.em, async () => {
+      const g1 = orm.em.create(GiraffeSchema, { name: "Galaxy", height: 1.5 })
+      await orm.em.persistAndFlush(g1)
+      return g1
+    })
+
+    // find
+    const Galaxy = await RequestContext.create(orm.em, async () => {
+      return orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
+    })
+
+    expect(Galaxy).toMatchInlineSnapshot(`
+      {
+        "age": 2,
+        "height": 1.5,
+        "hobbies": [],
+        "id": 1,
+        "isMale": true,
+        "name": "Galaxy",
+      }
+    `)
+
+    // update
+    await RequestContext.create(orm.em, async () => {
+      const g2 = await orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
+      g2.name = "Galaxy2"
+      g2.height = 3
+      await orm.em.persistAndFlush(g2)
+      return g2
+    })
+
+    const g2 = await RequestContext.create(orm.em, async () => {
+      return orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
+    })
+
+    expect(g2).toMatchInlineSnapshot(`
+      {
+        "age": 2,
+        "height": 3,
+        "hobbies": [],
+        "id": 1,
+        "isMale": true,
+        "name": "Galaxy2",
+      }
+    `)
+
+    // delete
+    await RequestContext.create(orm.em, async () => {
+      const g3 = await orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
+      return orm.em.removeAndFlush(g3)
+    })
+
+    expect(
+      RequestContext.create(orm.em, async () => {
+        return orm.em.findOne(GiraffeSchema, { id: g1.id })
+      })
+    ).resolves.toBeNull()
+  })
+})
+
+let id = 0
+function increasingId() {
+  return ++id
+}
