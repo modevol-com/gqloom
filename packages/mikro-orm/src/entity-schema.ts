@@ -117,7 +117,7 @@ function getGraphQLScalarType(
     case GraphQLFloat:
       return "float"
     case GraphQLInt:
-      return "int"
+      return "integer"
     case GraphQLBoolean:
       return "boolean"
     case GraphQLID:

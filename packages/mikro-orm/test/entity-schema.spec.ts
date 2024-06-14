@@ -4,13 +4,15 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  printType,
 } from "graphql"
 import { type GqloomMikroFieldExtensions } from "../src/types"
 import { describe, expect, it } from "vitest"
-import { defineEntitySchema } from "../src"
+import { defineEntitySchema, mikroSilk } from "../src"
 import { MikroORM } from "@mikro-orm/core"
 import { defineConfig } from "@mikro-orm/better-sqlite"
 
@@ -25,6 +27,7 @@ interface GiraffeI {
   age?: number
   height: number
   isMale?: boolean
+  hobbies?: string[]
 }
 
 const Giraffe = silk<Required<GiraffeI>, GiraffeI>(
@@ -36,16 +39,22 @@ const Giraffe = silk<Required<GiraffeI>, GiraffeI>(
         extensions: { mikroProperty: { primary: true } },
       },
       name: { type: new GraphQLNonNull(GraphQLString) },
-      age: { type: GraphQLInt },
+      age: { type: new GraphQLNonNull(GraphQLInt) },
       height: { type: new GraphQLNonNull(GraphQLFloat) },
-      isMale: { type: GraphQLBoolean },
+      isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
+      hobbies: {
+        type: new GraphQLNonNull(
+          new GraphQLList(new GraphQLNonNull(GraphQLString))
+        ),
+      },
     },
   }),
-  ({ id, age, isMale, ...fields }) => ({
-    id: id ?? Math.random().toString(36).slice(-5),
-    age: age ?? Math.floor(Math.random() * 30),
-    isMale: isMale ?? Math.random() > 0.5,
-    ...fields,
+  (input) => ({
+    id: Math.random().toString(36).slice(-5),
+    age: Math.floor(Math.random() * 30),
+    isMale: Math.random() > 0.5,
+    hobbies: [],
+    ...input,
   })
 )
 
@@ -70,20 +79,24 @@ describe("entity-schema", () => {
         "primaryKeys": [],
         "properties": {
           "age": {
-            "nullable": true,
+            "nullable": false,
             "type": "int",
           },
           "height": {
             "nullable": false,
             "type": "float",
           },
+          "hobbies": {
+            "nullable": false,
+            "type": "string[]",
+          },
           "id": {
-            "nullable": true,
+            "nullable": false,
             "primary": true,
             "type": "string",
           },
           "isMale": {
-            "nullable": true,
+            "nullable": false,
             "type": "boolean",
           },
           "name": {
@@ -106,10 +119,30 @@ describe("entity-schema", () => {
       .toMatchInlineSnapshot(`
       "pragma foreign_keys = off;
 
-      create table \`giraffe\` (\`id\` text not null, \`name\` text not null, \`age\` integer null, \`height\` real not null, \`is_male\` integer null, primary key (\`id\`));
+      create table \`giraffe\` (\`id\` text not null, \`name\` text not null, \`age\` integer not null, \`height\` real not null, \`is_male\` integer not null, \`hobbies\` text not null, primary key (\`id\`));
 
       pragma foreign_keys = on;
       "
+    `)
+  })
+
+  it("should convert to GraphQL type", () => {
+    const gqlType = mikroSilk(
+      GiraffeSchema
+    ).getGraphQLType() as GraphQLObjectType
+    expect(printType(Giraffe.getGraphQLType() as GraphQLObjectType)).toEqual(
+      printType(Giraffe.getGraphQLType() as GraphQLObjectType)
+    )
+
+    expect(printType(gqlType)).toMatchInlineSnapshot(`
+      "type Giraffe {
+        id: ID!
+        name: String!
+        age: Int!
+        height: Float!
+        isMale: Boolean!
+        hobbies: [String!]!
+      }"
     `)
   })
 })

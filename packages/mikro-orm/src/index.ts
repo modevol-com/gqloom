@@ -15,6 +15,7 @@ import {
   GraphQLList,
   GraphQLInt,
   GraphQLNonNull,
+  GraphQLID,
 } from "graphql"
 
 export class MikroSilk<TEntity>
@@ -76,6 +77,8 @@ export class MikroSilk<TEntity>
     property: EntityProperty
   ): GraphQLOutputType | undefined {
     if (property.kind !== ReferenceKind.SCALAR) return
+
+    if (property.primary === true) return GraphQLID
 
     switch (MikroSilk.extractSimpleType(property.type)) {
       case "string":
