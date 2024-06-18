@@ -66,7 +66,7 @@ export * from "./metadata-collector"
 export class ZodSilk<TSchema extends Schema>
   implements GraphQLSilk<output<TSchema>, input<TSchema>>
 {
-  _types?: { input: input<TSchema>; output: output<TSchema> }
+  "~types"?: { input: input<TSchema>; output: output<TSchema> }
   constructor(public schema: TSchema) {}
 
   getGraphQLType() {

@@ -21,7 +21,7 @@ import {
 export class MikroSilk<TEntity>
   implements GraphQLSilk<TEntity, RequiredEntityData<TEntity>>
 {
-  _types?: { output: TEntity; input: RequiredEntityData<TEntity> }
+  "~types"?: { output: TEntity; input: RequiredEntityData<TEntity> }
 
   getGraphQLType() {
     const fields: Record<string, GraphQLFieldConfig<any, any>> = {}

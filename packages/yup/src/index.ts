@@ -41,7 +41,7 @@ export * from "./union"
 export class YupSilk<TSchema extends Schema<any, any, any, any>>
   implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
 {
-  _types?: { input: InferType<TSchema>; output: InferType<TSchema> }
+  "~types"?: { input: InferType<TSchema>; output: InferType<TSchema> }
   schemaDescription: SchemaDescription
   nonNull: boolean
 

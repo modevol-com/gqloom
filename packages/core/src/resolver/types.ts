@@ -28,7 +28,7 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
    *
    * @internal
    */
-  readonly _types?: { readonly input: TInput; readonly output: TOutput }
+  readonly "~types"?: { readonly input: TInput; readonly output: TOutput }
 }
 
 export type AbstractSchemaIO = [
@@ -39,16 +39,16 @@ export type AbstractSchemaIO = [
 
 export type GraphQLSilkIO = [
   object: GraphQLSilk,
-  input: "_types.input",
-  output: "_types.output",
+  input: "~types.input",
+  output: "~types.output",
 ]
 
 export type InferSilkI<T extends GraphQLSilk> = NonNullable<
-  T["_types"]
+  T["~types"]
 >["input"]
 
 export type InferSilkO<T extends GraphQLSilk> = NonNullable<
-  T["_types"]
+  T["~types"]
 >["output"]
 
 export type InferSchemaI<
