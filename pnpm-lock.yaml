@@ -63,6 +63,15 @@ importers:
         specifier: ^6.2.8
         version: 6.2.8
 
+  packages/valibot:
+    devDependencies:
+      '@gqloom/core':
+        specifier: workspace:*
+        version: link:../core
+      valibot:
+        specifier: ^0.32.0
+        version: 0.32.0
+
   packages/yup:
     devDependencies:
       '@gqloom/core':
@@ -1422,6 +1431,9 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  valibot@0.32.0:
+    resolution: {integrity: sha512-FXBnJl4bNOmeg7lQv+jfvo/wADsRBN8e9C3r+O77Re3dEnDma8opp7p4hcIbF7XJJ30h/5SVohdjer17/sHOsQ==}
 
   vite-node@1.5.0:
     resolution: {integrity: sha512-tV8h6gMj6vPzVCa7l+VGq9lwoJjW8Y79vst8QZZGiuRAfijU+EEWuc0kFpmndQrWhMMhet1jdSF+40KSZUqIIw==}
@@ -2813,6 +2825,8 @@ snapshots:
       punycode: 2.3.1
 
   util-deprecate@1.0.2: {}
+
+  valibot@0.32.0: {}
 
   vite-node@1.5.0(@types/node@20.11.30):
     dependencies:

@@ -10,10 +10,10 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "yup": ">= 1.0.0"
+    "valibot": ">= 0.31.0"
   },
   "devDependencies": {
-    "yup": "^1.4.0",
+    "valibot": "^0.32.0",
     "@gqloom/core": "workspace:*"
   }
 }
