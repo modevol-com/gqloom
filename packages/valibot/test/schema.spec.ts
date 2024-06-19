@@ -72,7 +72,9 @@ describe("valibot", () => {
   })
 
   it("should handle non null", () => {
-    expect(getGraphQLType(valibotSilk(v.string()))).toEqual(GraphQLString)
+    expect(getGraphQLType(valibotSilk(v.string()))).toEqual(
+      new GraphQLNonNull(GraphQLString)
+    )
     expect(getGraphQLType(valibotSilk(v.nonNullable(v.string())))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )

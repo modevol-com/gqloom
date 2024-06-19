@@ -45,7 +45,7 @@ import {
   type VariantOptionsAsync,
   type VariantSchemaAsync,
 } from "valibot"
-import { SYMBOLS, type GraphQLSilk } from "@gqloom/core"
+import { SYMBOLS, weaverContext, type GraphQLSilk } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -53,6 +53,7 @@ import {
   GraphQLInt,
   GraphQLNonNull,
   GraphQLString,
+  isNonNullType,
   type GraphQLOutputType,
 } from "graphql"
 import { ValibotMetadataCollector } from "./metadata"
@@ -97,6 +98,22 @@ type SupportedSchema =
   | VariantSchema<string, VariantOptions<string>, any>
   | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>
 export class ValibotSilkBuilder {
+  static toNullableGraphQLType(
+    schema: BaseSchema<unknown, unknown, BaseIssue<unknown>>
+  ): GraphQLOutputType {
+    const nullable = (ofType: GraphQLOutputType) => {
+      const isNullish = ValibotSilkBuilder.nullishTypes.has(schema.type)
+      if (isNullish) return ofType
+      if (isNonNullType(ofType)) return ofType
+      return new GraphQLNonNull(ofType)
+    }
+
+    const gqlType = ValibotSilkBuilder.toGraphQLType(schema)
+
+    weaverContext.memo(gqlType)
+    return nullable(gqlType)
+  }
+
   static nullishTypes: Set<string> = new Set<
     (
       | NullableSchema<any, unknown>
@@ -171,5 +188,5 @@ export function valibotSilk<
 function getGraphQLType(
   this: BaseSchema<unknown, unknown, BaseIssue<unknown>>
 ): GraphQLOutputType {
-  return ValibotSilkBuilder.toGraphQLType(this)
+  return ValibotSilkBuilder.toNullableGraphQLType(this)
 }
