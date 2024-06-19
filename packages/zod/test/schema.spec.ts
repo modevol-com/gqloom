@@ -199,7 +199,7 @@ describe("ZodSilk", () => {
         color: z.string(),
         prize: z.number(),
       })
-      .superRefine(objectType({ name: "Origin", interfaces: [Fruit] }))
+      .superRefine(objectType({ name: "Orange", interfaces: [Fruit] }))
 
     const r = resolver({
       orange: query(Orange, () => 0 as any),
@@ -207,10 +207,10 @@ describe("ZodSilk", () => {
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
       "type Query {
-        orange: Origin!
+        orange: Orange!
       }
 
-      type Origin implements Fruit {
+      type Orange implements Fruit {
         name: String!
         color: String!
         prize: Float!
