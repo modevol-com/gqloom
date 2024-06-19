@@ -4,6 +4,8 @@ import {
   type InferSilkI,
   mapValue,
   notNullish,
+  getGraphQLType,
+  SYMBOLS,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -57,7 +59,7 @@ export function defineEntitySchema(
     | EntitySchemaMetadata<any>,
   options?: EntitySchemaMetadata<any>
 ): EntitySchema {
-  const gqlType = silk.getGraphQLType()
+  const gqlType = getGraphQLType(silk)
   if (!(gqlType instanceof GraphQLObjectType))
     throw new Error("Only object type can be converted to entity schema")
 
@@ -80,11 +82,11 @@ export function defineEntitySchema(
       ...options?.hooks,
       onInit: [
         ({ entity }: EventArgs<any>) => {
-          if (silk.parse == null) return
+          if (silk[SYMBOLS.PARSE] == null) return
           const pureEntity = Object.fromEntries(
             Object.entries(entity).filter(([, value]) => value !== undefined)
           )
-          const parsed = silk.parse(pureEntity)
+          const parsed = silk[SYMBOLS.PARSE](pureEntity)
           if (parsed !== undefined) {
             Object.assign(entity, parsed)
           }

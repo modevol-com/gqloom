@@ -1,4 +1,4 @@
-import { silk } from "@gqloom/core"
+import { getGraphQLType, silk } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -135,11 +135,11 @@ describe("Entity Schema", () => {
   })
 
   it("should convert to GraphQL type", () => {
-    const gqlType = mikroSilk(
-      GiraffeSchema
-    ).getGraphQLType() as GraphQLObjectType
-    expect(printType(Giraffe.getGraphQLType() as GraphQLObjectType)).toEqual(
-      printType(Giraffe.getGraphQLType() as GraphQLObjectType)
+    const gqlType = getGraphQLType(
+      mikroSilk(GiraffeSchema)
+    ) as GraphQLObjectType
+    expect(printType(getGraphQLType(Giraffe) as GraphQLObjectType)).toEqual(
+      printType(getGraphQLType(Giraffe) as GraphQLObjectType)
     )
 
     expect(printType(gqlType)).toMatchInlineSnapshot(`

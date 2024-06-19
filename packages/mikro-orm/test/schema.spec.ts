@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { type GraphQLObjectType, printType } from "graphql"
 import { mikroSilk } from "../src"
 import { EntitySchema, type Ref } from "@mikro-orm/core"
+import { getGraphQLType } from "@gqloom/core"
 
 const nullable = true
 
@@ -36,7 +37,7 @@ describe("MikroSilk", () => {
     },
   })
 
-  const gqlType = mikroSilk(BookSchema).getGraphQLType() as GraphQLObjectType
+  const gqlType = getGraphQLType(mikroSilk(BookSchema)) as GraphQLObjectType
 
   it("should handle object", () => {
     expect(printType(gqlType)).toMatchInlineSnapshot(`

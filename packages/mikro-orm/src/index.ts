@@ -1,4 +1,4 @@
-import { type GraphQLSilk } from "@gqloom/core"
+import { SYMBOLS, type GraphQLSilk } from "@gqloom/core"
 import {
   ReferenceKind,
   type EntityProperty,
@@ -21,9 +21,9 @@ import {
 export class MikroSilk<TEntity>
   implements GraphQLSilk<TEntity, RequiredEntityData<TEntity>>
 {
-  "~types"?: { output: TEntity; input: RequiredEntityData<TEntity> }
+  "~types"?: { output: TEntity; input: RequiredEntityData<TEntity> };
 
-  getGraphQLType() {
+  [SYMBOLS.GET_GRAPHQL_TYPE]() {
     const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
     const properties = this.schema.init().meta.properties
 

@@ -8,26 +8,27 @@ import {
   GraphQLString,
 } from "graphql"
 import * as v from "valibot"
+import { getGraphQLType } from "@gqloom/core"
 
 describe("valibot", () => {
   it("should handle scalar", () => {
-    expect(valibotSilk(v.string()).getGraphQLType()).toEqual(GraphQLString)
-    expect(valibotSilk(v.boolean()).getGraphQLType()).toEqual(GraphQLBoolean)
-    expect(valibotSilk(v.number()).getGraphQLType()).toEqual(GraphQLFloat)
+    expect(getGraphQLType(valibotSilk(v.string()))).toEqual(GraphQLString)
+    expect(getGraphQLType(valibotSilk(v.boolean()))).toEqual(GraphQLBoolean)
+    expect(getGraphQLType(valibotSilk(v.number()))).toEqual(GraphQLFloat)
     expect(
-      valibotSilk(v.pipe(v.number(), v.integer())).getGraphQLType()
+      getGraphQLType(valibotSilk(v.pipe(v.number(), v.integer())))
     ).toEqual(GraphQLInt)
 
-    expect(valibotSilk(v.pipe(v.string(), v.ulid())).getGraphQLType()).toEqual(
+    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.ulid())))).toEqual(
       GraphQLID
     )
-    expect(valibotSilk(v.pipe(v.string(), v.uuid())).getGraphQLType()).toEqual(
+    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.uuid())))).toEqual(
       GraphQLID
     )
-    expect(valibotSilk(v.pipe(v.string(), v.cuid2())).getGraphQLType()).toEqual(
+    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.cuid2())))).toEqual(
       GraphQLID
     )
-    expect(valibotSilk(v.pipe(v.string(), v.email())).getGraphQLType()).toEqual(
+    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.email())))).toEqual(
       GraphQLString
     )
   })

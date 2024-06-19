@@ -19,6 +19,7 @@ import {
   type GQLoomExtensions,
   SchemaWeaver,
   type SilkResolver,
+  getGraphQLType,
 } from "@gqloom/core"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 
@@ -35,34 +36,32 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 describe("ZodSilk", () => {
   it("should handle scalar", () => {
-    expect(zodSilk(z.string().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().nullable()))).toEqual(
       GraphQLString
     )
-    expect(zodSilk(z.number().nullable()).getGraphQLType()).toEqual(
-      GraphQLFloat
-    )
-    expect(zodSilk(z.number().int().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.number().nullable()))).toEqual(GraphQLFloat)
+    expect(getGraphQLType(zodSilk(z.number().int().nullable()))).toEqual(
       GraphQLInt
     )
     expect(
-      zodSilk(z.boolean().default(false).nullable()).getGraphQLType()
+      getGraphQLType(zodSilk(z.boolean().default(false).nullable()))
     ).toEqual(GraphQLBoolean)
-    expect(zodSilk(z.date().nullable()).getGraphQLType()).toEqual(GraphQLString)
+    expect(getGraphQLType(zodSilk(z.date().nullable()))).toEqual(GraphQLString)
 
-    expect(zodSilk(z.string().cuid().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().cuid().nullable()))).toEqual(
       GraphQLID
     )
-    expect(zodSilk(z.string().cuid2().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().cuid2().nullable()))).toEqual(
       GraphQLID
     )
-    expect(zodSilk(z.string().ulid().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().ulid().nullable()))).toEqual(
       GraphQLID
     )
-    expect(zodSilk(z.string().uuid().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().uuid().nullable()))).toEqual(
       GraphQLID
     )
 
-    expect(zodSilk(z.string().email().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().email().nullable()))).toEqual(
       GraphQLString
     )
   })
@@ -75,9 +74,9 @@ describe("ZodSilk", () => {
       .describe("ObjectType")
       .optional()
 
-    const objectGqlType = zodSilk(
-      objectType
-    ).getGraphQLType() as GraphQLObjectType
+    const objectGqlType = getGraphQLType(
+      zodSilk(objectType)
+    ) as GraphQLObjectType
 
     const extensions = objectGqlType.getFields().foo.extensions
 
@@ -87,44 +86,42 @@ describe("ZodSilk", () => {
 
   it("should handle custom type", () => {
     expect(
-      zodSilk(
-        fieldType({ type: GraphQLDate }, z.date().optional())
-      ).getGraphQLType()
+      getGraphQLType(
+        zodSilk(fieldType({ type: GraphQLDate }, z.date().optional()))
+      )
     ).toEqual(GraphQLDate)
   })
 
   it("should handle non null", () => {
-    expect(zodSilk(z.string()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string()))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(zodSilk(z.string().nullable()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().nullable()))).toEqual(
       GraphQLString
     )
-    expect(zodSilk(z.string().optional()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().optional()))).toEqual(
       GraphQLString
     )
-    expect(zodSilk(z.string().nullish()).getGraphQLType()).toEqual(
-      GraphQLString
-    )
+    expect(getGraphQLType(zodSilk(z.string().nullish()))).toEqual(GraphQLString)
   })
   it("should handle array", () => {
-    expect(zodSilk(z.array(z.string())).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.array(z.string())))).toEqual(
       new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
     )
-    expect(zodSilk(z.string().array()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.string().array()))).toEqual(
       new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
     )
 
-    expect(zodSilk(z.array(z.string()).optional()).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.array(z.string()).optional()))).toEqual(
       new GraphQLList(new GraphQLNonNull(GraphQLString))
     )
 
-    expect(zodSilk(z.array(z.string().nullable())).getGraphQLType()).toEqual(
+    expect(getGraphQLType(zodSilk(z.array(z.string().nullable())))).toEqual(
       new GraphQLNonNull(new GraphQLList(GraphQLString))
     )
 
     expect(
-      zodSilk(z.array(z.string().nullable()).nullable()).getGraphQLType()
+      getGraphQLType(zodSilk(z.array(z.string().nullable()).nullable()))
     ).toEqual(new GraphQLList(GraphQLString))
   })
   it("should handle object", () => {
@@ -137,7 +134,7 @@ describe("ZodSilk", () => {
       .describe("Cat")
 
     expect(
-      (zodSilk(Cat).getGraphQLType() as GraphQLNonNull<any>).ofType
+      (getGraphQLType(zodSilk(Cat)) as GraphQLNonNull<any>).ofType
     ).toBeInstanceOf(GraphQLObjectType)
 
     expect(printZodSilk(Cat)).toMatchInlineSnapshot(`
@@ -567,7 +564,7 @@ describe("ZodSilk", () => {
 })
 
 function printZodSilk(schema: Schema): string {
-  let gqlType = zodSilk(schema).getGraphQLType()
+  let gqlType = getGraphQLType(zodSilk(schema))
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
 }

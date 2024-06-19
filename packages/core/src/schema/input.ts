@@ -16,7 +16,12 @@ import {
   type GraphQLInterfaceType,
   isInputObjectType,
 } from "graphql"
-import { type GraphQLSilk, type InputSchema, isSilk } from "../resolver"
+import {
+  type GraphQLSilk,
+  type InputSchema,
+  isSilk,
+  getGraphQLType,
+} from "../resolver"
 import { mapValue, tryIn } from "../utils"
 import { weaverContext } from "./weaver-context"
 import {
@@ -32,7 +37,7 @@ export function inputToArgs(
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined
   if (isSilk(input)) {
-    let inputType = input.getGraphQLType()
+    let inputType = getGraphQLType(input)
     if (isNonNullType(inputType)) inputType = inputType.ofType
     if (isObjectType(inputType)) {
       return mapValue(inputType.toConfig().fields, (it) =>
@@ -57,8 +62,8 @@ export function ensureInputType(
   silkOrType: GraphQLType | GraphQLSilk
 ): GraphQLInputType {
   const gqlType = (() => {
-    if ("getGraphQLType" in silkOrType) {
-      const ofType = silkOrType.getGraphQLType()
+    if (isSilk(silkOrType)) {
+      const ofType = getGraphQLType(silkOrType)
 
       if (silkOrType.nonNull && !isNonNullType(ofType))
         return new GraphQLNonNull(ofType)

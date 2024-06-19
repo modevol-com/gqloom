@@ -35,6 +35,7 @@ import {
   type GQLoomExtensions,
   SchemaWeaver,
   type SilkResolver,
+  getGraphQLType,
 } from "@gqloom/core"
 
 declare module "yup" {
@@ -54,10 +55,10 @@ const GraphQLDate = new GraphQLScalarType({
 
 describe("YupSilk", () => {
   it("should handle scalar", () => {
-    expect(yupSilk(string()).getGraphQLType()).toEqual(GraphQLString)
-    expect(yupSilk(boolean()).getGraphQLType()).toEqual(GraphQLBoolean)
-    expect(yupSilk(number()).getGraphQLType()).toEqual(GraphQLFloat)
-    expect(yupSilk(number().integer()).getGraphQLType()).toEqual(GraphQLInt)
+    expect(getGraphQLType(yupSilk(string()))).toEqual(GraphQLString)
+    expect(getGraphQLType(yupSilk(boolean()))).toEqual(GraphQLBoolean)
+    expect(getGraphQLType(yupSilk(number()))).toEqual(GraphQLFloat)
+    expect(getGraphQLType(yupSilk(number().integer()))).toEqual(GraphQLInt)
   })
 
   it("should keep default value in extensions", () => {
@@ -66,7 +67,7 @@ describe("YupSilk", () => {
     }).label("ObjectType")
 
     const objectSilk = yupSilk(objectType)
-    const objectGqlType = objectSilk.getGraphQLType() as GraphQLObjectType
+    const objectGqlType = getGraphQLType(objectSilk) as GraphQLObjectType
 
     expect(objectGqlType.getFields().foo).toMatchObject({
       extensions: {
@@ -84,7 +85,7 @@ describe("YupSilk", () => {
     }).label("ObjectType")
 
     const objectE1Silk = yupSilk(objectE1Type)
-    const objectE1GqlType = objectE1Silk.getGraphQLType() as GraphQLObjectType
+    const objectE1GqlType = getGraphQLType(objectE1Silk) as GraphQLObjectType
 
     expect(objectE1GqlType.getFields().foo).toMatchObject({
       extensions: {
@@ -95,56 +96,58 @@ describe("YupSilk", () => {
 
   it("should handle custom type", () => {
     expect(
-      yupSilk(date().meta({ type: () => GraphQLDate })).getGraphQLType()
+      getGraphQLType(yupSilk(date().meta({ type: () => GraphQLDate })))
     ).toEqual(GraphQLDate)
   })
 
   it("should handle non null", () => {
-    const s = yupSilk(string().required()).getGraphQLType()
+    const s = getGraphQLType(yupSilk(string().required()))
     expect(s).toBeInstanceOf(GraphQLNonNull)
     expect(s).toMatchObject({ ofType: GraphQLString })
 
-    const b = yupSilk(boolean().required()).getGraphQLType()
+    const b = getGraphQLType(yupSilk(boolean().required()))
     expect(b).toBeInstanceOf(GraphQLNonNull)
     expect(b).toMatchObject({ ofType: GraphQLBoolean })
 
-    const f = yupSilk(number().required()).getGraphQLType()
+    const f = getGraphQLType(yupSilk(number().required()))
     expect(f).toBeInstanceOf(GraphQLNonNull)
     expect(f).toMatchObject({ ofType: GraphQLFloat })
 
-    const i = yupSilk(number().required().integer()).getGraphQLType()
+    const i = getGraphQLType(yupSilk(number().required().integer()))
     expect(i).toBeInstanceOf(GraphQLNonNull)
     expect(i).toMatchObject({ ofType: GraphQLInt })
 
-    const d = yupSilk(
-      date()
-        .meta({ type: () => GraphQLDate })
-        .required()
-    ).getGraphQLType()
+    const d = getGraphQLType(
+      yupSilk(
+        date()
+          .meta({ type: () => GraphQLDate })
+          .required()
+      )
+    )
     expect(d).toBeInstanceOf(GraphQLNonNull)
     expect(d).toMatchObject({ ofType: GraphQLDate })
   })
 
   it("should handle array", () => {
-    const s = yupSilk(array().of(string())).getGraphQLType()
+    const s = getGraphQLType(yupSilk(array().of(string())))
     expect(s).toBeInstanceOf(GraphQLList)
     expect(s).toMatchObject({ ofType: GraphQLString })
 
-    const b = yupSilk(array().of(boolean())).getGraphQLType()
+    const b = getGraphQLType(yupSilk(array().of(boolean())))
     expect(b).toBeInstanceOf(GraphQLList)
     expect(b).toMatchObject({ ofType: GraphQLBoolean })
 
-    const f = yupSilk(array(number())).getGraphQLType()
+    const f = getGraphQLType(yupSilk(array(number())))
     expect(f).toBeInstanceOf(GraphQLList)
     expect(f).toMatchObject({ ofType: GraphQLFloat })
 
-    const i = yupSilk(array(number().integer())).getGraphQLType()
+    const i = getGraphQLType(yupSilk(array(number().integer())))
     expect(i).toBeInstanceOf(GraphQLList)
     expect(i).toMatchObject({ ofType: GraphQLInt })
 
-    const d = yupSilk(
-      array(date().meta({ type: () => GraphQLDate }))
-    ).getGraphQLType()
+    const d = getGraphQLType(
+      yupSilk(array(date().meta({ type: () => GraphQLDate })))
+    )
     expect(d).toBeInstanceOf(GraphQLList)
     expect(d).toMatchObject({ ofType: GraphQLDate })
   })
@@ -573,7 +576,7 @@ describe("YupSilk", () => {
 })
 
 function printYupSilk(schema: Schema): string {
-  return printType(yupSilk(schema).getGraphQLType() as GraphQLNamedType)
+  return printType(getGraphQLType(yupSilk(schema)) as GraphQLNamedType)
 }
 
 function printResolver(...resolvers: SilkResolver[]): string {

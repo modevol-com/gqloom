@@ -8,7 +8,7 @@ import {
   lexicographicSortSchema,
   GraphQLInt,
 } from "graphql"
-import { silk } from "../resolver"
+import { getGraphQLType, silk } from "../resolver"
 import { loom } from "../resolver"
 import { SchemaWeaver } from "./schema-weaver"
 
@@ -92,7 +92,7 @@ describe("SchemaWeaver", () => {
           new GraphQLObjectType({
             name: "CreateGiraffeInput",
             fields: {
-              data: { type: GiraffeInput.getGraphQLType() },
+              data: { type: getGraphQLType(GiraffeInput) },
             },
           })
         ),

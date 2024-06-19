@@ -1,3 +1,4 @@
+import { SYMBOLS } from "."
 import type { MayPromise, ObjectOrNever } from "../utils"
 import { isSilk } from "./silk"
 import type {
@@ -57,8 +58,8 @@ export function parseInput(
   }
 
   if (isSilk(inputSchema)) {
-    if (typeof inputSchema.parse === "function") {
-      return inputSchema.parse(input)
+    if (typeof inputSchema[SYMBOLS.PARSE] === "function") {
+      return inputSchema[SYMBOLS.PARSE](input)
     }
     return input
   }
@@ -73,8 +74,8 @@ async function parseInputEntries(
   const result: Record<string, any> = {}
   await Promise.all(
     Object.entries(inputSchema).map(async ([key, value]) => {
-      if (typeof value.parse === "function") {
-        result[key] = await value.parse(input[key])
+      if (typeof value[SYMBOLS.PARSE] === "function") {
+        result[key] = await value[SYMBOLS.PARSE](input[key])
       } else {
         result[key] = input[key]
       }

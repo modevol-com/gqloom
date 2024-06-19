@@ -5,6 +5,7 @@ import {
   ensureInterfaceType,
   weaverContext,
   mergeExtensions,
+  SYMBOLS,
 } from "@gqloom/core"
 import {
   GraphQLString,
@@ -51,11 +52,11 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
       !this.schemaDescription.nullable && !this.schemaDescription.optional
   }
 
-  getGraphQLType() {
+  [SYMBOLS.GET_GRAPHQL_TYPE]() {
     return YupSilk.toNullableGraphQLType(this.schemaDescription)
   }
 
-  parse(input: InferType<TSchema>): Promise<InferType<TSchema>> {
+  [SYMBOLS.PARSE](input: InferType<TSchema>): Promise<InferType<TSchema>> {
     return this.schema.validate(input)
   }
 
@@ -198,7 +199,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
     const list = typeof thunkList === "function" ? thunkList() : thunkList
 
     return list.map((yupSchema) =>
-      ensureInterfaceType(new YupSilk(yupSchema).getGraphQLType())
+      ensureInterfaceType(new YupSilk(yupSchema)[SYMBOLS.GET_GRAPHQL_TYPE]())
     )
   }
 

@@ -7,6 +7,7 @@ import type {
   InputSchemaToSilk,
 } from "./input"
 import type { GraphQLFieldConfig, GraphQLOutputType } from "graphql"
+import { type PARSE, type GET_GRAPHQL_TYPE } from "./symbols"
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
@@ -16,12 +17,12 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
   /**
    * GraphQL type for schema
    */
-  getGraphQLType(): GraphQLOutputType
+  [GET_GRAPHQL_TYPE]: () => GraphQLOutputType
 
   /**
    * validate and transform input to output
    */
-  parse?: (input: TInput) => MayPromise<TOutput>
+  [PARSE]?: (input: TInput) => MayPromise<TOutput>
 
   /**
    * Input and output type.

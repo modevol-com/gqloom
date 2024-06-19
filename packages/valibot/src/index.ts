@@ -45,7 +45,7 @@ import {
   type VariantOptionsAsync,
   type VariantSchemaAsync,
 } from "valibot"
-import { type GraphQLSilk } from "@gqloom/core"
+import { SYMBOLS, type GraphQLSilk } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -57,6 +57,45 @@ import {
 } from "graphql"
 import { ValibotMetadataCollector } from "./metadata"
 
+type SupportedSchema =
+  | ArraySchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | ArraySchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | BigintSchema<any>
+  | BooleanSchema<any>
+  | DateSchema<any>
+  | EnumSchema<Enum, any>
+  | LiteralSchema<Literal, any>
+  | LooseObjectSchema<ObjectEntries, any>
+  | LooseObjectSchemaAsync<ObjectEntriesAsync, any>
+  | NonNullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NonNullableSchemaAsync<
+      BaseSchema<unknown, unknown, BaseIssue<unknown>>,
+      any
+    >
+  | NonNullishSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NonNullishSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NonOptionalSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NonOptionalSchemaAsync<
+      BaseSchema<unknown, unknown, BaseIssue<unknown>>,
+      any
+    >
+  | NullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NullableSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NullishSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NullishSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | NumberSchema<any>
+  | ObjectSchema<ObjectEntries, any>
+  | ObjectSchemaAsync<ObjectEntriesAsync, any>
+  | OptionalSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | OptionalSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
+  | PicklistSchema<PicklistOptions, any>
+  | StrictObjectSchema<ObjectEntries, any>
+  | StrictObjectSchemaAsync<ObjectEntriesAsync, any>
+  | StringSchema<any>
+  | UnionSchema<UnionOptions, any>
+  | UnionSchemaAsync<UnionOptionsAsync, any>
+  | VariantSchema<string, VariantOptions<string>, any>
+  | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>
 export class ValibotSilkBuilder {
   static nullishTypes: Set<string> = new Set<
     (
@@ -126,7 +165,7 @@ export function valibotSilk<
 >(
   schema: TSchema
 ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
-  return Object.assign(schema, { getGraphQLType })
+  return Object.assign(schema, { [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType })
 }
 
 function getGraphQLType(
@@ -134,43 +173,3 @@ function getGraphQLType(
 ): GraphQLOutputType {
   return ValibotSilkBuilder.toGraphQLType(this)
 }
-
-type SupportedSchema =
-  | ArraySchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | ArraySchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | BigintSchema<any>
-  | BooleanSchema<any>
-  | DateSchema<any>
-  | EnumSchema<Enum, any>
-  | LiteralSchema<Literal, any>
-  | LooseObjectSchema<ObjectEntries, any>
-  | LooseObjectSchemaAsync<ObjectEntriesAsync, any>
-  | NonNullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonNullableSchemaAsync<
-      BaseSchema<unknown, unknown, BaseIssue<unknown>>,
-      any
-    >
-  | NonNullishSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonNullishSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonOptionalSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonOptionalSchemaAsync<
-      BaseSchema<unknown, unknown, BaseIssue<unknown>>,
-      any
-    >
-  | NullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NullableSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NullishSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NullishSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NumberSchema<any>
-  | ObjectSchema<ObjectEntries, any>
-  | ObjectSchemaAsync<ObjectEntriesAsync, any>
-  | OptionalSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | OptionalSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | PicklistSchema<PicklistOptions, any>
-  | StrictObjectSchema<ObjectEntries, any>
-  | StrictObjectSchemaAsync<ObjectEntriesAsync, any>
-  | StringSchema<any>
-  | UnionSchema<UnionOptions, any>
-  | UnionSchemaAsync<UnionOptionsAsync, any>
-  | VariantSchema<string, VariantOptions<string>, any>
-  | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>

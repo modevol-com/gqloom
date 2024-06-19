@@ -30,7 +30,11 @@ import {
   type WeaverContext,
 } from "./weaver-context"
 import { inputToArgs } from "./input"
-import { type ResolvingOptions, defaultSubscriptionResolve } from "../resolver"
+import {
+  type ResolvingOptions,
+  defaultSubscriptionResolve,
+  getGraphQLType,
+} from "../resolver"
 import { createFieldNode, createObjectTypeNode } from "./definition-node"
 import { extractGqloomExtension } from "./extensions"
 
@@ -119,7 +123,7 @@ export class LoomObjectType extends GraphQLObjectType {
     field: SilkOperationOrField
   ): GraphQLFieldConfig<any, any> {
     try {
-      let outputType = this.getCacheType(field.output.getGraphQLType())
+      let outputType = this.getCacheType(getGraphQLType(field.output))
 
       if (
         (field.nonNull ?? field.output.nonNull) &&

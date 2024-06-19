@@ -5,7 +5,11 @@ import {
   type GraphQLSchemaConfig,
   isNonNullType,
 } from "graphql"
-import { RESOLVER_OPTIONS_KEY, type ResolvingOptions } from "../resolver"
+import {
+  RESOLVER_OPTIONS_KEY,
+  getGraphQLType,
+  type ResolvingOptions,
+} from "../resolver"
 import { LoomObjectType } from "./object"
 import { type Middleware } from "../utils"
 import {
@@ -74,7 +78,7 @@ export class SchemaWeaver {
     const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
-      let gqlType = parent.getGraphQLType()
+      let gqlType = getGraphQLType(parent)
 
       if (isNonNullType(gqlType)) gqlType = gqlType.ofType
 

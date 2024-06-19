@@ -6,6 +6,7 @@ import {
   weaverContext,
   mergeExtensions,
   type GQLoomExtensions,
+  SYMBOLS,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -69,7 +70,7 @@ export class ZodSilk<TSchema extends Schema>
   "~types"?: { input: input<TSchema>; output: output<TSchema> }
   constructor(public schema: TSchema) {}
 
-  getGraphQLType() {
+  [SYMBOLS.GET_GRAPHQL_TYPE]() {
     return ZodSilk.toNullableGraphQLType(this.schema)
   }
 
@@ -301,7 +302,7 @@ export class ZodSilk<TSchema extends Schema>
     }
   }
 
-  parse(input: input<TSchema>): Promise<output<TSchema>> {
+  [SYMBOLS.PARSE](input: input<TSchema>): Promise<output<TSchema>> {
     return this.schema.parseAsync(input)
   }
 }
