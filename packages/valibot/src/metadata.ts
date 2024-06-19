@@ -1,31 +1,14 @@
 import {
-  type SchemaWithPipe,
-  type SchemaWithPipeAsync,
-  type BaseSchema,
   type PipeItem,
   type BaseTransformation,
   type BaseIssue,
-  type BaseSchemaAsync,
   type PipeItemAsync,
 } from "valibot"
 
-import { type GraphQLFieldConfig } from "graphql"
-
-export type PipedSchema =
-  | SchemaWithPipe<
-      [
-        BaseSchema<unknown, unknown, BaseIssue<unknown>>,
-        ...PipeItem<unknown, unknown, BaseIssue<unknown>>[],
-      ]
-    >
-  | SchemaWithPipeAsync<
-      [
-        BaseSchemaAsync<unknown, unknown, BaseIssue<unknown>>,
-        ...PipeItem<unknown, unknown, BaseIssue<unknown>>[],
-      ]
-    >
-  | BaseSchema<unknown, unknown, BaseIssue<unknown>>
-  | BaseSchemaAsync<unknown, unknown, BaseIssue<unknown>>
+import { type GraphQLObjectTypeConfig, type GraphQLFieldConfig } from "graphql"
+import { type PipedSchema } from "./types"
+import { isNullish } from "./utils"
+import { deepMerge } from "@gqloom/core"
 
 export class ValibotMetadataCollector {
   static getFieldConfig(
@@ -33,9 +16,35 @@ export class ValibotMetadataCollector {
   ): Partial<GraphQLFieldConfig<any, any, any>> | undefined {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
+    let defaultValue: any
+    let config: Partial<GraphQLFieldConfig<any, any, any>> | undefined
+
     for (const item of pipe) {
+      if (item.kind === "schema" && isNullish(item)) {
+        defaultValue ??= item.default
+        if (defaultValue !== undefined && config !== undefined) break
+      }
       if (item.type === "gqloom.asField") {
-        return (item as AsFieldMetadata<unknown>).config
+        config ??= (item as AsFieldMetadata<unknown>).config
+        if (defaultValue !== undefined && config !== undefined) break
+      }
+    }
+
+    return defaultValue !== undefined
+      ? deepMerge(config, {
+          extensions: { defaultValue },
+        })
+      : config
+  }
+
+  static getObjectConfig(
+    ...schemas: PipedSchema[]
+  ): AsObjectTypeMetadata<object>["config"] | undefined {
+    const pipe = ValibotMetadataCollector.getPipe(...schemas)
+
+    for (const item of pipe) {
+      if (item.type === "gqloom.asObjectType") {
+        return (item as AsObjectTypeMetadata<object>).config
       }
     }
   }
@@ -61,6 +70,7 @@ export class ValibotMetadataCollector {
     )[] = []
     for (const schema of schemas) {
       if (schema == null) continue
+      pipe.push(schema)
       if ("pipe" in schema) {
         pipe.push(...schema.pipe)
       }
@@ -103,6 +113,47 @@ export function asField<TInput>(
     kind: "transformation",
     type: "gqloom.asField",
     reference: asField,
+    async: false,
+    _run: (dataset) => dataset,
+    config,
+  }
+}
+
+/**
+ * GraphQL Object type metadata type.
+ */
+export interface AsObjectTypeMetadata<TInput extends object>
+  extends BaseTransformation<TInput, TInput, never> {
+  /**
+   * The metadata type.
+   */
+  readonly type: "gqloom.asObjectType"
+  /**
+   * The metadata reference.
+   */
+  readonly reference: typeof asObjectType
+
+  /**
+   * The GraphQL Object type config.
+   */
+  readonly config: Partial<GraphQLObjectTypeConfig<any, any>> &
+    Pick<GraphQLObjectTypeConfig<any, any>, "name">
+}
+
+/**
+ * Creates a GraphQL object type metadata.
+ *
+ * @param config - The GraphQL field config.
+ *
+ * @returns A GraphQL object type metadata.
+ */
+export function asObjectType<TInput extends object>(
+  config: AsObjectTypeMetadata<TInput>["config"]
+): AsObjectTypeMetadata<TInput> {
+  return {
+    kind: "transformation",
+    type: "gqloom.asObjectType",
+    reference: asObjectType,
     async: false,
     _run: (dataset) => dataset,
     config,

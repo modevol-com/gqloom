@@ -5,14 +5,36 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
-  type GraphQLObjectType,
+  GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
   GraphQLNonNull,
+  type GraphQLNamedType,
+  printType,
 } from "graphql"
-import * as v from "valibot"
 import { type GQLoomExtensions, getGraphQLType } from "@gqloom/core"
-import { asField } from "../src/metadata"
+import { asField, asObjectType } from "../src/metadata"
+import {
+  type BaseSchema,
+  type BaseSchemaAsync,
+  boolean,
+  cuid2,
+  date,
+  email,
+  integer,
+  nonNullable,
+  nonNullish,
+  nonOptional,
+  nullable,
+  nullish,
+  number,
+  object,
+  optional,
+  pipe,
+  string,
+  ulid,
+  uuid,
+} from "valibot"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -27,80 +49,114 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 describe("valibot", () => {
   it("should handle scalar", () => {
-    expect(getGraphQLType(valibotSilk(v.nullable(v.string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nullable(string())))).toEqual(
       GraphQLString
     )
-    expect(getGraphQLType(valibotSilk(v.nullable(v.boolean())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nullable(boolean())))).toEqual(
       GraphQLBoolean
     )
-    expect(getGraphQLType(valibotSilk(v.nullable(v.number())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nullable(number())))).toEqual(
       GraphQLFloat
     )
     expect(
-      getGraphQLType(valibotSilk(v.pipe(v.nullable(v.number()), v.integer())))
+      getGraphQLType(valibotSilk(pipe(nullable(number()), integer())))
     ).toEqual(GraphQLInt)
 
     expect(
-      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.ulid())))
+      getGraphQLType(valibotSilk(pipe(optional(string()), ulid())))
     ).toEqual(GraphQLID)
     expect(
-      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.uuid())))
+      getGraphQLType(valibotSilk(pipe(optional(string()), uuid())))
     ).toEqual(GraphQLID)
     expect(
-      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.cuid2())))
+      getGraphQLType(valibotSilk(pipe(optional(string()), cuid2())))
     ).toEqual(GraphQLID)
     expect(
-      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.email())))
+      getGraphQLType(valibotSilk(pipe(optional(string()), email())))
     ).toEqual(GraphQLString)
   })
 
-  it.skip("should keep default value in extensions", () => {
-    const objectType = v.object({
-      foo: v.optional(v.string(), "foo"),
-    })
+  it("should keep default value in extensions", () => {
+    const objectType = pipe(
+      object({
+        foo: optional(string(), () => "foo"),
+      }),
+      asObjectType({ name: "ObjectType" })
+    )
 
-    const objectGqlType = getGraphQLType(
-      valibotSilk(objectType)
-    ) as GraphQLObjectType
+    const objectGqlType = (
+      getGraphQLType(
+        valibotSilk(objectType)
+      ) as GraphQLNonNull<GraphQLObjectType>
+    ).ofType
 
     const extensions = objectGqlType.getFields().foo.extensions
 
-    expect(extensions.gqloom?.defaultValue).toEqual(expect.any(Function))
-    expect(extensions.gqloom?.defaultValue?.()).toEqual("foo")
+    expect(extensions?.defaultValue).toEqual(expect.any(Function))
+    expect(extensions?.defaultValue?.()).toEqual("foo")
   })
 
   it("should handle custom type", () => {
     expect(
       getGraphQLType(
-        valibotSilk(
-          v.pipe(v.nullable(v.date()), asField({ type: GraphQLDate }))
-        )
+        valibotSilk(pipe(nullable(date()), asField({ type: GraphQLDate })))
       )
     ).toEqual(GraphQLDate)
   })
 
   it("should handle non null", () => {
-    expect(getGraphQLType(valibotSilk(v.string()))).toEqual(
+    expect(getGraphQLType(valibotSilk(string()))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(v.nonNullable(v.string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nonNullable(string())))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(v.nonOptional(v.string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nonOptional(string())))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(v.nonNullish(v.string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nonNullish(string())))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
 
-    expect(getGraphQLType(valibotSilk(v.nullable(v.string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nullable(string())))).toEqual(
       GraphQLString
     )
-    expect(getGraphQLType(valibotSilk(v.optional(v.string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(optional(string())))).toEqual(
       GraphQLString
     )
-    expect(getGraphQLType(valibotSilk(v.nullish(v.string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(nullish(string())))).toEqual(
       GraphQLString
     )
   })
+
+  it("should handle object", () => {
+    const Cat = pipe(
+      object({
+        name: string(),
+        age: pipe(number(), integer()),
+        loveFish: optional(boolean()),
+      }),
+      asObjectType({ name: "Cat" })
+    )
+
+    expect(
+      (getGraphQLType(valibotSilk(Cat)) as GraphQLNonNull<any>).ofType
+    ).toBeInstanceOf(GraphQLObjectType)
+
+    expect(printValibotSilk(Cat)).toMatchInlineSnapshot(`
+      "type Cat {
+        name: String!
+        age: Float!
+        loveFish: Boolean
+      }"
+    `)
+  })
 })
+
+function printValibotSilk(
+  schema: BaseSchema<any, any, any> | BaseSchemaAsync<any, any, any>
+): string {
+  let gqlType = getGraphQLType(valibotSilk(schema))
+  while ("ofType" in gqlType) gqlType = gqlType.ofType
+  return printType(gqlType as GraphQLNamedType)
+}

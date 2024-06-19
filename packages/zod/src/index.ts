@@ -153,6 +153,8 @@ export class ZodSilk<TSchema extends Schema>
       const existing = weaverContext.objectMap?.get(name)
       if (existing) return existing
 
+      const strictSchema = schema.strict()
+
       return new GraphQLObjectType({
         name,
         fields: mapValue(schema.shape as ZodRawShape, (field) => {
@@ -163,7 +165,7 @@ export class ZodSilk<TSchema extends Schema>
           }
         }),
         isTypeOf: (input) =>
-          schema.safeParseAsync(input).then((it) => it.success),
+          strictSchema.safeParseAsync(input).then((it) => it.success),
         ...objectConfig,
       })
     }

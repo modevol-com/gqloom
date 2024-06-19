@@ -1,112 +1,34 @@
 import {
-  type BaseIssue,
-  type BaseSchema,
   type InferOutput,
   type InferInput,
-  type ArraySchema,
-  type ArraySchemaAsync,
-  type BigintSchema,
-  type BooleanSchema,
-  type DateSchema,
-  type EnumSchema,
-  type Enum,
-  type LiteralSchema,
-  type Literal,
-  type LooseObjectSchema,
-  type ObjectEntries,
-  type ObjectEntriesAsync,
-  type LooseObjectSchemaAsync,
-  type NonNullableSchema,
-  type NonNullableSchemaAsync,
-  type NonNullishSchema,
-  type NonNullishSchemaAsync,
-  type NonOptionalSchemaAsync,
-  type NonOptionalSchema,
-  type NullableSchema,
-  type NullableSchemaAsync,
-  type NullishSchema,
-  type NullishSchemaAsync,
-  type NumberSchema,
-  type ObjectSchema,
-  type ObjectSchemaAsync,
-  type OptionalSchema,
-  type OptionalSchemaAsync,
-  type PicklistSchema,
-  type PicklistOptions,
-  type StrictObjectSchema,
-  type StrictObjectSchemaAsync,
-  type StringSchema,
-  type UnionOptions,
-  type UnionSchema,
-  type UnionSchemaAsync,
-  type UnionOptionsAsync,
-  type VariantSchema,
-  type VariantOptions,
-  type VariantOptionsAsync,
-  type VariantSchemaAsync,
-  type BaseSchemaAsync,
+  safeParseAsync,
+  strictObjectAsync,
 } from "valibot"
-import { SYMBOLS, weaverContext, type GraphQLSilk } from "@gqloom/core"
+import {
+  SYMBOLS,
+  mapValue,
+  weaverContext,
+  type GraphQLSilk,
+} from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
   GraphQLNonNull,
+  GraphQLObjectType,
   GraphQLString,
   isNonNullType,
   type GraphQLOutputType,
 } from "graphql"
 import { ValibotMetadataCollector } from "./metadata"
-
-type SupportedSchema =
-  | ArraySchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | ArraySchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | BigintSchema<any>
-  | BooleanSchema<any>
-  | DateSchema<any>
-  | EnumSchema<Enum, any>
-  | LiteralSchema<Literal, any>
-  | LooseObjectSchema<ObjectEntries, any>
-  | LooseObjectSchemaAsync<ObjectEntriesAsync, any>
-  | NonNullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonNullableSchemaAsync<
-      BaseSchema<unknown, unknown, BaseIssue<unknown>>,
-      any
-    >
-  | NonNullishSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonNullishSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonOptionalSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NonOptionalSchemaAsync<
-      BaseSchema<unknown, unknown, BaseIssue<unknown>>,
-      any
-    >
-  | NullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NullableSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NullishSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NullishSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | NumberSchema<any>
-  | ObjectSchema<ObjectEntries, any>
-  | ObjectSchemaAsync<ObjectEntriesAsync, any>
-  | OptionalSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | OptionalSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
-  | PicklistSchema<PicklistOptions, any>
-  | StrictObjectSchema<ObjectEntries, any>
-  | StrictObjectSchemaAsync<ObjectEntriesAsync, any>
-  | StringSchema<any>
-  | UnionSchema<UnionOptions, any>
-  | UnionSchemaAsync<UnionOptionsAsync, any>
-  | VariantSchema<string, VariantOptions<string>, any>
-  | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>
-
-export type UnknownSchema =
-  | BaseSchema<unknown, unknown, BaseIssue<unknown>>
-  | BaseSchemaAsync<unknown, unknown, BaseIssue<unknown>>
+import { nullishTypes } from "./utils"
+import { type SupportedSchema, type BaseSchemaOrAsync } from "./types"
 
 export class ValibotSilkBuilder {
-  static toNullableGraphQLType(schema: UnknownSchema): GraphQLOutputType {
+  static toNullableGraphQLType(schema: BaseSchemaOrAsync): GraphQLOutputType {
     const nullable = (ofType: GraphQLOutputType) => {
-      const isNullish = ValibotSilkBuilder.nullishTypes.has(schema.type)
+      const isNullish = nullishTypes.has(schema.type)
       if (isNullish) return ofType
       if (isNonNullType(ofType)) return ofType
       return new GraphQLNonNull(ofType)
@@ -118,17 +40,9 @@ export class ValibotSilkBuilder {
     return nullable(gqlType)
   }
 
-  static nullishTypes: Set<string> = new Set<
-    (
-      | NullableSchema<any, unknown>
-      | NullishSchema<any, unknown>
-      | OptionalSchema<any, unknown>
-    )["type"]
-  >(["nullable", "nullish", "optional"])
-
   static toGraphQLType(
-    valibotSchema: UnknownSchema,
-    ...wrappers: UnknownSchema[]
+    valibotSchema: BaseSchemaOrAsync,
+    ...wrappers: BaseSchemaOrAsync[]
   ): GraphQLOutputType {
     const config = ValibotMetadataCollector.getFieldConfig(
       valibotSchema,
@@ -139,7 +53,7 @@ export class ValibotSilkBuilder {
     const schema = valibotSchema as SupportedSchema
     switch (schema.type) {
       case "array":
-        if (ValibotSilkBuilder.nullishTypes.has(schema.item.type))
+        if (nullishTypes.has(schema.item.type))
           return ValibotSilkBuilder.toGraphQLType(
             schema.item,
             schema,
@@ -168,8 +82,30 @@ export class ValibotSilkBuilder {
         }
       case "loose_object":
       case "object":
-      case "strict_object":
-        throw new Error("todo") // TODO
+      case "strict_object": {
+        const { name, ...objectConfig } =
+          ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
+        if (!name) throw new Error("Object must have a name")
+
+        const existing = weaverContext.objectMap?.get(name)
+        if (existing) return existing
+
+        const strictSchema = strictObjectAsync(schema.entries)
+
+        return new GraphQLObjectType({
+          name,
+          fields: mapValue(schema.entries, (field) => {
+            const fieldConfig = ValibotMetadataCollector.getFieldConfig(field)
+            return {
+              type: ValibotSilkBuilder.toNullableGraphQLType(field),
+              ...fieldConfig,
+            }
+          }),
+          isTypeOf: (input) =>
+            safeParseAsync(strictSchema, input).then((x) => x.success),
+          ...objectConfig,
+        })
+      }
       case "non_nullable":
       case "non_nullish":
       case "non_optional":
@@ -197,12 +133,12 @@ export class ValibotSilkBuilder {
   }
 }
 
-export function valibotSilk<TSchema extends UnknownSchema>(
+export function valibotSilk<TSchema extends BaseSchemaOrAsync>(
   schema: TSchema
 ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
   return Object.assign(schema, { [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType })
 }
 
-function getGraphQLType(this: UnknownSchema): GraphQLOutputType {
+function getGraphQLType(this: BaseSchemaOrAsync): GraphQLOutputType {
   return ValibotSilkBuilder.toNullableGraphQLType(this)
 }
