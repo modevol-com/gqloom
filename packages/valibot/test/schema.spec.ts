@@ -11,6 +11,7 @@ import {
   GraphQLNonNull,
   type GraphQLNamedType,
   printType,
+  GraphQLList,
 } from "graphql"
 import { type GQLoomExtensions, getGraphQLType } from "@gqloom/core"
 import { asField, asObjectType } from "../src/metadata"
@@ -34,6 +35,7 @@ import {
   string,
   ulid,
   uuid,
+  array,
 } from "valibot"
 
 declare module "graphql" {
@@ -127,6 +129,23 @@ describe("valibot", () => {
     expect(getGraphQLType(valibotSilk(nullish(string())))).toEqual(
       GraphQLString
     )
+  })
+  it("should handle array", () => {
+    expect(getGraphQLType(valibotSilk(array(string())))).toEqual(
+      new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
+    )
+
+    expect(getGraphQLType(valibotSilk(optional(array(string()))))).toEqual(
+      new GraphQLList(new GraphQLNonNull(GraphQLString))
+    )
+
+    expect(getGraphQLType(valibotSilk(array(nullable(string()))))).toEqual(
+      new GraphQLNonNull(new GraphQLList(GraphQLString))
+    )
+
+    expect(
+      getGraphQLType(valibotSilk(nullable(array(nullable(string())))))
+    ).toEqual(new GraphQLList(GraphQLString))
   })
 
   it("should handle object", () => {

@@ -15,6 +15,7 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
@@ -27,17 +28,10 @@ import { type SupportedSchema, type BaseSchemaOrAsync } from "./types"
 
 export class ValibotSilkBuilder {
   static toNullableGraphQLType(schema: BaseSchemaOrAsync): GraphQLOutputType {
-    const nullable = (ofType: GraphQLOutputType) => {
-      const isNullish = nullishTypes.has(schema.type)
-      if (isNullish) return ofType
-      if (isNonNullType(ofType)) return ofType
-      return new GraphQLNonNull(ofType)
-    }
-
     const gqlType = ValibotSilkBuilder.toGraphQLType(schema)
 
     weaverContext.memo(gqlType)
-    return nullable(gqlType)
+    return ValibotSilkBuilder.nullable(gqlType, schema)
   }
 
   static toGraphQLType(
@@ -52,16 +46,16 @@ export class ValibotSilkBuilder {
 
     const schema = valibotSchema as SupportedSchema
     switch (schema.type) {
-      case "array":
-        if (nullishTypes.has(schema.item.type))
-          return ValibotSilkBuilder.toGraphQLType(
-            schema.item,
-            schema,
-            ...wrappers
-          )
-        return new GraphQLNonNull(
-          ValibotSilkBuilder.toGraphQLType(schema.item, schema, ...wrappers)
+      case "array": {
+        const itemType = ValibotSilkBuilder.toGraphQLType(
+          schema.item,
+          schema,
+          ...wrappers
         )
+        return new GraphQLList(
+          ValibotSilkBuilder.nullable(itemType, schema.item)
+        )
+      }
       case "bigint":
         return GraphQLInt
       case "boolean":
@@ -130,6 +124,13 @@ export class ValibotSilkBuilder {
     }
 
     throw new Error(`Unsupported schema type ${schema.type}`)
+  }
+
+  static nullable(ofType: GraphQLOutputType, wrapper: BaseSchemaOrAsync) {
+    const isNullish = nullishTypes.has(wrapper.type)
+    if (isNullish) return ofType
+    if (isNonNullType(ofType)) return ofType
+    return new GraphQLNonNull(ofType)
   }
 }
 
