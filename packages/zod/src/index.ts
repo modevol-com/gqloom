@@ -162,6 +162,8 @@ export class ZodSilk<TSchema extends Schema>
             ...fieldConfig,
           }
         }),
+        isTypeOf: (input) =>
+          schema.safeParseAsync(input).then((it) => it.success),
         ...objectConfig,
       })
     }
