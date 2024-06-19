@@ -88,14 +88,19 @@ describe("ZodSilk", () => {
 
     const extensions = objectGqlType.getFields().foo.extensions
 
-    expect(extensions.gqloom?.defaultValue).toEqual(expect.any(Function))
-    expect(extensions.gqloom?.defaultValue?.()).toEqual("foo")
+    expect(extensions.defaultValue).toEqual(expect.any(Function))
+    expect(extensions.defaultValue?.()).toEqual("foo")
   })
 
   it("should handle custom type", () => {
     expect(
       getGraphQLType(
-        zodSilk(fieldType({ type: GraphQLDate }, z.date().optional()))
+        zodSilk(
+          z
+            .date()
+            .optional()
+            .superRefine(fieldType({ type: GraphQLDate }))
+        )
       )
     ).toEqual(GraphQLDate)
   })
@@ -188,14 +193,13 @@ describe("ZodSilk", () => {
       })
       .describe("Fruit: Some fruits you might like")
 
-    const Orange = objectType(
-      { name: "Origin", interfaces: [Fruit] },
-      z.object({
+    const Orange = z
+      .object({
         name: z.string(),
         color: z.string(),
         prize: z.number(),
       })
-    )
+      .superRefine(objectType({ name: "Origin", interfaces: [Fruit] }))
 
     const r = resolver({
       orange: query(Orange, () => 0 as any),
@@ -491,18 +495,20 @@ describe("ZodSilk", () => {
 
     it("should avoid duplicate interface", () => {
       const Fruit = z.object({ color: z.string().optional() }).describe("Fruit")
-      const Orange = objectType(
-        { name: "Orange", interfaces: [Fruit] },
-        z.object({ color: z.string().optional(), flavor: z.string() })
-      )
+      const Orange = z
+        .object({
+          color: z.string().optional(),
+          flavor: z.string(),
+        })
+        .superRefine(objectType({ name: "Orange", interfaces: [Fruit] }))
 
-      const Apple = objectType(
-        { name: "Apple", interfaces: [Fruit] },
-        z.object({
+      const Apple = z
+        .object({
           color: z.string().optional(),
           flavor: z.string().optional(),
         })
-      )
+        .superRefine(objectType({ name: "Apple", interfaces: [Fruit] }))
+
       const r1 = resolver({
         apple: query(Apple.optional(), () => ({ flavor: "" })),
         apples: query(z.array(Apple.optional()).optional(), () => []),

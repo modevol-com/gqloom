@@ -4,9 +4,10 @@ import {
   mapValue,
   ensureInterfaceType,
   weaverContext,
-  mergeExtensions,
-  type GQLoomExtensions,
   SYMBOLS,
+  deepMerge,
+  type GQLoomExtensions,
+  mergeExtensions,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -23,12 +24,12 @@ import {
   type GraphQLEnumValueConfigMap,
   GraphQLUnionType,
   isObjectType,
-  type GraphQLObjectTypeConfig,
-  type GraphQLEnumTypeConfig,
-  type GraphQLUnionTypeConfig,
-  type GraphQLFieldConfig,
   type GraphQLInterfaceType,
   isInterfaceType,
+  type GraphQLEnumTypeConfig,
+  type GraphQLFieldConfig,
+  type GraphQLObjectTypeConfig,
+  type GraphQLUnionTypeConfig,
 } from "graphql"
 import {
   ZodArray,
@@ -51,19 +52,23 @@ import {
   type ZodTypeAny,
   ZodDiscriminatedUnion,
   ZodLiteral,
-  type ZodSchema,
   ZodDefault,
   ZodEffects,
+  type ZodSchema,
 } from "zod"
-import { ZodIDKinds } from "./utils"
+import { ZodIDKinds, parseFieldConfig, parseObjectConfig } from "./utils"
+import { resolveTypeByDiscriminatedUnion } from "./utils"
+// import { metadataCollector } from "./metadata-collector"
 import {
-  resolveTypeByDiscriminatedUnion,
-  parseObjectConfig,
-  parseFieldConfig,
-} from "./utils"
-import { metadataCollector } from "./metadata-collector"
+  type UnionConfig,
+  type FieldConfig,
+  type TypeOrFieldConfig,
+  type EnumConfig,
+  type ObjectConfig,
+} from "./types"
+import { getConfig } from "./metadata"
 
-export * from "./metadata-collector"
+export * from "./metadata"
 
 export class ZodSilk<TSchema extends Schema>
   implements GraphQLSilk<output<TSchema>, input<TSchema>>
@@ -91,23 +96,27 @@ export class ZodSilk<TSchema extends Schema>
 
   static toGraphQLType(
     schema: Schema,
-    extensions?: GQLoomExtensions
+    config?: TypeOrFieldConfig
   ): GraphQLOutputType {
-    const customType = metadataCollector.fields.get(schema)?.type
+    const customType = (config as FieldConfig | undefined)?.type
     if (customType) return customType
 
     if (schema instanceof ZodEffects) {
-      return ZodSilk.toGraphQLType(schema.innerType())
+      config ??= getConfig(schema)
+      return ZodSilk.toGraphQLType(schema.innerType(), config)
     }
 
     if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
-      return ZodSilk.toGraphQLType(schema.unwrap())
+      return ZodSilk.toGraphQLType(schema.unwrap(), config)
     }
 
     if (schema instanceof ZodDefault) {
-      return ZodSilk.toGraphQLType(schema._def.innerType, {
-        gqloom: { defaultValue: schema._def.defaultValue },
-      })
+      return ZodSilk.toGraphQLType(
+        schema._def.innerType,
+        deepMerge(config, {
+          extensions: { defaultValue: schema._def.defaultValue },
+        })
+      )
     }
 
     if (schema instanceof ZodArray) {
@@ -138,7 +147,7 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodObject) {
-      const { name, ...config } = ZodSilk.getObjectConfig(schema)
+      const { name, ...objectConfig } = ZodSilk.getObjectConfig(schema, config)
       if (!name) throw new Error("Object must have a name")
 
       const existing = weaverContext.objectMap?.get(name)
@@ -153,13 +162,12 @@ export class ZodSilk<TSchema extends Schema>
             ...fieldConfig,
           }
         }),
-        ...config,
-        extensions: mergeExtensions(config.extensions, extensions),
+        ...objectConfig,
       })
     }
 
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
-      const { name, ...config } = ZodSilk.getEnumConfig(schema)
+      const { name, ...enumConfig } = ZodSilk.getEnumConfig(schema)
       if (!name) throw new Error("Enum must have a name")
 
       const existing = weaverContext.enumMap?.get(name)
@@ -181,13 +189,12 @@ export class ZodSilk<TSchema extends Schema>
       return new GraphQLEnumType({
         name,
         values,
-        ...config,
-        extensions: mergeExtensions(config.extensions, extensions),
+        ...enumConfig,
       })
     }
 
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
-      const { name, ...config } = ZodSilk.getUnionConfig(schema)
+      const { name, ...unionConfig } = ZodSilk.getUnionConfig(schema, config)
       if (!name) throw new Error("Enum must have a name")
 
       const existing = weaverContext.unionMap?.get(name)
@@ -208,8 +215,7 @@ export class ZodSilk<TSchema extends Schema>
             : undefined,
         types,
         name,
-        ...config,
-        extensions: mergeExtensions(config.extensions, extensions),
+        ...unionConfig,
       })
     }
 
@@ -217,21 +223,22 @@ export class ZodSilk<TSchema extends Schema>
   }
 
   protected static getObjectConfig(
-    schema: ZodObject<any>
+    schema: ZodObject<any>,
+    config?: TypeOrFieldConfig
   ): Partial<GraphQLObjectTypeConfig<any, any>> {
-    const fromMetadata = metadataCollector.objects.get(schema)
+    const objectConfig = config as ObjectConfig | undefined
     const fromDescription = schema.description
       ? parseObjectConfig(schema.description)
       : undefined
-    const interfaces = fromMetadata?.interfaces?.map(
+    const interfaces = objectConfig?.interfaces?.map(
       ZodSilk.ensureInterfaceType
     )
     return {
-      ...fromMetadata,
+      ...objectConfig,
       ...fromDescription,
       interfaces,
       extensions: mergeExtensions(
-        fromMetadata?.extensions,
+        objectConfig?.extensions,
         fromDescription?.extensions
       ),
     }
@@ -247,34 +254,37 @@ export class ZodSilk<TSchema extends Schema>
   }
 
   protected static getEnumConfig(
-    schema: ZodEnum<any> | ZodNativeEnum<any>
+    schema: ZodEnum<any> | ZodNativeEnum<any>,
+    config?: TypeOrFieldConfig
   ): Partial<GraphQLEnumTypeConfig> {
-    const fromMetadata = metadataCollector.enums.get(schema)
+    const enumConfig = config as EnumConfig | undefined
+
     const fromDescription = schema.description
       ? parseObjectConfig(schema.description)
       : undefined
     return {
-      ...fromMetadata,
+      ...enumConfig,
       ...fromDescription,
       extensions: mergeExtensions(
-        fromMetadata?.extensions,
+        enumConfig?.extensions,
         fromDescription?.extensions
       ),
     }
   }
 
   protected static getUnionConfig(
-    schema: ZodDiscriminatedUnion<any, any> | ZodUnion<any>
+    schema: ZodDiscriminatedUnion<any, any> | ZodUnion<any>,
+    config?: TypeOrFieldConfig
   ): Partial<GraphQLUnionTypeConfig<any, any>> {
-    const fromMetadata = metadataCollector.unions.get(schema)
+    const unionConfig = config as UnionConfig | undefined
     const fromDescription = schema.description
       ? parseObjectConfig(schema.description)
       : undefined
     return {
-      ...fromMetadata,
+      ...unionConfig,
       ...fromDescription,
       extensions: mergeExtensions(
-        fromMetadata?.extensions,
+        unionConfig?.extensions,
         fromDescription?.extensions
       ),
     }
@@ -286,11 +296,11 @@ export class ZodSilk<TSchema extends Schema>
     const fromDefault = (() => {
       if (schema instanceof ZodDefault) {
         return {
-          gqloom: { defaultValue: schema._def.defaultValue },
+          defaultValue: schema._def.defaultValue,
         } as GQLoomExtensions
       }
     })()
-    const fromMetadata = metadataCollector.fields.get(schema)
+    const config = getConfig(schema) as FieldConfig | undefined
     const fromDescription = schema.description
       ? schema instanceof ZodObject
         ? parseObjectConfig(schema.description)
@@ -298,11 +308,11 @@ export class ZodSilk<TSchema extends Schema>
       : undefined
     return {
       ...fromDescription,
-      ...fromMetadata,
+      ...config,
       extensions: mergeExtensions(
         fromDefault,
         fromDescription?.extensions,
-        fromMetadata?.extensions
+        config?.extensions
       ),
     }
   }

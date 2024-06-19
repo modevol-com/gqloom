@@ -4,15 +4,20 @@
  */
 export function mapValue<T, V>(
   record: Record<string, T>,
-  fn: (value: T, key: string) => V
+  fn: (value: T, key: string) => V | typeof SKIP
 ): Record<string, V> {
   const result = Object.create(null)
 
   for (const key of Object.keys(record)) {
-    result[key] = fn(record[key], key)
+    const value = fn(record[key], key)
+    if (value === SKIP) continue
+    result[key] = value
   }
   return result
 }
+
+const SKIP = Symbol.for("mapValue.skip")
+mapValue.SKIP = SKIP
 
 // https://github.com/graphql/graphql-js/blob/main/src/jsutils/toObjMap.ts
 export function toObjMap<T>(

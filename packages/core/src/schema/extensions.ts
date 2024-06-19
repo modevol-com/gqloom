@@ -5,12 +5,12 @@ import {
 import { deepMerge } from "../utils"
 
 export interface GQLoomExtensions {
+  defaultValue?: any
   gqloom?: GQLoomExtensionAttribute
 }
 
 export interface GQLoomExtensionAttribute {
   directives?: string[]
-  defaultValue?: any
 }
 
 export function gqloomExtensions(extension: GQLoomExtensionAttribute) {
