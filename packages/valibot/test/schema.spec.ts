@@ -27,25 +27,31 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 describe("valibot", () => {
   it("should handle scalar", () => {
-    expect(getGraphQLType(valibotSilk(v.string()))).toEqual(GraphQLString)
-    expect(getGraphQLType(valibotSilk(v.boolean()))).toEqual(GraphQLBoolean)
-    expect(getGraphQLType(valibotSilk(v.number()))).toEqual(GraphQLFloat)
-    expect(
-      getGraphQLType(valibotSilk(v.pipe(v.number(), v.integer())))
-    ).toEqual(GraphQLInt)
-
-    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.ulid())))).toEqual(
-      GraphQLID
-    )
-    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.uuid())))).toEqual(
-      GraphQLID
-    )
-    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.cuid2())))).toEqual(
-      GraphQLID
-    )
-    expect(getGraphQLType(valibotSilk(v.pipe(v.string(), v.email())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.nullable(v.string())))).toEqual(
       GraphQLString
     )
+    expect(getGraphQLType(valibotSilk(v.nullable(v.boolean())))).toEqual(
+      GraphQLBoolean
+    )
+    expect(getGraphQLType(valibotSilk(v.nullable(v.number())))).toEqual(
+      GraphQLFloat
+    )
+    expect(
+      getGraphQLType(valibotSilk(v.pipe(v.nullable(v.number()), v.integer())))
+    ).toEqual(GraphQLInt)
+
+    expect(
+      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.ulid())))
+    ).toEqual(GraphQLID)
+    expect(
+      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.uuid())))
+    ).toEqual(GraphQLID)
+    expect(
+      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.cuid2())))
+    ).toEqual(GraphQLID)
+    expect(
+      getGraphQLType(valibotSilk(v.pipe(v.optional(v.string()), v.email())))
+    ).toEqual(GraphQLString)
   })
 
   it.skip("should keep default value in extensions", () => {
@@ -66,7 +72,9 @@ describe("valibot", () => {
   it("should handle custom type", () => {
     expect(
       getGraphQLType(
-        valibotSilk(v.pipe(v.date(), asField({ type: GraphQLDate })))
+        valibotSilk(
+          v.pipe(v.nullable(v.date()), asField({ type: GraphQLDate }))
+        )
       )
     ).toEqual(GraphQLDate)
   })

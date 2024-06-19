@@ -44,6 +44,7 @@ import {
   type VariantOptions,
   type VariantOptionsAsync,
   type VariantSchemaAsync,
+  type BaseSchemaAsync,
 } from "valibot"
 import { SYMBOLS, weaverContext, type GraphQLSilk } from "@gqloom/core"
 import {
@@ -97,10 +98,13 @@ type SupportedSchema =
   | UnionSchemaAsync<UnionOptionsAsync, any>
   | VariantSchema<string, VariantOptions<string>, any>
   | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>
+
+export type UnknownSchema =
+  | BaseSchema<unknown, unknown, BaseIssue<unknown>>
+  | BaseSchemaAsync<unknown, unknown, BaseIssue<unknown>>
+
 export class ValibotSilkBuilder {
-  static toNullableGraphQLType(
-    schema: BaseSchema<unknown, unknown, BaseIssue<unknown>>
-  ): GraphQLOutputType {
+  static toNullableGraphQLType(schema: UnknownSchema): GraphQLOutputType {
     const nullable = (ofType: GraphQLOutputType) => {
       const isNullish = ValibotSilkBuilder.nullishTypes.has(schema.type)
       if (isNullish) return ofType
@@ -121,18 +125,29 @@ export class ValibotSilkBuilder {
       | OptionalSchema<any, unknown>
     )["type"]
   >(["nullable", "nullish", "optional"])
+
   static toGraphQLType(
-    valibotSchema: BaseSchema<unknown, unknown, BaseIssue<unknown>>
+    valibotSchema: UnknownSchema,
+    ...wrappers: UnknownSchema[]
   ): GraphQLOutputType {
-    const config = ValibotMetadataCollector.getFieldConfig(valibotSchema)
+    const config = ValibotMetadataCollector.getFieldConfig(
+      valibotSchema,
+      ...wrappers
+    )
     if (config?.type) return config.type
 
     const schema = valibotSchema as SupportedSchema
     switch (schema.type) {
       case "array":
         if (ValibotSilkBuilder.nullishTypes.has(schema.item.type))
-          return ValibotSilkBuilder.toGraphQLType(schema.item)
-        return new GraphQLNonNull(ValibotSilkBuilder.toGraphQLType(schema.item))
+          return ValibotSilkBuilder.toGraphQLType(
+            schema.item,
+            schema,
+            ...wrappers
+          )
+        return new GraphQLNonNull(
+          ValibotSilkBuilder.toGraphQLType(schema.item, schema, ...wrappers)
+        )
       case "bigint":
         return GraphQLInt
       case "boolean":
@@ -159,17 +174,22 @@ export class ValibotSilkBuilder {
       case "non_nullish":
       case "non_optional":
         return new GraphQLNonNull(
-          ValibotSilkBuilder.toGraphQLType(schema.wrapped)
+          ValibotSilkBuilder.toGraphQLType(schema.wrapped, schema, ...wrappers)
         )
       case "nullable":
       case "nullish":
       case "optional":
-        return ValibotSilkBuilder.toGraphQLType(schema.wrapped)
+        return ValibotSilkBuilder.toGraphQLType(
+          schema.wrapped,
+          schema,
+          ...wrappers
+        )
       case "number":
-        if (ValibotMetadataCollector.isInteger(schema)) return GraphQLInt
+        if (ValibotMetadataCollector.isInteger(schema, ...wrappers))
+          return GraphQLInt
         return GraphQLFloat
       case "string":
-        if (ValibotMetadataCollector.isID(schema)) return GraphQLID
+        if (ValibotMetadataCollector.isID(schema, ...wrappers)) return GraphQLID
         return GraphQLString
     }
 
@@ -177,16 +197,12 @@ export class ValibotSilkBuilder {
   }
 }
 
-export function valibotSilk<
-  TSchema extends BaseSchema<unknown, unknown, BaseIssue<unknown>>,
->(
+export function valibotSilk<TSchema extends UnknownSchema>(
   schema: TSchema
 ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
   return Object.assign(schema, { [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType })
 }
 
-function getGraphQLType(
-  this: BaseSchema<unknown, unknown, BaseIssue<unknown>>
-): GraphQLOutputType {
+function getGraphQLType(this: UnknownSchema): GraphQLOutputType {
   return ValibotSilkBuilder.toNullableGraphQLType(this)
 }
