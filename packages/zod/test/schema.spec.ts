@@ -48,9 +48,17 @@ describe("ZodSilk", () => {
     ).toEqual(GraphQLBoolean)
     expect(getGraphQLType(zodSilk(z.date().nullable()))).toEqual(GraphQLString)
 
-    expect(getGraphQLType(zodSilk(z.string().cuid().nullable()))).toEqual(
-      GraphQLID
-    )
+    expect(
+      getGraphQLType(
+        zodSilk(
+          z
+            .string()
+            .cuid()
+            .nullable()
+            .superRefine(() => {})
+        )
+      )
+    ).toEqual(GraphQLID)
     expect(getGraphQLType(zodSilk(z.string().cuid2().nullable()))).toEqual(
       GraphQLID
     )

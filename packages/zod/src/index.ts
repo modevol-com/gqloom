@@ -53,6 +53,7 @@ import {
   ZodLiteral,
   type ZodSchema,
   ZodDefault,
+  ZodEffects,
 } from "zod"
 import { ZodIDKinds } from "./utils"
 import {
@@ -94,6 +95,10 @@ export class ZodSilk<TSchema extends Schema>
   ): GraphQLOutputType {
     const customType = metadataCollector.fields.get(schema)?.type
     if (customType) return customType
+
+    if (schema instanceof ZodEffects) {
+      return ZodSilk.toGraphQLType(schema.innerType())
+    }
 
     if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
       return ZodSilk.toGraphQLType(schema.unwrap())
