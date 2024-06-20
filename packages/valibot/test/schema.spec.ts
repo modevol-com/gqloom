@@ -51,31 +51,30 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 describe("valibot", () => {
   it("should handle scalar", () => {
-    expect(getGraphQLType(valibotSilk(nullable(string())))).toEqual(
-      GraphQLString
-    )
-    expect(getGraphQLType(valibotSilk(nullable(boolean())))).toEqual(
-      GraphQLBoolean
-    )
-    expect(getGraphQLType(valibotSilk(nullable(number())))).toEqual(
-      GraphQLFloat
-    )
-    expect(
-      getGraphQLType(valibotSilk(pipe(nullable(number()), integer())))
-    ).toEqual(GraphQLInt)
+    let x: any
+    x = nullable(string())
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLString)
 
-    expect(
-      getGraphQLType(valibotSilk(pipe(optional(string()), ulid())))
-    ).toEqual(GraphQLID)
-    expect(
-      getGraphQLType(valibotSilk(pipe(optional(string()), uuid())))
-    ).toEqual(GraphQLID)
-    expect(
-      getGraphQLType(valibotSilk(pipe(optional(string()), cuid2())))
-    ).toEqual(GraphQLID)
-    expect(
-      getGraphQLType(valibotSilk(pipe(optional(string()), email())))
-    ).toEqual(GraphQLString)
+    x = nullable(boolean())
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLBoolean)
+    x = nullable(number())
+
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLFloat)
+
+    x = pipe(nullable(number()), integer())
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLInt)
+
+    x = pipe(optional(string()), ulid())
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLID)
+
+    x = pipe(optional(string()), uuid())
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLID)
+
+    x = pipe(optional(string()), cuid2())
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLID)
+
+    x = pipe(optional(string()), email())
+    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLString)
   })
 
   it("should keep default value in extensions", () => {
@@ -165,7 +164,7 @@ describe("valibot", () => {
     expect(printValibotSilk(Cat)).toMatchInlineSnapshot(`
       "type Cat {
         name: String!
-        age: Float!
+        age: Int!
         loveFish: Boolean
       }"
     `)
