@@ -8,7 +8,7 @@ import {
 import { type GraphQLObjectTypeConfig, type GraphQLFieldConfig } from "graphql"
 import { type PipedSchema } from "./types"
 import { isNullish } from "./utils"
-import { deepMerge } from "@gqloom/core"
+import { deepMerge, weaverContext } from "@gqloom/core"
 
 export class ValibotMetadataCollector {
   static getFieldConfig(
@@ -42,11 +42,20 @@ export class ValibotMetadataCollector {
   ): AsObjectTypeMetadata<object>["config"] | undefined {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
+    let name: string | undefined
+
     for (const item of pipe) {
+      name ??= weaverContext.names.get(item)
       if (item.type === "gqloom.asObjectType") {
-        return (item as AsObjectTypeMetadata<object>).config
+        const config = (item as AsObjectTypeMetadata<object>).config
+        return {
+          name: weaverContext.names.get(item),
+          ...config,
+        }
       }
     }
+
+    if (name !== undefined) return { name }
   }
 
   static isInteger(...schemas: PipedSchema[]): boolean {
@@ -136,8 +145,7 @@ export interface AsObjectTypeMetadata<TInput extends object>
   /**
    * The GraphQL Object type config.
    */
-  readonly config: Partial<GraphQLObjectTypeConfig<any, any>> &
-    Pick<GraphQLObjectTypeConfig<any, any>, "name">
+  readonly config: Partial<GraphQLObjectTypeConfig<any, any>>
 }
 
 /**

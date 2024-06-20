@@ -13,7 +13,11 @@ import {
   printType,
   GraphQLList,
 } from "graphql"
-import { type GQLoomExtensions, getGraphQLType } from "@gqloom/core"
+import {
+  type GQLoomExtensions,
+  getGraphQLType,
+  collectNames,
+} from "@gqloom/core"
 import { asField, asObjectType } from "../src/metadata"
 import {
   type BaseSchema,
@@ -149,7 +153,7 @@ describe("valibot", () => {
   })
 
   it("should handle object", () => {
-    const Cat = pipe(
+    const Cat1 = pipe(
       object({
         name: string(),
         age: pipe(number(), integer()),
@@ -158,6 +162,15 @@ describe("valibot", () => {
       asObjectType({ name: "Cat" })
     )
 
+    const Cat = object({
+      name: string(),
+      age: pipe(number(), integer()),
+      loveFish: optional(boolean()),
+    })
+
+    collectNames({ Cat })
+
+    expect(printValibotSilk(Cat)).toEqual(printValibotSilk(Cat1))
     expect(
       (getGraphQLType(valibotSilk(Cat)) as GraphQLNonNull<any>).ofType
     ).toBeInstanceOf(GraphQLObjectType)
