@@ -246,23 +246,21 @@ describe("ZodSilk", () => {
   })
 
   it("should handle union", () => {
-    const Cat = z
-      .object({
-        name: z.string(),
-        age: z.number(),
-        loveFish: z.boolean().optional(),
-      })
-      .describe("Cat")
+    const Cat = z.object({
+      name: z.string(),
+      age: z.number(),
+      loveFish: z.boolean().optional(),
+    })
 
-    const Dog = z
-      .object({
-        name: z.string(),
-        age: z.number(),
-        loveBone: z.boolean().optional(),
-      })
-      .describe("Dog")
+    const Dog = z.object({
+      name: z.string(),
+      age: z.number(),
+      loveBone: z.boolean().optional(),
+    })
 
-    const Animal = z.union([Cat, Dog]).describe("Animal")
+    const Animal = z.union([Cat, Dog])
+
+    collectNames({ Cat, Dog, Animal })
     const r = resolver({
       animal: query(Animal, () => 0 as any),
     })

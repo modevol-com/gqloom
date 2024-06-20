@@ -27,9 +27,11 @@ import {
   GraphQLEnumType,
   type GraphQLInterfaceType,
   isInterfaceType,
+  isObjectType,
+  GraphQLUnionType,
 } from "graphql"
 import { type AsObjectTypeMetadata, ValibotMetadataCollector } from "./metadata"
-import { nullishTypes } from "./utils"
+import { flatVariant, nullishTypes } from "./utils"
 import {
   type SupportedSchema,
   type GenericSchemaOrAsync,
@@ -113,6 +115,7 @@ export class ValibotSilkBuilder {
         }
       case "loose_object":
       case "object":
+      case "object_with_rest":
       case "strict_object": {
         const { name, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
@@ -157,13 +160,41 @@ export class ValibotSilkBuilder {
           schema,
           ...wrappers
         )
-      case "number":
+      case "number": {
         if (ValibotMetadataCollector.isInteger(schema, ...wrappers))
           return GraphQLInt
         return GraphQLFloat
-      case "string":
+      }
+      case "string": {
         if (ValibotMetadataCollector.isID(schema, ...wrappers)) return GraphQLID
         return GraphQLString
+      }
+      case "union":
+      case "variant": {
+        const { name, ...unionConfig } =
+          ValibotMetadataCollector.getUnionConfig(schema, ...wrappers) ?? {}
+        if (!name) throw new Error("Union type must have a name")
+
+        const existing = weaverContext.unionMap?.get(name)
+        if (existing) return existing
+
+        const options =
+          schema.type === "variant" ? flatVariant(schema) : schema.options
+
+        const types = options.map((s) => {
+          const gqlType = ValibotSilkBuilder.toGraphQLType(s)
+          if (isObjectType(gqlType)) return gqlType
+          throw new Error(
+            `Union types ${name} can only contain objects, but got ${gqlType}`
+          )
+        })
+
+        return new GraphQLUnionType({
+          name,
+          types,
+          ...unionConfig,
+        })
+      }
     }
 
     throw new Error(`Unsupported schema type ${schema.type}`)

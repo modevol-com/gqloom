@@ -12,6 +12,7 @@ import {
   type GraphQLFieldConfig,
   type GraphQLEnumTypeConfig,
   type GraphQLInterfaceType,
+  type GraphQLUnionTypeConfig,
 } from "graphql"
 import { type PipedSchema } from "./types"
 import { isNullish } from "./utils"
@@ -62,8 +63,20 @@ export class ValibotMetadataCollector {
     )
   }
 
+  static getUnionConfig(
+    ...schemas: PipedSchema[]
+  ): AsUnionTypeMetadata<object>["config"] | undefined {
+    return ValibotMetadataCollector.getConfig<AsUnionTypeMetadata<object>>(
+      "gqloom.asUnionType",
+      schemas
+    )
+  }
+
   static getConfig<
-    T extends AsEnumTypeMetadata<object> | AsObjectTypeMetadata<object>,
+    T extends
+      | AsEnumTypeMetadata<object>
+      | AsObjectTypeMetadata<object>
+      | AsUnionTypeMetadata<object>,
   >(configType: T["type"], schemas: PipedSchema[]): T["config"] | undefined {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
@@ -197,7 +210,7 @@ export function asObjectType<TInput extends object>(
 }
 
 /**
- * GraphQL Object enum metadata type.
+ * GraphQL enum type metadata type.
  */
 export interface AsEnumTypeMetadata<TInput extends object>
   extends BaseTransformation<TInput, TInput, never> {
@@ -230,6 +243,46 @@ export function asEnumType<TInput extends object>(
     kind: "transformation",
     type: "gqloom.asEnumType",
     reference: asEnumType,
+    async: false,
+    _run: (dataset) => dataset,
+    config,
+  }
+}
+
+/**
+ * GraphQL union type metadata type.
+ */
+export interface AsUnionTypeMetadata<TInput extends object>
+  extends BaseTransformation<TInput, TInput, never> {
+  /**
+   * The metadata type.
+   */
+  readonly type: "gqloom.asUnionType"
+  /**
+   * The metadata reference.
+   */
+  readonly reference: typeof asUnionType
+
+  /**
+   * The GraphQL union type config.
+   */
+  readonly config: Partial<GraphQLUnionTypeConfig<any, any>>
+}
+
+/**
+ * Creates a GraphQL union type metadata.
+ *
+ * @param config - The GraphQL union config.
+ *
+ * @returns A GraphQL union type metadata.
+ */
+export function asUnionType<TInput extends object>(
+  config: AsUnionTypeMetadata<TInput>["config"]
+): AsUnionTypeMetadata<TInput> {
+  return {
+    kind: "transformation",
+    type: "gqloom.asUnionType",
+    reference: asUnionType,
     async: false,
     _run: (dataset) => dataset,
     config,

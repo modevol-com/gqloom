@@ -45,6 +45,9 @@ import {
   array,
   picklist,
   enum_,
+  union,
+  variant,
+  literal,
 } from "valibot"
 import { type PipedSchema } from "../src/types"
 
@@ -250,6 +253,91 @@ describe("valibot", () => {
         name: String!
         color: String!
         prize: Float!
+      }"
+    `)
+  })
+
+  it("should handle union", () => {
+    const Cat = object({
+      name: string(),
+      age: pipe(number(), integer()),
+      loveFish: optional(boolean()),
+    })
+
+    const Dog = object({
+      name: string(),
+      age: pipe(number(), integer()),
+      loveBone: optional(boolean()),
+    })
+
+    const Animal = union([Cat, Dog])
+
+    collectNames({ Cat, Dog, Animal })
+    const r = resolver({
+      animal: query(Animal, () => 0 as any),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        name: String!
+        age: Int!
+        loveFish: Boolean
+      }
+
+      type Dog {
+        name: String!
+        age: Int!
+        loveBone: Boolean
+      }"
+    `)
+  })
+
+  it("should handle variant", () => {
+    const Cat = object({
+      __typename: literal("Cat"),
+      name: string(),
+      age: pipe(number(), integer()),
+      loveFish: optional(boolean()),
+    })
+
+    const Dog = object({
+      __typename: literal("Dog"),
+      name: string(),
+      age: pipe(number(), integer()),
+      loveBone: optional(boolean()),
+    })
+
+    const Animal = variant("__typename", [Cat, Dog])
+
+    collectNames({ Cat, Dog, Animal })
+    const r = resolver({
+      animal: query(Animal, () => 0 as any),
+    })
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        __typename: String!
+        name: String!
+        age: Int!
+        loveFish: Boolean
+      }
+
+      type Dog {
+        __typename: String!
+        name: String!
+        age: Int!
+        loveBone: Boolean
       }"
     `)
   })

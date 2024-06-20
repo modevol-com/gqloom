@@ -48,6 +48,9 @@ import {
   type VariantSchemaAsync,
   type GenericSchema,
   type GenericSchemaAsync,
+  type UnknownSchema,
+  type ObjectWithRestSchema,
+  type ObjectWithRestSchemaAsync,
 } from "valibot"
 
 export type PipedSchema =
@@ -95,6 +98,8 @@ export type SupportedSchema =
   | NumberSchema<any>
   | ObjectSchema<ObjectEntries, any>
   | ObjectSchemaAsync<ObjectEntriesAsync, any>
+  | ObjectWithRestSchema<ObjectEntries, any, any>
+  | ObjectWithRestSchemaAsync<ObjectEntries, any, any>
   | OptionalSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
   | OptionalSchemaAsync<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>
   | PicklistSchema<PicklistOptions, any>
@@ -105,6 +110,7 @@ export type SupportedSchema =
   | UnionSchemaAsync<UnionOptionsAsync, any>
   | VariantSchema<string, VariantOptions<string>, any>
   | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>
+  | UnknownSchema
 
 export type GenericSchemaOrAsync = GenericSchema | GenericSchemaAsync
 
