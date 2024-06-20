@@ -112,7 +112,7 @@ export function collectNames<TRecords extends Record<string, object>[]>(
   for (const namesItem of namesList) {
     for (const [name, schema] of Object.entries(namesItem)) {
       names.set(schema, name)
-      namesRecord[name] = schema as any
+      namesRecord[name] = schema
     }
   }
   return namesRecord
