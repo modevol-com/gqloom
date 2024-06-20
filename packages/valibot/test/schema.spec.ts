@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { query, resolver, valibotSilk } from "../src"
+import { field, query, resolver, valibotSilk } from "../src"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -62,7 +62,7 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
   name: "Date",
 })
 
-describe("valibot", () => {
+describe("valibotSilk", () => {
   it("should handle scalar", () => {
     let schema: PipedSchema
     schema = nullable(string())
@@ -340,6 +340,261 @@ describe("valibot", () => {
         loveBone: Boolean
       }"
     `)
+  })
+
+  describe("should avoid duplicate", () => {
+    it("should merge field from multiple resolver", () => {
+      const Dog = object({
+        name: string(),
+        birthday: string(),
+      })
+
+      collectNames({ Dog })
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
+        age: field(number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      const r2 = resolver.of(Dog, {
+        greeting: field(string(), (dog) => {
+          return `Hello ${dog.name}`
+        }),
+      })
+      expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+          greeting: String!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate object", () => {
+      const Dog = object({
+        name: string(),
+        birthday: string(),
+      })
+      collectNames({ Dog })
+      const r1 = resolver.of(Dog, {
+        dog: query(optional(Dog), () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        dogs: query(array(nullable(Dog)), () => [
+          { name: "Fido", birthday: "2012-12-12" },
+          { name: "Rover", birthday: "2012-12-12" },
+        ]),
+        mustDog: query(Dog, () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        mustDogs: query(array(Dog), () => []),
+        age: field(number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog
+          dogs: [Dog]!
+          mustDog: Dog!
+          mustDogs: [Dog!]!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate input", () => {
+      const Dog = object({
+        name: string(),
+        birthday: string(),
+      })
+
+      const DogInput = object(Dog.entries)
+
+      const DataInput = object({
+        dog: DogInput,
+      })
+
+      collectNames({ Dog, DogInput, DataInput })
+
+      const r1 = resolver.of(Dog, {
+        unwrap: query(Dog, {
+          input: DogInput,
+          resolve: (data) => data,
+        }),
+        dog: query(Dog, {
+          input: { data: DogInput },
+          resolve: ({ data }) => data,
+        }),
+        dogs: query(array(Dog), {
+          input: {
+            data: array(DogInput),
+            required: array(DogInput),
+            names: array(string()),
+          },
+          resolve: ({ data }) => data,
+        }),
+        mustDog: query(nonNullable(Dog), {
+          input: { data: DataInput },
+          resolve: ({ data }) => data.dog,
+        }),
+        age: field(number(), (dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          unwrap(name: String!, birthday: String!): Dog!
+          dog(data: DogInput!): Dog!
+          dogs(data: [DogInput!]!, required: [DogInput!]!, names: [String!]!): [Dog!]!
+          mustDog(data: DataInput!): Dog!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }
+
+        input DogInput {
+          name: String!
+          birthday: String!
+        }
+
+        input DataInput {
+          dog: DogInput!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate enum", () => {
+      const Fruit = picklist(["apple", "banana", "orange"])
+
+      collectNames({ Fruit })
+
+      const r1 = resolver({
+        fruit: query(optional(Fruit), () => "apple" as const),
+        fruits: query(array(optional(Fruit)), () => []),
+        mustFruit: query(Fruit, () => "apple" as const),
+        mustFruits: query(array(Fruit), () => []),
+      })
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit]!
+          mustFruit: Fruit!
+          mustFruits: [Fruit!]!
+        }
+
+        enum Fruit {
+          apple
+          banana
+          orange
+        }"
+      `)
+    })
+
+    it("should avoid duplicate interface", () => {
+      const Fruit = object({ color: optional(string()) })
+      const Orange = pipe(
+        object({
+          color: optional(string()),
+          flavor: string(),
+        }),
+        asObjectType({ interfaces: [Fruit] })
+      )
+
+      const Apple = pipe(
+        object({
+          color: optional(string()),
+          flavor: optional(string()),
+        }),
+        asObjectType({ interfaces: [Fruit] })
+      )
+
+      collectNames({ Fruit, Orange, Apple })
+
+      const r1 = resolver({
+        apple: query(optional(Apple), () => ({ flavor: "" })),
+        apples: query(optional(array(optional(Apple))), () => []),
+        orange: query(optional(Orange), () => ({ flavor: "" })),
+        oranges: query(array(nullable(Orange)), () => []),
+        mustOrange: query(Orange, () => ({ flavor: "" })),
+        mustOranges: query(array(Orange), () => []),
+      })
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          apple: Apple
+          apples: [Apple]
+          orange: Orange
+          oranges: [Orange]!
+          mustOrange: Orange!
+          mustOranges: [Orange!]!
+        }
+
+        type Apple implements Fruit {
+          color: String
+          flavor: String
+        }
+
+        interface Fruit {
+          color: String
+        }
+
+        type Orange implements Fruit {
+          color: String
+          flavor: String!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate union", () => {
+      const Apple = object({ flavor: string() })
+      const Orange = object({ color: string() })
+      const Fruit = union([Apple, Orange])
+      collectNames({ Apple, Orange, Fruit })
+
+      const r1 = resolver({
+        fruit: query(optional(Fruit), () => ({ flavor: "" })),
+        fruits: query(array(optional(Fruit)), () => []),
+        mustFruit: query(Fruit, () => ({ flavor: "" })),
+        mustFruits: query(array(Fruit), () => []),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit]!
+          mustFruit: Fruit!
+          mustFruits: [Fruit!]!
+        }
+
+        union Fruit = Apple | Orange
+
+        type Apple {
+          flavor: String!
+        }
+
+        type Orange {
+          color: String!
+        }"
+      `)
+    })
   })
 })
 
