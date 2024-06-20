@@ -5,7 +5,11 @@ import {
   type PipeItemAsync,
 } from "valibot"
 
-import { type GraphQLObjectTypeConfig, type GraphQLFieldConfig } from "graphql"
+import {
+  type GraphQLObjectTypeConfig,
+  type GraphQLFieldConfig,
+  type GraphQLEnumTypeConfig,
+} from "graphql"
 import { type PipedSchema } from "./types"
 import { isNullish } from "./utils"
 import { deepMerge, weaverContext } from "@gqloom/core"
@@ -40,14 +44,31 @@ export class ValibotMetadataCollector {
   static getObjectConfig(
     ...schemas: PipedSchema[]
   ): AsObjectTypeMetadata<object>["config"] | undefined {
+    return this.getConfig<AsObjectTypeMetadata<object>>(
+      "gqloom.asObjectType",
+      schemas
+    )
+  }
+
+  static getEnumConfig(
+    ...schemas: PipedSchema[]
+  ): AsEnumTypeMetadata<object>["config"] | undefined {
+    return this.getConfig<AsEnumTypeMetadata<object>>(
+      "gqloom.asEnumType",
+      schemas
+    )
+  }
+
+  protected static getConfig<
+    T extends AsEnumTypeMetadata<object> | AsObjectTypeMetadata<object>,
+  >(configType: T["type"], schemas: PipedSchema[]): T["config"] | undefined {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
     let name: string | undefined
-
     for (const item of pipe) {
       name ??= weaverContext.names.get(item)
-      if (item.type === "gqloom.asObjectType") {
-        const config = (item as AsObjectTypeMetadata<object>).config
+      if (item.type === configType) {
+        const config = (item as T).config
         return {
           name: weaverContext.names.get(item),
           ...config,
@@ -151,7 +172,7 @@ export interface AsObjectTypeMetadata<TInput extends object>
 /**
  * Creates a GraphQL object type metadata.
  *
- * @param config - The GraphQL field config.
+ * @param config - The GraphQL object config.
  *
  * @returns A GraphQL object type metadata.
  */
@@ -162,6 +183,46 @@ export function asObjectType<TInput extends object>(
     kind: "transformation",
     type: "gqloom.asObjectType",
     reference: asObjectType,
+    async: false,
+    _run: (dataset) => dataset,
+    config,
+  }
+}
+
+/**
+ * GraphQL Object enum metadata type.
+ */
+export interface AsEnumTypeMetadata<TInput extends object>
+  extends BaseTransformation<TInput, TInput, never> {
+  /**
+   * The metadata type.
+   */
+  readonly type: "gqloom.asEnumType"
+  /**
+   * The metadata reference.
+   */
+  readonly reference: typeof asEnumType
+
+  /**
+   * The GraphQL enum type config.
+   */
+  readonly config: Partial<GraphQLEnumTypeConfig>
+}
+
+/**
+ * Creates a GraphQL enum type metadata.
+ *
+ * @param config - The GraphQL enum config.
+ *
+ * @returns A GraphQL enum type metadata.
+ */
+export function asEnumType<TInput extends object>(
+  config: AsEnumTypeMetadata<TInput>["config"]
+): AsEnumTypeMetadata<TInput> {
+  return {
+    kind: "transformation",
+    type: "gqloom.asEnumType",
+    reference: asEnumType,
     async: false,
     _run: (dataset) => dataset,
     config,

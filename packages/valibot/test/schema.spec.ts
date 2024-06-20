@@ -40,6 +40,8 @@ import {
   ulid,
   uuid,
   array,
+  picklist,
+  enum_,
 } from "valibot"
 import { type PipedSchema } from "../src/types"
 
@@ -180,6 +182,26 @@ describe("valibot", () => {
         name: String!
         age: Int!
         loveFish: Boolean
+      }"
+    `)
+  })
+
+  it("should handle enum", () => {
+    const FruitPL = picklist(["apple", "banana", "orange"])
+    enum Fruit {
+      apple,
+      banana,
+      orange,
+    }
+    const FruitE = enum_(Fruit)
+
+    collectNames({ Fruit: FruitPL }, { Fruit: FruitE })
+    expect(printValibotSilk(FruitPL)).toEqual(printValibotSilk(FruitE))
+    expect(printValibotSilk(FruitPL)).toMatchInlineSnapshot(`
+      "enum Fruit {
+        apple
+        banana
+        orange
       }"
     `)
   })

@@ -107,3 +107,8 @@ export type SupportedSchema =
 export type BaseSchemaOrAsync =
   | BaseSchema<unknown, unknown, BaseIssue<unknown>>
   | BaseSchemaAsync<unknown, unknown, BaseIssue<unknown>>
+
+export interface EnumLike {
+  [k: string]: string | number
+  [nu: number]: string
+}

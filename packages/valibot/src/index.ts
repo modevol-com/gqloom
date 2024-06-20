@@ -12,6 +12,7 @@ import {
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
+  type GraphQLEnumValueConfigMap,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
@@ -21,10 +22,15 @@ import {
   GraphQLString,
   isNonNullType,
   type GraphQLOutputType,
+  GraphQLEnumType,
 } from "graphql"
 import { ValibotMetadataCollector } from "./metadata"
 import { nullishTypes } from "./utils"
-import { type SupportedSchema, type BaseSchemaOrAsync } from "./types"
+import {
+  type SupportedSchema,
+  type BaseSchemaOrAsync,
+  type EnumLike,
+} from "./types"
 
 export class ValibotSilkBuilder {
   static toNullableGraphQLType(schema: BaseSchemaOrAsync): GraphQLOutputType {
@@ -63,7 +69,32 @@ export class ValibotSilkBuilder {
       case "date":
         return GraphQLString
       case "enum":
-        throw new Error("todo") // TODO
+      case "picklist": {
+        const { name, ...enumConfig } =
+          ValibotMetadataCollector.getEnumConfig(schema, ...wrappers) ?? {}
+        if (!name) throw new Error("Enum must have a name")
+
+        const existing = weaverContext.enumMap?.get(name)
+        if (existing) return existing
+
+        const values: GraphQLEnumValueConfigMap = {}
+
+        if (schema.type === "picklist") {
+          for (const value of schema.options) {
+            values[String(value)] = { value }
+          }
+        } else {
+          Object.entries(schema.enum as EnumLike).forEach(([key, value]) => {
+            if (typeof schema.enum?.[schema.enum[key]] === "number") return
+            values[key] = { value }
+          })
+        }
+        return new GraphQLEnumType({
+          name,
+          values,
+          ...enumConfig,
+        })
+      }
       case "literal":
         switch (typeof schema.literal) {
           case "boolean":
