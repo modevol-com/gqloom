@@ -20,6 +20,7 @@ import {
   SchemaWeaver,
   type SilkResolver,
   getGraphQLType,
+  collectNames,
 } from "@gqloom/core"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 
@@ -138,13 +139,32 @@ describe("ZodSilk", () => {
     ).toEqual(new GraphQLList(GraphQLString))
   })
   it("should handle object", () => {
-    const Cat = z
+    const Cat1 = z
       .object({
         name: z.string(),
         age: z.number(),
         loveFish: z.boolean().optional(),
       })
       .describe("Cat")
+
+    const Cat2 = z
+      .object({
+        name: z.string(),
+        age: z.number(),
+        loveFish: z.boolean().optional(),
+      })
+      .superRefine(objectType({ name: "Cat" }))
+
+    const Cat = z.object({
+      name: z.string(),
+      age: z.number(),
+      loveFish: z.boolean().optional(),
+    })
+
+    void collectNames({ Cat })
+
+    expect(printZodSilk(Cat1)).toEqual(printZodSilk(Cat2))
+    expect(printZodSilk(Cat)).toEqual(printZodSilk(Cat2))
 
     expect(
       (getGraphQLType(zodSilk(Cat)) as GraphQLNonNull<any>).ofType

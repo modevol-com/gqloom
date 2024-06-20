@@ -70,9 +70,7 @@ describe("YupSilk", () => {
     const objectGqlType = getGraphQLType(objectSilk) as GraphQLObjectType
 
     expect(objectGqlType.getFields().foo).toMatchObject({
-      extensions: {
-        gqloom: { defaultValue: "foo" },
-      },
+      extensions: { defaultValue: "foo" },
     })
 
     const fooGetter = () => "foo"
@@ -81,16 +79,14 @@ describe("YupSilk", () => {
       foo: string()
         .optional()
         .default("foo")
-        .meta({ extension: { gqloom: { defaultValue: fooGetter } } }),
+        .meta({ extension: { defaultValue: fooGetter } }),
     }).label("ObjectType")
 
     const objectE1Silk = yupSilk(objectE1Type)
     const objectE1GqlType = getGraphQLType(objectE1Silk) as GraphQLObjectType
 
     expect(objectE1GqlType.getFields().foo).toMatchObject({
-      extensions: {
-        gqloom: { defaultValue: fooGetter },
-      },
+      extensions: { defaultValue: fooGetter },
     })
   })
 

@@ -48,6 +48,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
 
   constructor(public schema: TSchema) {
     this.schemaDescription = schema.describe()
+    this.schemaDescription.label ??= weaverContext.names.get(schema)
     this.nonNull =
       !this.schemaDescription.nullable && !this.schemaDescription.optional
   }
@@ -115,7 +116,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
           ),
           name,
           extensions: mergeExtensions(
-            { gqloom: { defaultValue: description.default } },
+            { defaultValue: description.default },
             description.meta?.extension
           ),
           description: description.meta?.description,
@@ -125,7 +126,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
               const d = YupSilk.ensureSchemaDescription(fieldDescription)
               return {
                 extensions: mergeExtensions(
-                  { gqloom: { defaultValue: d.default } },
+                  { defaultValue: d.default },
                   d.meta?.extension
                 ),
                 type: YupSilk.toNullableGraphQLType(d),

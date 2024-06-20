@@ -23,9 +23,12 @@ export interface WeaverContext {
   unionMap: Map<string, GraphQLUnionType>
   options: Record<string | symbol | number, any>
   memo<T extends GraphQLOutputType>(gqlType: T): T
+  names: WeakMap<object, string>
 }
 
 let ref: WeaverContext | undefined
+
+const names = new WeakMap<object, string>()
 
 export function initWeaverContext(): WeaverContext {
   return {
@@ -36,6 +39,7 @@ export function initWeaverContext(): WeaverContext {
     interfaceMap: new Map(),
     unionMap: new Map(),
     options: {},
+    names,
     memo(gqlType) {
       if (isObjectType(gqlType)) {
         weaverContext.objectMap?.set(gqlType.name, gqlType)
@@ -50,9 +54,9 @@ export function initWeaverContext(): WeaverContext {
 }
 
 export const weaverContext: Partial<
-  Omit<WeaverContext, "memo"> & { value: WeaverContext }
+  Omit<WeaverContext, "memo" | "names"> & { value: WeaverContext }
 > &
-  Pick<WeaverContext, "memo"> = {
+  Pick<WeaverContext, "memo" | "names"> = {
   get loomObjectMap() {
     return ref?.loomObjectMap
   },
@@ -77,6 +81,7 @@ export const weaverContext: Partial<
   get value() {
     return ref
   },
+  names,
   memo(gqlType) {
     return ref?.memo(gqlType) ?? gqlType
   },
@@ -94,3 +99,27 @@ export function provideWeaverContext<T>(
     ref = lastRef
   }
 }
+
+/**
+ * collect names for schemas
+ * @param namesList - names to collect
+ * @returns namesRecord
+ */
+export function collectNames<TRecords extends Record<string, object>[]>(
+  ...namesList: TRecords
+): UnionToIntersection<TRecords[number]> {
+  const namesRecord = {} as any
+  for (const namesItem of namesList) {
+    for (const [name, schema] of Object.entries(namesItem)) {
+      names.set(schema, name)
+      namesRecord[name] = schema as any
+    }
+  }
+  return namesRecord
+}
+
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never

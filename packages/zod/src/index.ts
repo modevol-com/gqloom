@@ -238,6 +238,7 @@ export class ZodSilk<TSchema extends Schema>
       ZodSilk.ensureInterfaceType
     )
     return {
+      name: weaverContext.names.get(schema),
       ...objectConfig,
       ...fromDescription,
       interfaces,
@@ -267,6 +268,7 @@ export class ZodSilk<TSchema extends Schema>
       ? parseObjectConfig(schema.description)
       : undefined
     return {
+      name: weaverContext.names.get(schema),
       ...enumConfig,
       ...fromDescription,
       extensions: mergeExtensions(
@@ -285,6 +287,7 @@ export class ZodSilk<TSchema extends Schema>
       ? parseObjectConfig(schema.description)
       : undefined
     return {
+      name: weaverContext.names.get(schema),
       ...unionConfig,
       ...fromDescription,
       extensions: mergeExtensions(
