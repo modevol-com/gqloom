@@ -46,6 +46,8 @@ import {
   type VariantOptionsAsync,
   type VariantSchema,
   type VariantSchemaAsync,
+  type GenericSchema,
+  type GenericSchemaAsync,
 } from "valibot"
 
 export type PipedSchema =
@@ -104,9 +106,7 @@ export type SupportedSchema =
   | VariantSchema<string, VariantOptions<string>, any>
   | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>
 
-export type BaseSchemaOrAsync =
-  | BaseSchema<unknown, unknown, BaseIssue<unknown>>
-  | BaseSchemaAsync<unknown, unknown, BaseIssue<unknown>>
+export type GenericSchemaOrAsync = GenericSchema | GenericSchemaAsync
 
 export interface EnumLike {
   [k: string]: string | number

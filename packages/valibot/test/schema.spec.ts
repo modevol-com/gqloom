@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { valibotSilk } from "../src"
+import { query, resolver, valibotSilk } from "../src"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -12,11 +12,14 @@ import {
   type GraphQLNamedType,
   printType,
   GraphQLList,
+  printSchema,
 } from "graphql"
 import {
   type GQLoomExtensions,
   getGraphQLType,
   collectNames,
+  type SilkResolver,
+  SchemaWeaver,
 } from "@gqloom/core"
 import { asField, asObjectType } from "../src/metadata"
 import {
@@ -205,6 +208,51 @@ describe("valibot", () => {
       }"
     `)
   })
+
+  it("should handle interfere", () => {
+    const Fruit = object({
+      _Fruit: boolean(),
+      name: string(),
+      color: string(),
+      prize: number(),
+    })
+
+    const Orange = pipe(
+      object({
+        _Orange: boolean(),
+        name: string(),
+        color: string(),
+        prize: number(),
+      }),
+      asObjectType({ interfaces: [Fruit] })
+    )
+
+    collectNames({ Fruit, Orange })
+
+    const r = resolver.of(Orange, {
+      orange: query(Orange, () => 0 as any),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        orange: Orange!
+      }
+
+      type Orange implements Fruit {
+        _Orange: Boolean!
+        name: String!
+        color: String!
+        prize: Float!
+      }
+
+      interface Fruit {
+        _Fruit: Boolean!
+        name: String!
+        color: String!
+        prize: Float!
+      }"
+    `)
+  })
 })
 
 function printValibotSilk(
@@ -213,4 +261,12 @@ function printValibotSilk(
   let gqlType = getGraphQLType(valibotSilk(schema))
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
+}
+
+function printResolver(...resolvers: SilkResolver[]): string {
+  const weaver = new SchemaWeaver()
+  for (const r of resolvers) weaver.add(r)
+
+  const schema = weaver.weaveGraphQLSchema()
+  return printSchema(schema)
 }

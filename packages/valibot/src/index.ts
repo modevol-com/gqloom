@@ -6,6 +6,8 @@ import {
 } from "valibot"
 import {
   SYMBOLS,
+  createLoom,
+  ensureInterfaceType,
   mapValue,
   weaverContext,
   type GraphQLSilk,
@@ -23,17 +25,21 @@ import {
   isNonNullType,
   type GraphQLOutputType,
   GraphQLEnumType,
+  type GraphQLInterfaceType,
+  isInterfaceType,
 } from "graphql"
-import { ValibotMetadataCollector } from "./metadata"
+import { type AsObjectTypeMetadata, ValibotMetadataCollector } from "./metadata"
 import { nullishTypes } from "./utils"
 import {
   type SupportedSchema,
-  type BaseSchemaOrAsync,
+  type GenericSchemaOrAsync,
   type EnumLike,
 } from "./types"
 
 export class ValibotSilkBuilder {
-  static toNullableGraphQLType(schema: BaseSchemaOrAsync): GraphQLOutputType {
+  static toNullableGraphQLType(
+    schema: GenericSchemaOrAsync
+  ): GraphQLOutputType {
     const gqlType = ValibotSilkBuilder.toGraphQLType(schema)
 
     weaverContext.memo(gqlType)
@@ -41,8 +47,8 @@ export class ValibotSilkBuilder {
   }
 
   static toGraphQLType(
-    valibotSchema: BaseSchemaOrAsync,
-    ...wrappers: BaseSchemaOrAsync[]
+    valibotSchema: GenericSchemaOrAsync,
+    ...wrappers: GenericSchemaOrAsync[]
   ): GraphQLOutputType {
     const config = ValibotMetadataCollector.getFieldConfig(
       valibotSchema,
@@ -110,7 +116,10 @@ export class ValibotSilkBuilder {
       case "strict_object": {
         const { name, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
-        if (!name) throw new Error("Object must have a name")
+        if (!name)
+          throw new Error(
+            `Object { ${Object.keys(schema.entries).join(", ")} } must have a name`
+          )
 
         const existing = weaverContext.objectMap?.get(name)
         if (existing) return existing
@@ -129,6 +138,9 @@ export class ValibotSilkBuilder {
           isTypeOf: (input) =>
             safeParseAsync(strictSchema, input).then((x) => x.success),
           ...objectConfig,
+          interfaces: objectConfig.interfaces?.map(
+            ValibotSilkBuilder.ensureInterfaceType
+          ),
         })
       }
       case "non_nullable":
@@ -157,20 +169,43 @@ export class ValibotSilkBuilder {
     throw new Error(`Unsupported schema type ${schema.type}`)
   }
 
-  static nullable(ofType: GraphQLOutputType, wrapper: BaseSchemaOrAsync) {
+  static nullable(ofType: GraphQLOutputType, wrapper: GenericSchemaOrAsync) {
     const isNullish = nullishTypes.has(wrapper.type)
     if (isNullish) return ofType
     if (isNonNullType(ofType)) return ofType
     return new GraphQLNonNull(ofType)
   }
+
+  protected static ensureInterfaceType(
+    item: NonNullable<
+      AsObjectTypeMetadata<object>["config"]["interfaces"]
+    >[number]
+  ): GraphQLInterfaceType {
+    if (isInterfaceType(item)) return item
+    const gqlType = weaverContext.memo(ValibotSilkBuilder.toGraphQLType(item))
+
+    return ensureInterfaceType(gqlType)
+  }
 }
 
-export function valibotSilk<TSchema extends BaseSchemaOrAsync>(
+export function valibotSilk<TSchema extends GenericSchemaOrAsync>(
   schema: TSchema
 ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
   return Object.assign(schema, { [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType })
 }
 
-function getGraphQLType(this: BaseSchemaOrAsync): GraphQLOutputType {
+function getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
   return ValibotSilkBuilder.toNullableGraphQLType(this)
+}
+
+type ValibotSchemaIO = [GenericSchemaOrAsync, "_types.input", "_types.output"]
+
+export const { query, mutation, field, resolver } = createLoom<ValibotSchemaIO>(
+  valibotSilk,
+  isValibotSchema
+)
+
+function isValibotSchema(schema: any): schema is GenericSchemaOrAsync {
+  if (!("kind" in schema)) return false
+  return schema.kind === "schema"
 }

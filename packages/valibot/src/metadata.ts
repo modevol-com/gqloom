@@ -3,12 +3,15 @@ import {
   type BaseTransformation,
   type BaseIssue,
   type PipeItemAsync,
+  type GenericSchema,
+  type GenericSchemaAsync,
 } from "valibot"
 
 import {
   type GraphQLObjectTypeConfig,
   type GraphQLFieldConfig,
   type GraphQLEnumTypeConfig,
+  type GraphQLInterfaceType,
 } from "graphql"
 import { type PipedSchema } from "./types"
 import { isNullish } from "./utils"
@@ -44,7 +47,7 @@ export class ValibotMetadataCollector {
   static getObjectConfig(
     ...schemas: PipedSchema[]
   ): AsObjectTypeMetadata<object>["config"] | undefined {
-    return this.getConfig<AsObjectTypeMetadata<object>>(
+    return ValibotMetadataCollector.getConfig<AsObjectTypeMetadata<object>>(
       "gqloom.asObjectType",
       schemas
     )
@@ -53,13 +56,13 @@ export class ValibotMetadataCollector {
   static getEnumConfig(
     ...schemas: PipedSchema[]
   ): AsEnumTypeMetadata<object>["config"] | undefined {
-    return this.getConfig<AsEnumTypeMetadata<object>>(
+    return ValibotMetadataCollector.getConfig<AsEnumTypeMetadata<object>>(
       "gqloom.asEnumType",
       schemas
     )
   }
 
-  protected static getConfig<
+  static getConfig<
     T extends AsEnumTypeMetadata<object> | AsObjectTypeMetadata<object>,
   >(configType: T["type"], schemas: PipedSchema[]): T["config"] | undefined {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
@@ -70,7 +73,7 @@ export class ValibotMetadataCollector {
       if (item.type === configType) {
         const config = (item as T).config
         return {
-          name: weaverContext.names.get(item),
+          name,
           ...config,
         }
       }
@@ -166,7 +169,11 @@ export interface AsObjectTypeMetadata<TInput extends object>
   /**
    * The GraphQL Object type config.
    */
-  readonly config: Partial<GraphQLObjectTypeConfig<any, any>>
+  readonly config: Partial<
+    Omit<GraphQLObjectTypeConfig<any, any>, "fields" | "interfaces">
+  > & {
+    interfaces?: (GenericSchema | GenericSchemaAsync | GraphQLInterfaceType)[]
+  }
 }
 
 /**
