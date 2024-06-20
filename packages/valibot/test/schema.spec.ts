@@ -37,6 +37,7 @@ import {
   uuid,
   array,
 } from "valibot"
+import { type PipedSchema } from "../src/types"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -51,30 +52,30 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 describe("valibot", () => {
   it("should handle scalar", () => {
-    let x: any
-    x = nullable(string())
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLString)
+    let schema: PipedSchema
+    schema = nullable(string())
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLString)
 
-    x = nullable(boolean())
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLBoolean)
-    x = nullable(number())
+    schema = nullable(boolean())
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLBoolean)
+    schema = nullable(number())
 
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLFloat)
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLFloat)
 
-    x = pipe(nullable(number()), integer())
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLInt)
+    schema = pipe(nullable(number()), integer())
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLInt)
 
-    x = pipe(optional(string()), ulid())
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLID)
+    schema = pipe(optional(string()), ulid())
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
 
-    x = pipe(optional(string()), uuid())
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLID)
+    schema = pipe(optional(string()), uuid())
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
 
-    x = pipe(optional(string()), cuid2())
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLID)
+    schema = pipe(optional(string()), cuid2())
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
 
-    x = pipe(optional(string()), email())
-    expect(getGraphQLType(valibotSilk(x))).toEqual(GraphQLString)
+    schema = pipe(optional(string()), email())
+    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLString)
   })
 
   it("should keep default value in extensions", () => {
