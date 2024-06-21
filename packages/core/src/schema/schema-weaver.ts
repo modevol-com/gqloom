@@ -13,6 +13,7 @@ import {
 import { LoomObjectType } from "./object"
 import { type Middleware } from "../utils"
 import {
+  type WeaverConfig,
   initWeaverContext,
   provideWeaverContext,
   type WeaverContext,
@@ -62,10 +63,8 @@ export class SchemaWeaver {
     return answer
   }
 
-  public setOptions<
-    TOptions extends object = Record<string | symbol | number, any>,
-  >(options: TOptions) {
-    Object.assign(this.context.options, options)
+  public setConfig<TConfig extends WeaverConfig>(config: TConfig) {
+    this.context.setConfig(config)
     return this
   }
 

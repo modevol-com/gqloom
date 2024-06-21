@@ -1,3 +1,4 @@
+import { type SYMBOLS, type WeaverConfig } from "@gqloom/core"
 import {
   type ThunkReadonlyArray,
   type GraphQLEnumValueConfig,
@@ -44,4 +45,14 @@ export interface YupWeaverOptions {
   yupPresetGraphQLType?: (
     description: SchemaDescription
   ) => GraphQLOutputType | undefined
+}
+
+export interface YupWeaverConfigOptions {
+  presetGraphQLType?: (
+    description: SchemaDescription
+  ) => GraphQLOutputType | undefined
+}
+
+export interface YupWeaverConfig extends WeaverConfig, YupWeaverConfigOptions {
+  [SYMBOLS.WEAVER_CONFIG]: "gqloom.yup"
 }

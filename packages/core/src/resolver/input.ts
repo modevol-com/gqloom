@@ -1,4 +1,4 @@
-import { SYMBOLS } from "."
+import { SYMBOLS } from "../utils"
 import type { MayPromise, ObjectOrNever } from "../utils"
 import { isSilk } from "./silk"
 import type {

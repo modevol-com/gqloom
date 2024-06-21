@@ -327,14 +327,12 @@ describe("valibotSilk", () => {
       union Animal = Cat | Dog
 
       type Cat {
-        __typename: String!
         name: String!
         age: Int!
         loveFish: Boolean
       }
 
       type Dog {
-        __typename: String!
         name: String!
         age: Int!
         loveBone: Boolean

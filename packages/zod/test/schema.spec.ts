@@ -321,14 +321,12 @@ describe("ZodSilk", () => {
       union Animal = Cat | Dog
 
       type Cat {
-        __typename: String!
         name: String!
         age: Float!
         loveFish: Boolean
       }
 
       type Dog {
-        __typename: String!
         name: String!
         age: Float!
         loveBone: Boolean

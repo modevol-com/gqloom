@@ -6,6 +6,8 @@ import {
   weaverContext,
   mergeExtensions,
   SYMBOLS,
+  provideWeaverContext,
+  initWeaverContext,
 } from "@gqloom/core"
 import {
   GraphQLString,
@@ -34,7 +36,11 @@ import {
   type SchemaFieldDescription,
   type SchemaInnerTypeDescription,
 } from "yup"
-import { type YupWeaverOptions, type GQLoomMetadata } from "./types"
+import {
+  type GQLoomMetadata,
+  type YupWeaverConfigOptions,
+  type YupWeaverConfig,
+} from "./types"
 
 export * from "./types"
 export * from "./union"
@@ -61,10 +67,6 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
     return this.schema.validate(input)
   }
 
-  static get options(): YupWeaverOptions | undefined {
-    return weaverContext.options
-  }
-
   static toNullableGraphQLType(description: SchemaDescription) {
     const gqlType = YupSilk.toGraphQLType(description)
 
@@ -82,7 +84,8 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
     const customType = description.meta?.type
     if (customType) return customType()
 
-    const presetType = YupSilk.options?.yupPresetGraphQLType?.(description)
+    const config = weaverContext.getConfig<YupWeaverConfig>("gqloom.yup")
+    const presetType = config?.presetGraphQLType?.(description)
     if (presetType) return presetType
 
     const maybeEnum = YupSilk.getEnumType(description)
@@ -244,6 +247,32 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
       description: meta?.description,
       values,
     })
+  }
+
+  /**
+   * Create a yup weaver config object
+   * @param config yup weaver config options
+   * @returns a yup weaver config object
+   */
+  static config = function (config: YupWeaverConfigOptions): YupWeaverConfig {
+    return {
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.yup",
+    }
+  }
+
+  /**
+   * Use a yup weaver config
+   * @param config yup weaver config options
+   * @returns a new yup to silk function
+   */
+  static useConfig = function (config: YupWeaverConfigOptions): typeof yupSilk {
+    const context = weaverContext.value ?? initWeaverContext()
+    context.setConfig<YupWeaverConfig>({
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.yup",
+    })
+    return (schema) => provideWeaverContext(() => yupSilk(schema), context)
   }
 }
 

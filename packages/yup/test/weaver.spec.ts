@@ -1,6 +1,6 @@
 import { SchemaWeaver } from "@gqloom/core"
 import { describe, expect, it } from "vitest"
-import { query, resolver, type YupWeaverOptions } from "../src"
+import { YupSilk, query, resolver } from "../src"
 import { GraphQLScalarType, printSchema } from "graphql"
 import { date, object, string } from "yup"
 
@@ -17,14 +17,16 @@ describe("Weaver with YupSilk", () => {
 
     const r1 = resolver({ dog: query(Dog, () => ({})) })
     const schema = new SchemaWeaver()
-      .setOptions<YupWeaverOptions>({
-        yupPresetGraphQLType: (description) => {
-          switch (description.type) {
-            case "date":
-              return GraphQLDate
-          }
-        },
-      })
+      .setConfig(
+        YupSilk.config({
+          presetGraphQLType: (description) => {
+            switch (description.type) {
+              case "date":
+                return GraphQLDate
+            }
+          },
+        })
+      )
       .add(r1)
       .weaveGraphQLSchema()
 

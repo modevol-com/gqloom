@@ -10,6 +10,7 @@ import {
   type GraphQLOutputType,
 } from "graphql"
 import { type LoomObjectType } from "./object"
+import { WEAVER_CONFIG } from "../utils/symbols"
 
 export interface WeaverContext {
   loomObjectMap: Map<GraphQLObjectType, LoomObjectType>
@@ -21,7 +22,11 @@ export interface WeaverContext {
   interfaceMap: Map<GraphQLObjectType, GraphQLInterfaceType>
   enumMap: Map<string, GraphQLEnumType>
   unionMap: Map<string, GraphQLUnionType>
-  options: Record<string | symbol | number, any>
+  configs: Map<string | symbol, WeaverConfig>
+  getConfig: <TConfig extends WeaverConfig>(
+    key: TConfig[typeof WEAVER_CONFIG]
+  ) => TConfig | undefined
+  setConfig<TConfig extends WeaverConfig>(config: TConfig): void
   memo<T extends GraphQLOutputType>(gqlType: T): T
   names: WeakMap<object, string>
 }
@@ -29,6 +34,10 @@ export interface WeaverContext {
 let ref: WeaverContext | undefined
 
 const names = new WeakMap<object, string>()
+
+export interface WeaverConfig {
+  [WEAVER_CONFIG]: string | symbol
+}
 
 export function initWeaverContext(): WeaverContext {
   return {
@@ -38,7 +47,16 @@ export function initWeaverContext(): WeaverContext {
     enumMap: new Map(),
     interfaceMap: new Map(),
     unionMap: new Map(),
-    options: {},
+    configs: new Map(),
+    getConfig<TConfig extends WeaverConfig>(
+      key: TConfig[typeof WEAVER_CONFIG]
+    ) {
+      return this.configs.get(key) as TConfig | undefined
+    },
+    setConfig(config) {
+      const key = config[WEAVER_CONFIG]
+      this.configs.set(key, config)
+    },
     names,
     memo(gqlType) {
       if (isObjectType(gqlType)) {
@@ -54,9 +72,11 @@ export function initWeaverContext(): WeaverContext {
 }
 
 export const weaverContext: Partial<
-  Omit<WeaverContext, "memo" | "names"> & { value: WeaverContext }
+  Omit<WeaverContext, "memo" | "names" | "getConfig" | "setConfig"> & {
+    value: WeaverContext
+  }
 > &
-  Pick<WeaverContext, "memo" | "names"> = {
+  Pick<WeaverContext, "memo" | "names" | "getConfig" | "setConfig"> = {
   get loomObjectMap() {
     return ref?.loomObjectMap
   },
@@ -75,8 +95,16 @@ export const weaverContext: Partial<
   get unionMap() {
     return ref?.unionMap
   },
-  get options() {
-    return ref?.options
+
+  get configs() {
+    return ref?.configs
+  },
+
+  getConfig(key) {
+    return ref?.getConfig(key)
+  },
+  setConfig(config) {
+    ref?.setConfig(config)
   },
   get value() {
     return ref

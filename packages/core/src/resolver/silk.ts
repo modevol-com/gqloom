@@ -1,7 +1,7 @@
 import type { GraphQLOutputType, GraphQLScalarType } from "graphql"
 import type { MayPromise } from "../utils"
 import type { GraphQLSilk, InferSilkI, InferSilkO } from "./types"
-import { GET_GRAPHQL_TYPE, PARSE } from "./symbols"
+import { GET_GRAPHQL_TYPE, PARSE } from "../utils/symbols"
 
 /**
  * Create a Silk from Scalar.
