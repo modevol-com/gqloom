@@ -19,6 +19,7 @@ import {
   type WeaverContext,
 } from "./weaver-context"
 import { type SilkResolver } from "./types"
+import { WEAVER_CONFIG } from "../utils/symbols"
 
 interface SchemaWeaverParameters
   extends Partial<
@@ -56,11 +57,8 @@ export class SchemaWeaver {
   }
 
   public add(resolver: SilkResolver) {
-    const answer = provideWeaverContext(
-      () => this.addResolver(resolver),
-      this.context
-    )
-    return answer
+    provideWeaverContext(() => this.addResolver(resolver), this.context)
+    return this
   }
 
   public setConfig<TConfig extends WeaverConfig>(config: TConfig) {
@@ -135,4 +133,30 @@ export class SchemaWeaver {
     const { resolverOptions, context } = this
     return { resolverOptions, weaverContext: context }
   }
+}
+
+/**
+ * Weave a GraphQL Schema from resolvers
+ * @param inputs Resolvers, Global Middlewares or WeaverConfigs
+ * @returns GraphQ LSchema
+ */
+export function weave(...inputs: (SilkResolver | Middleware | WeaverConfig)[]) {
+  const configs = new Set<WeaverConfig>()
+  const middlewares = new Set<Middleware>()
+  const resolvers = new Set<SilkResolver>()
+
+  for (const item of inputs) {
+    if (typeof item === "function") {
+      middlewares.add(item)
+    } else if (WEAVER_CONFIG in item) {
+      configs.add(item)
+    } else {
+      resolvers.add(item)
+    }
+  }
+  const weaver = new SchemaWeaver()
+  configs.forEach((it) => weaver.setConfig(it))
+  middlewares.forEach((it) => weaver.use(it))
+  resolvers.forEach((it) => weaver.add(it))
+  return weaver.weaveGraphQLSchema()
 }

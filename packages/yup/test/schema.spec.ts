@@ -34,9 +34,9 @@ import {
 } from "graphql"
 import {
   type GQLoomExtensions,
-  SchemaWeaver,
   type SilkResolver,
   getGraphQLType,
+  weave,
 } from "@gqloom/core"
 
 declare module "yup" {
@@ -104,19 +104,17 @@ describe("YupWeaver", () => {
     }).label("Dog")
 
     const r1 = resolver({ dog: query(Dog, () => ({})) })
-    const schema = new SchemaWeaver()
-      .setConfig(
-        YupWeaver.config({
-          presetGraphQLType: (description) => {
-            switch (description.type) {
-              case "date":
-                return GraphQLDate
-            }
-          },
-        })
-      )
-      .add(r1)
-      .weaveGraphQLSchema()
+    const schema = weave(
+      r1,
+      YupWeaver.config({
+        presetGraphQLType: (description) => {
+          switch (description.type) {
+            case "date":
+              return GraphQLDate
+          }
+        },
+      })
+    )
 
     expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type Query {
@@ -612,9 +610,6 @@ function printYupSilk(schema: Schema): string {
 }
 
 function printResolver(...resolvers: SilkResolver[]): string {
-  const weaver = new SchemaWeaver()
-  for (const r of resolvers) weaver.add(r)
-
-  const schema = weaver.weaveGraphQLSchema()
+  const schema = weave(...resolvers)
   return printSchema(schema)
 }

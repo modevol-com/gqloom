@@ -10,7 +10,7 @@ import {
 } from "graphql"
 import { getGraphQLType, silk } from "../resolver"
 import { loom } from "../resolver"
-import { SchemaWeaver } from "./schema-weaver"
+import { SchemaWeaver, weave } from "./schema-weaver"
 
 const { resolver, query, mutation, field } = loom
 
@@ -110,6 +110,12 @@ describe("SchemaWeaver", () => {
       .add(simpleResolver)
       .add(simpleFieldResolver)
       .weaveGraphQLSchema()
+
+    const schema2 = weave(simpleResolver, simpleFieldResolver)
+
+    expect(printSchema(lexicographicSortSchema(schema2))).toEqual(
+      printSchema(lexicographicSortSchema(schema))
+    )
 
     expect(printSchema(lexicographicSortSchema(schema))).toMatchInlineSnapshot(`
       "type Giraffe {
