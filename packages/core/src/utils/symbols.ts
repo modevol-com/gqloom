@@ -9,11 +9,6 @@ export const GET_GRAPHQL_TYPE = Symbol.for("gqloom.get_graphql_type")
 export const PARSE = Symbol.for("gqloom.parse")
 
 /**
- * The symbol to store field_options in silk
- */
-export const FIELD_OPTIONS = Symbol.for("gqloom.field_options")
-
-/**
  * The symbol to get and store weaver config
  */
 export const WEAVER_CONFIG = Symbol.for("gqloom.weaver_config")
