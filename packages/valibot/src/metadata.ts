@@ -72,7 +72,7 @@ export class ValibotMetadataCollector {
     )
   }
 
-  static getConfig<
+  protected static getConfig<
     T extends
       | AsEnumTypeMetadata<object>
       | AsObjectTypeMetadata<object>

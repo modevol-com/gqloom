@@ -39,14 +39,27 @@ import {
   type EnumLike,
 } from "./types"
 
-export class ValibotSilkBuilder {
+export class ValibotWeaver {
+  /**
+   * get GraphQL Silk from Valibot Schema
+   * @param schema Valibot Schema
+   * @returns GraphQL Silk Like Valibot Schema
+   */
+  static unravel<TSchema extends GenericSchemaOrAsync>(
+    schema: TSchema
+  ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
+    return Object.assign(schema, {
+      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+      [SYMBOLS.PARSE]: parse,
+    })
+  }
   static toNullableGraphQLType(
     schema: GenericSchemaOrAsync
   ): GraphQLOutputType {
-    const gqlType = ValibotSilkBuilder.toGraphQLType(schema)
+    const gqlType = ValibotWeaver.toGraphQLType(schema)
 
     weaverContext.memo(gqlType)
-    return ValibotSilkBuilder.nullable(gqlType, schema)
+    return ValibotWeaver.nullable(gqlType, schema)
   }
 
   static toGraphQLType(
@@ -62,14 +75,12 @@ export class ValibotSilkBuilder {
     const schema = valibotSchema as SupportedSchema
     switch (schema.type) {
       case "array": {
-        const itemType = ValibotSilkBuilder.toGraphQLType(
+        const itemType = ValibotWeaver.toGraphQLType(
           schema.item,
           schema,
           ...wrappers
         )
-        return new GraphQLList(
-          ValibotSilkBuilder.nullable(itemType, schema.item)
-        )
+        return new GraphQLList(ValibotWeaver.nullable(itemType, schema.item))
       }
       case "bigint":
         return GraphQLInt
@@ -136,7 +147,7 @@ export class ValibotSilkBuilder {
             if (key.startsWith("__")) return mapValue.SKIP
             const fieldConfig = ValibotMetadataCollector.getFieldConfig(field)
             return {
-              type: ValibotSilkBuilder.toNullableGraphQLType(field),
+              type: ValibotWeaver.toNullableGraphQLType(field),
               ...fieldConfig,
             }
           }),
@@ -144,7 +155,7 @@ export class ValibotSilkBuilder {
             safeParseAsync(strictSchema, input).then((x) => x.success),
           ...objectConfig,
           interfaces: objectConfig.interfaces?.map(
-            ValibotSilkBuilder.ensureInterfaceType
+            ValibotWeaver.ensureInterfaceType
           ),
         })
       }
@@ -152,16 +163,12 @@ export class ValibotSilkBuilder {
       case "non_nullish":
       case "non_optional":
         return new GraphQLNonNull(
-          ValibotSilkBuilder.toGraphQLType(schema.wrapped, schema, ...wrappers)
+          ValibotWeaver.toGraphQLType(schema.wrapped, schema, ...wrappers)
         )
       case "nullable":
       case "nullish":
       case "optional":
-        return ValibotSilkBuilder.toGraphQLType(
-          schema.wrapped,
-          schema,
-          ...wrappers
-        )
+        return ValibotWeaver.toGraphQLType(schema.wrapped, schema, ...wrappers)
       case "number": {
         if (ValibotMetadataCollector.isInteger(schema, ...wrappers))
           return GraphQLInt
@@ -184,7 +191,7 @@ export class ValibotSilkBuilder {
           schema.type === "variant" ? flatVariant(schema) : schema.options
 
         const types = options.map((s) => {
-          const gqlType = ValibotSilkBuilder.toGraphQLType(s)
+          const gqlType = ValibotWeaver.toGraphQLType(s)
           if (isObjectType(gqlType)) return gqlType
           throw new Error(
             `Union types ${name} can only contain objects, but got ${gqlType}`
@@ -202,7 +209,10 @@ export class ValibotSilkBuilder {
     throw new Error(`Unsupported schema type ${schema.type}`)
   }
 
-  static nullable(ofType: GraphQLOutputType, wrapper: GenericSchemaOrAsync) {
+  protected static nullable(
+    ofType: GraphQLOutputType,
+    wrapper: GenericSchemaOrAsync
+  ) {
     const isNullish = nullishTypes.has(wrapper.type)
     if (isNullish) return ofType
     if (isNonNullType(ofType)) return ofType
@@ -215,23 +225,21 @@ export class ValibotSilkBuilder {
     >[number]
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = weaverContext.memo(ValibotSilkBuilder.toGraphQLType(item))
+    const gqlType = weaverContext.memo(ValibotWeaver.toGraphQLType(item))
 
     return ensureInterfaceType(gqlType)
   }
 }
 
-export function valibotSilk<TSchema extends GenericSchemaOrAsync>(
-  schema: TSchema
-): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
-  return Object.assign(schema, {
-    [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
-    [SYMBOLS.PARSE]: parse,
-  })
-}
+/**
+ * get GraphQL Silk from Valibot Schema
+ * @param schema Valibot Schema
+ * @returns GraphQL Silk Like Valibot Schema
+ */
+export const valibotSilk = ValibotWeaver.unravel
 
 function getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
-  return ValibotSilkBuilder.toNullableGraphQLType(this)
+  return ValibotWeaver.toNullableGraphQLType(this)
 }
 
 function parse<TSchema extends GenericSchemaOrAsync>(

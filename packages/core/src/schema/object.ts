@@ -123,11 +123,7 @@ export class LoomObjectType extends GraphQLObjectType {
     field: SilkOperationOrField
   ): GraphQLFieldConfig<any, any> {
     try {
-      let outputType = this.getCacheType(getGraphQLType(field.output))
-
-      if (field.nonNull && !isNonNullType(outputType)) {
-        outputType = new GraphQLNonNull(outputType)
-      }
+      const outputType = this.getCacheType(getGraphQLType(field.output))
 
       // AST node has to be manually created in order to define directives
       const { directives } = extractGqloomExtension(field)
