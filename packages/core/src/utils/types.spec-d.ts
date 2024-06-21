@@ -22,8 +22,18 @@ describe("InferPropertyType", () => {
   })
 
   it("should infer union property", () => {
-    type C = InferPropertyType<B, "b" | "d">
+    type C = InferPropertyType<B, "b" | "d" | "c">
     expectTypeOf<C>().toEqualTypeOf<{
+      c: string
+    }>()
+
+    type C1 = InferPropertyType<B, "b" | "c">
+    expectTypeOf<C1>().toEqualTypeOf<{
+      c: string
+    }>()
+
+    type C2 = InferPropertyType<B, "b" | "d">
+    expectTypeOf<C2>().toEqualTypeOf<{
       c: string
     }>()
   })
