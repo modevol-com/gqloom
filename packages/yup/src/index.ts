@@ -259,13 +259,16 @@ export class YupWeaver {
    * @param config yup weaver config options
    * @returns a new yup to silk function
    */
-  static useConfig = function (config: YupWeaverConfigOptions): typeof yupSilk {
+  static useConfig = function (
+    config: YupWeaverConfigOptions
+  ): typeof YupWeaver.unravel {
     const context = weaverContext.value ?? initWeaverContext()
     context.setConfig<YupWeaverConfig>({
       ...config,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.yup",
     })
-    return (schema) => provideWeaverContext(() => yupSilk(schema), context)
+    return (schema) =>
+      provideWeaverContext(() => YupWeaver.unravel(schema), context)
   }
 }
 
@@ -287,5 +290,5 @@ function parseYup(this: Schema, input: any) {
   })
 }
 
-export const yupLoom = createLoom<YupSchemaIO>(yupSilk, isSchema)
+export const yupLoom = createLoom<YupSchemaIO>(YupWeaver.unravel, isSchema)
 export const { query, mutation, field, resolver } = yupLoom
