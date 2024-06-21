@@ -132,7 +132,8 @@ export class ValibotSilkBuilder {
 
         return new GraphQLObjectType({
           name,
-          fields: mapValue(schema.entries, (field) => {
+          fields: mapValue(schema.entries, (field, key) => {
+            if (key.startsWith("__")) return mapValue.SKIP
             const fieldConfig = ValibotMetadataCollector.getFieldConfig(field)
             return {
               type: ValibotSilkBuilder.toNullableGraphQLType(field),

@@ -122,7 +122,8 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
           description: description.meta?.description,
           fields: mapValue(
             (description as SchemaObjectDescription).fields,
-            (fieldDescription) => {
+            (fieldDescription, key) => {
+              if (key.startsWith("__")) return mapValue.SKIP
               const d = YupSilk.ensureSchemaDescription(fieldDescription)
               return {
                 extensions: mergeExtensions(

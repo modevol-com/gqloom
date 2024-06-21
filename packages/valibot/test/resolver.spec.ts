@@ -13,6 +13,8 @@ import {
   integer,
   optional,
   union,
+  variant,
+  literal,
 } from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { field, mutation, query, resolver } from "../src"
@@ -182,6 +184,78 @@ describe("valibot resolver", () => {
     expect(result).toEqual({
       data: {
         dog: { __typename: "Dog", name: "Sadie", age: 2, loveBone: true },
+      },
+    })
+  })
+
+  it("should resolve variant", async () => {
+    const ExplicitCat = object({
+      __typename: literal("Cat"),
+      ...Cat.entries,
+    })
+
+    const ExplicitDog = object({
+      __typename: literal("Dog"),
+      ...Dog.entries,
+    })
+
+    const Animal = variant("__typename", [ExplicitCat, ExplicitDog])
+    collectNames({ Cat: ExplicitCat, Dog: ExplicitDog, Animal })
+
+    const animalResolver = resolver({
+      cat: query(Animal, () => ({
+        __typename: "Cat" as const,
+        name: "Kitty",
+        age: 1,
+      })),
+
+      dog: query(Animal, () => ({
+        __typename: "Dog" as const,
+        name: "Sadie",
+        age: 2,
+      })),
+    })
+
+    const schema = new SchemaWeaver().add(animalResolver).weaveGraphQLSchema()
+    let result: any
+    result = await graphql({
+      schema,
+      source: /* GraphQL */ `
+        query {
+          cat {
+            __typename
+            ... on Cat {
+              name
+              age
+              loveFish
+            }
+          }
+        }
+      `,
+    })
+    expect(result).toMatchObject({
+      data: {
+        cat: { __typename: "Cat", name: "Kitty", age: 1 },
+      },
+    })
+    result = await graphql({
+      schema,
+      source: /* GraphQL */ `
+        query {
+          dog {
+            __typename
+            ... on Dog {
+              name
+              age
+              loveBone
+            }
+          }
+        }
+      `,
+    })
+    expect(result).toMatchObject({
+      data: {
+        dog: { __typename: "Dog", name: "Sadie", age: 2 },
       },
     })
   })

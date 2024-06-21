@@ -157,7 +157,8 @@ export class ZodSilk<TSchema extends Schema>
 
       return new GraphQLObjectType({
         name,
-        fields: mapValue(schema.shape as ZodRawShape, (field) => {
+        fields: mapValue(schema.shape as ZodRawShape, (field, key) => {
+          if (key.startsWith("__")) return mapValue.SKIP
           const fieldConfig = ZodSilk.getFieldConfig(field)
           return {
             type: ZodSilk.toNullableGraphQLType(field),
