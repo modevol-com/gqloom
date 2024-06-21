@@ -17,6 +17,7 @@ import {
   resolver,
   yupSilk,
   union,
+  YupWeaver,
 } from "../src/index"
 import {
   GraphQLString,
@@ -53,7 +54,7 @@ const GraphQLDate = new GraphQLScalarType({
   name: "Date",
 })
 
-describe("YupSilk", () => {
+describe("YupWeaver", () => {
   it("should handle scalar", () => {
     expect(getGraphQLType(yupSilk(string()))).toEqual(GraphQLString)
     expect(getGraphQLType(yupSilk(boolean()))).toEqual(GraphQLBoolean)
@@ -94,6 +95,41 @@ describe("YupSilk", () => {
     expect(
       getGraphQLType(yupSilk(date().meta({ type: () => GraphQLDate })))
     ).toEqual(GraphQLDate)
+  })
+
+  it("should use preset GraphQLType", () => {
+    const Dog = object({
+      name: string(),
+      birthday: date(),
+    }).label("Dog")
+
+    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const schema = new SchemaWeaver()
+      .setConfig(
+        YupWeaver.config({
+          presetGraphQLType: (description) => {
+            switch (description.type) {
+              case "date":
+                return GraphQLDate
+            }
+          },
+        })
+      )
+      .add(r1)
+      .weaveGraphQLSchema()
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog
+      }
+
+      type Dog {
+        name: String
+        birthday: Date
+      }
+
+      scalar Date"
+    `)
   })
 
   it("should handle non null", () => {
@@ -432,7 +468,7 @@ describe("YupSilk", () => {
           input: {
             data: array(DogInput),
             required: array(DogInput.required()),
-            names: array(string().required()),
+            names: array(string().required()).required(),
           },
           resolve: ({ data }) => data,
         }),
@@ -449,7 +485,7 @@ describe("YupSilk", () => {
         "type Query {
           unwrap(name: String!, birthday: String!): Dog
           dog(data: DogInput): Dog
-          dogs(data: [DogInput], required: [DogInput!], names: [String!]): [Dog!]
+          dogs(data: [DogInput], required: [DogInput!], names: [String!]!): [Dog!]
           mustDog(data: DogInput!): Dog!
         }
 

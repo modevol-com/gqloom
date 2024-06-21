@@ -63,11 +63,7 @@ export function ensureInputType(
 ): GraphQLInputType {
   const gqlType = (() => {
     if (isSilk(silkOrType)) {
-      const ofType = getGraphQLType(silkOrType)
-
-      if (silkOrType.nonNull && !isNonNullType(ofType))
-        return new GraphQLNonNull(ofType)
-      return ofType
+      return getGraphQLType(silkOrType)
     }
     return silkOrType
   })()

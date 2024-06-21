@@ -125,10 +125,7 @@ export class LoomObjectType extends GraphQLObjectType {
     try {
       let outputType = this.getCacheType(getGraphQLType(field.output))
 
-      if (
-        (field.nonNull ?? field.output.nonNull) &&
-        !isNonNullType(outputType)
-      ) {
+      if (field.nonNull && !isNonNullType(outputType)) {
         outputType = new GraphQLNonNull(outputType)
       }
 

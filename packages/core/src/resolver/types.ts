@@ -12,8 +12,7 @@ import { type PARSE, type GET_GRAPHQL_TYPE } from "../utils/symbols"
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
  */
-export interface GraphQLSilk<TOutput = any, TInput = any>
-  extends GraphQLFieldOptions {
+export interface GraphQLSilk<TOutput = any, TInput = any> {
   /**
    * GraphQL type for schema
    */

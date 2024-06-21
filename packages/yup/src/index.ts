@@ -45,30 +45,23 @@ import {
 export * from "./types"
 export * from "./union"
 
-export class YupSilk<TSchema extends Schema<any, any, any, any>>
-  implements GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
-{
-  "~types"?: { input: InferType<TSchema>; output: InferType<TSchema> }
-  schemaDescription: SchemaDescription
-  nonNull: boolean
-
-  constructor(public schema: TSchema) {
-    this.schemaDescription = schema.describe()
-    this.schemaDescription.label ??= weaverContext.names.get(schema)
-    this.nonNull =
-      !this.schemaDescription.nullable && !this.schemaDescription.optional
-  }
-
-  [SYMBOLS.GET_GRAPHQL_TYPE]() {
-    return YupSilk.toNullableGraphQLType(this.schemaDescription)
-  }
-
-  [SYMBOLS.PARSE](input: InferType<TSchema>): Promise<InferType<TSchema>> {
-    return this.schema.validate(input)
+export class YupWeaver {
+  /**
+   * get GraphQL Silk from Yup Schema
+   * @param schema Yup Schema
+   * @returns GraphQL Silk Like Yup Schema
+   */
+  static unravel<TSchema extends Schema<any, any, any, any>>(
+    schema: TSchema
+  ): TSchema & GraphQLSilk<InferType<TSchema>, InferType<TSchema>> {
+    return Object.assign(schema, {
+      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+      [SYMBOLS.PARSE]: parseYup,
+    })
   }
 
   static toNullableGraphQLType(description: SchemaDescription) {
-    const gqlType = YupSilk.toGraphQLType(description)
+    const gqlType = YupWeaver.toGraphQLType(description)
 
     weaverContext.memo(gqlType)
     return nullable(gqlType)
@@ -88,7 +81,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
     const presetType = config?.presetGraphQLType?.(description)
     if (presetType) return presetType
 
-    const maybeEnum = YupSilk.getEnumType(description)
+    const maybeEnum = YupWeaver.getEnumType(description)
     if (maybeEnum) return maybeEnum
 
     switch (description.type) {
@@ -114,7 +107,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
         if (existing) return existing
         return new GraphQLObjectType({
           isTypeOf: description.meta?.isTypeOf,
-          interfaces: YupSilk.ensureInterfaceTypes(
+          interfaces: YupWeaver.ensureInterfaceTypes(
             description.meta?.interfaces
           ),
           name,
@@ -127,13 +120,13 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
             (description as SchemaObjectDescription).fields,
             (fieldDescription, key) => {
               if (key.startsWith("__")) return mapValue.SKIP
-              const d = YupSilk.ensureSchemaDescription(fieldDescription)
+              const d = YupWeaver.ensureSchemaDescription(fieldDescription)
               return {
                 extensions: mergeExtensions(
                   { defaultValue: d.default },
                   d.meta?.extension
                 ),
-                type: YupSilk.toNullableGraphQLType(d),
+                type: YupWeaver.toNullableGraphQLType(d),
                 description: d?.meta?.description,
               } as GraphQLFieldConfig<any, any>
             }
@@ -149,8 +142,8 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
           throw new Error("Array type must have an inner type")
 
         return new GraphQLList(
-          YupSilk.toNullableGraphQLType(
-            YupSilk.ensureSchemaDescription(innerType)
+          YupWeaver.toNullableGraphQLType(
+            YupWeaver.ensureSchemaDescription(innerType)
           )
         )
       }
@@ -168,8 +161,8 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
         if (existing) return existing
 
         const types = innerTypes.map((innerType) => {
-          const gqlType = YupSilk.toNullableGraphQLType(
-            YupSilk.ensureSchemaDescription(innerType)
+          const gqlType = YupWeaver.toNullableGraphQLType(
+            YupWeaver.ensureSchemaDescription(innerType)
           )
           if (isObjectType(gqlType)) return gqlType
           throw new Error(
@@ -204,7 +197,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
     const list = typeof thunkList === "function" ? thunkList() : thunkList
 
     return list.map((yupSchema) =>
-      ensureInterfaceType(new YupSilk(yupSchema)[SYMBOLS.GET_GRAPHQL_TYPE]())
+      ensureInterfaceType(getGraphQLType.call(yupSchema))
     )
   }
 
@@ -213,7 +206,7 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
   }
 
   static getEnumType(description: SchemaDescription): GraphQLEnumType | null {
-    if (!YupSilk.isEnumType(description)) return null
+    if (!YupWeaver.isEnumType(description)) return null
     const meta: GQLoomMetadata | undefined = description.meta
 
     const name = meta?.name ?? description.label
@@ -276,12 +269,22 @@ export class YupSilk<TSchema extends Schema<any, any, any, any>>
   }
 }
 
+export const yupSilk: typeof YupWeaver.unravel = YupWeaver.unravel
+
 export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
 
-export function yupSilk<TSchema extends Schema<any, any, any, any>>(
-  schema: TSchema
-): YupSilk<TSchema> {
-  return new YupSilk(schema)
+function getGraphQLType(this: Schema) {
+  const schemaDescription = this.describe()
+  schemaDescription.label ??= weaverContext.names.get(this)
+  return YupWeaver.toNullableGraphQLType(schemaDescription)
+}
+
+function parseYup(this: Schema, input: any) {
+  return this.validate(input, {
+    strict: true,
+    abortEarly: false,
+    stripUnknown: true,
+  })
 }
 
 export const yupLoom = createLoom<YupSchemaIO>(yupSilk, isSchema)
