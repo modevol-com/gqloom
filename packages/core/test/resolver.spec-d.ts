@@ -60,7 +60,7 @@ describe("resolver type", () => {
       createGiraffe: mutation(Giraffe, {
         input: GiraffeInput,
         resolve: (input) => {
-          it("should infer output type", () => {
+          it("should infer input type", () => {
             expectTypeOf(input).toEqualTypeOf<Partial<IGiraffe>>()
           })
           return {

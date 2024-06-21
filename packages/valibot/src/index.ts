@@ -3,6 +3,7 @@ import {
   type InferInput,
   safeParseAsync,
   strictObjectAsync,
+  parseAsync,
 } from "valibot"
 import {
   SYMBOLS,
@@ -222,11 +223,23 @@ export class ValibotSilkBuilder {
 export function valibotSilk<TSchema extends GenericSchemaOrAsync>(
   schema: TSchema
 ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
-  return Object.assign(schema, { [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType })
+  return Object.assign(schema, {
+    [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+    [SYMBOLS.PARSE]: parse,
+  })
 }
 
 function getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
   return ValibotSilkBuilder.toNullableGraphQLType(this)
+}
+
+async function parse<TSchema extends GenericSchemaOrAsync>(
+  this: TSchema,
+  input: unknown
+): Promise<InferOutput<TSchema>> {
+  const answer = await parseAsync(this, input)
+  console.log("parse", answer)
+  return answer
 }
 
 type ValibotSchemaIO = [GenericSchemaOrAsync, "_types.input", "_types.output"]
