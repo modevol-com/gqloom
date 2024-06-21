@@ -233,13 +233,11 @@ function getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
   return ValibotSilkBuilder.toNullableGraphQLType(this)
 }
 
-async function parse<TSchema extends GenericSchemaOrAsync>(
+function parse<TSchema extends GenericSchemaOrAsync>(
   this: TSchema,
   input: unknown
 ): Promise<InferOutput<TSchema>> {
-  const answer = await parseAsync(this, input)
-  console.log("parse", answer)
-  return answer
+  return parseAsync(this, input)
 }
 
 type ValibotSchemaIO = [GenericSchemaOrAsync, "_types.input", "_types.output"]
