@@ -9,9 +9,15 @@ import {
   nullish,
   pipe,
   minLength,
+  boolean,
+  integer,
+  optional,
+  union,
 } from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { field, mutation, query, resolver } from "../src"
+import { SchemaWeaver, collectNames } from "@gqloom/core"
+import { graphql } from "graphql"
 
 describe("valibot resolver", () => {
   const Giraffe = object({
@@ -21,6 +27,20 @@ describe("valibot resolver", () => {
   })
 
   const GiraffeInput = partial(Giraffe)
+
+  const Cat = object({
+    name: string(),
+    age: pipe(number(), integer()),
+    loveFish: optional(boolean()),
+  })
+
+  const Dog = object({
+    name: string(),
+    age: pipe(number(), integer()),
+    loveBone: optional(boolean()),
+  })
+
+  collectNames({ Cat, Dog }, { Giraffe, GiraffeInput })
 
   const createGiraffe = mutation(Giraffe, {
     input: GiraffeInput,
@@ -37,6 +57,7 @@ describe("valibot resolver", () => {
   const simpleGiraffeResolver = resolver({
     createGiraffe: createGiraffe,
   })
+
   const giraffeResolver = resolver.of(Giraffe, {
     age: field(number(), async (giraffe) => {
       assertType<InferOutput<typeof Giraffe>>(giraffe)
@@ -87,6 +108,81 @@ describe("valibot resolver", () => {
       name: "Giraffe",
       birthday: expect.any(Date),
       heightInMeters: 5,
+    })
+  })
+
+  it("should resolve field", async () => {
+    const giraffe = await giraffeResolver.giraffe.resolve({
+      name: "Giraffe",
+    })
+
+    expect(await giraffeResolver.age.resolve(giraffe, undefined)).toEqual(
+      expect.any(Number)
+    )
+  })
+
+  it("should resolve union", async () => {
+    const Animal = union([Cat, Dog])
+
+    collectNames({ Animal })
+
+    const animalResolver = resolver({
+      cat: query(Animal, () => ({
+        name: "Kitty",
+        age: 1,
+        loveFish: true,
+      })),
+
+      dog: query(Animal, () => ({
+        name: "Sadie",
+        age: 2,
+        loveBone: true,
+      })),
+    })
+
+    const schema = new SchemaWeaver().add(animalResolver).weaveGraphQLSchema()
+
+    let result: any
+    result = await graphql({
+      schema,
+      source: /* GraphQL */ `
+        query {
+          cat {
+            __typename
+            ... on Cat {
+              name
+              age
+              loveFish
+            }
+          }
+        }
+      `,
+    })
+    expect(result).toEqual({
+      data: {
+        cat: { __typename: "Cat", name: "Kitty", age: 1, loveFish: true },
+      },
+    })
+
+    result = await graphql({
+      schema,
+      source: /* GraphQL */ `
+        query {
+          dog {
+            __typename
+            ... on Dog {
+              name
+              age
+              loveBone
+            }
+          }
+        }
+      `,
+    })
+    expect(result).toEqual({
+      data: {
+        dog: { __typename: "Dog", name: "Sadie", age: 2, loveBone: true },
+      },
     })
   })
 
