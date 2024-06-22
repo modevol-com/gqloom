@@ -1,14 +1,15 @@
 {
   "name": "gqloom",
   "version": "0.0.0",
-  "description": "",
+  "description": "Create GraphQL schema and resolvers with TypeScript, using Zod, Valibot or Yup!",
   "main": "index.js",
   "scripts": {
     "test": "vitest --typecheck",
     "coverage": "vitest run --coverage",
     "format": "prettier . --write",
     "lint": "eslint \"**/*.{ts,tsx}\" --fix",
-    "check:type": "tsc --noEmit"
+    "check:type": "tsc --noEmit",
+    "build": "pnpm -F '*' run build"
   },
   "keywords": [],
   "author": "xcfox",
@@ -23,6 +24,7 @@
     "eslint-config-prettier": "^9.1.0",
     "graphql": "^16.8.1",
     "prettier": "3.2.5",
+    "tsup": "^8.1.0",
     "tsx": "^4.7.2",
     "typescript": "^5.4.3",
     "vitest": "^1.5.0"

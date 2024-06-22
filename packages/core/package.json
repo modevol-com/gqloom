@@ -1,16 +1,30 @@
 {
   "name": "@gqloom/core",
-  "version": "0.0.0",
-  "description": "",
-  "main": "src/index.ts",
+  "version": "0.1.0",
+  "description": "Create GraphQL schema and resolvers with TypeScript.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
-  },
-  "peerDependencies": {
-    "graphql": "^16.0.0 || ^17.0.0"
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup"
+  },
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "graphql": ">= 16.8.0"
   },
   "keywords": [],
   "author": "xcfox",

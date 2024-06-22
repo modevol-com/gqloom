@@ -4,7 +4,7 @@
  */
 export function mapValue<T, V>(
   record: Record<string, T>,
-  fn: (value: T, key: string) => V | typeof SKIP
+  fn: (value: T, key: string) => V | typeof mapValue.SKIP
 ): Record<string, V> {
   const result = Object.create(null)
 

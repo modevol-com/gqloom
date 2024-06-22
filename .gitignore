@@ -5,6 +5,7 @@ node_modules
 dist
 build
 server
+release
 
 # Tests
 coverage
