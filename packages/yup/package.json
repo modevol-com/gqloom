@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/yup",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Create GraphQL schema and resolvers with TypeScript using Yup!",
   "type": "module",
   "main": "./dist/index.js",
@@ -27,6 +27,8 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
+    "graphql": ">= 16.8.0",
+    "@gqloom/core": ">= 0.1.0",
     "yup": ">= 1.0.0"
   },
   "devDependencies": {
