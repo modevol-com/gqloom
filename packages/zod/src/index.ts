@@ -70,14 +70,19 @@ import { getConfig } from "./metadata"
 
 export * from "./metadata"
 
-export class ZodSilk<TSchema extends Schema>
-  implements GraphQLSilk<output<TSchema>, input<TSchema>>
-{
-  "~types"?: { input: input<TSchema>; output: output<TSchema> }
-  constructor(public schema: TSchema) {}
-
-  [SYMBOLS.GET_GRAPHQL_TYPE]() {
-    return ZodSilk.toNullableGraphQLType(this.schema)
+export class ZodWeaver {
+  /**
+   * get GraphQL Silk from Zod Schema
+   * @param schema Zod Schema
+   * @returns GraphQL Silk Like Zod Schema
+   */
+  static unravel<TSchema extends Schema>(
+    schema: TSchema
+  ): TSchema & GraphQLSilk<output<TSchema>, input<TSchema>> {
+    return Object.assign(schema, {
+      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+      [SYMBOLS.PARSE]: parseZod,
+    })
   }
 
   static toNullableGraphQLType(schema: Schema): GraphQLOutputType {
@@ -88,7 +93,7 @@ export class ZodSilk<TSchema extends Schema>
       return new GraphQLNonNull(ofType)
     }
 
-    const gqlType = ZodSilk.toGraphQLType(schema)
+    const gqlType = ZodWeaver.toGraphQLType(schema)
 
     weaverContext.memo(gqlType)
     return nullable(gqlType)
@@ -103,15 +108,15 @@ export class ZodSilk<TSchema extends Schema>
 
     if (schema instanceof ZodEffects) {
       config ??= getConfig(schema)
-      return ZodSilk.toGraphQLType(schema.innerType(), config)
+      return ZodWeaver.toGraphQLType(schema.innerType(), config)
     }
 
     if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
-      return ZodSilk.toGraphQLType(schema.unwrap(), config)
+      return ZodWeaver.toGraphQLType(schema.unwrap(), config)
     }
 
     if (schema instanceof ZodDefault) {
-      return ZodSilk.toGraphQLType(
+      return ZodWeaver.toGraphQLType(
         schema._def.innerType,
         deepMerge(config, {
           extensions: { defaultValue: schema._def.defaultValue },
@@ -120,7 +125,7 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodArray) {
-      return new GraphQLList(ZodSilk.toNullableGraphQLType(schema.element))
+      return new GraphQLList(ZodWeaver.toNullableGraphQLType(schema.element))
     }
 
     if (schema instanceof ZodString) {
@@ -147,7 +152,10 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodObject) {
-      const { name, ...objectConfig } = ZodSilk.getObjectConfig(schema, config)
+      const { name, ...objectConfig } = ZodWeaver.getObjectConfig(
+        schema,
+        config
+      )
       if (!name) throw new Error("Object must have a name")
 
       const existing = weaverContext.objectMap?.get(name)
@@ -159,9 +167,9 @@ export class ZodSilk<TSchema extends Schema>
         name,
         fields: mapValue(schema.shape as ZodRawShape, (field, key) => {
           if (key.startsWith("__")) return mapValue.SKIP
-          const fieldConfig = ZodSilk.getFieldConfig(field)
+          const fieldConfig = ZodWeaver.getFieldConfig(field)
           return {
-            type: ZodSilk.toNullableGraphQLType(field),
+            type: ZodWeaver.toNullableGraphQLType(field),
             ...fieldConfig,
           }
         }),
@@ -172,7 +180,7 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
-      const { name, ...enumConfig } = ZodSilk.getEnumConfig(schema)
+      const { name, ...enumConfig } = ZodWeaver.getEnumConfig(schema)
       if (!name) throw new Error("Enum must have a name")
 
       const existing = weaverContext.enumMap?.get(name)
@@ -199,14 +207,14 @@ export class ZodSilk<TSchema extends Schema>
     }
 
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
-      const { name, ...unionConfig } = ZodSilk.getUnionConfig(schema, config)
+      const { name, ...unionConfig } = ZodWeaver.getUnionConfig(schema, config)
       if (!name) throw new Error("Enum must have a name")
 
       const existing = weaverContext.unionMap?.get(name)
       if (existing) return existing
 
       const types = (schema.options as ZodTypeAny[]).map((s) => {
-        const gqlType = ZodSilk.toGraphQLType(s)
+        const gqlType = ZodWeaver.toGraphQLType(s)
         if (isObjectType(gqlType)) return gqlType
         throw new Error(
           `Union types ${name} can only contain objects, but got ${gqlType}`
@@ -236,7 +244,7 @@ export class ZodSilk<TSchema extends Schema>
       ? parseObjectConfig(schema.description)
       : undefined
     const interfaces = objectConfig?.interfaces?.map(
-      ZodSilk.ensureInterfaceType
+      ZodWeaver.ensureInterfaceType
     )
     return {
       name: weaverContext.names.get(schema),
@@ -254,7 +262,7 @@ export class ZodSilk<TSchema extends Schema>
     item: GraphQLInterfaceType | ZodObject<any>
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = weaverContext.memo(ZodSilk.toGraphQLType(item))
+    const gqlType = weaverContext.memo(ZodWeaver.toGraphQLType(item))
 
     return ensureInterfaceType(gqlType)
   }
@@ -324,19 +332,16 @@ export class ZodSilk<TSchema extends Schema>
       ),
     }
   }
-
-  [SYMBOLS.PARSE](input: input<TSchema>): Promise<output<TSchema>> {
-    return this.schema.parseAsync(input)
-  }
 }
+
+/**
+ * get GraphQL Silk from Zod Schema
+ * @param schema Zod Schema
+ * @returns GraphQL Silk Like Zod Schema
+ */
+export const zodSilk = ZodWeaver.unravel
 
 export type ZodSchemaIO = [Schema, "_input", "_output"]
-
-export function zodSilk<TSchema extends Schema>(
-  schema: TSchema
-): ZodSilk<TSchema> {
-  return new ZodSilk(schema)
-}
 
 export const { query, mutation, field, resolver } = createLoom<ZodSchemaIO>(
   zodSilk,
@@ -345,4 +350,12 @@ export const { query, mutation, field, resolver } = createLoom<ZodSchemaIO>(
 
 function isZodSchema(target: any): target is Schema {
   return target instanceof ZodType
+}
+
+function getGraphQLType(this: Schema) {
+  return ZodWeaver.toNullableGraphQLType(this)
+}
+
+function parseZod(this: Schema, data: any) {
+  return this.parseAsync(data)
 }
