@@ -88,6 +88,7 @@ export class EntitySchemaWeaver {
           ...(extensions.mikroProperty as TypeProperty),
           ...options,
         }),
+        comment: field.description,
         ...extensions.mikroProperty,
       } as EntitySchemaProperty<any, any>
     })
