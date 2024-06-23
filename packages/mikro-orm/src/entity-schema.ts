@@ -86,7 +86,7 @@ export class EntitySchemaWeaver {
       const extensions = field.extensions as GqloomMikroFieldExtensions
 
       const typeOptions =
-        field.extensions.mikroProperty?.type == null
+        extensions.mikroProperty?.type == null
           ? EntitySchemaWeaver.getPropertyType(field.type, field, options)
           : undefined
 
