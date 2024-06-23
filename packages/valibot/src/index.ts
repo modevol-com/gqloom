@@ -231,6 +231,8 @@ export class ValibotWeaver {
   }
 }
 
+export * from "./metadata"
+
 /**
  * get GraphQL Silk from Valibot Schema
  * @param schema Valibot Schema
