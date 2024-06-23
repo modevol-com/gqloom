@@ -157,7 +157,7 @@ export interface EntitySchemaWeaverOptions {
   getPropertyType?: (
     gqlType: Exclude<GraphQLOutputType, GraphQLNonNull<any> | GraphQLList<any>>,
     wrappedType: GraphQLOutputType
-  ) => string
+  ) => string | undefined
 }
 
 function toTypeProperty(
