@@ -249,10 +249,7 @@ export type SilkSchemaEntity<
   TSilk,
   TSchemaIO extends AbstractSchemaIO,
 > = InferSchemaO<TSilk, TSchemaIO> & {
-  [OptionalProps]: DiffKeys<
-    NonNullishKeys<InferSchemaO<TSilk, TSchemaIO>>,
-    NonNullishKeys<InferSchemaI<TSilk, TSchemaIO>>
-  >
+  [OptionalProps]: NullishKeys<InferSchemaI<TSilk, TSchemaIO>>
 }
 
 export type GraphQLSilkEntity<TSilk> = SilkSchemaEntity<TSilk, GraphQLSilkIO>
@@ -349,21 +346,11 @@ export function manyToMany<TTarget extends object, TOwner>(
   }
 }
 
-type NonNullishKeys<T> = NonNullable<
-  {
-    [K in keyof T]: undefined extends T[K]
-      ? never
-      : null extends T[K]
-        ? never
-        : K
-  }[keyof T]
+type NullishKeys<T> = Exclude<
+  NonNullable<
+    {
+      [K in keyof T]: undefined extends T[K] ? K : null extends T[K] ? K : never
+    }[keyof T]
+  >,
+  undefined
 >
-
-type DiffKeys<
-  T extends string | number | symbol,
-  U extends string | number | symbol,
-> = ({ [P in T]: P } & {
-  [P in U]: never
-} & {
-  [x: string]: never
-})[T]
