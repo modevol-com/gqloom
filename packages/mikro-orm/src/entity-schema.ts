@@ -36,6 +36,7 @@ import {
   GraphQLBoolean,
   GraphQLID,
   GraphQLScalarType,
+  type GraphQLField,
 } from "graphql"
 import { type GqloomMikroFieldExtensions } from "./types"
 
@@ -83,12 +84,19 @@ export class EntitySchemaWeaver {
   ): Record<string, EntitySchemaProperty<any, any>> {
     return mapValue(gqlType.getFields(), (field) => {
       const extensions = field.extensions as GqloomMikroFieldExtensions
+
+      const typeOptions =
+        field.extensions.mikroProperty?.type == null
+          ? EntitySchemaWeaver.getPropertyType(field.type, field, options)
+          : undefined
+
+      const commentOptions = field.description
+        ? { comment: field.description }
+        : undefined
+
       return {
-        ...EntitySchemaWeaver.getPropertyType(field.type, {
-          ...(extensions.mikroProperty as TypeProperty),
-          ...options,
-        }),
-        comment: field.description,
+        ...typeOptions,
+        ...commentOptions,
         ...extensions.mikroProperty,
       } as EntitySchemaProperty<any, any>
     })
@@ -96,16 +104,17 @@ export class EntitySchemaWeaver {
 
   static getPropertyType(
     wrappedType: GraphQLOutputType,
-    options?: Partial<TypeProperty> & EntitySchemaWeaverOptions
-  ): TypeProperty {
+    field: GraphQLField<any, any, any>,
+    options?: EntitySchemaWeaverOptions
+  ): PropertyType {
     let nullable = true
     let isList = false
-    let type = options?.type
     const gqlType = unwrap(wrappedType)
-    type ??= options?.getPropertyType?.(gqlType, wrappedType)
 
-    if (type == null) {
-      let simpleType: EntityProperty["type"]
+    let simpleType: EntityProperty["type"] | undefined =
+      options?.getPropertyType?.(gqlType, field)
+
+    if (simpleType == null) {
       if (gqlType instanceof GraphQLScalarType) {
         simpleType = EntitySchemaWeaver.getGraphQLScalarType(gqlType)
       } else if (gqlType instanceof GraphQLObjectType) {
@@ -113,12 +122,12 @@ export class EntitySchemaWeaver {
       } else {
         simpleType = "string"
       }
-      type = isList ? `${simpleType}[]` : simpleType
     }
+    const type: EntityProperty["type"] = isList ? `${simpleType}[]` : simpleType
+
     return {
       type,
       nullable,
-      ...options,
     }
     function unwrap(t: GraphQLOutputType) {
       if (t instanceof GraphQLNonNull) {
@@ -220,7 +229,7 @@ export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver<GraphQLSilkIO> 
     }
   )
 
-type TypeProperty = Exclude<
+export type PropertyType = Exclude<
   EntitySchemaProperty<any, any>,
   | {
       kind:
@@ -242,7 +251,7 @@ type TypeProperty = Exclude<
 export interface EntitySchemaWeaverOptions {
   getPropertyType?: (
     gqlType: Exclude<GraphQLOutputType, GraphQLNonNull<any> | GraphQLList<any>>,
-    wrappedType: GraphQLOutputType
+    filed: GraphQLField<any, any, any>
   ) => string | undefined
 }
 
