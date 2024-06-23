@@ -251,7 +251,11 @@ function parse<TSchema extends GenericSchemaOrAsync>(
   return parseAsync(this, input)
 }
 
-type ValibotSchemaIO = [GenericSchemaOrAsync, "_types.input", "_types.output"]
+export type ValibotSchemaIO = [
+  GenericSchemaOrAsync,
+  "_types.input",
+  "_types.output",
+]
 
 export const { query, mutation, field, resolver } = createLoom<ValibotSchemaIO>(
   valibotSilk,
