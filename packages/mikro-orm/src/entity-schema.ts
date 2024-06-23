@@ -39,7 +39,7 @@ import { type GqloomMikroFieldExtensions } from "./types"
 
 export function defineEntitySchema<TSilk extends GraphQLSilk<object, any>>(
   silk: TSilk,
-  options?: EntitySchemaMetadata<SilkEntity<TSilk>>
+  options?: EntitySchemaMetadata<SilkEntity<TSilk>> & EntitySchemaWeaverOptions
 ): EntitySchema<SilkEntity<TSilk>>
 export function defineEntitySchema<
   TSilk extends GraphQLSilk<any, any>,
@@ -50,14 +50,14 @@ export function defineEntitySchema<
 >(
   silk: TSilk,
   relationships: TRelationships,
-  options?: EntitySchemaMetadata<SilkEntity<TSilk>>
+  options?: EntitySchemaMetadata<SilkEntity<TSilk>> & EntitySchemaWeaverOptions
 ): SilkEntitySchema<TSilk, TRelationships>
 export function defineEntitySchema(
   silk: GraphQLSilk<any, any>,
   relationshipsOrOptions?:
     | Record<string, RelationshipProperty<any, object>>
     | EntitySchemaMetadata<any>,
-  options?: EntitySchemaMetadata<any>
+  options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
 ): EntitySchema {
   const gqlType = getGraphQLType(silk)
   if (!(gqlType instanceof GraphQLObjectType))
@@ -74,7 +74,7 @@ export function defineEntitySchema(
   return new EntitySchema({
     name: gqlType.name,
     properties: {
-      ...toProperties(gqlType),
+      ...toProperties(gqlType, options),
       ...relationships,
     },
     ...options,
@@ -119,12 +119,16 @@ type TypeProperty = Exclude<
 >
 
 function toProperties(
-  gqlType: GraphQLObjectType
+  gqlType: GraphQLObjectType,
+  options?: EntitySchemaWeaverOptions
 ): Record<string, EntitySchemaProperty<any, any>> {
   return mapValue(gqlType.getFields(), (field) => {
     const extensions = field.extensions as GqloomMikroFieldExtensions
     return {
-      ...toTypeProperty(field.type),
+      ...toTypeProperty(field.type, {
+        ...(extensions.mikroProperty as TypeProperty),
+        ...options,
+      }),
       ...extensions.mikroProperty,
     } as EntitySchemaProperty<any, any>
   })
@@ -149,15 +153,22 @@ function getGraphQLScalarType(
   }
 }
 
+export interface EntitySchemaWeaverOptions {
+  getPropertyType?: (
+    gqlType: Exclude<GraphQLOutputType, GraphQLNonNull<any> | GraphQLList<any>>,
+    wrappedType: GraphQLOutputType
+  ) => string
+}
+
 function toTypeProperty(
   wrappedType: GraphQLOutputType,
-  options?: Partial<TypeProperty> & { isList?: boolean }
+  options?: Partial<TypeProperty> & EntitySchemaWeaverOptions
 ): TypeProperty {
   let nullable = true
   let isList = false
   let type = options?.type
-
   const gqlType = unwrap(wrappedType)
+  type ??= options?.getPropertyType?.(gqlType, wrappedType)
 
   if (type == null) {
     let simpleType: EntityProperty["type"]
