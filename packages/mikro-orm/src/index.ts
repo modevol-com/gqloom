@@ -114,3 +114,4 @@ export function mikroSilk<TEntity>(
 }
 
 export * from "./entity-schema"
+export * from "./types"
