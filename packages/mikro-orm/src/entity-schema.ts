@@ -1,11 +1,13 @@
 import {
-  type InferSilkO,
   type GraphQLSilk,
-  type InferSilkI,
   mapValue,
   notNullish,
   getGraphQLType,
   SYMBOLS,
+  type AbstractSchemaIO,
+  type InferSchemaI,
+  type InferSchemaO,
+  type GraphQLSilkIO,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -37,67 +39,185 @@ import {
 } from "graphql"
 import { type GqloomMikroFieldExtensions } from "./types"
 
-export function defineEntitySchema<TSilk extends GraphQLSilk<object, any>>(
-  silk: TSilk,
-  options?: EntitySchemaMetadata<SilkEntity<TSilk>> & EntitySchemaWeaverOptions
-): EntitySchema<SilkEntity<TSilk>>
-export function defineEntitySchema<
-  TSilk extends GraphQLSilk<any, any>,
-  TRelationships extends Record<
-    string,
-    RelationshipProperty<any, InferSilkO<TSilk>>
-  >,
->(
-  silk: TSilk,
-  relationships: TRelationships,
-  options?: EntitySchemaMetadata<SilkEntity<TSilk>> & EntitySchemaWeaverOptions
-): SilkEntitySchema<TSilk, TRelationships>
-export function defineEntitySchema(
-  silk: GraphQLSilk<any, any>,
-  relationshipsOrOptions?:
-    | Record<string, RelationshipProperty<any, object>>
-    | EntitySchemaMetadata<any>,
-  options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
-): EntitySchema {
-  const gqlType = getGraphQLType(silk)
-  if (!(gqlType instanceof GraphQLObjectType))
-    throw new Error("Only object type can be converted to entity schema")
+export class EntitySchemaWeaver {
+  static weave(
+    silk: GraphQLSilk<any, any>,
+    relationships?: Record<string, RelationshipProperty<any, object>>,
+    options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+  ) {
+    const gqlType = getGraphQLType(silk)
+    if (!(gqlType instanceof GraphQLObjectType))
+      throw new Error("Only object type can be converted to entity schema")
 
-  let relationships: Record<string, RelationshipProperty<any, object>> = {}
-
-  if (isRelationshipProperties(relationshipsOrOptions)) {
-    relationships = relationshipsOrOptions
-  } else {
-    options = relationshipsOrOptions
+    return new EntitySchema({
+      name: gqlType.name,
+      properties: {
+        ...EntitySchemaWeaver.toProperties(gqlType, options),
+        ...relationships,
+      },
+      ...options,
+      hooks: {
+        ...options?.hooks,
+        onInit: [
+          ({ entity }: EventArgs<any>) => {
+            if (silk[SYMBOLS.PARSE] == null) return
+            const pureEntity = Object.fromEntries(
+              Object.entries(entity).filter(([, value]) => value !== undefined)
+            )
+            const parsed = silk[SYMBOLS.PARSE](pureEntity)
+            if (parsed !== undefined) {
+              Object.assign(entity, parsed)
+            }
+          },
+          ...(Array.isArray(options?.hooks?.onInit)
+            ? options.hooks.onInit
+            : [options?.hooks?.onInit].filter(notNullish)),
+        ],
+      },
+    })
   }
 
-  return new EntitySchema({
-    name: gqlType.name,
-    properties: {
-      ...toProperties(gqlType, options),
-      ...relationships,
-    },
-    ...options,
-    hooks: {
-      ...options?.hooks,
-      onInit: [
-        ({ entity }: EventArgs<any>) => {
-          if (silk[SYMBOLS.PARSE] == null) return
-          const pureEntity = Object.fromEntries(
-            Object.entries(entity).filter(([, value]) => value !== undefined)
-          )
-          const parsed = silk[SYMBOLS.PARSE](pureEntity)
-          if (parsed !== undefined) {
-            Object.assign(entity, parsed)
-          }
-        },
-        ...(Array.isArray(options?.hooks?.onInit)
-          ? options.hooks.onInit
-          : [options?.hooks?.onInit].filter(notNullish)),
-      ],
-    },
-  })
+  static toProperties(
+    gqlType: GraphQLObjectType,
+    options?: EntitySchemaWeaverOptions
+  ): Record<string, EntitySchemaProperty<any, any>> {
+    return mapValue(gqlType.getFields(), (field) => {
+      const extensions = field.extensions as GqloomMikroFieldExtensions
+      return {
+        ...EntitySchemaWeaver.getPropertyType(field.type, {
+          ...(extensions.mikroProperty as TypeProperty),
+          ...options,
+        }),
+        ...extensions.mikroProperty,
+      } as EntitySchemaProperty<any, any>
+    })
+  }
+
+  static getPropertyType(
+    wrappedType: GraphQLOutputType,
+    options?: Partial<TypeProperty> & EntitySchemaWeaverOptions
+  ): TypeProperty {
+    let nullable = true
+    let isList = false
+    let type = options?.type
+    const gqlType = unwrap(wrappedType)
+    type ??= options?.getPropertyType?.(gqlType, wrappedType)
+
+    if (type == null) {
+      let simpleType: EntityProperty["type"]
+      if (gqlType instanceof GraphQLScalarType) {
+        simpleType = EntitySchemaWeaver.getGraphQLScalarType(gqlType)
+      } else if (gqlType instanceof GraphQLObjectType) {
+        simpleType = "json"
+      } else {
+        simpleType = "string"
+      }
+      type = isList ? `${simpleType}[]` : simpleType
+    }
+    return {
+      type,
+      nullable,
+      ...options,
+    }
+    function unwrap(t: GraphQLOutputType) {
+      if (t instanceof GraphQLNonNull) {
+        nullable = false
+        return unwrap(t.ofType)
+      }
+      if (t instanceof GraphQLList) {
+        isList = true
+        return unwrap(t.ofType)
+      }
+      return t
+    }
+  }
+
+  static getGraphQLScalarType(
+    gqlType: GraphQLScalarType<any, any>
+  ): EntityProperty["type"] {
+    switch (gqlType) {
+      case GraphQLString:
+        return "string"
+      case GraphQLFloat:
+        return "float"
+      case GraphQLInt:
+        return "integer"
+      case GraphQLBoolean:
+        return "boolean"
+      case GraphQLID:
+        return "string"
+      default:
+        return "string"
+    }
+  }
+
+  static createWeaver<TSchemaIO extends AbstractSchemaIO>(
+    toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
+    creatorOptions: EntitySchemaWeaverOptions = {}
+  ): CallableEntitySchemaWeaver<TSchemaIO> {
+    return Object.assign(
+      (
+        silk: TSchemaIO[0],
+        options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+      ) =>
+        EntitySchemaWeaver.weave(toSilk(silk), undefined, {
+          ...creatorOptions,
+          ...options,
+        } as EntitySchemaMetadata<any> & EntitySchemaWeaverOptions),
+      {
+        withRelationships: (
+          silk: TSchemaIO[0],
+          relationships: Record<string, RelationshipProperty<any, any>>,
+          options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+        ) =>
+          EntitySchemaWeaver.weave(toSilk(silk), relationships, {
+            ...creatorOptions,
+            ...options,
+          } as EntitySchemaMetadata<any> & EntitySchemaWeaverOptions),
+      }
+    )
+  }
 }
+
+export interface CallableEntitySchemaWeaver<
+  TSchemaIO extends AbstractSchemaIO,
+> {
+  <TSilk extends TSchemaIO[0]>(
+    silk: TSilk,
+    options?: EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>> &
+      EntitySchemaWeaverOptions
+  ): EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>
+
+  withRelationships: <
+    TSilk extends TSchemaIO[0],
+    TRelationships extends Record<
+      string,
+      RelationshipProperty<any, InferSchemaO<TSilk, TSchemaIO>>
+    > = never,
+  >(
+    silk: TSilk,
+    relationships: TRelationships,
+    options?: EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>> &
+      EntitySchemaWeaverOptions
+  ) => EntitySchema<
+    SilkSchemaEntity<TSilk, TSchemaIO> & InferRelationship<TRelationships>
+  >
+}
+
+export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver<GraphQLSilkIO> =
+  Object.assign(
+    (
+      silk: GraphQLSilk,
+      options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+    ) => EntitySchemaWeaver.weave(silk, undefined, options),
+    {
+      withRelationships: (
+        silk: GraphQLSilk,
+        relationships: Record<string, RelationshipProperty<any, any>>,
+        options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+      ) => EntitySchemaWeaver.weave(silk, relationships, options),
+    }
+  )
 
 type TypeProperty = Exclude<
   EntitySchemaProperty<any, any>,
@@ -118,41 +238,6 @@ type TypeProperty = Exclude<
   | { entity: string | (() => EntityName<any>) }
 >
 
-function toProperties(
-  gqlType: GraphQLObjectType,
-  options?: EntitySchemaWeaverOptions
-): Record<string, EntitySchemaProperty<any, any>> {
-  return mapValue(gqlType.getFields(), (field) => {
-    const extensions = field.extensions as GqloomMikroFieldExtensions
-    return {
-      ...toTypeProperty(field.type, {
-        ...(extensions.mikroProperty as TypeProperty),
-        ...options,
-      }),
-      ...extensions.mikroProperty,
-    } as EntitySchemaProperty<any, any>
-  })
-}
-
-function getGraphQLScalarType(
-  gqlType: GraphQLScalarType<any, any>
-): EntityProperty["type"] {
-  switch (gqlType) {
-    case GraphQLString:
-      return "string"
-    case GraphQLFloat:
-      return "float"
-    case GraphQLInt:
-      return "integer"
-    case GraphQLBoolean:
-      return "boolean"
-    case GraphQLID:
-      return "string"
-    default:
-      return "string"
-  }
-}
-
 export interface EntitySchemaWeaverOptions {
   getPropertyType?: (
     gqlType: Exclude<GraphQLOutputType, GraphQLNonNull<any> | GraphQLList<any>>,
@@ -160,75 +245,17 @@ export interface EntitySchemaWeaverOptions {
   ) => string | undefined
 }
 
-function toTypeProperty(
-  wrappedType: GraphQLOutputType,
-  options?: Partial<TypeProperty> & EntitySchemaWeaverOptions
-): TypeProperty {
-  let nullable = true
-  let isList = false
-  let type = options?.type
-  const gqlType = unwrap(wrappedType)
-  type ??= options?.getPropertyType?.(gqlType, wrappedType)
-
-  if (type == null) {
-    let simpleType: EntityProperty["type"]
-    if (gqlType instanceof GraphQLScalarType) {
-      simpleType = getGraphQLScalarType(gqlType)
-    } else if (gqlType instanceof GraphQLObjectType) {
-      simpleType = "json"
-    } else {
-      simpleType = "string"
-    }
-    type = isList ? `${simpleType}[]` : simpleType
-  }
-  return {
-    type,
-    nullable,
-    ...options,
-  }
-
-  function unwrap(t: GraphQLOutputType) {
-    if (t instanceof GraphQLNonNull) {
-      nullable = false
-      return unwrap(t.ofType)
-    }
-    if (t instanceof GraphQLList) {
-      isList = true
-      return unwrap(t.ofType)
-    }
-    return t
-  }
+export type SilkSchemaEntity<
+  TSilk,
+  TSchemaIO extends AbstractSchemaIO,
+> = InferSchemaO<TSilk, TSchemaIO> & {
+  [OptionalProps]: DiffKeys<
+    NonNullishKeys<InferSchemaO<TSilk, TSchemaIO>>,
+    NonNullishKeys<InferSchemaI<TSilk, TSchemaIO>>
+  >
 }
 
-function isRelationshipProperties(
-  relationshipsOrOptions:
-    | Record<string, RelationshipProperty<any, object>>
-    | EntitySchemaMetadata<any>
-    | undefined
-): relationshipsOrOptions is Record<string, RelationshipProperty<any, object>> {
-  if (relationshipsOrOptions === undefined) return false
-  const firstValue = Object.values(relationshipsOrOptions)[0]
-  if ("kind" in firstValue) {
-    if (Object.values(ReferenceKind).includes(firstValue["kind"])) return true
-  }
-  return false
-}
-
-export type SilkEntity<TSilk extends GraphQLSilk<any, any>> =
-  InferSilkO<TSilk> & {
-    [OptionalProps]: DiffKeys<
-      NonNullishKeys<InferSilkO<TSilk>>,
-      NonNullishKeys<InferSilkI<TSilk>>
-    >
-  }
-
-export type SilkEntitySchema<
-  TSilk extends GraphQLSilk<any, any>,
-  TRelationships extends Record<
-    string,
-    RelationshipProperty<any, InferSilkO<TSilk>>
-  > = never,
-> = EntitySchema<SilkEntity<TSilk> & InferRelationship<TRelationships>>
+export type GraphQLSilkEntity<TSilk> = SilkSchemaEntity<TSilk, GraphQLSilkIO>
 
 export type InferRelationship<
   TRelationships extends Record<string, RelationshipProperty<any, any>>,
@@ -322,7 +349,7 @@ export function manyToMany<TTarget extends object, TOwner>(
   }
 }
 
-type NonNullishKeys<T extends Record<string, any>> = NonNullable<
+type NonNullishKeys<T> = NonNullable<
   {
     [K in keyof T]: undefined extends T[K]
       ? never

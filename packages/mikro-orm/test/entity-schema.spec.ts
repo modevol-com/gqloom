@@ -12,9 +12,10 @@ import {
 } from "graphql"
 import { type GqloomMikroFieldExtensions } from "../src/types"
 import { beforeAll, describe, expect, it } from "vitest"
-import { defineEntitySchema, mikroSilk } from "../src"
+import { mikroSilk } from "../src"
 import { MikroORM, RequestContext } from "@mikro-orm/core"
 import { defineConfig } from "@mikro-orm/better-sqlite"
+import { weaveEntitySchemaBySilk } from "../src/entity-schema"
 
 declare module "graphql" {
   interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any>
@@ -60,7 +61,7 @@ const Giraffe = silk<Required<GiraffeI>, GiraffeI>(
   }
 )
 
-const GiraffeSchema = defineEntitySchema(Giraffe)
+const GiraffeSchema = weaveEntitySchemaBySilk(Giraffe)
 const ORMConfig = defineConfig({
   entities: [GiraffeSchema],
   dbName: ":memory:",

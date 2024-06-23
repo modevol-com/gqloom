@@ -1,10 +1,10 @@
 import { silk } from "@gqloom/core"
 import {
   manyToMany,
-  defineEntitySchema,
+  weaveEntitySchemaBySilk,
   manyToOne,
   oneToMany,
-  type SilkEntity,
+  type GraphQLSilkEntity,
 } from "../src/entity-schema"
 import { GraphQLObjectType, GraphQLString } from "graphql"
 import {
@@ -48,30 +48,32 @@ const Giraffe = silk<
   })
 )
 
-interface IBookEntity extends SilkEntity<typeof Book> {
+interface IBookEntity extends GraphQLSilkEntity<typeof Book> {
   author: Ref<IAuthorEntity>
 }
 
-const BookEntity: EntitySchema<IBookEntity> = defineEntitySchema(Book, {
-  author: manyToOne(() => AuthorEntity),
-})
+const BookEntity: EntitySchema<IBookEntity> =
+  weaveEntitySchemaBySilk.withRelationships(Book, {
+    author: manyToOne(() => AuthorEntity),
+  })
 
-interface IAuthorEntity extends SilkEntity<typeof Author> {
+interface IAuthorEntity extends GraphQLSilkEntity<typeof Author> {
   books: Collection<IBookEntity>
 }
 
-const AuthorEntity: EntitySchema<IAuthorEntity> = defineEntitySchema(Author, {
-  books: oneToMany(() => BookEntity, { mappedBy: "author" }),
-})
+const AuthorEntity: EntitySchema<IAuthorEntity> =
+  weaveEntitySchemaBySilk.withRelationships(Author, {
+    books: oneToMany(() => BookEntity, { mappedBy: "author" }),
+  })
 
-interface IGiraffeEntity extends SilkEntity<typeof Giraffe> {
+interface IGiraffeEntity extends GraphQLSilkEntity<typeof Giraffe> {
   friends: Collection<IGiraffeEntity>
 }
 
-const GiraffeEntity: EntitySchema<IGiraffeEntity> = defineEntitySchema(
-  Giraffe,
-  { friends: manyToMany(() => GiraffeEntity) }
-)
+const GiraffeEntity: EntitySchema<IGiraffeEntity> =
+  weaveEntitySchemaBySilk.withRelationships(Giraffe, {
+    friends: manyToMany(() => GiraffeEntity),
+  })
 
 describe("entity-schema", () => {
   it("should avoid circular reference", async () => {
