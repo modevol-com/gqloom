@@ -13,19 +13,18 @@ import {
   type GraphQLEnumTypeConfig,
   type GraphQLInterfaceType,
   type GraphQLUnionTypeConfig,
+  type GraphQLOutputType,
 } from "graphql"
 import { type PipedSchema } from "./types"
 import { isNullish } from "./utils"
 import { deepMerge, weaverContext } from "@gqloom/core"
 
 export class ValibotMetadataCollector {
-  static getFieldConfig(
-    ...schemas: PipedSchema[]
-  ): Partial<GraphQLFieldConfig<any, any, any>> | undefined {
+  static getFieldConfig(...schemas: PipedSchema[]): FieldConfig | undefined {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
     let defaultValue: any
-    let config: Partial<GraphQLFieldConfig<any, any, any>> | undefined
+    let config: FieldConfig | undefined
 
     for (const item of pipe) {
       if (item.kind === "schema" && isNullish(item)) {
@@ -124,6 +123,10 @@ export class ValibotMetadataCollector {
     return pipe
   }
 }
+export interface FieldConfig
+  extends Partial<Omit<GraphQLFieldConfig<any, any>, "type">> {
+  type?: GraphQLOutputType | undefined | null
+}
 
 /**
  * GraphQL field metadata type.
@@ -142,7 +145,7 @@ export interface AsFieldMetadata<TInput>
   /**
    * The GraphQL field config.
    */
-  readonly config: Partial<GraphQLFieldConfig<any, any, any>>
+  readonly config: FieldConfig
 }
 
 /**
@@ -152,9 +155,7 @@ export interface AsFieldMetadata<TInput>
  *
  * @returns A GraphQL field metadata.
  */
-export function asField<TInput>(
-  config: Partial<GraphQLFieldConfig<any, any, any>>
-): AsFieldMetadata<TInput> {
+export function asField<TInput>(config: FieldConfig): AsFieldMetadata<TInput> {
   return {
     kind: "transformation",
     type: "gqloom.asField",

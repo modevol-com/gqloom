@@ -119,7 +119,20 @@ describe("valibotSilk", () => {
     ).toEqual(GraphQLDate)
   })
 
-  it("should use preset GraphQLType", () => {
+  it("should handle hidden field", () => {
+    const Dog = object({
+      name: optional(string()),
+      birthday: pipe(optional(date()), asField({ type: null })),
+    })
+    collectNames({ Dog })
+    expect(printValibotSilk(Dog)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }"
+    `)
+  })
+
+  it("should handle preset GraphQLType", () => {
     const Dog = object({
       name: optional(string()),
       birthday: optional(date()),

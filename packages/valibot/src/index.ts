@@ -154,9 +154,13 @@ export class ValibotWeaver {
           name,
           fields: mapValue(schema.entries, (field, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
-            const fieldConfig = ValibotMetadataCollector.getFieldConfig(field)
+            const { type, ...fieldConfig } =
+              ValibotMetadataCollector.getFieldConfig(field) ?? {}
+
+            if (type === null) return mapValue.SKIP
+
             return {
-              type: ValibotWeaver.toNullableGraphQLType(field),
+              type: type ?? ValibotWeaver.toNullableGraphQLType(field),
               ...fieldConfig,
             }
           }),
