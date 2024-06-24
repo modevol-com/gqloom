@@ -29,7 +29,6 @@ import {
   type GraphQLInterfaceType,
   isInterfaceType,
   type GraphQLEnumTypeConfig,
-  type GraphQLFieldConfig,
   type GraphQLObjectTypeConfig,
   type GraphQLUnionTypeConfig,
 } from "graphql"
@@ -171,9 +170,10 @@ export class ZodWeaver {
         name,
         fields: mapValue(schema.shape as ZodRawShape, (field, key) => {
           if (key.startsWith("__")) return mapValue.SKIP
-          const fieldConfig = ZodWeaver.getFieldConfig(field)
+          const { type, ...fieldConfig } = ZodWeaver.getFieldConfig(field)
+          if (type === null) return mapValue.SKIP
           return {
-            type: ZodWeaver.toNullableGraphQLType(field),
+            type: type ?? ZodWeaver.toNullableGraphQLType(field),
             ...fieldConfig,
           }
         }),
@@ -310,9 +310,7 @@ export class ZodWeaver {
     }
   }
 
-  protected static getFieldConfig(
-    schema: ZodSchema
-  ): Partial<GraphQLFieldConfig<any, any>> {
+  protected static getFieldConfig(schema: ZodSchema): FieldConfig {
     const fromDefault = (() => {
       if (schema instanceof ZodDefault) {
         return {

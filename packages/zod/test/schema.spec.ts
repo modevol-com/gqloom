@@ -115,6 +115,37 @@ describe("ZodSilk", () => {
     ).toEqual(GraphQLDate)
   })
 
+  it("should handle hidden field", () => {
+    const Dog = z.object({
+      name: z.string().optional(),
+      birthday: z
+        .date()
+        .optional()
+        .superRefine(fieldType({ type: null })),
+    })
+
+    collectNames({ Dog })
+
+    const schema = weave(
+      resolver({ dog: query(Dog, () => ({})) }),
+      ZodWeaver.config({
+        presetGraphQLType: (schema) => {
+          if (schema instanceof z.ZodDate) return GraphQLDate
+        },
+      })
+    )
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog!
+      }
+
+      type Dog {
+        name: String
+      }"
+    `)
+  })
+
   it("should handle preset GraphQLType", () => {
     const Dog = z.object({
       name: z.string().optional(),

@@ -1,7 +1,6 @@
 import {
   type GraphQLUnionTypeConfig,
   type GraphQLEnumTypeConfig,
-  type GraphQLFieldConfig,
   type GraphQLObjectTypeConfig,
   type GraphQLInterfaceType,
 } from "graphql"
@@ -12,15 +11,13 @@ import {
   type ZodRawShape,
   type Schema,
 } from "zod"
-import { type TypeOrFieldConfig } from "./types"
+import { type FieldConfig, type TypeOrFieldConfig } from "./types"
 
 interface ObjectConfig
   extends Omit<GraphQLObjectTypeConfig<any, any>, "fields" | "interfaces">,
     Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields">> {
   interfaces?: (ZodObject<ZodRawShape> | GraphQLInterfaceType)[]
 }
-
-interface FieldConfig extends Partial<GraphQLFieldConfig<any, any>> {}
 
 // interface ArgumentConfig extends
 

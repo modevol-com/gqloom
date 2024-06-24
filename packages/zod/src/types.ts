@@ -18,7 +18,10 @@ export interface ObjectConfig
   interfaces?: (ZodObject<ZodRawShape> | GraphQLInterfaceType)[]
 }
 
-export interface FieldConfig extends Partial<GraphQLFieldConfig<any, any>> {}
+export interface FieldConfig
+  extends Partial<Omit<GraphQLFieldConfig<any, any>, "type">> {
+  type?: GraphQLOutputType | undefined | null
+}
 
 export interface EnumConfig
   extends Omit<GraphQLEnumTypeConfig, "values">,
