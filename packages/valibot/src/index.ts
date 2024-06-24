@@ -6,6 +6,7 @@ import {
   parseAsync,
 } from "valibot"
 import {
+  type GraphQLSilkIO,
   SYMBOLS,
   createLoom,
   ensureInterfaceType,
@@ -14,6 +15,7 @@ import {
   provideWeaverContext,
   weaverContext,
   type GraphQLSilk,
+  isSilk,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -301,10 +303,14 @@ export type ValibotSchemaIO = [
   "_types.output",
 ]
 
-// TODO: created Loom should accept GraphQLSilk
-export const { query, mutation, field, resolver } = createLoom<ValibotSchemaIO>(
-  valibotSilk,
-  isValibotSchema
+export const { query, mutation, field, resolver } = createLoom<
+  ValibotSchemaIO | GraphQLSilkIO
+>(
+  (schema) => {
+    if (isSilk(schema)) return schema
+    return ValibotWeaver.unravel(schema)
+  },
+  (schema) => isSilk(schema) || isValibotSchema(schema)
 )
 
 function isValibotSchema(schema: any): schema is GenericSchemaOrAsync {

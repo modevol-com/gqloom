@@ -18,8 +18,8 @@ import {
 } from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { field, mutation, query, resolver } from "../src"
-import { SchemaWeaver, collectNames } from "@gqloom/core"
-import { graphql } from "graphql"
+import { SchemaWeaver, collectNames, silk } from "@gqloom/core"
+import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
 
 describe("valibot resolver", () => {
   const Giraffe = object({
@@ -57,7 +57,7 @@ describe("valibot resolver", () => {
   })
 
   const simpleGiraffeResolver = resolver({
-    createGiraffe: createGiraffe,
+    createGiraffe,
   })
 
   const giraffeResolver = resolver.of(Giraffe, {
@@ -82,10 +82,22 @@ describe("valibot resolver", () => {
     }),
   })
 
+  it("should infer input type", () => {
+    expectTypeOf(simpleGiraffeResolver.createGiraffe.resolve)
+      .parameter(0)
+      .toEqualTypeOf<InferInput<typeof GiraffeInput>>()
+  })
+
   it("should infer output type", () => {
     expectTypeOf(
       simpleGiraffeResolver.createGiraffe.resolve
     ).returns.resolves.toEqualTypeOf<InferOutput<typeof Giraffe>>()
+  })
+
+  it("should infer parent type", () => {
+    expectTypeOf(giraffeResolver.age.resolve)
+      .parameter(0)
+      .toEqualTypeOf<InferOutput<typeof Giraffe>>()
   })
 
   it("should resolve mutation", async () => {
@@ -267,5 +279,94 @@ describe("valibot resolver", () => {
         birthday: new Date("2022-2-22"),
       })
     ).rejects.toThrow("Invalid length")
+  })
+
+  describe("it should handle GraphQLSilk", () => {
+    interface IHorse {
+      name: string
+      age: number
+    }
+
+    const Horse = silk<IHorse, Partial<IHorse>>(
+      new GraphQLObjectType({
+        name: "Horse",
+        fields: {
+          name: { type: GraphQLString },
+          age: { type: GraphQLInt },
+        },
+      }),
+      (input) => ({
+        name: input.name ?? "",
+        age: input.age ?? 0,
+      })
+    )
+
+    const createHorse = mutation(Horse, {
+      input: Horse,
+      resolve: (input) => {
+        assertType<IHorse>(input)
+        return input
+      },
+    })
+
+    const horseResolver = resolver.of(Horse, {
+      createHorse,
+      hello: field(string(), (horse) => {
+        assertType<IHorse>(horse)
+        return `Neh! Neh! --${horse.name}`
+      }),
+      horse: query(Horse, {
+        input: { name: string() },
+        resolve: ({ name }) => ({
+          name,
+          age: 1,
+        }),
+      }),
+    })
+
+    it("should infer input type", () => {
+      expectTypeOf(horseResolver.createHorse.resolve)
+        .parameter(0)
+        .toEqualTypeOf<Partial<IHorse>>()
+    })
+
+    it("should infer output type", () => {
+      expectTypeOf(
+        horseResolver.createHorse.resolve
+      ).returns.resolves.toEqualTypeOf<IHorse>()
+    })
+
+    it("should infer parent type", () => {
+      expectTypeOf(horseResolver.hello.resolve)
+        .parameter(0)
+        .toEqualTypeOf<IHorse>()
+    })
+
+    it("should resolve mutation", async () => {
+      expect(
+        await horseResolver.createHorse.resolve({
+          name: "Horse",
+          age: 1,
+        })
+      ).toEqual({
+        name: "Horse",
+        age: 1,
+      })
+    })
+    it("should resolve query", async () => {
+      expect(
+        await horseResolver.horse.resolve({
+          name: "Horse",
+        })
+      ).toEqual({
+        name: "Horse",
+        age: 1,
+      })
+    })
+    it("should resolve field", async () => {
+      expect(
+        await horseResolver.hello.resolve({ name: "Horse", age: 1 }, undefined)
+      ).toEqual("Neh! Neh! --Horse")
+    })
   })
 })
