@@ -301,6 +301,7 @@ export type ValibotSchemaIO = [
   "_types.output",
 ]
 
+// TODO: created Loom should accept GraphQLSilk
 export const { query, mutation, field, resolver } = createLoom<ValibotSchemaIO>(
   valibotSilk,
   isValibotSchema

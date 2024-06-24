@@ -378,6 +378,7 @@ export const zodSilk = ZodWeaver.unravel
 
 export type ZodSchemaIO = [Schema, "_input", "_output"]
 
+// TODO: created Loom should accept GraphQLSilk
 export const { query, mutation, field, resolver } = createLoom<ZodSchemaIO>(
   zodSilk,
   isZodSchema

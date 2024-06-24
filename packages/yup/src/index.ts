@@ -298,4 +298,6 @@ function parseYup(this: Schema, input: any) {
 }
 
 export const yupLoom = createLoom<YupSchemaIO>(YupWeaver.unravel, isSchema)
+
+// TODO: created Loom should accept GraphQLSilk
 export const { query, mutation, field, resolver } = yupLoom
