@@ -1,3 +1,5 @@
+import { type SYMBOLS, type WeaverConfig } from "@gqloom/core"
+import { type GraphQLOutputType } from "graphql"
 import {
   type SchemaWithPipe,
   type BaseSchema,
@@ -117,4 +119,16 @@ export type GenericSchemaOrAsync = GenericSchema | GenericSchemaAsync
 export interface EnumLike {
   [k: string]: string | number
   [nu: number]: string
+}
+
+export interface ValibotWeaverConfigOptions {
+  presetGraphQLType?: (
+    schema: GenericSchema | GenericSchemaAsync
+  ) => GraphQLOutputType | undefined
+}
+
+export interface ValibotWeaverConfig
+  extends WeaverConfig,
+    ValibotWeaverConfigOptions {
+  [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot"
 }

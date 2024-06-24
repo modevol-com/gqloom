@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { field, query, resolver, valibotSilk } from "../src"
+import { ValibotWeaver, field, query, resolver, valibotSilk } from "../src"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -20,6 +20,7 @@ import {
   collectNames,
   type SilkResolver,
   SchemaWeaver,
+  weave,
 } from "@gqloom/core"
 import { asField, asObjectType } from "../src/metadata"
 import {
@@ -116,6 +117,40 @@ describe("valibotSilk", () => {
         valibotSilk(pipe(nullable(date()), asField({ type: GraphQLDate })))
       )
     ).toEqual(GraphQLDate)
+  })
+
+  it("should use preset GraphQLType", () => {
+    const Dog = object({
+      name: optional(string()),
+      birthday: optional(date()),
+    })
+    collectNames({ Dog })
+
+    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const schema = weave(
+      r1,
+      ValibotWeaver.config({
+        presetGraphQLType: (description) => {
+          switch (description.type) {
+            case "date":
+              return GraphQLDate
+          }
+        },
+      })
+    )
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog!
+      }
+
+      type Dog {
+        name: String
+        birthday: Date
+      }
+
+      scalar Date"
+    `)
   })
 
   it("should handle non null", () => {
