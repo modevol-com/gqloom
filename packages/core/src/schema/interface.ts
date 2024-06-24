@@ -15,7 +15,7 @@ import { extractGqloomExtension } from "./extensions"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,
-  resolveType?: GraphQLInterfaceTypeConfig<any, any>["resolveType"]
+  interfaceConfig?: GraphQLInterfaceTypeConfig<any, any>
 ): GraphQLInterfaceType {
   if (isInterfaceType(gqlType)) return withDirective(gqlType)
 
@@ -28,7 +28,10 @@ export function ensureInterfaceType(
   if (existing != null) return withDirective(existing)
 
   const { astNode: _, extensionASTNodes: _1, ...config } = gqlType.toConfig()
-  const interfaceType = new GraphQLInterfaceType({ ...config, resolveType })
+  const interfaceType = new GraphQLInterfaceType({
+    ...config,
+    ...interfaceConfig,
+  })
 
   weaverContext.interfaceMap?.set(key, interfaceType)
   return withDirective(interfaceType)

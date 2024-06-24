@@ -74,8 +74,10 @@ export class YupWeaver {
   }
 
   static toGraphQLType(description: SchemaDescription): GraphQLOutputType {
-    const customType = description.meta?.type
-    if (customType) return customType()
+    const customTypeOrFn = description.meta?.type
+    const customType =
+      typeof customTypeOrFn === "function" ? customTypeOrFn() : customTypeOrFn
+    if (customType) return customType
 
     const config = weaverContext.getConfig<YupWeaverConfig>("gqloom.yup")
     const presetType = config?.presetGraphQLType?.(description)
@@ -106,7 +108,6 @@ export class YupWeaver {
         const existing = weaverContext.objectMap?.get(name)
         if (existing) return existing
         return new GraphQLObjectType({
-          isTypeOf: description.meta?.isTypeOf,
           interfaces: YupWeaver.ensureInterfaceTypes(
             description.meta?.interfaces
           ),
@@ -121,6 +122,7 @@ export class YupWeaver {
             (fieldDescription, key) => {
               if (key.startsWith("__")) return mapValue.SKIP
               const d = YupWeaver.ensureSchemaDescription(fieldDescription)
+              if (d.meta?.type === null) return mapValue.SKIP
               return {
                 extensions: mergeExtensions(
                   { defaultValue: d.default },
@@ -131,6 +133,7 @@ export class YupWeaver {
               } as GraphQLFieldConfig<any, any>
             }
           ),
+          ...description.meta?.objectType,
         })
       }
       case "array": {
@@ -174,7 +177,7 @@ export class YupWeaver {
           name,
           types,
           description: description.meta?.description,
-          resolveType: description.meta?.resolveType,
+          ...description.meta?.unionType,
         })
       }
       default:
@@ -197,7 +200,10 @@ export class YupWeaver {
     const list = typeof thunkList === "function" ? thunkList() : thunkList
 
     return list.map((yupSchema) =>
-      ensureInterfaceType(getGraphQLType.call(yupSchema))
+      ensureInterfaceType(
+        getGraphQLType.call(yupSchema),
+        yupSchema.describe().meta?.interfaceType
+      )
     )
   }
 
@@ -239,6 +245,7 @@ export class YupWeaver {
       name: meta?.name ?? description.label ?? "",
       description: meta?.description,
       values,
+      ...meta?.enumType,
     })
   }
 

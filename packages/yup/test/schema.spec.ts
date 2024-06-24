@@ -97,7 +97,20 @@ describe("YupWeaver", () => {
     ).toEqual(GraphQLDate)
   })
 
-  it("should use preset GraphQLType", () => {
+  it("should handle hidden field", () => {
+    const Dog = object({
+      name: string(),
+      birthday: date().meta({ type: null }),
+    }).label("Dog")
+
+    expect(printYupSilk(Dog)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }"
+    `)
+  })
+
+  it("should handle preset GraphQLType", () => {
     const Dog = object({
       name: string(),
       birthday: date(),

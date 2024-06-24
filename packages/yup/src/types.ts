@@ -7,6 +7,9 @@ import {
   type GraphQLOutputType,
   type GraphQLObjectTypeExtensions,
   type GraphQLFieldExtensions,
+  type GraphQLEnumTypeConfig,
+  type GraphQLUnionTypeConfig,
+  type GraphQLFieldConfig,
 } from "graphql"
 import { type SchemaDescription, type Schema } from "yup"
 
@@ -22,23 +25,13 @@ export interface GQLoomMetadata {
     | GraphQLObjectTypeExtensions
     | GraphQLFieldExtensions<any, any, any>
 
-  type?: () => GraphQLOutputType
+  type?: (() => GraphQLOutputType) | null
 
-  /**
-   * For `object`
-   *
-   * How should objects be distinguished when using `interface` and `union`?
-   */
-  isTypeOf?: GraphQLObjectTypeConfig<any, any>["isTypeOf"]
-
-  /**
-   * For `interface`, `union`
-   *
-   * Optionally provide a custom type resolver function. If one is not provided,
-   * the default implementation will call `isTypeOf` on each implementing
-   * Object type.
-   */
-  resolveType?: GraphQLInterfaceTypeConfig<any, any>["resolveType"]
+  field?: GraphQLFieldConfig<any, any, any>
+  objectType?: GraphQLObjectTypeConfig<any, any>
+  interfaceType?: GraphQLInterfaceTypeConfig<any, any>
+  enumType?: GraphQLEnumTypeConfig
+  unionType?: GraphQLUnionTypeConfig<any, any>
 }
 
 export interface YupWeaverOptions {

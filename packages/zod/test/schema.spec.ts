@@ -126,21 +126,8 @@ describe("ZodSilk", () => {
 
     collectNames({ Dog })
 
-    const schema = weave(
-      resolver({ dog: query(Dog, () => ({})) }),
-      ZodWeaver.config({
-        presetGraphQLType: (schema) => {
-          if (schema instanceof z.ZodDate) return GraphQLDate
-        },
-      })
-    )
-
-    expect(printSchema(schema)).toMatchInlineSnapshot(`
-      "type Query {
-        dog: Dog!
-      }
-
-      type Dog {
+    expect(printZodSilk(Dog)).toMatchInlineSnapshot(`
+      "type Dog {
         name: String
       }"
     `)
@@ -171,8 +158,10 @@ describe("ZodSilk", () => {
 
       type Dog {
         name: String
-        birthday: String
-      }"
+        birthday: Date
+      }
+
+      scalar Date"
     `)
   })
 

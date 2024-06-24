@@ -109,6 +109,10 @@ export class ZodWeaver {
     const customType = (config as FieldConfig | undefined)?.type
     if (customType) return customType
 
+    const preset = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+    const presetType = preset?.presetGraphQLType?.(schema)
+    if (presetType) return presetType
+
     if (schema instanceof ZodEffects) {
       config ??= getConfig(schema)
       return ZodWeaver.toGraphQLType(schema.innerType(), config)
