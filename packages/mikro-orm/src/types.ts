@@ -1,5 +1,5 @@
 import { type PropertyOptions } from "@mikro-orm/core"
 
-export interface GqloomMikroFieldExtensions {
+export interface GQLoomMikroFieldExtensions {
   mikroProperty?: PropertyOptions<any>
 }

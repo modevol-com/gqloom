@@ -8,6 +8,7 @@ import {
   type InferSchemaI,
   type InferSchemaO,
   type GraphQLSilkIO,
+  type GQLoomExtensions,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -38,7 +39,7 @@ import {
   GraphQLScalarType,
   type GraphQLField,
 } from "graphql"
-import { type GqloomMikroFieldExtensions } from "./types"
+import { type GQLoomMikroFieldExtensions } from "./types"
 
 export class EntitySchemaWeaver {
   static weave(
@@ -83,7 +84,8 @@ export class EntitySchemaWeaver {
     options?: EntitySchemaWeaverOptions
   ): Record<string, EntitySchemaProperty<any, any>> {
     return mapValue(gqlType.getFields(), (field) => {
-      const extensions = field.extensions as GqloomMikroFieldExtensions
+      const extensions = field.extensions as GQLoomMikroFieldExtensions &
+        GQLoomExtensions
 
       const typeOptions =
         extensions.mikroProperty?.type == null
@@ -125,10 +127,11 @@ export class EntitySchemaWeaver {
     }
     const type: EntityProperty["type"] = isList ? `${simpleType}[]` : simpleType
 
-    return {
-      type,
-      nullable,
-    }
+    const extensions = field.extensions as GQLoomMikroFieldExtensions &
+      GQLoomExtensions
+    if (extensions.defaultValue !== undefined) nullable = false
+
+    return { type, nullable }
     function unwrap(t: GraphQLOutputType) {
       if (t instanceof GraphQLNonNull) {
         nullable = false

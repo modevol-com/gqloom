@@ -10,7 +10,7 @@ import {
   GraphQLString,
   printType,
 } from "graphql"
-import { type GqloomMikroFieldExtensions } from "../src/types"
+import { type GQLoomMikroFieldExtensions } from "../src/types"
 import { beforeAll, describe, expect, it } from "vitest"
 import { mikroSilk } from "../src"
 import { MikroORM, RequestContext } from "@mikro-orm/core"
@@ -19,7 +19,7 @@ import { weaveEntitySchemaBySilk } from "../src/entity-schema"
 
 declare module "graphql" {
   interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any>
-    extends GqloomMikroFieldExtensions {}
+    extends GQLoomMikroFieldExtensions {}
 }
 
 interface GiraffeI {
