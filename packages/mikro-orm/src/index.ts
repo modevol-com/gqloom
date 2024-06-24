@@ -18,6 +18,7 @@ import {
   GraphQLID,
 } from "graphql"
 
+// TODO: MikroWeaver instead of MikroSilk
 export class MikroSilk<TEntity>
   implements GraphQLSilk<TEntity, RequiredEntityData<TEntity>>
 {

@@ -96,7 +96,7 @@ export function createSubscriptionShuttle<TSchemaIO extends AbstractSchemaIO>(
     }) as Subscription<any, any, any>
   }
 }
-
+// TODO: created Loom should accept GraphQLSilk
 export function createLoom<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
