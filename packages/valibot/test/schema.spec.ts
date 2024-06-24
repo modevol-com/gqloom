@@ -130,8 +130,8 @@ describe("valibotSilk", () => {
     const schema = weave(
       r1,
       ValibotWeaver.config({
-        presetGraphQLType: (description) => {
-          switch (description.type) {
+        presetGraphQLType: (schema) => {
+          switch (schema.type) {
             case "date":
               return GraphQLDate
           }

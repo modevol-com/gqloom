@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest"
-import { field, fieldType, objectType, query, resolver, zodSilk } from "../src"
+import {
+  ZodWeaver,
+  field,
+  fieldType,
+  objectType,
+  query,
+  resolver,
+  zodSilk,
+} from "../src"
 import { type Schema, z } from "zod"
 import {
   GraphQLID,
@@ -21,6 +29,7 @@ import {
   type SilkResolver,
   getGraphQLType,
   collectNames,
+  weave,
 } from "@gqloom/core"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 
@@ -104,6 +113,36 @@ describe("ZodSilk", () => {
         )
       )
     ).toEqual(GraphQLDate)
+  })
+
+  it("should handle preset GraphQLType", () => {
+    const Dog = z.object({
+      name: z.string().optional(),
+      birthday: z.date().optional(),
+    })
+
+    collectNames({ Dog })
+
+    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const schema = weave(
+      r1,
+      ZodWeaver.config({
+        presetGraphQLType: (schema) => {
+          if (schema instanceof z.ZodDate) return GraphQLDate
+        },
+      })
+    )
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog!
+      }
+
+      type Dog {
+        name: String
+        birthday: String
+      }"
+    `)
   })
 
   it("should handle non null", () => {

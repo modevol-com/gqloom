@@ -8,6 +8,8 @@ import {
   deepMerge,
   type GQLoomExtensions,
   mergeExtensions,
+  initWeaverContext,
+  provideWeaverContext,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -65,6 +67,8 @@ import {
   type TypeOrFieldConfig,
   type EnumConfig,
   type ObjectConfig,
+  type ZodWeaverConfigOptions,
+  type ZodWeaverConfig,
 } from "./types"
 import { getConfig } from "./metadata"
 
@@ -331,6 +335,35 @@ export class ZodWeaver {
         config?.extensions
       ),
     }
+  }
+
+  /**
+   * Create a Zod weaver config object
+   * @param config Zod weaver config options
+   * @returns a Zod weaver config object
+   */
+  static config = function (config: ZodWeaverConfigOptions): ZodWeaverConfig {
+    return {
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
+    }
+  }
+
+  /**
+   * Use a Zod weaver config
+   * @param config Zod weaver config options
+   * @returns a new Zod to silk function
+   */
+  static useConfig = function (
+    config: ZodWeaverConfigOptions
+  ): typeof ZodWeaver.unravel {
+    const context = weaverContext.value ?? initWeaverContext()
+    context.setConfig<ZodWeaverConfig>({
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
+    })
+    return (schema) =>
+      provideWeaverContext(() => ZodWeaver.unravel(schema), context)
   }
 }
 
