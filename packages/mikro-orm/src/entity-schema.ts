@@ -9,6 +9,7 @@ import {
   type InferSchemaO,
   type GraphQLSilkIO,
   type GQLoomExtensions,
+  weaverContext,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -47,7 +48,7 @@ export class EntitySchemaWeaver {
     relationships?: Record<string, RelationshipProperty<any, object>>,
     options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
   ) {
-    const gqlType = getGraphQLType(silk)
+    const gqlType = getGraphQLTypeWithName(silk, options?.name)
     if (!(gqlType instanceof GraphQLObjectType))
       throw new Error("Only object type can be converted to entity schema")
 
@@ -189,6 +190,23 @@ export class EntitySchemaWeaver {
           } as EntitySchemaMetadata<any> & EntitySchemaWeaverOptions),
       }
     )
+  }
+}
+
+function getGraphQLTypeWithName(
+  silk: GraphQLSilk<any, any>,
+  name?: string | null
+) {
+  const lastName = weaverContext.names.get(silk)
+  try {
+    if (name != null) weaverContext.names.set(silk, name)
+    return getGraphQLType(silk)
+  } finally {
+    if (lastName === undefined) {
+      weaverContext.names.delete(silk)
+    } else {
+      weaverContext.names.set(silk, lastName)
+    }
   }
 }
 
