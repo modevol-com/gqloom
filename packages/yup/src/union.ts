@@ -19,9 +19,9 @@ export function union<
   TSchema extends Schema,
   TContext extends Maybe<AnyObject> = AnyObject,
 >(
-  schemas: ReadonlyArray<TSchema>
+  types: ReadonlyArray<TSchema>
 ): IUnionSchema<InferType<TSchema> | undefined, TContext> {
-  return new UnionSchema(schemas)
+  return new UnionSchema(types)
 }
 
 export class UnionSchema<
@@ -35,12 +35,12 @@ export class UnionSchema<
 {
   declare spec: UnionSchemaSpec
 
-  constructor(schemas: ReadonlyArray<Schema>) {
+  constructor(types: ReadonlyArray<Schema>) {
     super({
-      spec: { schemas } as any,
+      spec: { types } as any,
       type: "union",
       check(value): value is NonNullable<TType> {
-        return schemas.some((schema) => schema.isType(value))
+        return types.some((schema) => schema.isType(value))
       },
     })
   }
@@ -77,8 +77,8 @@ export class UnionSchema<
     const next = (options ? this.resolve(options) : this).clone()
     const base = super.describe(options) as SchemaInnerTypeDescription
     base.innerType = (
-      next.spec as unknown as { schemas: ReadonlyArray<Schema> }
-    ).schemas.map((schema, index) => {
+      next.spec as unknown as { types: ReadonlyArray<Schema> }
+    ).types.map((schema, index) => {
       let innerOptions = options
       if (innerOptions?.value) {
         innerOptions = {
@@ -100,14 +100,14 @@ export class UnionSchema<
 
   async findTargetSchema(value: any): Promise<Schema | undefined> {
     if (value == null) return
-    for (const schema of this.spec.schemas) {
+    for (const schema of this.spec.types) {
       if (await schema.isValid(value, { strict: true })) return schema
     }
   }
 
   findTargetSchemaSync(value: any): Schema | undefined {
     if (value == null) return
-    for (const schema of this.spec.schemas) {
+    for (const schema of this.spec.types) {
       if (schema.isValidSync(value, { strict: true })) return schema
     }
   }
@@ -116,7 +116,7 @@ export class UnionSchema<
 type SchemaSpec = Schema<any>["spec"]
 
 interface UnionSchemaSpec extends SchemaSpec {
-  schemas: ReadonlyArray<Schema>
+  types: ReadonlyArray<Schema>
 }
 
 export interface IUnionSchema<

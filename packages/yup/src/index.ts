@@ -8,6 +8,8 @@ import {
   SYMBOLS,
   provideWeaverContext,
   initWeaverContext,
+  type GraphQLSilkIO,
+  isSilk,
 } from "@gqloom/core"
 import {
   GraphQLString,
@@ -31,16 +33,18 @@ import {
   type SchemaDescription,
   isSchema,
   type InferType,
-  type Schema,
-  type SchemaObjectDescription,
-  type SchemaFieldDescription,
-  type SchemaInnerTypeDescription,
+  Schema,
+  type ArraySchema,
+  type ObjectSchema,
+  type Reference,
+  type ISchema,
 } from "yup"
 import {
   type GQLoomMetadata,
   type YupWeaverConfigOptions,
   type YupWeaverConfig,
 } from "./types"
+import { type UnionSchema } from "./union"
 
 export * from "./types"
 export * from "./union"
@@ -60,8 +64,9 @@ export class YupWeaver {
     })
   }
 
-  static toNullableGraphQLType(description: SchemaDescription) {
-    const gqlType = YupWeaver.toGraphQLType(description)
+  static toNullableGraphQLType(schema: Schema) {
+    const description = YupWeaver.describe(schema)
+    const gqlType = YupWeaver.toGraphQLType(schema)
 
     weaverContext.memo(gqlType)
     return nullable(gqlType)
@@ -73,7 +78,8 @@ export class YupWeaver {
     }
   }
 
-  static toGraphQLType(description: SchemaDescription): GraphQLOutputType {
+  static toGraphQLType(schema: Schema): GraphQLOutputType {
+    const description = YupWeaver.describe(schema)
     const customTypeOrFn = description.meta?.type
     const customType =
       typeof customTypeOrFn === "function" ? customTypeOrFn() : customTypeOrFn
@@ -103,10 +109,18 @@ export class YupWeaver {
       case "date":
         return GraphQLString
       case "object": {
-        const name = description.meta?.name ?? description.label
+        const name =
+          description.meta?.name ??
+          description.label ??
+          weaverContext.names.get(schema)
         if (!name) throw new Error("object type must have a name")
         const existing = weaverContext.objectMap?.get(name)
         if (existing) return existing
+        const objectSchema = schema as ObjectSchema<
+          Record<string, unknown>,
+          unknown
+        >
+        const strictSchema = objectSchema.strict().noUnknown()
         return new GraphQLObjectType({
           interfaces: YupWeaver.ensureInterfaceTypes(
             description.meta?.interfaces
@@ -117,27 +131,27 @@ export class YupWeaver {
             description.meta?.extension
           ),
           description: description.meta?.description,
-          fields: mapValue(
-            (description as SchemaObjectDescription).fields,
-            (fieldDescription, key) => {
-              if (key.startsWith("__")) return mapValue.SKIP
-              const d = YupWeaver.ensureSchemaDescription(fieldDescription)
-              if (d.meta?.type === null) return mapValue.SKIP
-              return {
-                extensions: mergeExtensions(
-                  { defaultValue: d.default },
-                  d.meta?.extension
-                ),
-                type: YupWeaver.toNullableGraphQLType(d),
-                description: d?.meta?.description,
-              } as GraphQLFieldConfig<any, any>
-            }
-          ),
+          fields: mapValue(objectSchema.fields, (fieldSchemaOrigin, key) => {
+            if (key.startsWith("__")) return mapValue.SKIP
+            const fieldSchema = YupWeaver.ensureSchema(fieldSchemaOrigin)
+            const fieldDesc = fieldSchema.describe()
+            if (fieldDesc.meta?.type === null) return mapValue.SKIP
+            return {
+              extensions: mergeExtensions(
+                { defaultValue: fieldDesc.default },
+                fieldDesc.meta?.extension
+              ),
+              type: YupWeaver.toNullableGraphQLType(fieldSchema),
+              description: fieldDesc?.meta?.description,
+            } as GraphQLFieldConfig<any, any>
+          }),
+          isTypeOf: (source) => strictSchema.isValid(source),
           ...description.meta?.objectType,
         })
       }
       case "array": {
-        const innerType = (description as SchemaInnerTypeDescription).innerType
+        const arraySchema = schema as ArraySchema<unknown[], unknown>
+        const innerType = arraySchema.innerType
         if (Array.isArray(innerType))
           throw new Error("Array type cannot have multiple inner types")
 
@@ -145,28 +159,25 @@ export class YupWeaver {
           throw new Error("Array type must have an inner type")
 
         return new GraphQLList(
-          YupWeaver.toNullableGraphQLType(
-            YupWeaver.ensureSchemaDescription(innerType)
-          )
+          YupWeaver.toNullableGraphQLType(innerType as Schema)
         )
       }
 
       case "union": {
-        const innerType = (description as SchemaInnerTypeDescription).innerType
-        if (innerType == null)
-          throw new Error("Union type must have inner types")
+        const unionSchema = schema as UnionSchema
 
-        const innerTypes = Array.isArray(innerType) ? innerType : [innerType]
+        const innerTypes = unionSchema.spec.types
 
-        const name = description.meta?.name ?? description.label
+        const name =
+          description.meta?.name ??
+          description.label ??
+          weaverContext.names.get(unionSchema)
         if (!name) throw new Error("union type must have a name")
         const existing = weaverContext.unionMap?.get(name)
         if (existing) return existing
 
         const types = innerTypes.map((innerType) => {
-          const gqlType = YupWeaver.toNullableGraphQLType(
-            YupWeaver.ensureSchemaDescription(innerType)
-          )
+          const gqlType = YupWeaver.toNullableGraphQLType(innerType)
           if (isObjectType(gqlType)) return gqlType
           throw new Error(
             `Union types ${name} can only contain objects, but got ${gqlType}`
@@ -185,12 +196,11 @@ export class YupWeaver {
     }
   }
 
-  static ensureSchemaDescription(
-    description: SchemaFieldDescription
-  ): SchemaDescription {
-    if (description.type === "lazy")
-      throw new Error("lazy type is not supported")
-    return description as SchemaDescription
+  static ensureSchema(
+    schema: Reference<unknown> | ISchema<unknown, unknown, any, any>
+  ): Schema {
+    if (schema instanceof Schema) return schema
+    throw new Error("type is not supported", { cause: schema })
   }
 
   static ensureInterfaceTypes(
@@ -277,6 +287,17 @@ export class YupWeaver {
     return (schema) =>
       provideWeaverContext(() => YupWeaver.unravel(schema), context)
   }
+
+  static DescriptionMap = new WeakMap<Schema, SchemaDescription>()
+
+  protected static describe(schema: Schema): SchemaDescription {
+    const existing = YupWeaver.DescriptionMap.get(schema)
+    if (existing) return existing
+
+    const description = schema.describe()
+    YupWeaver.DescriptionMap.set(schema, description)
+    return description
+  }
 }
 
 export const yupSilk: typeof YupWeaver.unravel = YupWeaver.unravel
@@ -284,9 +305,7 @@ export const yupSilk: typeof YupWeaver.unravel = YupWeaver.unravel
 export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
 
 function getGraphQLType(this: Schema) {
-  const schemaDescription = this.describe()
-  schemaDescription.label ??= weaverContext.names.get(this)
-  return YupWeaver.toNullableGraphQLType(schemaDescription)
+  return YupWeaver.toNullableGraphQLType(this)
 }
 
 function parseYup(this: Schema, input: any) {
@@ -297,7 +316,12 @@ function parseYup(this: Schema, input: any) {
   })
 }
 
-export const yupLoom = createLoom<YupSchemaIO>(YupWeaver.unravel, isSchema)
+export const yupLoom = createLoom<YupSchemaIO | GraphQLSilkIO>(
+  (schema) => {
+    if (isSilk(schema)) return schema
+    return YupWeaver.unravel(schema)
+  },
+  (schema) => isSilk(schema) || isSchema(schema)
+)
 
-// TODO: created Loom should accept GraphQLSilk
 export const { query, mutation, field, resolver } = yupLoom

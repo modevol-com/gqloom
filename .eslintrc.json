@@ -27,6 +27,7 @@
   "plugins": ["@typescript-eslint"],
   "rules": {
     "no-unused-vars": "off",
+    "no-console": ["warn"],
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/consistent-type-definitions": "error", // Enforce declaring types using `interface` keyword for better TS performance.
     "@typescript-eslint/consistent-type-imports": [

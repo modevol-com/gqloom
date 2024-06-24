@@ -18,7 +18,7 @@ import {
 } from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { field, mutation, query, resolver } from "../src"
-import { SchemaWeaver, collectNames, silk } from "@gqloom/core"
+import { SchemaWeaver, collectNames, silk, weave } from "@gqloom/core"
 import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
 
 describe("valibot resolver", () => {
@@ -154,7 +154,7 @@ describe("valibot resolver", () => {
       })),
     })
 
-    const schema = new SchemaWeaver().add(animalResolver).weaveGraphQLSchema()
+    const schema = weave(animalResolver)
 
     let result: any
     result = await graphql({
