@@ -10,6 +10,8 @@ import {
   mergeExtensions,
   initWeaverContext,
   provideWeaverContext,
+  type GraphQLSilkIO,
+  isSilk,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -378,10 +380,14 @@ export const zodSilk = ZodWeaver.unravel
 
 export type ZodSchemaIO = [Schema, "_input", "_output"]
 
-// TODO: created Loom should accept GraphQLSilk
-export const { query, mutation, field, resolver } = createLoom<ZodSchemaIO>(
-  zodSilk,
-  isZodSchema
+export const { query, mutation, field, resolver } = createLoom<
+  ZodSchemaIO | GraphQLSilkIO
+>(
+  (schema) => {
+    if (isSilk(schema)) return schema
+    return ZodWeaver.unravel(schema)
+  },
+  (schema) => isSilk(schema) || isZodSchema(schema)
 )
 
 function isZodSchema(target: any): target is Schema {
