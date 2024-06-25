@@ -1,4 +1,11 @@
-import { SYMBOLS, type GraphQLSilk } from "@gqloom/core"
+import {
+  SYMBOLS,
+  initWeaverContext,
+  mapValue,
+  provideWeaverContext,
+  weaverContext,
+  type GraphQLSilk,
+} from "@gqloom/core"
 import {
   ReferenceKind,
   type EntityProperty,
@@ -17,7 +24,11 @@ import {
   GraphQLNonNull,
   GraphQLID,
 } from "graphql"
-import { type InferEntity } from "./types"
+import {
+  type MikroWeaverConfig,
+  type MikroWeaverConfigOptions,
+  type InferEntity,
+} from "./types"
 
 export class MikroWeaver {
   /**
@@ -33,22 +44,15 @@ export class MikroWeaver {
     })
   }
 
-  static propertyToField(
+  static getFieldConfig(
     property: EntityProperty
   ): GraphQLFieldConfig<any, any> | undefined {
-    const type = MikroWeaver.propertyGraphQLType(property)
-    if (type == null) return undefined
-    return { type }
-  }
-
-  static propertyGraphQLType(
-    property: EntityProperty
-  ): GraphQLOutputType | undefined {
-    let gqlType = MikroWeaver.propertyGraphQLTypeInner(property)
+    let gqlType = MikroWeaver.getFieldType(property)
     if (gqlType == null) return
+
     gqlType = list(gqlType)
     gqlType = nonNull(gqlType)
-    return gqlType
+    return { type: gqlType }
 
     function list(gqlType: GraphQLOutputType) {
       if (property.type.endsWith("[]"))
@@ -62,11 +66,13 @@ export class MikroWeaver {
     }
   }
 
-  static propertyGraphQLTypeInner(
-    property: EntityProperty
-  ): GraphQLOutputType | undefined {
-    if (property.kind !== ReferenceKind.SCALAR) return
+  static getFieldType(property: EntityProperty): GraphQLOutputType | undefined {
+    const config =
+      weaverContext.getConfig<MikroWeaverConfig>("gqloom.mikro-orm")
+    const presetType = config?.presetGraphQLType?.(property)
 
+    if (presetType) return presetType
+    if (property.kind !== ReferenceKind.SCALAR) return
     if (property.primary === true) return GraphQLID
 
     switch (MikroWeaver.extractSimpleType(property.type)) {
@@ -94,24 +100,49 @@ export class MikroWeaver {
   static extractSimpleType(type: string): EntityProperty["type"] {
     return type.toLowerCase().match(/[^(), ]+/)![0]
   }
+
+  /**
+   * Create a Valibot weaver config object
+   * @param config Valibot weaver config options
+   * @returns a Valibot weaver config object
+   */
+  static config = function (
+    config: MikroWeaverConfigOptions
+  ): MikroWeaverConfig {
+    return {
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.mikro-orm",
+    }
+  }
+
+  /**
+   * Use a Valibot weaver config
+   * @param config Valibot weaver config options
+   * @returns a new Valibot to silk function
+   */
+  static useConfig = function (
+    config: MikroWeaverConfigOptions
+  ): typeof MikroWeaver.unravel {
+    const context = weaverContext.value ?? initWeaverContext()
+    context.setConfig<MikroWeaverConfig>({
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.mikro-orm",
+    })
+    return (schema) =>
+      provideWeaverContext(() => MikroWeaver.unravel(schema), context)
+  }
 }
 
 function getGraphQLType(this: EntitySchema) {
-  const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
   const properties = this.init().meta.properties
-
-  for (const [key, value] of Object.entries(properties) as [
-    string,
-    EntityProperty,
-  ][]) {
-    const field = MikroWeaver.propertyToField(value)
-    if (field == null) continue
-    fields[key] = field
-  }
 
   return new GraphQLObjectType({
     name: this.meta.className,
-    fields,
+    fields: mapValue(properties, (value) => {
+      const field = MikroWeaver.getFieldConfig(value)
+      if (field == null) return mapValue.SKIP
+      return field
+    }),
   })
 }
 
