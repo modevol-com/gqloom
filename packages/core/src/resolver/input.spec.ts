@@ -1,19 +1,20 @@
 import { describe, expect, it } from "vitest"
-import { parseInput } from "./input"
+import { createInputParser, parseInputValue } from "./input"
 import { silk } from "./silk"
 import {
   GraphQLObjectType,
   GraphQLNonNull,
   GraphQLString,
   GraphQLFloat,
+  GraphQLInt,
 } from "graphql"
 
 describe("parseInput", () => {
   it("should parse undefined", async () => {
-    expect(await parseInput(undefined, undefined)).toBeUndefined()
-    expect(await parseInput(undefined, 1)).toBeUndefined()
-    expect(await parseInput(undefined, "abc")).toBeUndefined()
-    expect(await parseInput(undefined, {})).toBeUndefined()
+    expect(await parseInputValue(undefined, undefined)).toBeUndefined()
+    expect(await parseInputValue(undefined, 1)).toBeUndefined()
+    expect(await parseInputValue(undefined, "abc")).toBeUndefined()
+    expect(await parseInputValue(undefined, {})).toBeUndefined()
   })
 
   describe("should parse Silk", () => {
@@ -36,7 +37,7 @@ describe("parseInput", () => {
       }
     )
     it("should accept undefined", async () => {
-      const output1 = await parseInput(Giraffe, undefined)
+      const output1 = await parseInputValue(Giraffe, undefined)
       expect(output1.name).toBe("Tallulah")
       expect(output1.birthday).toBeInstanceOf(Date)
       expect(output1.heightInMeters).toBe(1.5)
@@ -49,13 +50,13 @@ describe("parseInput", () => {
         heightInMeters: 1.5,
       }
 
-      expect(await parseInput(Giraffe, Twiga)).toEqual(Twiga)
+      expect(await parseInputValue(Giraffe, Twiga)).toEqual(Twiga)
     })
 
     it("should throw errors", () => {
       const nameVeryLong = "this is a very long name, and it should fail"
       expect(async () =>
-        parseInput(Giraffe, { name: nameVeryLong })
+        parseInputValue(Giraffe, { name: nameVeryLong })
       ).rejects.toThrowError("Name too long")
     })
   })
@@ -83,7 +84,7 @@ describe("parseInput", () => {
     }
 
     it("should accept undefined", async () => {
-      const output1 = await parseInput(Giraffe, undefined)
+      const output1 = await parseInputValue(Giraffe, undefined)
       expect(output1.name).toBe("Twiga")
       expect(output1.birthday).toBeInstanceOf(Date)
       expect(output1.heightInMeters).toBe(1.5)
@@ -95,15 +96,81 @@ describe("parseInput", () => {
         birthday: new Date(),
         heightInMeters: 1.5,
       }
-      expect(await parseInput(Giraffe, Twiga)).toEqual(Twiga)
+      expect(await parseInputValue(Giraffe, Twiga)).toEqual(Twiga)
     })
 
     it("should throw errors", () => {
       const nameVeryLong = "this is a very long name, and it should fail"
       expect(async () =>
-        parseInput(Giraffe, { name: nameVeryLong })
+        parseInputValue(Giraffe, { name: nameVeryLong })
       ).rejects.toThrowError("Name too long")
     })
+  })
+})
+
+describe("CallableInputParser", () => {
+  it("should parse input", async () => {
+    const parseInput = createInputParser(
+      { count: silk(GraphQLInt) },
+      { count: 1 }
+    )
+    const result = await parseInput()
+
+    expect(result).toEqual({ count: 1 })
+  })
+
+  it("should cache result", async () => {
+    const parseInput = createInputParser(
+      { count: silk(GraphQLInt) },
+      { count: 1 }
+    )
+
+    const result = await parseInput()
+    const result2 = await parseInput()
+    expect(result).toBe(result2)
+  })
+
+  it("should parse once", async () => {
+    let parseTime = 0
+    const parseInput = createInputParser(
+      {
+        count: silk(GraphQLInt, (n) => {
+          parseTime++
+          return n
+        }),
+      },
+      { count: 1 }
+    )
+    await parseInput()
+    await parseInput()
+    await parseInput()
+    expect(parseTime).toBe(1)
+  })
+
+  it("should be able to clear cache", async () => {
+    let parseTime = 0
+    const parseInput = createInputParser(
+      {
+        count: silk(GraphQLInt, (n) => {
+          parseTime++
+          return n
+        }),
+      },
+      { count: 1 }
+    )
+    await parseInput()
+    await parseInput()
+    await parseInput()
+    expect(parseTime).toBe(1)
+
+    parseInput.clearCache()
+    await parseInput()
+    await parseInput()
+    expect(parseTime).toBe(2)
+
+    parseInput.clearCache()
+    await parseInput()
+    expect(parseTime).toBe(3)
   })
 })
 

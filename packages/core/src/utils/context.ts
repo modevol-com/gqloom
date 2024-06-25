@@ -6,28 +6,36 @@ import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 /**
  * Detailed payload of the current resolver
  */
-export interface ResolverPayload<TContext extends object = object> {
+export interface ResolverPayload<
+  TContext extends object = object,
+  TField extends OperationOrField<any, any, any, any> = OperationOrField<
+    any,
+    any,
+    any,
+    any
+  >,
+> {
   /**
    * The previous object, which for a field on the root Query type is often not used.
    */
-  root: any
+  readonly root: any
   /**
    * The payload provided to the field in the GraphQL query.
    */
-  args: Record<string, any>
+  readonly args: Record<string, any>
   /**
    * The resolved value of the field, or an error.
    */
-  context: TContext
+  readonly context: TContext
   /**
    * The source object that contains the field in the parent type.
    */
-  info: GraphQLResolveInfo
+  readonly info: GraphQLResolveInfo
 
   /**
    * The field that is being resolved.
    */
-  field: OperationOrField<any, any, any, any>
+  readonly field: TField
 }
 
 /**

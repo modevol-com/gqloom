@@ -7,7 +7,7 @@ import {
   getFieldOptions,
 } from "../utils"
 import { RESOLVER_OPTIONS_KEY } from "../utils/symbols"
-import { parseInput } from "./input"
+import { createInputParser } from "./input"
 import type {
   FieldShuttle,
   QueryMutationShuttle,
@@ -29,11 +29,13 @@ export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
     ...getFieldOptions(options),
     input: options.input,
     output,
-    resolve: (input, extraOptions) =>
-      applyMiddlewares(
+    resolve: (inputValue, extraOptions) => {
+      const parseInput = createInputParser(options.input, inputValue)
+      return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput(options.input, input))
-      ),
+        async () => options.resolve(await parseInput())
+      )
+    },
     type: "query",
   }
 }
@@ -47,11 +49,13 @@ export const silkMutation: QueryMutationShuttle<GraphQLSilkIO> = (
     ...getFieldOptions(options),
     input: options.input,
     output,
-    resolve: (input, extraOptions) =>
-      applyMiddlewares(
+    resolve: (inputValue, extraOptions) => {
+      const parseInput = createInputParser(options.input, inputValue)
+      return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput(options.input, input))
-      ),
+        async () => options.resolve(await parseInput())
+      )
+    },
     type: "mutation",
   }
 }
@@ -65,12 +69,13 @@ export const silkField: FieldShuttle<GraphQLSilkIO> = (
     ...getFieldOptions(options),
     input: options.input,
     output,
-    resolve: (parent, input, extraOptions) =>
-      applyMiddlewares(
+    resolve: (parent, inputValue, extraOptions) => {
+      const parseInput = createInputParser(options.input, inputValue)
+      return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () =>
-          options.resolve(parent, await parseInput(options.input, input))
-      ),
+        async () => options.resolve(parent, await parseInput())
+      )
+    },
     type: "field",
   }
 }
@@ -86,11 +91,13 @@ export const silkSubscription: SubscriptionShuttle<GraphQLSilkIO> = (
     ...getFieldOptions(options),
     input: options.input,
     output,
-    subscribe: (input, extraOptions) =>
-      applyMiddlewares(
+    subscribe: (inputValue, extraOptions) => {
+      const parseInput = createInputParser(options.input, inputValue)
+      return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.subscribe(await parseInput(options.input, input))
-      ),
+        async () => options.subscribe(await parseInput())
+      )
+    },
     resolve: options.resolve ?? defaultSubscriptionResolve,
     type: "subscription",
   }

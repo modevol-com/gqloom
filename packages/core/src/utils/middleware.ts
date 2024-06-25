@@ -3,9 +3,11 @@ import type { MayPromise } from "./types"
 // TODO: enhance ResolveResult type
 type ResolveResult = any
 
+export interface MiddlewarePayload {}
+
 export type Middleware = (
-  next: () => Promise<ResolveResult>
-) => Promise<ResolveResult>
+  next: () => MayPromise<ResolveResult>
+) => MayPromise<ResolveResult>
 
 export function applyMiddlewares(
   middlewares: Middleware[],
@@ -16,7 +18,7 @@ export function applyMiddlewares(
       return resolveFunction()
     }
     const middleware = middlewares[index]
-    return middleware(() => next(index + 1))
+    return middleware.call({ foo: "woo" }, () => next(index + 1))
   }
   return next(0)
 }

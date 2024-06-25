@@ -7,6 +7,7 @@ import type {
   SchemaToSilk,
   AbstractSchemaIO,
   GraphQLSilk,
+  GraphQLSilkIO,
 } from "./types"
 
 export type InputSchema<TBaseSchema> =
@@ -49,12 +50,52 @@ export type InferInputO<
         [K in keyof TInput]: InferSchemaO<TInput[K], TSchemaIO>
       }
 
-export function parseInput(
-  inputSchema: InputSchema<GraphQLSilk>,
+export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
+  /**
+   * input schema
+   */
+  schema: TSchema
+  /**
+   *  origin value to parse
+   */
+  value: InferInputI<TSchema, GraphQLSilkIO>
+  /**
+   * Parse the input and return the parsed value
+   */
+  (): Promise<InferInputO<TSchema, GraphQLSilkIO>>
+  /**
+   * clear cache if existing, so next call will re-parse the input
+   */
+  clearCache(): void
+}
+
+export function createInputParser<TSchema extends InputSchema<GraphQLSilk>>(
+  schema: TSchema,
+  value: InferInputI<TSchema, GraphQLSilkIO>
+): CallableInputParser<TSchema> {
+  let cache: InferInputO<TSchema, GraphQLSilkIO> | undefined
+  return Object.assign(
+    async () => {
+      if (cache !== undefined) return cache
+      cache = await parseInputValue(schema, value)
+      return cache as InferInputO<TSchema, GraphQLSilkIO>
+    },
+    {
+      schema,
+      value,
+      clearCache: () => (cache = undefined),
+    }
+  )
+}
+
+export function parseInputValue<
+  TSchema extends InputSchema<GraphQLSilk> | undefined,
+>(
+  inputSchema: TSchema,
   input: any
-): MayPromise<any> {
+): MayPromise<InferInputO<TSchema, GraphQLSilkIO>> {
   if (inputSchema === undefined) {
-    return undefined
+    return undefined as InferInputO<TSchema, GraphQLSilkIO>
   }
 
   if (isSilk(inputSchema)) {
@@ -64,7 +105,10 @@ export function parseInput(
     return input
   }
 
-  return parseInputEntries(inputSchema, input)
+  return parseInputEntries(inputSchema, input) as InferInputO<
+    TSchema,
+    GraphQLSilkIO
+  >
 }
 
 async function parseInputEntries(
