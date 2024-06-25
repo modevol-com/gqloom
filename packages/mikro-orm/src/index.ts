@@ -17,38 +17,26 @@ import {
   GraphQLNonNull,
   GraphQLID,
 } from "graphql"
+import { type InferEntity } from "./types"
 
-// TODO: MikroWeaver instead of MikroSilk
-export class MikroSilk<TEntity>
-  implements GraphQLSilk<TEntity, RequiredEntityData<TEntity>>
-{
-  "~types"?: { output: TEntity; input: RequiredEntityData<TEntity> };
-
-  [SYMBOLS.GET_GRAPHQL_TYPE]() {
-    const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
-    const properties = this.schema.init().meta.properties
-
-    for (const [key, value] of Object.entries(properties) as [
-      string,
-      EntityProperty,
-    ][]) {
-      const field = MikroSilk.propertyToField(value)
-      if (field == null) continue
-      fields[key] = field
-    }
-
-    return new GraphQLObjectType({
-      name: this.schema.meta.className,
-      fields,
+export class MikroWeaver {
+  /**
+   * get GraphQL Silk from Mikro Entity Schema
+   * @param schema Mikro Entity Schema
+   * @returns GraphQL Silk Like Mikro Entity Schema
+   */
+  static unravel<TSchema extends EntitySchema, TEntity = InferEntity<TSchema>>(
+    schema: TSchema
+  ): TSchema & GraphQLSilk<TEntity, RequiredEntityData<TEntity>> {
+    return Object.assign(schema, {
+      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
     })
   }
-
-  constructor(public readonly schema: EntitySchema<TEntity, any>) {}
 
   static propertyToField(
     property: EntityProperty
   ): GraphQLFieldConfig<any, any> | undefined {
-    const type = MikroSilk.propertyGraphQLType(property)
+    const type = MikroWeaver.propertyGraphQLType(property)
     if (type == null) return undefined
     return { type }
   }
@@ -56,7 +44,7 @@ export class MikroSilk<TEntity>
   static propertyGraphQLType(
     property: EntityProperty
   ): GraphQLOutputType | undefined {
-    let gqlType = MikroSilk.propertyGraphQLTypeInner(property)
+    let gqlType = MikroWeaver.propertyGraphQLTypeInner(property)
     if (gqlType == null) return
     gqlType = list(gqlType)
     gqlType = nonNull(gqlType)
@@ -81,7 +69,7 @@ export class MikroSilk<TEntity>
 
     if (property.primary === true) return GraphQLID
 
-    switch (MikroSilk.extractSimpleType(property.type)) {
+    switch (MikroWeaver.extractSimpleType(property.type)) {
       case "string":
         return GraphQLString
       case "double":
@@ -108,11 +96,31 @@ export class MikroSilk<TEntity>
   }
 }
 
-export function mikroSilk<TEntity>(
-  schema: EntitySchema<TEntity, any>
-): MikroSilk<TEntity> {
-  return new MikroSilk(schema)
+function getGraphQLType(this: EntitySchema) {
+  const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
+  const properties = this.init().meta.properties
+
+  for (const [key, value] of Object.entries(properties) as [
+    string,
+    EntityProperty,
+  ][]) {
+    const field = MikroWeaver.propertyToField(value)
+    if (field == null) continue
+    fields[key] = field
+  }
+
+  return new GraphQLObjectType({
+    name: this.meta.className,
+    fields,
+  })
 }
+
+/**
+ * get GraphQL Silk from Mikro Entity Schema
+ * @param schema Mikro Entity Schema
+ * @returns GraphQL Silk Like Mikro Entity Schema
+ */
+export const mikroSilk = MikroWeaver.unravel
 
 export * from "./entity-schema"
 export * from "./types"
