@@ -6,6 +6,7 @@ import {
   getSubscriptionOptions,
   getFieldOptions,
 } from "../utils"
+import { RESOLVER_OPTIONS_KEY } from "../utils/symbols"
 import { parseInput } from "./input"
 import type {
   FieldShuttle,
@@ -18,8 +19,6 @@ import type {
   SubscriptionShuttle,
   Subscription,
 } from "./types"
-
-export const RESOLVER_OPTIONS_KEY = Symbol("resolver-options")
 
 export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
   output,

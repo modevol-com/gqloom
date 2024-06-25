@@ -5,11 +5,7 @@ import {
   type GraphQLSchemaConfig,
   isNonNullType,
 } from "graphql"
-import {
-  RESOLVER_OPTIONS_KEY,
-  getGraphQLType,
-  type ResolvingOptions,
-} from "../resolver"
+import { getGraphQLType, type ResolvingOptions } from "../resolver"
 import { LoomObjectType } from "./object"
 import { type Middleware } from "../utils"
 import {
@@ -19,7 +15,7 @@ import {
   type WeaverContext,
 } from "./weaver-context"
 import { type SilkResolver } from "./types"
-import { WEAVER_CONFIG } from "../utils/symbols"
+import { RESOLVER_OPTIONS_KEY, WEAVER_CONFIG } from "../utils/symbols"
 
 interface SchemaWeaverParameters
   extends Partial<

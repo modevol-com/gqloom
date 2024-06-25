@@ -29,7 +29,7 @@ interface UnionConfig
   extends Omit<GraphQLUnionTypeConfig<any, any>, "types">,
     Partial<Pick<GraphQLUnionTypeConfig<any, any>, "types">> {}
 
-const CONFIG = Symbol.for("gqloom.config")
+const CONFIG = Symbol.for("gqloom.zod.config")
 
 export function objectType(
   config: ObjectConfig

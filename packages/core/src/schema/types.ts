@@ -1,10 +1,10 @@
 import type {
   GraphQLSilk,
   OperationOrField,
-  RESOLVER_OPTIONS_KEY,
   ResolverOptionsWithParent,
   ResolvingOptions,
 } from "../resolver"
+import { type RESOLVER_OPTIONS_KEY } from "../utils/symbols"
 
 export type SilkOperationOrField = OperationOrField<
   GraphQLSilk,
