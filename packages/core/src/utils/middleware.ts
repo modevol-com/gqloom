@@ -1,5 +1,6 @@
 import type { MayPromise } from "./types"
 
+// TODO: enhance ResolveResult type
 type ResolveResult = any
 
 export type Middleware = (

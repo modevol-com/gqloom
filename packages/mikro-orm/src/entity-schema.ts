@@ -45,7 +45,7 @@ import { type GQLoomMikroFieldExtensions } from "./types"
 export class EntitySchemaWeaver {
   static weave(
     silk: GraphQLSilk<any, any>,
-    relationships?: Record<string, RelationshipProperty<any, object>>,
+    relations?: Record<string, RelationProperty<any, object>>,
     options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
   ) {
     const gqlType = getGraphQLTypeWithName(silk, options?.name)
@@ -56,7 +56,7 @@ export class EntitySchemaWeaver {
       name: gqlType.name,
       properties: {
         ...EntitySchemaWeaver.toProperties(gqlType, options),
-        ...relationships,
+        ...relations,
       },
       ...options,
       hooks: {
@@ -179,12 +179,12 @@ export class EntitySchemaWeaver {
           ...options,
         } as EntitySchemaMetadata<any> & EntitySchemaWeaverOptions),
       {
-        withRelationships: (
+        withRelations: (
           silk: TSchemaIO[0],
-          relationships: Record<string, RelationshipProperty<any, any>>,
+          relations: Record<string, RelationProperty<any, any>>,
           options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
         ) =>
-          EntitySchemaWeaver.weave(toSilk(silk), relationships, {
+          EntitySchemaWeaver.weave(toSilk(silk), relations, {
             ...creatorOptions,
             ...options,
           } as EntitySchemaMetadata<any> & EntitySchemaWeaverOptions),
@@ -219,19 +219,19 @@ export interface CallableEntitySchemaWeaver<
       EntitySchemaWeaverOptions
   ): EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>
 
-  withRelationships: <
+  withRelations: <
     TSilk extends TSchemaIO[0],
-    TRelationships extends Record<
+    TRelation extends Record<
       string,
-      RelationshipProperty<any, InferSchemaO<TSilk, TSchemaIO>>
+      RelationProperty<any, InferSchemaO<TSilk, TSchemaIO>>
     > = never,
   >(
     silk: TSilk,
-    relationships: TRelationships,
+    relations: TRelation,
     options?: EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>> &
       EntitySchemaWeaverOptions
   ) => EntitySchema<
-    SilkSchemaEntity<TSilk, TSchemaIO> & InferRelationship<TRelationships>
+    SilkSchemaEntity<TSilk, TSchemaIO> & InferRelations<TRelation>
   >
 }
 
@@ -242,11 +242,11 @@ export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver<GraphQLSilkIO> 
       options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
     ) => EntitySchemaWeaver.weave(silk, undefined, options),
     {
-      withRelationships: (
+      withRelations: (
         silk: GraphQLSilk,
-        relationships: Record<string, RelationshipProperty<any, any>>,
+        relations: Record<string, RelationProperty<any, any>>,
         options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
-      ) => EntitySchemaWeaver.weave(silk, relationships, options),
+      ) => EntitySchemaWeaver.weave(silk, relations, options),
     }
   )
 
@@ -285,28 +285,28 @@ export type SilkSchemaEntity<
 
 export type GraphQLSilkEntity<TSilk> = SilkSchemaEntity<TSilk, GraphQLSilkIO>
 
-export type InferRelationship<
-  TRelationships extends Record<string, RelationshipProperty<any, any>>,
+export type InferRelations<
+  TRelation extends Record<string, RelationProperty<any, any>>,
 > = {
-  [key in keyof TRelationships]: TRelationships[key] extends ManyToOneProperty<
+  [key in keyof TRelation]: TRelation[key] extends ManyToOneProperty<
     infer TTarget,
     any
   >
     ? Ref<TTarget>
-    : TRelationships[key] extends OneToOneProperty<infer TTarget, any>
+    : TRelation[key] extends OneToOneProperty<infer TTarget, any>
       ? Ref<TTarget>
-      : TRelationships[key] extends OneToManyProperty<infer TTarget, any>
+      : TRelation[key] extends OneToManyProperty<infer TTarget, any>
         ? TTarget extends object
           ? Collection<TTarget>
           : never
-        : TRelationships[key] extends ManyToManyProperty<infer TTarget, any>
+        : TRelation[key] extends ManyToManyProperty<infer TTarget, any>
           ? TTarget extends object
             ? Collection<TTarget>
             : never
           : never
 }
 
-export type RelationshipProperty<TTarget extends object, TOwner> =
+export type RelationProperty<TTarget extends object, TOwner> =
   | ManyToOneProperty<TTarget, TOwner>
   | OneToOneProperty<TTarget, TOwner>
   | OneToManyProperty<TTarget, TOwner>

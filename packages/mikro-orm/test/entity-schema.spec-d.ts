@@ -53,7 +53,7 @@ interface IBookEntity extends GraphQLSilkEntity<typeof Book> {
 }
 
 const BookEntity: EntitySchema<IBookEntity> =
-  weaveEntitySchemaBySilk.withRelationships(Book, {
+  weaveEntitySchemaBySilk.withRelations(Book, {
     author: manyToOne(() => AuthorEntity),
   })
 
@@ -62,7 +62,7 @@ interface IAuthorEntity extends GraphQLSilkEntity<typeof Author> {
 }
 
 const AuthorEntity: EntitySchema<IAuthorEntity> =
-  weaveEntitySchemaBySilk.withRelationships(Author, {
+  weaveEntitySchemaBySilk.withRelations(Author, {
     books: oneToMany(() => BookEntity, { mappedBy: "author" }),
   })
 
@@ -71,7 +71,7 @@ interface IGiraffeEntity extends GraphQLSilkEntity<typeof Giraffe> {
 }
 
 const GiraffeEntity: EntitySchema<IGiraffeEntity> =
-  weaveEntitySchemaBySilk.withRelationships(Giraffe, {
+  weaveEntitySchemaBySilk.withRelations(Giraffe, {
     friends: manyToMany(() => GiraffeEntity),
   })
 
