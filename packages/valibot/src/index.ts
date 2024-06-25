@@ -267,13 +267,14 @@ export class ValibotWeaver {
   static useConfig = function (
     config: ValibotWeaverConfigOptions
   ): typeof ValibotWeaver.unravel {
-    const context = weaverContext.value ?? initWeaverContext()
-    context.setConfig<ValibotWeaverConfig>({
-      ...config,
-      [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot",
-    })
-    return (schema) =>
-      provideWeaverContext(() => ValibotWeaver.unravel(schema), context)
+    return (schema) => {
+      const context = weaverContext.value ?? initWeaverContext()
+      context.setConfig<ValibotWeaverConfig>({
+        ...config,
+        [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot",
+      })
+      return provideWeaverContext(() => ValibotWeaver.unravel(schema), context)
+    }
   }
 }
 

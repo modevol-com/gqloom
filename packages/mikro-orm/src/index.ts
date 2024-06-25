@@ -123,13 +123,14 @@ export class MikroWeaver {
   static useConfig = function (
     config: MikroWeaverConfigOptions
   ): typeof MikroWeaver.unravel {
-    const context = weaverContext.value ?? initWeaverContext()
-    context.setConfig<MikroWeaverConfig>({
-      ...config,
-      [SYMBOLS.WEAVER_CONFIG]: "gqloom.mikro-orm",
-    })
-    return (schema) =>
-      provideWeaverContext(() => MikroWeaver.unravel(schema), context)
+    return (schema) => {
+      const context = weaverContext.value ?? initWeaverContext()
+      context.setConfig<MikroWeaverConfig>({
+        ...config,
+        [SYMBOLS.WEAVER_CONFIG]: "gqloom.mikro-orm",
+      })
+      return provideWeaverContext(() => MikroWeaver.unravel(schema), context)
+    }
   }
 }
 

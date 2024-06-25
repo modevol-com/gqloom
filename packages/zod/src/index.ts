@@ -361,13 +361,14 @@ export class ZodWeaver {
   static useConfig = function (
     config: ZodWeaverConfigOptions
   ): typeof ZodWeaver.unravel {
-    const context = weaverContext.value ?? initWeaverContext()
-    context.setConfig<ZodWeaverConfig>({
-      ...config,
-      [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
-    })
-    return (schema) =>
-      provideWeaverContext(() => ZodWeaver.unravel(schema), context)
+    return (schema) => {
+      const context = weaverContext.value ?? initWeaverContext()
+      context.setConfig<ZodWeaverConfig>({
+        ...config,
+        [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
+      })
+      return provideWeaverContext(() => ZodWeaver.unravel(schema), context)
+    }
   }
 }
 
