@@ -163,12 +163,12 @@ describe("CallableInputParser", () => {
     await parseInput()
     expect(parseTime).toBe(1)
 
-    parseInput.clearCache()
+    parseInput.result = undefined
     await parseInput()
     await parseInput()
     expect(parseTime).toBe(2)
 
-    parseInput.clearCache()
+    parseInput.result = undefined
     await parseInput()
     expect(parseTime).toBe(3)
   })

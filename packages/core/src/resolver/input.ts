@@ -55,37 +55,42 @@ export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
    * input schema
    */
   schema: TSchema
+
   /**
-   *  origin value to parse
+   *  Origin value to parse
    */
   value: InferInputI<TSchema, GraphQLSilkIO>
+
   /**
-   * Parse the input and return the parsed value
+   * Parse the input and return the
    */
   (): Promise<InferInputO<TSchema, GraphQLSilkIO>>
+
   /**
-   * clear cache if existing, so next call will re-parse the input
+   * Result of parsing. Set it to `undefined` then the parser will run again.
    */
-  clearCache(): void
+  result: InferInputO<TSchema, GraphQLSilkIO> | undefined
 }
 
 export function createInputParser<TSchema extends InputSchema<GraphQLSilk>>(
   schema: TSchema,
   value: InferInputI<TSchema, GraphQLSilkIO>
 ): CallableInputParser<TSchema> {
-  let cache: InferInputO<TSchema, GraphQLSilkIO> | undefined
-  return Object.assign(
-    async () => {
-      if (cache !== undefined) return cache
-      cache = await parseInputValue(schema, value)
-      return cache as InferInputO<TSchema, GraphQLSilkIO>
-    },
-    {
-      schema,
-      value,
-      clearCache: () => (cache = undefined),
-    }
-  )
+  let result: InferInputO<TSchema, GraphQLSilkIO> | undefined
+
+  const parse = async () => {
+    if (result !== undefined) return result
+    result = await parseInputValue(schema, value)
+    return result as InferInputO<TSchema, GraphQLSilkIO>
+  }
+
+  Object.assign(parse, { schema, value })
+  Object.defineProperty(parse, "result", {
+    get: () => result,
+    set: (value) => (result = value),
+  })
+
+  return parse as CallableInputParser<TSchema>
 }
 
 export function parseInputValue<
