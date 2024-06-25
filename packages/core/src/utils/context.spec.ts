@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
   ContextMemory,
-  CONTEXT_MEMORY_MAP_KEY,
   createMemory,
   onlyMemory,
   resolverPayloadStorage,
@@ -9,6 +8,7 @@ import {
   useMemoryMap,
   useResolverPayload,
 } from "./context"
+import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 
 describe("context", () => {
   describe("useResolverArgs", () => {

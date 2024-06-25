@@ -1,11 +1,12 @@
 import { AsyncLocalStorage } from "async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
 import { type OperationOrField } from "../resolver/types"
+import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 
 /**
  * Detailed payload of the current resolver
  */
-export interface ResolverPayload<TContextType extends object = object> {
+export interface ResolverPayload<TContext extends object = object> {
   /**
    * The previous object, which for a field on the root Query type is often not used.
    */
@@ -17,12 +18,15 @@ export interface ResolverPayload<TContextType extends object = object> {
   /**
    * The resolved value of the field, or an error.
    */
-  context: TContextType
+  context: TContext
   /**
    * The source object that contains the field in the parent type.
    */
   info: GraphQLResolveInfo
 
+  /**
+   * The field that is being resolved.
+   */
   field: OperationOrField<any, any, any, any>
 }
 
@@ -86,11 +90,6 @@ export function useMemoryMap(): WeakMap<WeakKey, any> | undefined {
   if (isOnlyMemoryPayload(payload)) return payload.memory
   return ContextMemory.assignMemoryMap(payload.context)
 }
-
-/**
- * The Symbol Key to assign a WeakMap to an object
- */
-export const CONTEXT_MEMORY_MAP_KEY = Symbol("ContextMemory")
 
 interface ContextMemoryContainer {
   [CONTEXT_MEMORY_MAP_KEY]?: WeakMap<WeakKey, any>

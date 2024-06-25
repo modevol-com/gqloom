@@ -17,3 +17,8 @@ export const WEAVER_CONFIG = Symbol.for("gqloom.weaver_config")
  * The symbol to get resolver options
  */
 export const RESOLVER_OPTIONS_KEY = Symbol.for("gqloom.resolver-options")
+
+/**
+ * The symbol to assign a WeakMap to an object
+ */
+export const CONTEXT_MEMORY_MAP_KEY = Symbol.for("gqloom.context-memory")
