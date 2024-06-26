@@ -17,7 +17,7 @@ import {
   type GraphQLOutputType,
   type GraphQLField,
 } from "graphql"
-import type { SilkOperationOrField } from "./types"
+import type { SilkFieldOrOperation } from "./types"
 import {
   mapValue,
   markErrorLocation,
@@ -39,7 +39,7 @@ import { createFieldNode, createObjectTypeNode } from "./definition-node"
 import { extractGqloomExtension } from "./extensions"
 
 export class LoomObjectType extends GraphQLObjectType {
-  public extraFields = new Map<string, SilkOperationOrField>()
+  public extraFields = new Map<string, SilkFieldOrOperation>()
 
   public weaverContext: WeaverContext
   public resolverOptions?: ResolvingOptions
@@ -76,7 +76,7 @@ export class LoomObjectType extends GraphQLObjectType {
     this.weaverContext = options.weaverContext ?? initWeaverContext()
   }
 
-  addField(name: string, resolver: SilkOperationOrField) {
+  addField(name: string, resolver: SilkFieldOrOperation) {
     const existing = this.extraFields.get(name)
     if (existing && existing !== resolver) {
       throw new Error(`Field ${name} already exists in ${this.name}`)
@@ -107,7 +107,7 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   protected mapToFieldConfig(
-    map: Map<string, SilkOperationOrField>
+    map: Map<string, SilkFieldOrOperation>
   ): Record<string, GraphQLFieldConfig<any, any>> {
     const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
@@ -120,7 +120,7 @@ export class LoomObjectType extends GraphQLObjectType {
 
   toFieldConfig(
     name: string,
-    field: SilkOperationOrField
+    field: SilkFieldOrOperation
   ): GraphQLFieldConfig<any, any> {
     try {
       const outputType = this.getCacheType(getGraphQLType(field.output))
@@ -142,7 +142,7 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   protected provideForResolve(
-    field: SilkOperationOrField
+    field: SilkFieldOrOperation
   ): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
     if (field?.resolve == null) return
     if (field.resolve === defaultSubscriptionResolve)
@@ -170,7 +170,7 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   protected provideForSubscribe(
-    field: SilkOperationOrField
+    field: SilkFieldOrOperation
   ): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
     if (field?.subscribe == null) return
     return {
@@ -208,7 +208,7 @@ function extract({
   deprecationReason,
   description,
   extensions,
-}: SilkOperationOrField): Partial<GraphQLFieldConfig<any, any>> {
+}: SilkFieldOrOperation): Partial<GraphQLFieldConfig<any, any>> {
   return {
     description,
     deprecationReason,

@@ -59,6 +59,22 @@ describe("resolver type", () => {
       }),
       createGiraffe: mutation(Giraffe, {
         input: GiraffeInput,
+        middlewares: [
+          async (next, { parent, parseInput }) => {
+            it("should infer input type", () => {
+              expectTypeOf(parseInput).returns.resolves.toEqualTypeOf<
+                Partial<IGiraffe>
+              >()
+            })
+            it("should infer parent type", () => {
+              expectTypeOf(parent).toEqualTypeOf<undefined>()
+            })
+            it("should infer output type", () => {
+              expectTypeOf(next).returns.resolves.toEqualTypeOf<IGiraffe>()
+            })
+            return next()
+          },
+        ],
         resolve: (input) => {
           it("should infer input type", () => {
             expectTypeOf(input).toEqualTypeOf<Partial<IGiraffe>>()
@@ -88,26 +104,75 @@ describe("resolver type", () => {
   })
 
   describe("field", () => {
-    const simpleResolver = resolver.of(Giraffe, {
-      age: field(silk(GraphQLInt), async (giraffe) => {
-        it("should infer parent type", () => {
-          expectTypeOf(giraffe).toEqualTypeOf<IGiraffe>()
-        })
-        return new Date().getFullYear() - giraffe.birthday.getFullYear()
-      }),
-      greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
-        input: { myName: silk(GraphQLString) },
-        resolve: (giraffe, input) => {
+    const simpleResolver = resolver.of(
+      Giraffe,
+      {
+        hello: query(silk<string>(GraphQLString), async () => {
+          return "hello"
+        }),
+        age: field(silk<number>(GraphQLInt), async (giraffe) => {
           it("should infer parent type", () => {
             expectTypeOf(giraffe).toEqualTypeOf<IGiraffe>()
           })
-          it("should infer input type", () => {
-            expectTypeOf(input).toEqualTypeOf<{ myName: string | undefined }>()
-          })
-          return `Hello, ${input.myName ?? "my friend"}! My name is ${giraffe.name}.`
-        },
-      }),
-    })
+          return new Date().getFullYear() - giraffe.birthday.getFullYear()
+        }),
+        greeting: field(silk<string>(new GraphQLNonNull(GraphQLString)), {
+          input: { myName: silk(GraphQLString) },
+          middlewares: [
+            async (next, { parent, parseInput }) => {
+              it("should infer parent type", () => {
+                expectTypeOf(parent).toEqualTypeOf<IGiraffe>()
+              })
+              it("should infer output type", () => {
+                expectTypeOf(next).returns.resolves.toEqualTypeOf<string>()
+              })
+              const input = await parseInput()
+              it("should infer input type", () => {
+                expectTypeOf(input).toEqualTypeOf<{
+                  myName: string | undefined
+                }>()
+              })
+              return next()
+            },
+          ],
+          resolve: (giraffe, input) => {
+            it("should infer parent type", () => {
+              expectTypeOf(giraffe).toEqualTypeOf<IGiraffe>()
+            })
+            it("should infer input type", () => {
+              expectTypeOf(input).toEqualTypeOf<{
+                myName: string | undefined
+              }>()
+            })
+            return `Hello, ${input.myName ?? "my friend"}! My name is ${giraffe.name}.`
+          },
+        }),
+      },
+      {
+        middlewares: [
+          async (next, { parent, parseInput }) => {
+            it("should infer parent type", () => {
+              expectTypeOf(parent).toEqualTypeOf<IGiraffe | undefined>()
+            })
+
+            const input = await parseInput()
+
+            it("should infer input type", () => {
+              expectTypeOf(input).toEqualTypeOf<
+                { myName: string | undefined } | undefined
+              >()
+            })
+
+            it("should infer output type", () => {
+              expectTypeOf(next).returns.resolves.toEqualTypeOf<
+                string | number
+              >()
+            })
+            return next()
+          },
+        ],
+      }
+    )
     it("should infer input type", () => {
       expectTypeOf(simpleResolver.age.resolve)
         .parameter(0)
@@ -115,9 +180,9 @@ describe("resolver type", () => {
     })
 
     it("should infer output type", () => {
-      expectTypeOf(simpleResolver.age.resolve).returns.resolves.toEqualTypeOf<
-        number | undefined
-      >()
+      expectTypeOf(
+        simpleResolver.age.resolve
+      ).returns.resolves.toEqualTypeOf<number>()
     })
   })
 

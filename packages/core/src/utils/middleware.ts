@@ -11,12 +11,14 @@ export interface MiddlewarePayload<
   TField extends GenericFieldOrOperation = GenericFieldOrOperation,
 > {
   parent: TField extends FieldOrOperation<infer TParent, any, any, any>
-    ? InferSilkO<TParent>
-    : never
+    ? TParent extends undefined
+      ? undefined
+      : InferSilkO<NonNullable<TParent>>
+    : undefined
 
   parseInput: TField extends FieldOrOperation<any, any, infer TInput, any>
     ? CallableInputParser<TInput>
-    : never
+    : undefined
 }
 
 export type Middleware<

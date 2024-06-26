@@ -50,7 +50,9 @@ export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): FieldShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
-    const options = getOperationOptions<"field">(resolveOrOptions)
+    const options = getOperationOptions<"field">(
+      resolveOrOptions
+    ) as FieldOrOperation<any, any, any, "field">
     return silkField(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
@@ -63,7 +65,12 @@ export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
-    const options = getOperationOptions(resolveOrOptions)
+    const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
+      any,
+      any,
+      any,
+      "query"
+    >
     return silkQuery(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
@@ -76,7 +83,12 @@ export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): QueryMutationShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
-    const options = getOperationOptions(resolveOrOptions)
+    const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
+      any,
+      any,
+      any,
+      "mutation"
+    >
     return silkMutation(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
@@ -89,7 +101,11 @@ export function createSubscriptionShuttle<TSchemaIO extends AbstractSchemaIO>(
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): SubscriptionShuttle<TSchemaIO> {
   return (output, resolveOrOptions) => {
-    const options = getSubscriptionOptions(resolveOrOptions)
+    const options = getSubscriptionOptions(resolveOrOptions) as Subscription<
+      any,
+      any,
+      any
+    >
     return silkSubscription(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),

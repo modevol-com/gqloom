@@ -1,4 +1,9 @@
-import type { InferPropertyType, MayPromise, Middleware } from "../utils"
+import type {
+  InferPropertyType,
+  MayPromise,
+  Middleware,
+  ValueOf,
+} from "../utils"
 import type {
   InferInputI,
   InferInputO,
@@ -72,13 +77,18 @@ export type SchemaToSilk<
   InferSchemaI<TSchema, TSchemaIO>
 >
 
-export interface ResolverOptions {
-  middlewares?: Middleware[]
+export interface ResolverOptions<
+  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+> {
+  middlewares?: Middleware<TField>[]
 }
 
-export interface ResolverOptionsWithParent<T extends GraphQLSilk = GraphQLSilk>
-  extends ResolverOptions {
-  parent?: T
+export interface ResolverOptionsWithParent<
+  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+> extends ResolverOptions {
+  parent?: TField extends FieldOrOperation<infer TParent, any, any, any>
+    ? TParent
+    : undefined
 }
 
 export interface ResolvingOptions
@@ -98,9 +108,9 @@ export interface GraphQLFieldOptions
  * Operation or Field for resolver.
  */
 export interface FieldOrOperation<
-  TParent extends GraphQLSilk,
+  TParent extends undefined | GraphQLSilk,
   TOutput extends GraphQLSilk,
-  TInput extends InputSchema<GraphQLSilk> = undefined,
+  TInput extends InputSchema<GraphQLSilk> | undefined = undefined,
   TType extends FieldOrOperationType = FieldOrOperationType,
 > extends GraphQLFieldOptions {
   type: TType
@@ -108,7 +118,7 @@ export interface FieldOrOperation<
   output: TOutput
   resolve: TType extends "field"
     ? (
-        parent: InferSilkO<TParent>,
+        parent: InferSilkO<NonNullable<TParent>>,
         input: InferInputI<TInput, GraphQLSilkIO>,
         options?: ResolvingOptions
       ) => Promise<InferSilkO<TOutput>>
@@ -144,7 +154,14 @@ export interface QueryMutationOptions<
   TSchemaIO extends AbstractSchemaIO,
   TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
-> extends ResolverOptions,
+> extends ResolverOptions<
+      FieldOrOperation<
+        undefined,
+        SchemaToSilk<TSchemaIO, TOutput>,
+        InputSchemaToSilk<TSchemaIO, TInput>,
+        "query" | "mutation"
+      >
+    >,
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
@@ -152,6 +169,9 @@ export interface QueryMutationOptions<
   ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
+/**
+ * Function to create a GraphQL query or mutation.
+ */
 export interface QueryMutationShuttle<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
@@ -162,7 +182,7 @@ export interface QueryMutationShuttle<TSchemaIO extends AbstractSchemaIO> {
       | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
       | QueryMutationOptions<TSchemaIO, TOutput, TInput>
   ): FieldOrOperation<
-    any,
+    undefined,
     SchemaToSilk<TSchemaIO, TOutput>,
     InputSchemaToSilk<TSchemaIO, TInput>,
     "query" | "mutation"
@@ -175,9 +195,16 @@ export interface QueryMutationShuttle<TSchemaIO extends AbstractSchemaIO> {
 export interface FieldOptions<
   TSchemaIO extends AbstractSchemaIO,
   TParent extends TSchemaIO[0],
-  TOutput,
+  TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
-> extends ResolverOptions,
+> extends ResolverOptions<
+      FieldOrOperation<
+        SchemaToSilk<TSchemaIO, TParent>,
+        SchemaToSilk<TSchemaIO, TOutput>,
+        InputSchemaToSilk<TSchemaIO, TInput>,
+        "field"
+      >
+    >,
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
@@ -186,6 +213,9 @@ export interface FieldOptions<
   ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
 }
 
+/**
+ * Function to create a GraphQL Field.
+ */
 export interface FieldShuttle<TSchemaIO extends AbstractSchemaIO> {
   <
     TParent extends TSchemaIO[0],
@@ -214,7 +244,13 @@ export interface SubscriptionOptions<
   TOutput extends TSchemaIO[0],
   TInput extends InputSchema<TSchemaIO[0]> = undefined,
   TValue = InferSchemaO<TOutput, TSchemaIO>,
-> extends ResolverOptions,
+> extends ResolverOptions<
+      Subscription<
+        SchemaToSilk<TSchemaIO, TOutput>,
+        InputSchemaToSilk<TSchemaIO, TInput>,
+        TValue
+      >
+    >,
     GraphQLFieldOptions {
   input?: TInput
   subscribe: (
@@ -230,7 +266,7 @@ export interface Subscription<
   TOutput extends GraphQLSilk,
   TInput extends InputSchema<GraphQLSilk> = undefined,
   TValue = InferSilkO<TOutput>,
-> extends FieldOrOperation<any, TOutput, TInput, "subscription"> {
+> extends FieldOrOperation<undefined, TOutput, TInput, "subscription"> {
   resolve: (
     value: TValue,
     input: InferInputI<TInput, GraphQLSilkIO>
@@ -241,6 +277,9 @@ export interface Subscription<
   ) => MayPromise<AsyncIterator<TValue>>
 }
 
+/**
+ * Function to create a GraphQL subscription.
+ */
 export interface SubscriptionShuttle<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
@@ -263,27 +302,26 @@ export interface ResolverShuttle<TSchemaIO extends AbstractSchemaIO> {
     TParent extends TSchemaIO[0],
     TOperations extends Record<
       string,
-      FieldOrOperation<SchemaToSilk<TSchemaIO, TParent>, any, any>
+      | FieldOrOperation<SchemaToSilk<TSchemaIO, TParent>, any, any>
+      | FieldOrOperation<undefined, any, any, OperationType>
     >,
   >(
     parent: TParent,
     operationOrFields: TOperations,
-    options?: ResolverOptions
+    options?: ResolverOptions<ValueOf<TOperations>>
   ): TOperations & {
-    [RESOLVER_OPTIONS_KEY]: ResolverOptionsWithParent<
-      SchemaToSilk<TSchemaIO, TParent>
-    >
+    [RESOLVER_OPTIONS_KEY]: ResolverOptionsWithParent<ValueOf<TOperations>>
   }
 
   <
     TOperations extends Record<
       string,
-      FieldOrOperation<any, any, any, OperationType>
+      FieldOrOperation<undefined, any, any, OperationType>
     >,
   >(
     operations: TOperations,
-    options?: ResolverOptions
+    options?: ResolverOptions<ValueOf<TOperations>>
   ): TOperations & {
-    [RESOLVER_OPTIONS_KEY]?: ResolverOptions
+    [RESOLVER_OPTIONS_KEY]?: ResolverOptions<ValueOf<TOperations>>
   }
 }

@@ -22,3 +22,5 @@ export type InferPropertyType<
     : never
 
 export type ObjectOrNever<T> = T extends object ? T : never
+
+export type ValueOf<T extends object> = T[keyof T]

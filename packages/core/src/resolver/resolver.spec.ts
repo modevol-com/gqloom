@@ -65,7 +65,7 @@ describe("resolver", () => {
           `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
       }),
 
-      nominalAge: field(silk(GraphQLInt), {
+      nominalAge: field(silk<number>(GraphQLInt), {
         middlewares: [async (next) => (await next()) + 1],
         resolve: async (giraffe) => {
           return new Date().getFullYear() - giraffe.birthday.getFullYear()
