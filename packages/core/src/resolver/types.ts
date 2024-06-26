@@ -142,9 +142,17 @@ export interface FieldOrOperation<
 
 export type GenericFieldOrOperation = FieldOrOperation<any, any, any, any>
 
+export type InferFieldParent<TField extends GenericFieldOrOperation> =
+  TField extends FieldOrOperation<infer TParent, any, any, any>
+    ? TParent
+    : never
+
+export type InferFieldInput<TField extends GenericFieldOrOperation> =
+  TField extends FieldOrOperation<any, any, infer TInput, any> ? TInput : never
+
 export type InferFieldOutput<TField extends GenericFieldOrOperation> =
   TField extends FieldOrOperation<any, infer TOutput, any, any>
-    ? InferSilkO<TOutput>
+    ? TOutput
     : never
 
 /**

@@ -14,7 +14,7 @@ export interface MiddlewarePayload<
     ? TParent extends undefined
       ? undefined
       : InferSilkO<NonNullable<TParent>>
-    : undefined
+    : never
 
   parseInput: TField extends FieldOrOperation<any, any, infer TInput, any>
     ? CallableInputParser<TInput>
@@ -24,18 +24,20 @@ export interface MiddlewarePayload<
 export type Middleware<
   TField extends GenericFieldOrOperation = GenericFieldOrOperation,
 > = (
-  next: () => MayPromise<InferFieldOutput<TField>>,
+  next: () => MayPromise<InferSilkO<InferFieldOutput<TField>>>,
   payload: MiddlewarePayload<TField>
-) => MayPromise<InferFieldOutput<TField>>
+) => MayPromise<InferSilkO<InferFieldOutput<TField>>>
 
 export function applyMiddlewares<
   TField extends GenericFieldOrOperation = GenericFieldOrOperation,
 >(
   middlewares: Middleware[],
-  resolveFunction: () => MayPromise<InferFieldOutput<TField>>,
+  resolveFunction: () => MayPromise<InferSilkO<InferFieldOutput<TField>>>,
   payload: MiddlewarePayload<TField>
-): Promise<InferFieldOutput<TField>> {
-  const next = (index: number): MayPromise<InferFieldOutput<TField>> => {
+): Promise<InferSilkO<InferFieldOutput<TField>>> {
+  const next = (
+    index: number
+  ): MayPromise<InferSilkO<InferFieldOutput<TField>>> => {
     if (index >= middlewares.length) {
       return resolveFunction()
     }
