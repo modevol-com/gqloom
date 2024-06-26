@@ -1,6 +1,5 @@
-import { type WeaverConfig, type SYMBOLS, type GraphQLSilk } from "@gqloom/core"
+import { type WeaverConfig, type SYMBOLS } from "@gqloom/core"
 import {
-  type RequiredEntityData,
   type EntityProperty,
   type EntitySchema,
   type PropertyOptions,
@@ -25,6 +24,3 @@ export interface MikroWeaverConfig
     MikroWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.mikro-orm"
 }
-
-export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
-  GraphQLSilk<InferEntity<TSchema>, RequiredEntityData<InferEntity<TSchema>>>
