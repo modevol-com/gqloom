@@ -5,7 +5,7 @@ import {
   type QueryMutationShuttle,
   type ResolverShuttle,
   type AbstractSchemaIO,
-  type OperationOrField,
+  type FieldOrOperation,
   baseResolver,
   silkField,
   silkQuery,
@@ -39,7 +39,7 @@ export function createResolverShuttle<TSchemaIO extends AbstractSchemaIO>(
   return Object.assign(baseResolver, {
     of: ((parent, operations, options) =>
       baseResolver(
-        operations as Record<string, OperationOrField<any, any, any>>,
+        operations as Record<string, FieldOrOperation<any, any, any>>,
         { ...options, parent: toSilk(parent) }
       )) as ResolverShuttle<TSchemaIO>["of"],
   }) as ResolverShuttle<TSchemaIO>
@@ -54,7 +54,7 @@ export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
     return silkField(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
-    }) as OperationOrField<any, any, any, "field">
+    }) as FieldOrOperation<any, any, any, "field">
   }
 }
 
@@ -67,7 +67,7 @@ export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
     return silkQuery(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
-    }) as OperationOrField<any, any, any, "query">
+    }) as FieldOrOperation<any, any, any, "query">
   }
 }
 
@@ -80,7 +80,7 @@ export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
     return silkMutation(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
-    }) as OperationOrField<any, any, any, "mutation">
+    }) as FieldOrOperation<any, any, any, "mutation">
   }
 }
 

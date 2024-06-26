@@ -1,24 +1,44 @@
+import {
+  type GenericFieldOrOperation,
+  type CallableInputParser,
+  type FieldOrOperation,
+  type InferFieldOutput,
+  type InferSilkO,
+} from "../resolver"
 import type { MayPromise } from "./types"
 
-// TODO: enhance ResolveResult type
-type ResolveResult = any
+export interface MiddlewarePayload<
+  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+> {
+  parent: TField extends FieldOrOperation<infer TParent, any, any, any>
+    ? InferSilkO<TParent>
+    : never
 
-export interface MiddlewarePayload {}
+  parseInput: TField extends FieldOrOperation<any, any, infer TInput, any>
+    ? CallableInputParser<TInput>
+    : never
+}
 
-export type Middleware = (
-  next: () => MayPromise<ResolveResult>
-) => MayPromise<ResolveResult>
+export type Middleware<
+  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+> = (
+  next: () => MayPromise<InferFieldOutput<TField>>,
+  payload: MiddlewarePayload<TField>
+) => MayPromise<InferFieldOutput<TField>>
 
-export function applyMiddlewares(
+export function applyMiddlewares<
+  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+>(
   middlewares: Middleware[],
-  resolveFunction: () => MayPromise<ResolveResult>
-): Promise<ResolveResult> {
-  const next = async (index: number): Promise<unknown> => {
+  resolveFunction: () => MayPromise<InferFieldOutput<TField>>,
+  payload: MiddlewarePayload<TField>
+): Promise<InferFieldOutput<TField>> {
+  const next = (index: number): MayPromise<InferFieldOutput<TField>> => {
     if (index >= middlewares.length) {
       return resolveFunction()
     }
     const middleware = middlewares[index]
-    return middleware.call({ foo: "woo" }, () => next(index + 1))
+    return middleware(() => next(index + 1), payload)
   }
   return next(0)
 }

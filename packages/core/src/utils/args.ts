@@ -1,14 +1,14 @@
 import type {
   FieldOptions,
   QueryMutationOptions,
-  OperationOrFieldType,
+  FieldOrOperationType,
   OperationType,
   SubscriptionOptions,
   GraphQLFieldOptions,
 } from "../resolver/types"
 
 export function getOperationOptions<
-  T extends OperationOrFieldType = OperationType,
+  T extends FieldOrOperationType = OperationType,
 >(
   resolveOrOptions: T extends "field"
     ? ((parent: any) => any) | FieldOptions<any, any, any, any>

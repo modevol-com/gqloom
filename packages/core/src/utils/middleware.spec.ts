@@ -1,12 +1,28 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { describe, expect, it } from "vitest"
-import { type Middleware, applyMiddlewares } from "./middleware"
+import {
+  type Middleware,
+  applyMiddlewares,
+  type MiddlewarePayload,
+} from "./middleware"
+import { createInputParser } from "../resolver"
+
+function initPayload(): MiddlewarePayload {
+  return {
+    parent: undefined,
+    parseInput: createInputParser(undefined, undefined),
+  }
+}
 
 describe("middleware", async () => {
   it("should work", async () => {
     const simpleMiddleware: Middleware = (next) => next()
     const answer = Math.random()
-    const result = await applyMiddlewares([simpleMiddleware], () => answer)
+    const result = await applyMiddlewares(
+      [simpleMiddleware],
+      () => answer,
+      initPayload()
+    )
     expect(result).toBe(answer)
   })
 
@@ -36,7 +52,7 @@ describe("middleware", async () => {
       results.push("Resolve")
       return "resolved"
     }
-    await applyMiddlewares(middlewares, resolve)
+    await applyMiddlewares(middlewares, resolve, initPayload())
     expect(results).toEqual([
       "A Start",
       "B Start",
@@ -64,7 +80,7 @@ describe("middleware", async () => {
       },
     ]
     const resolve = () => 0
-    const result = await applyMiddlewares(middlewares, resolve)
+    const result = await applyMiddlewares(middlewares, resolve, initPayload())
     expect(result).toBe(6)
   })
 
@@ -80,9 +96,13 @@ describe("middleware", async () => {
       return next()
     }
 
-    const result = await applyMiddlewares([provideCat, consumeCat], () => {
-      return asyncLocalStorage.getStore()?.cat
-    })
+    const result = await applyMiddlewares(
+      [provideCat, consumeCat],
+      () => {
+        return asyncLocalStorage.getStore()?.cat
+      },
+      initPayload()
+    )
 
     expect(result).toBe("meow")
   })

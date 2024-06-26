@@ -72,7 +72,9 @@ export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
   result: InferInputO<TSchema, GraphQLSilkIO> | undefined
 }
 
-export function createInputParser<TSchema extends InputSchema<GraphQLSilk>>(
+export function createInputParser<
+  TSchema extends InputSchema<GraphQLSilk> | undefined,
+>(
   schema: TSchema,
   value: InferInputI<TSchema, GraphQLSilkIO>
 ): CallableInputParser<TSchema> {

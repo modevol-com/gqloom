@@ -13,7 +13,7 @@ import type {
   QueryMutationShuttle,
   ResolvingOptions,
   ResolverShuttle,
-  OperationOrField,
+  FieldOrOperation,
   ResolverOptionsWithParent,
   GraphQLSilkIO,
   SubscriptionShuttle,
@@ -33,7 +33,8 @@ export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput())
+        async () => options.resolve(await parseInput()),
+        { parseInput, parent: undefined }
       )
     },
     type: "query",
@@ -53,7 +54,8 @@ export const silkMutation: QueryMutationShuttle<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput())
+        async () => options.resolve(await parseInput()),
+        { parseInput, parent: undefined }
       )
     },
     type: "mutation",
@@ -73,7 +75,8 @@ export const silkField: FieldShuttle<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(parent, await parseInput())
+        async () => options.resolve(parent, await parseInput()),
+        { parseInput, parent }
       )
     },
     type: "field",
@@ -95,7 +98,8 @@ export const silkSubscription: SubscriptionShuttle<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.subscribe(await parseInput())
+        async () => options.subscribe(await parseInput()),
+        { parseInput, parent: undefined }
       )
     },
     resolve: options.resolve ?? defaultSubscriptionResolve,
@@ -104,10 +108,10 @@ export const silkSubscription: SubscriptionShuttle<GraphQLSilkIO> = (
 }
 
 export function baseResolver(
-  operations: Record<string, OperationOrField<any, any, any>>,
+  operations: Record<string, FieldOrOperation<any, any, any>>,
   options: ResolverOptionsWithParent | undefined
 ) {
-  const record: Record<string, OperationOrField<any, any, any>> & {
+  const record: Record<string, FieldOrOperation<any, any, any>> & {
     [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
   } = {
     [RESOLVER_OPTIONS_KEY]: options,
@@ -127,7 +131,7 @@ export function baseResolver(
 }
 
 function extraOperationOptions<
-  TOperation extends OperationOrField<any, any, any>,
+  TOperation extends FieldOrOperation<any, any, any>,
 >(
   operation: TOperation,
   options: ResolverOptionsWithParent<any> | undefined
@@ -172,7 +176,7 @@ export const silkResolver: ResolverShuttle<GraphQLSilkIO> = Object.assign(
   {
     of: ((parent, operations, options) =>
       baseResolver(
-        operations as Record<string, OperationOrField<any, any, any>>,
+        operations as Record<string, FieldOrOperation<any, any, any>>,
         { ...options, parent }
       )) as ResolverShuttle<GraphQLSilkIO>["of"],
   }
