@@ -22,7 +22,7 @@ declare module "graphql" {
     extends GQLoomMikroFieldExtensions {}
 }
 
-interface GiraffeI {
+interface IGiraffe {
   id?: string | number
   name: string
   age?: number
@@ -31,7 +31,7 @@ interface GiraffeI {
   hobbies?: string[]
 }
 
-const Giraffe = silk<Required<GiraffeI>, GiraffeI>(
+const Giraffe = silk<Required<IGiraffe>, IGiraffe>(
   new GraphQLObjectType({
     name: "Giraffe",
     fields: {

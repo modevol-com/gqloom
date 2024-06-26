@@ -1,16 +1,16 @@
 import {
+  type GraphQLSilk,
   SYMBOLS,
   initWeaverContext,
   mapValue,
   provideWeaverContext,
   weaverContext,
-  type GraphQLSilk,
 } from "@gqloom/core"
 import {
   ReferenceKind,
+  type RequiredEntityData,
   type EntityProperty,
   type EntitySchema,
-  type RequiredEntityData,
 } from "@mikro-orm/core"
 import {
   type GraphQLFieldConfig,
@@ -36,9 +36,13 @@ export class MikroWeaver {
    * @param schema Mikro Entity Schema
    * @returns GraphQL Silk Like Mikro Entity Schema
    */
-  static unravel<TSchema extends EntitySchema, TEntity = InferEntity<TSchema>>(
+  static unravel<TSchema extends EntitySchema>(
     schema: TSchema
-  ): TSchema & GraphQLSilk<TEntity, RequiredEntityData<TEntity>> {
+  ): TSchema &
+    GraphQLSilk<
+      InferEntity<TSchema>,
+      RequiredEntityData<InferEntity<TSchema>>
+    > {
     return Object.assign(schema, {
       [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
     })
