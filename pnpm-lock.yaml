@@ -51,10 +51,14 @@ importers:
   packages/core:
     dependencies:
       graphql:
-        specifier: ^16.8.1
+        specifier: '>= 16.8.0'
         version: 16.8.1
 
   packages/mikro-orm:
+    dependencies:
+      graphql:
+        specifier: '>= 16.8.0'
+        version: 16.8.1
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -65,9 +69,6 @@ importers:
       '@mikro-orm/core':
         specifier: ^6.2.8
         version: 6.2.8
-      graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
 
   packages/valibot:
     dependencies:

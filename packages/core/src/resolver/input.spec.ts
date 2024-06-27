@@ -12,9 +12,9 @@ import {
 describe("parseInput", () => {
   it("should parse undefined", async () => {
     expect(await parseInputValue(undefined, undefined)).toBeUndefined()
-    expect(await parseInputValue(undefined, 1)).toBeUndefined()
-    expect(await parseInputValue(undefined, "abc")).toBeUndefined()
-    expect(await parseInputValue(undefined, {})).toBeUndefined()
+    expect(await parseInputValue(undefined, 1)).toEqual(1)
+    expect(await parseInputValue(undefined, "abc")).toEqual("abc")
+    expect(await parseInputValue(undefined, {})).toEqual({})
   })
 
   describe("should parse Silk", () => {

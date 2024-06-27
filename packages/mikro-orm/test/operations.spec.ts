@@ -1,11 +1,15 @@
 import { silk } from "@gqloom/core"
-import { EntitySchema } from "@mikro-orm/core"
-import { describe, it } from "vitest"
+import {
+  EntitySchema,
+  MikroORM,
+  type RequiredEntityData,
+  defineConfig,
+  RequestContext,
+} from "@mikro-orm/better-sqlite"
+import { describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
-import { type MikroCreateShuttle } from "../src/operations"
+import { MikroOperationWeaver } from "../src/operations"
 import { GraphQLObjectType } from "graphql"
-
-const emptyFn: any = () => {}
 
 interface IGiraffe {
   id: string
@@ -35,17 +39,54 @@ const Giraffe = mikroSilk(
     },
   })
 )
+const ORMConfig = defineConfig({
+  entities: [Giraffe],
+  dbName: ":memory:",
+})
 
 describe("MikroOperationsWeaver", () => {
-  describe("MikroCreateShuttle", () => {
-    const create: MikroCreateShuttle = emptyFn
+  describe("pieceCreate", async () => {
+    const orm = await MikroORM.init(ORMConfig)
+    await orm.getSchemaGenerator().updateSchema()
+
+    const weaver = new MikroOperationWeaver(Giraffe, () => orm.em)
+    const create = weaver.pieceCreate()
     it("should infer Input type", () => {
-      create(
-        Giraffe,
-        silk<Omit<IGiraffe, "height" | "id">>(
+      weaver.pieceCreate({
+        input: silk<Omit<IGiraffe, "height" | "id">>(
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
-        )
+        ),
+      })
+      expectTypeOf(create.resolve)
+        .parameter(0)
+        .toEqualTypeOf<RequiredEntityData<IGiraffe>>()
+    })
+
+    it("should infer Output type", () => {
+      expectTypeOf(create.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
+    })
+
+    it("should do create", async () => {
+      const one = await RequestContext.create(orm.em, () =>
+        create.resolve({
+          id: "one",
+          name: "Giraffe",
+          birthday: new Date(),
+        })
       )
+
+      expect(one).toEqual({
+        id: "one",
+        name: "Giraffe",
+        birthday: expect.any(Date),
+      })
+
+      expect(await orm.em.fork().findOne(Giraffe, "one")).toEqual({
+        id: "one",
+        height: null,
+        name: "Giraffe",
+        birthday: expect.any(Date),
+      })
     })
   })
 })

@@ -102,7 +102,7 @@ export function parseInputValue<
   input: any
 ): MayPromise<InferInputO<TSchema, GraphQLSilkIO>> {
   if (inputSchema === undefined) {
-    return undefined as InferInputO<TSchema, GraphQLSilkIO>
+    return input as InferInputO<TSchema, GraphQLSilkIO>
   }
 
   if (isSilk(inputSchema)) {
