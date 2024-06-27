@@ -34,7 +34,7 @@ export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(await parseInput()),
-        { parseInput, parent: undefined }
+        { parseInput, parent: undefined, outputSilk: output }
       )
     },
     type: "query",
@@ -55,7 +55,7 @@ export const silkMutation: QueryMutationShuttle<GraphQLSilkIO> = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(await parseInput()),
-        { parseInput, parent: undefined }
+        { parseInput, parent: undefined, outputSilk: output }
       )
     },
     type: "mutation",
@@ -76,7 +76,7 @@ export const silkField: FieldShuttle<GraphQLSilkIO> = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(parent, await parseInput()),
-        { parseInput, parent }
+        { parseInput, parent, outputSilk: output }
       )
     },
     type: "field",
@@ -99,7 +99,7 @@ export const silkSubscription: SubscriptionShuttle<GraphQLSilkIO> = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.subscribe(await parseInput()),
-        { parseInput, parent: undefined }
+        { parseInput, parent: undefined, outputSilk: output }
       )
     },
     resolve: options.resolve ?? defaultSubscriptionResolve,

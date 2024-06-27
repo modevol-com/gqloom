@@ -10,6 +10,8 @@ import type { MayPromise } from "./types"
 export interface MiddlewarePayload<
   TField extends GenericFieldOrOperation = GenericFieldOrOperation,
 > {
+  outputSilk: InferSilkO<InferFieldOutput<TField>>
+
   parent: TField extends FieldOrOperation<infer TParent, any, any, any>
     ? TParent extends undefined
       ? undefined
