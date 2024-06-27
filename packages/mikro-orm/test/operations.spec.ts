@@ -23,7 +23,7 @@ const Giraffe = mikroSilk(
     name: "Giraffe",
     properties: {
       id: {
-        type: "string",
+        type: "number",
         primary: true,
       },
       name: {
@@ -42,6 +42,7 @@ const Giraffe = mikroSilk(
 const ORMConfig = defineConfig({
   entities: [Giraffe],
   dbName: ":memory:",
+  // debug: true,
 })
 
 describe("MikroOperationsWeaver", () => {
@@ -69,22 +70,21 @@ describe("MikroOperationsWeaver", () => {
     it("should do create", async () => {
       const one = await RequestContext.create(orm.em, () =>
         create.resolve({
-          id: "one",
-          name: "Giraffe",
+          name: "Foo",
           birthday: new Date(),
         })
       )
 
       expect(one).toEqual({
-        id: "one",
-        name: "Giraffe",
+        id: one.id,
+        name: "Foo",
         birthday: expect.any(Date),
       })
 
-      expect(await orm.em.fork().findOne(Giraffe, "one")).toEqual({
-        id: "one",
+      expect(await orm.em.fork().findOne(Giraffe, one.id)).toEqual({
+        id: one.id,
         height: null,
-        name: "Giraffe",
+        name: "Foo",
         birthday: expect.any(Date),
       })
     })

@@ -8,6 +8,7 @@ import {
   applyMiddlewares,
   compose,
   type MayPromise,
+  silk,
 } from "@gqloom/core"
 import {
   type RequiredEntityData,
@@ -15,6 +16,7 @@ import {
   type EntityManager,
 } from "@mikro-orm/core"
 import { type InferEntity } from "./types"
+import { GraphQLString } from "graphql"
 
 interface MikroOperationWeaverOptions {
   getEntityManager: () => MayPromise<EntityManager>
@@ -55,7 +57,7 @@ export class MikroOperationWeaver<
     RequiredEntityData<InferEntity<TSchema>>
   > {
     // TODO
-    return undefined as any
+    return silk(GraphQLString, (value) => value) as any
   }
 
   /**
