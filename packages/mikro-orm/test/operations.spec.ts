@@ -9,7 +9,7 @@ import {
 import { describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
-  type FindOneOptions,
+  type FindOneFilter,
   MikroOperationBobbin,
   type UpdateInput,
 } from "../src/operations"
@@ -191,7 +191,7 @@ describe("MikroOperationsBobbin", async () => {
 
       expectTypeOf(findOne.resolve)
         .parameter(0)
-        .toEqualTypeOf<FindOneOptions<IGiraffe>>()
+        .toEqualTypeOf<FindOneFilter<IGiraffe>>()
     })
 
     it("should infer output type", () => {
@@ -199,9 +199,9 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create FindOneOptions", () => {
-      const silk = bobbin.FindOneOptions()
+      const silk = bobbin.FindOneFilter()
       expect(printSilk(silk)).toMatchInlineSnapshot(`
-        "type GiraffeFindOneParameters {
+        "type GiraffeFindOneFilter {
           id: ID!
         }"
       `)

@@ -192,8 +192,8 @@ export class MikroOperationBobbin<
     }
   }
 
-  FindOneOptions() {
-    const name = `${this.entity.meta.name}FindOneParameters`
+  FindOneFilter() {
+    const name = `${this.entity.meta.name}FindOneFilter`
 
     const gqlType =
       weaverContext.objectMap?.get(name) ??
@@ -212,13 +212,13 @@ export class MikroOperationBobbin<
    */
   FindOneQuery<
     TInput extends GraphQLSilk<
-      FindOneOptions<InferEntity<TSchema>>
+      FindOneFilter<InferEntity<TSchema>>
     > = GraphQLSilk<
-      FindOneOptions<InferEntity<TSchema>>,
-      FindOneOptions<InferEntity<TSchema>>
+      FindOneFilter<InferEntity<TSchema>>,
+      FindOneFilter<InferEntity<TSchema>>
     >,
   >({
-    input = this.FindOneOptions() as TInput,
+    input = this.FindOneFilter() as TInput,
     ...options
   }: {
     input?: TInput
@@ -260,13 +260,13 @@ export class MikroOperationBobbin<
    */
   DeleteOneMutation<
     TInput extends GraphQLSilk<
-      FindOneOptions<InferEntity<TSchema>>
+      FindOneFilter<InferEntity<TSchema>>
     > = GraphQLSilk<
-      FindOneOptions<InferEntity<TSchema>>,
-      FindOneOptions<InferEntity<TSchema>>
+      FindOneFilter<InferEntity<TSchema>>,
+      FindOneFilter<InferEntity<TSchema>>
     >,
   >({
-    input = this.FindOneOptions() as TInput,
+    input = this.FindOneFilter() as TInput,
     ...options
   }: {
     input?: TInput
@@ -330,6 +330,6 @@ export type UpdateInput<TEntity> = Omit<
   [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
 }
 
-export type FindOneOptions<TEntity> = {
+export type FindOneFilter<TEntity> = {
   [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
 }
