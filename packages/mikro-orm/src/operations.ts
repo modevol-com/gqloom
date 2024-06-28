@@ -256,6 +256,60 @@ export class MikroOperationBobbin<
       },
     }
   }
+
+  /**
+   * Create a `deleteOne` mutation for the given entity.
+   */
+  DeleteOneMutation<
+    TInput extends GraphQLSilk<
+      FindOneParameters<InferEntity<TSchema>>
+    > = GraphQLSilk<
+      FindOneParameters<InferEntity<TSchema>>,
+      FindOneParameters<InferEntity<TSchema>>
+    >,
+  >({
+    input = this.FindOneParameters() as TInput,
+    ...options
+  }: {
+    input?: TInput
+    middlewares?: Middleware<
+      FieldOrOperation<undefined, TSchema, TInput, "mutation">
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    TSchema,
+    TInput,
+    "mutation"
+  > {
+    const entity = this.entity
+
+    const middlewares = options.middlewares?.includes(this.flushMiddleware)
+      ? options.middlewares
+      : compose(options.middlewares, [this.flushMiddleware])
+
+    return {
+      ...getFieldOptions(options),
+      input,
+      output: entity,
+      type: "mutation",
+      resolve: async (inputValue, extraOptions) => {
+        const parseInput = createInputParser(input, inputValue)
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, middlewares),
+          async () => {
+            const em = await this.useEm()
+            const inputResult = await parseInput()
+            const pk = Utils.extractPK(inputResult, entity.meta)
+            const instance = await em.findOne(entity, pk)
+            if (instance == null) return null
+            em.remove(instance)
+            return instance
+          },
+          { parseInput, parent: undefined, outputSilk: entity }
+        )
+      },
+    }
+  }
 }
 
 export type UpdateInput<TEntity> = Omit<

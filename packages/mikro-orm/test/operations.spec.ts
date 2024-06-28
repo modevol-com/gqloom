@@ -220,4 +220,40 @@ describe("MikroOperationsBobbin", async () => {
       })
     })
   })
+
+  describe("DeleteOneMutation", async () => {
+    const deleteOne = bobbin.DeleteOneMutation()
+    const giraffe = await RequestContext.create(orm.em, async () => {
+      const g = orm.em.create(Giraffe, {
+        name: "Foo",
+        birthday: new Date(),
+        height: 1,
+      })
+      await orm.em.persistAndFlush(g)
+      return g
+    })
+
+    it("should do delete one", async () => {
+      const g1 = await RequestContext.create(orm.em, () =>
+        deleteOne.resolve({
+          id: giraffe.id,
+        })
+      )
+
+      expect(g1).toEqual({
+        id: giraffe.id,
+        name: "Foo",
+        birthday: expect.any(Date),
+        height: 1,
+      })
+
+      const g2 = await RequestContext.create(orm.em, () =>
+        deleteOne.resolve({
+          id: giraffe.id,
+        })
+      )
+
+      expect(g2).toBeNull()
+    })
+  })
 })
