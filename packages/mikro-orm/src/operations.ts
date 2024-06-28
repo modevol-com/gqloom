@@ -9,6 +9,7 @@ import {
   compose,
   type MayPromise,
   silk,
+  weaverContext,
 } from "@gqloom/core"
 import {
   type RequiredEntityData,
@@ -58,13 +59,16 @@ export class MikroOperationBobbin<
     RequiredEntityData<InferEntity<TSchema>>,
     RequiredEntityData<InferEntity<TSchema>>
   > {
-    return silk(
+    const name = `${this.entity.meta.name}CreateInput`
+
+    const gqlType =
+      weaverContext.objectMap?.get(name) ??
       MikroWeaver.getGraphQLType(this.entity, {
         partial: this.entity.meta.primaryKeys,
         name: `${this.entity.meta.name}CreateInput`,
-      }),
-      (value) => value
-    )
+      })
+
+    return silk(gqlType, (value) => value)
   }
 
   /**
@@ -123,14 +127,18 @@ export class MikroOperationBobbin<
     UpdateInput<InferEntity<TSchema>>,
     UpdateInput<InferEntity<TSchema>>
   > {
-    return silk(
-      MikroWeaver.getGraphQLType(this.entity, {
-        partial: true,
-        required: this.entity.meta.primaryKeys,
-        name: `${this.entity.meta.name}UpdateInput`,
-      }),
-      (value) => value
-    )
+    const name = `${this.entity.meta.name}UpdateInput`
+    const gqlType =
+      weaverContext.objectMap?.get(name) ??
+      weaverContext.memo(
+        MikroWeaver.getGraphQLType(this.entity, {
+          partial: true,
+          required: this.entity.meta.primaryKeys,
+          name,
+        })
+      )
+
+    return silk(gqlType, (value) => value)
   }
 
   /**
@@ -175,8 +183,72 @@ export class MikroOperationBobbin<
             const inputResult = await parseInput()
             const pk = Utils.extractPK(inputResult, entity.meta)
             const instance = await em.findOne(entity, pk)
+            if (instance == null) return null
             em.assign(instance, inputResult as any)
             em.persist(instance)
+            return instance
+          },
+          { parseInput, parent: undefined, outputSilk: entity }
+        )
+      },
+    }
+  }
+
+  FindOneParameters() {
+    const name = `${this.entity.meta.name}FindOneParameters`
+
+    const gqlType =
+      weaverContext.objectMap?.get(name) ??
+      weaverContext.memo(
+        MikroWeaver.getGraphQLType(this.entity, {
+          pick: this.entity.meta.primaryKeys,
+          name,
+        })
+      )
+
+    return silk(gqlType, (value) => value)
+  }
+
+  /**
+   * Create a `findOne` query for the given entity.
+   */
+  FindOneQuery<
+    TInput extends GraphQLSilk<
+      FindOneParameters<InferEntity<TSchema>>
+    > = GraphQLSilk<
+      FindOneParameters<InferEntity<TSchema>>,
+      FindOneParameters<InferEntity<TSchema>>
+    >,
+  >({
+    input = this.FindOneParameters() as TInput,
+    ...options
+  }: {
+    input?: TInput
+    middlewares?: Middleware<
+      FieldOrOperation<undefined, TSchema, TInput, "query">
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    TSchema,
+    TInput,
+    "query"
+  > {
+    const entity = this.entity
+
+    return {
+      ...getFieldOptions(options),
+      input,
+      output: entity,
+      type: "query",
+      resolve: async (inputValue, extraOptions) => {
+        const parseInput = createInputParser(input, inputValue)
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, options.middlewares),
+          async () => {
+            const em = await this.useEm()
+            const inputResult = await parseInput()
+            const pk = Utils.extractPK(inputResult, entity.meta)
+            const instance = await em.findOne(entity, pk)
             return instance
           },
           { parseInput, parent: undefined, outputSilk: entity }
@@ -190,5 +262,9 @@ export type UpdateInput<TEntity> = Omit<
   Partial<TEntity>,
   PrimaryProperty<TEntity>
 > & {
+  [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
+}
+
+export type FindOneParameters<TEntity> = {
   [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
 }

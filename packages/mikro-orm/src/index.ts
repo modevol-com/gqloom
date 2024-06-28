@@ -57,10 +57,12 @@ export class MikroWeaver {
     {
       required,
       partial,
+      pick,
       name,
     }: {
       required?: (keyof InferEntity<TSchema>)[] | boolean
       partial?: (keyof InferEntity<TSchema>)[] | boolean
+      pick?: (keyof InferEntity<TSchema>)[]
       name?: string
     } = {}
   ) {
@@ -68,6 +70,7 @@ export class MikroWeaver {
     return new GraphQLObjectType({
       name: name ?? entity.meta.className,
       fields: mapValue(properties, (value, key) => {
+        if (pick != null && !pick.includes(key)) return mapValue.SKIP
         const nullable: boolean | undefined = (() => {
           if (Array.isArray(required))
             return !required.includes(key) || undefined

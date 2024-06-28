@@ -8,7 +8,11 @@ import {
 } from "@mikro-orm/better-sqlite"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
-import { MikroOperationBobbin, type UpdateInput } from "../src/operations"
+import {
+  type FindOneParameters,
+  MikroOperationBobbin,
+  type UpdateInput,
+} from "../src/operations"
 import { GraphQLObjectType, printType } from "graphql"
 
 interface IGiraffe {
@@ -112,7 +116,6 @@ describe("MikroOperationsBobbin", async () => {
         height: 1,
       })
       await orm.em.persistAndFlush(g)
-      // await orm.em.flush()
       return g
     })
 
@@ -161,6 +164,59 @@ describe("MikroOperationsBobbin", async () => {
         name: "Foo",
         birthday: expect.any(Date),
         height: 2,
+      })
+    })
+  })
+
+  describe("FindOneQuery", async () => {
+    const findOne = bobbin.FindOneQuery()
+    const giraffe = await RequestContext.create(orm.em, async () => {
+      const g = orm.em.create(Giraffe, {
+        name: "Foo",
+        birthday: new Date(),
+        height: 1,
+      })
+      await orm.em.persistAndFlush(g)
+      return g
+    })
+    it("should infer input type", () => {
+      bobbin.FindOneQuery({
+        input: silk<Omit<IGiraffe, "height">>(
+          new GraphQLObjectType({ name: "FindOneGiraffeInput", fields: {} })
+        ),
+      })
+
+      expectTypeOf(findOne.resolve)
+        .parameter(0)
+        .toEqualTypeOf<FindOneParameters<IGiraffe>>()
+    })
+
+    it("should infer output type", () => {
+      expectTypeOf(findOne.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
+    })
+
+    it("should create FindOne Default Input", () => {
+      const silk = bobbin.FindOneParameters()
+      expect(printType(getGraphQLType(silk) as GraphQLObjectType))
+        .toMatchInlineSnapshot(`
+        "type GiraffeFindOneParameters {
+          id: ID!
+        }"
+      `)
+    })
+
+    it("should do findOne", async () => {
+      const g = await RequestContext.create(orm.em, () =>
+        findOne.resolve({
+          id: giraffe.id,
+        })
+      )
+
+      expect(g).toEqual({
+        id: giraffe.id,
+        name: "Foo",
+        birthday: expect.any(Date),
+        height: 1,
       })
     })
   })
