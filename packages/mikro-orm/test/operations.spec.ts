@@ -235,6 +235,12 @@ describe("MikroOperationsBobbin", async () => {
       return g
     })
 
+    it("should infer output type", () => {
+      expectTypeOf(
+        deleteOne.resolve
+      ).returns.resolves.toEqualTypeOf<IGiraffe | null>()
+    })
+
     it("should do delete one", async () => {
       const g1 = await RequestContext.create(orm.em, () =>
         deleteOne.resolve({

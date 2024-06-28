@@ -11,6 +11,7 @@ import {
   silk,
   weaverContext,
   type GenericFieldOrOperation,
+  type InferSilkO,
 } from "@gqloom/core"
 import {
   type RequiredEntityData,
@@ -270,11 +271,11 @@ export class MikroOperationBobbin<
   }: {
     input?: TInput
     middlewares?: Middleware<
-      FieldOrOperation<undefined, TSchema, TInput, "mutation">
+      FieldOrOperation<undefined, NullableSilk<TSchema>, TInput, "mutation">
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
-    TSchema,
+    NullableSilk<TSchema>,
     TInput,
     "mutation"
   > {
@@ -285,7 +286,7 @@ export class MikroOperationBobbin<
     return {
       ...getFieldOptions(options),
       input,
-      output: entity,
+      output: silk.nullable(entity),
       type: "mutation",
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
@@ -316,6 +317,11 @@ export class MikroOperationBobbin<
       : compose(middlewares, [this.flushMiddleware])
   }
 }
+
+type NullableSilk<T extends GraphQLSilk> = GraphQLSilk<
+  InferSilkO<T> | null,
+  undefined
+>
 
 export type UpdateInput<TEntity> = Omit<
   Partial<TEntity>,
