@@ -68,7 +68,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create Create Default Input", () => {
-      const silk = bobbin.CreateDefaultInput()
+      const silk = bobbin.CreateInput()
       expect(printType(getGraphQLType(silk) as GraphQLObjectType))
         .toMatchInlineSnapshot(`
         "type GiraffeCreateInput {
@@ -133,7 +133,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create Update Default Input", () => {
-      const silk = bobbin.UpdateDefaultInput()
+      const silk = bobbin.UpdateInput()
       expect(printType(getGraphQLType(silk) as GraphQLObjectType))
         .toMatchInlineSnapshot(`
         "type GiraffeUpdateInput {

@@ -54,7 +54,7 @@ export class MikroOperationBobbin<
     return this.options.getEntityManager()
   }
 
-  CreateDefaultInput(): GraphQLSilk<
+  CreateInput(): GraphQLSilk<
     RequiredEntityData<InferEntity<TSchema>>,
     RequiredEntityData<InferEntity<TSchema>>
   > {
@@ -78,7 +78,7 @@ export class MikroOperationBobbin<
       RequiredEntityData<InferEntity<TSchema>>
     >,
   >({
-    input = this.CreateDefaultInput() as TInput,
+    input = this.CreateInput() as TInput,
     ...options
   }: {
     input?: TInput
@@ -119,7 +119,7 @@ export class MikroOperationBobbin<
     }
   }
 
-  UpdateDefaultInput(): GraphQLSilk<
+  UpdateInput(): GraphQLSilk<
     UpdateInput<InferEntity<TSchema>>,
     UpdateInput<InferEntity<TSchema>>
   > {
@@ -142,7 +142,7 @@ export class MikroOperationBobbin<
       UpdateInput<InferEntity<TSchema>>
     >,
   >({
-    input = this.UpdateDefaultInput() as TInput,
+    input = this.UpdateInput() as TInput,
     ...options
   }: {
     input?: TInput
