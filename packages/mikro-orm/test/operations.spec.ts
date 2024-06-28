@@ -197,9 +197,8 @@ describe("MikroOperationsBobbin", async () => {
 
     it("should create FindOneOptions", () => {
       const silk = bobbin.FindOneOptions()
-      expect(
-        printType(getGraphQLType(silk) as GraphQLObjectType)
-      ).toMatchInlineSnapshot(`
+      expect(printType(getGraphQLType(silk) as GraphQLObjectType))
+        .toMatchInlineSnapshot(`
         "type GiraffeFindOneParameters {
           id: ID!
         }"
