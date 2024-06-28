@@ -8,6 +8,8 @@ const nullable = true
 
 describe("MikroSilk", () => {
   interface IBook {
+    ISBN: string
+    sales: number
     title: string
     isPublished: boolean
     price: number
@@ -29,6 +31,8 @@ describe("MikroSilk", () => {
   const BookSchema = new EntitySchema<IBook>({
     name: "Book",
     properties: {
+      ISBN: { type: "string", primary: true },
+      sales: { type: "number", hidden: true },
       title: { type: "string" },
       isPublished: { type: Boolean },
       price: { type: "number", nullable },
@@ -42,12 +46,17 @@ describe("MikroSilk", () => {
   it("should handle object", () => {
     expect(printType(gqlType)).toMatchInlineSnapshot(`
       "type Book {
+        ISBN: ID!
         title: String!
         isPublished: Boolean!
         price: Float
         tags: [String!]!
       }"
     `)
+  })
+
+  it("should not expose hidden property", () => {
+    expect(printType(gqlType)).not.toMatch("sales")
   })
 
   it("should handle non null", () => {
