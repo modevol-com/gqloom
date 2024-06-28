@@ -8,7 +8,7 @@ import {
 } from "@mikro-orm/better-sqlite"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
-import { MikroOperationBobbin } from "../src/operations"
+import { MikroOperationBobbin, type UpdateInput } from "../src/operations"
 import { GraphQLObjectType, printType } from "graphql"
 
 interface IGiraffe {
@@ -45,12 +45,12 @@ const ORMConfig = defineConfig({
   // debug: true,
 })
 
-describe("MikroOperationsBobbins", () => {
-  describe("pieceCreate", async () => {
-    const orm = await MikroORM.init(ORMConfig)
-    await orm.getSchemaGenerator().updateSchema()
+describe("MikroOperationsBobbins", async () => {
+  const orm = await MikroORM.init(ORMConfig)
+  await orm.getSchemaGenerator().updateSchema()
 
-    const bobbins = new MikroOperationBobbin(Giraffe, () => orm.em)
+  const bobbins = new MikroOperationBobbin(Giraffe, () => orm.em)
+  describe("reelCreateMutation", () => {
     const create = bobbins.reelCreateMutation()
     it("should infer Input type", () => {
       bobbins.reelCreateMutation({
@@ -99,6 +99,68 @@ describe("MikroOperationsBobbins", () => {
         height: null,
         name: "Foo",
         birthday: expect.any(Date),
+      })
+    })
+  })
+
+  describe("reelUpdateMutation", async () => {
+    const update = bobbins.reelUpdateMutation()
+    const giraffe = await RequestContext.create(orm.em, async () => {
+      const g = orm.em.create(Giraffe, {
+        name: "Foo",
+        birthday: new Date(),
+        height: 1,
+      })
+      await orm.em.persistAndFlush(g)
+      // await orm.em.flush()
+      return g
+    })
+
+    it("should infer input type", () => {
+      bobbins.reelUpdateMutation({
+        input: silk<Omit<IGiraffe, "height">>(
+          new GraphQLObjectType({ name: "UpdateGiraffeInput", fields: {} })
+        ),
+      })
+
+      expectTypeOf(update.resolve)
+        .parameter(0)
+        .toEqualTypeOf<UpdateInput<IGiraffe>>()
+    })
+
+    it("should infer output type", () => {
+      expectTypeOf(update.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
+    })
+
+    it("should reel Update Default Input", () => {
+      const silk = bobbins.reelUpdateDefaultInput()
+      expect(printType(getGraphQLType(silk) as GraphQLObjectType))
+        .toMatchInlineSnapshot(`
+        "type GiraffeUpdateInput {
+          id: ID!
+          name: String
+          birthday: String
+          height: Float
+        }"
+      `)
+    })
+
+    it("should do update", async () => {
+      await RequestContext.create(orm.em, () =>
+        update.resolve({
+          id: giraffe.id,
+          height: 2,
+        })
+      )
+      const g = await RequestContext.create(orm.em, () =>
+        orm.em.findOne(Giraffe, giraffe.id)
+      )
+
+      expect(g).toEqual({
+        id: giraffe.id,
+        name: "Foo",
+        birthday: expect.any(Date),
+        height: 2,
       })
     })
   })

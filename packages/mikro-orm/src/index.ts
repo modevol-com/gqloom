@@ -55,9 +55,11 @@ export class MikroWeaver {
   static getGraphQLType<TSchema extends EntitySchema>(
     entity: TSchema,
     {
+      required,
       partial,
       name,
     }: {
+      required?: (keyof InferEntity<TSchema>)[] | boolean
       partial?: (keyof InferEntity<TSchema>)[] | boolean
       name?: string
     } = {}
@@ -66,11 +68,14 @@ export class MikroWeaver {
     return new GraphQLObjectType({
       name: name ?? entity.meta.className,
       fields: mapValue(properties, (value, key) => {
-        const nullable = Array.isArray(partial)
-          ? partial.includes(key)
-          : partial != null
-            ? partial === true
-            : undefined
+        const nullable: boolean | undefined = (() => {
+          if (Array.isArray(required))
+            return !required.includes(key) || undefined
+          if (Array.isArray(partial)) return partial.includes(key) || undefined
+          if (typeof required === "boolean") return !required
+          if (typeof partial === "boolean") return partial
+        })()
+
         const field = MikroWeaver.getFieldConfig(value, { nullable })
         if (field == null) return mapValue.SKIP
         return field
@@ -97,7 +102,9 @@ export class MikroWeaver {
     }
 
     function nonNull(gqlType: GraphQLOutputType) {
-      if (nullable) return gqlType
+      if (nullable != null) {
+        return nullable ? gqlType : new GraphQLNonNull(gqlType)
+      }
       if (!property.nullable) return new GraphQLNonNull(gqlType)
       return gqlType
     }

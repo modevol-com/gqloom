@@ -14,6 +14,8 @@ import {
   type RequiredEntityData,
   type EntitySchema,
   type EntityManager,
+  Utils,
+  type PrimaryProperty,
 } from "@mikro-orm/core"
 import { type InferEntity } from "./types"
 import { MikroWeaver } from "."
@@ -116,4 +118,77 @@ export class MikroOperationBobbin<
       },
     }
   }
+
+  reelUpdateDefaultInput(): GraphQLSilk<
+    UpdateInput<InferEntity<TSchema>>,
+    UpdateInput<InferEntity<TSchema>>
+  > {
+    return silk(
+      MikroWeaver.getGraphQLType(this.entity, {
+        partial: true,
+        required: this.entity.meta.primaryKeys,
+        name: `${this.entity.meta.name}UpdateInput`,
+      }),
+      (value) => value
+    )
+  }
+
+  /**
+   * Create a `update` mutation for the given entity.
+   */
+  reelUpdateMutation<
+    TInput extends GraphQLSilk<UpdateInput<InferEntity<TSchema>>> = GraphQLSilk<
+      UpdateInput<InferEntity<TSchema>>,
+      UpdateInput<InferEntity<TSchema>>
+    >,
+  >({
+    input = this.reelUpdateDefaultInput() as TInput,
+    ...options
+  }: {
+    input?: TInput
+    middlewares?: Middleware<
+      FieldOrOperation<undefined, TSchema, TInput, "mutation">
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    TSchema,
+    TInput,
+    "mutation"
+  > {
+    const entity = this.entity
+
+    const middlewares = options.middlewares?.includes(this.flushMiddleware)
+      ? options.middlewares
+      : compose(options.middlewares, [this.flushMiddleware])
+
+    return {
+      ...getFieldOptions(options),
+      input,
+      output: entity,
+      type: "mutation",
+      resolve: async (inputValue, extraOptions) => {
+        const parseInput = createInputParser(input, inputValue)
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, middlewares),
+          async () => {
+            const em = await this.useEm()
+            const inputResult = await parseInput()
+            const pk = Utils.extractPK(inputResult, entity.meta)
+            const instance = await em.findOne(entity, pk)
+            em.assign(instance, inputResult as any)
+            em.persist(instance)
+            return instance
+          },
+          { parseInput, parent: undefined, outputSilk: entity }
+        )
+      },
+    }
+  }
+}
+
+export type UpdateInput<TEntity> = Omit<
+  Partial<TEntity>,
+  PrimaryProperty<TEntity>
+> & {
+  [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
 }
