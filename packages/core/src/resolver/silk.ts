@@ -39,14 +39,14 @@ export function silk<TOutput, TInput = TOutput>(
 }
 
 silk.parse = parseSilk
-silk.getGraphQLType = getGraphQLType
-silk.nonNull = nonNull
-silk.nullable = nullable
+silk.getType = getGraphQLType
+silk.nonNull = nonNullSilk
+silk.nullable = nullableSilk
 
 /**
  * Non-nullable Silk.
  */
-export function nonNull<TSilk extends GraphQLSilk<any, any>>(
+export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
 ): GraphQLSilk<NonNullable<InferSilkO<TSilk>>, NonNullable<InferSilkI<TSilk>>> {
   return {
@@ -64,7 +64,7 @@ export function nonNull<TSilk extends GraphQLSilk<any, any>>(
 /**
  * Nullable Silk.
  */
-export function nullable<TSilk extends GraphQLSilk<any, any>>(
+export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
 ): GraphQLSilk<InferSilkO<TSilk>, InferSilkI<TSilk>> {
   return {

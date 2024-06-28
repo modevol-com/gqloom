@@ -1,14 +1,16 @@
-import { getGraphQLType, silk } from "@gqloom/core"
+import { type GraphQLSilk, getGraphQLType, silk, isSilk } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
   GraphQLList,
+  type GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
   printType,
+  type GraphQLOutputType,
 } from "graphql"
 import { type GQLoomMikroFieldExtensions } from "../src/types"
 import { beforeAll, describe, expect, it } from "vitest"
@@ -139,11 +141,11 @@ describe("Entity Schema", () => {
     const gqlType = getGraphQLType(
       mikroSilk(GiraffeSchema)
     ) as GraphQLObjectType
-    expect(printType(getGraphQLType(Giraffe) as GraphQLObjectType)).toEqual(
-      printType(getGraphQLType(Giraffe) as GraphQLObjectType)
+    expect(printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)).toEqual(
+      printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)
     )
 
-    expect(printType(gqlType)).toMatchInlineSnapshot(`
+    expect(printSilk(gqlType)).toMatchInlineSnapshot(`
       "type Giraffe {
         id: ID!
         name: String!
@@ -228,4 +230,18 @@ describe("Entity Manager", () => {
 let id = 0
 function increasingId() {
   return ++id
+}
+
+function printSilk(silkOrType: GraphQLSilk | GraphQLOutputType) {
+  if (isSilk(silkOrType)) {
+    const gqlType = getGraphQLType(silkOrType)
+    if (gqlType instanceof GraphQLNonNull) {
+      return printType(gqlType.ofType as GraphQLNamedType)
+    }
+    return printType(gqlType as GraphQLNamedType)
+  }
+  if (silkOrType instanceof GraphQLNonNull) {
+    return printType(silkOrType.ofType as GraphQLNamedType)
+  }
+  return printType(silkOrType as GraphQLNamedType)
 }

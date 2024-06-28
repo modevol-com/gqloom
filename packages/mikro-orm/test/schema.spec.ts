@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { type GraphQLObjectType, printType } from "graphql"
+import {
+  type GraphQLObjectType,
+  printType,
+  GraphQLNonNull,
+  type GraphQLOutputType,
+} from "graphql"
 import { mikroSilk } from "../src"
 import { EntitySchema, type Ref } from "@mikro-orm/core"
 import { getGraphQLType } from "@gqloom/core"
@@ -28,23 +33,25 @@ describe("MikroSilk", () => {
     },
   })
 
-  const BookSchema = new EntitySchema<IBook>({
-    name: "Book",
-    properties: {
-      ISBN: { type: "string", primary: true },
-      sales: { type: "number", hidden: true },
-      title: { type: "string" },
-      isPublished: { type: Boolean },
-      price: { type: "number", nullable },
-      tags: { type: "string[]", array: true },
-      author: { entity: () => AuthorSchema, kind: "m:1", ref: true },
-    },
-  })
+  const BookSchema = mikroSilk(
+    new EntitySchema<IBook>({
+      name: "Book",
+      properties: {
+        ISBN: { type: "string", primary: true },
+        sales: { type: "number", hidden: true },
+        title: { type: "string" },
+        isPublished: { type: Boolean },
+        price: { type: "number", nullable },
+        tags: { type: "string[]", array: true },
+        author: { entity: () => AuthorSchema, kind: "m:1", ref: true },
+      },
+    })
+  )
 
-  const gqlType = getGraphQLType(mikroSilk(BookSchema)) as GraphQLObjectType
+  const gqlType = getGraphQLType(BookSchema)
 
   it("should handle object", () => {
-    expect(printType(gqlType)).toMatchInlineSnapshot(`
+    expect(printType(unwrap(gqlType))).toMatchInlineSnapshot(`
       "type Book {
         ISBN: ID!
         title: String!
@@ -53,23 +60,38 @@ describe("MikroSilk", () => {
         tags: [String!]!
       }"
     `)
+
+    expect(
+      printType(getGraphQLType(BookSchema.nullable()) as GraphQLObjectType)
+    ).toEqual(printType(unwrap(gqlType)))
   })
 
   it("should not expose hidden property", () => {
-    expect(printType(gqlType)).not.toMatch("sales")
+    expect(printType(unwrap(gqlType))).not.toMatch("sales")
   })
 
   it("should handle non null", () => {
-    expect(gqlType.getFields()["title"].type).toMatchInlineSnapshot(`"String!"`)
+    expect(unwrap(gqlType).getFields()["title"].type).toMatchInlineSnapshot(
+      `"String!"`
+    )
   })
 
   it("should handle nullable", () => {
-    expect(gqlType.getFields()["price"].type).toMatchInlineSnapshot(`"Float"`)
+    expect(unwrap(gqlType).getFields()["price"].type).toMatchInlineSnapshot(
+      `"Float"`
+    )
   })
 
   it("should handle array", () => {
-    expect(gqlType.getFields()["tags"].type).toMatchInlineSnapshot(
+    expect(unwrap(gqlType).getFields()["tags"].type).toMatchInlineSnapshot(
       `"[String!]!"`
     )
   })
 })
+
+function unwrap(gqlType: GraphQLOutputType) {
+  if (gqlType instanceof GraphQLNonNull) {
+    return gqlType.ofType as GraphQLObjectType
+  }
+  return gqlType as GraphQLObjectType
+}

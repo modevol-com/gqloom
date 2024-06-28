@@ -5,6 +5,7 @@ import {
   mapValue,
   provideWeaverContext,
   weaverContext,
+  silk,
 } from "@gqloom/core"
 import {
   ReferenceKind,
@@ -42,9 +43,14 @@ export class MikroWeaver {
     GraphQLSilk<
       InferEntity<TSchema>,
       RequiredEntityData<InferEntity<TSchema>>
-    > {
+    > & {
+      nullable: () => GraphQLSilk<InferEntity<TSchema> | null>
+    } {
     return Object.assign(schema, {
       [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLTypeBySelf,
+      nullable() {
+        return silk.nullable(this as unknown as GraphQLSilk)
+      },
     })
   }
 
@@ -67,23 +73,26 @@ export class MikroWeaver {
     } = {}
   ) {
     const properties = entity.init().meta.properties
-    return new GraphQLObjectType({
-      name: name ?? entity.meta.className,
-      fields: mapValue(properties, (value, key) => {
-        if (pick != null && !pick.includes(key)) return mapValue.SKIP
-        const nullable: boolean | undefined = (() => {
-          if (Array.isArray(required))
-            return !required.includes(key) || undefined
-          if (Array.isArray(partial)) return partial.includes(key) || undefined
-          if (typeof required === "boolean") return !required
-          if (typeof partial === "boolean") return partial
-        })()
+    return new GraphQLNonNull(
+      new GraphQLObjectType({
+        name: name ?? entity.meta.className,
+        fields: mapValue(properties, (value, key) => {
+          if (pick != null && !pick.includes(key)) return mapValue.SKIP
+          const nullable: boolean | undefined = (() => {
+            if (Array.isArray(required))
+              return !required.includes(key) || undefined
+            if (Array.isArray(partial))
+              return partial.includes(key) || undefined
+            if (typeof required === "boolean") return !required
+            if (typeof partial === "boolean") return partial
+          })()
 
-        const field = MikroWeaver.getFieldConfig(value, { nullable })
-        if (field == null) return mapValue.SKIP
-        return field
-      }),
-    })
+          const field = MikroWeaver.getFieldConfig(value, { nullable })
+          if (field == null) return mapValue.SKIP
+          return field
+        }),
+      })
+    )
   }
 
   static getFieldConfig(

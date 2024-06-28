@@ -1,4 +1,4 @@
-import { getGraphQLType, silk } from "@gqloom/core"
+import { type GraphQLSilk, getGraphQLType, silk } from "@gqloom/core"
 import {
   EntitySchema,
   MikroORM,
@@ -13,7 +13,12 @@ import {
   MikroOperationBobbin,
   type UpdateInput,
 } from "../src/operations"
-import { GraphQLObjectType, printType } from "graphql"
+import {
+  type GraphQLNamedType,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  printType,
+} from "graphql"
 
 interface IGiraffe {
   id: string
@@ -73,8 +78,7 @@ describe("MikroOperationsBobbin", async () => {
 
     it("should create Create Default Input", () => {
       const silk = bobbin.CreateInput()
-      expect(printType(getGraphQLType(silk) as GraphQLObjectType))
-        .toMatchInlineSnapshot(`
+      expect(printSilk(silk)).toMatchInlineSnapshot(`
         "type GiraffeCreateInput {
           id: ID
           name: String!
@@ -137,8 +141,7 @@ describe("MikroOperationsBobbin", async () => {
 
     it("should create Update Default Input", () => {
       const silk = bobbin.UpdateInput()
-      expect(printType(getGraphQLType(silk) as GraphQLObjectType))
-        .toMatchInlineSnapshot(`
+      expect(printSilk(silk)).toMatchInlineSnapshot(`
         "type GiraffeUpdateInput {
           id: ID!
           name: String
@@ -197,8 +200,7 @@ describe("MikroOperationsBobbin", async () => {
 
     it("should create FindOneOptions", () => {
       const silk = bobbin.FindOneOptions()
-      expect(printType(getGraphQLType(silk) as GraphQLObjectType))
-        .toMatchInlineSnapshot(`
+      expect(printSilk(silk)).toMatchInlineSnapshot(`
         "type GiraffeFindOneParameters {
           id: ID!
         }"
@@ -257,3 +259,11 @@ describe("MikroOperationsBobbin", async () => {
     })
   })
 })
+
+function printSilk(silk: GraphQLSilk) {
+  const gqlType = getGraphQLType(silk)
+  if (gqlType instanceof GraphQLNonNull) {
+    return printType(gqlType.ofType as GraphQLNamedType)
+  }
+  return printType(gqlType as GraphQLNamedType)
+}
