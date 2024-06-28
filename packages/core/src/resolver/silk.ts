@@ -1,4 +1,8 @@
-import type { GraphQLOutputType, GraphQLScalarType } from "graphql"
+import {
+  GraphQLNonNull,
+  type GraphQLOutputType,
+  type GraphQLScalarType,
+} from "graphql"
 import type { MayPromise } from "../utils"
 import type { GraphQLSilk, InferSilkI, InferSilkO } from "./types"
 import { GET_GRAPHQL_TYPE, PARSE } from "../utils/symbols"
@@ -25,14 +29,37 @@ export function silk<TOutput, TInput = TOutput>(
 ): GraphQLSilk<TOutput, TInput>
 
 export function silk<TOutput, TInput = TOutput>(
-  type: GraphQLOutputType,
+  type: GraphQLOutputType | (() => GraphQLOutputType),
   parse?: (input: TInput) => MayPromise<TOutput>
 ): GraphQLSilk<TOutput, TInput> {
-  return { [GET_GRAPHQL_TYPE]: () => type, [PARSE]: parse }
+  return {
+    [GET_GRAPHQL_TYPE]: typeof type === "function" ? type : () => type,
+    [PARSE]: parse,
+  }
 }
 
 silk.parse = parseSilk
 silk.getGraphQLType = getGraphQLType
+silk.nonNull = nonNull
+
+/**
+ * Non-nullable Silk.
+ */
+export function nonNull<TSilk extends GraphQLSilk<any, any>>(
+  origin: TSilk
+): GraphQLSilk<NonNullable<InferSilkO<TSilk>>, NonNullable<InferSilkI<TSilk>>> {
+  return {
+    [GET_GRAPHQL_TYPE]: () => {
+      const originType = getGraphQLType(origin)
+      if (originType instanceof GraphQLNonNull) {
+        return originType.ofType
+      } else {
+        return new GraphQLNonNull(originType)
+      }
+    },
+    [PARSE]: origin[PARSE],
+  }
+}
 
 /**
  * Get GraphQL Output Type from Silk.
