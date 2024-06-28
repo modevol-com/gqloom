@@ -13,5 +13,26 @@ describe("silk", () => {
         GraphQLNonNull
       )
     })
+
+    it("should keep non nullable GraphQL Type", () => {
+      const stringSilk = silk(new GraphQLNonNull(GraphQLString))
+
+      const nonNullStringSilk = silk.nonNull(stringSilk)
+
+      expect(silk.getGraphQLType(nonNullStringSilk)).toBeInstanceOf(
+        GraphQLNonNull
+      )
+    })
+  })
+
+  describe("nullable", () => {
+    it("should return a nullable silk", () => {
+      const stringSilk = silk(new GraphQLNonNull(GraphQLString))
+      expect(silk.getGraphQLType(silk.nullable(stringSilk))).toBe(GraphQLString)
+    })
+    it("should return keep nullable silk", () => {
+      const stringSilk = silk(GraphQLString)
+      expect(silk.getGraphQLType(silk.nullable(stringSilk))).toBe(GraphQLString)
+    })
   })
 })
