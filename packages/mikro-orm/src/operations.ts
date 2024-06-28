@@ -18,19 +18,19 @@ import {
 import { type InferEntity } from "./types"
 import { MikroWeaver } from "."
 
-interface MikroOperationWeaverOptions {
+interface MikroOperationBobbinOptions {
   getEntityManager: () => MayPromise<EntityManager>
 }
 
-export class MikroOperationWeaver<
+export class MikroOperationBobbin<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
-  readonly options: MikroOperationWeaverOptions
+  readonly options: MikroOperationBobbinOptions
   constructor(
     public readonly entity: TSchema,
     optionsOrGetEntityManager:
-      | MikroOperationWeaverOptions
-      | MikroOperationWeaverOptions["getEntityManager"]
+      | MikroOperationBobbinOptions
+      | MikroOperationBobbinOptions["getEntityManager"]
   ) {
     if (typeof optionsOrGetEntityManager === "function") {
       this.options = { getEntityManager: optionsOrGetEntityManager }
@@ -52,7 +52,7 @@ export class MikroOperationWeaver<
     return this.options.getEntityManager()
   }
 
-  reelDefaultCreateInput(): GraphQLSilk<
+  reelCreateDefaultInput(): GraphQLSilk<
     RequiredEntityData<InferEntity<TSchema>>,
     RequiredEntityData<InferEntity<TSchema>>
   > {
@@ -76,7 +76,7 @@ export class MikroOperationWeaver<
       RequiredEntityData<InferEntity<TSchema>>
     >,
   >({
-    input = this.reelDefaultCreateInput() as TInput,
+    input = this.reelCreateDefaultInput() as TInput,
     ...options
   }: {
     input?: TInput
@@ -116,23 +116,4 @@ export class MikroOperationWeaver<
       },
     }
   }
-}
-
-export interface MikroOperationBobbins {
-  create: MikroCreateBobbin
-}
-
-export interface MikroCreateBobbin {
-  <
-    TSchema extends EntitySchema<any, any> & GraphQLSilk,
-    TInput extends GraphQLSilk<
-      RequiredEntityData<InferEntity<TSchema>>
-    > = GraphQLSilk<
-      RequiredEntityData<InferEntity<TSchema>>,
-      RequiredEntityData<InferEntity<TSchema>>
-    >,
-  >(
-    entitySchemaSilk: TSchema,
-    inputSilk?: TInput
-  ): FieldOrOperation<undefined, TSchema, TInput, "query">
 }

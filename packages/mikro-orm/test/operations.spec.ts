@@ -8,7 +8,7 @@ import {
 } from "@mikro-orm/better-sqlite"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
-import { MikroOperationWeaver } from "../src/operations"
+import { MikroOperationBobbin } from "../src/operations"
 import { GraphQLObjectType, printType } from "graphql"
 
 interface IGiraffe {
@@ -45,15 +45,15 @@ const ORMConfig = defineConfig({
   // debug: true,
 })
 
-describe("MikroOperationsWeaver", () => {
+describe("MikroOperationsBobbins", () => {
   describe("pieceCreate", async () => {
     const orm = await MikroORM.init(ORMConfig)
     await orm.getSchemaGenerator().updateSchema()
 
-    const weaver = new MikroOperationWeaver(Giraffe, () => orm.em)
-    const create = weaver.reelCreate()
+    const bobbins = new MikroOperationBobbin(Giraffe, () => orm.em)
+    const create = bobbins.reelCreate()
     it("should infer Input type", () => {
-      weaver.reelCreate({
+      bobbins.reelCreate({
         input: silk<Omit<IGiraffe, "height" | "id">>(
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
         ),
@@ -67,11 +67,10 @@ describe("MikroOperationsWeaver", () => {
       expectTypeOf(create.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
     })
 
-    it("should reel Default Create Input", () => {
-      const silk = weaver.reelDefaultCreateInput()
-      expect(
-        printType(getGraphQLType(silk) as GraphQLObjectType)
-      ).toMatchInlineSnapshot(`
+    it("should reel Create Default Input", () => {
+      const silk = bobbins.reelCreateDefaultInput()
+      expect(printType(getGraphQLType(silk) as GraphQLObjectType))
+        .toMatchInlineSnapshot(`
         "type GiraffeCreateInput {
           id: ID
           name: String!
