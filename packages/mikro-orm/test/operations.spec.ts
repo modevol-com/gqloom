@@ -51,9 +51,9 @@ describe("MikroOperationsBobbins", () => {
     await orm.getSchemaGenerator().updateSchema()
 
     const bobbins = new MikroOperationBobbin(Giraffe, () => orm.em)
-    const create = bobbins.reelCreate()
+    const create = bobbins.reelCreateMutation()
     it("should infer Input type", () => {
-      bobbins.reelCreate({
+      bobbins.reelCreateMutation({
         input: silk<Omit<IGiraffe, "height" | "id">>(
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
         ),

@@ -68,7 +68,7 @@ export class MikroOperationBobbin<
   /**
    * Create a `create` mutation for the given entity.
    */
-  reelCreate<
+  reelCreateMutation<
     TInput extends GraphQLSilk<
       RequiredEntityData<InferEntity<TSchema>>
     > = GraphQLSilk<
