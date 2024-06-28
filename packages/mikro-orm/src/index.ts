@@ -44,7 +44,20 @@ export class MikroWeaver {
       RequiredEntityData<InferEntity<TSchema>>
     > {
     return Object.assign(schema, {
-      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+      [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLType,
+    })
+  }
+
+  static getGraphQLType(this: EntitySchema) {
+    const properties = this.init().meta.properties
+
+    return new GraphQLObjectType({
+      name: this.meta.className,
+      fields: mapValue(properties, (value) => {
+        const field = MikroWeaver.getFieldConfig(value)
+        if (field == null) return mapValue.SKIP
+        return field
+      }),
     })
   }
 
@@ -136,19 +149,6 @@ export class MikroWeaver {
       return provideWeaverContext(() => MikroWeaver.unravel(schema), context)
     }
   }
-}
-
-function getGraphQLType(this: EntitySchema) {
-  const properties = this.init().meta.properties
-
-  return new GraphQLObjectType({
-    name: this.meta.className,
-    fields: mapValue(properties, (value) => {
-      const field = MikroWeaver.getFieldConfig(value)
-      if (field == null) return mapValue.SKIP
-      return field
-    }),
-  })
 }
 
 /**
