@@ -52,12 +52,26 @@ export class MikroWeaver {
     return MikroWeaver.getGraphQLType(this)
   }
 
-  static getGraphQLType(entity: EntitySchema) {
+  static getGraphQLType<TSchema extends EntitySchema>(
+    entity: TSchema,
+    {
+      partial,
+      name,
+    }: {
+      partial?: (keyof InferEntity<TSchema>)[] | boolean
+      name?: string
+    } = {}
+  ) {
     const properties = entity.init().meta.properties
     return new GraphQLObjectType({
-      name: entity.meta.className,
-      fields: mapValue(properties, (value) => {
-        const field = MikroWeaver.getFieldConfig(value)
+      name: name ?? entity.meta.className,
+      fields: mapValue(properties, (value, key) => {
+        const nullable = Array.isArray(partial)
+          ? partial.includes(key)
+          : partial != null
+            ? partial === true
+            : undefined
+        const field = MikroWeaver.getFieldConfig(value, { nullable })
         if (field == null) return mapValue.SKIP
         return field
       }),
@@ -65,7 +79,8 @@ export class MikroWeaver {
   }
 
   static getFieldConfig(
-    property: EntityProperty
+    property: EntityProperty,
+    { nullable }: { nullable?: boolean } = {}
   ): GraphQLFieldConfig<any, any> | undefined {
     if (property.hidden) return
     let gqlType = MikroWeaver.getFieldType(property)
@@ -82,6 +97,7 @@ export class MikroWeaver {
     }
 
     function nonNull(gqlType: GraphQLOutputType) {
+      if (nullable) return gqlType
       if (!property.nullable) return new GraphQLNonNull(gqlType)
       return gqlType
     }

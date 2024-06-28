@@ -16,7 +16,7 @@ import {
   type EntityManager,
 } from "@mikro-orm/core"
 import { type InferEntity } from "./types"
-import { GraphQLString } from "graphql"
+import { MikroWeaver } from "."
 
 interface MikroOperationWeaverOptions {
   getEntityManager: () => MayPromise<EntityManager>
@@ -52,18 +52,23 @@ export class MikroOperationWeaver<
     return this.options.getEntityManager()
   }
 
-  pieceDefaultCreateInput(): GraphQLSilk<
+  reelDefaultCreateInput(): GraphQLSilk<
     RequiredEntityData<InferEntity<TSchema>>,
     RequiredEntityData<InferEntity<TSchema>>
   > {
-    // TODO
-    return silk(GraphQLString, (value) => value) as any
+    return silk(
+      MikroWeaver.getGraphQLType(this.entity, {
+        partial: this.entity.meta.primaryKeys,
+        name: `${this.entity.meta.name}CreateInput`,
+      }),
+      (value) => value
+    )
   }
 
   /**
    * Create a `create` mutation for the given entity.
    */
-  pieceCreate<
+  reelCreate<
     TInput extends GraphQLSilk<
       RequiredEntityData<InferEntity<TSchema>>
     > = GraphQLSilk<
@@ -71,7 +76,7 @@ export class MikroOperationWeaver<
       RequiredEntityData<InferEntity<TSchema>>
     >,
   >({
-    input = this.pieceDefaultCreateInput() as TInput,
+    input = this.reelDefaultCreateInput() as TInput,
     ...options
   }: {
     input?: TInput
@@ -113,11 +118,11 @@ export class MikroOperationWeaver<
   }
 }
 
-export interface MikroOperationShuttles {
-  create: MikroCreateShuttle
+export interface MikroOperationBobbins {
+  create: MikroCreateBobbin
 }
 
-export interface MikroCreateShuttle {
+export interface MikroCreateBobbin {
   <
     TSchema extends EntitySchema<any, any> & GraphQLSilk,
     TInput extends GraphQLSilk<

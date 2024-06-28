@@ -1,4 +1,4 @@
-import { silk } from "@gqloom/core"
+import { getGraphQLType, silk } from "@gqloom/core"
 import {
   EntitySchema,
   MikroORM,
@@ -9,7 +9,7 @@ import {
 import { describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import { MikroOperationWeaver } from "../src/operations"
-import { GraphQLObjectType } from "graphql"
+import { GraphQLObjectType, printType } from "graphql"
 
 interface IGiraffe {
   id: string
@@ -51,9 +51,9 @@ describe("MikroOperationsWeaver", () => {
     await orm.getSchemaGenerator().updateSchema()
 
     const weaver = new MikroOperationWeaver(Giraffe, () => orm.em)
-    const create = weaver.pieceCreate()
+    const create = weaver.reelCreate()
     it("should infer Input type", () => {
-      weaver.pieceCreate({
+      weaver.reelCreate({
         input: silk<Omit<IGiraffe, "height" | "id">>(
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
         ),
@@ -65,6 +65,20 @@ describe("MikroOperationsWeaver", () => {
 
     it("should infer Output type", () => {
       expectTypeOf(create.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
+    })
+
+    it("should reel Default Create Input", () => {
+      const silk = weaver.reelDefaultCreateInput()
+      expect(
+        printType(getGraphQLType(silk) as GraphQLObjectType)
+      ).toMatchInlineSnapshot(`
+        "type GiraffeCreateInput {
+          id: ID
+          name: String!
+          birthday: String!
+          height: Float
+        }"
+      `)
     })
 
     it("should do create", async () => {
