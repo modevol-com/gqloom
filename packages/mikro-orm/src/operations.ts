@@ -179,7 +179,7 @@ export class MikroOperationBobbin<
             const em = await this.useEm()
             const inputResult = await parseInput()
             const pk = Utils.extractPK(inputResult, entity.meta)
-            const instance = await em.findOne(entity, pk)
+            const instance = await em.findOneOrFail(entity, pk)
             if (instance == null) return null
             em.assign(instance, inputResult as any)
             em.persist(instance)
@@ -191,7 +191,7 @@ export class MikroOperationBobbin<
     }
   }
 
-  FindOneParameters() {
+  FindOneOptions() {
     const name = `${this.entity.meta.name}FindOneParameters`
 
     const gqlType =
@@ -211,13 +211,13 @@ export class MikroOperationBobbin<
    */
   FindOneQuery<
     TInput extends GraphQLSilk<
-      FindOneParameters<InferEntity<TSchema>>
+      FindOneOptions<InferEntity<TSchema>>
     > = GraphQLSilk<
-      FindOneParameters<InferEntity<TSchema>>,
-      FindOneParameters<InferEntity<TSchema>>
+      FindOneOptions<InferEntity<TSchema>>,
+      FindOneOptions<InferEntity<TSchema>>
     >,
   >({
-    input = this.FindOneParameters() as TInput,
+    input = this.FindOneOptions() as TInput,
     ...options
   }: {
     input?: TInput
@@ -245,7 +245,7 @@ export class MikroOperationBobbin<
             const em = await this.useEm()
             const inputResult = await parseInput()
             const pk = Utils.extractPK(inputResult, entity.meta)
-            const instance = await em.findOne(entity, pk)
+            const instance = await em.findOneOrFail(entity, pk)
             return instance
           },
           { parseInput, parent: undefined, outputSilk: entity }
@@ -259,13 +259,13 @@ export class MikroOperationBobbin<
    */
   DeleteOneMutation<
     TInput extends GraphQLSilk<
-      FindOneParameters<InferEntity<TSchema>>
+      FindOneOptions<InferEntity<TSchema>>
     > = GraphQLSilk<
-      FindOneParameters<InferEntity<TSchema>>,
-      FindOneParameters<InferEntity<TSchema>>
+      FindOneOptions<InferEntity<TSchema>>,
+      FindOneOptions<InferEntity<TSchema>>
     >,
   >({
-    input = this.FindOneParameters() as TInput,
+    input = this.FindOneOptions() as TInput,
     ...options
   }: {
     input?: TInput
@@ -324,6 +324,6 @@ export type UpdateInput<TEntity> = Omit<
   [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
 }
 
-export type FindOneParameters<TEntity> = {
+export type FindOneOptions<TEntity> = {
   [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
 }
