@@ -1,9 +1,9 @@
-import type { SubscriptionShuttle, Subscription } from "../resolver"
+import type { SubscriptionBobbin, Subscription } from "../resolver"
 import {
   type GraphQLSilk,
-  type FieldShuttle,
-  type QueryMutationShuttle,
-  type ResolverShuttle,
+  type FieldBobbin,
+  type QueryMutationBobbin,
+  type ResolverBobbin,
   type AbstractSchemaIO,
   type FieldOrOperation,
   baseResolver,
@@ -33,22 +33,22 @@ function toSilkInput(
   return record
 }
 
-export function createResolverShuttle<TSchemaIO extends AbstractSchemaIO>(
+export function createResolverBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk
-): ResolverShuttle<TSchemaIO> {
+): ResolverBobbin<TSchemaIO> {
   return Object.assign(baseResolver, {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, FieldOrOperation<any, any, any>>,
         { ...options, parent: toSilk(parent) }
-      )) as ResolverShuttle<TSchemaIO>["of"],
-  }) as ResolverShuttle<TSchemaIO>
+      )) as ResolverBobbin<TSchemaIO>["of"],
+  }) as ResolverBobbin<TSchemaIO>
 }
 
-export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
+export function createFieldBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): FieldShuttle<TSchemaIO> {
+): FieldBobbin<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions<"field">(
       resolveOrOptions
@@ -60,10 +60,10 @@ export function createFieldShuttle<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
+export function createQueryBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): QueryMutationShuttle<TSchemaIO> {
+): QueryMutationBobbin<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
       any,
@@ -78,10 +78,10 @@ export function createQueryShuttle<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
+export function createMutationBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): QueryMutationShuttle<TSchemaIO> {
+): QueryMutationBobbin<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
       any,
@@ -96,10 +96,10 @@ export function createMutationShuttle<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createSubscriptionShuttle<TSchemaIO extends AbstractSchemaIO>(
+export function createSubscriptionBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): SubscriptionShuttle<TSchemaIO> {
+): SubscriptionBobbin<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getSubscriptionOptions(resolveOrOptions) as Subscription<
       any,
@@ -117,17 +117,17 @@ export function createLoom<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): {
-  query: QueryMutationShuttle<TSchemaIO>
-  mutation: QueryMutationShuttle<TSchemaIO>
-  field: FieldShuttle<TSchemaIO>
-  resolver: ResolverShuttle<TSchemaIO>
-  subscription: SubscriptionShuttle<TSchemaIO>
+  query: QueryMutationBobbin<TSchemaIO>
+  mutation: QueryMutationBobbin<TSchemaIO>
+  field: FieldBobbin<TSchemaIO>
+  resolver: ResolverBobbin<TSchemaIO>
+  subscription: SubscriptionBobbin<TSchemaIO>
 } {
   return {
-    query: createQueryShuttle<TSchemaIO>(toSilk, isSchema),
-    mutation: createMutationShuttle<TSchemaIO>(toSilk, isSchema),
-    field: createFieldShuttle<TSchemaIO>(toSilk, isSchema),
-    resolver: createResolverShuttle<TSchemaIO>(toSilk),
-    subscription: createSubscriptionShuttle<TSchemaIO>(toSilk, isSchema),
+    query: createQueryBobbin<TSchemaIO>(toSilk, isSchema),
+    mutation: createMutationBobbin<TSchemaIO>(toSilk, isSchema),
+    field: createFieldBobbin<TSchemaIO>(toSilk, isSchema),
+    resolver: createResolverBobbin<TSchemaIO>(toSilk),
+    subscription: createSubscriptionBobbin<TSchemaIO>(toSilk, isSchema),
   }
 }

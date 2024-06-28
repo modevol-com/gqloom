@@ -180,7 +180,7 @@ export interface QueryMutationOptions<
 /**
  * Function to create a GraphQL query or mutation.
  */
-export interface QueryMutationShuttle<TSchemaIO extends AbstractSchemaIO> {
+export interface QueryMutationBobbin<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -224,7 +224,7 @@ export interface FieldOptions<
 /**
  * Function to create a GraphQL Field.
  */
-export interface FieldShuttle<TSchemaIO extends AbstractSchemaIO> {
+export interface FieldBobbin<TSchemaIO extends AbstractSchemaIO> {
   <
     TParent extends TSchemaIO[0],
     TOutput extends TSchemaIO[0],
@@ -288,7 +288,7 @@ export interface Subscription<
 /**
  * Function to create a GraphQL subscription.
  */
-export interface SubscriptionShuttle<TSchemaIO extends AbstractSchemaIO> {
+export interface SubscriptionBobbin<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -305,7 +305,7 @@ export interface SubscriptionShuttle<TSchemaIO extends AbstractSchemaIO> {
   >
 }
 
-export interface ResolverShuttle<TSchemaIO extends AbstractSchemaIO> {
+export interface ResolverBobbin<TSchemaIO extends AbstractSchemaIO> {
   of<
     TParent extends TSchemaIO[0],
     TOperations extends Record<

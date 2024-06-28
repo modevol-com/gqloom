@@ -5,10 +5,12 @@ import {
   applyMiddlewares,
   type MiddlewarePayload,
 } from "./middleware"
-import { createInputParser } from "../resolver"
+import { createInputParser, silk } from "../resolver"
+import { GraphQLString } from "graphql"
 
 function initPayload(): MiddlewarePayload {
   return {
+    outputSilk: silk(GraphQLString),
     parent: undefined,
     parseInput: createInputParser(undefined, undefined),
   }

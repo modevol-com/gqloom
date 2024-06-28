@@ -9,18 +9,18 @@ import {
 import { RESOLVER_OPTIONS_KEY } from "../utils/symbols"
 import { createInputParser } from "./input"
 import type {
-  FieldShuttle,
-  QueryMutationShuttle,
+  FieldBobbin,
+  QueryMutationBobbin,
   ResolvingOptions,
-  ResolverShuttle,
+  ResolverBobbin,
   FieldOrOperation,
   ResolverOptionsWithParent,
   GraphQLSilkIO,
-  SubscriptionShuttle,
+  SubscriptionBobbin,
   Subscription,
 } from "./types"
 
-export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
+export const silkQuery: QueryMutationBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -41,7 +41,7 @@ export const silkQuery: QueryMutationShuttle<GraphQLSilkIO> = (
   }
 }
 
-export const silkMutation: QueryMutationShuttle<GraphQLSilkIO> = (
+export const silkMutation: QueryMutationBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -62,7 +62,7 @@ export const silkMutation: QueryMutationShuttle<GraphQLSilkIO> = (
   }
 }
 
-export const silkField: FieldShuttle<GraphQLSilkIO> = (
+export const silkField: FieldBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -85,7 +85,7 @@ export const silkField: FieldShuttle<GraphQLSilkIO> = (
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const silkSubscription: SubscriptionShuttle<GraphQLSilkIO> = (
+export const silkSubscription: SubscriptionBobbin<GraphQLSilkIO> = (
   output,
   subscribeOrOptions
 ) => {
@@ -171,14 +171,14 @@ function extraOperationOptions<
   }
 }
 
-export const silkResolver: ResolverShuttle<GraphQLSilkIO> = Object.assign(
-  baseResolver as ResolverShuttle<GraphQLSilkIO>,
+export const silkResolver: ResolverBobbin<GraphQLSilkIO> = Object.assign(
+  baseResolver as ResolverBobbin<GraphQLSilkIO>,
   {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, FieldOrOperation<any, any, any>>,
         { ...options, parent }
-      )) as ResolverShuttle<GraphQLSilkIO>["of"],
+      )) as ResolverBobbin<GraphQLSilkIO>["of"],
   }
 )
 
