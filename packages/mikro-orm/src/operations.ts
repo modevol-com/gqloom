@@ -10,6 +10,7 @@ import {
   type MayPromise,
   silk,
   weaverContext,
+  type GenericFieldOrOperation,
 } from "@gqloom/core"
 import {
   type RequiredEntityData,
@@ -97,9 +98,7 @@ export class MikroOperationBobbin<
   > {
     const entity = this.entity
 
-    const middlewares = options.middlewares?.includes(this.flushMiddleware)
-      ? options.middlewares
-      : compose(options.middlewares, [this.flushMiddleware])
+    const middlewares = this.middlewaresWithFlush(options)
 
     return {
       ...getFieldOptions(options),
@@ -165,9 +164,7 @@ export class MikroOperationBobbin<
   > {
     const entity = this.entity
 
-    const middlewares = options.middlewares?.includes(this.flushMiddleware)
-      ? options.middlewares
-      : compose(options.middlewares, [this.flushMiddleware])
+    const middlewares = this.middlewaresWithFlush(options)
 
     return {
       ...getFieldOptions(options),
@@ -283,9 +280,7 @@ export class MikroOperationBobbin<
   > {
     const entity = this.entity
 
-    const middlewares = options.middlewares?.includes(this.flushMiddleware)
-      ? options.middlewares
-      : compose(options.middlewares, [this.flushMiddleware])
+    const middlewares = this.middlewaresWithFlush(options)
 
     return {
       ...getFieldOptions(options),
@@ -309,6 +304,16 @@ export class MikroOperationBobbin<
         )
       },
     }
+  }
+
+  protected middlewaresWithFlush<TField extends GenericFieldOrOperation>({
+    middlewares,
+  }: {
+    middlewares?: Middleware<TField>[]
+  }): Middleware<TField>[] {
+    return middlewares?.includes(this.flushMiddleware)
+      ? middlewares
+      : compose(middlewares, [this.flushMiddleware])
   }
 }
 
