@@ -45,15 +45,15 @@ const ORMConfig = defineConfig({
   // debug: true,
 })
 
-describe("MikroOperationsBobbins", async () => {
+describe("MikroOperationsBobbin", async () => {
   const orm = await MikroORM.init(ORMConfig)
   await orm.getSchemaGenerator().updateSchema()
 
-  const bobbins = new MikroOperationBobbin(Giraffe, () => orm.em)
+  const bobbin = new MikroOperationBobbin(Giraffe, () => orm.em)
   describe("reelCreateMutation", () => {
-    const create = bobbins.reelCreateMutation()
+    const create = bobbin.reelCreateMutation()
     it("should infer Input type", () => {
-      bobbins.reelCreateMutation({
+      bobbin.reelCreateMutation({
         input: silk<Omit<IGiraffe, "height" | "id">>(
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
         ),
@@ -68,7 +68,7 @@ describe("MikroOperationsBobbins", async () => {
     })
 
     it("should reel Create Default Input", () => {
-      const silk = bobbins.reelCreateDefaultInput()
+      const silk = bobbin.reelCreateDefaultInput()
       expect(printType(getGraphQLType(silk) as GraphQLObjectType))
         .toMatchInlineSnapshot(`
         "type GiraffeCreateInput {
@@ -104,7 +104,7 @@ describe("MikroOperationsBobbins", async () => {
   })
 
   describe("reelUpdateMutation", async () => {
-    const update = bobbins.reelUpdateMutation()
+    const update = bobbin.reelUpdateMutation()
     const giraffe = await RequestContext.create(orm.em, async () => {
       const g = orm.em.create(Giraffe, {
         name: "Foo",
@@ -117,7 +117,7 @@ describe("MikroOperationsBobbins", async () => {
     })
 
     it("should infer input type", () => {
-      bobbins.reelUpdateMutation({
+      bobbin.reelUpdateMutation({
         input: silk<Omit<IGiraffe, "height">>(
           new GraphQLObjectType({ name: "UpdateGiraffeInput", fields: {} })
         ),
@@ -133,7 +133,7 @@ describe("MikroOperationsBobbins", async () => {
     })
 
     it("should reel Update Default Input", () => {
-      const silk = bobbins.reelUpdateDefaultInput()
+      const silk = bobbin.reelUpdateDefaultInput()
       expect(printType(getGraphQLType(silk) as GraphQLObjectType))
         .toMatchInlineSnapshot(`
         "type GiraffeUpdateInput {
