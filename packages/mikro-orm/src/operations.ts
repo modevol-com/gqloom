@@ -54,7 +54,7 @@ export class MikroOperationBobbin<
     return this.options.getEntityManager()
   }
 
-  reelCreateDefaultInput(): GraphQLSilk<
+  CreateDefaultInput(): GraphQLSilk<
     RequiredEntityData<InferEntity<TSchema>>,
     RequiredEntityData<InferEntity<TSchema>>
   > {
@@ -70,7 +70,7 @@ export class MikroOperationBobbin<
   /**
    * Create a `create` mutation for the given entity.
    */
-  reelCreateMutation<
+  CreateMutation<
     TInput extends GraphQLSilk<
       RequiredEntityData<InferEntity<TSchema>>
     > = GraphQLSilk<
@@ -78,7 +78,7 @@ export class MikroOperationBobbin<
       RequiredEntityData<InferEntity<TSchema>>
     >,
   >({
-    input = this.reelCreateDefaultInput() as TInput,
+    input = this.CreateDefaultInput() as TInput,
     ...options
   }: {
     input?: TInput
@@ -119,7 +119,7 @@ export class MikroOperationBobbin<
     }
   }
 
-  reelUpdateDefaultInput(): GraphQLSilk<
+  UpdateDefaultInput(): GraphQLSilk<
     UpdateInput<InferEntity<TSchema>>,
     UpdateInput<InferEntity<TSchema>>
   > {
@@ -136,13 +136,13 @@ export class MikroOperationBobbin<
   /**
    * Create a `update` mutation for the given entity.
    */
-  reelUpdateMutation<
+  UpdateMutation<
     TInput extends GraphQLSilk<UpdateInput<InferEntity<TSchema>>> = GraphQLSilk<
       UpdateInput<InferEntity<TSchema>>,
       UpdateInput<InferEntity<TSchema>>
     >,
   >({
-    input = this.reelUpdateDefaultInput() as TInput,
+    input = this.UpdateDefaultInput() as TInput,
     ...options
   }: {
     input?: TInput
