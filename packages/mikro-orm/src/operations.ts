@@ -33,6 +33,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLEnumType,
+  GraphQLInt,
 } from "graphql"
 
 interface MikroOperationBobbinOptions {
@@ -330,6 +331,15 @@ export class MikroOperationBobbin<
           fields: {
             where: {
               type: this.FindManyOptionsWhereType(),
+            },
+            orderBy: {
+              type: this.FindManyOptionsOrderByType(),
+            },
+            skip: {
+              type: GraphQLInt,
+            },
+            limit: {
+              type: GraphQLInt,
             },
           },
         })

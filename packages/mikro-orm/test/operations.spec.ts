@@ -405,6 +405,18 @@ describe("MikroOperationsBobbin", async () => {
         }"
       `)
     })
+
+    it("should create FindManyOptions", () => {
+      const options = bobbin.FindManyOptions()
+      expect(printSilk(options)).toMatchInlineSnapshot(`
+        "type GiraffeFindManyOptions {
+          where: GiraffeFindManyOptionsWhere
+          orderBy: GiraffeFindManyOptionsOrderBy
+          skip: Int
+          limit: Int
+        }"
+      `)
+    })
   })
 })
 
