@@ -369,13 +369,27 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create FindManyOptionsWhereType", () => {
-      const whereType = bobbin.FindManOptionsWhereType()
+      const whereType = bobbin.FindManyOptionsWhereType()
       expect(printType(whereType)).toMatchInlineSnapshot(`
         "type GiraffeFindManyOptionsWhere {
           id: IDMikroComparisonOperators
           name: StringMikroComparisonOperators
           birthday: StringMikroComparisonOperators
           height: FloatMikroComparisonOperators
+        }"
+      `)
+    })
+
+    it("should create QueryOrderType", () => {
+      const queryOrderType = MikroOperationBobbin.QueryOrderType()
+      expect(printType(queryOrderType)).toMatchInlineSnapshot(`
+        "enum MikroQueryOrder {
+          ASC
+          ASC_NULLS_LAST
+          ASC_NULLS_FIRST
+          DESC
+          DESC_NULLS_LAST
+          DESC_NULLS_FIRST
         }"
       `)
     })

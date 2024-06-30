@@ -21,6 +21,7 @@ import {
   Utils,
   type PrimaryProperty,
   type FindAllOptions,
+  QueryOrder,
 } from "@mikro-orm/core"
 import { type InferEntity } from "./types"
 import { MikroWeaver } from "."
@@ -31,6 +32,7 @@ import {
   GraphQLString,
   GraphQLList,
   GraphQLNonNull,
+  GraphQLEnumType,
 } from "graphql"
 
 interface MikroOperationBobbinOptions {
@@ -325,14 +327,42 @@ export class MikroOperationBobbin<
       weaverContext.memo(
         new GraphQLObjectType({
           name: name,
-          fields: {},
+          fields: {
+            where: {
+              type: this.FindManyOptionsWhereType(),
+            },
+          },
         })
       )
 
     return silk(optionsType, (value) => value)
   }
 
-  FindManOptionsWhereType() {
+  FindManyOptionsOrderBy() {
+    // TODO
+    const name = `${this.entity.meta.name}FindManyOptionsOrderBy`
+    return (
+      weaverContext.objectMap?.get(name) ??
+      weaverContext.memo(
+        new GraphQLObjectType({
+          name,
+          fields: mapValue(this.entity.meta.properties, (property) => {
+            const type = MikroWeaver.getFieldType(property)
+            if (type == null) return mapValue.SKIP
+            return {
+              type:
+                type instanceof GraphQLScalarType
+                  ? MikroOperationBobbin.ComparisonOperatorsType(type)
+                  : type,
+              description: property.comment,
+            } as GraphQLFieldConfig<any, any>
+          }),
+        })
+      )
+    )
+  }
+
+  FindManyOptionsWhereType() {
     const name = `${this.entity.meta.name}FindManyOptionsWhere`
 
     return (
@@ -363,11 +393,11 @@ export class MikroOperationBobbin<
     TInput extends GraphQLSilk<
       FindAllOptions<InferEntity<TSchema>>
     > = GraphQLSilk<
-      FindOneFilter<InferEntity<TSchema>>,
+      FindAllOptions<InferEntity<TSchema>>,
       FindOneFilter<InferEntity<TSchema>>
     >,
   >({
-    input = this.FindOneFilter() as TInput,
+    input = this.FindManyOptions() as TInput,
     ...options
   }: {
     input?: TInput
@@ -410,6 +440,26 @@ export class MikroOperationBobbin<
     return middlewares?.includes(this.flushMiddleware)
       ? middlewares
       : compose(middlewares, [this.flushMiddleware])
+  }
+
+  static QueryOrderType() {
+    const name = `MikroQueryOrder`
+    return (
+      weaverContext.objectMap?.get(name) ??
+      weaverContext.memo(
+        new GraphQLEnumType({
+          name,
+          values: {
+            ASC: { value: QueryOrder.ASC },
+            ASC_NULLS_LAST: { value: QueryOrder.ASC_NULLS_LAST },
+            ASC_NULLS_FIRST: { value: QueryOrder.ASC_NULLS_FIRST },
+            DESC: { value: QueryOrder.DESC },
+            DESC_NULLS_LAST: { value: QueryOrder.DESC_NULLS_LAST },
+            DESC_NULLS_FIRST: { value: QueryOrder.DESC_NULLS_FIRST },
+          },
+        })
+      )
+    )
   }
 
   static ComparisonOperatorsType<TScalarType extends GraphQLScalarType>(
