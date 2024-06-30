@@ -338,8 +338,7 @@ export class MikroOperationBobbin<
     return silk(optionsType, (value) => value)
   }
 
-  FindManyOptionsOrderBy() {
-    // TODO
+  FindManyOptionsOrderByType() {
     const name = `${this.entity.meta.name}FindManyOptionsOrderBy`
     return (
       weaverContext.objectMap?.get(name) ??
@@ -350,10 +349,7 @@ export class MikroOperationBobbin<
             const type = MikroWeaver.getFieldType(property)
             if (type == null) return mapValue.SKIP
             return {
-              type:
-                type instanceof GraphQLScalarType
-                  ? MikroOperationBobbin.ComparisonOperatorsType(type)
-                  : type,
+              type: MikroOperationBobbin.QueryOrderType(),
               description: property.comment,
             } as GraphQLFieldConfig<any, any>
           }),

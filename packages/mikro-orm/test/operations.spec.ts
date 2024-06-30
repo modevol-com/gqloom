@@ -393,6 +393,18 @@ describe("MikroOperationsBobbin", async () => {
         }"
       `)
     })
+
+    it("should create FindManyOptionsOrderBy", () => {
+      const orderBy = bobbin.FindManyOptionsOrderByType()
+      expect(printType(orderBy)).toMatchInlineSnapshot(`
+        "type GiraffeFindManyOptionsOrderBy {
+          id: MikroQueryOrder
+          name: MikroQueryOrder
+          birthday: MikroQueryOrder
+          height: MikroQueryOrder
+        }"
+      `)
+    })
   })
 })
 
