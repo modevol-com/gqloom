@@ -596,6 +596,32 @@ describe("MikroOperationsBobbin", async () => {
         }"
       `)
     })
+
+    it("should convert to mikro condition", () => {
+      const FindManyOptions = bobbin.FindManyOptions()
+
+      expect(
+        silk.parse(FindManyOptions, {
+          where: { id: { eq: 1 } },
+        })
+      ).toMatchObject({
+        where: {
+          id: {
+            $eq: 1,
+          },
+        },
+      })
+
+      expect(
+        silk.parse(FindManyOptions, {
+          where: { id: 1 },
+        })
+      ).toMatchObject({
+        where: {
+          id: 1,
+        },
+      })
+    })
   })
 })
 

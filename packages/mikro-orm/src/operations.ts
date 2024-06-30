@@ -424,10 +424,7 @@ export class MikroOperationBobbin<
   FindManyQuery<
     TInput extends GraphQLSilk<
       FindAllOptions<InferEntity<TSchema>>
-    > = GraphQLSilk<
-      FindAllOptions<InferEntity<TSchema>>,
-      FindOneFilter<InferEntity<TSchema>>
-    >,
+    > = GraphQLSilk<FindAllOptions<InferEntity<TSchema>>>,
   >({
     input = this.FindManyOptions() as TInput,
     ...options
