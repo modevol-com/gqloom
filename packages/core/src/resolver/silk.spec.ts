@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { silk } from "./silk"
-import { GraphQLNonNull, GraphQLString } from "graphql"
+import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql"
 
 describe("silk", () => {
   describe("nonNull", () => {
@@ -18,6 +18,18 @@ describe("silk", () => {
       const nonNullStringSilk = silk.nonNull(stringSilk)
 
       expect(silk.getType(nonNullStringSilk)).toBeInstanceOf(GraphQLNonNull)
+    })
+  })
+
+  describe("list", () => {
+    it("should return a list silk", () => {
+      const stringSilk = silk(GraphQLString)
+      expect(silk.getType(silk.list(stringSilk))).toBeInstanceOf(GraphQLList)
+    })
+
+    it("should keep list GraphQL Type", () => {
+      const stringSilk = silk(new GraphQLList(GraphQLString))
+      expect(silk.getType(silk.list(stringSilk))).toBeInstanceOf(GraphQLList)
     })
   })
 

@@ -1,5 +1,6 @@
 import {
   GraphQLNonNull,
+  GraphQLList,
   type GraphQLOutputType,
   type GraphQLScalarType,
 } from "graphql"
@@ -41,6 +42,7 @@ export function silk<TOutput, TInput = TOutput>(
 silk.parse = parseSilk
 silk.getType = getGraphQLType
 silk.nonNull = nonNullSilk
+silk.list = listSilk
 silk.nullable = nullableSilk
 
 /**
@@ -61,6 +63,24 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
     [PARSE]: origin[PARSE],
   }
 }
+/**
+ * List Silk.
+ */
+export function listSilk<TSilk extends GraphQLSilk<any, any>>(
+  origin: TSilk
+): GraphQLSilk<Array<InferSilkO<TSilk>>, Array<InferSilkI<TSilk>>> {
+  return {
+    [GET_GRAPHQL_TYPE]: () => {
+      const originType = getGraphQLType(origin)
+      if (originType instanceof GraphQLList) {
+        return originType
+      } else {
+        return new GraphQLList(originType)
+      }
+    },
+  }
+}
+
 /**
  * Nullable Silk.
  */
