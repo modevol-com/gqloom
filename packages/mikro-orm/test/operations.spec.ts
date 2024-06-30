@@ -18,6 +18,8 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   printType,
+  GraphQLString,
+  GraphQLFloat,
 } from "graphql"
 
 interface IGiraffe {
@@ -262,6 +264,120 @@ describe("MikroOperationsBobbin", async () => {
       )
 
       expect(g2).toBeNull()
+    })
+  })
+
+  describe("FindManyQuery", () => {
+    it("should create operators type", () => {
+      const stringType =
+        MikroOperationBobbin.ComparisonOperatorsType(GraphQLString)
+      expect(printType(stringType)).toMatchInlineSnapshot(`
+        "type StringMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: String
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: String
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: String
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [String!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: String
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: String
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: String
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [String!]
+
+          """&&"""
+          overlap: [String!]
+
+          """@>"""
+          contains: [String!]
+
+          """<@"""
+          contained: [String!]
+
+          """Like. Uses LIKE operator"""
+          like: String
+
+          """Regexp. Uses REGEXP operator"""
+          re: String
+
+          """Full text.	A driver specific full text search function."""
+          fulltext: String
+
+          """ilike"""
+          ilike: String
+        }"
+      `)
+
+      const floatType =
+        MikroOperationBobbin.ComparisonOperatorsType(GraphQLFloat)
+      expect(printType(floatType)).toMatchInlineSnapshot(`
+        "type FloatMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: Float
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: Float
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: Float
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [Float!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: Float
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: Float
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: Float
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [Float!]
+
+          """&&"""
+          overlap: [Float!]
+
+          """@>"""
+          contains: [Float!]
+
+          """<@"""
+          contained: [Float!]
+        }"
+      `)
+    })
+
+    it("should create FindManyOptionsWhereType", () => {
+      const whereType = bobbin.FindManOptionsWhereType()
+      expect(printType(whereType)).toMatchInlineSnapshot(`
+        "type GiraffeFindManyOptionsWhere {
+          id: IDMikroComparisonOperators
+          name: StringMikroComparisonOperators
+          birthday: StringMikroComparisonOperators
+          height: FloatMikroComparisonOperators
+        }"
+      `)
     })
   })
 })

@@ -12,6 +12,7 @@ import {
   weaverContext,
   type GenericFieldOrOperation,
   type InferSilkO,
+  mapValue,
 } from "@gqloom/core"
 import {
   type RequiredEntityData,
@@ -19,9 +20,18 @@ import {
   type EntityManager,
   Utils,
   type PrimaryProperty,
+  type FindAllOptions,
 } from "@mikro-orm/core"
 import { type InferEntity } from "./types"
 import { MikroWeaver } from "."
+import {
+  type GraphQLFieldConfig,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLString,
+  GraphQLList,
+  GraphQLNonNull,
+} from "graphql"
 
 interface MikroOperationBobbinOptions {
   getEntityManager: () => MayPromise<EntityManager>
@@ -307,6 +317,91 @@ export class MikroOperationBobbin<
     }
   }
 
+  FindManyOptions() {
+    const name = `${this.entity.meta.name}FindManyOptions`
+
+    const optionsType =
+      weaverContext.objectMap?.get(name) ??
+      weaverContext.memo(
+        new GraphQLObjectType({
+          name: name,
+          fields: {},
+        })
+      )
+
+    return silk(optionsType, (value) => value)
+  }
+
+  FindManOptionsWhereType() {
+    const name = `${this.entity.meta.name}FindManyOptionsWhere`
+
+    return (
+      weaverContext.objectMap?.get(name) ??
+      weaverContext.memo(
+        new GraphQLObjectType({
+          name,
+          fields: mapValue(this.entity.meta.properties, (property) => {
+            const type = MikroWeaver.getFieldType(property)
+            if (type == null) return mapValue.SKIP
+            return {
+              type:
+                type instanceof GraphQLScalarType
+                  ? MikroOperationBobbin.ComparisonOperatorsType(type)
+                  : type,
+              description: property.comment,
+            } as GraphQLFieldConfig<any, any>
+          }),
+        })
+      )
+    )
+  }
+
+  /**
+   * Create a `findMany` query for the given entity.
+   */
+  FindManyQuery<
+    TInput extends GraphQLSilk<
+      FindAllOptions<InferEntity<TSchema>>
+    > = GraphQLSilk<
+      FindOneFilter<InferEntity<TSchema>>,
+      FindOneFilter<InferEntity<TSchema>>
+    >,
+  >({
+    input = this.FindOneFilter() as TInput,
+    ...options
+  }: {
+    input?: TInput
+    middlewares?: Middleware<
+      FieldOrOperation<undefined, NullableSilk<TSchema>, TInput, "mutation">
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    ListSilk<TSchema>,
+    TInput,
+    "query"
+  > {
+    const entity = this.entity
+
+    return {
+      ...getFieldOptions(options),
+      input,
+      output: silk.list(entity),
+      type: "query",
+      resolve: async (inputValue, extraOptions) => {
+        const parseInput = createInputParser(input, inputValue)
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, options.middlewares),
+          async () => {
+            const em = await this.useEm()
+            const inputResult = await parseInput()
+            return em.findAll(entity, inputResult)
+          },
+          { parseInput, parent: undefined, outputSilk: entity }
+        )
+      },
+    }
+  }
+
   protected middlewaresWithFlush<TField extends GenericFieldOrOperation>({
     middlewares,
   }: {
@@ -316,11 +411,106 @@ export class MikroOperationBobbin<
       ? middlewares
       : compose(middlewares, [this.flushMiddleware])
   }
+
+  static ComparisonOperatorsType<TScalarType extends GraphQLScalarType>(
+    type: TScalarType
+  ) {
+    // https://mikro-orm.io/docs/query-conditions#comparison
+    const name = `${type.name}MikroComparisonOperators`
+    return (
+      weaverContext.objectMap?.get(name) ??
+      weaverContext.memo(
+        new GraphQLObjectType({
+          name,
+          fields: {
+            eq: {
+              type,
+              description:
+                "Equals. Matches values that are equal to a specified value.",
+            },
+            gt: {
+              type,
+              description:
+                "Greater. Matches values that are greater than a specified value.",
+            },
+            gte: {
+              type,
+              description:
+                "Greater or Equal. Matches values that are greater than or equal to a specified value.",
+            },
+            in: {
+              type: new GraphQLList(new GraphQLNonNull(type)),
+              description:
+                "Contains, Contains, Matches any of the values specified in an array.",
+            },
+            lt: {
+              type,
+              description:
+                "Lower, Matches values that are less than a specified value.",
+            },
+            lte: {
+              type,
+              description:
+                "Lower or equal, Matches values that are less than or equal to a specified value.",
+            },
+            ne: {
+              type,
+              description:
+                "Not equal. Matches all values that are not equal to a specified value.",
+            },
+            nin: {
+              type: new GraphQLList(new GraphQLNonNull(type)),
+              description:
+                "Not contains. Matches none of the values specified in an array.",
+            },
+            overlap: {
+              type: new GraphQLList(new GraphQLNonNull(type)),
+              description: "&&",
+            },
+            contains: {
+              type: new GraphQLList(new GraphQLNonNull(type)),
+              description: "@>",
+            },
+            contained: {
+              type: new GraphQLList(new GraphQLNonNull(type)),
+              description: "<@",
+            },
+            ...(type === GraphQLString
+              ? {
+                  like: {
+                    type,
+                    description: "Like. Uses LIKE operator",
+                  },
+                  re: {
+                    type,
+                    description: "Regexp. Uses REGEXP operator",
+                  },
+                  fulltext: {
+                    type,
+                    description:
+                      "Full text.	A driver specific full text search function.",
+                  },
+                  ilike: {
+                    type,
+                    description: "ilike",
+                  },
+                }
+              : {}),
+          },
+        })
+      )
+    )
+  }
 }
 
 type NullableSilk<T extends GraphQLSilk> = GraphQLSilk<
   InferSilkO<T> | null,
   undefined
+>
+
+type ListSilk<T extends GraphQLSilk> = GraphQLSilk<
+  InferSilkO<T>[],
+  InferSilkO<T>[]
 >
 
 export type UpdateInput<TEntity> = Omit<

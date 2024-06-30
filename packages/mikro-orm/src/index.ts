@@ -105,7 +105,7 @@ export class MikroWeaver {
 
     gqlType = list(gqlType)
     gqlType = nonNull(gqlType)
-    return { type: gqlType }
+    return { type: gqlType, description: property.comment }
 
     function list(gqlType: GraphQLOutputType) {
       if (property.type.endsWith("[]"))
