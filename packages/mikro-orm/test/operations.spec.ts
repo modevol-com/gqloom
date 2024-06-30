@@ -1,4 +1,10 @@
-import { type GraphQLSilk, getGraphQLType, silk } from "@gqloom/core"
+import {
+  type GraphQLSilk,
+  getGraphQLType,
+  silk,
+  baseResolver,
+  weave,
+} from "@gqloom/core"
 import {
   EntitySchema,
   MikroORM,
@@ -20,6 +26,7 @@ import {
   printType,
   GraphQLString,
   GraphQLFloat,
+  printSchema,
 } from "graphql"
 
 interface IGiraffe {
@@ -268,6 +275,7 @@ describe("MikroOperationsBobbin", async () => {
   })
 
   describe("FindManyQuery", () => {
+    const findMany = bobbin.FindManyQuery()
     it("should create operators type", () => {
       const stringType =
         MikroOperationBobbin.ComparisonOperatorsType(GraphQLString)
@@ -414,6 +422,176 @@ describe("MikroOperationsBobbin", async () => {
           orderBy: GiraffeFindManyOptionsOrderBy
           skip: Int
           limit: Int
+        }"
+      `)
+    })
+
+    it("should weave schema without error", () => {
+      const r = baseResolver({ findMany }, undefined)
+      const schema = weave(r)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          findMany(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [Giraffe!]
+        }
+
+        type Giraffe {
+          id: ID!
+          name: String!
+          birthday: String!
+          height: Float
+        }
+
+        input GiraffeFindManyOptionsWhere {
+          id: IDMikroComparisonOperators
+          name: StringMikroComparisonOperators
+          birthday: StringMikroComparisonOperators
+          height: FloatMikroComparisonOperators
+        }
+
+        input IDMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: ID
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: ID
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: ID
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [ID!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: ID
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: ID
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: ID
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [ID!]
+
+          """&&"""
+          overlap: [ID!]
+
+          """@>"""
+          contains: [ID!]
+
+          """<@"""
+          contained: [ID!]
+        }
+
+        input StringMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: String
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: String
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: String
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [String!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: String
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: String
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: String
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [String!]
+
+          """&&"""
+          overlap: [String!]
+
+          """@>"""
+          contains: [String!]
+
+          """<@"""
+          contained: [String!]
+
+          """Like. Uses LIKE operator"""
+          like: String
+
+          """Regexp. Uses REGEXP operator"""
+          re: String
+
+          """Full text.	A driver specific full text search function."""
+          fulltext: String
+
+          """ilike"""
+          ilike: String
+        }
+
+        input FloatMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: Float
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: Float
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: Float
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [Float!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: Float
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: Float
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: Float
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [Float!]
+
+          """&&"""
+          overlap: [Float!]
+
+          """@>"""
+          contains: [Float!]
+
+          """<@"""
+          contained: [Float!]
+        }
+
+        input GiraffeFindManyOptionsOrderBy {
+          id: MikroQueryOrder
+          name: MikroQueryOrder
+          birthday: MikroQueryOrder
+          height: MikroQueryOrder
+        }
+
+        enum MikroQueryOrder {
+          ASC
+          ASC_NULLS_LAST
+          ASC_NULLS_FIRST
+          DESC
+          DESC_NULLS_LAST
+          DESC_NULLS_FIRST
         }"
       `)
     })

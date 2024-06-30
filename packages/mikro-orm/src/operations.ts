@@ -328,7 +328,7 @@ export class MikroOperationBobbin<
       weaverContext.memo(
         new GraphQLObjectType({
           name: name,
-          fields: {
+          fields: () => ({
             where: {
               type: this.FindManyOptionsWhereType(),
             },
@@ -341,7 +341,7 @@ export class MikroOperationBobbin<
             limit: {
               type: GraphQLInt,
             },
-          },
+          }),
         })
       )
 
@@ -355,14 +355,15 @@ export class MikroOperationBobbin<
       weaverContext.memo(
         new GraphQLObjectType({
           name,
-          fields: mapValue(this.entity.meta.properties, (property) => {
-            const type = MikroWeaver.getFieldType(property)
-            if (type == null) return mapValue.SKIP
-            return {
-              type: MikroOperationBobbin.QueryOrderType(),
-              description: property.comment,
-            } as GraphQLFieldConfig<any, any>
-          }),
+          fields: () =>
+            mapValue(this.entity.meta.properties, (property) => {
+              const type = MikroWeaver.getFieldType(property)
+              if (type == null) return mapValue.SKIP
+              return {
+                type: MikroOperationBobbin.QueryOrderType(),
+                description: property.comment,
+              } as GraphQLFieldConfig<any, any>
+            }),
         })
       )
     )
@@ -376,17 +377,18 @@ export class MikroOperationBobbin<
       weaverContext.memo(
         new GraphQLObjectType({
           name,
-          fields: mapValue(this.entity.meta.properties, (property) => {
-            const type = MikroWeaver.getFieldType(property)
-            if (type == null) return mapValue.SKIP
-            return {
-              type:
-                type instanceof GraphQLScalarType
-                  ? MikroOperationBobbin.ComparisonOperatorsType(type)
-                  : type,
-              description: property.comment,
-            } as GraphQLFieldConfig<any, any>
-          }),
+          fields: () =>
+            mapValue(this.entity.meta.properties, (property) => {
+              const type = MikroWeaver.getFieldType(property)
+              if (type == null) return mapValue.SKIP
+              return {
+                type:
+                  type instanceof GraphQLScalarType
+                    ? MikroOperationBobbin.ComparisonOperatorsType(type)
+                    : type,
+                description: property.comment,
+              } as GraphQLFieldConfig<any, any>
+            }),
         })
       )
     )
@@ -450,8 +452,9 @@ export class MikroOperationBobbin<
 
   static QueryOrderType() {
     const name = `MikroQueryOrder`
+
     return (
-      weaverContext.objectMap?.get(name) ??
+      weaverContext.enumMap?.get(name) ??
       weaverContext.memo(
         new GraphQLEnumType({
           name,
@@ -473,6 +476,7 @@ export class MikroOperationBobbin<
   ) {
     // https://mikro-orm.io/docs/query-conditions#comparison
     const name = `${type.name}MikroComparisonOperators`
+
     return (
       weaverContext.objectMap?.get(name) ??
       weaverContext.memo(
