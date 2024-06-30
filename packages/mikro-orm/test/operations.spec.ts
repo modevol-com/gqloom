@@ -427,12 +427,13 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should weave schema without error", () => {
-      const r = baseResolver({ findMany }, undefined)
+      const r = baseResolver({ findMany, findMany2: findMany }, undefined)
       const schema = weave(r)
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {
           findMany(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [Giraffe!]
+          findMany2(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [Giraffe!]
         }
 
         type Giraffe {

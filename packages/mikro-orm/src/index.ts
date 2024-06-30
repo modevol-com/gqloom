@@ -64,7 +64,7 @@ export class MikroWeaver {
       required,
       partial,
       pick,
-      name,
+      name: entityName,
     }: {
       required?: (keyof InferEntity<TSchema>)[] | boolean
       partial?: (keyof InferEntity<TSchema>)[] | boolean
@@ -72,26 +72,34 @@ export class MikroWeaver {
       name?: string
     } = {}
   ) {
-    const properties = entity.init().meta.properties
-    return new GraphQLNonNull(
-      new GraphQLObjectType({
-        name: name ?? entity.meta.className,
-        fields: mapValue(properties, (value, key) => {
-          if (pick != null && !pick.includes(key)) return mapValue.SKIP
-          const nullable: boolean | undefined = (() => {
-            if (Array.isArray(required))
-              return !required.includes(key) || undefined
-            if (Array.isArray(partial))
-              return partial.includes(key) || undefined
-            if (typeof required === "boolean") return !required
-            if (typeof partial === "boolean") return partial
-          })()
+    const name = entityName ?? entity.meta.className
 
-          const field = MikroWeaver.getFieldConfig(value, { nullable })
-          if (field == null) return mapValue.SKIP
-          return field
-        }),
-      })
+    const existing = weaverContext.objectMap?.get(name)
+    if (existing != null) return new GraphQLNonNull(existing)
+
+    const properties = entity.init().meta.properties
+
+    return new GraphQLNonNull(
+      weaverContext.memo(
+        new GraphQLObjectType({
+          name: name ?? entity.meta.className,
+          fields: mapValue(properties, (value, key) => {
+            if (pick != null && !pick.includes(key)) return mapValue.SKIP
+            const nullable: boolean | undefined = (() => {
+              if (Array.isArray(required))
+                return !required.includes(key) || undefined
+              if (Array.isArray(partial))
+                return partial.includes(key) || undefined
+              if (typeof required === "boolean") return !required
+              if (typeof partial === "boolean") return partial
+            })()
+
+            const field = MikroWeaver.getFieldConfig(value, { nullable })
+            if (field == null) return mapValue.SKIP
+            return field
+          }),
+        })
+      )
     )
   }
 

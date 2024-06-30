@@ -323,15 +323,15 @@ export class MikroOperationBobbin<
   FindManyOptions() {
     const name = `${this.entity.meta.name}FindManyOptions`
 
+    const whereType = this.FindManyOptionsWhereType()
+
     const optionsType =
       weaverContext.objectMap?.get(name) ??
       weaverContext.memo(
         new GraphQLObjectType({
           name: name,
           fields: () => ({
-            where: {
-              type: this.FindManyOptionsWhereType(),
-            },
+            where: { type: whereType },
             orderBy: {
               type: this.FindManyOptionsOrderByType(),
             },
@@ -345,7 +345,30 @@ export class MikroOperationBobbin<
         })
       )
 
-    return silk(optionsType, (value) => value)
+    const properties = this.entity.meta.properties
+    const comparisonKeys = new Set<string>()
+
+    Object.entries(properties).map(([key, property]) => {
+      const type = MikroWeaver.getFieldType(property)
+      if (type == null) return mapValue.SKIP
+      if (type instanceof GraphQLScalarType) comparisonKeys.add(key)
+    })
+
+    return silk(optionsType, (value: any) => {
+      if ("where" in value && typeof value.where === "object") {
+        Object.entries(value.where)
+          .filter(([key]) => comparisonKeys.has(key))
+          .forEach(([key, property]) => {
+            const conditions: Record<string, any> = {}
+            if (typeof property !== "object" || property == null) return
+            Object.entries(property).forEach(
+              ([key, value]) => (conditions[`$${key}`] = value)
+            )
+            ;(value as any).where[key] = conditions
+          })
+      }
+      return value
+    })
   }
 
   FindManyOptionsOrderByType() {
@@ -372,28 +395,29 @@ export class MikroOperationBobbin<
   FindManyOptionsWhereType() {
     const name = `${this.entity.meta.name}FindManyOptionsWhere`
 
-    return (
-      weaverContext.objectMap?.get(name) ??
-      weaverContext.memo(
-        new GraphQLObjectType({
-          name,
-          fields: () =>
-            mapValue(this.entity.meta.properties, (property) => {
-              const type = MikroWeaver.getFieldType(property)
-              if (type == null) return mapValue.SKIP
-              return {
-                type:
-                  type instanceof GraphQLScalarType
-                    ? MikroOperationBobbin.ComparisonOperatorsType(type)
-                    : type,
-                description: property.comment,
-              } as GraphQLFieldConfig<any, any>
-            }),
-        })
-      )
+    const existing = weaverContext.objectMap?.get(name)
+    if (existing != null) return existing
+
+    return weaverContext.memo(
+      new GraphQLObjectType({
+        name,
+        fields: () =>
+          mapValue(this.entity.meta.properties, (property) => {
+            const type = MikroWeaver.getFieldType(property)
+            if (type == null) return mapValue.SKIP
+            return {
+              type:
+                type instanceof GraphQLScalarType
+                  ? MikroOperationBobbin.ComparisonOperatorsType(type)
+                  : type,
+              description: property.comment,
+            } as GraphQLFieldConfig<any, any>
+          }),
+      })
     )
   }
 
+  static COMPARISON_KEYS = "comparisonKeys"
   /**
    * Create a `findMany` query for the given entity.
    */
