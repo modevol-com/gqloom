@@ -605,11 +605,7 @@ describe("MikroOperationsBobbin", async () => {
           where: { id: { eq: 1 } },
         })
       ).toMatchObject({
-        where: {
-          id: {
-            $eq: 1,
-          },
-        },
+        where: { id: { $eq: 1 } },
       })
 
       expect(
@@ -617,9 +613,7 @@ describe("MikroOperationsBobbin", async () => {
           where: { id: 1 },
         })
       ).toMatchObject({
-        where: {
-          id: 1,
-        },
+        where: { id: 1 },
       })
     })
   })

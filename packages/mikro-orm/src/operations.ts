@@ -424,7 +424,10 @@ export class MikroOperationBobbin<
   FindManyQuery<
     TInput extends GraphQLSilk<
       FindAllOptions<InferEntity<TSchema>>
-    > = GraphQLSilk<FindAllOptions<InferEntity<TSchema>>>,
+    > = GraphQLSilk<
+      FindAllOptions<InferEntity<TSchema>>,
+      FindManyOptions<InferEntity<TSchema>>
+    >,
   >({
     input = this.FindManyOptions() as TInput,
     ...options
@@ -603,4 +606,13 @@ export type UpdateInput<TEntity> = Omit<
 
 export type FindOneFilter<TEntity> = {
   [P in PrimaryProperty<TEntity>]: P extends keyof TEntity ? TEntity[P] : never
+}
+
+export interface FindManyOptions<TEntity> {
+  where?: any // It's difficult to type
+  orderBy?: {
+    [P in keyof TEntity]?: QueryOrder
+  }
+  limit?: number
+  offset?: number
 }
