@@ -118,6 +118,23 @@ describe("MikroOperationsBobbin", async () => {
         birthday: expect.any(Date),
       })
     })
+
+    it("should weave schema without error", () => {
+      const r = baseResolver({ create }, undefined)
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          create(id: ID, name: String!, birthday: String!, height: Float): Giraffe!
+        }
+
+        type Giraffe {
+          id: ID!
+          name: String!
+          birthday: String!
+          height: Float
+        }"
+      `)
+    })
   })
 
   describe("UpdateMutation", async () => {
@@ -177,6 +194,23 @@ describe("MikroOperationsBobbin", async () => {
         birthday: expect.any(Date),
         height: 2,
       })
+    })
+
+    it("should weave schema without error", () => {
+      const r = baseResolver({ update }, undefined)
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          update(id: ID!, name: String, birthday: String, height: Float): Giraffe!
+        }
+
+        type Giraffe {
+          id: ID!
+          name: String!
+          birthday: String!
+          height: Float
+        }"
+      `)
     })
   })
 
