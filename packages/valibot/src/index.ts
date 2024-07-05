@@ -10,9 +10,7 @@ import {
   SYMBOLS,
   createLoom,
   ensureInterfaceType,
-  initWeaverContext,
   mapValue,
-  provideWeaverContext,
   weaverContext,
   type GraphQLSilk,
   isSilk,
@@ -54,8 +52,17 @@ export class ValibotWeaver {
   static unravel<TSchema extends GenericSchemaOrAsync>(
     schema: TSchema
   ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
+    const config =
+      weaverContext.value?.getConfig<ValibotWeaverConfig>("gqloom.valibot")
+
     return Object.assign(schema, {
-      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+      [SYMBOLS.GET_GRAPHQL_TYPE]: config
+        ? function (this: GenericSchemaOrAsync) {
+            return weaverContext.useConfig(config, () =>
+              getGraphQLType.call(this)
+            )
+          }
+        : getGraphQLType,
       [SYMBOLS.PARSE]: parse,
     })
   }
@@ -268,12 +275,13 @@ export class ValibotWeaver {
     config: ValibotWeaverConfigOptions
   ): typeof ValibotWeaver.unravel {
     return (schema) => {
-      const context = weaverContext.value ?? initWeaverContext()
-      context.setConfig<ValibotWeaverConfig>({
-        ...config,
-        [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot",
-      })
-      return provideWeaverContext(() => ValibotWeaver.unravel(schema), context)
+      return weaverContext.useConfig(
+        {
+          ...config,
+          [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot",
+        },
+        () => ValibotWeaver.unravel(schema)
+      )
     }
   }
 }

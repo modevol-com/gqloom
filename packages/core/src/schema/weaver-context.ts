@@ -27,6 +27,9 @@ export interface WeaverContext {
     key: TConfig[typeof WEAVER_CONFIG]
   ) => TConfig | undefined
   setConfig<TConfig extends WeaverConfig>(config: TConfig): void
+  deleteConfig: <TConfig extends WeaverConfig>(
+    key: TConfig[typeof WEAVER_CONFIG]
+  ) => void
   memo<T extends GraphQLOutputType>(gqlType: T): T
   names: WeakMap<object, string>
 }
@@ -57,6 +60,9 @@ export function initWeaverContext(): WeaverContext {
       const key = config[WEAVER_CONFIG]
       this.configs.set(key, config)
     },
+    deleteConfig(key) {
+      this.configs.delete(key)
+    },
     names,
     memo(gqlType) {
       if (isObjectType(gqlType)) {
@@ -71,12 +77,19 @@ export function initWeaverContext(): WeaverContext {
   }
 }
 
-export const weaverContext: Partial<
-  Omit<WeaverContext, "memo" | "names" | "getConfig" | "setConfig"> & {
-    value: WeaverContext
-  }
-> &
-  Pick<WeaverContext, "memo" | "names" | "getConfig" | "setConfig"> = {
+export interface GlobalWeaverContext
+  extends Partial<
+      Omit<WeaverContext, "memo" | "names" | "getConfig" | "setConfig">
+    >,
+    Pick<WeaverContext, "memo" | "names" | "getConfig" | "setConfig"> {
+  value?: WeaverContext
+  useConfig<TConfig extends WeaverConfig, TCallback extends () => any>(
+    config: TConfig,
+    callback: TCallback
+  ): ReturnType<TCallback>
+}
+
+export const weaverContext: GlobalWeaverContext = {
   get loomObjectMap() {
     return ref?.loomObjectMap
   },
@@ -106,8 +119,23 @@ export const weaverContext: Partial<
   setConfig(config) {
     ref?.setConfig(config)
   },
+  deleteConfig(key) {
+    ref?.deleteConfig(key)
+  },
   get value() {
     return ref
+  },
+  useConfig<TConfig extends WeaverConfig, TCallback extends () => any>(
+    config: TConfig,
+    callback: TCallback
+  ) {
+    const context = weaverContext.value ?? initWeaverContext()
+    context.setConfig(config)
+
+    const result = provideWeaverContext(callback, context)
+
+    context.deleteConfig(config[WEAVER_CONFIG])
+    return result
   },
   names,
   memo(gqlType) {

@@ -140,19 +140,23 @@ describe("valibotSilk", () => {
     collectNames({ Dog })
 
     const r1 = resolver({ dog: query(Dog, () => ({})) })
-    const schema = weave(
-      r1,
-      ValibotWeaver.config({
-        presetGraphQLType: (schema) => {
-          switch (schema.type) {
-            case "date":
-              return GraphQLDate
-          }
-        },
-      })
-    )
+    const config = ValibotWeaver.config({
+      presetGraphQLType: (schema) => {
+        switch (schema.type) {
+          case "date":
+            return GraphQLDate
+        }
+      },
+    })
+    const schema1 = weave(r1, config)
 
-    expect(printSchema(schema)).toMatchInlineSnapshot(`
+    const vSilk = ValibotWeaver.useConfig(config)
+    const r2 = resolver({ dog: query(vSilk(Dog), () => ({})) })
+    const schema2 = weave(r2)
+
+    expect(printSchema(schema2)).toEqual(printSchema(schema1))
+
+    expect(printSchema(schema1)).toMatchInlineSnapshot(`
       "type Query {
         dog: Dog!
       }
