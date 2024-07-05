@@ -206,4 +206,5 @@ export class MikroWeaver {
 export const mikroSilk = MikroWeaver.unravel
 
 export * from "./entity-schema"
+export * from "./operations"
 export * from "./types"
