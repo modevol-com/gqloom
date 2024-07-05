@@ -137,24 +137,28 @@ describe("Entity Schema", () => {
     `)
   })
 
-  it("should convert to GraphQL type", () => {
-    const gqlType = getGraphQLType(
-      mikroSilk(GiraffeSchema)
-    ) as GraphQLObjectType
-    expect(printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)).toEqual(
-      printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)
-    )
+  describe("weaveEntitySchema", () => {
+    it("should convert to GraphQL type", () => {
+      const gqlType = getGraphQLType(
+        mikroSilk(GiraffeSchema)
+      ) as GraphQLObjectType
+      expect(printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)).toEqual(
+        printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)
+      )
 
-    expect(printSilk(gqlType)).toMatchInlineSnapshot(`
-      "type Giraffe {
-        id: ID!
-        name: String!
-        age: Int!
-        height: Float!
-        isMale: Boolean!
-        hobbies: [String!]!
-      }"
-    `)
+      expect(printSilk(gqlType)).toMatchInlineSnapshot(`
+        "type Giraffe {
+          id: ID!
+          name: String!
+          age: Int!
+          height: Float!
+          isMale: Boolean!
+          hobbies: [String!]!
+        }"
+      `)
+    })
+
+    it.todo("should keep origin GraphQL Type")
   })
 })
 
