@@ -116,20 +116,25 @@ describe("YupWeaver", () => {
       birthday: date(),
     }).label("Dog")
 
-    const r1 = resolver({ dog: query(Dog, () => ({})) })
-    const schema = weave(
-      r1,
-      YupWeaver.config({
-        presetGraphQLType: (description) => {
-          switch (description.type) {
-            case "date":
-              return GraphQLDate
-          }
-        },
-      })
-    )
+    const config = YupWeaver.config({
+      presetGraphQLType: (description) => {
+        switch (description.type) {
+          case "date":
+            return GraphQLDate
+        }
+      },
+    })
 
-    expect(printSchema(schema)).toMatchInlineSnapshot(`
+    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const schema1 = weave(r1, config)
+
+    const ySilk = YupWeaver.useConfig(config)
+    const r2 = resolver({ dog: query(ySilk(Dog), () => ({})) })
+    const schema2 = weave(r2)
+
+    expect(printSchema(schema2)).toEqual(printSchema(schema1))
+
+    expect(printSchema(schema1)).toMatchInlineSnapshot(`
       "type Query {
         dog: Dog
       }

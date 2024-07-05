@@ -58,8 +58,15 @@ export class YupWeaver {
   static unravel<TSchema extends Schema<any, any, any, any>>(
     schema: TSchema
   ): TSchema & GraphQLSilk<InferType<TSchema>, InferType<TSchema>> {
+    const config = weaverContext.value?.getConfig<YupWeaverConfig>("gqloom.yup")
     return Object.assign(schema, {
-      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+      [SYMBOLS.GET_GRAPHQL_TYPE]: config
+        ? function (this: Schema) {
+            return weaverContext.useConfig(config, () =>
+              getGraphQLType.call(this)
+            )
+          }
+        : getGraphQLType,
       [SYMBOLS.PARSE]: parseYup,
     })
   }
