@@ -133,33 +133,40 @@ export class EntitySchemaWeaver {
     let isList = false
     const gqlType = unwrap(wrappedType)
 
-    const typeOrProperty: EntityProperty["type"] | PropertyType | undefined =
-      options?.getProperty?.(gqlType, field)
+    const typeOrProperty:
+      | EntityProperty["type"]
+      | Partial<PropertyType>
+      | undefined = options?.getProperty?.(gqlType, field)
 
-    const property: PropertyType =
+    const property: Partial<PropertyType> =
       typeof typeOrProperty === "string"
         ? { type: typeOrProperty }
-        : typeOrProperty ??
-          (() => {
-            let simpleType: EntityProperty["type"]
-            if (gqlType instanceof GraphQLScalarType) {
-              simpleType = EntitySchemaWeaver.getGraphQLScalarType(gqlType)
-            } else if (gqlType instanceof GraphQLObjectType) {
-              simpleType = "json"
-            } else {
-              simpleType = "string"
-            }
-            const type: EntityProperty["type"] = isList
-              ? `${simpleType}[]`
-              : simpleType
-            return { type }
-          })()
+        : typeOrProperty ?? {}
 
     const extensions = field.extensions as GQLoomMikroFieldExtensions &
       GQLoomExtensions
     if (extensions.defaultValue !== undefined) nullable = false
 
-    return { nullable, ...property }
+    return {
+      nullable,
+      ...property,
+      type:
+        property.type ??
+        (() => {
+          let simpleType: EntityProperty["type"]
+          if (gqlType instanceof GraphQLScalarType) {
+            simpleType = EntitySchemaWeaver.getGraphQLScalarType(gqlType)
+          } else if (gqlType instanceof GraphQLObjectType) {
+            simpleType = "json"
+          } else {
+            simpleType = "string"
+          }
+          const type: EntityProperty["type"] = isList
+            ? `${simpleType}[]`
+            : simpleType
+          return type
+        })(),
+    }
     function unwrap(t: GraphQLOutputType) {
       if (t instanceof GraphQLNonNull) {
         nullable = false
@@ -300,7 +307,7 @@ export interface EntitySchemaWeaverOptions {
   getProperty?: (
     gqlType: Exclude<GraphQLOutputType, GraphQLNonNull<any> | GraphQLList<any>>,
     filed: GraphQLField<any, any, any>
-  ) => string | PropertyType | undefined
+  ) => string | Partial<PropertyType> | undefined
 }
 
 export type SilkSchemaEntity<
