@@ -48,9 +48,13 @@ export class EntitySchemaWeaver {
     relations?: Record<string, RelationProperty<any, object>>,
     options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
   ) {
-    const gqlType = getGraphQLTypeWithName(silk, options?.name)
+    const gqlType = EntitySchemaWeaver.unwrap(
+      getGraphQLTypeWithName(silk, options?.name)
+    )
     if (!(gqlType instanceof GraphQLObjectType))
-      throw new Error("Only object type can be converted to entity schema")
+      throw new Error(
+        `Only object type can be converted to entity schema, but got ${gqlType}`
+      )
 
     return new EntitySchema({
       name: gqlType.name,
@@ -78,6 +82,21 @@ export class EntitySchemaWeaver {
         ],
       },
     })
+  }
+
+  static unwrap(
+    gqlType: GraphQLOutputType
+  ): Exclude<
+    GraphQLOutputType,
+    GraphQLList<GraphQLOutputType> | GraphQLNonNull<any>
+  > {
+    if (gqlType instanceof GraphQLNonNull) {
+      return EntitySchemaWeaver.unwrap(gqlType.ofType)
+    }
+    if (gqlType instanceof GraphQLList) {
+      return EntitySchemaWeaver.unwrap(gqlType.ofType)
+    }
+    return gqlType
   }
 
   static toProperties(
