@@ -274,15 +274,14 @@ export class ValibotWeaver {
   static useConfig = function (
     config: ValibotWeaverConfigOptions
   ): typeof ValibotWeaver.unravel {
-    return (schema) => {
-      return weaverContext.useConfig(
+    return (schema) =>
+      weaverContext.useConfig(
         {
           ...config,
           [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot",
         },
         () => ValibotWeaver.unravel(schema)
       )
-    }
   }
 }
 

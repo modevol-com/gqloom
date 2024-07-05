@@ -8,8 +8,6 @@ import {
   deepMerge,
   type GQLoomExtensions,
   mergeExtensions,
-  initWeaverContext,
-  provideWeaverContext,
   type GraphQLSilkIO,
   isSilk,
 } from "@gqloom/core"
@@ -84,8 +82,15 @@ export class ZodWeaver {
   static unravel<TSchema extends Schema>(
     schema: TSchema
   ): TSchema & GraphQLSilk<output<TSchema>, input<TSchema>> {
+    const config = weaverContext.value?.getConfig<ZodWeaverConfig>("gqloom.zod")
     return Object.assign(schema, {
-      [SYMBOLS.GET_GRAPHQL_TYPE]: getGraphQLType,
+      [SYMBOLS.GET_GRAPHQL_TYPE]: config
+        ? function (this: Schema) {
+            return weaverContext.useConfig(config, () =>
+              getGraphQLType.call(this)
+            )
+          }
+        : getGraphQLType,
       [SYMBOLS.PARSE]: parseZod,
     })
   }
@@ -361,14 +366,14 @@ export class ZodWeaver {
   static useConfig = function (
     config: ZodWeaverConfigOptions
   ): typeof ZodWeaver.unravel {
-    return (schema) => {
-      const context = weaverContext.value ?? initWeaverContext()
-      context.setConfig<ZodWeaverConfig>({
-        ...config,
-        [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
-      })
-      return provideWeaverContext(() => ZodWeaver.unravel(schema), context)
-    }
+    return (schema) =>
+      weaverContext.useConfig(
+        {
+          ...config,
+          [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
+        } as ZodWeaverConfig,
+        () => ZodWeaver.unravel(schema)
+      )
   }
 }
 

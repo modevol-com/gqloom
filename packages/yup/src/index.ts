@@ -6,8 +6,6 @@ import {
   weaverContext,
   mergeExtensions,
   SYMBOLS,
-  provideWeaverContext,
-  initWeaverContext,
   type GraphQLSilkIO,
   isSilk,
 } from "@gqloom/core"
@@ -286,14 +284,14 @@ export class YupWeaver {
   static useConfig = function (
     config: YupWeaverConfigOptions
   ): typeof YupWeaver.unravel {
-    return (schema) => {
-      const context = weaverContext.value ?? initWeaverContext()
-      context.setConfig<YupWeaverConfig>({
-        ...config,
-        [SYMBOLS.WEAVER_CONFIG]: "gqloom.yup",
-      })
-      return provideWeaverContext(() => YupWeaver.unravel(schema), context)
-    }
+    return (schema) =>
+      weaverContext.useConfig(
+        {
+          ...config,
+          [SYMBOLS.WEAVER_CONFIG]: "gqloom.yup",
+        } as YupWeaverConfig,
+        () => YupWeaver.unravel(schema)
+      )
   }
 
   static DescriptionMap = new WeakMap<Schema, SchemaDescription>()

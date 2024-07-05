@@ -141,17 +141,22 @@ describe("ZodSilk", () => {
 
     collectNames({ Dog })
 
-    const r1 = resolver({ dog: query(Dog, () => ({})) })
-    const schema = weave(
-      r1,
-      ZodWeaver.config({
-        presetGraphQLType: (schema) => {
-          if (schema instanceof z.ZodDate) return GraphQLDate
-        },
-      })
-    )
+    const config = ZodWeaver.config({
+      presetGraphQLType: (schema) => {
+        if (schema instanceof z.ZodDate) return GraphQLDate
+      },
+    })
 
-    expect(printSchema(schema)).toMatchInlineSnapshot(`
+    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const schema1 = weave(r1, config)
+
+    const zSilk = ZodWeaver.useConfig(config)
+    const r2 = resolver({ dog: query(zSilk(Dog), () => ({})) })
+    const schema2 = weave(r2)
+
+    expect(printSchema(schema2)).toEqual(printSchema(schema1))
+
+    expect(printSchema(schema1)).toMatchInlineSnapshot(`
       "type Query {
         dog: Dog!
       }
