@@ -133,25 +133,33 @@ export class EntitySchemaWeaver {
     let isList = false
     const gqlType = unwrap(wrappedType)
 
-    let simpleType: EntityProperty["type"] | undefined =
-      options?.getPropertyType?.(gqlType, field)
+    const typeOrProperty: EntityProperty["type"] | PropertyType | undefined =
+      options?.getProperty?.(gqlType, field)
 
-    if (simpleType == null) {
-      if (gqlType instanceof GraphQLScalarType) {
-        simpleType = EntitySchemaWeaver.getGraphQLScalarType(gqlType)
-      } else if (gqlType instanceof GraphQLObjectType) {
-        simpleType = "json"
-      } else {
-        simpleType = "string"
-      }
-    }
-    const type: EntityProperty["type"] = isList ? `${simpleType}[]` : simpleType
+    const property: PropertyType =
+      typeof typeOrProperty === "string"
+        ? { type: typeOrProperty }
+        : typeOrProperty ??
+          (() => {
+            let simpleType: EntityProperty["type"]
+            if (gqlType instanceof GraphQLScalarType) {
+              simpleType = EntitySchemaWeaver.getGraphQLScalarType(gqlType)
+            } else if (gqlType instanceof GraphQLObjectType) {
+              simpleType = "json"
+            } else {
+              simpleType = "string"
+            }
+            const type: EntityProperty["type"] = isList
+              ? `${simpleType}[]`
+              : simpleType
+            return { type }
+          })()
 
     const extensions = field.extensions as GQLoomMikroFieldExtensions &
       GQLoomExtensions
     if (extensions.defaultValue !== undefined) nullable = false
 
-    return { type, nullable }
+    return { nullable, ...property }
     function unwrap(t: GraphQLOutputType) {
       if (t instanceof GraphQLNonNull) {
         nullable = false
@@ -289,10 +297,10 @@ export type PropertyType = Exclude<
 >
 
 export interface EntitySchemaWeaverOptions {
-  getPropertyType?: (
+  getProperty?: (
     gqlType: Exclude<GraphQLOutputType, GraphQLNonNull<any> | GraphQLList<any>>,
     filed: GraphQLField<any, any, any>
-  ) => string | undefined
+  ) => string | PropertyType | undefined
 }
 
 export type SilkSchemaEntity<
