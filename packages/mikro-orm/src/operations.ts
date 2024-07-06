@@ -40,6 +40,9 @@ interface MikroOperationBobbinOptions {
   getEntityManager: () => MayPromise<EntityManager>
 }
 
+// TODO: auto wrap silk create function
+// TODO: use `data` field Input
+
 export class MikroOperationBobbin<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
