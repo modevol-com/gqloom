@@ -24,12 +24,14 @@ import {
   GraphQLInt,
   GraphQLNonNull,
   GraphQLID,
+  type GraphQLField,
 } from "graphql"
 import {
   type MikroWeaverConfig,
   type MikroWeaverConfigOptions,
   type InferEntity,
 } from "./types"
+import { EntityGraphQLTypes } from "./utils"
 
 export class MikroWeaver {
   /**
@@ -79,12 +81,16 @@ export class MikroWeaver {
 
     const properties = entity.init().meta.properties
 
+    const originType = EntityGraphQLTypes.get(entity)
+    const originFields = originType?.getFields()
+
     return new GraphQLNonNull(
       weaverContext.memo(
         new GraphQLObjectType({
           name: name ?? entity.meta.className,
           fields: mapValue(properties, (value, key) => {
             if (pick != null && !pick.includes(key)) return mapValue.SKIP
+            const originField = originFields?.[key]
             const nullable: boolean | undefined = (() => {
               if (Array.isArray(required))
                 return !required.includes(key) || undefined
@@ -94,7 +100,10 @@ export class MikroWeaver {
               if (typeof partial === "boolean") return partial
             })()
 
-            const field = MikroWeaver.getFieldConfig(value, { nullable })
+            const field = MikroWeaver.getFieldConfig(value, {
+              nullable,
+              originField,
+            })
             if (field == null) return mapValue.SKIP
             return field
           }),
@@ -105,16 +114,28 @@ export class MikroWeaver {
 
   static getFieldConfig(
     property: EntityProperty,
-    { nullable }: { nullable?: boolean } = {}
+    {
+      nullable,
+      originField,
+    }: {
+      nullable?: boolean
+      originField?: GraphQLField<any, any, any>
+    } = {}
   ): GraphQLFieldConfig<any, any> | undefined {
     if (property.hidden) return
-    let gqlType = MikroWeaver.getFieldType(property)
+    let gqlType = originField?.type ?? getGraphQLTypeByProperty()
     if (gqlType == null) return
-
-    gqlType = list(gqlType)
     gqlType = nonNull(gqlType)
+
     return { type: gqlType, description: property.comment }
 
+    function getGraphQLTypeByProperty() {
+      let gqlType = MikroWeaver.getFieldType(property)
+      if (gqlType == null) return
+
+      gqlType = list(gqlType)
+      return gqlType
+    }
     function list(gqlType: GraphQLOutputType) {
       if (property.type.endsWith("[]"))
         return new GraphQLList(new GraphQLNonNull(gqlType))
@@ -125,7 +146,10 @@ export class MikroWeaver {
       if (nullable != null) {
         return nullable ? gqlType : new GraphQLNonNull(gqlType)
       }
-      if (!property.nullable) return new GraphQLNonNull(gqlType)
+      if (!property.nullable) {
+        if (gqlType instanceof GraphQLNonNull) return gqlType
+        return new GraphQLNonNull(gqlType)
+      }
       return gqlType
     }
   }

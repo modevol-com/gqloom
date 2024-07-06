@@ -41,6 +41,7 @@ import {
   type GraphQLField,
 } from "graphql"
 import { type GQLoomMikroFieldExtensions } from "./types"
+import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
 
 export class EntitySchemaWeaver {
   static weave(
@@ -48,7 +49,7 @@ export class EntitySchemaWeaver {
     relations?: Record<string, RelationProperty<any, object>>,
     options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
   ) {
-    const gqlType = EntitySchemaWeaver.unwrap(
+    const gqlType = unwrapGraphQLType(
       getGraphQLTypeWithName(silk, options?.name)
     )
     if (!(gqlType instanceof GraphQLObjectType))
@@ -56,7 +57,7 @@ export class EntitySchemaWeaver {
         `Only object type can be converted to entity schema, but got ${gqlType}`
       )
 
-    return new EntitySchema({
+    const entity = new EntitySchema({
       name: gqlType.name,
       properties: {
         ...EntitySchemaWeaver.toProperties(gqlType, options),
@@ -82,21 +83,10 @@ export class EntitySchemaWeaver {
         ],
       },
     })
-  }
 
-  static unwrap(
-    gqlType: GraphQLOutputType
-  ): Exclude<
-    GraphQLOutputType,
-    GraphQLList<GraphQLOutputType> | GraphQLNonNull<any>
-  > {
-    if (gqlType instanceof GraphQLNonNull) {
-      return EntitySchemaWeaver.unwrap(gqlType.ofType)
-    }
-    if (gqlType instanceof GraphQLList) {
-      return EntitySchemaWeaver.unwrap(gqlType.ofType)
-    }
-    return gqlType
+    EntityGraphQLTypes.set(entity, gqlType)
+
+    return entity
   }
 
   static toProperties(

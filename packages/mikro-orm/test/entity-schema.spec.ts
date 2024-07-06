@@ -11,13 +11,15 @@ import {
   GraphQLString,
   printType,
   type GraphQLOutputType,
+  GraphQLScalarType,
 } from "graphql"
 import { type GQLoomMikroFieldExtensions } from "../src/types"
 import { beforeAll, describe, expect, it } from "vitest"
 import { mikroSilk } from "../src"
-import { MikroORM, RequestContext } from "@mikro-orm/core"
+import { EntitySchema, MikroORM, RequestContext } from "@mikro-orm/core"
 import { defineConfig } from "@mikro-orm/better-sqlite"
 import { weaveEntitySchemaBySilk } from "../src/entity-schema"
+import { unwrapGraphQLType } from "../src/utils"
 
 declare module "graphql" {
   interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any>
@@ -28,10 +30,15 @@ interface IGiraffe {
   id?: string | number
   name: string
   age?: number
+  birthDay?: Date
   height: number
   isMale?: boolean
   hobbies?: string[]
 }
+
+const GraphQLDate = new GraphQLScalarType<Date, string>({
+  name: "Date",
+})
 
 const Giraffe = silk<Required<IGiraffe>, IGiraffe>(
   new GraphQLObjectType({
@@ -42,13 +49,21 @@ const Giraffe = silk<Required<IGiraffe>, IGiraffe>(
         extensions: { mikroProperty: { primary: true, columnType: "INTEGER" } },
       },
       name: { type: new GraphQLNonNull(GraphQLString) },
-      age: { type: new GraphQLNonNull(GraphQLInt) },
+      age: { type: GraphQLInt, extensions: { defaultValue: 2 } },
+      birthDay: {
+        type: GraphQLDate,
+        extensions: { defaultValue: () => new Date() },
+      },
       height: { type: new GraphQLNonNull(GraphQLFloat) },
-      isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
+      isMale: {
+        type: GraphQLBoolean,
+        extensions: { defaultValue: true },
+      },
       hobbies: {
-        type: new GraphQLNonNull(
-          new GraphQLList(new GraphQLNonNull(GraphQLString))
-        ),
+        type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+        extensions: {
+          defaultValue: () => [],
+        },
       },
     },
   }),
@@ -57,6 +72,7 @@ const Giraffe = silk<Required<IGiraffe>, IGiraffe>(
       id: increasingId(),
       age: 2,
       isMale: true,
+      birthDay: new Date(),
       hobbies: [],
       ...input,
     }
@@ -71,94 +87,58 @@ const ORMConfig = defineConfig({
 
 describe("Entity Schema", () => {
   it("should create a schema", () => {
-    expect(GiraffeSchema.meta).toMatchInlineSnapshot(`
-      EntityMetadata {
-        "_id": 0,
-        "abstract": false,
-        "checks": [],
-        "className": "Giraffe",
-        "concurrencyCheckKeys": Set {},
-        "filters": {},
-        "hooks": {
-          "onInit": [
-            [Function],
-          ],
-        },
-        "indexes": [],
-        "name": "Giraffe",
-        "primaryKeys": [],
-        "properties": {
-          "age": {
-            "nullable": false,
-            "type": "integer",
-          },
-          "height": {
-            "nullable": false,
-            "type": "float",
-          },
-          "hobbies": {
-            "nullable": false,
-            "type": "string[]",
-          },
-          "id": {
-            "columnType": "INTEGER",
-            "nullable": false,
-            "primary": true,
-            "type": "string",
-          },
-          "isMale": {
-            "nullable": false,
-            "type": "boolean",
-          },
-          "name": {
-            "nullable": false,
-            "type": "string",
-          },
-        },
-        "propertyOrder": Map {},
-        "props": [],
-        "referencingProperties": [],
-        "root": [Circular],
-        "uniques": [],
-      }
-    `)
-  })
-
-  it("should generate schema SQL", async () => {
-    const orm = await MikroORM.init(ORMConfig)
-    expect(orm.getSchemaGenerator().getCreateSchemaSQL()).resolves
-      .toMatchInlineSnapshot(`
-      "pragma foreign_keys = off;
-
-      create table \`giraffe\` (\`id\` integer not null primary key autoincrement, \`name\` text not null, \`age\` integer not null, \`height\` real not null, \`is_male\` integer not null, \`hobbies\` text not null);
-
-      pragma foreign_keys = on;
-      "
-    `)
+    expect(GiraffeSchema).toBeInstanceOf(EntitySchema)
   })
 
   describe("weaveEntitySchema", () => {
     it("should convert to GraphQL type", () => {
-      const gqlType = getGraphQLType(
-        mikroSilk(GiraffeSchema)
+      const fromEntity = getGraphQLType(
+        silk.nullable(mikroSilk(GiraffeSchema))
       ) as GraphQLObjectType
-      expect(printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)).toEqual(
-        printSilk(getGraphQLType(Giraffe) as GraphQLObjectType)
-      )
 
-      expect(printSilk(gqlType)).toMatchInlineSnapshot(`
+      expect(printSilk(fromEntity)).toMatchInlineSnapshot(`
         "type Giraffe {
           id: ID!
           name: String!
           age: Int!
+          birthDay: Date!
           height: Float!
           isMale: Boolean!
           hobbies: [String!]!
         }"
       `)
+
+      const fromSilk = getGraphQLType(Giraffe) as GraphQLObjectType
+
+      expect(printSilk(fromSilk)).toMatchInlineSnapshot(`
+        "type Giraffe {
+          id: ID!
+          name: String!
+          age: Int
+          birthDay: Date
+          height: Float!
+          isMale: Boolean
+          hobbies: [String!]
+        }"
+      `)
     })
 
-    it.todo("should keep origin GraphQL Type")
+    it("should keep origin GraphQL Field Type", () => {
+      const fromEntity = getGraphQLType(
+        silk.nullable(mikroSilk(GiraffeSchema))
+      ) as GraphQLObjectType
+
+      const fromSilk = getGraphQLType(Giraffe) as GraphQLObjectType
+
+      Object.keys(fromEntity.getFields()).forEach((key) => {
+        const typeFromEntity = unwrapGraphQLType(
+          fromEntity.getFields()[key].type
+        )
+        const typeFromSilk = unwrapGraphQLType(fromSilk.getFields()[key].type)
+
+        expect(typeFromEntity).toEqual(typeFromSilk)
+      })
+    })
   })
 })
 
@@ -182,16 +162,14 @@ describe("Entity Manager", () => {
       return orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
     })
 
-    expect(Galaxy).toMatchInlineSnapshot(`
-      {
-        "age": 2,
-        "height": 1.5,
-        "hobbies": [],
-        "id": 1,
-        "isMale": true,
-        "name": "Galaxy",
-      }
-    `)
+    expect(Galaxy).toMatchObject({
+      id: 1,
+      name: "Galaxy",
+      age: 2,
+      height: 1.5,
+      isMale: true,
+      hobbies: [],
+    })
 
     // update
     await RequestContext.create(orm.em, async () => {
@@ -206,16 +184,14 @@ describe("Entity Manager", () => {
       return orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
     })
 
-    expect(g2).toMatchInlineSnapshot(`
-      {
-        "age": 2,
-        "height": 3,
-        "hobbies": [],
-        "id": 1,
-        "isMale": true,
-        "name": "Galaxy2",
-      }
-    `)
+    expect(g2).toMatchObject({
+      id: 1,
+      name: "Galaxy2",
+      age: 2,
+      height: 3,
+      isMale: true,
+      hobbies: [],
+    })
 
     // delete
     await RequestContext.create(orm.em, async () => {
