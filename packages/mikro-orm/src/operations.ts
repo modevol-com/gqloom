@@ -61,7 +61,7 @@ export class MikroOperationBobbin<
 
     this.flushMiddleware = async (next) => {
       const result = await next()
-      const em = await this.useEm()
+      const em = await this.getEm()
       await em.flush()
       return result
     }
@@ -69,7 +69,7 @@ export class MikroOperationBobbin<
 
   flushMiddleware: Middleware
 
-  useEm() {
+  getEm() {
     return this.options.getEntityManager()
   }
 
@@ -127,7 +127,7 @@ export class MikroOperationBobbin<
         return applyMiddlewares(
           compose(extraOptions?.middlewares, middlewares),
           async () => {
-            const em = await this.useEm()
+            const em = await this.getEm()
             const inputResult = await parseInput()
             const instance = em.create(entity, inputResult)
             em.persist(instance)
@@ -193,7 +193,7 @@ export class MikroOperationBobbin<
         return applyMiddlewares(
           compose(extraOptions?.middlewares, middlewares),
           async () => {
-            const em = await this.useEm()
+            const em = await this.getEm()
             const inputResult = await parseInput()
             const pk = Utils.extractPK(inputResult, entity.meta)
             const instance = await em.findOneOrFail(entity, pk)
@@ -259,7 +259,7 @@ export class MikroOperationBobbin<
         return applyMiddlewares(
           compose(extraOptions?.middlewares, options.middlewares),
           async () => {
-            const em = await this.useEm()
+            const em = await this.getEm()
             const inputResult = await parseInput()
             const pk = Utils.extractPK(inputResult, entity.meta)
             const instance = await em.findOneOrFail(entity, pk)
@@ -309,7 +309,7 @@ export class MikroOperationBobbin<
         return applyMiddlewares(
           compose(extraOptions?.middlewares, middlewares),
           async () => {
-            const em = await this.useEm()
+            const em = await this.getEm()
             const inputResult = await parseInput()
             const pk = Utils.extractPK(inputResult, entity.meta)
             const instance = await em.findOne(entity, pk)
@@ -457,7 +457,7 @@ export class MikroOperationBobbin<
         return applyMiddlewares(
           compose(extraOptions?.middlewares, options.middlewares),
           async () => {
-            const em = await this.useEm()
+            const em = await this.getEm()
             const inputResult = await parseInput()
             return em.findAll(entity, inputResult)
           },
