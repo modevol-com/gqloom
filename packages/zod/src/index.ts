@@ -382,19 +382,22 @@ export class ZodWeaver {
  * @param schema Zod Schema
  * @returns GraphQL Silk Like Zod Schema
  */
-export const zodSilk = ZodWeaver.unravel
+export function zodSilk<TSchema extends Schema>(
+  schema: TSchema
+): TSchema & GraphQLSilk<output<TSchema>, input<TSchema>>
+export function zodSilk<TSilk>(silk: TSilk): TSilk
+export function zodSilk(schema: ZodType | GraphQLSilk) {
+  if (isSilk(schema)) return schema
+  return ZodWeaver.unravel(schema)
+}
+
+zodSilk.isSilk = (schema: any) => isSilk(schema) || isZodSchema(schema)
 
 export type ZodSchemaIO = [Schema, "_input", "_output"]
 
 export const { query, mutation, field, resolver } = createLoom<
   ZodSchemaIO | GraphQLSilkIO
->(
-  (schema) => {
-    if (isSilk(schema)) return schema
-    return ZodWeaver.unravel(schema)
-  },
-  (schema) => isSilk(schema) || isZodSchema(schema)
-)
+>(zodSilk, zodSilk.isSilk)
 
 function isZodSchema(target: any): target is Schema {
   return target instanceof ZodType
