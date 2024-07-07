@@ -40,9 +40,6 @@ interface MikroOperationBobbinOptions {
   getEntityManager: () => MayPromise<EntityManager>
 }
 
-// TODO: auto wrap silk create function
-// TODO: use `data` field Input
-
 export class MikroOperationBobbin<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
@@ -75,7 +72,7 @@ export class MikroOperationBobbin<
 
   CreateInput(): GraphQLSilk<
     RequiredEntityData<InferEntity<TSchema>>,
-    RequiredEntityData<InferEntity<TSchema>>
+    { data: RequiredEntityData<InferEntity<TSchema>> }
   > {
     const name = `${this.entity.meta.name}CreateInput`
 
@@ -86,7 +83,13 @@ export class MikroOperationBobbin<
         name: `${this.entity.meta.name}CreateInput`,
       })
 
-    return silk(gqlType, (value) => value)
+    return silk(
+      new GraphQLObjectType({
+        name: name + "Wrapper",
+        fields: { data: { type: gqlType } },
+      }),
+      (value) => value.data
+    )
   }
 
   /**
@@ -97,7 +100,7 @@ export class MikroOperationBobbin<
       RequiredEntityData<InferEntity<TSchema>>
     > = GraphQLSilk<
       RequiredEntityData<InferEntity<TSchema>>,
-      RequiredEntityData<InferEntity<TSchema>>
+      { data: RequiredEntityData<InferEntity<TSchema>> }
     >,
   >({
     input = this.CreateInput() as TInput,
@@ -141,7 +144,7 @@ export class MikroOperationBobbin<
 
   UpdateInput(): GraphQLSilk<
     UpdateInput<InferEntity<TSchema>>,
-    UpdateInput<InferEntity<TSchema>>
+    { data: UpdateInput<InferEntity<TSchema>> }
   > {
     const name = `${this.entity.meta.name}UpdateInput`
     const gqlType =
@@ -154,7 +157,13 @@ export class MikroOperationBobbin<
         })
       )
 
-    return silk(gqlType, (value) => value)
+    return silk(
+      new GraphQLObjectType({
+        name: name + "Wrapper",
+        fields: { data: { type: gqlType } },
+      }),
+      (value) => value.data
+    )
   }
 
   /**
@@ -163,7 +172,7 @@ export class MikroOperationBobbin<
   UpdateMutation<
     TInput extends GraphQLSilk<UpdateInput<InferEntity<TSchema>>> = GraphQLSilk<
       UpdateInput<InferEntity<TSchema>>,
-      UpdateInput<InferEntity<TSchema>>
+      { data: UpdateInput<InferEntity<TSchema>> }
     >,
   >({
     input = this.UpdateInput() as TInput,

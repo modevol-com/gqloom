@@ -27,6 +27,8 @@ import {
   GraphQLString,
   GraphQLFloat,
   printSchema,
+  type GraphQLOutputType,
+  GraphQLList,
 } from "graphql"
 
 interface IGiraffe {
@@ -78,7 +80,7 @@ describe("MikroOperationsBobbin", async () => {
       })
       expectTypeOf(create.resolve)
         .parameter(0)
-        .toEqualTypeOf<RequiredEntityData<IGiraffe>>()
+        .toEqualTypeOf<{ data: RequiredEntityData<IGiraffe> }>()
     })
 
     it("should infer Output type", () => {
@@ -86,8 +88,20 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create Create Default Input", () => {
-      const silk = bobbin.CreateInput()
-      expect(printSilk(silk)).toMatchInlineSnapshot(`
+      const inputWarperSilk = bobbin.CreateInput()
+      expect(printSilk(inputWarperSilk)).toMatchInlineSnapshot(`
+        "type GiraffeCreateInputWrapper {
+          data: GiraffeCreateInput!
+        }"
+      `)
+
+      const inputType = unwrap(
+        (getGraphQLType(inputWarperSilk) as GraphQLObjectType).getFields()[
+          "data"
+        ].type
+      )
+
+      expect(printType(inputType)).toMatchInlineSnapshot(`
         "type GiraffeCreateInput {
           id: ID
           name: String!
@@ -100,8 +114,10 @@ describe("MikroOperationsBobbin", async () => {
     it("should do create", async () => {
       const one = await RequestContext.create(orm.em, () =>
         create.resolve({
-          name: "Foo",
-          birthday: new Date(),
+          data: {
+            name: "Foo",
+            birthday: new Date(),
+          },
         })
       )
 
@@ -124,11 +140,18 @@ describe("MikroOperationsBobbin", async () => {
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Mutation {
-          create(id: ID, name: String!, birthday: String!, height: Float): Giraffe!
+          create(data: GiraffeCreateInput!): Giraffe!
         }
 
         type Giraffe {
           id: ID!
+          name: String!
+          birthday: String!
+          height: Float
+        }
+
+        input GiraffeCreateInput {
+          id: ID
           name: String!
           birthday: String!
           height: Float
@@ -158,7 +181,7 @@ describe("MikroOperationsBobbin", async () => {
 
       expectTypeOf(update.resolve)
         .parameter(0)
-        .toEqualTypeOf<UpdateInput<IGiraffe>>()
+        .toEqualTypeOf<{ data: UpdateInput<IGiraffe> }>()
     })
 
     it("should infer output type", () => {
@@ -166,8 +189,20 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create Update Default Input", () => {
-      const silk = bobbin.UpdateInput()
-      expect(printSilk(silk)).toMatchInlineSnapshot(`
+      const inputWarperSilk = bobbin.UpdateInput()
+      expect(printSilk(inputWarperSilk)).toMatchInlineSnapshot(`
+        "type GiraffeUpdateInputWrapper {
+          data: GiraffeUpdateInput!
+        }"
+      `)
+
+      const inputType = unwrap(
+        (getGraphQLType(inputWarperSilk) as GraphQLObjectType).getFields()[
+          "data"
+        ].type
+      )
+
+      expect(printType(inputType)).toMatchInlineSnapshot(`
         "type GiraffeUpdateInput {
           id: ID!
           name: String
@@ -180,8 +215,10 @@ describe("MikroOperationsBobbin", async () => {
     it("should do update", async () => {
       await RequestContext.create(orm.em, () =>
         update.resolve({
-          id: giraffe.id,
-          height: 2,
+          data: {
+            id: giraffe.id,
+            height: 2,
+          },
         })
       )
       const g = await RequestContext.create(orm.em, () =>
@@ -201,13 +238,20 @@ describe("MikroOperationsBobbin", async () => {
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Mutation {
-          update(id: ID!, name: String, birthday: String, height: Float): Giraffe!
+          update(data: GiraffeUpdateInput!): Giraffe!
         }
 
         type Giraffe {
           id: ID!
           name: String!
           birthday: String!
+          height: Float
+        }
+
+        input GiraffeUpdateInput {
+          id: ID!
+          name: String
+          birthday: String
           height: Float
         }"
       `)
@@ -659,4 +703,14 @@ function printSilk(silk: GraphQLSilk) {
     return printType(gqlType.ofType as GraphQLNamedType)
   }
   return printType(gqlType as GraphQLNamedType)
+}
+
+function unwrap(gqlType: GraphQLOutputType) {
+  if (gqlType instanceof GraphQLNonNull) {
+    return unwrap(gqlType.ofType)
+  }
+  if (gqlType instanceof GraphQLList) {
+    return unwrap(gqlType.ofType)
+  }
+  return gqlType
 }
