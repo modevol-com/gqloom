@@ -211,6 +211,19 @@ export function asObjectType<TInput extends object>(
 }
 
 /**
+ * Creates a GraphQL object type metadata only for input args.
+ *
+ * @returns A GraphQL object type metadata.
+ */
+export function asInputArgs<
+  TInput extends object,
+>(): AsObjectTypeMetadata<TInput> {
+  return asObjectType({ name: `InputArgs${asInputArgs.increasingID++}` })
+}
+
+asInputArgs.increasingID = 1
+
+/**
  * GraphQL enum type metadata type.
  */
 export interface AsEnumTypeMetadata<TInput extends object>
