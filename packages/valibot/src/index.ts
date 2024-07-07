@@ -14,6 +14,7 @@ import {
   weaverContext,
   type GraphQLSilk,
   isSilk,
+  type InputSchema,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -292,7 +293,24 @@ export * from "./metadata"
  * @param schema Valibot Schema
  * @returns GraphQL Silk Like Valibot Schema
  */
-export const valibotSilk = ValibotWeaver.unravel
+export function valibotSilk<TSchema extends GenericSchemaOrAsync>(
+  schema: TSchema
+): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>>
+
+/**
+ * get GraphQL Silk from Valibot Schema
+ * @param silk GraphQL Silk
+ * @returns GraphQL Silk
+ */
+export function valibotSilk<TSilk>(silk: TSilk): TSilk
+export function valibotSilk(schema: GenericSchemaOrAsync | GraphQLSilk) {
+  if (isSilk(schema)) return schema
+  return ValibotWeaver.unravel(schema)
+}
+
+valibotSilk.isSilk = (
+  schema: InputSchema<GenericSchemaOrAsync | GraphQLSilk>
+) => isSilk(schema) || isValibotSchema(schema)
 
 function getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
   return ValibotWeaver.toNullableGraphQLType(this)
@@ -313,13 +331,7 @@ export type ValibotSchemaIO = [
 
 export const { query, mutation, field, resolver } = createLoom<
   ValibotSchemaIO | GraphQLSilkIO
->(
-  (schema) => {
-    if (isSilk(schema)) return schema
-    return ValibotWeaver.unravel(schema)
-  },
-  (schema) => isSilk(schema) || isValibotSchema(schema)
-)
+>(valibotSilk, valibotSilk.isSilk)
 
 function isValibotSchema(schema: any): schema is GenericSchemaOrAsync {
   if (!("kind" in schema)) return false
