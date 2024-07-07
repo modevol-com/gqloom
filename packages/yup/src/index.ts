@@ -306,7 +306,28 @@ export class YupWeaver {
   }
 }
 
-export const yupSilk: typeof YupWeaver.unravel = YupWeaver.unravel
+/**
+ * get GraphQL Silk from Yup Schema
+ * @param schema Yup Schema
+ * @returns GraphQL Silk Like Yup Schema
+ */
+export function yupSilk<TSchema extends Schema<any, any, any, any>>(
+  schema: TSchema
+): TSchema & GraphQLSilk<InferType<TSchema>, InferType<TSchema>>
+
+/**
+ * get GraphQL Silk from Yup Schema
+ * @param silk GraphQL Silk
+ * @returns GraphQL Silk
+ */
+export function yupSilk<TSilk extends GraphQLSilk>(silk: TSilk): TSilk
+
+export function yupSilk(schema: Schema<any, any, any, any> | GraphQLSilk) {
+  if (isSilk(schema)) return schema
+  return YupWeaver.unravel(schema)
+}
+
+yupSilk.isSilk = (schema: any) => isSilk(schema) || isSchema(schema)
 
 export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
 
@@ -323,11 +344,8 @@ function parseYup(this: Schema, input: any) {
 }
 
 export const yupLoom = createLoom<YupSchemaIO | GraphQLSilkIO>(
-  (schema) => {
-    if (isSilk(schema)) return schema
-    return YupWeaver.unravel(schema)
-  },
-  (schema) => isSilk(schema) || isSchema(schema)
+  yupSilk,
+  yupSilk.isSilk
 )
 
 export const { query, mutation, field, resolver } = yupLoom
