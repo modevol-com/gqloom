@@ -14,7 +14,6 @@ import {
   weaverContext,
   type GraphQLSilk,
   isSilk,
-  type InputSchema,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -308,9 +307,7 @@ export function valibotSilk(schema: GenericSchemaOrAsync | GraphQLSilk) {
   return ValibotWeaver.unravel(schema)
 }
 
-valibotSilk.isSilk = (
-  schema: InputSchema<GenericSchemaOrAsync | GraphQLSilk>
-) => isSilk(schema) || isValibotSchema(schema)
+valibotSilk.isSilk = (schema: any) => isSilk(schema) || isValibotSchema(schema)
 
 function getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
   return ValibotWeaver.toNullableGraphQLType(this)
@@ -335,5 +332,11 @@ export const { query, mutation, field, resolver } = createLoom<
 
 function isValibotSchema(schema: any): schema is GenericSchemaOrAsync {
   if (!("kind" in schema)) return false
-  return schema.kind === "schema"
+  if (!("async" in schema)) return false
+  if (!("type" in schema)) return false
+  return (
+    schema.kind === "schema" &&
+    typeof schema.async === "boolean" &&
+    typeof schema.type === "string"
+  )
 }
