@@ -21,6 +21,21 @@ export type InferPropertyType<
     ? T[K]
     : never
 
+/**
+ * @example
+ * ```TypeScript
+ * type C = { c: string }
+ * type A = WrapPropertyType<"a", C> // { a: C }
+ * type B = WrapPropertyType<"a.b", C> // { a: { b: C } }
+ * ```
+ */
+export type WrapPropertyType<
+  TKey extends string,
+  TProperty,
+> = TKey extends `${infer TFirst}.${infer TRest}`
+  ? { [K in TFirst]: WrapPropertyType<TRest, TProperty> }
+  : { [K in TKey]: TProperty }
+
 export type ObjectOrNever<T> = T extends object ? T : never
 
 export type ValueOf<T extends object> = T[keyof T]

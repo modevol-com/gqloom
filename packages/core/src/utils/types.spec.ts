@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from "vitest"
-import { type InferPropertyType } from "./types"
+import { type InferPropertyType, type WrapPropertyType } from "./types"
 
 interface A {
   a?: { b?: { c: string } }
@@ -36,5 +36,20 @@ describe("InferPropertyType", () => {
     expectTypeOf<C2>().toEqualTypeOf<{
       c: string
     }>()
+  })
+})
+
+describe("WrapPropertyType", () => {
+  interface C {
+    c: string
+  }
+  it("should wrap property", () => {
+    type D = WrapPropertyType<"c", C>
+    expectTypeOf<D>().toEqualTypeOf<{ c: C }>()
+  })
+
+  it("should wrap nested property", () => {
+    type E = WrapPropertyType<"a.b.c", C>
+    expectTypeOf<E>().toEqualTypeOf<{ a: { b: { c: C } } }>()
   })
 })
