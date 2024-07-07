@@ -385,7 +385,14 @@ export class ZodWeaver {
 export function zodSilk<TSchema extends Schema>(
   schema: TSchema
 ): TSchema & GraphQLSilk<output<TSchema>, input<TSchema>>
+
+/**
+ * get GraphQL Silk from Zod Schema
+ * @param silk GraphQL Silk
+ * @returns GraphQL Silk
+ */
 export function zodSilk<TSilk>(silk: TSilk): TSilk
+
 export function zodSilk(schema: ZodType | GraphQLSilk) {
   if (isSilk(schema)) return schema
   return ZodWeaver.unravel(schema)
