@@ -56,6 +56,8 @@ export class MikroOperationBobbin<
       this.options = optionsOrGetEntityManager
     }
 
+    entity.init()
+
     this.flushMiddleware = async (next) => {
       const result = await next()
       const em = await this.getEm()
@@ -95,25 +97,26 @@ export class MikroOperationBobbin<
   /**
    * Create a `create` mutation for the given entity.
    */
-  CreateMutation<
-    TInput extends GraphQLSilk<
-      RequiredEntityData<InferEntity<TSchema>>
-    > = GraphQLSilk<
+  CreateMutation<TInputI = { data: RequiredEntityData<InferEntity<TSchema>> }>({
+    input = this.CreateInput() as unknown as GraphQLSilk<
       RequiredEntityData<InferEntity<TSchema>>,
-      { data: RequiredEntityData<InferEntity<TSchema>> }
+      TInputI
     >,
-  >({
-    input = this.CreateInput() as TInput,
     ...options
   }: {
-    input?: TInput
+    input?: GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<undefined, TSchema, TInput, "mutation">
+      FieldOrOperation<
+        undefined,
+        TSchema,
+        GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>,
+        "mutation"
+      >
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
     TSchema,
-    TInput,
+    GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>,
     "mutation"
   > {
     const entity = this.entity
@@ -169,23 +172,26 @@ export class MikroOperationBobbin<
   /**
    * Create a `update` mutation for the given entity.
    */
-  UpdateMutation<
-    TInput extends GraphQLSilk<UpdateInput<InferEntity<TSchema>>> = GraphQLSilk<
+  UpdateMutation<TInputI = { data: UpdateInput<InferEntity<TSchema>> }>({
+    input = this.UpdateInput() as unknown as GraphQLSilk<
       UpdateInput<InferEntity<TSchema>>,
-      { data: UpdateInput<InferEntity<TSchema>> }
+      TInputI
     >,
-  >({
-    input = this.UpdateInput() as TInput,
     ...options
   }: {
-    input?: TInput
+    input?: GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<undefined, TSchema, TInput, "mutation">
+      FieldOrOperation<
+        undefined,
+        TSchema,
+        GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>,
+        "mutation"
+      >
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
     TSchema,
-    TInput,
+    GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>,
     "mutation"
   > {
     const entity = this.entity
@@ -217,7 +223,10 @@ export class MikroOperationBobbin<
     }
   }
 
-  FindOneFilter() {
+  FindOneFilter(): GraphQLSilk<
+    FindOneFilter<InferEntity<TSchema>>,
+    FindOneFilter<InferEntity<TSchema>>
+  > {
     const name = `${this.entity.meta.name}FindOneFilter`
 
     const gqlType =
@@ -235,25 +244,26 @@ export class MikroOperationBobbin<
   /**
    * Create a `findOne` query for the given entity.
    */
-  FindOneQuery<
-    TInput extends GraphQLSilk<
-      FindOneFilter<InferEntity<TSchema>>
-    > = GraphQLSilk<
+  FindOneQuery<TInputI = FindOneFilter<InferEntity<TSchema>>>({
+    input = this.FindOneFilter() as unknown as GraphQLSilk<
       FindOneFilter<InferEntity<TSchema>>,
-      FindOneFilter<InferEntity<TSchema>>
+      TInputI
     >,
-  >({
-    input = this.FindOneFilter() as TInput,
     ...options
   }: {
-    input?: TInput
+    input?: GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<undefined, TSchema, TInput, "query">
+      FieldOrOperation<
+        undefined,
+        TSchema,
+        GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
+        "query"
+      >
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
     TSchema,
-    TInput,
+    GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
     "query"
   > {
     const entity = this.entity
@@ -283,25 +293,26 @@ export class MikroOperationBobbin<
   /**
    * Create a `deleteOne` mutation for the given entity.
    */
-  DeleteOneMutation<
-    TInput extends GraphQLSilk<
-      FindOneFilter<InferEntity<TSchema>>
-    > = GraphQLSilk<
+  DeleteOneMutation<TInputI = FindOneFilter<InferEntity<TSchema>>>({
+    input = this.FindOneFilter() as unknown as GraphQLSilk<
       FindOneFilter<InferEntity<TSchema>>,
-      FindOneFilter<InferEntity<TSchema>>
+      TInputI
     >,
-  >({
-    input = this.FindOneFilter() as TInput,
     ...options
   }: {
-    input?: TInput
+    input?: GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<undefined, NullableSilk<TSchema>, TInput, "mutation">
+      FieldOrOperation<
+        undefined,
+        NullableSilk<TSchema>,
+        GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
+        "mutation"
+      >
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
     NullableSilk<TSchema>,
-    TInput,
+    GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
     "mutation"
   > {
     const entity = this.entity
@@ -433,25 +444,23 @@ export class MikroOperationBobbin<
   /**
    * Create a `findMany` query for the given entity.
    */
-  FindManyQuery<
-    TInput extends GraphQLSilk<
-      FindAllOptions<InferEntity<TSchema>>
-    > = GraphQLSilk<
-      FindAllOptions<InferEntity<TSchema>>,
-      FindManyOptions<InferEntity<TSchema>>
-    >,
-  >({
-    input = this.FindManyOptions() as TInput,
+  FindManyQuery<TInputI = FindManyOptions<InferEntity<TSchema>>>({
+    input = this.FindManyOptions(),
     ...options
   }: {
-    input?: TInput
+    input?: GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<undefined, NullableSilk<TSchema>, TInput, "mutation">
+      FieldOrOperation<
+        undefined,
+        NullableSilk<TSchema>,
+        GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>,
+        "mutation"
+      >
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
     ListSilk<TSchema>,
-    TInput,
+    GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>,
     "query"
   > {
     const entity = this.entity

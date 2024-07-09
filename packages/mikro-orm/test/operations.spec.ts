@@ -4,6 +4,7 @@ import {
   silk,
   baseResolver,
   weave,
+  type CallableInputParser,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -12,7 +13,7 @@ import {
   defineConfig,
   RequestContext,
 } from "@mikro-orm/better-sqlite"
-import { describe, expect, expectTypeOf, it } from "vitest"
+import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
   type FindOneFilter,
@@ -259,7 +260,18 @@ describe("MikroOperationsBobbin", async () => {
   })
 
   describe("FindOneQuery", async () => {
-    const findOne = bobbin.FindOneQuery()
+    const findOne = bobbin.FindOneQuery({
+      middlewares: [
+        async (next, { parseInput }) => {
+          assertType<
+            CallableInputParser<
+              GraphQLSilk<FindOneFilter<IGiraffe>, FindOneFilter<IGiraffe>>
+            >
+          >(parseInput)
+          return next()
+        },
+      ],
+    })
     const giraffe = await RequestContext.create(orm.em, async () => {
       const g = orm.em.create(Giraffe, {
         name: "Foo",
@@ -275,6 +287,27 @@ describe("MikroOperationsBobbin", async () => {
           new GraphQLObjectType({ name: "FindOneGiraffeInput", fields: {} })
         ),
       })
+
+      baseResolver(
+        {
+          findOne: bobbin.FindOneQuery({
+            middlewares: [
+              async (next, { parseInput }) => {
+                assertType<
+                  CallableInputParser<
+                    GraphQLSilk<
+                      FindOneFilter<IGiraffe>,
+                      FindOneFilter<IGiraffe>
+                    >
+                  >
+                >(parseInput)
+                return next()
+              },
+            ],
+          }),
+        },
+        undefined
+      )
 
       expectTypeOf(findOne.resolve)
         .parameter(0)
