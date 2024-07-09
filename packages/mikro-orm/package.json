@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/mikro-orm",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "",
   "type": "module",
   "main": "./dist/index.js",
