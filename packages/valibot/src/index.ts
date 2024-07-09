@@ -4,6 +4,8 @@ import {
   safeParseAsync,
   strictObjectAsync,
   parseAsync,
+  parse,
+  type GenericSchema,
 } from "valibot"
 import {
   type GraphQLSilkIO,
@@ -59,11 +61,11 @@ export class ValibotWeaver {
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: GenericSchemaOrAsync) {
             return weaverContext.useConfig(config, () =>
-              getGraphQLType.call(this)
+              ValibotWeaver.getGraphQLType.call(this)
             )
           }
-        : getGraphQLType,
-      [SYMBOLS.PARSE]: parse,
+        : ValibotWeaver.getGraphQLType,
+      [SYMBOLS.PARSE]: ValibotWeaver.parse,
     })
   }
   static toNullableGraphQLType(
@@ -283,6 +285,19 @@ export class ValibotWeaver {
         () => ValibotWeaver.unravel(schema)
       )
   }
+
+  static parse<TSchema extends GenericSchemaOrAsync>(
+    this: TSchema,
+    input: unknown
+  ): Promise<InferOutput<TSchema>> | InferOutput<TSchema> {
+    return this.async
+      ? parseAsync(this, input)
+      : parse(this as GenericSchema, input)
+  }
+
+  static getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
+    return ValibotWeaver.toNullableGraphQLType(this)
+  }
 }
 
 export * from "./metadata"
@@ -308,17 +323,6 @@ export function valibotSilk(schema: GenericSchemaOrAsync | GraphQLSilk) {
 }
 
 valibotSilk.isSilk = (schema: any) => isSilk(schema) || isValibotSchema(schema)
-
-function getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
-  return ValibotWeaver.toNullableGraphQLType(this)
-}
-
-function parse<TSchema extends GenericSchemaOrAsync>(
-  this: TSchema,
-  input: unknown
-): Promise<InferOutput<TSchema>> {
-  return parseAsync(this, input)
-}
 
 export type ValibotSchemaIO = [
   GenericSchemaOrAsync,
