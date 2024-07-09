@@ -3,7 +3,6 @@ import {
   mapValue,
   notNullish,
   getGraphQLType,
-  SYMBOLS,
   type AbstractSchemaIO,
   type InferSchemaI,
   type InferSchemaO,
@@ -68,14 +67,20 @@ export class EntitySchemaWeaver {
         ...options?.hooks,
         onInit: [
           ({ entity }: EventArgs<any>) => {
-            if (silk[SYMBOLS.PARSE] == null) return
-            const pureEntity = Object.fromEntries(
-              Object.entries(entity).filter(([, value]) => value !== undefined)
-            )
-            const parsed = silk[SYMBOLS.PARSE](pureEntity)
-            if (parsed !== undefined) {
-              Object.assign(entity, parsed)
-            }
+            const fields = gqlType.getFields()
+
+            const values = mapValue(fields, (field, key) => {
+              if (key in entity && entity[key] !== undefined)
+                return mapValue.SKIP
+              if (field.extensions.defaultValue === undefined)
+                return mapValue.SKIP
+
+              if (typeof field.extensions.defaultValue === "function")
+                return field.extensions.defaultValue()
+              return field.extensions.defaultValue
+            })
+
+            Object.assign(entity, values)
           },
           ...(Array.isArray(options?.hooks?.onInit)
             ? options.hooks.onInit

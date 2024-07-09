@@ -1,4 +1,10 @@
-import { type GraphQLSilk, getGraphQLType, silk, isSilk } from "@gqloom/core"
+import {
+  type GraphQLSilk,
+  getGraphQLType,
+  silk,
+  isSilk,
+  type GQLoomExtensions,
+} from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -23,7 +29,8 @@ import { unwrapGraphQLType } from "../src/utils"
 
 declare module "graphql" {
   interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any>
-    extends GQLoomMikroFieldExtensions {}
+    extends GQLoomMikroFieldExtensions,
+      GQLoomExtensions {}
 }
 
 interface IGiraffe {
@@ -46,7 +53,10 @@ const Giraffe = silk<Required<IGiraffe>, IGiraffe>(
     fields: {
       id: {
         type: new GraphQLNonNull(GraphQLID),
-        extensions: { mikroProperty: { primary: true, columnType: "INTEGER" } },
+        extensions: {
+          mikroProperty: { primary: true, columnType: "INTEGER" },
+          defaultValue: increasingId,
+        },
       },
       name: { type: new GraphQLNonNull(GraphQLString) },
       age: { type: GraphQLInt, extensions: { defaultValue: 2 } },
@@ -66,17 +76,7 @@ const Giraffe = silk<Required<IGiraffe>, IGiraffe>(
         },
       },
     },
-  }),
-  (input) => {
-    return {
-      id: increasingId(),
-      age: 2,
-      isMale: true,
-      birthDay: new Date(),
-      hobbies: [],
-      ...input,
-    }
-  }
+  })
 )
 
 const GiraffeSchema = weaveEntitySchemaBySilk(Giraffe)
