@@ -60,7 +60,7 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
         return new GraphQLNonNull(originType)
       }
     },
-    [PARSE]: origin[PARSE],
+    [PARSE]: (input) => origin[PARSE]?.(input),
   }
 }
 /**
@@ -68,15 +68,11 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
  */
 export function listSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
-): GraphQLSilk<Array<InferSilkO<TSilk>>, Array<InferSilkI<TSilk>>> {
+): GraphQLSilk<EnsureArray<InferSilkO<TSilk>>, EnsureArray<InferSilkI<TSilk>>> {
   return {
     [GET_GRAPHQL_TYPE]: () => {
-      const originType = getGraphQLType(origin)
-      if (originType instanceof GraphQLList) {
-        return originType
-      } else {
-        return new GraphQLList(originType)
-      }
+      const originType = unwrapType(getGraphQLType(origin))
+      return new GraphQLNonNull(new GraphQLList(originType))
     },
   }
 }
@@ -86,7 +82,7 @@ export function listSilk<TSilk extends GraphQLSilk<any, any>>(
  */
 export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
-): GraphQLSilk<InferSilkO<TSilk>, InferSilkI<TSilk>> {
+): GraphQLSilk<InferSilkO<TSilk> | null | undefined, InferSilkI<TSilk>> {
   return {
     [GET_GRAPHQL_TYPE]: () => {
       const originType = getGraphQLType(origin)
@@ -96,7 +92,7 @@ export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
         return originType
       }
     },
-    [PARSE]: origin[PARSE],
+    [PARSE]: (input) => origin[PARSE]?.(input),
   }
 }
 
@@ -119,7 +115,8 @@ export function parseSilk<TSilk extends GraphQLSilk>(
   silk: TSilk,
   input: InferSilkI<TSilk>
 ): MayPromise<InferSilkO<TSilk>> {
-  return silk[PARSE]?.(input) ?? input
+  if (silk[PARSE] == null) return input
+  return silk[PARSE](input)
 }
 
 export function isSilk(target: any): target is GraphQLSilk {
@@ -128,8 +125,16 @@ export function isSilk(target: any): target is GraphQLSilk {
   return GET_GRAPHQL_TYPE in target
 }
 
+function unwrapType(type: GraphQLOutputType) {
+  if (type instanceof GraphQLNonNull) return unwrapType(type.ofType)
+  if (type instanceof GraphQLList) return unwrapType(type.ofType)
+  return type
+}
+
 type InferScalarInternal<T extends GraphQLScalarType> =
   T extends GraphQLScalarType<infer TInternal> ? TInternal : never
 
 type InferScalarExternal<T extends GraphQLScalarType> =
   T extends GraphQLScalarType<any, infer TExternal> ? TExternal : never
+
+type EnsureArray<T> = T extends Array<infer U> ? U[] : T[]

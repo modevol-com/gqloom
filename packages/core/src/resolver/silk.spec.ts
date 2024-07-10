@@ -24,12 +24,18 @@ describe("silk", () => {
   describe("list", () => {
     it("should return a list silk", () => {
       const stringSilk = silk(GraphQLString)
-      expect(silk.getType(silk.list(stringSilk))).toBeInstanceOf(GraphQLList)
+      const gType = silk.getType(silk.list(stringSilk))
+      expect(gType).toBeInstanceOf(GraphQLNonNull)
+      expect((gType as GraphQLNonNull<any>).ofType).toBeInstanceOf(GraphQLList)
     })
 
     it("should keep list GraphQL Type", () => {
-      const stringSilk = silk(new GraphQLList(GraphQLString))
-      expect(silk.getType(silk.list(stringSilk))).toBeInstanceOf(GraphQLList)
+      const stringSilk = silk<string[], string[]>(
+        new GraphQLList(GraphQLString)
+      )
+      const gType = silk.getType(silk.list(stringSilk))
+      expect(gType).toBeInstanceOf(GraphQLNonNull)
+      expect((gType as GraphQLNonNull<any>).ofType).toBeInstanceOf(GraphQLList)
     })
   })
 
