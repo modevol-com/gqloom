@@ -68,7 +68,7 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
  */
 export function listSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
-): GraphQLSilk<EnsureArray<InferSilkO<TSilk>>, EnsureArray<InferSilkI<TSilk>>> {
+): GraphQLSilk<EnsureArray<InferSilkO<TSilk>>, EnsureArray<InferSilkO<TSilk>>> {
   return {
     [GET_GRAPHQL_TYPE]: () => {
       const originType = unwrapType(getGraphQLType(origin))

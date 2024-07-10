@@ -468,7 +468,7 @@ export class MikroOperationBobbin<
     return {
       ...getFieldOptions(options),
       input,
-      output: silk.list(entity),
+      output: silk.list(entity) as unknown as ListSilk<TSchema>,
       type: "query",
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
