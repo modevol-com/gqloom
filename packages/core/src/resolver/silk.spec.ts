@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 import { silk } from "./silk"
-import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql"
+import {
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
+  printSchema,
+} from "graphql"
+import { loom } from "./resolver"
+import { weave } from "../schema"
 
 describe("silk", () => {
   describe("nonNull", () => {
@@ -36,6 +43,34 @@ describe("silk", () => {
       const gType = silk.getType(silk.list(stringSilk))
       expect(gType).toBeInstanceOf(GraphQLNonNull)
       expect((gType as GraphQLNonNull<any>).ofType).toBeInstanceOf(GraphQLList)
+    })
+
+    it("should keep nullable ofType", () => {
+      const stringSilk = silk(GraphQLString)
+      const r = loom.resolver({
+        texts: loom.query(silk.list(stringSilk), () => []),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          texts: [String]!
+        }"
+      `)
+    })
+
+    it("should keep nonNull ofType", () => {
+      const stringSilk = silk(GraphQLString)
+      const r = loom.resolver({
+        texts: loom.query(silk.list(silk.nonNull(stringSilk)), () => []),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          texts: [String!]!
+        }"
+      `)
     })
   })
 

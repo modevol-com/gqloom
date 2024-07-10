@@ -13,6 +13,7 @@ import {
   type GenericFieldOrOperation,
   type InferSilkO,
   mapValue,
+  type ListSilk,
 } from "@gqloom/core"
 import {
   type RequiredEntityData,
@@ -468,7 +469,7 @@ export class MikroOperationBobbin<
     return {
       ...getFieldOptions(options),
       input,
-      output: silk.list(entity) as unknown as ListSilk<TSchema>,
+      output: silk.list(entity),
       type: "query",
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
@@ -611,11 +612,6 @@ export class MikroOperationBobbin<
 type NullableSilk<T extends GraphQLSilk> = GraphQLSilk<
   InferSilkO<T> | null,
   undefined
->
-
-type ListSilk<T extends GraphQLSilk> = GraphQLSilk<
-  InferSilkO<T>[],
-  InferSilkO<T>[]
 >
 
 export type UpdateInput<TEntity> = Omit<

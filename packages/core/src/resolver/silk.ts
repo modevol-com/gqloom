@@ -45,12 +45,17 @@ silk.nonNull = nonNullSilk
 silk.list = listSilk
 silk.nullable = nullableSilk
 
+export type NonNullSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
+  NonNullable<InferSilkO<TSilk>>,
+  NonNullable<InferSilkI<TSilk>>
+>
+
 /**
  * Non-nullable Silk.
  */
 export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
-): GraphQLSilk<NonNullable<InferSilkO<TSilk>>, NonNullable<InferSilkI<TSilk>>> {
+): NonNullSilk<TSilk> {
   return {
     [GET_GRAPHQL_TYPE]: () => {
       const originType = getGraphQLType(origin)
@@ -63,26 +68,46 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
     [PARSE]: (input) => origin[PARSE]?.(input),
   }
 }
+
+export type ListSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
+  EnsureArray<InferSilkO<TSilk>>,
+  EnsureArray<InferSilkO<TSilk>>
+>
+
 /**
  * List Silk.
  */
 export function listSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
-): GraphQLSilk<EnsureArray<InferSilkO<TSilk>>, EnsureArray<InferSilkO<TSilk>>> {
+): ListSilk<TSilk> {
   return {
     [GET_GRAPHQL_TYPE]: () => {
-      const originType = unwrapType(getGraphQLType(origin))
+      let originType = getGraphQLType(origin)
+      if (
+        originType instanceof GraphQLNonNull &&
+        originType.ofType instanceof GraphQLList
+      ) {
+        originType = originType.ofType
+      }
+      if (originType instanceof GraphQLList) {
+        originType = originType.ofType
+      }
       return new GraphQLNonNull(new GraphQLList(originType))
     },
   }
 }
+
+export type NullableSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
+  InferSilkO<TSilk> | null | undefined,
+  InferSilkI<TSilk>
+>
 
 /**
  * Nullable Silk.
  */
 export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
-): GraphQLSilk<InferSilkO<TSilk> | null | undefined, InferSilkI<TSilk>> {
+): NullableSilk<TSilk> {
   return {
     [GET_GRAPHQL_TYPE]: () => {
       const originType = getGraphQLType(origin)
@@ -123,12 +148,6 @@ export function isSilk(target: any): target is GraphQLSilk {
   if (typeof target !== "object") return false
   if (target == null) return false
   return GET_GRAPHQL_TYPE in target
-}
-
-function unwrapType(type: GraphQLOutputType) {
-  if (type instanceof GraphQLNonNull) return unwrapType(type.ofType)
-  if (type instanceof GraphQLList) return unwrapType(type.ofType)
-  return type
 }
 
 type InferScalarInternal<T extends GraphQLScalarType> =
