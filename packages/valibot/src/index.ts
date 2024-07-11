@@ -77,16 +77,13 @@ export class ValibotWeaver {
   }
 
   static toGraphQLType(
-    valibotSchema: GenericSchemaOrAsync,
+    schema: GenericSchemaOrAsync,
     ...wrappers: GenericSchemaOrAsync[]
   ): GraphQLOutputType {
-    const existing = weaverContext.getGraphQLType(valibotSchema)
+    const existing = weaverContext.getGraphQLType(schema)
     if (existing) return existing
-    const gqlType = ValibotWeaver.toGraphQLTypePurely(
-      valibotSchema,
-      ...wrappers
-    )
-    return weaverContext.memoGraphQLType(valibotSchema, gqlType)
+    const gqlType = ValibotWeaver.toGraphQLTypePurely(schema, ...wrappers)
+    return weaverContext.memoGraphQLType(schema, gqlType)
   }
 
   static toGraphQLTypePurely(
