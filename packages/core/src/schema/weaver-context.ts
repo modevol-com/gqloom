@@ -31,6 +31,11 @@ export interface WeaverContext {
     key: TConfig[typeof WEAVER_CONFIG]
   ) => void
   memo<T extends GraphQLOutputType>(gqlType: T): T
+  namedTypes: Map<string, GraphQLOutputType>
+  memoNamedType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
+    gqlType: TGraphQLType
+  ): TGraphQLType
+  getNamedType<T extends GraphQLOutputType>(name: string): T | undefined
   names: WeakMap<object, string>
 }
 
@@ -64,6 +69,21 @@ export function initWeaverContext(): WeaverContext {
       this.configs.delete(key)
     },
     names,
+    namedTypes: new Map<string, GraphQLOutputType>(),
+    memoNamedType(gqlTypeValue) {
+      const gqlType = gqlTypeValue as GraphQLOutputType
+      if (
+        isObjectType(gqlType) ||
+        isUnionType(gqlType) ||
+        isEnumType(gqlType)
+      ) {
+        this.namedTypes.set(gqlType.name, gqlType)
+      }
+      return gqlTypeValue
+    },
+    getNamedType<T extends GraphQLOutputType>(name: string) {
+      return this.namedTypes.get(name) as T | undefined
+    },
     memo(gqlType) {
       if (isObjectType(gqlType)) {
         weaverContext.objectMap?.set(gqlType.name, gqlType)
@@ -77,11 +97,17 @@ export function initWeaverContext(): WeaverContext {
   }
 }
 
+type GlobalContextRequiredKeys =
+  | "memo"
+  | "names"
+  | "getConfig"
+  | "setConfig"
+  | "getNamedType"
+  | "memoNamedType"
+
 export interface GlobalWeaverContext
-  extends Partial<
-      Omit<WeaverContext, "memo" | "names" | "getConfig" | "setConfig">
-    >,
-    Pick<WeaverContext, "memo" | "names" | "getConfig" | "setConfig"> {
+  extends Partial<Omit<WeaverContext, GlobalContextRequiredKeys>>,
+    Pick<WeaverContext, GlobalContextRequiredKeys> {
   value?: WeaverContext
   useConfig<TConfig extends WeaverConfig, TCallback extends () => any>(
     config: TConfig,
@@ -149,6 +175,13 @@ export const weaverContext: GlobalWeaverContext = {
   names,
   memo(gqlType) {
     return ref?.memo(gqlType) ?? gqlType
+  },
+
+  getNamedType(name) {
+    return ref?.getNamedType(name)
+  },
+  memoNamedType(gqlType) {
+    return ref?.memoNamedType(gqlType) ?? gqlType
   },
 
   GraphQLTypes: new WeakMap(),

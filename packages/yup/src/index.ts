@@ -73,7 +73,7 @@ export class YupWeaver {
     const description = YupWeaver.describe(schema)
     const gqlType = YupWeaver.toGraphQLType(schema)
 
-    weaverContext.memo(gqlType)
+    weaverContext.memoNamedType(gqlType)
     return nullable(gqlType)
 
     function nullable(ofType: GraphQLOutputType) {
@@ -119,7 +119,7 @@ export class YupWeaver {
           description.label ??
           weaverContext.names.get(schema)
         if (!name) throw new Error("object type must have a name")
-        const existing = weaverContext.objectMap?.get(name)
+        const existing = weaverContext.getNamedType(name)
         if (existing) return existing
         const objectSchema = schema as ObjectSchema<
           Record<string, unknown>,
@@ -178,7 +178,7 @@ export class YupWeaver {
           description.label ??
           weaverContext.names.get(unionSchema)
         if (!name) throw new Error("union type must have a name")
-        const existing = weaverContext.unionMap?.get(name)
+        const existing = weaverContext.getNamedType(name)
         if (existing) return existing
 
         const types = innerTypes.map((innerType) => {
@@ -235,7 +235,7 @@ export class YupWeaver {
       throw new Error(
         `enum type ${description.oneOf.join("|")} must have a name`
       )
-    const existing = weaverContext.enumMap?.get(name)
+    const existing = weaverContext.getNamedType<GraphQLEnumType>(name)
     if (existing) return existing
 
     const values: GraphQLEnumValueConfigMap = {}
