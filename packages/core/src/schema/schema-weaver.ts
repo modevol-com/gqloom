@@ -14,7 +14,11 @@ import {
   provideWeaverContext,
   type WeaverContext,
 } from "./weaver-context"
-import { type SilkResolver } from "./types"
+import {
+  type CoreSchemaWeaverConfigOptions,
+  type CoreSchemaWeaverConfig,
+  type SilkResolver,
+} from "./types"
 import { RESOLVER_OPTIONS_KEY, WEAVER_CONFIG } from "../utils/symbols"
 
 interface SchemaWeaverParameters
@@ -32,6 +36,18 @@ export class SchemaWeaver {
   public context: WeaverContext = initWeaverContext()
 
   public resolverOptions?: ResolvingOptions
+
+  /**
+   * Create a Schema Weaver config object
+   * @param config Schema Weaver config options
+   * @returns a Schema Weaver config object
+   */
+  static config(config: CoreSchemaWeaverConfigOptions): CoreSchemaWeaverConfig {
+    return {
+      ...config,
+      [WEAVER_CONFIG]: "gqloom.core.schema",
+    }
+  }
 
   constructor({
     query,

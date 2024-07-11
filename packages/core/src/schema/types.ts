@@ -3,7 +3,8 @@ import type {
   ResolverOptionsWithParent,
   ResolvingOptions,
 } from "../resolver"
-import { type RESOLVER_OPTIONS_KEY } from "../utils/symbols"
+import { type WEAVER_CONFIG, type RESOLVER_OPTIONS_KEY } from "../utils/symbols"
+import { type WeaverConfig } from "./weaver-context"
 
 export type SilkFieldOrOperation = FieldOrOperation<any, any, any, any>
 
@@ -16,4 +17,14 @@ export type SilkResolver = Record<
   FieldOrOperation<any, any, any, any>
 > & {
   [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
+}
+
+export interface CoreSchemaWeaverConfigOptions {
+  getInputObjectName?: (name: string) => string
+}
+
+export interface CoreSchemaWeaverConfig
+  extends WeaverConfig,
+    CoreSchemaWeaverConfigOptions {
+  [WEAVER_CONFIG]: "gqloom.core.schema"
 }

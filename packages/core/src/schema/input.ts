@@ -31,6 +31,7 @@ import {
   ensureInputValueNode,
 } from "./definition-node"
 import { extractGqloomExtension } from "./extensions"
+import { type CoreSchemaWeaverConfig } from "./types"
 
 export function inputToArgs(
   input: InputSchema<GraphQLSilk>
@@ -96,8 +97,13 @@ export function ensureInputObjectType(
     ...config
   } = object.toConfig()
 
+  const getInputObjectName =
+    weaverContext.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
+      ?.getInputObjectName ?? ((name) => name)
+
   const input = new GraphQLInputObjectType({
     ...config,
+    name: getInputObjectName(object.name),
     fields: mapValue(fields, (it) => toInputFieldConfig(it)),
   })
 
