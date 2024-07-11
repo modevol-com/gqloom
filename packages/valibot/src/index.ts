@@ -73,11 +73,23 @@ export class ValibotWeaver {
   ): GraphQLOutputType {
     const gqlType = ValibotWeaver.toGraphQLType(schema)
 
-    weaverContext.memo(gqlType)
     return ValibotWeaver.nullable(gqlType, schema)
   }
 
   static toGraphQLType(
+    valibotSchema: GenericSchemaOrAsync,
+    ...wrappers: GenericSchemaOrAsync[]
+  ): GraphQLOutputType {
+    const existing = weaverContext.getGraphQLType(valibotSchema)
+    if (existing) return existing
+    const gqlType = ValibotWeaver.toGraphQLTypePurely(
+      valibotSchema,
+      ...wrappers
+    )
+    return weaverContext.memoGraphQLType(valibotSchema, gqlType)
+  }
+
+  static toGraphQLTypePurely(
     valibotSchema: GenericSchemaOrAsync,
     ...wrappers: GenericSchemaOrAsync[]
   ): GraphQLOutputType {
@@ -112,13 +124,8 @@ export class ValibotWeaver {
       case "picklist": {
         const { name, ...enumConfig } =
           ValibotMetadataCollector.getEnumConfig(schema, ...wrappers) ?? {}
-        if (!name) throw new Error("Enum must have a name")
-
-        const existing = weaverContext.enumMap?.get(name)
-        if (existing) return existing
 
         const values: GraphQLEnumValueConfigMap = {}
-
         if (schema.type === "picklist") {
           for (const value of schema.options) {
             values[String(value)] = { value }
@@ -129,6 +136,13 @@ export class ValibotWeaver {
             values[key] = { value }
           })
         }
+        if (!name)
+          throw new Error(
+            `Enum (${Object.values(values)
+              .map((it) => it.value)
+              .join(", ")}) must have a name`
+          )
+
         return new GraphQLEnumType({
           name,
           values,
@@ -155,9 +169,6 @@ export class ValibotWeaver {
           throw new Error(
             `Object { ${Object.keys(schema.entries).join(", ")} } must have a name`
           )
-
-        const existing = weaverContext.objectMap?.get(name)
-        if (existing) return existing
 
         const strictSchema = strictObjectAsync(schema.entries)
 
@@ -208,9 +219,6 @@ export class ValibotWeaver {
           ValibotMetadataCollector.getUnionConfig(schema, ...wrappers) ?? {}
         if (!name) throw new Error("Union type must have a name")
 
-        const existing = weaverContext.unionMap?.get(name)
-        if (existing) return existing
-
         const options =
           schema.type === "variant" ? flatVariant(schema) : schema.options
 
@@ -249,7 +257,7 @@ export class ValibotWeaver {
     >[number]
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = weaverContext.memo(ValibotWeaver.toGraphQLType(item))
+    const gqlType = ValibotWeaver.toGraphQLType(item)
 
     return ensureInterfaceType(gqlType)
   }

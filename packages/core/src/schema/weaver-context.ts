@@ -87,6 +87,15 @@ export interface GlobalWeaverContext
     config: TConfig,
     callback: TCallback
   ): ReturnType<TCallback>
+
+  GraphQLTypes: WeakMap<object, GraphQLOutputType>
+  getGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
+    origin: object
+  ): TGraphQLType | undefined
+  memoGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
+    origin: object,
+    gqlType: TGraphQLType
+  ): TGraphQLType
 }
 
 export const weaverContext: GlobalWeaverContext = {
@@ -140,6 +149,22 @@ export const weaverContext: GlobalWeaverContext = {
   names,
   memo(gqlType) {
     return ref?.memo(gqlType) ?? gqlType
+  },
+
+  GraphQLTypes: new WeakMap(),
+
+  getGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
+    origin: object
+  ): TGraphQLType | undefined {
+    return this.GraphQLTypes.get(origin) as TGraphQLType | undefined
+  },
+
+  memoGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
+    origin: object,
+    gqlType: TGraphQLType
+  ) {
+    this.GraphQLTypes.set(origin, gqlType)
+    return gqlType
   },
 }
 
