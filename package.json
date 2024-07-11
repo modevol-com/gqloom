@@ -9,7 +9,15 @@
     "format": "prettier . --write",
     "lint": "eslint \"**/*.{ts,tsx}\" --fix",
     "check:type": "tsc --noEmit",
-    "build": "pnpm -F '*' run build"
+    "build": "pnpm -F '*' run build",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{md,json,toml,graphql,gql}": "prettier --write"
   },
   "keywords": [],
   "author": "xcfox",
@@ -23,6 +31,8 @@
     "eslint": "^9.6.0",
     "eslint-config-prettier": "^9.1.0",
     "graphql": "^16.8.1",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7",
     "prettier": "3.2.5",
     "tsup": "^8.1.0",
     "tsx": "^4.7.2",
