@@ -277,7 +277,7 @@ export class ZodWeaver {
     item: GraphQLInterfaceType | ZodObject<any>
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = weaverContext.memo(ZodWeaver.toGraphQLType(item))
+    const gqlType = ZodWeaver.toGraphQLType(item)
 
     return ensureInterfaceType(gqlType)
   }

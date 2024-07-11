@@ -70,7 +70,7 @@ export class MikroWeaver {
   ) {
     const name = entityName ?? entity.meta.className
 
-    const existing = weaverContext.objectMap?.get(name)
+    const existing = weaverContext.getNamedType(name)
     if (existing != null) return new GraphQLNonNull(existing)
 
     const properties = entity.init().meta.properties
@@ -79,7 +79,7 @@ export class MikroWeaver {
     const originFields = originType?.getFields()
 
     return new GraphQLNonNull(
-      weaverContext.memo(
+      weaverContext.memoNamedType(
         new GraphQLObjectType({
           name: name ?? entity.meta.className,
           fields: mapValue(properties, (value, key) => {

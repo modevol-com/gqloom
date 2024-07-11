@@ -80,11 +80,13 @@ export class MikroOperationBobbin<
     const name = `${this.entity.meta.name}CreateInput`
 
     const gqlType =
-      weaverContext.objectMap?.get(name) ??
-      MikroWeaver.getGraphQLType(this.entity, {
-        partial: this.entity.meta.primaryKeys,
-        name: `${this.entity.meta.name}CreateInput`,
-      })
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        MikroWeaver.getGraphQLType(this.entity, {
+          partial: this.entity.meta.primaryKeys,
+          name: `${this.entity.meta.name}CreateInput`,
+        })
+      )
 
     return silk(
       new GraphQLObjectType({
@@ -152,8 +154,8 @@ export class MikroOperationBobbin<
   > {
     const name = `${this.entity.meta.name}UpdateInput`
     const gqlType =
-      weaverContext.objectMap?.get(name) ??
-      weaverContext.memo(
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
         MikroWeaver.getGraphQLType(this.entity, {
           partial: true,
           required: this.entity.meta.primaryKeys,
@@ -231,8 +233,8 @@ export class MikroOperationBobbin<
     const name = `${this.entity.meta.name}FindOneFilter`
 
     const gqlType =
-      weaverContext.objectMap?.get(name) ??
-      weaverContext.memo(
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
         MikroWeaver.getGraphQLType(this.entity, {
           pick: this.entity.meta.primaryKeys,
           name,
@@ -350,8 +352,8 @@ export class MikroOperationBobbin<
     const whereType = this.FindManyOptionsWhereType()
 
     const optionsType =
-      weaverContext.objectMap?.get(name) ??
-      weaverContext.memo(
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
         new GraphQLObjectType({
           name: name,
           fields: () => ({
@@ -395,11 +397,11 @@ export class MikroOperationBobbin<
     })
   }
 
-  FindManyOptionsOrderByType() {
+  FindManyOptionsOrderByType(): GraphQLObjectType {
     const name = `${this.entity.meta.name}FindManyOptionsOrderBy`
     return (
-      weaverContext.objectMap?.get(name) ??
-      weaverContext.memo(
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
           fields: () =>
@@ -416,28 +418,28 @@ export class MikroOperationBobbin<
     )
   }
 
-  FindManyOptionsWhereType() {
+  FindManyOptionsWhereType(): GraphQLObjectType {
     const name = `${this.entity.meta.name}FindManyOptionsWhere`
 
-    const existing = weaverContext.objectMap?.get(name)
-    if (existing != null) return existing
-
-    return weaverContext.memo(
-      new GraphQLObjectType({
-        name,
-        fields: () =>
-          mapValue(this.entity.meta.properties, (property) => {
-            const type = MikroWeaver.getFieldType(property)
-            if (type == null) return mapValue.SKIP
-            return {
-              type:
-                type instanceof GraphQLScalarType
-                  ? MikroOperationBobbin.ComparisonOperatorsType(type)
-                  : type,
-              description: property.comment,
-            } as GraphQLFieldConfig<any, any>
-          }),
-      })
+    return (
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        new GraphQLObjectType({
+          name,
+          fields: () =>
+            mapValue(this.entity.meta.properties, (property) => {
+              const type = MikroWeaver.getFieldType(property)
+              if (type == null) return mapValue.SKIP
+              return {
+                type:
+                  type instanceof GraphQLScalarType
+                    ? MikroOperationBobbin.ComparisonOperatorsType(type)
+                    : type,
+                description: property.comment,
+              } as GraphQLFieldConfig<any, any>
+            }),
+        })
+      )
     )
   }
 
@@ -496,12 +498,12 @@ export class MikroOperationBobbin<
       : compose(middlewares, [this.flushMiddleware])
   }
 
-  static QueryOrderType() {
+  static QueryOrderType(): GraphQLEnumType {
     const name = `MikroQueryOrder`
 
     return (
-      weaverContext.enumMap?.get(name) ??
-      weaverContext.memo(
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
         new GraphQLEnumType({
           name,
           values: {
@@ -519,13 +521,13 @@ export class MikroOperationBobbin<
 
   static ComparisonOperatorsType<TScalarType extends GraphQLScalarType>(
     type: TScalarType
-  ) {
+  ): GraphQLObjectType {
     // https://mikro-orm.io/docs/query-conditions#comparison
     const name = `${type.name}MikroComparisonOperators`
 
     return (
-      weaverContext.objectMap?.get(name) ??
-      weaverContext.memo(
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
           fields: {
