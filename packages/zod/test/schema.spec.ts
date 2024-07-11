@@ -485,7 +485,7 @@ describe("ZodSilk", () => {
       const Dog = z
         .object({
           name: z.string(),
-          birthday: z.string(),
+          birthday: z.string().optional(),
         })
         .describe("Dog: Does the dog love fish?")
 
@@ -514,31 +514,42 @@ describe("ZodSilk", () => {
           },
           resolve: ({ data }) => data,
         }),
-        mustDog: query(Dog.required(), {
+        mustDog: query(Dog.required().describe("DogRequired"), {
           input: { data: DataInput },
-          resolve: ({ data }) => data.dog,
+          resolve: ({ data }) => ({
+            ...data.dog,
+            birthday: new Date().toLocaleString(),
+          }),
         }),
         age: field(z.number(), (dog) => {
-          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+          return (
+            new Date().getFullYear() -
+            new Date(dog.birthday ?? Date.now()).getFullYear()
+          )
         }),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
-          unwrap(name: String!, birthday: String!): Dog!
+          unwrap(name: String!, birthday: String): Dog!
           dog(data: DogInput!): Dog!
           dogs(data: [DogInput!]!, required: [DogInput!]!, names: [String!]!): [Dog!]!
-          mustDog(data: DataInput!): Dog!
+          mustDog(data: DataInput!): DogRequired!
         }
 
         """Does the dog love fish?"""
         type Dog {
           name: String!
-          birthday: String!
+          birthday: String
           age: Float!
         }
 
         input DogInput {
+          name: String!
+          birthday: String
+        }
+
+        type DogRequired {
           name: String!
           birthday: String!
         }

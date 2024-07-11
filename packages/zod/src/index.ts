@@ -105,11 +105,20 @@ export class ZodWeaver {
 
     const gqlType = ZodWeaver.toGraphQLType(schema)
 
-    weaverContext.memo(gqlType)
     return nullable(gqlType)
   }
 
   static toGraphQLType(
+    schema: Schema,
+    config?: TypeOrFieldConfig
+  ): GraphQLOutputType {
+    const existing = weaverContext.getGraphQLType(schema)
+    if (existing) return existing
+    const gqlType = ZodWeaver.toGraphQLTypePurely(schema, config)
+    return weaverContext.memoGraphQLType(schema, gqlType)
+  }
+
+  static toGraphQLTypePurely(
     schema: Schema,
     config?: TypeOrFieldConfig
   ): GraphQLOutputType {
@@ -172,9 +181,6 @@ export class ZodWeaver {
       )
       if (!name) throw new Error("Object must have a name")
 
-      const existing = weaverContext.objectMap?.get(name)
-      if (existing) return existing
-
       const strictSchema = schema.strict()
 
       return new GraphQLObjectType({
@@ -197,9 +203,6 @@ export class ZodWeaver {
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
       const { name, ...enumConfig } = ZodWeaver.getEnumConfig(schema)
       if (!name) throw new Error("Enum must have a name")
-
-      const existing = weaverContext.enumMap?.get(name)
-      if (existing) return existing
 
       const values: GraphQLEnumValueConfigMap = {}
 
@@ -224,9 +227,6 @@ export class ZodWeaver {
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
       const { name, ...unionConfig } = ZodWeaver.getUnionConfig(schema, config)
       if (!name) throw new Error("Enum must have a name")
-
-      const existing = weaverContext.unionMap?.get(name)
-      if (existing) return existing
 
       const types = (schema.options as ZodTypeAny[]).map((s) => {
         const gqlType = ZodWeaver.toGraphQLType(s)
