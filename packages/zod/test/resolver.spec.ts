@@ -50,7 +50,7 @@ describe("zod resolver", () => {
   })
 
   giraffeResolver.giraffe.resolve({ name: "Giraffe" })
-  simpleGiraffeResolver.createGiraffe.input
+
   it("should infer input type", () => {
     expectTypeOf(simpleGiraffeResolver.createGiraffe.resolve)
       .parameter(0)
