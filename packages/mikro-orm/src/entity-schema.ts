@@ -259,10 +259,14 @@ export interface CallableEntitySchemaWeaver<
     relations: TRelation,
     options?: EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>> &
       EntitySchemaWeaverOptions
-  ) => EntitySchema<
-    SilkSchemaEntity<TSilk, TSchemaIO> & InferRelations<TRelation>
-  >
+  ) => EntitySchemaWithRelations<TSchemaIO, TSilk, TRelation>
 }
+
+export type EntitySchemaWithRelations<
+  TSchemaIO extends AbstractSchemaIO,
+  TSilk extends TSchemaIO[0],
+  TRelation extends Record<string, RelationProperty<any, any>>,
+> = EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO> & InferRelations<TRelation>>
 
 export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver<GraphQLSilkIO> =
   Object.assign(

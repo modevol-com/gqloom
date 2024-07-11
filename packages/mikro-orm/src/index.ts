@@ -41,13 +41,7 @@ export class MikroWeaver {
    */
   static unravel<TSchema extends EntitySchema>(
     schema: TSchema
-  ): TSchema &
-    GraphQLSilk<
-      InferEntity<TSchema>,
-      RequiredEntityData<InferEntity<TSchema>>
-    > & {
-      nullable: () => GraphQLSilk<InferEntity<TSchema> | null>
-    } {
+  ): EntitySchemaSilk<TSchema> {
     return Object.assign(schema, {
       [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLTypeBySelf,
       nullable() {
@@ -228,6 +222,14 @@ export class MikroWeaver {
  * @returns GraphQL Silk Like Mikro Entity Schema
  */
 export const mikroSilk = MikroWeaver.unravel
+
+export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
+  GraphQLSilk<
+    InferEntity<TSchema>,
+    RequiredEntityData<InferEntity<TSchema>>
+  > & {
+    nullable: () => GraphQLSilk<InferEntity<TSchema> | null>
+  }
 
 export * from "./entity-schema"
 export * from "./operations"
