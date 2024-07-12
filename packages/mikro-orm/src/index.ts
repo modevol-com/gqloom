@@ -231,8 +231,11 @@ export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
     InferEntity<TSchema>,
     RequiredEntityData<InferEntity<TSchema>>
   > & {
-    nullable: () => GraphQLSilk<InferEntity<TSchema> | null>
-    list: () => GraphQLSilk<InferEntity<TSchema>[]>
+    nullable: () => GraphQLSilk<
+      InferEntity<TSchema> | null | undefined,
+      InferEntity<TSchema> | null | undefined
+    >
+    list: () => GraphQLSilk<InferEntity<TSchema>[], InferEntity<TSchema>[]>
   }
 
 export * from "./entity-schema"
