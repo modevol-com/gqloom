@@ -47,6 +47,9 @@ export class MikroWeaver {
       nullable() {
         return silk.nullable(this as unknown as GraphQLSilk)
       },
+      list() {
+        return silk.list(this) as GraphQLSilk<InferEntity<TSchema>[]>
+      },
     })
   }
 
@@ -229,6 +232,7 @@ export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
     RequiredEntityData<InferEntity<TSchema>>
   > & {
     nullable: () => GraphQLSilk<InferEntity<TSchema> | null>
+    list: () => GraphQLSilk<InferEntity<TSchema>[]>
   }
 
 export * from "./entity-schema"

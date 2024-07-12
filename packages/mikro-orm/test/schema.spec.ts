@@ -64,6 +64,10 @@ describe("MikroSilk", () => {
     expect(
       printType(getGraphQLType(BookSchema.nullable()) as GraphQLObjectType)
     ).toEqual(printType(unwrap(gqlType)))
+
+    expect(getGraphQLType(BookSchema.list())).toMatchInlineSnapshot(
+      `"[Book!]!"`
+    )
   })
 
   it("should not expose hidden property", () => {
