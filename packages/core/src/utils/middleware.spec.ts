@@ -13,6 +13,7 @@ function initPayload(): MiddlewarePayload {
     outputSilk: silk(GraphQLString),
     parent: undefined,
     parseInput: createInputParser(undefined, undefined),
+    type: "field",
   }
 }
 

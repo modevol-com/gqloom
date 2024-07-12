@@ -126,11 +126,13 @@ export class MikroOperationBobbin<
 
     const middlewares = this.middlewaresWithFlush(options)
 
+    const type = "mutation"
+
     return {
       ...getFieldOptions(options),
       input,
       output: entity,
-      type: "mutation",
+      type,
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
         return applyMiddlewares(
@@ -142,7 +144,7 @@ export class MikroOperationBobbin<
             em.persist(instance)
             return instance
           },
-          { parseInput, parent: undefined, outputSilk: entity }
+          { parseInput, parent: undefined, outputSilk: entity, type }
         )
       },
     }
@@ -201,11 +203,13 @@ export class MikroOperationBobbin<
 
     const middlewares = this.middlewaresWithFlush(options)
 
+    const type = "mutation"
+
     return {
       ...getFieldOptions(options),
       input,
       output: entity,
-      type: "mutation",
+      type,
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
         return applyMiddlewares(
@@ -220,7 +224,7 @@ export class MikroOperationBobbin<
             em.persist(instance)
             return instance
           },
-          { parseInput, parent: undefined, outputSilk: entity }
+          { parseInput, parent: undefined, outputSilk: entity, type }
         )
       },
     }
@@ -271,11 +275,13 @@ export class MikroOperationBobbin<
   > {
     const entity = this.entity
 
+    const type = "query"
+
     return {
       ...getFieldOptions(options),
       input,
       output: entity,
-      type: "query",
+      type,
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
         return applyMiddlewares(
@@ -287,7 +293,7 @@ export class MikroOperationBobbin<
             const instance = await em.findOneOrFail(entity, pk)
             return instance
           },
-          { parseInput, parent: undefined, outputSilk: entity }
+          { parseInput, parent: undefined, outputSilk: entity, type }
         )
       },
     }
@@ -322,11 +328,13 @@ export class MikroOperationBobbin<
 
     const middlewares = this.middlewaresWithFlush(options)
 
+    const type = "mutation"
+
     return {
       ...getFieldOptions(options),
       input,
       output: silk.nullable(entity),
-      type: "mutation",
+      type,
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
         return applyMiddlewares(
@@ -340,7 +348,7 @@ export class MikroOperationBobbin<
             em.remove(instance)
             return instance
           },
-          { parseInput, parent: undefined, outputSilk: entity }
+          { parseInput, parent: undefined, outputSilk: entity, type }
         )
       },
     }
@@ -468,11 +476,13 @@ export class MikroOperationBobbin<
   > {
     const entity = this.entity
 
+    const type = "query"
+
     return {
       ...getFieldOptions(options),
       input,
       output: silk.list(entity),
-      type: "query",
+      type,
       resolve: async (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
         return applyMiddlewares(
@@ -482,7 +492,7 @@ export class MikroOperationBobbin<
             const inputResult = await parseInput()
             return em.findAll(entity, inputResult)
           },
-          { parseInput, parent: undefined, outputSilk: entity }
+          { parseInput, parent: undefined, outputSilk: entity, type }
         )
       },
     }

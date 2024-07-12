@@ -1,4 +1,8 @@
-import type { SubscriptionBobbin, Subscription } from "../resolver"
+import type {
+  SubscriptionBobbin,
+  Subscription,
+  ResolverOptionsWithParent,
+} from "../resolver"
 import {
   type GraphQLSilk,
   type FieldBobbin,
@@ -40,7 +44,7 @@ export function createResolverBobbin<TSchemaIO extends AbstractSchemaIO>(
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, FieldOrOperation<any, any, any>>,
-        { ...options, parent: toSilk(parent) }
+        { ...options, parent: toSilk(parent) } as ResolverOptionsWithParent<any>
       )) as ResolverBobbin<TSchemaIO>["of"],
   }) as ResolverBobbin<TSchemaIO>
 }

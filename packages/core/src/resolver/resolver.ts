@@ -25,6 +25,7 @@ export const silkQuery: QueryMutationBobbin<GraphQLSilkIO> = (
   resolveOrOptions
 ) => {
   const options = getOperationOptions(resolveOrOptions)
+  const type = "query"
   return {
     ...getFieldOptions(options),
     input: options.input,
@@ -34,10 +35,10 @@ export const silkQuery: QueryMutationBobbin<GraphQLSilkIO> = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(await parseInput()),
-        { parseInput, parent: undefined, outputSilk: output }
+        { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
-    type: "query",
+    type,
   }
 }
 
@@ -46,6 +47,7 @@ export const silkMutation: QueryMutationBobbin<GraphQLSilkIO> = (
   resolveOrOptions
 ) => {
   const options = getOperationOptions(resolveOrOptions)
+  const type = "mutation"
   return {
     ...getFieldOptions(options),
     input: options.input,
@@ -55,10 +57,10 @@ export const silkMutation: QueryMutationBobbin<GraphQLSilkIO> = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(await parseInput()),
-        { parseInput, parent: undefined, outputSilk: output }
+        { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
-    type: "mutation",
+    type,
   }
 }
 
@@ -67,6 +69,7 @@ export const silkField: FieldBobbin<GraphQLSilkIO> = (
   resolveOrOptions
 ) => {
   const options = getOperationOptions<"field">(resolveOrOptions)
+  const type = "field"
   return {
     ...getFieldOptions(options),
     input: options.input,
@@ -76,10 +79,10 @@ export const silkField: FieldBobbin<GraphQLSilkIO> = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(parent, await parseInput()),
-        { parseInput, parent, outputSilk: output }
+        { parseInput, parent, outputSilk: output, type }
       )
     },
-    type: "field",
+    type,
   }
 }
 
@@ -90,6 +93,7 @@ export const silkSubscription: SubscriptionBobbin<GraphQLSilkIO> = (
   subscribeOrOptions
 ) => {
   const options = getSubscriptionOptions(subscribeOrOptions)
+  const type = "subscription"
   return {
     ...getFieldOptions(options),
     input: options.input,
@@ -97,13 +101,16 @@ export const silkSubscription: SubscriptionBobbin<GraphQLSilkIO> = (
     subscribe: (inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        compose(extraOptions?.middlewares, options.middlewares),
+        compose<Middleware<any>>(
+          extraOptions?.middlewares,
+          options.middlewares
+        ),
         async () => options.subscribe(await parseInput()),
-        { parseInput, parent: undefined, outputSilk: output }
+        { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
     resolve: options.resolve ?? defaultSubscriptionResolve,
-    type: "subscription",
+    type,
   }
 }
 
@@ -177,7 +184,7 @@ export const silkResolver: ResolverBobbin<GraphQLSilkIO> = Object.assign(
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, FieldOrOperation<any, any, any>>,
-        { ...options, parent }
+        { ...options, parent } as ResolverOptionsWithParent
       )) as ResolverBobbin<GraphQLSilkIO>["of"],
   }
 )

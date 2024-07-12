@@ -4,11 +4,12 @@ import {
   type FieldOrOperation,
   type InferFieldOutput,
   type InferSilkO,
+  type FieldOrOperationType,
 } from "../resolver"
 import type { MayPromise } from "./types"
 
 export interface MiddlewarePayload<
-  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 > {
   outputSilk: InferSilkO<InferFieldOutput<TField>>
 
@@ -21,17 +22,19 @@ export interface MiddlewarePayload<
   parseInput: TField extends FieldOrOperation<any, any, infer TInput, any>
     ? CallableInputParser<TInput>
     : undefined
+
+  type: FieldOrOperationType
 }
 
 export type Middleware<
-  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 > = (
   next: () => MayPromise<InferSilkO<InferFieldOutput<TField>>>,
   payload: MiddlewarePayload<TField>
 ) => MayPromise<InferSilkO<InferFieldOutput<TField>>>
 
 export function applyMiddlewares<
-  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 >(
   middlewares: Middleware[],
   resolveFunction: () => MayPromise<InferSilkO<InferFieldOutput<TField>>>,
