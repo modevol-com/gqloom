@@ -1,0 +1,40 @@
+{
+  "name": "@gqloom/federation",
+  "version": "0.1.0",
+  "description": "Building subGraphs with GQLoom",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "@gqloom/core": ">= 0.1.0",
+    "graphql": ">= 16.8.0"
+  },
+  "devDependencies": {
+    "@apollo/server": "^4.10.4",
+    "@apollo/subgraph": "^2.8.2",
+    "@gqloom/core": "workspace:*",
+    "graphql-tag": "^2.12.6",
+    "graphql-yoga": "^5.6.0"
+  },
+  "keywords": [],
+  "author": "xcfox",
+  "license": "MIT"
+}

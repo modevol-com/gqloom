@@ -4,5 +4,5 @@
 
 ### 代办
 
-- [ ] 生成 Repository 映射 GraphQL 解析器
+- [x] 生成 Repository 映射 GraphQL 解析器
 - [ ] 生成 Relationships 映射 GraphQL 解析器
