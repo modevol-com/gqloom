@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApolloServer } from "@apollo/server"
+import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
 import gql from "graphql-tag"
 import { buildSubgraphSchema } from "@apollo/subgraph"
 import { createYoga } from "graphql-yoga"
@@ -39,7 +40,10 @@ const resolvers = {
 
 describe("Apollo", () => {
   const schema = buildSubgraphSchema({ typeDefs, resolvers })
-  const server = new ApolloServer({ schema })
+  const server = new ApolloServer({
+    schema,
+    plugins: [ApolloServerPluginInlineTraceDisabled()],
+  })
   it("should build schema", () => {
     expect(schema).toBeDefined()
   })
