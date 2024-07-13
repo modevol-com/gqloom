@@ -7,6 +7,21 @@ import { createYoga } from "graphql-yoga"
 import Fastify from "fastify"
 import { mercuriusFederationPlugin } from "@mercuriusjs/federation"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
+import { type GraphQLResolveInfo } from "graphql"
+
+declare module "graphql" {
+  export interface GraphQLObjectTypeExtensions {
+    apollo?: {
+      subgraph?: {
+        resolveReference?: (
+          parent: object,
+          context: object,
+          info: GraphQLResolveInfo
+        ) => Promise<object> | object
+      }
+    }
+  }
+}
 
 const typeDefs = gql`
   extend schema
@@ -38,6 +53,34 @@ const resolvers = {
   },
 }
 
+const queries = {
+  me: /* GraphQL */ `
+    query me {
+      me {
+        id
+        name
+      }
+    }
+  `,
+  entities: /* GraphQL */ `
+    query entities($representations: [_Any!]!) {
+      _entities(representations: $representations) {
+        ... on User {
+          id
+          name
+        }
+      }
+    }
+  `,
+  subgraphSchema: /* GraphQL */ `
+    query subgraphSchema {
+      _service {
+        sdl
+      }
+    }
+  `,
+}
+
 describe("Apollo", () => {
   const schema = buildSubgraphSchema({ typeDefs, resolvers })
   const server = new ApolloServer({
@@ -49,35 +92,19 @@ describe("Apollo", () => {
   })
 
   it("should execute query", async () => {
-    const reponse = await server.executeOperation({
-      query: /* GraphQL */ `
-        query {
-          me {
-            id
-            name
-          }
-        }
-      `,
+    const response = await server.executeOperation({
+      query: queries.me,
     })
 
-    if (reponse.body.kind !== "single") throw new Error("unexpected")
-    expect(reponse.body.singleResult.data).toMatchObject({
+    if (response.body.kind !== "single") throw new Error("unexpected")
+    expect(response.body.singleResult.data).toMatchObject({
       me: { id: "1", name: "@ava" },
     })
   })
 
   it("should execute query for entities", async () => {
-    const reponse = await server.executeOperation({
-      query: /* GraphQL */ `
-        query ($representations: [_Any!]!) {
-          _entities(representations: $representations) {
-            ... on User {
-              id
-              name
-            }
-          }
-        }
-      `,
+    const response = await server.executeOperation({
+      query: queries.entities,
       variables: {
         representations: [
           { __typename: "User", id: "1" },
@@ -86,13 +113,25 @@ describe("Apollo", () => {
       },
     })
 
-    if (reponse.body.kind !== "single") throw new Error("unexpected")
-    expect(reponse.body.singleResult.data).toMatchObject({
+    if (response.body.kind !== "single") throw new Error("unexpected")
+    expect(response.body.singleResult.data).toMatchObject({
       _entities: [
         { id: "1", name: "@ava" },
         { id: "2", name: "@ava" },
       ],
     })
+  })
+
+  it("should introspect Subgraph Schema", async () => {
+    const response = await server.executeOperation({
+      query: queries.subgraphSchema,
+    })
+
+    if (response.body.kind !== "single") throw new Error("unexpected")
+    expect(
+      (response.body.singleResult.data as unknown as SubgraphSchemaData)
+        ._service.sdl
+    ).toMatch("type Query")
   })
 })
 
@@ -110,14 +149,7 @@ describe("Yoga", () => {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        query: /* GraphQL */ `
-          query {
-            me {
-              id
-              name
-            }
-          }
-        `,
+        query: queries.me,
       }),
     })
 
@@ -135,16 +167,7 @@ describe("Yoga", () => {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        query: /* GraphQL */ `
-          query ($representations: [_Any!]!) {
-            _entities(representations: $representations) {
-              ... on User {
-                id
-                name
-              }
-            }
-          }
-        `,
+        query: queries.entities,
         variables: {
           representations: [
             { __typename: "User", id: "1" },
@@ -165,6 +188,23 @@ describe("Yoga", () => {
       },
     })
   })
+
+  it("should introspect Subgraph Schema", async () => {
+    const response = await yoga.fetch("http://localhost/graphql", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        query: queries.subgraphSchema,
+      }),
+    })
+    if (response.status !== 200) throw new Error("unexpected")
+    const json = await response.json()
+    expect((json.data as unknown as SubgraphSchemaData)._service.sdl).toMatch(
+      "type Query"
+    )
+  })
 })
 
 describe("Mercurius", () => {
@@ -180,14 +220,7 @@ describe("Mercurius", () => {
   })
 
   it("should execute query", async () => {
-    const response = await client.query(/* GraphQL */ `
-      query {
-        me {
-          id
-          name
-        }
-      }
-    `)
+    const response = await client.query(queries.me)
 
     expect(response).toMatchObject({
       data: { me: { id: "1", name: "@ava" } },
@@ -195,26 +228,14 @@ describe("Mercurius", () => {
   })
 
   it("should execute query for entities", async () => {
-    const response = await client.query(
-      /* GraphQL */ `
-        query ($representations: [_Any!]!) {
-          _entities(representations: $representations) {
-            ... on User {
-              id
-              name
-            }
-          }
-        }
-      `,
-      {
-        variables: {
-          representations: [
-            { __typename: "User", id: "1" },
-            { __typename: "User", id: "2" },
-          ],
-        },
-      }
-    )
+    const response = await client.query(queries.entities, {
+      variables: {
+        representations: [
+          { __typename: "User", id: "1" },
+          { __typename: "User", id: "2" },
+        ],
+      },
+    })
     expect(response).toMatchObject({
       data: {
         _entities: [
@@ -224,4 +245,17 @@ describe("Mercurius", () => {
       },
     })
   })
+
+  it("should introspect Subgraph Schema", async () => {
+    const response = await client.query(queries.subgraphSchema)
+
+    const sdl = (response.data as unknown as SubgraphSchemaData)._service.sdl
+    expect(sdl).toMatch("type Query")
+  })
 })
+
+interface SubgraphSchemaData {
+  _service: {
+    sdl: string
+  }
+}
