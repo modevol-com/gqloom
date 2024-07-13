@@ -7,21 +7,6 @@ import { createYoga } from "graphql-yoga"
 import Fastify from "fastify"
 import { mercuriusFederationPlugin } from "@mercuriusjs/federation"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
-import { type GraphQLResolveInfo } from "graphql"
-
-declare module "graphql" {
-  export interface GraphQLObjectTypeExtensions {
-    apollo?: {
-      subgraph?: {
-        resolveReference?: (
-          parent: object,
-          context: object,
-          info: GraphQLResolveInfo
-        ) => Promise<object> | object
-      }
-    }
-  }
-}
 
 const typeDefs = gql`
   extend schema
