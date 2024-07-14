@@ -26,6 +26,7 @@ import {
   isObjectType,
   GraphQLUnionType,
   isNonNullType,
+  type GraphQLObjectTypeExtensions,
 } from "graphql"
 import {
   type SchemaDescription,
@@ -134,7 +135,7 @@ export class YupWeaver {
           extensions: mergeExtensions(
             { defaultValue: description.default },
             description.meta?.extension
-          ),
+          ) as GraphQLObjectTypeExtensions,
           description: description.meta?.description,
           fields: mapValue(objectSchema.fields, (fieldSchemaOrigin, key) => {
             if (key.startsWith("__")) return mapValue.SKIP

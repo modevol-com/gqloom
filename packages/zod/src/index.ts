@@ -31,6 +31,7 @@ import {
   type GraphQLEnumTypeConfig,
   type GraphQLObjectTypeConfig,
   type GraphQLUnionTypeConfig,
+  type GraphQLObjectTypeExtensions,
 } from "graphql"
 import {
   ZodArray,
@@ -269,7 +270,7 @@ export class ZodWeaver {
       extensions: mergeExtensions(
         objectConfig?.extensions,
         fromDescription?.extensions
-      ),
+      ) as GraphQLObjectTypeExtensions,
     }
   }
 

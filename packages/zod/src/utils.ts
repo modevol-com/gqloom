@@ -1,4 +1,3 @@
-import { directives as defineDirectives } from "@gqloom/core"
 import {
   type GraphQLTypeResolver,
   type GraphQLFieldConfig,
@@ -10,20 +9,13 @@ import {
   type ZodObject,
 } from "zod"
 
-const directiveRegex = /@\w+(\(.*?\))?/g
-
 export function parseObjectConfig(
   input: string
 ): Pick<
   GraphQLObjectTypeConfig<any, any>,
   "name" | "description" | "extensions"
 > {
-  const directiveMatches = Array.from(input.matchAll(directiveRegex))
-  const extractedDirectives = directiveMatches.map((match) => match[0])
-
-  const inputWithoutDirectives = input.replace(directiveRegex, "")
-
-  const [name, ...maybeDescription] = inputWithoutDirectives.split(":")
+  const [name, ...maybeDescription] = input.split(":")
 
   return {
     name: name.trim(),
@@ -31,7 +23,6 @@ export function parseObjectConfig(
       maybeDescription.length > 0
         ? maybeDescription.join(":").trim()
         : undefined,
-    extensions: defineDirectives(...extractedDirectives),
   }
 }
 
@@ -41,14 +32,9 @@ export function parseFieldConfig(
   | Pick<GraphQLFieldConfig<any, any>, "description" | "extensions">
   | undefined {
   if (!input) return undefined
-  const directiveMatches = Array.from(input.matchAll(directiveRegex))
-  const extractedDirectives = directiveMatches.map((match) => match[0])
-
-  const inputWithoutDirectives = input.replace(directiveRegex, "")
 
   return {
-    description: inputWithoutDirectives.trim(),
-    extensions: defineDirectives(...extractedDirectives),
+    description: input.trim(),
   }
 }
 

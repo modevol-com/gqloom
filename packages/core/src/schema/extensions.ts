@@ -7,32 +7,18 @@ import { deepMerge } from "../utils"
 export interface GQLoomExtensions {
   defaultValue?: any
   gqloom?: GQLoomExtensionAttribute
+  directives?: DirectiveItem[] | DirectiveRecord
 }
+
+export interface DirectiveItem {
+  name: string
+  args?: Record<string, any>
+}
+
+export type DirectiveRecord = Record<string, Record<string, any>>
 
 export interface GQLoomExtensionAttribute {
   directives?: string[]
-}
-
-export function gqloomExtensions(extension: GQLoomExtensionAttribute) {
-  return { gqloom: extension }
-}
-
-export function directives(...directives: string[]) {
-  if (!directives.length) return undefined
-  return gqloomExtensions({ directives })
-}
-
-export function extractGqloomExtension({
-  extensions,
-}: {
-  extensions?:
-    | Readonly<
-        GraphQLFieldExtensions<any, any, any> | GraphQLObjectTypeExtensions
-      >
-    | null
-    | undefined
-}): GQLoomExtensionAttribute {
-  return (extensions?.gqloom as GQLoomExtensionAttribute | undefined) ?? {}
 }
 
 export function mergeExtensions(

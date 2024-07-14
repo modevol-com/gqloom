@@ -5,16 +5,12 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from "graphql"
-import {
-  gqloomExtensions,
-  directives,
-  type GQLoomExtensions,
-} from "./extensions"
+import { type GQLoomExtensions } from "./extensions"
 import { SchemaWeaver } from "./schema-weaver"
 import { loom, silk } from "../resolver"
 import { ensureInterfaceType } from "./interface"
-import { NodeDefiner } from "./definition-node"
 import { printSchemaWithDirectives } from "@graphql-tools/utils"
+import { mockAst } from "./mock-ast"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -33,7 +29,9 @@ describe("directive", () => {
     fields: {
       color: { type: GraphQLString },
     },
-    extensions: { gqloom: { directives: ['@loom(value: "Animal")'] } },
+    extensions: {
+      directives: { loom: { value: "Animal" } },
+    },
   })
 
   const Cat = new GraphQLObjectType({
@@ -41,11 +39,13 @@ describe("directive", () => {
     fields: {
       color: {
         type: GraphQLString,
-        extensions: { gqloom: { directives: ['@loom(value: "color")'] } },
+        extensions: {
+          directives: { loom: { value: "color" } },
+        },
       },
     },
     interfaces: [Animal].map((it) => ensureInterfaceType(it)),
-    extensions: directives('@loom(value: "cat")'),
+    extensions: { directives: { loom: { value: "cat" } } },
   })
 
   const CatInput = new GraphQLObjectType({
@@ -53,10 +53,10 @@ describe("directive", () => {
     fields: {
       color: {
         type: GraphQLString,
-        extensions: { gqloom: { directives: ['@loom(value: "color")'] } },
+        extensions: { directives: { loom: { value: "color" } } },
       },
     },
-    extensions: gqloomExtensions({ directives: ['@loom(value: "CatInput")'] }),
+    extensions: { directives: { loom: { value: "CatInput" } } },
   })
 
   interface IFruit {
@@ -90,9 +90,7 @@ describe("directive", () => {
     }),
   })
 
-  const schema = NodeDefiner.applySchemaTypeNode(
-    new SchemaWeaver().add(r).weaveGraphQLSchema()
-  )
+  const schema = mockAst(new SchemaWeaver().add(r).weaveGraphQLSchema())
 
   it("should work with object", () => {
     expect(schema.getType("Grape")?.astNode).toBeDefined()
