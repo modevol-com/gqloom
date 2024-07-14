@@ -39,8 +39,8 @@ const User = new GraphQLObjectType({
   },
   extensions: {
     directives: {
-      key: [{ fields: "email" }],
       extends: [{}],
+      key: [{ fields: "id" }],
     },
     apollo: {
       subgraph: {
