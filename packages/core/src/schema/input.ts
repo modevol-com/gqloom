@@ -24,13 +24,6 @@ import {
 } from "../resolver"
 import { mapValue, tryIn } from "../utils"
 import { weaverContext } from "./weaver-context"
-import {
-  createFieldNode,
-  createObjectTypeNode,
-  ensureInputObjectNode,
-  ensureInputValueNode,
-} from "./definition-node"
-import { extractGqloomExtension } from "./extensions"
 import { type CoreSchemaWeaverConfig } from "./types"
 
 export function inputToArgs(
@@ -85,10 +78,10 @@ export function ensureInputType(
 export function ensureInputObjectType(
   object: GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType
 ): GraphQLInputObjectType {
-  if (isInputObjectType(object)) return withDirective(object)
+  if (isInputObjectType(object)) return object
 
   const existing = weaverContext.inputMap?.get(object)
-  if (existing != null) return withDirective(existing)
+  if (existing != null) return existing
 
   const {
     astNode: _,
@@ -108,7 +101,7 @@ export function ensureInputObjectType(
   })
 
   weaverContext.inputMap?.set(object, input)
-  return withDirective(input)
+  return input
 }
 
 function toInputFieldConfig({
@@ -117,27 +110,4 @@ function toInputFieldConfig({
   ...config
 }: GraphQLFieldConfig<any, any>): GraphQLInputFieldConfig {
   return { ...config, type: ensureInputType(config.type) }
-}
-
-function withDirective(
-  gqlType: GraphQLInputObjectType
-): GraphQLInputObjectType {
-  gqlType.astNode ??= ensureInputObjectNode(
-    createObjectTypeNode(
-      gqlType.name,
-      extractGqloomExtension(gqlType).directives
-    )
-  )
-
-  Object.entries(gqlType.getFields()).forEach(([name, field]) => {
-    field.astNode ??= ensureInputValueNode(
-      createFieldNode(
-        name,
-        field.type,
-        extractGqloomExtension(field).directives
-      )
-    )
-  })
-
-  return gqlType
 }

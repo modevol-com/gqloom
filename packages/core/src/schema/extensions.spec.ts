@@ -13,6 +13,8 @@ import {
 import { SchemaWeaver } from "./schema-weaver"
 import { loom, silk } from "../resolver"
 import { ensureInterfaceType } from "./interface"
+import { NodeDefiner } from "./definition-node"
+import { printSchemaWithDirectives } from "@graphql-tools/utils"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -31,7 +33,7 @@ describe("directive", () => {
     fields: {
       color: { type: GraphQLString },
     },
-    extensions: { gqloom: { directives: ['@loom(value: "woo")'] } },
+    extensions: { gqloom: { directives: ['@loom(value: "Animal")'] } },
   })
 
   const Cat = new GraphQLObjectType({
@@ -39,11 +41,11 @@ describe("directive", () => {
     fields: {
       color: {
         type: GraphQLString,
-        extensions: { gqloom: { directives: ['@loom(value: "woo")'] } },
+        extensions: { gqloom: { directives: ['@loom(value: "color")'] } },
       },
     },
     interfaces: [Animal].map((it) => ensureInterfaceType(it)),
-    extensions: directives('@loom(value: "woo")'),
+    extensions: directives('@loom(value: "cat")'),
   })
 
   const CatInput = new GraphQLObjectType({
@@ -51,10 +53,10 @@ describe("directive", () => {
     fields: {
       color: {
         type: GraphQLString,
-        extensions: { gqloom: { directives: ['@loom(value: "woo")'] } },
+        extensions: { gqloom: { directives: ['@loom(value: "color")'] } },
       },
     },
-    extensions: gqloomExtensions({ directives: ['@loom(value: "woo")'] }),
+    extensions: gqloomExtensions({ directives: ['@loom(value: "CatInput")'] }),
   })
 
   interface IFruit {
@@ -88,16 +90,18 @@ describe("directive", () => {
     }),
   })
 
-  const schema = new SchemaWeaver().add(r).weaveGraphQLSchema()
+  const schema = NodeDefiner.applySchemaTypeNode(
+    new SchemaWeaver().add(r).weaveGraphQLSchema()
+  )
 
   it("should work with object", () => {
-    expect(schema.getType("Grape")?.astNode).not.toBeDefined()
+    expect(schema.getType("Grape")?.astNode).toBeDefined()
     expect(schema.getType("Cat")?.astNode).toBeDefined()
   })
 
   it("should work with field", () => {
     const GrapeO = schema.getType("Grape") as GraphQLObjectType
-    expect(GrapeO.getFields()["color"].astNode).not.toBeDefined()
+    expect(GrapeO.getFields()["color"].astNode).toBeDefined()
 
     const CatO = schema.getType("Cat") as GraphQLObjectType
     expect(CatO.getFields()["color"].astNode).toBeDefined()
@@ -105,22 +109,59 @@ describe("directive", () => {
 
   it("should work with interface", () => {
     const FruitI = schema.getType("Fruit") as GraphQLInterfaceType
-    expect(FruitI.astNode).not.toBeDefined()
+    expect(FruitI.astNode).toBeDefined()
 
     const AnimalI = schema.getType("Animal") as GraphQLInterfaceType
     expect(AnimalI.astNode).toBeDefined()
   })
 
   it("should work with input object", () => {
-    expect(schema.getType("GrapeInput")?.astNode).not.toBeDefined()
+    expect(schema.getType("GrapeInput")?.astNode).toBeDefined()
     expect(schema.getType("CatInput")?.astNode).toBeDefined()
   })
 
   it("should work with input value", () => {
     const GrapeI = schema.getType("GrapeInput") as GraphQLInputObjectType
-    expect(GrapeI.getFields()["color"].astNode).not.toBeDefined()
+    expect(GrapeI.getFields()["color"].astNode).toBeDefined()
 
     const CatI = schema.getType("CatInput") as GraphQLInputObjectType
     expect(CatI.getFields()["color"].astNode).toBeDefined()
+  })
+
+  it("should print Schema with Directives", () => {
+    expect(printSchemaWithDirectives(schema)).toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      type Query {
+        grape(data: GrapeInput): Grape
+        cat(data: CatInput): Cat
+      }
+
+      type Grape implements Fruit {
+        color: String
+      }
+
+      interface Fruit {
+        color: String
+      }
+
+      input GrapeInput {
+        color: String
+      }
+
+      type Cat implements Animal @loom(value: "cat") {
+        color: String @loom(value: "color")
+      }
+
+      interface Animal @loom(value: "Animal") {
+        color: String
+      }
+
+      input CatInput @loom(value: "CatInput") {
+        color: String @loom(value: "color")
+      }"
+    `)
   })
 })

@@ -15,7 +15,6 @@ import {
   isNonNullType,
   type GraphQLFieldResolver,
   type GraphQLOutputType,
-  type GraphQLField,
 } from "graphql"
 import type { SilkFieldOrOperation } from "./types"
 import {
@@ -35,9 +34,6 @@ import {
   defaultSubscriptionResolve,
   getGraphQLType,
 } from "../resolver"
-import { createFieldNode, createObjectTypeNode } from "./definition-node"
-import { extractGqloomExtension } from "./extensions"
-
 export class LoomObjectType extends GraphQLObjectType {
   public extraFields = new Map<string, SilkFieldOrOperation>()
 
@@ -68,9 +64,7 @@ export class LoomObjectType extends GraphQLObjectType {
       }
     })()
 
-    // AST node has to be manually created in order to define directives
-    const { directives } = extractGqloomExtension(config)
-    super({ ...config, astNode: createObjectTypeNode(config.name, directives) })
+    super(config)
 
     this.resolverOptions = options.resolverOptions
     this.weaverContext = options.weaverContext ?? initWeaverContext()
@@ -85,17 +79,7 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   override getFields(): GraphQLFieldMap<any, any> {
-    const fields = mapValue<GraphQLField<any, any>, GraphQLField<any, any>>(
-      super.getFields(),
-      (f, name) => ({
-        ...f,
-        astNode: createFieldNode(
-          name,
-          f.type,
-          extractGqloomExtension(f).directives
-        ),
-      })
-    )
+    const fields = super.getFields()
     const extraField = provideWeaverContext(
       () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
@@ -125,12 +109,8 @@ export class LoomObjectType extends GraphQLObjectType {
     try {
       const outputType = this.getCacheType(getGraphQLType(field.output))
 
-      // AST node has to be manually created in order to define directives
-      const { directives } = extractGqloomExtension(field)
-
       return {
         ...extract(field),
-        astNode: createFieldNode(name, outputType, directives),
         type: outputType,
         args: inputToArgs(field.input),
         ...this.provideForResolve(field),
