@@ -131,7 +131,7 @@ describe("schema", () => {
     `)
   })
 
-  it("should print Subgraph Schema", () => {
+  it("should print Schema with Directives", () => {
     expect(printSchemaWithDirectives(schema)).toMatchInlineSnapshot(`
       "schema @link(url: "https://specs.apollo.dev/federation/v2.6", import: ["@extends", "@external", "@inaccessible", "@key", "@override", "@provides", "@shareable", "@tag"]) {
         query: Query
