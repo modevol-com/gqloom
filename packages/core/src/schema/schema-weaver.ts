@@ -20,6 +20,7 @@ import {
   type SilkResolver,
 } from "./types"
 import { RESOLVER_OPTIONS_KEY, WEAVER_CONFIG } from "../utils/symbols"
+import { mockAst } from "./mock-ast"
 
 interface SchemaWeaverParameters
   extends Partial<
@@ -80,7 +81,18 @@ export class SchemaWeaver {
 
   public weaveGraphQLSchema(): GraphQLSchema {
     const { query, mutation, subscription, types } = this
-    return new GraphQLSchema({ query, mutation, subscription, types })
+    const config =
+      this.context.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
+    const schema = new GraphQLSchema({
+      query,
+      mutation,
+      subscription,
+      types: [...(types ?? []), ...(config?.types ?? [])],
+      ...config,
+    })
+
+    if (config?.mockAST) return mockAst(schema)
+    return schema
   }
 
   protected addResolver(resolver: SilkResolver) {

@@ -1,3 +1,4 @@
+import { type GraphQLSchemaConfig } from "graphql"
 import type {
   FieldOrOperation,
   ResolverOptionsWithParent,
@@ -19,8 +20,9 @@ export type SilkResolver = Record<
   [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
 }
 
-export interface CoreSchemaWeaverConfigOptions {
+export interface CoreSchemaWeaverConfigOptions extends GraphQLSchemaConfig {
   getInputObjectName?: (name: string) => string
+  mockAST?: boolean
 }
 
 export interface CoreSchemaWeaverConfig
