@@ -9,8 +9,15 @@ import {
   type GraphQLResolveInfo,
 } from "graphql"
 import { printSubgraphSchema } from "@apollo/subgraph"
+import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
 import { printSchemaWithDirectives } from "@graphql-tools/utils"
 import { mockAst } from "@gqloom/core"
+import { ApolloServer } from "@apollo/server"
+import { entitiesField } from "@apollo/subgraph/dist/types"
+import { createYoga } from "graphql-yoga"
+import Fastify from "fastify"
+import Mercurius from "mercurius"
+import { createMercuriusTestClient } from "mercurius-integration-testing"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions {
@@ -66,6 +73,7 @@ const schema = new GraphQLSchema({
         resolve: () => ({ id: "1", name: "@ava" }),
       },
       _entities: {
+        ...entitiesField,
         type: new GraphQLNonNull(
           new GraphQLList(
             new GraphQLUnionType({
@@ -111,6 +119,34 @@ const schema = new GraphQLSchema({
 
 mockAst(schema)
 
+const queries = {
+  me: /* GraphQL */ `
+    query me {
+      me {
+        id
+        name
+      }
+    }
+  `,
+  entities: /* GraphQL */ `
+    query entities($representations: [_Any!]!) {
+      _entities(representations: $representations) {
+        ... on User {
+          id
+          name
+        }
+      }
+    }
+  `,
+  subgraphSchema: /* GraphQL */ `
+    query subgraphSchema {
+      _service {
+        sdl
+      }
+    }
+  `,
+}
+
 describe("schema", () => {
   it("should print Subgraph Schema", () => {
     expect(printSubgraphSchema(schema)).toMatchInlineSnapshot(`
@@ -139,7 +175,7 @@ describe("schema", () => {
 
       type Query {
         me: User
-        _entities: [_Entity]!
+        _entities(representations: [_Any!]!): [_Entity]!
         _service: _Service
       }
 
@@ -150,9 +186,95 @@ describe("schema", () => {
 
       union _Entity = User
 
+      scalar _Any
+
       type _Service {
         sdl: String
       }"
     `)
+  })
+})
+
+describe("Apollo", () => {
+  const server = new ApolloServer({
+    schema,
+    plugins: [ApolloServerPluginInlineTraceDisabled()],
+  })
+  it("should execute query for entities", async () => {
+    const response = await server.executeOperation({
+      query: queries.entities,
+      variables: {
+        representations: [
+          { __typename: "User", id: "1" },
+          { __typename: "User", id: "2" },
+        ],
+      },
+    })
+
+    if (response.body.kind !== "single") throw new Error("unexpected")
+    expect(response.body.singleResult.data).toMatchObject({
+      _entities: [
+        { id: "1", name: "@ava" },
+        { id: "2", name: "@ava" },
+      ],
+    })
+  })
+})
+
+describe("Yoga", () => {
+  const yoga = createYoga({ schema })
+
+  it("should execute query for entities", async () => {
+    const response = await yoga.fetch("http://localhost/graphql", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        query: queries.entities,
+        variables: {
+          representations: [
+            { __typename: "User", id: "1" },
+            { __typename: "User", id: "2" },
+          ],
+        },
+      }),
+    })
+
+    if (response.status !== 200) throw new Error("unexpected")
+    const json = await response.json()
+    expect(json).toMatchObject({
+      data: {
+        _entities: [
+          { id: "1", name: "@ava" },
+          { id: "2", name: "@ava" },
+        ],
+      },
+    })
+  })
+})
+
+describe("Mercurius", () => {
+  const app = Fastify()
+  app.register(Mercurius, { schema })
+  const client = createMercuriusTestClient(app)
+
+  it("should execute query for entities", async () => {
+    const response = await client.query(queries.entities, {
+      variables: {
+        representations: [
+          { __typename: "User", id: "1" },
+          { __typename: "User", id: "2" },
+        ],
+      },
+    })
+    expect(response).toMatchObject({
+      data: {
+        _entities: [
+          { id: "1", name: "@ava" },
+          { id: "2", name: "@ava" },
+        ],
+      },
+    })
   })
 })
