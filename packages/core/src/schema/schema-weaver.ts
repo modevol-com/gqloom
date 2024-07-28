@@ -34,7 +34,7 @@ export class SchemaWeaver {
   public subscription?: LoomObjectType
   public types?: GraphQLNamedType[] | null
 
-  public context: WeaverContext = initWeaverContext()
+  public context: WeaverContext
 
   public resolverOptions?: ResolvingOptions
 
@@ -50,16 +50,15 @@ export class SchemaWeaver {
     }
   }
 
-  constructor({
-    query,
-    mutation,
-    subscription,
-    types,
-  }: SchemaWeaverParameters = {}) {
+  constructor(
+    { query, mutation, subscription, types }: SchemaWeaverParameters = {},
+    context?: WeaverContext
+  ) {
     if (query != null) this.query = query
     if (mutation != null) this.mutation = mutation
     if (subscription != null) this.subscription = subscription
     if (types != null) this.types = types.slice()
+    this.context = context ?? initWeaverContext()
   }
 
   public use(...middlewares: Middleware[]) {
@@ -168,17 +167,23 @@ export function weave(...inputs: (SilkResolver | Middleware | WeaverConfig)[]) {
   const configs = new Set<WeaverConfig>()
   const middlewares = new Set<Middleware>()
   const resolvers = new Set<SilkResolver>()
+  let context: WeaverContext | undefined
 
   for (const item of inputs) {
     if (typeof item === "function") {
       middlewares.add(item)
     } else if (WEAVER_CONFIG in item) {
       configs.add(item)
+      if (
+        (item as CoreSchemaWeaverConfig)[WEAVER_CONFIG] === "gqloom.core.schema"
+      ) {
+        context = (item as CoreSchemaWeaverConfig).weaverContext
+      }
     } else {
       resolvers.add(item)
     }
   }
-  const weaver = new SchemaWeaver()
+  const weaver = new SchemaWeaver({}, context)
   configs.forEach((it) => weaver.setConfig(it))
   middlewares.forEach((it) => weaver.use(it))
   resolvers.forEach((it) => weaver.add(it))

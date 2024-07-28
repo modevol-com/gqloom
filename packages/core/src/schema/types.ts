@@ -5,7 +5,7 @@ import type {
   ResolvingOptions,
 } from "../resolver"
 import { type WEAVER_CONFIG, type RESOLVER_OPTIONS_KEY } from "../utils/symbols"
-import { type WeaverConfig } from "./weaver-context"
+import { type WeaverContext, type WeaverConfig } from "./weaver-context"
 
 export type SilkFieldOrOperation = FieldOrOperation<any, any, any, any>
 
@@ -23,6 +23,7 @@ export type SilkResolver = Record<
 export interface CoreSchemaWeaverConfigOptions extends GraphQLSchemaConfig {
   getInputObjectName?: (name: string) => string
   mockAST?: boolean
+  weaverContext?: WeaverContext
 }
 
 export interface CoreSchemaWeaverConfig

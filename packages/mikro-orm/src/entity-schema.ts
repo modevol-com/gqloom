@@ -9,6 +9,8 @@ import {
   type GraphQLSilkIO,
   type GQLoomExtensions,
   weaverContext,
+  provideWeaverContext,
+  type WeaverContext,
 } from "@gqloom/core"
 import {
   EntitySchema,
@@ -49,7 +51,7 @@ export class EntitySchemaWeaver {
     options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
   ) {
     const gqlType = unwrapGraphQLType(
-      getGraphQLTypeWithName(silk, options?.name)
+      getGraphQLTypeWithName(silk, options?.name, options?.weaverContext)
     )
     if (!(gqlType instanceof GraphQLObjectType))
       throw new Error(
@@ -224,12 +226,15 @@ export class EntitySchemaWeaver {
 
 function getGraphQLTypeWithName(
   silk: GraphQLSilk<any, any>,
-  name?: string | null
+  name?: string | null,
+  context?: WeaverContext
 ) {
   const lastName = weaverContext.names.get(silk)
   try {
     if (name != null) weaverContext.names.set(silk, name)
-    return getGraphQLType(silk)
+
+    if (!context) return getGraphQLType(silk)
+    return provideWeaverContext(() => getGraphQLType(silk), context)
   } finally {
     if (lastName === undefined) {
       weaverContext.names.delete(silk)
@@ -307,6 +312,8 @@ export interface EntitySchemaWeaverOptions {
     gqlType: Exclude<GraphQLOutputType, GraphQLNonNull<any> | GraphQLList<any>>,
     filed: GraphQLField<any, any, any>
   ) => string | Partial<PropertyType> | undefined
+
+  weaverContext?: WeaverContext
 }
 
 export type SilkSchemaEntity<
