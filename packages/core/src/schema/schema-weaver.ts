@@ -131,24 +131,27 @@ export class SchemaWeaver {
     type: "query" | "mutation" | "subscription"
   ): LoomObjectType {
     switch (type) {
-      case "query":
-        if (this.query) return this.query
-        return (this.query = new LoomObjectType(
+      case "query": {
+        this.query ??= new LoomObjectType(
           { name: "Query", fields: {} },
           this.fieldOptions
-        ))
-      case "mutation":
-        if (this.mutation) return this.mutation
-        return (this.mutation = new LoomObjectType(
+        )
+        return this.query
+      }
+      case "mutation": {
+        this.mutation ??= new LoomObjectType(
           { name: "Mutation", fields: {} },
           this.fieldOptions
-        ))
-      case "subscription":
-        if (this.subscription) return this.subscription
-        return (this.subscription = new LoomObjectType(
+        )
+        return this.mutation
+      }
+      case "subscription": {
+        this.subscription ??= new LoomObjectType(
           { name: "Subscription", fields: {} },
           this.fieldOptions
-        ))
+        )
+        return this.subscription
+      }
     }
   }
 

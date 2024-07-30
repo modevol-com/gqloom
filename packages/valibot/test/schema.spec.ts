@@ -21,6 +21,7 @@ import {
   type SilkResolver,
   SchemaWeaver,
   weave,
+  silk,
 } from "@gqloom/core"
 import { asField, asObjectType } from "../src/metadata"
 import {
@@ -431,9 +432,20 @@ describe("valibotSilk", () => {
         name: string(),
         birthday: string(),
       })
-      collectNames({ Dog })
+
+      const Cat = object({
+        name: string(),
+        birthday: string(),
+        friend: nullish(Dog),
+      })
+
+      collectNames({ Dog, Cat })
       const r1 = resolver.of(Dog, {
         dog: query(optional(Dog), () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        cat: query(Cat, () => ({
           name: "",
           birthday: "2012-12-12",
         })),
@@ -454,6 +466,7 @@ describe("valibotSilk", () => {
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
           dog: Dog
+          cat: Cat!
           dogs: [Dog]!
           mustDog: Dog!
           mustDogs: [Dog!]!
@@ -463,6 +476,63 @@ describe("valibotSilk", () => {
           name: String!
           birthday: String!
           age: Float!
+        }
+
+        type Cat {
+          name: String!
+          birthday: String!
+          friend: Dog
+        }"
+      `)
+    })
+
+    it("should avoid duplicate object", () => {
+      const DogType = new GraphQLObjectType({
+        name: "Dog",
+        fields: {
+          name: { type: GraphQLString },
+          birthday: { type: GraphQLString },
+        },
+      })
+      const Dog = silk(DogType)
+
+      const Cat = silk(
+        new GraphQLObjectType({
+          name: "Cat",
+          fields: {
+            name: { type: GraphQLString },
+            birthday: { type: GraphQLString },
+            friend: { type: DogType },
+          },
+        })
+      )
+
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog, () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        cat: query(Cat, () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog
+          cat: Cat
+        }
+
+        type Dog {
+          name: String
+          birthday: String
+        }
+
+        type Cat {
+          name: String
+          birthday: String
+          friend: Dog
         }"
       `)
     })

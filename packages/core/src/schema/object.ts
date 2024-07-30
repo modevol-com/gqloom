@@ -78,15 +78,29 @@ export class LoomObjectType extends GraphQLObjectType {
     this.extraFields.set(name, resolver)
   }
 
+  private extraField?: GraphQLFieldMap<any, any>
   override getFields(): GraphQLFieldMap<any, any> {
     const fields = super.getFields()
+
+    Object.values(fields).forEach(
+      (field) => (field.type = this.getCacheType(field.type))
+    )
+
     const extraField = provideWeaverContext(
       () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
     )
+
+    if (
+      Object.keys(this.extraField ?? {}).join() !==
+      Object.keys(extraField).join()
+    ) {
+      this.extraField = extraField
+    }
+
     return {
       ...fields,
-      ...extraField,
+      ...this.extraField,
     }
   }
 
@@ -96,16 +110,13 @@ export class LoomObjectType extends GraphQLObjectType {
     const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
     for (const [name, field] of map.entries()) {
-      record[name] = this.toFieldConfig(name, field)
+      record[name] = this.toFieldConfig(field)
     }
 
     return record
   }
 
-  toFieldConfig(
-    name: string,
-    field: SilkFieldOrOperation
-  ): GraphQLFieldConfig<any, any> {
+  toFieldConfig(field: SilkFieldOrOperation): GraphQLFieldConfig<any, any> {
     try {
       const outputType = this.getCacheType(getGraphQLType(field.output))
 

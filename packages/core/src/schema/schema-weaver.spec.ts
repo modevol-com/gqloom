@@ -257,4 +257,61 @@ describe("SchemaWeaver", () => {
       }"
     `)
   })
+
+  it("should avoid duplicate object", () => {
+    const DogType = new GraphQLObjectType({
+      name: "Dog",
+      fields: {
+        name: { type: GraphQLString },
+        birthday: { type: GraphQLString },
+      },
+    })
+    const Dog = silk(DogType)
+
+    const d1 = getGraphQLType(Dog)
+
+    expect(d1).toBe(getGraphQLType(Dog))
+
+    const Cat = silk(
+      new GraphQLObjectType({
+        name: "Cat",
+        fields: {
+          name: { type: GraphQLString },
+          birthday: { type: GraphQLString },
+          friend: { type: DogType },
+        },
+      })
+    )
+
+    const r1 = resolver({
+      dog: query(Dog, () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
+
+      cat: query(Cat, () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
+    })
+
+    const schema = weave(r1)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog
+        cat: Cat
+      }
+
+      type Dog {
+        name: String
+        birthday: String
+      }
+
+      type Cat {
+        name: String
+        birthday: String
+        friend: Dog
+      }"
+    `)
+  })
 })
