@@ -7,6 +7,7 @@ import {
   printSchema,
   lexicographicSortSchema,
   GraphQLInt,
+  GraphQLUnionType,
 } from "graphql"
 import { getGraphQLType, silk } from "../resolver"
 import { loom } from "../resolver"
@@ -312,6 +313,78 @@ describe("SchemaWeaver", () => {
         birthday: String
         friend: Dog
       }"
+    `)
+  })
+
+  it("should avoid duplicate object in union", () => {
+    const DogType = new GraphQLObjectType({
+      name: "Dog",
+      fields: {
+        name: { type: GraphQLString },
+        birthday: { type: GraphQLString },
+      },
+    })
+    const Dog = silk(DogType)
+
+    const d1 = getGraphQLType(Dog)
+
+    expect(d1).toBe(getGraphQLType(Dog))
+
+    const CatType = new GraphQLObjectType({
+      name: "Cat",
+      fields: {
+        name: { type: GraphQLString },
+        birthday: { type: GraphQLString },
+        friend: { type: DogType },
+      },
+    })
+
+    const Cat = silk(CatType)
+
+    const Animal = silk(
+      new GraphQLUnionType({
+        name: "Animal",
+        types: [DogType, CatType],
+      })
+    )
+
+    const r1 = resolver({
+      dog: query(Dog, () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
+
+      cat: query(Cat, () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
+
+      animal: query(Animal, () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
+    })
+
+    const schema = weave(r1)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog
+        cat: Cat
+        animal: Animal
+      }
+
+      type Dog {
+        name: String
+        birthday: String
+      }
+
+      type Cat {
+        name: String
+        birthday: String
+        friend: Dog
+      }
+
+      union Animal = Dog | Cat"
     `)
   })
 })

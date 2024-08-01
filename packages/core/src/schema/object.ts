@@ -15,6 +15,8 @@ import {
   isNonNullType,
   type GraphQLFieldResolver,
   type GraphQLOutputType,
+  isUnionType,
+  GraphQLUnionType,
 } from "graphql"
 import type { SilkFieldOrOperation } from "./types"
 import {
@@ -185,6 +187,18 @@ export class LoomObjectType extends GraphQLObjectType {
       return new GraphQLList(this.getCacheType(gqlType.ofType))
     } else if (isNonNullType(gqlType)) {
       return new GraphQLNonNull(this.getCacheType(gqlType.ofType))
+    } else if (isUnionType(gqlType)) {
+      const existing = this.weaverContext.loomUnionMap.get(gqlType)
+      if (existing != null) return existing
+      const config = gqlType.toConfig()
+      const unionType = new GraphQLUnionType({
+        ...config,
+        types: config.types.map(
+          (type) => this.getCacheType(type) as GraphQLObjectType
+        ),
+      })
+      this.weaverContext.loomUnionMap.set(gqlType, unionType)
+      return unionType
     }
     return gqlType
   }

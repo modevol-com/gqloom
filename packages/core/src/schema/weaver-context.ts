@@ -6,12 +6,14 @@ import {
   isObjectType,
   isUnionType,
   type GraphQLOutputType,
+  type GraphQLUnionType,
 } from "graphql"
 import { type LoomObjectType } from "./object"
 import { WEAVER_CONFIG } from "../utils/symbols"
 
 export interface WeaverContext {
   loomObjectMap: Map<GraphQLObjectType, LoomObjectType>
+  loomUnionMap: Map<GraphQLUnionType, GraphQLUnionType>
   inputMap: Map<
     GraphQLObjectType | GraphQLInterfaceType,
     GraphQLInputObjectType
@@ -44,6 +46,7 @@ export interface WeaverConfig {
 export function initWeaverContext(): WeaverContext {
   return {
     loomObjectMap: new Map(),
+    loomUnionMap: new Map(),
     inputMap: new Map(),
     interfaceMap: new Map(),
     configs: new Map(),
@@ -107,6 +110,9 @@ export interface GlobalWeaverContext
 export const weaverContext: GlobalWeaverContext = {
   get loomObjectMap() {
     return ref?.loomObjectMap
+  },
+  get loomUnionMap() {
+    return ref?.loomUnionMap
   },
   get inputMap() {
     return ref?.inputMap

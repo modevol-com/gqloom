@@ -21,7 +21,6 @@ import {
   type SilkResolver,
   SchemaWeaver,
   weave,
-  silk,
 } from "@gqloom/core"
 import { asField, asObjectType } from "../src/metadata"
 import {
@@ -486,57 +485,6 @@ describe("valibotSilk", () => {
       `)
     })
 
-    it("should avoid duplicate object", () => {
-      const DogType = new GraphQLObjectType({
-        name: "Dog",
-        fields: {
-          name: { type: GraphQLString },
-          birthday: { type: GraphQLString },
-        },
-      })
-      const Dog = silk(DogType)
-
-      const Cat = silk(
-        new GraphQLObjectType({
-          name: "Cat",
-          fields: {
-            name: { type: GraphQLString },
-            birthday: { type: GraphQLString },
-            friend: { type: DogType },
-          },
-        })
-      )
-
-      const r1 = resolver.of(Dog, {
-        dog: query(Dog, () => ({
-          name: "",
-          birthday: "2012-12-12",
-        })),
-        cat: query(Cat, () => ({
-          name: "",
-          birthday: "2012-12-12",
-        })),
-      })
-
-      expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type Query {
-          dog: Dog
-          cat: Cat
-        }
-
-        type Dog {
-          name: String
-          birthday: String
-        }
-
-        type Cat {
-          name: String
-          birthday: String
-          friend: Dog
-        }"
-      `)
-    })
-
     it("should avoid duplicate input", () => {
       const Dog = object({
         name: string(),
@@ -694,6 +642,14 @@ describe("valibotSilk", () => {
         fruits: query(array(optional(Fruit)), () => []),
         mustFruit: query(Fruit, () => ({ flavor: "" })),
         mustFruits: query(array(Fruit), () => []),
+        apple: query(optional(Apple), () => ({ flavor: "" })),
+        apples: query(array(optional(Apple)), () => []),
+        mustApple: query(Apple, () => ({ flavor: "" })),
+        mustApples: query(array(Apple), () => []),
+        orange: query(optional(Orange), () => ({ color: "" })),
+        oranges: query(array(optional(Orange)), () => []),
+        mustOrange: query(Orange, () => ({ color: "" })),
+        mustOranges: query(array(Orange), () => []),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -702,6 +658,14 @@ describe("valibotSilk", () => {
           fruits: [Fruit]!
           mustFruit: Fruit!
           mustFruits: [Fruit!]!
+          apple: Apple
+          apples: [Apple]!
+          mustApple: Apple!
+          mustApples: [Apple!]!
+          orange: Orange
+          oranges: [Orange]!
+          mustOrange: Orange!
+          mustOranges: [Orange!]!
         }
 
         union Fruit = Apple | Orange
