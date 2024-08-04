@@ -222,7 +222,15 @@ describe("valibotSilk", () => {
       asObjectType({ name: "Cat" })
     )
 
+    const Cat2 = object({
+      __typename: literal("Cat"),
+      name: string(),
+      age: pipe(number(), integer()),
+      loveFish: optional(boolean()),
+    })
+
     const Cat = object({
+      __typename: literal("Cat"),
       name: string(),
       age: pipe(number(), integer()),
       loveFish: optional(boolean()),
@@ -231,6 +239,8 @@ describe("valibotSilk", () => {
     collectNames({ Cat })
 
     expect(printValibotSilk(Cat)).toEqual(printValibotSilk(Cat1))
+    expect(printValibotSilk(Cat)).toEqual(printValibotSilk(Cat2))
+
     expect(
       (getGraphQLType(valibotSilk(Cat)) as GraphQLNonNull<any>).ofType
     ).toBeInstanceOf(GraphQLObjectType)

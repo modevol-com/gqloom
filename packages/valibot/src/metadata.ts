@@ -81,17 +81,36 @@ export class ValibotMetadataCollector {
 
     let name: string | undefined
     for (const item of pipe) {
-      name ??= weaverContext.names.get(item)
+      name ??= weaverContext.names.get(item) ?? this.getTypenameByLiteral(item)
       if (item.type === configType) {
         const config = (item as T).config
-        return {
-          name,
-          ...config,
-        }
+        return { name, ...config }
       }
     }
 
     if (name !== undefined) return { name }
+  }
+
+  protected static getTypenameByLiteral(
+    item:
+      | PipeItemAsync<unknown, unknown, BaseIssue<unknown>>
+      | PipeItem<unknown, unknown, BaseIssue<unknown>>
+  ): string | undefined {
+    if (
+      item.type === "object" &&
+      "entries" in item &&
+      typeof item.entries === "object" &&
+      item.entries &&
+      "__typename" in item.entries &&
+      typeof item.entries.__typename === "object" &&
+      item.entries.__typename != null &&
+      "type" in item.entries.__typename &&
+      item.entries.__typename.type === "literal" &&
+      "literal" in item.entries.__typename &&
+      typeof item.entries.__typename.literal === "string"
+    ) {
+      return item.entries.__typename.literal
+    }
   }
 
   static isInteger(...schemas: PipedSchema[]): boolean {
