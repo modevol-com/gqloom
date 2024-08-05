@@ -17,7 +17,7 @@ import {
   literal,
 } from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
-import { field, mutation, query, resolver } from "../src"
+import { asUnionType, field, mutation, query, resolver } from "../src"
 import { SchemaWeaver, collectNames, silk, weave } from "@gqloom/core"
 import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
 
@@ -136,7 +136,15 @@ describe("valibot resolver", () => {
   })
 
   it("should resolve union", async () => {
-    const Animal = union([Cat, Dog])
+    const Animal = pipe(
+      union([Cat, Dog]),
+      asUnionType({
+        resolveType: (value: InferOutput<typeof Cat | typeof Dog>) => {
+          if ("loveFish" in value) return "Cat"
+          if ("loveBone" in value) return "Dog"
+        },
+      })
+    )
 
     collectNames({ Animal })
 

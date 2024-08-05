@@ -1,8 +1,6 @@
 import {
   type InferOutput,
   type InferInput,
-  safeParseAsync,
-  strictObjectAsync,
   parseAsync,
   parse,
   type GenericSchema,
@@ -178,8 +176,6 @@ export class ValibotWeaver {
             `Object { ${Object.keys(schema.entries).join(", ")} } must have a name`
           )
 
-        const strictSchema = strictObjectAsync(schema.entries)
-
         return new GraphQLObjectType({
           name,
           fields: mapValue(schema.entries, (field, key) => {
@@ -194,8 +190,6 @@ export class ValibotWeaver {
               ...fieldConfig,
             }
           }),
-          isTypeOf: (input) =>
-            safeParseAsync(strictSchema, input).then((x) => x.success),
           ...objectConfig,
           interfaces: objectConfig.interfaces?.map(
             ValibotWeaver.ensureInterfaceType
