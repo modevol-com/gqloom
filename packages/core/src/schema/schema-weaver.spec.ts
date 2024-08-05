@@ -12,6 +12,8 @@ import {
 import { getGraphQLType, silk } from "../resolver"
 import { loom } from "../resolver"
 import { SchemaWeaver, weave } from "./schema-weaver"
+import { ensureInterfaceType } from "./interface"
+import { provideWeaverContext } from "./weaver-context"
 
 const { resolver, query, mutation, field } = loom
 
@@ -385,6 +387,68 @@ describe("SchemaWeaver", () => {
       }
 
       union Animal = Dog | Cat"
+    `)
+  })
+
+  it("should avoid duplicate object in interface", () => {
+    const weaver = new SchemaWeaver()
+
+    const MasterType = new GraphQLObjectType({
+      name: "Master",
+      fields: { name: { type: GraphQLString } },
+    })
+
+    const AnimalType = new GraphQLObjectType({
+      name: "Animal",
+      fields: {
+        name: { type: GraphQLString },
+        master: { type: MasterType },
+        birthday: { type: GraphQLString },
+      },
+    })
+
+    const AnimalInterface = provideWeaverContext(
+      () => ensureInterfaceType(AnimalType),
+      weaver.context
+    )
+
+    const DogType = new GraphQLObjectType({
+      name: "Dog",
+      fields: {
+        name: { type: GraphQLString },
+        master: { type: MasterType },
+        birthday: { type: GraphQLString },
+      },
+      interfaces: () => [AnimalInterface],
+    })
+
+    const Dog = silk(DogType)
+
+    const r1 = resolver({
+      dog: query(Dog, () => ({})),
+    })
+
+    const schema = weaver.add(r1).weaveGraphQLSchema()
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog
+      }
+
+      type Dog implements Animal {
+        name: String
+        master: Master
+        birthday: String
+      }
+
+      interface Animal {
+        name: String
+        master: Master
+        birthday: String
+      }
+
+      type Master {
+        name: String
+      }"
     `)
   })
 })

@@ -495,6 +495,73 @@ describe("valibotSilk", () => {
       `)
     })
 
+    it("should avoid duplicate object in interface", () => {
+      const Prize = object({
+        name: string(),
+        value: number(),
+      })
+
+      collectNames({ Prize })
+
+      const Fruit = object({
+        __typename: literal("Fruit"),
+        name: string(),
+        color: string(),
+        prize: Prize,
+      })
+
+      const Orange = pipe(
+        object({
+          ...Fruit.entries,
+          __typename: literal("Orange"),
+        }),
+        asObjectType({ interfaces: [Fruit] })
+      )
+
+      const Apple = pipe(
+        object({
+          ...Fruit.entries,
+          __typename: literal("Apple"),
+        }),
+        asObjectType({ interfaces: [Fruit] })
+      )
+
+      const r = resolver.of(Orange, {
+        orange: query(Orange, () => 0 as any),
+        apple: query(Apple, () => 0 as any),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          orange: Orange!
+          apple: Apple!
+        }
+
+        type Orange implements Fruit {
+          name: String!
+          color: String!
+          prize: Prize!
+        }
+
+        interface Fruit {
+          name: String!
+          color: String!
+          prize: Prize!
+        }
+
+        type Prize {
+          name: String!
+          value: Float!
+        }
+
+        type Apple implements Fruit {
+          name: String!
+          color: String!
+          prize: Prize!
+        }"
+      `)
+    })
+
     it("should avoid duplicate input", () => {
       const Dog = object({
         name: string(),

@@ -28,6 +28,7 @@ import {
 import {
   initWeaverContext,
   provideWeaverContext,
+  weaverContext,
   type WeaverContext,
 } from "./weaver-context"
 import { inputToArgs } from "./input"
@@ -175,32 +176,7 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   protected getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
-    if (gqlType instanceof LoomObjectType) return gqlType
-    if (isObjectType(gqlType)) {
-      const gqlObject = this.weaverContext.loomObjectMap.get(gqlType)
-      if (gqlObject != null) return gqlObject
-
-      const loomObject = new LoomObjectType(gqlType, this.options)
-      this.weaverContext.loomObjectMap.set(gqlType, loomObject)
-      return loomObject
-    } else if (isListType(gqlType)) {
-      return new GraphQLList(this.getCacheType(gqlType.ofType))
-    } else if (isNonNullType(gqlType)) {
-      return new GraphQLNonNull(this.getCacheType(gqlType.ofType))
-    } else if (isUnionType(gqlType)) {
-      const existing = this.weaverContext.loomUnionMap.get(gqlType)
-      if (existing != null) return existing
-      const config = gqlType.toConfig()
-      const unionType = new GraphQLUnionType({
-        ...config,
-        types: config.types.map(
-          (type) => this.getCacheType(type) as GraphQLObjectType
-        ),
-      })
-      this.weaverContext.loomUnionMap.set(gqlType, unionType)
-      return unionType
-    }
-    return gqlType
+    return getCacheType(gqlType, this.options)
   }
 
   get options() {
@@ -256,4 +232,40 @@ function defineArguments(
     extensions: toObjMap(argConfig.extensions),
     astNode: argConfig.astNode,
   }))
+}
+
+export function getCacheType(
+  gqlType: GraphQLOutputType,
+  options: {
+    weaverContext?: WeaverContext
+    resolverOptions?: ResolvingOptions
+  } = {}
+): GraphQLOutputType {
+  const context = options.weaverContext ?? weaverContext
+  if (gqlType instanceof LoomObjectType) return gqlType
+  if (isObjectType(gqlType)) {
+    const gqlObject = context.loomObjectMap?.get(gqlType)
+    if (gqlObject != null) return gqlObject
+
+    const loomObject = new LoomObjectType(gqlType, options)
+    context.loomObjectMap?.set(gqlType, loomObject)
+    return loomObject
+  } else if (isListType(gqlType)) {
+    return new GraphQLList(getCacheType(gqlType.ofType, options))
+  } else if (isNonNullType(gqlType)) {
+    return new GraphQLNonNull(getCacheType(gqlType.ofType, options))
+  } else if (isUnionType(gqlType)) {
+    const existing = context.loomUnionMap?.get(gqlType)
+    if (existing != null) return existing
+    const config = gqlType.toConfig()
+    const unionType = new GraphQLUnionType({
+      ...config,
+      types: config.types.map(
+        (type) => getCacheType(type, options) as GraphQLObjectType
+      ),
+    })
+    context.loomUnionMap?.set(gqlType, unionType)
+    return unionType
+  }
+  return gqlType
 }

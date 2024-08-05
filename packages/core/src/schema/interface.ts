@@ -6,6 +6,8 @@ import {
   type GraphQLOutputType,
 } from "graphql"
 import { weaverContext } from "./weaver-context"
+import { mapValue } from "../utils"
+import { getCacheType } from "./object"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,
@@ -21,10 +23,18 @@ export function ensureInterfaceType(
   const existing = weaverContext.interfaceMap?.get(key)
   if (existing != null) return existing
 
-  const { astNode: _, extensionASTNodes: _1, ...config } = gqlType.toConfig()
+  const {
+    astNode: _,
+    extensionASTNodes: _1,
+    fields,
+    ...config
+  } = gqlType.toConfig()
   const interfaceType = new GraphQLInterfaceType({
     ...config,
     ...interfaceConfig,
+    fields: mapValue(fields, (field) => {
+      return { ...field, type: getCacheType(field.type) }
+    }),
   })
 
   weaverContext.interfaceMap?.set(key, interfaceType)
