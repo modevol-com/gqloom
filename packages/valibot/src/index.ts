@@ -160,6 +160,17 @@ export class ValibotWeaver {
       case "object":
       case "object_with_rest":
       case "strict_object": {
+        if (
+          "pipe" in schema &&
+          Array.isArray(schema.pipe) &&
+          schema.pipe.length > 0
+        ) {
+          return ValibotWeaver.toGraphQLType(
+            schema.pipe[0],
+            schema,
+            ...wrappers
+          )
+        }
         const { name, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
         if (!name)

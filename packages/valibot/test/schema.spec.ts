@@ -495,6 +495,58 @@ describe("valibotSilk", () => {
       `)
     })
 
+    it("should avoid duplicate object in pipe", () => {
+      const Prize = object({
+        name: string(),
+        value: number(),
+      })
+
+      collectNames({ Prize })
+
+      const Orange = object({
+        name: string(),
+        color: string(),
+        prize: pipe(Prize, asField({})),
+        __typename: literal("Orange"),
+      })
+
+      const Apple = object({
+        name: string(),
+        color: string(),
+        prize: pipe(Prize, asField({})),
+        __typename: literal("Apple"),
+      })
+
+      const r = resolver.of(Orange, {
+        orange: query(Orange, () => 0 as any),
+        apple: query(Apple, () => 0 as any),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          orange: Orange!
+          apple: Apple!
+        }
+
+        type Orange {
+          name: String!
+          color: String!
+          prize: Prize!
+        }
+
+        type Prize {
+          name: String!
+          value: Float!
+        }
+
+        type Apple {
+          name: String!
+          color: String!
+          prize: Prize!
+        }"
+      `)
+    })
+
     it("should avoid duplicate object in interface", () => {
       const Prize = object({
         name: string(),
