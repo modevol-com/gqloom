@@ -22,34 +22,8 @@ import {
   SchemaWeaver,
   weave,
 } from "@gqloom/core"
-import { asField, asObjectType } from "../src/metadata"
-import {
-  type BaseSchema,
-  type BaseSchemaAsync,
-  boolean,
-  cuid2,
-  date,
-  email,
-  integer,
-  nonNullable,
-  nonNullish,
-  nonOptional,
-  nullable,
-  nullish,
-  number,
-  object,
-  optional,
-  pipe,
-  string,
-  ulid,
-  uuid,
-  array,
-  picklist,
-  enum_,
-  union,
-  variant,
-  literal,
-} from "valibot"
+import { asEnumType, asField, asObjectType } from "../src/metadata"
+import * as v from "valibot"
 import { type PipedSchema } from "../src/types"
 
 declare module "graphql" {
@@ -66,35 +40,35 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 describe("valibotSilk", () => {
   it("should handle scalar", () => {
     let schema: PipedSchema
-    schema = nullable(string())
+    schema = v.nullable(v.string())
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLString)
 
-    schema = nullable(boolean())
+    schema = v.nullable(v.boolean())
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLBoolean)
-    schema = nullable(number())
+    schema = v.nullable(v.number())
 
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLFloat)
 
-    schema = pipe(nullable(number()), integer())
+    schema = v.pipe(v.nullable(v.number()), v.integer())
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLInt)
 
-    schema = pipe(optional(string()), ulid())
+    schema = v.pipe(v.optional(v.string()), v.ulid())
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
 
-    schema = pipe(optional(string()), uuid())
+    schema = v.pipe(v.optional(v.string()), v.uuid())
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
 
-    schema = pipe(optional(string()), cuid2())
+    schema = v.pipe(v.optional(v.string()), v.cuid2())
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
 
-    schema = pipe(optional(string()), email())
+    schema = v.pipe(v.optional(v.string()), v.email())
     expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLString)
   })
 
   it("should keep default value in extensions", () => {
-    const objectType = pipe(
-      object({
-        foo: optional(string(), () => "foo"),
+    const objectType = v.pipe(
+      v.object({
+        foo: v.optional(v.string(), () => "foo"),
       }),
       asObjectType({ name: "ObjectType" })
     )
@@ -114,15 +88,17 @@ describe("valibotSilk", () => {
   it("should handle custom type", () => {
     expect(
       getGraphQLType(
-        valibotSilk(pipe(nullable(date()), asField({ type: GraphQLDate })))
+        valibotSilk(
+          v.pipe(v.nullable(v.date()), asField({ type: GraphQLDate }))
+        )
       )
     ).toEqual(GraphQLDate)
   })
 
   it("should handle hidden field", () => {
-    const Dog = object({
-      name: optional(string()),
-      birthday: pipe(optional(date()), asField({ type: null })),
+    const Dog = v.object({
+      name: v.optional(v.string()),
+      birthday: v.pipe(v.optional(v.date()), asField({ type: null })),
     })
     collectNames({ Dog })
     expect(printValibotSilk(Dog)).toMatchInlineSnapshot(`
@@ -133,9 +109,9 @@ describe("valibotSilk", () => {
   })
 
   it("should handle preset GraphQLType", () => {
-    const Dog = object({
-      name: optional(string()),
-      birthday: optional(date()),
+    const Dog = v.object({
+      name: v.optional(v.string()),
+      birthday: v.optional(v.date()),
     })
     collectNames({ Dog })
 
@@ -171,69 +147,69 @@ describe("valibotSilk", () => {
   })
 
   it("should handle non null", () => {
-    expect(getGraphQLType(valibotSilk(string()))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.string()))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(nonNullable(string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.nonNullable(v.string())))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(nonOptional(string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.nonOptional(v.string())))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(nonNullish(string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.nonNullish(v.string())))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
 
-    expect(getGraphQLType(valibotSilk(nullable(string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.nullable(v.string())))).toEqual(
       GraphQLString
     )
-    expect(getGraphQLType(valibotSilk(optional(string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.optional(v.string())))).toEqual(
       GraphQLString
     )
-    expect(getGraphQLType(valibotSilk(nullish(string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.nullish(v.string())))).toEqual(
       GraphQLString
     )
   })
   it("should handle array", () => {
-    expect(getGraphQLType(valibotSilk(array(string())))).toEqual(
+    expect(getGraphQLType(valibotSilk(v.array(v.string())))).toEqual(
       new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
     )
 
-    expect(getGraphQLType(valibotSilk(optional(array(string()))))).toEqual(
-      new GraphQLList(new GraphQLNonNull(GraphQLString))
-    )
-
-    expect(getGraphQLType(valibotSilk(array(nullable(string()))))).toEqual(
-      new GraphQLNonNull(new GraphQLList(GraphQLString))
-    )
+    expect(
+      getGraphQLType(valibotSilk(v.optional(v.array(v.string()))))
+    ).toEqual(new GraphQLList(new GraphQLNonNull(GraphQLString)))
 
     expect(
-      getGraphQLType(valibotSilk(nullable(array(nullable(string())))))
+      getGraphQLType(valibotSilk(v.array(v.nullable(v.string()))))
+    ).toEqual(new GraphQLNonNull(new GraphQLList(GraphQLString)))
+
+    expect(
+      getGraphQLType(valibotSilk(v.nullable(v.array(v.nullable(v.string())))))
     ).toEqual(new GraphQLList(GraphQLString))
   })
 
   it("should handle object", () => {
-    const Cat1 = pipe(
-      object({
-        name: string(),
-        age: pipe(number(), integer()),
-        loveFish: optional(boolean()),
+    const Cat1 = v.pipe(
+      v.object({
+        name: v.string(),
+        age: v.pipe(v.number(), v.integer()),
+        loveFish: v.optional(v.boolean()),
       }),
       asObjectType({ name: "Cat" })
     )
 
-    const Cat2 = object({
-      __typename: literal("Cat"),
-      name: string(),
-      age: pipe(number(), integer()),
-      loveFish: optional(boolean()),
+    const Cat2 = v.object({
+      __typename: v.literal("Cat"),
+      name: v.string(),
+      age: v.pipe(v.number(), v.integer()),
+      loveFish: v.optional(v.boolean()),
     })
 
-    const Cat = object({
-      __typename: literal("Cat"),
-      name: string(),
-      age: pipe(number(), integer()),
-      loveFish: optional(boolean()),
+    const Cat = v.object({
+      __typename: v.literal("Cat"),
+      name: v.string(),
+      age: v.pipe(v.number(), v.integer()),
+      loveFish: v.optional(v.boolean()),
     })
 
     collectNames({ Cat })
@@ -255,39 +231,74 @@ describe("valibotSilk", () => {
   })
 
   it("should handle enum", () => {
-    const FruitPL = picklist(["apple", "banana", "orange"])
+    const FruitPL = v.pipe(
+      v.picklist(["apple", "banana", "orange"]),
+      asEnumType({
+        valuesConfig: {
+          apple: { description: "red" },
+          banana: { description: "yellow" },
+          orange: { description: "orange" },
+        },
+      })
+    )
     enum Fruit {
-      apple,
-      banana,
-      orange,
+      apple = "apple",
+      banana = "banana",
+      orange = "orange",
     }
-    const FruitE = enum_(Fruit)
+
+    const FruitE = v.pipe(
+      v.enum_(Fruit),
+      asEnumType({
+        valuesConfig: {
+          apple: { description: "red" },
+          [Fruit.banana]: { description: "yellow" },
+          [Fruit.orange]: { description: "orange" },
+        },
+      })
+    )
 
     collectNames({ Fruit: FruitPL }, { Fruit: FruitE })
-    expect(printValibotSilk(FruitPL)).toEqual(printValibotSilk(FruitE))
+    expect(printValibotSilk(FruitE)).toMatchInlineSnapshot(`
+      "enum Fruit {
+        """red"""
+        apple
+
+        """yellow"""
+        banana
+
+        """orange"""
+        orange
+      }"
+    `)
     expect(printValibotSilk(FruitPL)).toMatchInlineSnapshot(`
       "enum Fruit {
+        """red"""
         apple
+
+        """yellow"""
         banana
+
+        """orange"""
         orange
       }"
     `)
   })
 
   it("should handle interfere", () => {
-    const Fruit = object({
-      _Fruit: boolean(),
-      name: string(),
-      color: string(),
-      prize: number(),
+    const Fruit = v.object({
+      _Fruit: v.boolean(),
+      name: v.string(),
+      color: v.string(),
+      prize: v.number(),
     })
 
-    const Orange = pipe(
-      object({
-        _Orange: boolean(),
-        name: string(),
-        color: string(),
-        prize: number(),
+    const Orange = v.pipe(
+      v.object({
+        _Orange: v.boolean(),
+        name: v.string(),
+        color: v.string(),
+        prize: v.number(),
       }),
       asObjectType({ interfaces: [Fruit] })
     )
@@ -320,19 +331,19 @@ describe("valibotSilk", () => {
   })
 
   it("should handle union", () => {
-    const Cat = object({
-      name: string(),
-      age: pipe(number(), integer()),
-      loveFish: optional(boolean()),
+    const Cat = v.object({
+      name: v.string(),
+      age: v.pipe(v.number(), v.integer()),
+      loveFish: v.optional(v.boolean()),
     })
 
-    const Dog = object({
-      name: string(),
-      age: pipe(number(), integer()),
-      loveBone: optional(boolean()),
+    const Dog = v.object({
+      name: v.string(),
+      age: v.pipe(v.number(), v.integer()),
+      loveBone: v.optional(v.boolean()),
     })
 
-    const Animal = union([Cat, Dog])
+    const Animal = v.union([Cat, Dog])
 
     collectNames({ Cat, Dog, Animal })
     const r = resolver({
@@ -361,21 +372,21 @@ describe("valibotSilk", () => {
   })
 
   it("should handle variant", () => {
-    const Cat = object({
-      __typename: literal("Cat"),
-      name: string(),
-      age: pipe(number(), integer()),
-      loveFish: optional(boolean()),
+    const Cat = v.object({
+      __typename: v.literal("Cat"),
+      name: v.string(),
+      age: v.pipe(v.number(), v.integer()),
+      loveFish: v.optional(v.boolean()),
     })
 
-    const Dog = object({
-      __typename: literal("Dog"),
-      name: string(),
-      age: pipe(number(), integer()),
-      loveBone: optional(boolean()),
+    const Dog = v.object({
+      __typename: v.literal("Dog"),
+      name: v.string(),
+      age: v.pipe(v.number(), v.integer()),
+      loveBone: v.optional(v.boolean()),
     })
 
-    const Animal = variant("__typename", [Cat, Dog])
+    const Animal = v.variant("__typename", [Cat, Dog])
 
     collectNames({ Cat, Dog, Animal })
     const r = resolver({
@@ -404,21 +415,21 @@ describe("valibotSilk", () => {
 
   describe("should avoid duplicate", () => {
     it("should merge field from multiple resolver", () => {
-      const Dog = object({
-        name: string(),
-        birthday: string(),
+      const Dog = v.object({
+        name: v.string(),
+        birthday: v.string(),
       })
 
       collectNames({ Dog })
       const r1 = resolver.of(Dog, {
         dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-        age: field(number(), (dog) => {
+        age: field(v.number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
 
       const r2 = resolver.of(Dog, {
-        greeting: field(string(), (dog) => {
+        greeting: field(v.string(), (dog) => {
           return `Hello ${dog.name}`
         }),
       })
@@ -437,20 +448,20 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate object", () => {
-      const Dog = object({
-        name: string(),
-        birthday: string(),
+      const Dog = v.object({
+        name: v.string(),
+        birthday: v.string(),
       })
 
-      const Cat = object({
-        name: string(),
-        birthday: string(),
-        friend: nullish(Dog),
+      const Cat = v.object({
+        name: v.string(),
+        birthday: v.string(),
+        friend: v.nullish(Dog),
       })
 
       collectNames({ Dog, Cat })
       const r1 = resolver.of(Dog, {
-        dog: query(optional(Dog), () => ({
+        dog: query(v.optional(Dog), () => ({
           name: "",
           birthday: "2012-12-12",
         })),
@@ -458,7 +469,7 @@ describe("valibotSilk", () => {
           name: "",
           birthday: "2012-12-12",
         })),
-        dogs: query(array(nullable(Dog)), () => [
+        dogs: query(v.array(v.nullable(Dog)), () => [
           { name: "Fido", birthday: "2012-12-12" },
           { name: "Rover", birthday: "2012-12-12" },
         ]),
@@ -466,8 +477,8 @@ describe("valibotSilk", () => {
           name: "",
           birthday: "2012-12-12",
         })),
-        mustDogs: query(array(Dog), () => []),
-        age: field(number(), (dog) => {
+        mustDogs: query(v.array(Dog), () => []),
+        age: field(v.number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
@@ -496,25 +507,25 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate object in pipe", () => {
-      const Prize = object({
-        name: string(),
-        value: number(),
+      const Prize = v.object({
+        name: v.string(),
+        value: v.number(),
       })
 
       collectNames({ Prize })
 
-      const Orange = object({
-        name: string(),
-        color: string(),
-        prize: pipe(Prize, asField({})),
-        __typename: literal("Orange"),
+      const Orange = v.object({
+        name: v.string(),
+        color: v.string(),
+        prize: v.pipe(Prize, asField({})),
+        __typename: v.literal("Orange"),
       })
 
-      const Apple = object({
-        name: string(),
-        color: string(),
-        prize: pipe(Prize, asField({})),
-        __typename: literal("Apple"),
+      const Apple = v.object({
+        name: v.string(),
+        color: v.string(),
+        prize: v.pipe(Prize, asField({})),
+        __typename: v.literal("Apple"),
       })
 
       const r = resolver.of(Orange, {
@@ -548,32 +559,32 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate object in interface", () => {
-      const Prize = object({
-        name: string(),
-        value: number(),
+      const Prize = v.object({
+        name: v.string(),
+        value: v.number(),
       })
 
       collectNames({ Prize })
 
-      const Fruit = object({
-        __typename: literal("Fruit"),
-        name: string(),
-        color: string(),
+      const Fruit = v.object({
+        __typename: v.literal("Fruit"),
+        name: v.string(),
+        color: v.string(),
         prize: Prize,
       })
 
-      const Orange = pipe(
-        object({
+      const Orange = v.pipe(
+        v.object({
           ...Fruit.entries,
-          __typename: literal("Orange"),
+          __typename: v.literal("Orange"),
         }),
         asObjectType({ interfaces: [Fruit] })
       )
 
-      const Apple = pipe(
-        object({
+      const Apple = v.pipe(
+        v.object({
           ...Fruit.entries,
-          __typename: literal("Apple"),
+          __typename: v.literal("Apple"),
         }),
         asObjectType({ interfaces: [Fruit] })
       )
@@ -615,14 +626,14 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate input", () => {
-      const Dog = object({
-        name: string(),
-        birthday: string(),
+      const Dog = v.object({
+        name: v.string(),
+        birthday: v.string(),
       })
 
-      const DogInput = object(Dog.entries)
+      const DogInput = v.object(Dog.entries)
 
-      const DataInput = object({
+      const DataInput = v.object({
         dog: DogInput,
       })
 
@@ -637,19 +648,19 @@ describe("valibotSilk", () => {
           input: { data: DogInput },
           resolve: ({ data }) => data,
         }),
-        dogs: query(array(Dog), {
+        dogs: query(v.array(Dog), {
           input: {
-            data: array(DogInput),
-            required: array(DogInput),
-            names: array(string()),
+            data: v.array(DogInput),
+            required: v.array(DogInput),
+            names: v.array(v.string()),
           },
           resolve: ({ data }) => data,
         }),
-        mustDog: query(nonNullable(Dog), {
+        mustDog: query(v.nonNullable(Dog), {
           input: { data: DataInput },
           resolve: ({ data }) => data.dog,
         }),
-        age: field(number(), (dog) => {
+        age: field(v.number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
@@ -680,15 +691,15 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate enum", () => {
-      const Fruit = picklist(["apple", "banana", "orange"])
+      const Fruit = v.picklist(["apple", "banana", "orange"])
 
       collectNames({ Fruit })
 
       const r1 = resolver({
-        fruit: query(optional(Fruit), () => "apple" as const),
-        fruits: query(array(optional(Fruit)), () => []),
+        fruit: query(v.optional(Fruit), () => "apple" as const),
+        fruits: query(v.array(v.optional(Fruit)), () => []),
         mustFruit: query(Fruit, () => "apple" as const),
-        mustFruits: query(array(Fruit), () => []),
+        mustFruits: query(v.array(Fruit), () => []),
       })
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
@@ -707,19 +718,19 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate interface", () => {
-      const Fruit = object({ color: optional(string()) })
-      const Orange = pipe(
-        object({
-          color: optional(string()),
-          flavor: string(),
+      const Fruit = v.object({ color: v.optional(v.string()) })
+      const Orange = v.pipe(
+        v.object({
+          color: v.optional(v.string()),
+          flavor: v.string(),
         }),
         asObjectType({ interfaces: [Fruit] })
       )
 
-      const Apple = pipe(
-        object({
-          color: optional(string()),
-          flavor: optional(string()),
+      const Apple = v.pipe(
+        v.object({
+          color: v.optional(v.string()),
+          flavor: v.optional(v.string()),
         }),
         asObjectType({ interfaces: [Fruit] })
       )
@@ -727,12 +738,12 @@ describe("valibotSilk", () => {
       collectNames({ Fruit, Orange, Apple })
 
       const r1 = resolver({
-        apple: query(optional(Apple), () => ({ flavor: "" })),
-        apples: query(optional(array(optional(Apple))), () => []),
-        orange: query(optional(Orange), () => ({ flavor: "" })),
-        oranges: query(array(nullable(Orange)), () => []),
+        apple: query(v.optional(Apple), () => ({ flavor: "" })),
+        apples: query(v.optional(v.array(v.optional(Apple))), () => []),
+        orange: query(v.optional(Orange), () => ({ flavor: "" })),
+        oranges: query(v.array(v.nullable(Orange)), () => []),
         mustOrange: query(Orange, () => ({ flavor: "" })),
-        mustOranges: query(array(Orange), () => []),
+        mustOranges: query(v.array(Orange), () => []),
       })
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
@@ -761,24 +772,24 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate union", () => {
-      const Apple = object({ flavor: string() })
-      const Orange = object({ color: string() })
-      const Fruit = union([Apple, Orange])
+      const Apple = v.object({ flavor: v.string() })
+      const Orange = v.object({ color: v.string() })
+      const Fruit = v.union([Apple, Orange])
       collectNames({ Apple, Orange, Fruit })
 
       const r1 = resolver({
-        fruit: query(optional(Fruit), () => ({ flavor: "" })),
-        fruits: query(array(optional(Fruit)), () => []),
+        fruit: query(v.optional(Fruit), () => ({ flavor: "" })),
+        fruits: query(v.array(v.optional(Fruit)), () => []),
         mustFruit: query(Fruit, () => ({ flavor: "" })),
-        mustFruits: query(array(Fruit), () => []),
-        apple: query(optional(Apple), () => ({ flavor: "" })),
-        apples: query(array(optional(Apple)), () => []),
+        mustFruits: query(v.array(Fruit), () => []),
+        apple: query(v.optional(Apple), () => ({ flavor: "" })),
+        apples: query(v.array(v.optional(Apple)), () => []),
         mustApple: query(Apple, () => ({ flavor: "" })),
-        mustApples: query(array(Apple), () => []),
-        orange: query(optional(Orange), () => ({ color: "" })),
-        oranges: query(array(optional(Orange)), () => []),
+        mustApples: query(v.array(Apple), () => []),
+        orange: query(v.optional(Orange), () => ({ color: "" })),
+        oranges: query(v.array(v.optional(Orange)), () => []),
         mustOrange: query(Orange, () => ({ color: "" })),
-        mustOranges: query(array(Orange), () => []),
+        mustOranges: query(v.array(Orange), () => []),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -812,7 +823,7 @@ describe("valibotSilk", () => {
 })
 
 function printValibotSilk(
-  schema: BaseSchema<any, any, any> | BaseSchemaAsync<any, any, any>
+  schema: v.BaseSchema<any, any, any> | v.BaseSchemaAsync<any, any, any>
 ): string {
   let gqlType = getGraphQLType(valibotSilk(schema))
   while ("ofType" in gqlType) gqlType = gqlType.ofType

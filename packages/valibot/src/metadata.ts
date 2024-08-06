@@ -13,6 +13,7 @@ import {
   type GraphQLInterfaceType,
   type GraphQLUnionTypeConfig,
   type GraphQLOutputType,
+  type GraphQLEnumValueConfig,
 } from "graphql"
 import { type PipedSchema } from "./types"
 import { isNullish } from "./utils"
@@ -54,8 +55,8 @@ export class ValibotMetadataCollector {
 
   static getEnumConfig(
     ...schemas: PipedSchema[]
-  ): AsEnumTypeMetadata<object>["config"] | undefined {
-    return ValibotMetadataCollector.getConfig<AsEnumTypeMetadata<object>>(
+  ): AsEnumTypeMetadata<any>["config"] | undefined {
+    return ValibotMetadataCollector.getConfig<AsEnumTypeMetadata<any>>(
       "gqloom.asEnumType",
       schemas
     )
@@ -72,7 +73,7 @@ export class ValibotMetadataCollector {
 
   protected static getConfig<
     T extends
-      | AsEnumTypeMetadata<object>
+      | AsEnumTypeMetadata<any>
       | AsObjectTypeMetadata<object>
       | AsUnionTypeMetadata<object>,
   >(configType: T["type"], schemas: PipedSchema[]): T["config"] | undefined {
@@ -244,7 +245,7 @@ asInputArgs.increasingID = 1
 /**
  * GraphQL enum type metadata type.
  */
-export interface AsEnumTypeMetadata<TInput extends object>
+export interface AsEnumTypeMetadata<TInput extends string | number>
   extends BaseTransformation<TInput, TInput, never> {
   /**
    * The metadata type.
@@ -258,7 +259,14 @@ export interface AsEnumTypeMetadata<TInput extends object>
   /**
    * The GraphQL enum type config.
    */
-  readonly config: Partial<GraphQLEnumTypeConfig>
+  readonly config: EnumTypeConfig<TInput>
+}
+
+export interface EnumTypeConfig<TInput extends string | number>
+  extends Partial<GraphQLEnumTypeConfig> {
+  valuesConfig?: TInput extends string | number
+    ? Partial<Record<TInput, GraphQLEnumValueConfig>>
+    : Partial<Record<string, GraphQLEnumValueConfig>>
 }
 
 /**
@@ -268,8 +276,8 @@ export interface AsEnumTypeMetadata<TInput extends object>
  *
  * @returns A GraphQL enum type metadata.
  */
-export function asEnumType<TInput extends object>(
-  config: AsEnumTypeMetadata<TInput>["config"]
+export function asEnumType<TInput extends string | number>(
+  config: EnumTypeConfig<TInput>
 ): AsEnumTypeMetadata<TInput> {
   return {
     kind: "transformation",

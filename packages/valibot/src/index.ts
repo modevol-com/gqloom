@@ -116,18 +116,19 @@ export class ValibotWeaver {
         return GraphQLString
       case "enum":
       case "picklist": {
-        const { name, ...enumConfig } =
+        const { name, valuesConfig, ...enumConfig } =
           ValibotMetadataCollector.getEnumConfig(schema, ...wrappers) ?? {}
 
         const values: GraphQLEnumValueConfigMap = {}
         if (schema.type === "picklist") {
           for (const value of schema.options) {
-            values[String(value)] = { value }
+            const key = String(value)
+            values[key] = { value, ...valuesConfig?.[key] }
           }
         } else {
           Object.entries(schema.enum as EnumLike).forEach(([key, value]) => {
             if (typeof schema.enum?.[schema.enum[key]] === "number") return
-            values[key] = { value }
+            values[key] = { value, ...valuesConfig?.[key] }
           })
         }
         if (!name)
