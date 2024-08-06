@@ -270,8 +270,10 @@ export interface CallableEntitySchemaWeaver<
 export type EntitySchemaWithRelations<
   TSchemaIO extends AbstractSchemaIO,
   TSilk extends TSchemaIO[0],
-  TRelation extends Record<string, RelationProperty<any, any>>,
-> = EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO> & InferRelations<TRelation>>
+  TRelations extends Record<string, RelationProperty<any, any>>,
+> = EntitySchema<
+  SilkSchemaEntity<TSilk, TSchemaIO> & InferRelations<TRelations>
+>
 
 export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver<GraphQLSilkIO> =
   Object.assign(
@@ -326,25 +328,30 @@ export type SilkSchemaEntity<
 export type GraphQLSilkEntity<TSilk> = SilkSchemaEntity<TSilk, GraphQLSilkIO>
 
 export type InferRelations<
-  TRelation extends Record<string, RelationProperty<any, any>>,
+  TRelations extends Record<string, RelationProperty<any, any>>,
 > = {
-  [key in keyof TRelation]: TRelation[key] extends ManyToOneProperty<
-    infer TTarget,
-    any
-  >
+  [TKey in keyof TRelations]: TRelations[TKey] extends WithNullable
+    ? InferRelation<TRelations, TKey> | undefined | null
+    : InferRelation<TRelations, TKey>
+}
+
+export type InferRelation<
+  TRelations extends Record<string, RelationProperty<any, any>>,
+  TKey extends keyof TRelations,
+> =
+  TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
     ? Ref<TTarget>
-    : TRelation[key] extends OneToOneProperty<infer TTarget, any>
+    : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
       ? Ref<TTarget>
-      : TRelation[key] extends OneToManyProperty<infer TTarget, any>
+      : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
         ? TTarget extends object
           ? Collection<TTarget>
           : never
-        : TRelation[key] extends ManyToManyProperty<infer TTarget, any>
+        : TRelations[TKey] extends ManyToManyProperty<infer TTarget, any>
           ? TTarget extends object
             ? Collection<TTarget>
             : never
           : never
-}
 
 export type RelationProperty<TTarget extends object, TOwner> =
   | ManyToOneProperty<TTarget, TOwner>
@@ -357,6 +364,18 @@ export type ManyToOneProperty<TTarget extends object, TOwner> = Extract<
   { kind: ReferenceKind.MANY_TO_ONE | "m:1" }
 >
 
+export function manyToOne<TTarget extends object, TOwner>(
+  entity: string | (() => string | EntityName<TTarget>),
+  options?: Omit<ManyToOneOptions<TOwner, TTarget>, "nullable"> & {
+    nullable?: false
+  }
+): ManyToOneProperty<TTarget, TOwner>
+export function manyToOne<TTarget extends object, TOwner>(
+  entity: string | (() => string | EntityName<TTarget>),
+  options?: Omit<ManyToOneOptions<TOwner, TTarget>, "nullable"> & {
+    nullable: true
+  }
+): ManyToOneProperty<TTarget, TOwner> & WithNullable
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: ManyToOneOptions<TOwner, TTarget>
@@ -392,6 +411,18 @@ export type OneToOneProperty<TTarget extends object, TOwner> = Extract<
 
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
+  options?: Omit<OneToOneOptions<TOwner, TTarget>, "nullable"> & {
+    nullable?: false
+  }
+): OneToOneProperty<TTarget, TOwner>
+export function oneToOne<TTarget extends object, TOwner>(
+  entity: string | (() => string | EntityName<TTarget>),
+  options?: Omit<OneToOneOptions<TOwner, TTarget>, "nullable"> & {
+    nullable: true
+  }
+): OneToOneProperty<TTarget, TOwner> & WithNullable
+export function oneToOne<TTarget extends object, TOwner>(
+  entity: string | (() => string | EntityName<TTarget>),
   options?: OneToOneOptions<TOwner, TTarget>
 ): OneToOneProperty<TTarget, TOwner> {
   return {
@@ -425,3 +456,7 @@ type NullishKeys<T> = Exclude<
   >,
   undefined
 >
+
+interface WithNullable {
+  nullable: true
+}

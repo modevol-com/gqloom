@@ -1,5 +1,6 @@
 import { type WeaverConfig, type SYMBOLS } from "@gqloom/core"
 import {
+  type OptionalProps,
   type EntityProperty,
   type EntitySchema,
   type PropertyOptions,
@@ -12,6 +13,11 @@ export interface GQLoomMikroFieldExtensions {
 
 export type InferEntity<TSchema extends EntitySchema<any, any>> =
   TSchema extends EntitySchema<infer TEntity, any> ? TEntity : never
+
+export type InferEntityData<T extends EntitySchema> = Omit<
+  InferEntity<T>,
+  typeof OptionalProps
+>
 
 export interface MikroWeaverConfigOptions {
   presetGraphQLType?: (
