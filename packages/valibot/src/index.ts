@@ -1,10 +1,4 @@
-import {
-  type InferOutput,
-  type InferInput,
-  parseAsync,
-  parse,
-  type GenericSchema,
-} from "valibot"
+import * as v from "valibot"
 import {
   type GraphQLSilkIO,
   SYMBOLS,
@@ -14,6 +8,7 @@ import {
   weaverContext,
   type GraphQLSilk,
   isSilk,
+  collectNames,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -33,7 +28,11 @@ import {
   isObjectType,
   GraphQLUnionType,
 } from "graphql"
-import { type AsObjectTypeMetadata, ValibotMetadataCollector } from "./metadata"
+import {
+  type AsObjectTypeMetadata,
+  ValibotMetadataCollector,
+  asInputArgs,
+} from "./metadata"
 import { flatVariant, nullishTypes } from "./utils"
 import {
   type SupportedSchema,
@@ -51,7 +50,7 @@ export class ValibotWeaver {
    */
   static unravel<TSchema extends GenericSchemaOrAsync>(
     schema: TSchema
-  ): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>> {
+  ): TSchema & GraphQLSilk<v.InferOutput<TSchema>, v.InferInput<TSchema>> {
     const config =
       weaverContext.value?.getConfig<ValibotWeaverConfig>("gqloom.valibot")
 
@@ -299,10 +298,10 @@ export class ValibotWeaver {
   static parse<TSchema extends GenericSchemaOrAsync>(
     this: TSchema,
     input: unknown
-  ): Promise<InferOutput<TSchema>> | InferOutput<TSchema> {
+  ): Promise<v.InferOutput<TSchema>> | v.InferOutput<TSchema> {
     return this.async
-      ? parseAsync(this, input)
-      : parse(this as GenericSchema, input)
+      ? v.parseAsync(this, input)
+      : v.parse(this as v.GenericSchema, input)
   }
 
   static getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
@@ -319,7 +318,7 @@ export * from "./metadata"
  */
 export function valibotSilk<TSchema extends GenericSchemaOrAsync>(
   schema: TSchema
-): TSchema & GraphQLSilk<InferOutput<TSchema>, InferInput<TSchema>>
+): TSchema & GraphQLSilk<v.InferOutput<TSchema>, v.InferInput<TSchema>>
 
 /**
  * get GraphQL Silk from Valibot Schema
@@ -329,10 +328,16 @@ export function valibotSilk<TSchema extends GenericSchemaOrAsync>(
 export function valibotSilk<TSilk>(silk: TSilk): TSilk
 export function valibotSilk(schema: GenericSchemaOrAsync | GraphQLSilk) {
   if (isSilk(schema)) return schema
+  if (isValibotSchemaRecord(schema)) {
+    const inputSchema = v.objectAsync(schema)
+    collectNames({ [`InputArgs${asInputArgs.increasingID++}`]: inputSchema })
+    return ValibotWeaver.unravel(inputSchema)
+  }
   return ValibotWeaver.unravel(schema)
 }
 
-valibotSilk.isSilk = (schema: any) => isSilk(schema) || isValibotSchema(schema)
+valibotSilk.isSilk = (schema: any) =>
+  isSilk(schema) || isValibotSchema(schema) || isValibotSchemaRecord(schema)
 
 export type ValibotSchemaIO = [
   GenericSchemaOrAsync,
@@ -344,7 +349,18 @@ export const { query, mutation, field, resolver } = createLoom<
   ValibotSchemaIO | GraphQLSilkIO
 >(valibotSilk, valibotSilk.isSilk)
 
+function isValibotSchemaRecord(
+  schema: any
+): schema is Record<string, GenericSchemaOrAsync> {
+  return (
+    typeof schema === "object" &&
+    schema !== null &&
+    Object.values(schema).every(isValibotSchema)
+  )
+}
+
 function isValibotSchema(schema: any): schema is GenericSchemaOrAsync {
+  if (typeof schema !== "object") return false
   if (!("kind" in schema)) return false
   if (!("async" in schema)) return false
   if (!("type" in schema)) return false
