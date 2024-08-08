@@ -81,9 +81,16 @@ interface IArticleEntity extends GraphQLSilkEntity<typeof Article> {
 }
 
 const ArticleEntity: EntitySchema<IArticleEntity> =
-  weaveEntitySchemaBySilk.withRelations(Article, {
-    author: manyToOne(() => AuthorEntity, { nullable: true }),
-  })
+  weaveEntitySchemaBySilk.withRelations(
+    Article,
+    {
+      author: manyToOne(() => AuthorEntity, { nullable: true }),
+    },
+    {
+      name: "Article",
+      indexes: [{ properties: ["author"] }, { properties: ["title"] }],
+    }
+  )
 
 interface IGiraffeEntity extends GraphQLSilkEntity<typeof Giraffe> {
   friends: Collection<IGiraffeEntity>
