@@ -38,6 +38,15 @@ const Author = silk<
   })
 )
 
+const Article = silk<{ title: string }>(
+  new GraphQLObjectType({
+    name: "Article",
+    fields: {
+      title: { type: GraphQLString },
+    },
+  })
+)
+
 const Giraffe = silk<
   { name: string; age: number },
   { name: string; age?: number }
@@ -68,6 +77,15 @@ const AuthorEntity: EntitySchema<IAuthorEntity> =
     books: oneToMany(() => BookEntity, { mappedBy: "author" }),
   })
 
+interface IArticleEntity extends GraphQLSilkEntity<typeof Article> {
+  author: Ref<IAuthorEntity> | null | undefined
+}
+
+const ArticleEntity: EntitySchema<IArticleEntity> =
+  weaveEntitySchemaBySilk.withRelations(Article, {
+    author: manyToOne(() => AuthorEntity, { nullable: true }),
+  })
+
 interface IGiraffeEntity extends GraphQLSilkEntity<typeof Giraffe> {
   friends: Collection<IGiraffeEntity>
 }
@@ -86,9 +104,13 @@ describe("entity-schema", () => {
       name: "name",
       books: [book],
     })
+    const article = em.create(ArticleEntity, {
+      title: "title",
+    })
     const giraffe = em.create(GiraffeEntity, {
       name: "name",
     })
+    expectTypeOf(article).toMatchTypeOf<IArticleEntity>()
     expectTypeOf(book).toMatchTypeOf<IBookEntity>()
     expectTypeOf(author).toMatchTypeOf<IAuthorEntity>()
     expectTypeOf(giraffe).toMatchTypeOf<IGiraffeEntity>()

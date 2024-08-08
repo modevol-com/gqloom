@@ -457,6 +457,6 @@ type NullishKeys<T> = Exclude<
   undefined
 >
 
-interface WithNullable {
+export interface WithNullable {
   nullable: true
 }
