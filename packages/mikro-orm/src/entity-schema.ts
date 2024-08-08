@@ -331,7 +331,7 @@ export type InferRelations<
   TRelations extends Record<string, RelationProperty<any, any>>,
 > = {
   [TKey in keyof TRelations]: TRelations[TKey] extends WithNullable
-    ? InferRelation<TRelations, TKey> | undefined | null
+    ? InferRelation<TRelations, TKey> | null
     : InferRelation<TRelations, TKey>
 }
 

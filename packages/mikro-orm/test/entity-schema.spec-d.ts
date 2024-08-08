@@ -77,7 +77,7 @@ const AuthorEntity: EntitySchema<IAuthorEntity> =
   })
 
 interface IArticleEntity extends GraphQLSilkEntity<typeof Article> {
-  author: Reference<IAuthorEntity> | null | undefined
+  author: Reference<IAuthorEntity> | null
 }
 
 const ArticleEntity: EntitySchema<IArticleEntity> =
@@ -103,12 +103,8 @@ describe("entity-schema", () => {
       name: "name",
       books: [book],
     })
-    const article = em.create(ArticleEntity, {
-      title: "title",
-    })
-    const giraffe = em.create(GiraffeEntity, {
-      name: "name",
-    })
+    const article = em.create(ArticleEntity, { title: "title" })
+    const giraffe = em.create(GiraffeEntity, { name: "name" })
     expectTypeOf(article).toMatchTypeOf<IArticleEntity>()
     expectTypeOf(book).toMatchTypeOf<IBookEntity>()
     expectTypeOf(author).toMatchTypeOf<IAuthorEntity>()
