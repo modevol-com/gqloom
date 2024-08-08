@@ -12,7 +12,6 @@ import {
   MikroORM,
   type Reference,
   type EntitySchema,
-  type Ref,
 } from "@mikro-orm/core"
 import { describe, expectTypeOf, it } from "vitest"
 import { type InferEntityData } from "../src"
@@ -60,7 +59,7 @@ const Giraffe = silk<
 )
 
 interface IBookEntity extends GraphQLSilkEntity<typeof Book> {
-  author: Ref<IAuthorEntity>
+  author: Reference<IAuthorEntity>
 }
 
 const BookEntity: EntitySchema<IBookEntity> =
@@ -78,7 +77,7 @@ const AuthorEntity: EntitySchema<IAuthorEntity> =
   })
 
 interface IArticleEntity extends GraphQLSilkEntity<typeof Article> {
-  author: Ref<IAuthorEntity> | null | undefined
+  author: Reference<IAuthorEntity> | null | undefined
 }
 
 const ArticleEntity: EntitySchema<IArticleEntity> =

@@ -20,7 +20,7 @@ import {
   type OneToManyOptions,
   type OneToOneOptions,
   type ManyToManyOptions,
-  type Ref,
+  type Reference,
   type Collection,
   type OptionalProps,
   type EntityName,
@@ -340,9 +340,9 @@ export type InferRelation<
   TKey extends keyof TRelations,
 > =
   TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
-    ? Ref<TTarget>
+    ? Reference<TTarget>
     : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
-      ? Ref<TTarget>
+      ? Reference<TTarget>
       : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
         ? TTarget extends object
           ? Collection<TTarget>
