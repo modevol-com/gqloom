@@ -14,7 +14,7 @@ import {
   type EntitySchema,
 } from "@mikro-orm/core"
 import { describe, expectTypeOf, it } from "vitest"
-import { type InferEntityData } from "../src"
+import { type InferEntity } from "../src"
 
 const Book = silk<{ title: string }>(
   new GraphQLObjectType({
@@ -161,9 +161,9 @@ describe("entity-schema", () => {
       }),
     })
 
-    type IKeeper = InferEntityData<typeof KeeperEntity>
-    type ITree = InferEntityData<typeof TreeEntity>
-    type IAilurus = InferEntityData<typeof AilurusEntity>
+    type IKeeper = InferEntity<typeof KeeperEntity>
+    type ITree = InferEntity<typeof TreeEntity>
+    type IAilurus = InferEntity<typeof AilurusEntity>
 
     expectTypeOf<IKeeper>().toMatchTypeOf<{ id: number; name: string }>()
     expectTypeOf<ITree>().toMatchTypeOf<{ id: number; location: string }>()

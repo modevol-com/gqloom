@@ -322,7 +322,7 @@ export type SilkSchemaEntity<
   TSilk,
   TSchemaIO extends AbstractSchemaIO,
 > = InferSchemaO<TSilk, TSchemaIO> & {
-  [OptionalProps]: NullishKeys<InferSchemaI<TSilk, TSchemaIO>>
+  [OptionalProps]?: NullishKeys<InferSchemaI<TSilk, TSchemaIO>>
 }
 
 export type GraphQLSilkEntity<TSilk> = SilkSchemaEntity<TSilk, GraphQLSilkIO>
