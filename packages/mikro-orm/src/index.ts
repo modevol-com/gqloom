@@ -25,6 +25,7 @@ import {
   GraphQLNonNull,
   GraphQLID,
   type GraphQLField,
+  type GraphQLObjectTypeConfig,
 } from "graphql"
 import {
   type MikroWeaverConfig,
@@ -53,6 +54,19 @@ export class MikroWeaver {
     })
   }
 
+  static ObjectConfigMap = new WeakMap<
+    EntitySchema,
+    Partial<GraphQLObjectTypeConfig<any, any>>
+  >()
+
+  static asObjectType(
+    schema: EntitySchema,
+    config: Partial<GraphQLObjectTypeConfig<any, any>>
+  ) {
+    MikroWeaver.ObjectConfigMap.set(schema, config)
+    return schema
+  }
+
   static getGraphQLTypeBySelf(this: EntitySchema) {
     return MikroWeaver.getGraphQLType(this)
   }
@@ -71,7 +85,8 @@ export class MikroWeaver {
       name?: string
     } = {}
   ) {
-    const name = entityName ?? entity.meta.className
+    const config = MikroWeaver.ObjectConfigMap.get(entity)
+    const name = entityName ?? entity.meta.className ?? config?.name
 
     const existing = weaverContext.getNamedType(name)
     if (existing != null) return new GraphQLNonNull(existing)
@@ -104,6 +119,7 @@ export class MikroWeaver {
             if (field == null) return mapValue.SKIP
             return field
           }),
+          ...config,
         })
       )
     )
@@ -222,9 +238,16 @@ export class MikroWeaver {
 /**
  * get GraphQL Silk from Mikro Entity Schema
  * @param schema Mikro Entity Schema
+ * @param config GraphQL Object Type Config
  * @returns GraphQL Silk Like Mikro Entity Schema
  */
-export const mikroSilk = MikroWeaver.unravel
+export function mikroSilk<TSchema extends EntitySchema>(
+  schema: TSchema,
+  config?: Partial<GraphQLObjectTypeConfig<any, any>>
+): EntitySchemaSilk<TSchema> {
+  if (config) MikroWeaver.asObjectType(schema, config)
+  return MikroWeaver.unravel(schema)
+}
 
 export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
   GraphQLSilk<

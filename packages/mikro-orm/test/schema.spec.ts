@@ -45,7 +45,8 @@ describe("MikroSilk", () => {
         tags: { type: "string[]", array: true },
         author: { entity: () => AuthorSchema, kind: "m:1", ref: true },
       },
-    })
+    }),
+    { extensions: { foo: "bar" } }
   )
 
   const gqlType = getGraphQLType(BookSchema)
@@ -60,6 +61,10 @@ describe("MikroSilk", () => {
         tags: [String!]!
       }"
     `)
+
+    expect(
+      (getGraphQLType(BookSchema.nullable()) as GraphQLObjectType).toConfig()
+    ).toMatchObject({ extensions: { foo: "bar" } })
 
     expect(
       printType(getGraphQLType(BookSchema.nullable()) as GraphQLObjectType)
