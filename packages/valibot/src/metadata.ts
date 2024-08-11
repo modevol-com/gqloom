@@ -128,6 +128,7 @@ export class ValibotMetadataCollector {
   }
 
   static getPipe(...schemas: (PipedSchema | undefined)[]) {
+    // FIXME: get pipe from nested schema
     const pipe: (
       | PipeItemAsync<unknown, unknown, BaseIssue<unknown>>
       | PipeItem<unknown, unknown, BaseIssue<unknown>>
