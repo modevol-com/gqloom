@@ -159,6 +159,47 @@ export class SchemaWeaver {
     const { resolverOptions, context } = this
     return { resolverOptions, weaverContext: context }
   }
+
+  static optionsFrom(...inputs: (SilkResolver | Middleware | WeaverConfig)[]) {
+    const configs = new Set<WeaverConfig>()
+    const middlewares = new Set<Middleware>()
+    const resolvers = new Set<SilkResolver>()
+    let context: WeaverContext | undefined
+
+    for (const item of inputs) {
+      if (typeof item === "function") {
+        middlewares.add(item)
+      } else if (WEAVER_CONFIG in item) {
+        configs.add(item)
+        if (
+          (item as CoreSchemaWeaverConfig)[WEAVER_CONFIG] ===
+          "gqloom.core.schema"
+        ) {
+          context = (item as CoreSchemaWeaverConfig).weaverContext
+        }
+      } else {
+        resolvers.add(item)
+      }
+    }
+
+    return { context, configs, middlewares, resolvers }
+  }
+
+  /**
+   * Weave a GraphQL Schema from resolvers
+   * @param inputs Resolvers, Global Middlewares or WeaverConfigs
+   * @returns GraphQ LSchema
+   */
+  static weave(...inputs: (SilkResolver | Middleware | WeaverConfig)[]) {
+    const { context, configs, middlewares, resolvers } =
+      SchemaWeaver.optionsFrom(...inputs)
+
+    const weaver = new SchemaWeaver({}, context)
+    configs.forEach((it) => weaver.setConfig(it))
+    middlewares.forEach((it) => weaver.use(it))
+    resolvers.forEach((it) => weaver.add(it))
+    return weaver.weaveGraphQLSchema()
+  }
 }
 
 /**
@@ -166,29 +207,4 @@ export class SchemaWeaver {
  * @param inputs Resolvers, Global Middlewares or WeaverConfigs
  * @returns GraphQ LSchema
  */
-export function weave(...inputs: (SilkResolver | Middleware | WeaverConfig)[]) {
-  const configs = new Set<WeaverConfig>()
-  const middlewares = new Set<Middleware>()
-  const resolvers = new Set<SilkResolver>()
-  let context: WeaverContext | undefined
-
-  for (const item of inputs) {
-    if (typeof item === "function") {
-      middlewares.add(item)
-    } else if (WEAVER_CONFIG in item) {
-      configs.add(item)
-      if (
-        (item as CoreSchemaWeaverConfig)[WEAVER_CONFIG] === "gqloom.core.schema"
-      ) {
-        context = (item as CoreSchemaWeaverConfig).weaverContext
-      }
-    } else {
-      resolvers.add(item)
-    }
-  }
-  const weaver = new SchemaWeaver({}, context)
-  configs.forEach((it) => weaver.setConfig(it))
-  middlewares.forEach((it) => weaver.use(it))
-  resolvers.forEach((it) => weaver.add(it))
-  return weaver.weaveGraphQLSchema()
-}
+export const weave = SchemaWeaver.weave
