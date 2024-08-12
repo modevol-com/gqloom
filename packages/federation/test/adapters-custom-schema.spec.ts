@@ -31,7 +31,7 @@ declare module "graphql" {
     apollo?: {
       subgraph?: {
         resolveReference?: (
-          parent: Record<string, any>,
+          parent: any,
           context: object,
           info: GraphQLResolveInfo
         ) => Promise<object> | object

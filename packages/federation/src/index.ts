@@ -51,3 +51,5 @@ export function resolveReference<
     },
   }
 }
+
+export * from "./schema-weaver"
