@@ -37,7 +37,9 @@ export function resolveReference<
   TEntity extends object,
   TRequiredKey extends keyof TEntity,
 >(
-  resolve: (source: Pick<TEntity, TRequiredKey>) => MayPromise<TEntity>
+  resolve: (
+    source: Pick<TEntity, TRequiredKey>
+  ) => MayPromise<TEntity | null | undefined>
 ): ResolveReferenceExtension<TEntity, TRequiredKey> {
   return {
     apollo: {
