@@ -25,17 +25,24 @@ describe("FederatedSchemaWeaver", () => {
         name: { type: new GraphQLNonNull(GraphQLString) },
       },
       extensions: {
-        directives: {
-          key: { fields: "id", resolvable: true },
-        },
+        directives: { key: { fields: "id", resolvable: true } },
         ...resolveReference<IUser, "id">(({ id }) => ({ id, name: "@ava" })),
       },
     })
   )
 
-  const r1 = loom.resolver({
-    me: loom.query(User, () => ({ id: "1", name: "@ava" })),
-  })
+  const r1 = loom.resolver.of(
+    User,
+    {
+      me: loom.query(User, () => ({ id: "1", name: "@ava" })),
+    },
+    {
+      extensions: {
+        directives: { key: { fields: "id", resolvable: true } },
+        ...resolveReference<IUser, "id">(({ id }) => ({ id, name: "@ava" })),
+      },
+    }
+  )
 
   const schema = FederatedSchemaWeaver.weave(
     r1,
