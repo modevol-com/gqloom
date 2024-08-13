@@ -428,6 +428,7 @@ export function oneToOne<TTarget extends object, TOwner>(
   return {
     kind: ReferenceKind.ONE_TO_ONE,
     entity,
+    ref: true,
     ...options,
   }
 }
