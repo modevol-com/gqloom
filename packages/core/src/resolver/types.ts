@@ -11,11 +11,7 @@ import type {
   InputSchemaToSilk,
 } from "./input"
 import type { GraphQLFieldConfig, GraphQLOutputType } from "graphql"
-import {
-  type PARSE,
-  type GET_GRAPHQL_TYPE,
-  type RESOLVER_OPTIONS_KEY,
-} from "../utils/symbols"
+import { type PARSE, type GET_GRAPHQL_TYPE } from "../utils/symbols"
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
@@ -317,9 +313,7 @@ export interface ResolverBobbin<TSchemaIO extends AbstractSchemaIO> {
     parent: TParent,
     operationOrFields: TOperations,
     options?: ResolverOptions<ValueOf<TOperations>>
-  ): TOperations & {
-    [RESOLVER_OPTIONS_KEY]: ResolverOptionsWithParent<ValueOf<TOperations>>
-  }
+  ): TOperations
 
   <
     TOperations extends Record<
@@ -329,7 +323,5 @@ export interface ResolverBobbin<TSchemaIO extends AbstractSchemaIO> {
   >(
     operations: TOperations,
     options?: ResolverOptions<ValueOf<TOperations>>
-  ): TOperations & {
-    [RESOLVER_OPTIONS_KEY]?: ResolverOptions<ValueOf<TOperations>>
-  }
+  ): TOperations
 }

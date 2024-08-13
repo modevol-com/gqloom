@@ -6,7 +6,6 @@ import {
   getSubscriptionOptions,
   getFieldOptions,
 } from "../utils"
-import { RESOLVER_OPTIONS_KEY } from "../utils/symbols"
 import { createInputParser } from "./input"
 import type {
   FieldBobbin,
@@ -114,26 +113,22 @@ export const silkSubscription: SubscriptionBobbin<GraphQLSilkIO> = (
   }
 }
 
+export const ResolverOptionsMap = new WeakMap<
+  object,
+  ResolverOptionsWithParent
+>()
+
 export function baseResolver(
   operations: Record<string, FieldOrOperation<any, any, any>>,
   options: ResolverOptionsWithParent | undefined
 ) {
-  const record: Record<string, FieldOrOperation<any, any, any>> & {
-    [RESOLVER_OPTIONS_KEY]?: ResolverOptionsWithParent
-  } = {
-    [RESOLVER_OPTIONS_KEY]: options,
-  }
-  Object.defineProperty(record, RESOLVER_OPTIONS_KEY, {
-    enumerable: false,
-    configurable: true,
-    writable: true,
-    value: options,
-  })
+  const record: Record<string, FieldOrOperation<any, any, any>> = {}
 
   Object.entries(operations).forEach(([name, operation]) => {
     record[name] = extraOperationOptions(operation, options)
   })
 
+  if (options) ResolverOptionsMap.set(record, options)
   return record
 }
 

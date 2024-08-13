@@ -5,7 +5,11 @@ import {
   type GraphQLSchemaConfig,
   isNonNullType,
 } from "graphql"
-import { getGraphQLType, type ResolvingOptions } from "../resolver"
+import {
+  ResolverOptionsMap,
+  getGraphQLType,
+  type ResolvingOptions,
+} from "../resolver"
 import { LoomObjectType } from "./object"
 import { type Middleware } from "../utils"
 import {
@@ -19,7 +23,7 @@ import {
   type CoreSchemaWeaverConfig,
   type SilkResolver,
 } from "./types"
-import { RESOLVER_OPTIONS_KEY, WEAVER_CONFIG } from "../utils/symbols"
+import { WEAVER_CONFIG } from "../utils/symbols"
 import { mockAst } from "./mock-ast"
 
 interface SchemaWeaverParameters
@@ -95,7 +99,7 @@ export class SchemaWeaver {
   }
 
   protected addResolver(resolver: SilkResolver) {
-    const parent = resolver[RESOLVER_OPTIONS_KEY]?.parent
+    const parent = ResolverOptionsMap.get(resolver)?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
       let gqlType = getGraphQLType(parent)
@@ -115,7 +119,6 @@ export class SchemaWeaver {
     })()
 
     Object.entries(resolver).forEach(([name, operation]) => {
-      if ((name as any) === RESOLVER_OPTIONS_KEY) return
       if (operation.type === "field") {
         if (parentObject == null) return
         parentObject.addField(name, operation)

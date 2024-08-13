@@ -20,6 +20,7 @@ import {
 } from "graphql"
 import type { SilkFieldOrOperation } from "./types"
 import {
+  deepMerge,
   mapValue,
   markErrorLocation,
   resolverPayloadStorage,
@@ -79,6 +80,10 @@ export class LoomObjectType extends GraphQLObjectType {
       throw new Error(`Field ${name} already exists in ${this.name}`)
     }
     this.extraFields.set(name, resolver)
+  }
+
+  mergeExtensions(extensions: GraphQLObjectTypeConfig<any, any>["extensions"]) {
+    this.extensions = deepMerge(this.extensions, extensions)
   }
 
   private extraField?: GraphQLFieldMap<any, any>
