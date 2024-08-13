@@ -261,6 +261,36 @@ describe("SchemaWeaver", () => {
     `)
   })
 
+  it("should merge extensions from multiple resolver", () => {
+    const Dog = silk<{ name: string; birthday: string }>(
+      new GraphQLObjectType({
+        name: "Dog",
+        fields: {
+          name: { type: new GraphQLNonNull(GraphQLString) },
+          birthday: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        extensions: { k0: true },
+      })
+    )
+
+    const r1 = resolver.of(
+      Dog,
+      {
+        dog: query(Dog, () => {
+          return { name: "dog1", birthday: "2020-01-01" }
+        }),
+      },
+      { extensions: { k1: true } }
+    )
+    const r2 = resolver.of(Dog, {}, { extensions: { k2: true } })
+
+    const schema = SchemaWeaver.weave(r1, r2)
+
+    const DogType = schema.getType("Dog")
+    if (DogType == null) throw new Error("DogType is null")
+    expect(DogType.extensions).toEqual({ k0: true, k1: true, k2: true })
+  })
+
   it("should avoid duplicate object", () => {
     const DogType = new GraphQLObjectType({
       name: "Dog",

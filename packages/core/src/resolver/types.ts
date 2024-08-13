@@ -10,7 +10,11 @@ import type {
   InputSchema,
   InputSchemaToSilk,
 } from "./input"
-import type { GraphQLFieldConfig, GraphQLOutputType } from "graphql"
+import type {
+  GraphQLFieldConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+} from "graphql"
 import { type PARSE, type GET_GRAPHQL_TYPE } from "../utils/symbols"
 
 /*
@@ -79,9 +83,14 @@ export interface ResolverOptions<
   middlewares?: Middleware<TField>[]
 }
 
+export interface ResolverOptionsWithExtensions<
+  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+> extends ResolverOptions<TField>,
+    Pick<GraphQLObjectTypeConfig<any, any>, "extensions"> {}
+
 export interface ResolverOptionsWithParent<
   TField extends GenericFieldOrOperation = GenericFieldOrOperation,
-> extends ResolverOptions {
+> extends ResolverOptionsWithExtensions<TField> {
   parent?: TField extends FieldOrOperation<infer TParent, any, any, any>
     ? TParent
     : undefined
@@ -312,7 +321,7 @@ export interface ResolverBobbin<TSchemaIO extends AbstractSchemaIO> {
   >(
     parent: TParent,
     operationOrFields: TOperations,
-    options?: ResolverOptions<ValueOf<TOperations>>
+    options?: ResolverOptionsWithExtensions<ValueOf<TOperations>>
   ): TOperations
 
   <

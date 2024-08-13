@@ -99,7 +99,8 @@ export class SchemaWeaver {
   }
 
   protected addResolver(resolver: SilkResolver) {
-    const parent = ResolverOptionsMap.get(resolver)?.parent
+    const resolverOptions = ResolverOptionsMap.get(resolver)
+    const parent = resolverOptions?.parent
     const parentObject = (() => {
       if (parent == null) return undefined
       let gqlType = getGraphQLType(parent)
@@ -117,6 +118,9 @@ export class SchemaWeaver {
         `${(gqlType as any)?.name ?? gqlType.toString()} is not an object type`
       )
     })()
+
+    if (resolverOptions?.extensions && parentObject)
+      parentObject.mergeExtensions(resolverOptions.extensions)
 
     Object.entries(resolver).forEach(([name, operation]) => {
       if (operation.type === "field") {
