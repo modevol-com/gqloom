@@ -24,7 +24,7 @@ type ResolveReference<
   parent: Pick<TEntity, TRequiredKey>,
   context: object,
   info: GraphQLResolveInfo
-) => MayPromise<TEntity>
+) => MayPromise<TEntity | null | undefined>
 
 const referenceField: FieldOrOperation<any, any, any, any> = {
   type: "field",

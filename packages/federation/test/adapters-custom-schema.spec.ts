@@ -11,7 +11,7 @@ import {
 import { printSubgraphSchema } from "@apollo/subgraph"
 import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
 import { printSchemaWithDirectives } from "@graphql-tools/utils"
-import { mockAst } from "@gqloom/core"
+import { type MayPromise, mockAst } from "@gqloom/core"
 import { ApolloServer } from "@apollo/server"
 import { entitiesField } from "@apollo/subgraph/dist/types"
 import { createYoga } from "graphql-yoga"
@@ -34,7 +34,7 @@ declare module "graphql" {
           parent: any,
           context: object,
           info: GraphQLResolveInfo
-        ) => Promise<object> | object
+        ) => MayPromise<object | null | undefined>
       }
     }
   }
