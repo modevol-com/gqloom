@@ -145,7 +145,7 @@ export class ValibotMetadataCollector {
 }
 export interface FieldConfig
   extends Partial<Omit<GraphQLFieldConfig<any, any>, "type">> {
-  type?: GraphQLOutputType | undefined | null
+  type?: GraphQLOutputType | (() => GraphQLOutputType) | undefined | null
 }
 
 /**

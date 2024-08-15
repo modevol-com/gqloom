@@ -91,7 +91,10 @@ export class ValibotWeaver {
       valibotSchema,
       ...wrappers
     )
-    if (config?.type) return config.type
+    if (config?.type) {
+      if (typeof config.type === "function") return config.type()
+      return config.type
+    }
 
     const preset =
       weaverContext.getConfig<ValibotWeaverConfig>("gqloom.valibot")
@@ -186,7 +189,12 @@ export class ValibotWeaver {
             if (type === null) return mapValue.SKIP
 
             return {
-              type: type ?? ValibotWeaver.toNullableGraphQLType(field),
+              type:
+                type === undefined
+                  ? ValibotWeaver.toNullableGraphQLType(field)
+                  : typeof type === "function"
+                    ? type()
+                    : type,
               ...fieldConfig,
             }
           }),
