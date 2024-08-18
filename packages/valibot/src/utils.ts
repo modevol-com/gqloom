@@ -39,7 +39,12 @@ export function flatVariant(
 ): FlatVariantSchema[] {
   for (const item of schema.options) {
     if (item.type === "variant") {
-      flatVariant(item, flatten)
+      flatVariant(
+        item as
+          | VariantSchema<string, VariantOptions<string>, any>
+          | VariantSchemaAsync<string, VariantOptionsAsync<string>, any>,
+        flatten
+      )
     } else {
       flatten.push(item)
     }

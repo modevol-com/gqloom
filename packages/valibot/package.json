@@ -27,12 +27,12 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
+    "@gqloom/core": ">= 0.1.0",
     "graphql": ">= 16.8.0",
-    "valibot": ">= 0.31.0",
-    "@gqloom/core": ">= 0.1.0"
+    "valibot": ">= 0.37.0"
   },
   "devDependencies": {
-    "valibot": "^0.32.0",
-    "@gqloom/core": "workspace:*"
+    "@gqloom/core": "workspace:*",
+    "valibot": "^0.37.0"
   }
 }

@@ -1,10 +1,10 @@
 import {
   type PipeItem,
-  type BaseTransformation,
   type BaseIssue,
   type PipeItemAsync,
   type GenericSchema,
   type GenericSchemaAsync,
+  type BaseMetadata,
 } from "valibot"
 import {
   type GraphQLObjectTypeConfig,
@@ -151,8 +151,7 @@ export interface FieldConfig
 /**
  * GraphQL field metadata type.
  */
-export interface AsFieldMetadata<TInput>
-  extends BaseTransformation<TInput, TInput, never> {
+export interface AsFieldMetadata<TInput> extends BaseMetadata<TInput> {
   /**
    * The metadata type.
    */
@@ -177,11 +176,9 @@ export interface AsFieldMetadata<TInput>
  */
 export function asField<TInput>(config: FieldConfig): AsFieldMetadata<TInput> {
   return {
-    kind: "transformation",
+    kind: "metadata",
     type: "gqloom.asField",
     reference: asField,
-    async: false,
-    _run: (dataset) => dataset,
     config,
   }
 }
@@ -190,7 +187,7 @@ export function asField<TInput>(config: FieldConfig): AsFieldMetadata<TInput> {
  * GraphQL Object type metadata type.
  */
 export interface AsObjectTypeMetadata<TInput extends object>
-  extends BaseTransformation<TInput, TInput, never> {
+  extends BaseMetadata<TInput> {
   /**
    * The metadata type.
    */
@@ -221,11 +218,9 @@ export function asObjectType<TInput extends object>(
   config: AsObjectTypeMetadata<TInput>["config"]
 ): AsObjectTypeMetadata<TInput> {
   return {
-    kind: "transformation",
+    kind: "metadata",
     type: "gqloom.asObjectType",
     reference: asObjectType,
-    async: false,
-    _run: (dataset) => dataset,
     config,
   }
 }
@@ -247,7 +242,7 @@ asInputArgs.increasingID = 1
  * GraphQL enum type metadata type.
  */
 export interface AsEnumTypeMetadata<TInput extends string | number>
-  extends BaseTransformation<TInput, TInput, never> {
+  extends BaseMetadata<TInput> {
   /**
    * The metadata type.
    */
@@ -281,11 +276,9 @@ export function asEnumType<TInput extends string | number>(
   config: EnumTypeConfig<TInput>
 ): AsEnumTypeMetadata<TInput> {
   return {
-    kind: "transformation",
+    kind: "metadata",
     type: "gqloom.asEnumType",
     reference: asEnumType,
-    async: false,
-    _run: (dataset) => dataset,
     config,
   }
 }
@@ -294,7 +287,7 @@ export function asEnumType<TInput extends string | number>(
  * GraphQL union type metadata type.
  */
 export interface AsUnionTypeMetadata<TInput extends object>
-  extends BaseTransformation<TInput, TInput, never> {
+  extends BaseMetadata<TInput> {
   /**
    * The metadata type.
    */
@@ -321,11 +314,9 @@ export function asUnionType<TInput extends object>(
   config: AsUnionTypeMetadata<TInput>["config"]
 ): AsUnionTypeMetadata<TInput> {
   return {
-    kind: "transformation",
+    kind: "metadata",
     type: "gqloom.asUnionType",
     reference: asUnionType,
-    async: false,
-    _run: (dataset) => dataset,
     config,
   }
 }

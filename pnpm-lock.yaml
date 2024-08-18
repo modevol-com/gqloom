@@ -127,8 +127,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       valibot:
-        specifier: ^0.32.0
-        version: 0.32.0
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.4.3)
 
   packages/yup:
     dependencies:
@@ -2795,8 +2795,13 @@ packages:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
-  valibot@0.32.0:
-    resolution: {integrity: sha512-FXBnJl4bNOmeg7lQv+jfvo/wADsRBN8e9C3r+O77Re3dEnDma8opp7p4hcIbF7XJJ30h/5SVohdjer17/sHOsQ==}
+  valibot@0.37.0:
+    resolution: {integrity: sha512-FQz52I8RXgFgOHym3XHYSREbNtkgSjF9prvMFH1nBsRyfL6SfCzoT1GuSDTlbsuPubM7/6Kbw0ZMQb8A+V+VsQ==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   value-or-promise@1.0.12:
     resolution: {integrity: sha512-Z6Uz+TYwEqE7ZN50gwn+1LCVo9ZVrpxRPOhOLnncYkY1ZzOYtrX8Fwf/rFktZ8R5mJms6EZf5TqNOMeZmnPq9Q==}
@@ -5609,7 +5614,9 @@ snapshots:
 
   uuid@9.0.1: {}
 
-  valibot@0.32.0: {}
+  valibot@0.37.0(typescript@5.4.3):
+    optionalDependencies:
+      typescript: 5.4.3
 
   value-or-promise@1.0.12: {}
 
