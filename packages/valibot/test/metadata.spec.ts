@@ -43,3 +43,15 @@ describe("asObjectType", () => {
     })
   })
 })
+
+describe("ValibotMetadataCollector", () => {
+  it("should get description", () => {
+    const name = v.pipe(v.string(), v.description("some description"))
+
+    const config = ValibotMetadataCollector.getFieldConfig(name)
+
+    expect(config).toMatchObject({
+      description: "some description",
+    })
+  })
+})

@@ -5,6 +5,7 @@ import {
   type GenericSchema,
   type GenericSchemaAsync,
   type BaseMetadata,
+  type DescriptionAction,
 } from "valibot"
 import {
   type GraphQLObjectTypeConfig,
@@ -24,6 +25,7 @@ export class ValibotMetadataCollector {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
     let defaultValue: any
+    let description: string | undefined
     let config: FieldConfig | undefined
 
     for (const item of pipe) {
@@ -35,6 +37,15 @@ export class ValibotMetadataCollector {
         config ??= (item as AsFieldMetadata<unknown>).config
         if (defaultValue !== undefined && config !== undefined) break
       }
+      if (item.type === "description") {
+        description ??= (item as DescriptionAction<any, string>).description
+      }
+    }
+
+    if (config) {
+      config.description ??= description
+    } else {
+      config = { description }
     }
 
     return defaultValue !== undefined
@@ -80,15 +91,22 @@ export class ValibotMetadataCollector {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
     let name: string | undefined
+    let description: string | undefined
+    let config: T["config"] | undefined
     for (const item of pipe) {
-      name ??= weaverContext.names.get(item) ?? this.getTypenameByLiteral(item)
+      name ??=
+        weaverContext.names.get(item) ??
+        ValibotMetadataCollector.getTypenameByLiteral(item)
       if (item.type === configType) {
-        const config = (item as T).config
-        return { name, ...config }
+        config = (item as T).config
+      } else if (item.type === "description") {
+        description = (item as DescriptionAction<any, string>).description
       }
     }
 
-    if (name !== undefined) return { name }
+    if (name !== undefined || description !== undefined)
+      return { name, description, ...config } as T["config"]
+    return config
   }
 
   protected static getTypenameByLiteral(

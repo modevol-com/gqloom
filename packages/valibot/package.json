@@ -1,7 +1,7 @@
 {
   "name": "@gqloom/valibot",
-  "version": "0.1.16",
-  "description": "Create GraphQL schema and resolvers with TypeScript using Valibot!",
+  "version": "0.1.17",
+  "description": "Create GraphQL schema and resolvers easily using Valibot!",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
