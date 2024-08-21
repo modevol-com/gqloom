@@ -359,10 +359,11 @@ export type RelationProperty<TTarget extends object, TOwner> =
   | OneToManyProperty<TTarget, TOwner>
   | ManyToManyProperty<TTarget, TOwner>
 
-export type ManyToOneProperty<TTarget extends object, TOwner> = Extract<
-  EntitySchemaProperty<TTarget, TOwner>,
-  { kind: ReferenceKind.MANY_TO_ONE | "m:1" }
->
+export interface ManyToOneProperty<TTarget extends object, _TOwner> {
+  kind: ReferenceKind.MANY_TO_ONE | "m:1"
+  entity: string | (() => string | EntityName<TTarget>)
+  nullable?: boolean
+}
 
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
@@ -388,10 +389,10 @@ export function manyToOne<TTarget extends object, TOwner>(
   }
 }
 
-export type OneToManyProperty<TTarget extends object, TOwner> = Extract<
-  EntitySchemaProperty<TTarget, TOwner>,
-  { kind: ReferenceKind.ONE_TO_MANY | "1:m" }
->
+export interface OneToManyProperty<TTarget extends object, _TOwner> {
+  kind: ReferenceKind.ONE_TO_MANY | "1:m"
+  entity: string | (() => string | EntityName<TTarget>)
+}
 
 export function oneToMany<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
@@ -404,10 +405,11 @@ export function oneToMany<TTarget extends object, TOwner>(
   }
 }
 
-export type OneToOneProperty<TTarget extends object, TOwner> = Extract<
-  EntitySchemaProperty<TTarget, TOwner>,
-  { kind: ReferenceKind.ONE_TO_ONE | "1:1" }
->
+export interface OneToOneProperty<TTarget extends object, _TOwner> {
+  kind: ReferenceKind.ONE_TO_ONE | "1:1"
+  entity: string | (() => string | EntityName<TTarget>)
+  nullable?: boolean
+}
 
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
@@ -433,10 +435,10 @@ export function oneToOne<TTarget extends object, TOwner>(
   }
 }
 
-export type ManyToManyProperty<TTarget extends object, TOwner> = Extract<
-  EntitySchemaProperty<TTarget, TOwner>,
-  { kind: ReferenceKind.MANY_TO_MANY | "m:n" }
->
+export interface ManyToManyProperty<TTarget extends object, _TOwner> {
+  kind: ReferenceKind.MANY_TO_MANY | "m:n"
+  entity: string | (() => string | EntityName<TTarget>)
+}
 
 export function manyToMany<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),

@@ -5,6 +5,7 @@ import {
   manyToOne,
   oneToMany,
   type GraphQLSilkEntity,
+  oneToOne,
 } from "../src/entity-schema"
 import { GraphQLID, GraphQLObjectType, GraphQLString } from "graphql"
 import {
@@ -76,21 +77,33 @@ const AuthorEntity: EntitySchema<IAuthorEntity> =
     books: oneToMany(() => BookEntity, { mappedBy: "author" }),
   })
 
+const Label = silk<{ name: string }>(
+  new GraphQLObjectType({
+    name: "Label",
+    fields: { name: { type: GraphQLString } },
+  })
+)
+
+const LabelEntity = weaveEntitySchemaBySilk(Label)
+
+type ILabelEntity = InferEntity<typeof LabelEntity>
+
 interface IArticleEntity extends GraphQLSilkEntity<typeof Article> {
   author: Reference<IAuthorEntity> | null
+  label: Reference<ILabelEntity> | null
 }
 
-const ArticleEntity: EntitySchema<IArticleEntity> =
-  weaveEntitySchemaBySilk.withRelations(
-    Article,
-    {
-      author: manyToOne(() => AuthorEntity, { nullable: true }),
-    },
-    {
-      name: "Article",
-      indexes: [{ properties: ["author"] }, { properties: ["title"] }],
-    }
-  )
+const ArticleEntity = weaveEntitySchemaBySilk.withRelations(
+  Article,
+  {
+    author: manyToOne(() => AuthorEntity, { nullable: true }),
+    label: oneToOne(() => LabelEntity, { nullable: true }),
+  },
+  {
+    name: "Article",
+    indexes: [{ properties: ["author"] }, { properties: ["title"] }],
+  }
+)
 
 interface IGiraffeEntity extends GraphQLSilkEntity<typeof Giraffe> {
   friends: Collection<IGiraffeEntity>
