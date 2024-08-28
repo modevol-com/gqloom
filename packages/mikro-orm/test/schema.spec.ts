@@ -38,7 +38,7 @@ describe("MikroSilk", () => {
       name: "Book",
       properties: {
         ISBN: { type: "string", primary: true },
-        sales: { type: "number", hidden: true },
+        sales: { type: "number", hidden: false },
         title: { type: "string" },
         isPublished: { type: Boolean },
         price: { type: "number", nullable },

@@ -135,7 +135,7 @@ export class MikroWeaver {
       originField?: GraphQLField<any, any, any>
     } = {}
   ): GraphQLFieldConfig<any, any> | undefined {
-    if (property.hidden) return
+    if (property.hidden != null) return
     let gqlType = originField?.type ?? getGraphQLTypeByProperty()
     if (gqlType == null) return
     gqlType = nonNull(gqlType)
