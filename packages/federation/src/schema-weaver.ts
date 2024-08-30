@@ -11,7 +11,6 @@ import {
   silkQuery,
   silk,
   useResolverPayload,
-  mockAst,
   type Middleware,
   type SilkResolver,
   type WeaverConfig,
@@ -26,6 +25,7 @@ import {
   type GraphQLSchema,
   lexicographicSortSchema,
 } from "graphql"
+import { mockAst } from "./mock-ast"
 
 export class FederatedSchemaWeaver extends SchemaWeaver {
   public override weaveGraphQLSchema(): GraphQLSchema {

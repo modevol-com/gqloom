@@ -13,7 +13,6 @@ export type SilkResolver = Record<string, FieldOrOperation<any, any, any, any>>
 
 export interface CoreSchemaWeaverConfigOptions extends GraphQLSchemaConfig {
   getInputObjectName?: (name: string) => string
-  mockAST?: boolean
   weaverContext?: WeaverContext
 }
 

@@ -9,8 +9,7 @@ import { type GQLoomExtensions } from "./extensions"
 import { SchemaWeaver } from "./schema-weaver"
 import { loom, silk } from "../resolver"
 import { ensureInterfaceType } from "./interface"
-import { printSchemaWithDirectives } from "@graphql-tools/utils"
-import { mockAst } from "./mock-ast"
+import { mockAst } from "../../../federation/src/mock-ast"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -124,42 +123,5 @@ describe("directive", () => {
 
     const CatI = schema.getType("CatInput") as GraphQLInputObjectType
     expect(CatI.getFields()["color"].astNode).toBeDefined()
-  })
-
-  it("should print Schema with Directives", () => {
-    expect(printSchemaWithDirectives(schema)).toMatchInlineSnapshot(`
-      "schema {
-        query: Query
-      }
-
-      type Query {
-        grape(data: GrapeInput): Grape
-        cat(data: CatInput): Cat
-      }
-
-      type Grape implements Fruit {
-        color: String
-      }
-
-      interface Fruit {
-        color: String
-      }
-
-      input GrapeInput {
-        color: String
-      }
-
-      type Cat implements Animal @loom(value: "cat") {
-        color: String @loom(value: "color")
-      }
-
-      interface Animal @loom(value: "Animal") {
-        color: String
-      }
-
-      input CatInput @loom(value: "CatInput") {
-        color: String @loom(value: "color")
-      }"
-    `)
   })
 })

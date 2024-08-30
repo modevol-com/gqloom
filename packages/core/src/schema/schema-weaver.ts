@@ -24,7 +24,6 @@ import {
   type SilkResolver,
 } from "./types"
 import { WEAVER_CONFIG } from "../utils/symbols"
-import { mockAst } from "./mock-ast"
 
 interface SchemaWeaverParameters
   extends Partial<
@@ -94,7 +93,6 @@ export class SchemaWeaver {
       ...config,
     })
 
-    if (config?.mockAST) return mockAst(schema)
     return schema
   }
 
