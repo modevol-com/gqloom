@@ -147,6 +147,27 @@ describe("SchemaWeaver", () => {
     `)
   })
 
+  it("should weave schema for alone object", () => {
+    interface IGiraffe {
+      name: string
+    }
+    const Giraffe = silk<IGiraffe>(
+      new GraphQLObjectType({
+        name: "Giraffe",
+        fields: {
+          name: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      })
+    )
+
+    const schema = SchemaWeaver.weave(Giraffe)
+    expect(printSchema(lexicographicSortSchema(schema))).toMatchInlineSnapshot(`
+      "type Giraffe {
+        name: String!
+      }"
+    `)
+  })
+
   it("should avoid duplicate name", () => {
     const Dog1 = silk<{ name: string }>(
       new GraphQLObjectType({

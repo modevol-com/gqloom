@@ -11,13 +11,14 @@ import {
 import { printSubgraphSchema } from "@apollo/subgraph"
 import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
 import { printSchemaWithDirectives } from "@graphql-tools/utils"
-import { type MayPromise, mockAst } from "@gqloom/core"
+import { type MayPromise } from "@gqloom/core"
 import { ApolloServer } from "@apollo/server"
 import { entitiesField } from "@apollo/subgraph/dist/types"
 import { createYoga } from "graphql-yoga"
 import Fastify from "fastify"
 import Mercurius from "mercurius"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
+import { mockAst } from "../src/mock-ast"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions {

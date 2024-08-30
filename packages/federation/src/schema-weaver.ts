@@ -14,6 +14,7 @@ import {
   type Middleware,
   type SilkResolver,
   type WeaverConfig,
+  type GraphQLSilk,
 } from "@gqloom/core"
 import {
   GraphQLList,
@@ -101,15 +102,17 @@ export class FederatedSchemaWeaver extends SchemaWeaver {
    * @returns GraphQ LSchema
    */
   static override weave(
-    ...inputs: (SilkResolver | Middleware | WeaverConfig)[]
+    ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
   ): GraphQLSchema {
-    const { context, configs, middlewares, resolvers } =
+    const { context, configs, middlewares, resolvers, silks } =
       SchemaWeaver.optionsFrom(...inputs)
 
     const weaver = new FederatedSchemaWeaver({}, context)
     configs.forEach((it) => weaver.setConfig(it))
     middlewares.forEach((it) => weaver.use(it))
     resolvers.forEach((it) => weaver.add(it))
+    silks.forEach((it) => weaver.addType(it))
+
     return weaver.weaveGraphQLSchema()
   }
 }
