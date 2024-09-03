@@ -190,3 +190,20 @@ import { HelloResolver } from "./resolvers"
 
 export const schema = weave(HelloResolver, GreetingResolver)
 ```
+
+### 中间件｜Middleware
+
+GQLoom 提供了洋葱式中间件机制，可以在解析器执行之前或之后执行逻辑。
+
+##### 声明一个简单中间件
+
+```ts
+import { Middleware } from "@gqloom/core"
+
+const simpleMiddleware: Middleware = async (next) => {
+  console.log("Before resolve")
+  const result = await next()
+  console.log("After resolve")
+  return result
+}
+```
