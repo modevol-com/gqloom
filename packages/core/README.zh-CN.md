@@ -207,3 +207,59 @@ const simpleMiddleware: Middleware = async (next) => {
   return result
 }
 ```
+
+### 上下文｜Context
+
+使用 `useContext` 函数随处获取上下文。
+
+##### 在解析器中
+
+```ts
+import { loom, silk, useContext } from "@gqloom/core"
+import { GraphQLString } from "graphql"
+
+const { query, mutation } = loom
+
+const HelloResolver = resolver({
+  hello: query(silk(GraphQLString), () => {
+    const name = useContext().info.name
+    return `Hello, ${name}!`
+  }),
+})
+```
+
+##### 在中间件中
+
+```ts
+import { Middleware, useContext } from "@gqloom/core"
+
+const simpleMiddleware: Middleware = async (next) => {
+  const context = useContext()
+  console.log(`Hello, ${context.info.name}!`)
+  return next()
+}
+```
+
+Context 的内容取决于你选择的适配器。
+
+#### 上下文记忆｜Context Memoization
+
+我们有时需要在上下文中设置一些内容，并且在同一个上下文的中间件或解析器中获取同样的值，例如当前访问用户、DataLoader。
+GQLoom 提供了上下文记忆来便捷地实现这一点。
+
+```ts
+import { createMemoization, useContext } from "@gqloom/core"
+
+// 创建一个上下文记忆
+const useVisitor = createMemoization(async () => {
+  const context = useContext()
+  return await fetchVisitor(context.info.visitorId)
+})
+
+// 在解析器中使用上下文记忆
+const AllowAdmin: Middleware = async (next) => {
+  const visitor = await useVisitor()
+  if (visitor.role !== "admin") throw new Error("Forbidden")
+  return next()
+}
+```
