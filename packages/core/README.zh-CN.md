@@ -256,7 +256,7 @@ const useVisitor = createMemoization(async () => {
   return await fetchVisitor(context.info.visitorId)
 })
 
-// 在解析器中使用上下文记忆
+// 在中间件中使用上下文记忆
 const AllowAdmin: Middleware = async (next) => {
   const visitor = await useVisitor()
   if (visitor.role !== "admin") throw new Error("Forbidden")
