@@ -81,12 +81,8 @@ export function useResolverPayload(): ResolverPayload | undefined {
  * use context of the current resolver
  * @returns the context of the current resolver
  */
-export function useContext<TContextType extends object = object>():
-  | TContextType
-  | undefined {
-  const payload = useResolverPayload()
-  if (!payload) return
-  return payload.context as TContextType
+export function useContext<TContextType = object>(): TContextType {
+  return useResolverPayload()?.context as TContextType
 }
 
 /**
