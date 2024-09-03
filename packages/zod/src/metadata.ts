@@ -14,8 +14,9 @@ import {
 import { type FieldConfig, type TypeOrFieldConfig } from "./types"
 
 interface ObjectConfig
-  extends Omit<GraphQLObjectTypeConfig<any, any>, "fields" | "interfaces">,
-    Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields">> {
+  extends Partial<
+    Omit<GraphQLObjectTypeConfig<any, any>, "fields" | "interfaces">
+  > {
   interfaces?: (ZodObject<ZodRawShape> | GraphQLInterfaceType)[]
 }
 
@@ -38,7 +39,7 @@ const CONFIG = Symbol.for("gqloom.zod.config")
  *
  * @returns zod superRefine refinement
  */
-export function objectType(
+export function asObjectType(
   config: ObjectConfig
 ): (arg: object, ctx: RefinementCtx) => void
 
@@ -49,10 +50,10 @@ export function objectType(
  *
  * @returns zod superRefine refinement
  */
-export function objectType(
+export function asObjectType(
   name: string
 ): (arg: object, ctx: RefinementCtx) => void
-export function objectType(
+export function asObjectType(
   configOrName: ObjectConfig | string
 ): (arg: object, ctx: RefinementCtx) => void {
   const config: ObjectConfig =
@@ -69,7 +70,7 @@ export function objectType(
  *
  * @return zod superRefine refinement
  */
-export function fieldType(
+export function asFieldType(
   config: FieldConfig
 ): (arg: any, ctx: RefinementCtx) => void {
   return Object.assign(() => {}, {
@@ -84,9 +85,9 @@ export function fieldType(
  *
  * @return zod superRefine refinement
  */
-export function enumType(
+export function asEnumType(
   config: EnumConfig
-): (arg: object, ctx: RefinementCtx) => void
+): (arg: any, ctx: RefinementCtx) => void
 /**
  * Register as a GraphQL enum type.
  *
@@ -94,13 +95,11 @@ export function enumType(
  *
  * @return zod superRefine refinement
  */
-export function enumType(
-  name: string
-): (arg: object, ctx: RefinementCtx) => void
+export function asEnumType(name: string): (arg: any, ctx: RefinementCtx) => void
 
-export function enumType(
+export function asEnumType(
   configOrName: EnumConfig | string
-): (arg: object, ctx: RefinementCtx) => void {
+): (arg: any, ctx: RefinementCtx) => void {
   const config: EnumConfig =
     typeof configOrName === "string" ? { name: configOrName } : configOrName
   return Object.assign(() => {}, { [CONFIG]: config })
@@ -113,7 +112,7 @@ export function enumType(
  *
  * @return zod superRefine refinement
  */
-export function unionType(
+export function asUnionType(
   config: UnionConfig
 ): (arg: object, ctx: RefinementCtx) => void
 
@@ -124,11 +123,11 @@ export function unionType(
  *
  * @return zod superRefine refinement
  */
-export function unionType(
+export function asUnionType(
   name: string
 ): (arg: object, ctx: RefinementCtx) => void
 
-export function unionType(
+export function asUnionType(
   configOrName: UnionConfig | string
 ): (arg: object, ctx: RefinementCtx) => void {
   const config: UnionConfig =
@@ -144,5 +143,7 @@ export function unionType(
 export function getConfig(schema: Schema): TypeOrFieldConfig | undefined {
   if (!(schema instanceof ZodEffects)) return
   if (schema._def.effect.type !== "refinement") return
-  return (schema._def.effect.refinement as any)[CONFIG]
+  const config = (schema._def.effect.refinement as any)[CONFIG]
+  const description = schema.description
+  return { ...(description && { description }), ...config }
 }

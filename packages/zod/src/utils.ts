@@ -7,6 +7,7 @@ import {
   type ZodStringCheck,
   type ZodDiscriminatedUnion,
   type ZodObject,
+  ZodEffects,
 } from "zod"
 
 export function parseObjectConfig(
@@ -39,8 +40,15 @@ export function parseFieldConfig(
 }
 
 export function resolveTypeByDiscriminatedUnion(
-  schema: ZodDiscriminatedUnion<string, ZodObject<any>[]>
+  schemaOrEffect:
+    | ZodDiscriminatedUnion<string, ZodObject<any>[]>
+    | ZodEffects<ZodDiscriminatedUnion<string, ZodObject<any>[]>>
 ): GraphQLTypeResolver<any, any> {
+  const schema =
+    schemaOrEffect instanceof ZodEffects
+      ? schemaOrEffect.innerType()
+      : schemaOrEffect
+  console.debug("resolveTypeByDiscriminatedUnion", schema)
   return (data) => {
     const discriminatorValue: string = data[schema.discriminator]
     const option = schema.optionsMap.get(discriminatorValue)
@@ -49,6 +57,7 @@ export function resolveTypeByDiscriminatedUnion(
     return name
   }
 }
+
 export const ZodIDKinds: Set<ZodStringCheck["kind"]> = new Set([
   "cuid",
   "cuid2",

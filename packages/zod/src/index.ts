@@ -58,7 +58,7 @@ import {
   ZodEffects,
   type ZodSchema,
 } from "zod"
-import { ZodIDKinds, parseFieldConfig, parseObjectConfig } from "./utils"
+import { ZodIDKinds } from "./utils"
 import { resolveTypeByDiscriminatedUnion } from "./utils"
 // import { metadataCollector } from "./metadata-collector"
 import {
@@ -202,8 +202,7 @@ export class ZodWeaver {
     }
 
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
-      const { name, ...enumConfig } = ZodWeaver.getEnumConfig(schema)
-      if (!name) throw new Error("Enum must have a name")
+      const { name, ...enumConfig } = ZodWeaver.getEnumConfig(schema, config)
 
       const values: GraphQLEnumValueConfigMap = {}
 
@@ -218,6 +217,11 @@ export class ZodWeaver {
         })
       }
 
+      if (!name)
+        throw new Error(
+          `Enum (${Object.keys(values).join(", ")}) must have a name`
+        )
+
       return new GraphQLEnumType({
         name,
         values,
@@ -227,15 +231,19 @@ export class ZodWeaver {
 
     if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
       const { name, ...unionConfig } = ZodWeaver.getUnionConfig(schema, config)
-      if (!name) throw new Error("Enum must have a name")
 
       const types = (schema.options as ZodTypeAny[]).map((s) => {
         const gqlType = ZodWeaver.toGraphQLType(s)
         if (isObjectType(gqlType)) return gqlType
         throw new Error(
-          `Union types ${name} can only contain objects, but got ${gqlType}`
+          `Union types ${name ?? "(unnamed)"} can only contain objects, but got ${gqlType}`
         )
       })
+
+      if (!name)
+        throw new Error(
+          `Union (${types.map((t) => t.name).join(", ")}) must have a name`
+        )
 
       return new GraphQLUnionType({
         resolveType:
@@ -256,20 +264,33 @@ export class ZodWeaver {
     config?: TypeOrFieldConfig
   ): Partial<GraphQLObjectTypeConfig<any, any>> {
     const objectConfig = config as ObjectConfig | undefined
-    const fromDescription = schema.description
-      ? parseObjectConfig(schema.description)
-      : undefined
     const interfaces = objectConfig?.interfaces?.map(
       ZodWeaver.ensureInterfaceType
     )
+
+    const name = (() => {
+      if ("__typename" in schema.shape) {
+        let __typename = schema.shape["__typename"]
+        while (
+          __typename instanceof ZodOptional ||
+          __typename instanceof ZodNullable
+        ) {
+          __typename = __typename.unwrap()
+        }
+        if (__typename instanceof ZodLiteral) {
+          return __typename.value as string
+        }
+      }
+      return weaverContext.names.get(schema)
+    })()
+
     return {
-      name: weaverContext.names.get(schema),
+      name,
       ...objectConfig,
-      ...fromDescription,
+      description: schema.description,
       interfaces,
       extensions: mergeExtensions(
-        objectConfig?.extensions,
-        fromDescription?.extensions
+        objectConfig?.extensions
       ) as GraphQLObjectTypeExtensions,
     }
   }
@@ -289,17 +310,11 @@ export class ZodWeaver {
   ): Partial<GraphQLEnumTypeConfig> {
     const enumConfig = config as EnumConfig | undefined
 
-    const fromDescription = schema.description
-      ? parseObjectConfig(schema.description)
-      : undefined
     return {
       name: weaverContext.names.get(schema),
+      description: schema.description,
       ...enumConfig,
-      ...fromDescription,
-      extensions: mergeExtensions(
-        enumConfig?.extensions,
-        fromDescription?.extensions
-      ),
+      extensions: mergeExtensions(enumConfig?.extensions),
     }
   }
 
@@ -308,17 +323,11 @@ export class ZodWeaver {
     config?: TypeOrFieldConfig
   ): Partial<GraphQLUnionTypeConfig<any, any>> {
     const unionConfig = config as UnionConfig | undefined
-    const fromDescription = schema.description
-      ? parseObjectConfig(schema.description)
-      : undefined
     return {
       name: weaverContext.names.get(schema),
       ...unionConfig,
-      ...fromDescription,
-      extensions: mergeExtensions(
-        unionConfig?.extensions,
-        fromDescription?.extensions
-      ),
+      description: schema.description,
+      extensions: mergeExtensions(unionConfig?.extensions),
     }
   }
 
@@ -331,19 +340,10 @@ export class ZodWeaver {
       }
     })()
     const config = getConfig(schema) as FieldConfig | undefined
-    const fromDescription = schema.description
-      ? schema instanceof ZodObject
-        ? parseObjectConfig(schema.description)
-        : parseFieldConfig(schema.description)
-      : undefined
     return {
-      ...fromDescription,
+      description: schema.description,
       ...config,
-      extensions: mergeExtensions(
-        fromDefault,
-        fromDescription?.extensions,
-        config?.extensions
-      ),
+      extensions: mergeExtensions(fromDefault, config?.extensions),
     }
   }
 
