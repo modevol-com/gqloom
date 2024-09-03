@@ -261,6 +261,8 @@ export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
     list: () => GraphQLSilk<InferEntity<TSchema>[], InferEntity<TSchema>[]>
   }
 
+export type EntitySilk<TEntity> = EntitySchemaSilk<EntitySchema<TEntity>>
+
 export * from "./entity-schema"
 export * from "./operations"
 export * from "./types"
