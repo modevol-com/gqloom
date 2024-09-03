@@ -16,7 +16,7 @@ import {
   type GraphQLOutputType,
   type GraphQLEnumValueConfig,
 } from "graphql"
-import { type PipedSchema } from "./types"
+import { type SupportedSchema, type PipedSchema } from "./types"
 import { isNullish } from "./utils"
 import { deepMerge, weaverContext } from "@gqloom/core"
 
@@ -114,20 +114,18 @@ export class ValibotMetadataCollector {
       | PipeItemAsync<unknown, unknown, BaseIssue<unknown>>
       | PipeItem<unknown, unknown, BaseIssue<unknown>>
   ): string | undefined {
+    const schema = item as SupportedSchema
     if (
-      item.type === "object" &&
-      "entries" in item &&
-      typeof item.entries === "object" &&
-      item.entries &&
-      "__typename" in item.entries &&
-      typeof item.entries.__typename === "object" &&
-      item.entries.__typename != null &&
-      "type" in item.entries.__typename &&
-      item.entries.__typename.type === "literal" &&
-      "literal" in item.entries.__typename &&
-      typeof item.entries.__typename.literal === "string"
+      schema.type === "object" &&
+      "entries" in schema &&
+      typeof schema.entries === "object" &&
+      schema.entries &&
+      "__typename" in schema.entries
     ) {
-      return item.entries.__typename.literal
+      let __typename = schema.entries.__typename as SupportedSchema
+      while ("wrapped" in __typename)
+        __typename = __typename.wrapped as SupportedSchema
+      if (__typename.type === "literal") return __typename.literal as string
     }
   }
 
@@ -228,13 +226,29 @@ export interface AsObjectTypeMetadata<TInput extends object>
 /**
  * Creates a GraphQL object type metadata.
  *
+ * @param name - The GraphQL object name.
+ *
+ * @returns A GraphQL object type metadata.
+ */
+export function asObjectType<TInput extends object>(
+  name: string
+): AsObjectTypeMetadata<TInput>
+/**
+ * Creates a GraphQL object type metadata.
+ *
  * @param config - The GraphQL object config.
  *
  * @returns A GraphQL object type metadata.
  */
 export function asObjectType<TInput extends object>(
   config: AsObjectTypeMetadata<TInput>["config"]
+): AsObjectTypeMetadata<TInput>
+
+export function asObjectType<TInput extends object>(
+  configOrName: AsObjectTypeMetadata<TInput>["config"] | string
 ): AsObjectTypeMetadata<TInput> {
+  const config =
+    typeof configOrName === "string" ? { name: configOrName } : configOrName
   return {
     kind: "metadata",
     type: "gqloom.asObjectType",
@@ -286,13 +300,29 @@ export interface EnumTypeConfig<TInput extends string | number>
 /**
  * Creates a GraphQL enum type metadata.
  *
+ * @param name - The GraphQL enum name.
+ *
+ * @returns A GraphQL enum type metadata.
+ */
+export function asEnumType<TInput extends string | number>(
+  name: string
+): AsEnumTypeMetadata<TInput>
+/**
+ * Creates a GraphQL enum type metadata.
+ *
  * @param config - The GraphQL enum config.
  *
  * @returns A GraphQL enum type metadata.
  */
 export function asEnumType<TInput extends string | number>(
   config: EnumTypeConfig<TInput>
+): AsEnumTypeMetadata<TInput>
+
+export function asEnumType<TInput extends string | number>(
+  configOrName: EnumTypeConfig<TInput> | string
 ): AsEnumTypeMetadata<TInput> {
+  const config =
+    typeof configOrName === "string" ? { name: configOrName } : configOrName
   return {
     kind: "metadata",
     type: "gqloom.asEnumType",
@@ -330,7 +360,23 @@ export interface AsUnionTypeMetadata<TInput extends object>
  */
 export function asUnionType<TInput extends object>(
   config: AsUnionTypeMetadata<TInput>["config"]
+): AsUnionTypeMetadata<TInput>
+/**
+ * Creates a GraphQL union type metadata.
+ *
+ * @param name - The GraphQL union type Name.
+ *
+ * @returns A GraphQL union type metadata.
+ */
+export function asUnionType<TInput extends object>(
+  name: string
+): AsUnionTypeMetadata<TInput>
+
+export function asUnionType<TInput extends object>(
+  configOrName: AsUnionTypeMetadata<TInput>["config"] | string
 ): AsUnionTypeMetadata<TInput> {
+  const config =
+    typeof configOrName === "string" ? { name: configOrName } : configOrName
   return {
     kind: "metadata",
     type: "gqloom.asUnionType",

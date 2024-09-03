@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { ValibotWeaver, field, query, resolver, valibotSilk } from "../src"
+import {
+  ValibotWeaver,
+  field,
+  query,
+  resolver,
+  valibotSilk,
+  asEnumType,
+  asField,
+  asObjectType,
+  asUnionType,
+} from "../src"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -17,12 +27,10 @@ import {
 import {
   type GQLoomExtensions,
   getGraphQLType,
-  collectNames,
   type SilkResolver,
   SchemaWeaver,
   weave,
 } from "@gqloom/core"
-import { asEnumType, asField, asObjectType } from "../src/metadata"
 import * as v from "valibot"
 import { type PipedSchema } from "../src/types"
 
@@ -97,10 +105,11 @@ describe("valibotSilk", () => {
 
   it("should handle hidden field", () => {
     const Dog = v.object({
+      __typename: v.nullish(v.literal("Dog")),
       name: v.optional(v.string()),
       birthday: v.pipe(v.optional(v.date()), asField({ type: null })),
     })
-    collectNames({ Dog })
+
     expect(printValibotSilk(Dog)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
@@ -110,10 +119,10 @@ describe("valibotSilk", () => {
 
   it("should handle preset GraphQLType", () => {
     const Dog = v.object({
+      __typename: v.nullish(v.literal("Dog")),
       name: v.optional(v.string()),
       birthday: v.optional(v.date()),
     })
-    collectNames({ Dog })
 
     const r1 = resolver({ dog: query(Dog, () => ({})) })
     const config = ValibotWeaver.config({
@@ -212,8 +221,6 @@ describe("valibotSilk", () => {
       loveFish: v.optional(v.boolean()),
     })
 
-    collectNames({ Cat })
-
     expect(printValibotSilk(Cat)).toEqual(printValibotSilk(Cat1))
     expect(printValibotSilk(Cat)).toEqual(printValibotSilk(Cat2))
 
@@ -234,6 +241,7 @@ describe("valibotSilk", () => {
     const FruitPL = v.pipe(
       v.picklist(["apple", "banana", "orange"]),
       asEnumType({
+        name: "Fruit",
         valuesConfig: {
           apple: { description: "red" },
           banana: { description: "yellow" },
@@ -250,6 +258,7 @@ describe("valibotSilk", () => {
     const FruitE = v.pipe(
       v.enum_(Fruit),
       asEnumType({
+        name: "Fruit",
         valuesConfig: {
           apple: { description: "red" },
           [Fruit.banana]: { description: "yellow" },
@@ -258,7 +267,6 @@ describe("valibotSilk", () => {
       })
     )
 
-    collectNames({ Fruit: FruitPL }, { Fruit: FruitE })
     expect(printValibotSilk(FruitE)).toMatchInlineSnapshot(`
       "enum Fruit {
         """red"""
@@ -287,6 +295,7 @@ describe("valibotSilk", () => {
 
   it("should handle interfere", () => {
     const Fruit = v.object({
+      __typename: v.nullish(v.literal("Fruit")),
       _Fruit: v.boolean(),
       name: v.string(),
       color: v.string(),
@@ -295,6 +304,7 @@ describe("valibotSilk", () => {
 
     const Orange = v.pipe(
       v.object({
+        __typename: v.nullish(v.literal("Orange")),
         _Orange: v.boolean(),
         name: v.string(),
         color: v.string(),
@@ -302,8 +312,6 @@ describe("valibotSilk", () => {
       }),
       asObjectType({ interfaces: [Fruit] })
     )
-
-    collectNames({ Fruit, Orange })
 
     const r = resolver.of(Orange, {
       orange: query(Orange, () => 0 as any),
@@ -332,20 +340,21 @@ describe("valibotSilk", () => {
 
   it("should handle union", () => {
     const Cat = v.object({
+      __typename: v.nullish(v.literal("Cat")),
       name: v.string(),
       age: v.pipe(v.number(), v.integer()),
       loveFish: v.optional(v.boolean()),
     })
 
     const Dog = v.object({
+      __typename: v.nullish(v.literal("Dog")),
       name: v.string(),
       age: v.pipe(v.number(), v.integer()),
       loveBone: v.optional(v.boolean()),
     })
 
-    const Animal = v.union([Cat, Dog])
+    const Animal = v.pipe(v.union([Cat, Dog]), asUnionType("Animal"))
 
-    collectNames({ Cat, Dog, Animal })
     const r = resolver({
       animal: query(Animal, () => 0 as any),
     })
@@ -386,9 +395,11 @@ describe("valibotSilk", () => {
       loveBone: v.optional(v.boolean()),
     })
 
-    const Animal = v.variant("__typename", [Cat, Dog])
+    const Animal = v.pipe(
+      v.variant("__typename", [Cat, Dog]),
+      asUnionType({ name: "Animal" })
+    )
 
-    collectNames({ Cat, Dog, Animal })
     const r = resolver({
       animal: query(Animal, () => 0 as any),
     })
@@ -416,11 +427,11 @@ describe("valibotSilk", () => {
   describe("should avoid duplicate", () => {
     it("should merge field from multiple resolver", () => {
       const Dog = v.object({
+        __typename: v.nullish(v.literal("Dog")),
         name: v.string(),
         birthday: v.string(),
       })
 
-      collectNames({ Dog })
       const r1 = resolver.of(Dog, {
         dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
         age: field(v.number(), (dog) => {
@@ -449,17 +460,18 @@ describe("valibotSilk", () => {
 
     it("should avoid duplicate object", () => {
       const Dog = v.object({
+        __typename: v.nullish(v.literal("Dog")),
         name: v.string(),
         birthday: v.string(),
       })
 
       const Cat = v.object({
+        __typename: v.nullish(v.literal("Cat")),
         name: v.string(),
         birthday: v.string(),
         friend: v.nullish(Dog),
       })
 
-      collectNames({ Dog, Cat })
       const r1 = resolver.of(Dog, {
         dog: query(v.optional(Dog), () => ({
           name: "",
@@ -508,24 +520,23 @@ describe("valibotSilk", () => {
 
     it("should avoid duplicate object in pipe", () => {
       const Prize = v.object({
+        __typename: v.nullish(v.literal("Prize")),
         name: v.string(),
         value: v.number(),
       })
 
-      collectNames({ Prize })
-
       const Orange = v.object({
+        __typename: v.literal("Orange"),
         name: v.string(),
         color: v.string(),
         prize: v.pipe(Prize, asField({})),
-        __typename: v.literal("Orange"),
       })
 
       const Apple = v.object({
+        __typename: v.literal("Apple"),
         name: v.string(),
         color: v.string(),
         prize: v.pipe(Prize, asField({})),
-        __typename: v.literal("Apple"),
       })
 
       const r = resolver.of(Orange, {
@@ -560,11 +571,10 @@ describe("valibotSilk", () => {
 
     it("should avoid duplicate object in interface", () => {
       const Prize = v.object({
+        __typename: v.nullish(v.literal("Prize")),
         name: v.string(),
         value: v.number(),
       })
-
-      collectNames({ Prize })
 
       const Fruit = v.object({
         __typename: v.literal("Fruit"),
@@ -627,26 +637,29 @@ describe("valibotSilk", () => {
 
     it("should avoid duplicate input", () => {
       const Dog = v.object({
+        __typename: v.nullish(v.literal("Dog")),
         name: v.string(),
         birthday: v.string(),
       })
 
-      const DogInput = v.object(Dog.entries)
-
-      const DataInput = v.object({
-        dog: DogInput,
+      const DogInput = v.object({
+        ...Dog.entries,
+        __typename: v.nullish(v.literal("DogInput")),
       })
 
-      collectNames({ Dog, DogInput, DataInput })
+      const DataInput = v.object({
+        __typename: v.nullish(v.literal("DataInput")),
+        dog: DogInput,
+      })
 
       const r1 = resolver.of(Dog, {
         unwrap: query(Dog, {
           input: DogInput,
-          resolve: (data) => data,
+          resolve: (data) => ({ ...data, __typename: undefined }),
         }),
         dog: query(Dog, {
           input: { data: DogInput },
-          resolve: ({ data }) => data,
+          resolve: ({ data }) => ({ ...data, __typename: undefined }),
         }),
         dogs: query(v.array(Dog), {
           input: {
@@ -654,11 +667,12 @@ describe("valibotSilk", () => {
             required: v.array(DogInput),
             names: v.array(v.string()),
           },
-          resolve: ({ data }) => data,
+          resolve: ({ data }) =>
+            data.map((d) => ({ ...d, __typename: undefined })),
         }),
         mustDog: query(v.nonNullable(Dog), {
           input: { data: DataInput },
-          resolve: ({ data }) => data.dog,
+          resolve: ({ data }) => ({ ...data.dog, __typename: undefined }),
         }),
         age: field(v.number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
@@ -691,9 +705,10 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate enum", () => {
-      const Fruit = v.picklist(["apple", "banana", "orange"])
-
-      collectNames({ Fruit })
+      const Fruit = v.pipe(
+        v.picklist(["apple", "banana", "orange"]),
+        asEnumType("Fruit")
+      )
 
       const r1 = resolver({
         fruit: query(v.optional(Fruit), () => "apple" as const),
@@ -718,9 +733,13 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate interface", () => {
-      const Fruit = v.object({ color: v.optional(v.string()) })
+      const Fruit = v.object({
+        __typename: v.nullish(v.literal("Fruit")),
+        color: v.optional(v.string()),
+      })
       const Orange = v.pipe(
         v.object({
+          __typename: v.nullish(v.literal("Orange")),
           color: v.optional(v.string()),
           flavor: v.string(),
         }),
@@ -729,13 +748,12 @@ describe("valibotSilk", () => {
 
       const Apple = v.pipe(
         v.object({
+          __typename: v.nullish(v.literal("Apple")),
           color: v.optional(v.string()),
           flavor: v.optional(v.string()),
         }),
         asObjectType({ interfaces: [Fruit] })
       )
-
-      collectNames({ Fruit, Orange, Apple })
 
       const r1 = resolver({
         apple: query(v.optional(Apple), () => ({ flavor: "" })),
@@ -772,10 +790,18 @@ describe("valibotSilk", () => {
     })
 
     it("should avoid duplicate union", () => {
-      const Apple = v.object({ flavor: v.string() })
-      const Orange = v.object({ color: v.string() })
-      const Fruit = v.union([Apple, Orange])
-      collectNames({ Apple, Orange, Fruit })
+      const Apple = v.object({
+        __typename: v.nullish(v.literal("Apple")),
+        flavor: v.string(),
+      })
+      const Orange = v.object({
+        __typename: v.nullish(v.literal("Orange")),
+        color: v.string(),
+      })
+      const Fruit = v.pipe(
+        v.union([Apple, Orange]),
+        asUnionType({ name: "Fruit" })
+      )
 
       const r1 = resolver({
         fruit: query(v.optional(Fruit), () => ({ flavor: "" })),
