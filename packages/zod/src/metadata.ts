@@ -31,27 +31,108 @@ interface UnionConfig
 
 const CONFIG = Symbol.for("gqloom.zod.config")
 
+/**
+ * Register as a GraphQL object type.
+ *
+ * @param config - The GraphQL object config.
+ *
+ * @returns zod superRefine refinement
+ */
 export function objectType(
   config: ObjectConfig
+): (arg: object, ctx: RefinementCtx) => void
+
+/**
+ * Register as a GraphQL object type.
+ *
+ * @param name - The GraphQL object name.
+ *
+ * @returns zod superRefine refinement
+ */
+export function objectType(
+  name: string
+): (arg: object, ctx: RefinementCtx) => void
+export function objectType(
+  configOrName: ObjectConfig | string
 ): (arg: object, ctx: RefinementCtx) => void {
-  return Object.assign(() => {}, { [CONFIG]: config })
+  const config: ObjectConfig =
+    typeof configOrName === "string" ? { name: configOrName } : configOrName
+  return Object.assign(() => {}, {
+    [CONFIG]: config,
+  })
 }
 
+/**
+ * Register as a GraphQL field.
+ *
+ * @param config - The GraphQL field config.
+ *
+ * @return zod superRefine refinement
+ */
 export function fieldType(
   config: FieldConfig
 ): (arg: any, ctx: RefinementCtx) => void {
-  return Object.assign(() => {}, { [CONFIG]: config })
+  return Object.assign(() => {}, {
+    [CONFIG]: config,
+  })
 }
 
+/**
+ * Register as a GraphQL enum type.
+ *
+ * @param config - The GraphQL enum config.
+ *
+ * @return zod superRefine refinement
+ */
 export function enumType(
   config: EnumConfig
+): (arg: object, ctx: RefinementCtx) => void
+/**
+ * Register as a GraphQL enum type.
+ *
+ * @param name - The GraphQL enum name.
+ *
+ * @return zod superRefine refinement
+ */
+export function enumType(
+  name: string
+): (arg: object, ctx: RefinementCtx) => void
+
+export function enumType(
+  configOrName: EnumConfig | string
 ): (arg: object, ctx: RefinementCtx) => void {
+  const config: EnumConfig =
+    typeof configOrName === "string" ? { name: configOrName } : configOrName
   return Object.assign(() => {}, { [CONFIG]: config })
 }
 
+/**
+ * Register as a GraphQL union type.
+ *
+ * @param config - The GraphQL union config.
+ *
+ * @return zod superRefine refinement
+ */
 export function unionType(
   config: UnionConfig
+): (arg: object, ctx: RefinementCtx) => void
+
+/**
+ * Register as a GraphQL union type.
+ *
+ * @param name - The GraphQL union name.
+ *
+ * @return zod superRefine refinement
+ */
+export function unionType(
+  name: string
+): (arg: object, ctx: RefinementCtx) => void
+
+export function unionType(
+  configOrName: UnionConfig | string
 ): (arg: object, ctx: RefinementCtx) => void {
+  const config: UnionConfig =
+    typeof configOrName === "string" ? { name: configOrName } : configOrName
   return Object.assign(() => {}, { [CONFIG]: config })
 }
 
