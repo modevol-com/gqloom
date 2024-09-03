@@ -21,7 +21,6 @@ import {
 } from "graphql"
 import { type GQLoomMikroFieldExtensions } from "../src/types"
 import { beforeAll, describe, expect, it } from "vitest"
-import { mikroSilk } from "../src"
 import { EntitySchema, MikroORM, RequestContext } from "@mikro-orm/core"
 import { defineConfig } from "@mikro-orm/better-sqlite"
 import { weaveEntitySchemaBySilk } from "../src/entity-schema"
@@ -93,7 +92,7 @@ describe("Entity Schema", () => {
   describe("weaveEntitySchema", () => {
     it("should convert to GraphQL type", () => {
       const fromEntity = getGraphQLType(
-        silk.nullable(mikroSilk(GiraffeSchema))
+        GiraffeSchema.toSilk().nullable()
       ) as GraphQLObjectType
 
       expect(printSilk(fromEntity)).toMatchInlineSnapshot(`
@@ -125,7 +124,7 @@ describe("Entity Schema", () => {
 
     it("should keep origin GraphQL Field Type", () => {
       const fromEntity = getGraphQLType(
-        silk.nullable(mikroSilk(GiraffeSchema))
+        GiraffeSchema.toSilk().nullable()
       ) as GraphQLObjectType
 
       const fromSilk = getGraphQLType(Giraffe) as GraphQLObjectType

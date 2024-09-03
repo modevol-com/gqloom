@@ -43,13 +43,16 @@ import {
 } from "graphql"
 import { type GQLoomMikroFieldExtensions } from "./types"
 import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
+import { MikroWeaver, type EntitySchemaSilk } from "."
 
 export class EntitySchemaWeaver {
   static weave(
     silk: GraphQLSilk<any, any>,
     relations?: Record<string, RelationProperty<any, object>>,
     options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
-  ) {
+  ): EntitySchema<any> & {
+    toSilk: () => EntitySchemaSilk<any>
+  } {
     const gqlType = unwrapGraphQLType(
       getGraphQLTypeWithName(silk, options?.name, options?.weaverContext)
     )
@@ -93,7 +96,9 @@ export class EntitySchemaWeaver {
 
     EntityGraphQLTypes.set(entity, gqlType)
 
-    return entity
+    return Object.assign(entity, {
+      toSilk: () => MikroWeaver.unravel(entity),
+    })
   }
 
   static toProperties(
@@ -251,7 +256,11 @@ export interface CallableEntitySchemaWeaver<
     silk: TSilk,
     options?: EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>> &
       EntitySchemaWeaverOptions
-  ): EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>
+  ): EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>> & {
+    toSilk: () => EntitySchemaSilk<
+      EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>
+    >
+  }
 
   withRelations: <
     TSilk extends TSchemaIO[0],
@@ -266,7 +275,13 @@ export interface CallableEntitySchemaWeaver<
       SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>
     > &
       EntitySchemaWeaverOptions
-  ) => EntitySchema<SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>>
+  ) => EntitySchema<
+    SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>
+  > & {
+    toSilk: () => EntitySchemaSilk<
+      EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>
+    >
+  }
 }
 
 export type SilkSchemaEntityWithRelations<
