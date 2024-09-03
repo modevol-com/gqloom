@@ -39,32 +39,32 @@ export interface ResolverPayload<
 }
 
 /**
- * Empty Resolver Arguments that only store the memory
+ * Empty Resolver Arguments that only store the memoization
  */
-export interface OnlyMemoryPayload {
-  memory: WeakMap<WeakKey, any>
-  isMemory: true
+export interface OnlyMemoizationPayload {
+  memoization: WeakMap<WeakKey, any>
+  isMemoization: true
 }
 
 /**
- * Create an empty memory payload for the resolver
- * @returns the empty memory payload
+ * Create an empty memoization payload for the resolver
+ * @returns the empty memoization payload
  */
-export function onlyMemory(): OnlyMemoryPayload {
-  return { memory: new WeakMap(), isMemory: true }
+export function onlyMemoization(): OnlyMemoizationPayload {
+  return { memoization: new WeakMap(), isMemoization: true }
 }
 
 export function isOnlyMemoryPayload(
-  payload: ResolverPayload | OnlyMemoryPayload
-): payload is OnlyMemoryPayload {
-  return (payload as OnlyMemoryPayload).isMemory === true
+  payload: ResolverPayload | OnlyMemoizationPayload
+): payload is OnlyMemoizationPayload {
+  return (payload as OnlyMemoizationPayload).isMemoization === true
 }
 
 /**
  * the AsyncLocalStorage instance to store the resolver payload
  */
 export const resolverPayloadStorage = new AsyncLocalStorage<
-  ResolverPayload | OnlyMemoryPayload
+  ResolverPayload | OnlyMemoizationPayload
 >()
 
 /**
@@ -86,13 +86,13 @@ export function useContext<TContextType = object>(): TContextType {
 }
 
 /**
- * use the MemoryMap of the current context
+ * use the MemoizationMap of the current context
  */
-export function useMemoryMap(): WeakMap<WeakKey, any> | undefined {
+export function useMemoizationMap(): WeakMap<WeakKey, any> | undefined {
   const payload = resolverPayloadStorage.getStore()
   if (payload == null) return
-  if (isOnlyMemoryPayload(payload)) return payload.memory
-  return ContextMemory.assignMemoryMap(payload.context)
+  if (isOnlyMemoryPayload(payload)) return payload.memoization
+  return ContextMemoization.assignMemoizationMap(payload.context)
 }
 
 interface ContextMemoryContainer {
@@ -100,32 +100,32 @@ interface ContextMemoryContainer {
 }
 
 interface ContextMemoryOptions {
-  getMemoryMap: () => WeakMap<WeakKey, any> | undefined
+  getMemoizationMap: () => WeakMap<WeakKey, any> | undefined
   key: WeakKey
 }
 
 /**
- * Create a memory in context to store the result of a getter function
+ * Create a memoization in context to store the result of a getter function
  */
-export class ContextMemory<T> implements ContextMemoryOptions {
+export class ContextMemoization<T> implements ContextMemoryOptions {
   constructor(
     readonly getter: () => T,
     options: Partial<ContextMemoryOptions> = {}
   ) {
     this.getter = getter
-    this.getMemoryMap = options.getMemoryMap ?? useMemoryMap
+    this.getMemoizationMap = options.getMemoizationMap ?? useMemoizationMap
     this.key = options.key ?? this.getter
   }
 
-  getMemoryMap: () => WeakMap<WeakKey, any> | undefined
+  getMemoizationMap: () => WeakMap<WeakKey, any> | undefined
   readonly key: WeakKey
 
   /**
-   * Get the value in memory or call the getter function
+   * Get the value in memoization or call the getter function
    * @returns the value of the getter function
    */
   get(): T {
-    const map = this.getMemoryMap()
+    const map = this.getMemoizationMap()
     if (!map) return this.getter()
 
     if (!map.has(this.key)) {
@@ -136,37 +136,37 @@ export class ContextMemory<T> implements ContextMemoryOptions {
   }
 
   /**
-   * Clear the memory
-   * @returns true if the memory is cleared, undefined if the context is not found
+   * Clear the memoization
+   * @returns true if the memoization is cleared, undefined if the context is not found
    */
   clear(): boolean | undefined {
-    const map = this.getMemoryMap()
+    const map = this.getMemoizationMap()
     if (!map) return
     return map.delete(this.key)
   }
 
   /**
-   * Check if the memory exists
-   * @returns true if the memory exists, undefined if the context is not found
+   * Check if the memoization exists
+   * @returns true if the memoization exists, undefined if the context is not found
    */
   exists(): boolean | undefined {
-    const map = this.getMemoryMap()
+    const map = this.getMemoizationMap()
     if (!map) return
     return map.has(this.key)
   }
 
   /**
-   * Set a new value to the memory
+   * Set a new value to the memoization
    * @param value  the new value to set
-   * @returns the memory map or undefined if the context is not found
+   * @returns the memoization map or undefined if the context is not found
    */
   set(value: T): WeakMap<WeakKey, any> | undefined {
-    const map = this.getMemoryMap()
+    const map = this.getMemoizationMap()
     if (!map) return
     return map.set(this.key, value)
   }
 
-  static assignMemoryMap(
+  static assignMemoizationMap(
     target: ContextMemoryContainer
   ): WeakMap<WeakKey, any> {
     target[CONTEXT_MEMORY_MAP_KEY] ??= new WeakMap()
@@ -175,29 +175,32 @@ export class ContextMemory<T> implements ContextMemoryOptions {
 }
 
 /**
- * Async Memory with a callable function
+ * Async Memoization with a callable function
  */
-export interface CallableContextMemory<T>
+export interface CallableContextMemoization<T>
   extends Pick<
-    ContextMemory<T>,
+    ContextMemoization<T>,
     "get" | "set" | "clear" | "exists" | "getter"
   > {
   (): T
 }
 
 /**
- * Create a Memory in context to store the result of a getter function
+ * Create a memoization in context to store the result of a getter function
  */
-export function createMemory<T>(
-  ...args: ConstructorParameters<typeof ContextMemory<T>>
-): CallableContextMemory<T> {
-  const memory = new ContextMemory(...args)
-  const callable = () => memory.get()
+export function createMemoization<T>(
+  ...args: ConstructorParameters<typeof ContextMemoization<T>>
+): CallableContextMemoization<T> {
+  const memoization = new ContextMemoization(...args)
+  const callable = () => memoization.get()
   return Object.assign(callable, {
-    get: () => memory.get(),
-    set: (value: T) => memory.set(value),
-    clear: () => memory.clear(),
-    exists: () => memory.exists(),
-    getter: memory.getter,
-  } as Pick<ContextMemory<T>, "get" | "set" | "clear" | "exists" | "getter">)
+    get: () => memoization.get(),
+    set: (value: T) => memoization.set(value),
+    clear: () => memoization.clear(),
+    exists: () => memoization.exists(),
+    getter: memoization.getter,
+  } as Pick<
+    ContextMemoization<T>,
+    "get" | "set" | "clear" | "exists" | "getter"
+  >)
 }

@@ -6,7 +6,7 @@ import {
   SchemaWeaver,
   useResolverPayload,
   type ResolverPayload,
-  createMemory,
+  createMemoization,
 } from "../src"
 import {
   GraphQLString,
@@ -182,7 +182,7 @@ describe("memory integration", () => {
   )
 
   let calledTime = 0
-  const useRandom = createMemory(() => {
+  const useRandom = createMemoization(() => {
     calledTime++
     return Math.random()
   })

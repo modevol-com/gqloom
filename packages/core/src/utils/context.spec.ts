@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 import {
-  ContextMemory,
-  createMemory,
-  onlyMemory,
+  ContextMemoization,
+  createMemoization,
+  onlyMemoization,
   resolverPayloadStorage,
   useContext,
-  useMemoryMap,
+  useMemoizationMap,
   useResolverPayload,
 } from "./context"
 import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
@@ -24,7 +24,7 @@ describe("context", () => {
     })
 
     it("should return undefined if only memory args are set", () => {
-      resolverPayloadStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemoization(), () => {
         expect(useResolverPayload()).toBeUndefined()
       })
     })
@@ -43,7 +43,7 @@ describe("context", () => {
     })
 
     it("should return undefined if only memory args are set", () => {
-      resolverPayloadStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemoization(), () => {
         expect(useContext()).toBeUndefined()
       })
     })
@@ -61,7 +61,7 @@ describe("memory", () => {
   describe("ContextMemory", () => {
     it("should be called many times without context", () => {
       let times = 0
-      const memory = new ContextMemory(() => {
+      const memory = new ContextMemoization(() => {
         times++
         return "🥭mango"
       })
@@ -77,11 +77,11 @@ describe("memory", () => {
 
     it("should be called only one time with context", () => {
       let times = 0
-      const memory = new ContextMemory(() => {
+      const memory = new ContextMemoization(() => {
         times++
         return "🥭mango"
       })
-      resolverPayloadStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemoization(), () => {
         expect(times).toEqual(0)
         expect(memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -94,13 +94,13 @@ describe("memory", () => {
 
     it("should work with async function", async () => {
       let times = 0
-      const memory = new ContextMemory(async () => {
+      const memory = new ContextMemoization(async () => {
         times++
         await new Promise((resolve) => setTimeout(resolve, 6))
         return "🥭mango"
       })
 
-      resolverPayloadStorage.run(onlyMemory(), async () => {
+      resolverPayloadStorage.run(onlyMemoization(), async () => {
         expect(times).toEqual(0)
         expect(await memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -113,13 +113,13 @@ describe("memory", () => {
 
     it("should be able to clear", async () => {
       let times = 0
-      const memory = new ContextMemory(async () => {
+      const memory = new ContextMemoization(async () => {
         times++
         await new Promise((resolve) => setTimeout(resolve, 6))
         return "🥭mango"
       })
 
-      resolverPayloadStorage.run(onlyMemory(), async () => {
+      resolverPayloadStorage.run(onlyMemoization(), async () => {
         expect(times).toEqual(0)
         expect(await memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -136,12 +136,12 @@ describe("memory", () => {
 
     it("should be able to set", async () => {
       let times = 0
-      const memory = new ContextMemory(() => {
+      const memory = new ContextMemoization(() => {
         times++
         return "🥭mango"
       })
 
-      resolverPayloadStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemoization(), () => {
         expect(times).toEqual(0)
         expect(memory.get()).toEqual("🥭mango")
         expect(times).toEqual(1)
@@ -158,7 +158,7 @@ describe("memory", () => {
 
   describe("createMemory", () => {
     it("should create a callable memory object", () => {
-      const useFruit = createMemory(() => "🍌banana")
+      const useFruit = createMemoization(() => "🍌banana")
       expect(typeof useFruit).toBe("function")
       expect(useFruit()).toEqual("🍌banana")
       expect(useFruit.get()).toEqual("🍌banana")
@@ -166,7 +166,7 @@ describe("memory", () => {
       expect(useFruit.exists()).toEqual(undefined)
       expect(useFruit.clear()).toEqual(undefined)
 
-      resolverPayloadStorage.run(onlyMemory(), () => {
+      resolverPayloadStorage.run(onlyMemoization(), () => {
         expect(useFruit.exists()).toEqual(false)
         expect(useFruit.clear()).toEqual(false)
       })
@@ -175,7 +175,7 @@ describe("memory", () => {
 
   describe("useMemoryMap", () => {
     it("should return undefined if no memory map is set", () => {
-      expect(useMemoryMap()).toBeUndefined()
+      expect(useMemoizationMap()).toBeUndefined()
     })
 
     it("should return the memory map", () => {
@@ -183,29 +183,32 @@ describe("memory", () => {
       const args = { context: { [CONTEXT_MEMORY_MAP_KEY]: map } } as any
 
       resolverPayloadStorage.run(args, () => {
-        expect(useMemoryMap()).toBe(map)
+        expect(useMemoizationMap()).toBe(map)
       })
     })
 
     it("should return the memory map from the context", () => {
       const args = { context: {} } as any
       resolverPayloadStorage.run(args, () => {
-        expect(useMemoryMap()).toBe(args.context[CONTEXT_MEMORY_MAP_KEY])
+        expect(useMemoizationMap()).toBe(args.context[CONTEXT_MEMORY_MAP_KEY])
       })
     })
 
     it("should return the memory map from the only memory args", () => {
-      const memory = onlyMemory()
+      const memory = onlyMemoization()
       resolverPayloadStorage.run(memory, () => {
-        expect(useMemoryMap()).toBe(memory.memory)
+        expect(useMemoizationMap()).toBe(memory.memoization)
       })
     })
   })
 
   describe("onlyMemory", () => {
     it("should return the memory args", () => {
-      const memory = onlyMemory()
-      expect(memory).toEqual({ memory: new WeakMap(), isMemory: true })
+      const memory = onlyMemoization()
+      expect(memory).toEqual({
+        memoization: new WeakMap(),
+        isMemoization: true,
+      })
     })
   })
 })
