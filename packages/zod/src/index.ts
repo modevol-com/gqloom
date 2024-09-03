@@ -57,6 +57,7 @@ import {
   ZodDefault,
   ZodEffects,
   type ZodSchema,
+  type ZodDiscriminatedUnionOption,
 } from "zod"
 import { ZodIDKinds } from "./utils"
 import { resolveTypeByDiscriminatedUnion } from "./utils"
@@ -293,6 +294,18 @@ export class ZodWeaver {
         objectConfig?.extensions
       ) as GraphQLObjectTypeExtensions,
     }
+  }
+
+  static getDiscriminatedUnionOptionName(
+    option: ZodDiscriminatedUnionOption<any> | undefined,
+    config?: TypeOrFieldConfig
+  ): string | undefined {
+    if (option instanceof ZodEffects) {
+      config ??= getConfig(option)
+      return ZodWeaver.getDiscriminatedUnionOptionName(option, config)
+    }
+    const { name } = ZodWeaver.getObjectConfig(option as ZodObject<any>, config)
+    return name
   }
 
   protected static ensureInterfaceType(

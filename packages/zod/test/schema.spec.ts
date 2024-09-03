@@ -345,7 +345,7 @@ describe("ZodSilk", () => {
     `)
   })
 
-  it.todo("should handle discriminated union", () => {
+  it("should handle discriminated union", () => {
     const Cat = z.object({
       __typename: z.literal("Cat"),
       name: z.string(),

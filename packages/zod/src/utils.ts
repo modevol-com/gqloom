@@ -9,6 +9,7 @@ import {
   type ZodObject,
   ZodEffects,
 } from "zod"
+import { ZodWeaver } from "."
 
 export function parseObjectConfig(
   input: string
@@ -48,13 +49,10 @@ export function resolveTypeByDiscriminatedUnion(
     schemaOrEffect instanceof ZodEffects
       ? schemaOrEffect.innerType()
       : schemaOrEffect
-  console.debug("resolveTypeByDiscriminatedUnion", schema)
   return (data) => {
     const discriminatorValue: string = data[schema.discriminator]
     const option = schema.optionsMap.get(discriminatorValue)
-    if (!option?.description) return undefined
-    const { name } = parseObjectConfig(option.description)
-    return name
+    return ZodWeaver.getDiscriminatedUnionOptionName(option)
   }
 }
 
