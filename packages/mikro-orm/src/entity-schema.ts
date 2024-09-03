@@ -40,6 +40,7 @@ import {
   GraphQLID,
   GraphQLScalarType,
   type GraphQLField,
+  type GraphQLObjectTypeConfig,
 } from "graphql"
 import { type GQLoomMikroFieldExtensions } from "./types"
 import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
@@ -50,9 +51,7 @@ export class EntitySchemaWeaver {
     silk: GraphQLSilk<any, any>,
     relations?: Record<string, RelationProperty<any, object>>,
     options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
-  ): EntitySchema<any> & {
-    toSilk: () => EntitySchemaSilk<any>
-  } {
+  ): EntitySchema<any> & { toSilk: ToSilk<any> } {
     const gqlType = unwrapGraphQLType(
       getGraphQLTypeWithName(silk, options?.name, options?.weaverContext)
     )
@@ -97,7 +96,10 @@ export class EntitySchemaWeaver {
     EntityGraphQLTypes.set(entity, gqlType)
 
     return Object.assign(entity, {
-      toSilk: () => MikroWeaver.unravel(entity),
+      toSilk: (config?: Partial<GraphQLObjectTypeConfig<any, any>>) => {
+        if (config) MikroWeaver.asObjectType(entity, config)
+        return MikroWeaver.unravel(entity)
+      },
     })
   }
 
@@ -257,9 +259,7 @@ export interface CallableEntitySchemaWeaver<
     options?: EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>> &
       EntitySchemaWeaverOptions
   ): EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>> & {
-    toSilk: () => EntitySchemaSilk<
-      EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>
-    >
+    toSilk: ToSilk<EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>>
   }
 
   withRelations: <
@@ -278,11 +278,15 @@ export interface CallableEntitySchemaWeaver<
   ) => EntitySchema<
     SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>
   > & {
-    toSilk: () => EntitySchemaSilk<
-      EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>
+    toSilk: ToSilk<
+      EntitySchema<SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>>
     >
   }
 }
+
+type ToSilk<T extends EntitySchema> = (
+  config?: Partial<GraphQLObjectTypeConfig<any, any>>
+) => EntitySchemaSilk<T>
 
 export type SilkSchemaEntityWithRelations<
   TSchemaIO extends AbstractSchemaIO,
