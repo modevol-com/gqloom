@@ -19,9 +19,9 @@ import { weave } from "@gqloom/core"
 import { resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const helloResolver = resolver({
+const HelloResolver = resolver({
   hello: query(v.string(), () => "world"),
 })
 
-export const schema = weave(helloResolver)
+export const schema = weave(HelloResolver)
 ```

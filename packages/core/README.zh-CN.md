@@ -8,11 +8,11 @@ GQLoom 是一个用于 TypeScript/JavaScript 的 GraphQL 编织器，使用 Zod�
 import { weave, loom, silk } from "@gqloom/core"
 import { GraphQLString } from "graphql"
 
-const helloResolver = loom.resolver({
+const HelloResolver = loom.resolver({
   hello: loom.query(silk(GraphQLString), () => "world"),
 })
 
-export const schema = weave(helloResolver)
+export const schema = weave(HelloResolver)
 ```
 
 # GQLoom Core
