@@ -50,7 +50,7 @@ export class EntitySchemaWeaver {
   static weave(
     silk: GraphQLSilk<any, any>,
     relations?: Record<string, RelationProperty<any, object>>,
-    options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+    options?: Partial<EntitySchemaMetadata<any>> & EntitySchemaWeaverOptions
   ): EntitySchema<any> & { toSilk: ToSilk<any> } {
     const gqlType = unwrapGraphQLType(
       getGraphQLTypeWithName(silk, options?.name, options?.weaverContext)
@@ -210,7 +210,7 @@ export class EntitySchemaWeaver {
     return Object.assign(
       (
         silk: TSchemaIO[0],
-        options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+        options?: Partial<EntitySchemaMetadata<any>> & EntitySchemaWeaverOptions
       ) =>
         EntitySchemaWeaver.weave(toSilk(silk), undefined, {
           ...creatorOptions,
@@ -220,7 +220,8 @@ export class EntitySchemaWeaver {
         withRelations: (
           silk: TSchemaIO[0],
           relations: Record<string, RelationProperty<any, any>>,
-          options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+          options?: Partial<EntitySchemaMetadata<any>> &
+            EntitySchemaWeaverOptions
         ) =>
           EntitySchemaWeaver.weave(toSilk(silk), relations, {
             ...creatorOptions,
@@ -256,7 +257,9 @@ export interface CallableEntitySchemaWeaver<
 > {
   <TSilk extends TSchemaIO[0]>(
     silk: TSilk,
-    options?: EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>> &
+    options?: Partial<
+      EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>>
+    > &
       EntitySchemaWeaverOptions
   ): EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>> & {
     toSilk: ToSilk<EntitySchema<SilkSchemaEntity<TSilk, TSchemaIO>>>
@@ -271,8 +274,10 @@ export interface CallableEntitySchemaWeaver<
   >(
     silk: TSilk,
     relations: TRelations,
-    options?: EntitySchemaMetadata<
-      SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>
+    options?: Partial<
+      EntitySchemaMetadata<
+        SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>
+      >
     > &
       EntitySchemaWeaverOptions
   ) => EntitySchema<
@@ -298,13 +303,13 @@ export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver<GraphQLSilkIO> 
   Object.assign(
     (
       silk: GraphQLSilk,
-      options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+      options?: Partial<EntitySchemaMetadata<any>> & EntitySchemaWeaverOptions
     ) => EntitySchemaWeaver.weave(silk, undefined, options),
     {
       withRelations: (
         silk: GraphQLSilk,
         relations: Record<string, RelationProperty<any, any>>,
-        options?: EntitySchemaMetadata<any> & EntitySchemaWeaverOptions
+        options?: Partial<EntitySchemaMetadata<any>> & EntitySchemaWeaverOptions
       ) => EntitySchemaWeaver.weave(silk, relations, options),
     }
   )
