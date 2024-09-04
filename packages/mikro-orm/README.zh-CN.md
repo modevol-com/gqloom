@@ -193,3 +193,5 @@ const Book = weaveEntitySchema.withRelations(
 在上面的代码中，我们使用 `weaveEntitySchema.withRelations` 为 `Book` 实体定义了一个关于`author` 的多对一关系，该关系指向 `Author` 实体，并且该关系是可选的，你可以在 `manyToOne` 的第二个参数中定义更多关于该关系的配置。
 
 ## 从 MikroORM 的 Entity Schema 生成 GraphQL 操作
+
+TODO: 文档待续...
