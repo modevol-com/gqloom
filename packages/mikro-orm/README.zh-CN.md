@@ -82,10 +82,114 @@ const mikroWeaverConfig = MikroWeaver.config({
 
 ## 将丝线编织成 MikroORM 的 Entity Schema
 
-### 自定义类型映射
+GQLoom 能够将丝线编织成 MikroORM 的 Entity Schema，这让我们用更少的代码定义 Entity Schema。
+在下面的示例中，我们将使用 `Valibot` Schema 作为丝线定义 MikroORM 的 Entity Schema。
+
+### 创建编织器
+
+首先，我们需要先创建一个将 `Valibot` Schema 编织成 MikroORM 的 Entity Schema 的函数：
+
+```ts
+import {
+  type CallableEntitySchemaWeaver,
+  EntitySchemaWeaver,
+} from "@gqloom/mikro-orm"
+import {
+  type ValibotSchemaIO,
+  valibotSilk,
+  ValibotWeaver,
+} from "@gqloom/Valibot"
+
+// 仅使用 `valibotSilk` 不添加额外配置
+export const weaveEntitySchema: CallableEntitySchemaWeaver<ValibotSchemaIO> =
+  EntitySchemaWeaver.createWeaver<ValibotSchemaIO>(valibotSilk)
+
+// 使用带有额外配置的 `valibotSilk`
+export const weaveEntitySchema1: CallableEntitySchemaWeaver<ValibotSchemaIO> =
+  EntitySchemaWeaver.createWeaver<ValibotSchemaIO>(
+    ValibotWeaver.useConfig(valibotWeaverConfig)
+  )
+
+// 自定义 GraphQL 类型到数据库列类型的映射
+export const weaveEntitySchema2: CallableEntitySchemaWeaver<ValibotSchemaIO> =
+  EntitySchemaWeaver.createWeaver<ValibotSchemaIO>(valibotSilk，{
+    getProperty: (gqlType, field) => {
+      const columnType = (() => {
+        if (extensions.mikroProperty?.primary === true) return PostgresColumn.id
+        if (gqlType instanceof GraphQLObjectType) return PostgresColumn.jsonb
+        switch (gqlType) {
+          case GraphQLString:
+            return PostgresColumn.text
+          case GraphQLInt:
+            return PostgresColumn.integer
+          case GraphQLFloat:
+            return PostgresColumn.float
+          case GraphQLBoolean:
+            return PostgresColumn.bool
+          case GraphQLJSON:
+          case GraphQLJSONObject:
+            return PostgresColumn.jsonb
+          case GraphQLID:
+            return PostgresColumn.id
+        }
+      })()
+      return columnType ? { columnType } : undefined
+    },
+  })
+```
+
+### 定义 MikroORM 的 Entity Schema
+
+在上面的代码中，我们创建的 `weaveEntitySchema` 函数可以将 `Valibot` 丝线编织成 MikroORM 的 Entity Schema。
+现在我们将使用 `weaveEntitySchema` 函数来定义 Mikro Entity Schema。
+
+```ts
+import * as v from "valibot"
+import { asField } from "@gqloom/valibot"
+import { weaveEntitySchema } from "./weaveEntitySchema"
+
+const Author = weaveEntitySchema(
+  v.object({
+    id: v.pipe(
+      v.string(),
+      asField({ extensions: { mikroProperty: { primary: true } } })
+    ),
+    name: v.string(),
+  }),
+  {
+    name: "Author",
+    indexes: [{ properties: ["name"] }],
+  }
+)
+```
+
+在上面的代码中，我们将 `Valibot` 的对象作为 `weaveEntitySchema` 的第一个参数，并在第二个参数中传入 EntitySchema 的配置。在此，我们定义了一个 `Author` 实体，其包含 `id` 和 `name` 两个属性，其中`id`为该实体的主键，此为，我们还为 `name` 属性添加了一个索引。
+
+### 定义关系
+
+在 MikroORM 中，[关系](https://mikro-orm.io/docs/relationships)是一种将多个实体连接起来的方式。在 GQLoom 中，我们可以使用 `weaveEntitySchema.withRelations` 来为实体定义关系。
+
+```ts
+import * as v from "valibot"
+import { asField } from "@gqloom/valibot"
+import { manyToOne } from "@gqloom/mikro-orm"
+import { weaveEntitySchema } from "./weaveEntitySchema"
+
+const Book = weaveEntitySchema.withRelations(
+  v.object({
+    ISBN: v.pipe(
+      v.string(),
+      asField({ extensions: { mikroProperty: { primary: true } } })
+    ),
+    sales: v.number(),
+    title: v.string(),
+  }),
+  {
+    author: manyToOne(() => Author, { nullable: true }),
+  }
+)
+```
+
+在上面的代码中，我们使用 `weaveEntitySchema.withRelations` 为 `Book` 实体定义了一个关于`author` 的多对一关系，该关系指向 `Author` 实体，并且该关系是可选的，你可以在 `manyToOne` 的第二个参数中定义更多关于该关系的配置。
 
 ## 从 MikroORM 的 Entity Schema 生成 GraphQL 操作
-
-```
-
-```
