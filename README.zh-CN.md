@@ -1,5 +1,7 @@
 # GQLoom
 
+[English](./README.md) | 简体中文
+
 GQLoom 是一个用于 TypeScript/JavaScript 的 GraphQL 编织器，使用 Zod、Yup 或者 Valibot 来愉快地编织 GraphQL Schema, 支持完善的类型推断以提供最好的开发体验。
 
 GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)、[Pothos](https://pothos-graphql.dev/) 启发。
