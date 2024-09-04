@@ -353,7 +353,16 @@ describe("valibotSilk", () => {
       loveBone: v.optional(v.boolean()),
     })
 
-    const Animal = v.pipe(v.union([Cat, Dog]), asUnionType("Animal"))
+    const Animal = v.pipe(
+      v.union([Cat, Dog]),
+      asUnionType({
+        name: "Animal",
+        resolveType: (it) => {
+          if (it.loveFish) return "Cat"
+          return "Dog"
+        },
+      })
+    )
 
     const r = resolver({
       animal: query(Animal, () => 0 as any),
