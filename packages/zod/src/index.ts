@@ -431,3 +431,5 @@ function getGraphQLType(this: Schema) {
 function parseZod(this: Schema, data: any) {
   return this.parseAsync(data)
 }
+
+export * from "@gqloom/core"
