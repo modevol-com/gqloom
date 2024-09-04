@@ -1,8 +1,8 @@
-# GQLoom
+# [GQLoom](../../README.zh-CN.md)
 
-English | [简体中文](./README.zh-CN.md)
+[English](./README.md) | 简体中文
 
-GQLoom 是一个用于 TypeScript/JavaScript 的 GraphQL 编织器，使用 Zod、Yup 或者 Valibot 来愉快地编织 GraphQL Schema, 支持完善的类型推断以提供最好的开发体验。
+[GQLoom](../../README.zh-CN.md) 是一个用于 TypeScript/JavaScript 的 GraphQL 编织器，使用 Zod、Yup 或者 Valibot 来愉快地编织 GraphQL Schema, 支持完善的类型推断以提供最好的开发体验。
 
 ## 你好，世界！
 

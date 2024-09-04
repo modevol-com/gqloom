@@ -27,3 +27,11 @@ const HelloResolver = resolver({
 
 export const schema = weave(HelloResolver)
 ```
+
+## 仓库导航
+
+- [GQLoom Core](./packages/core/README.zh-CN.md): GraphQL 织布机核心功能。
+
+- [GQLoom Valibot](./packages/valibot/README.zh-CN.md): GQLoom 与 Valibot 的集成。
+
+- [GQLoom Mikro ORM](./packages/mikro-orm/README.zh-CN.md): GQLoom 与 Mikro ORM 的集成。
