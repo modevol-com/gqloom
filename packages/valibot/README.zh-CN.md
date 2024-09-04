@@ -45,8 +45,7 @@ export const HelloResolver = resolver({
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/core"
-import { asObjectType, valibotSilk } from "@gqloom/valibot"
+import { asObjectType, valibotSilk, collectNames } from "@gqloom/valibot"
 import { printType } from "graphql"
 
 export const Cat = v.object({
@@ -88,8 +87,7 @@ collectNames({ Cat, Dog, Animal }) // 为 GraphQL 收集名称
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/core"
-import { asUnionType, valibotSilk } from "@gqloom/valibot"
+import { asUnionType, valibotSilk, collectNames } from "@gqloom/valibot"
 import { printType } from "graphql"
 
 const Cat = v.object({
@@ -107,7 +105,7 @@ const Dog = v.object({
 const Animal = v.pipe(
   v.union([Cat, Dog]),
   asUnionType({
-    // 定义 resolveType 函数获取对象的类型名称
+    // 定义 resolveType 函数运行时在获取对象的类型名称
     resolveType: (it) => (it.loveFish ? "Cat" : "Dog"),
   })
 )
@@ -188,7 +186,7 @@ export const valibotWeaverConfig = ValibotWeaver.config({
 在编织 GraphQL Schema 时传入配置到 `weave` 中。
 
 ```ts
-import { weave } from "@gqloom/core"
+import { weave } from "@gqloom/valibot"
 
 export const schema = weave(valibotWeaverConfig, HelloResolver)
 ```
