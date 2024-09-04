@@ -26,14 +26,16 @@ describe("MikroSilk", () => {
     name: string
   }
 
-  const AuthorSchema = new EntitySchema<IAuthor>({
-    name: "Author",
-    properties: {
-      name: { type: "string" },
-    },
-  })
+  const Author = mikroSilk(
+    new EntitySchema<IAuthor>({
+      name: "Author",
+      properties: {
+        name: { type: "string" },
+      },
+    })
+  )
 
-  const BookSchema = mikroSilk(
+  const Book = mikroSilk(
     new EntitySchema<IBook>({
       name: "Book",
       properties: {
@@ -43,13 +45,13 @@ describe("MikroSilk", () => {
         isPublished: { type: Boolean },
         price: { type: "number", nullable },
         tags: { type: "string[]", array: true },
-        author: { entity: () => AuthorSchema, kind: "m:1", ref: true },
+        author: { entity: () => Author, kind: "m:1", ref: true },
       },
     }),
     { extensions: { foo: "bar" } }
   )
 
-  const gqlType = getGraphQLType(BookSchema)
+  const gqlType = getGraphQLType(Book)
 
   it("should handle object", () => {
     expect(printType(unwrap(gqlType))).toMatchInlineSnapshot(`
@@ -63,16 +65,14 @@ describe("MikroSilk", () => {
     `)
 
     expect(
-      (getGraphQLType(BookSchema.nullable()) as GraphQLObjectType).toConfig()
+      (getGraphQLType(Book.nullable()) as GraphQLObjectType).toConfig()
     ).toMatchObject({ extensions: { foo: "bar" } })
 
     expect(
-      printType(getGraphQLType(BookSchema.nullable()) as GraphQLObjectType)
+      printType(getGraphQLType(Book.nullable()) as GraphQLObjectType)
     ).toEqual(printType(unwrap(gqlType)))
 
-    expect(getGraphQLType(BookSchema.list())).toMatchInlineSnapshot(
-      `"[Book!]!"`
-    )
+    expect(getGraphQLType(Book.list())).toMatchInlineSnapshot(`"[Book!]!"`)
   })
 
   it("should not expose hidden property", () => {
