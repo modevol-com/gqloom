@@ -29,6 +29,16 @@ const IntScalar = valibotSilk(v.pipe(v.nullable(v.number()), v.integer())) // Gr
 
 ## 解析器｜Resolver
 
+为了将 Valibot Schema 作为丝线使用，我们需要为其包裹 `valibotSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/valibot` 提供重新导出了解析器和操作构造函数来简化这个过程。从 `@gqloom/valibot` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `valibotSilk`，这样在大部分情况下，我们可以直接使用 Valibot Schema。
+
+```ts
+import { resolver, query } from "@gqloom/valibot"
+
+export const HelloResolver = resolver({
+  hello: query(v.string(), () => "Hello, World!"),
+})
+```
+
 ## 声明对象
 
 我们可以使用 Valibot 定义对象，并将其作为丝线使用。
