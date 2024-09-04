@@ -41,6 +41,7 @@ import {
   type ValibotWeaverConfigOptions,
   type ValibotWeaverConfig,
 } from "./types"
+export * from "@gqloom/core"
 
 export class ValibotWeaver {
   /**
@@ -319,7 +320,6 @@ export class ValibotWeaver {
 }
 
 export * from "./metadata"
-
 /**
  * get GraphQL Silk from Valibot Schema
  * @param schema Valibot Schema
