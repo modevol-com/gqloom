@@ -159,3 +159,36 @@ const FruitE = v.pipe(
 ## 自定义类型映射
 
 为了适应更多的 Valibot 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
+
+首先我们使用 `ValibotWeaver.config` 来类型映射的配置。这里我们导入来自 `graphql-scalars` 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
+
+```ts
+import {
+  GraphQLDateTime,
+  GraphQLJSON,
+  GraphQLJSONObject,
+} from "graphql-scalars"
+import { ValibotWeaver } from "@gqloom/valibot"
+
+export const valibotWeaverConfig = ValibotWeaver.config({
+  presetGraphQLType: (schema) => {
+    const pipe = ValibotMetadataCollector.getPipe(schema)
+    switch (schema.type) {
+      case "date":
+        return GraphQLDateTime
+      case "any":
+        return GraphQLJSON
+      case "record":
+        return GraphQLJSONObject
+    }
+  },
+})
+```
+
+在编织 GraphQL Schema 时传入配置到 `weave` 中。
+
+```ts
+import { weave } from "@gqloom/core"
+
+export const schema = weave(valibotWeaverConfig, HelloResolver)
+```
