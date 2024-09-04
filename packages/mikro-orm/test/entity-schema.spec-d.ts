@@ -8,14 +8,9 @@ import {
   oneToOne,
 } from "../src/entity-schema"
 import { GraphQLID, GraphQLObjectType, GraphQLString } from "graphql"
-import {
-  type Collection,
-  MikroORM,
-  type Reference,
-  type EntitySchema,
-} from "@mikro-orm/core"
+import { type Collection, MikroORM, type Reference } from "@mikro-orm/core"
 import { describe, expectTypeOf, it } from "vitest"
-import { type InferEntity } from "../src"
+import { type EntitySilk, type InferEntity } from "../src"
 
 const Book = silk<{ title: string }>(
   new GraphQLObjectType({
@@ -63,7 +58,7 @@ interface IBookEntity extends GraphQLSilkEntity<typeof Book> {
   author: Reference<IAuthorEntity>
 }
 
-const BookEntity: EntitySchema<IBookEntity> =
+const BookEntity: EntitySilk<IBookEntity> =
   weaveEntitySchemaBySilk.withRelations(Book, {
     author: manyToOne(() => AuthorEntity),
   })
@@ -72,7 +67,7 @@ interface IAuthorEntity extends GraphQLSilkEntity<typeof Author> {
   books: Collection<IBookEntity>
 }
 
-const AuthorEntity: EntitySchema<IAuthorEntity> =
+const AuthorEntity: EntitySilk<IAuthorEntity> =
   weaveEntitySchemaBySilk.withRelations(Author, {
     books: oneToMany(() => BookEntity, { mappedBy: "author" }),
   })
@@ -109,7 +104,7 @@ interface IGiraffeEntity extends GraphQLSilkEntity<typeof Giraffe> {
   friends: Collection<IGiraffeEntity>
 }
 
-const GiraffeEntity: EntitySchema<IGiraffeEntity> =
+const GiraffeEntity: EntitySilk<IGiraffeEntity> =
   weaveEntitySchemaBySilk.withRelations(Giraffe, {
     friends: manyToMany(() => GiraffeEntity),
   })

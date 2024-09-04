@@ -92,7 +92,7 @@ describe("Entity Schema", () => {
   describe("weaveEntitySchema", () => {
     it("should convert to GraphQL type", () => {
       const fromEntity = getGraphQLType(
-        GiraffeSchema.toSilk().nullable()
+        GiraffeSchema.nullable()
       ) as GraphQLObjectType
 
       expect(printSilk(fromEntity)).toMatchInlineSnapshot(`
@@ -124,7 +124,7 @@ describe("Entity Schema", () => {
 
     it("should keep origin GraphQL Field Type", () => {
       const fromEntity = getGraphQLType(
-        GiraffeSchema.toSilk().nullable()
+        GiraffeSchema.nullable()
       ) as GraphQLObjectType
 
       const fromSilk = getGraphQLType(Giraffe) as GraphQLObjectType
