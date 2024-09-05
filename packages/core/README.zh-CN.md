@@ -56,7 +56,7 @@ interface ICat {
   age: number
 }
 
-// 这里我们使用 `silk`的泛型参数将 CatSilk 的类型标记为 ICat
+// 这里我们使用 `silk`的泛型参数将 Cat 的类型标记为 ICat
 export const Cat = silk<ICat>(
   new GraphQLObjectType({
     name: "Cat",
