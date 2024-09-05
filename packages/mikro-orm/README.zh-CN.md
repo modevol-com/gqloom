@@ -194,4 +194,302 @@ const Book = weaveEntitySchema.withRelations(
 
 ## 从 MikroORM 的 Entity Schema 生成 GraphQL 操作
 
-TODO: 文档待续...
+GQLoom 提供了直接从 MikroORM 的 Entity Schema 生成 GraphQL 操作的功能，这将极大简化开发过程。
+
+首先，我们需要从 Entity Schema 创建线筒。
+
+```ts
+import { EntitySchema } from "@mikro-orm/core"
+import { MikroOperationBobbin, mikroSilk } from "@gqloom/mikro-orm"
+
+interface IGiraffe {
+  id: string
+  name: string
+  birthday: Date
+  height?: number | null
+}
+
+const Giraffe = mikroSilk(
+  new EntitySchema<IGiraffe>({
+    name: "Giraffe",
+    properties: {
+      id: { type: "number", primary: true },
+      name: { type: "string" },
+      birthday: { type: "Date" },
+      height: { type: "number", nullable: true },
+    },
+  })
+)
+
+const giraffeBobbin = new MikroOperationBobbin(Giraffe, () => orm.em)
+```
+
+在上面的代码中，我们首先定义了一个 `Giraffe` 实体，然后使用 `MikroOperationBobbin` 创建了一个线筒。从线筒中，我们可以直接生成 GraphQL 操作。
+
+```ts
+const GiraffeResolver = resolver.of(Giraffe, {
+  giraffe: giraffeBobbin.FindOneQuery(),
+  giraffes: giraffeBobbin.FindManyQuery(),
+  createGiraffe: giraffeBobbin.CreateMutation(),
+  updateGiraffe: giraffeBobbin.UpdateMutation(),
+  deleteGiraffe: giraffeBobbin.DeleteOneMutation(),
+})
+
+const schema = weave(GiraffeResolver)
+```
+
+只需要以上简单的代码，我们就可以从 `Giraffe` 实体生成 GraphQL 操作，并使用 `weave` 函数将它们编织到 GraphQL Schema 中。
+得到的完整的 GraphQL Schema 如下：
+
+```graphql
+type Query {
+  giraffe(id: ID!): Giraffe!
+  giraffes(
+    limit: Int
+    orderBy: GiraffeFindManyOptionsOrderBy
+    skip: Int
+    where: GiraffeFindManyOptionsWhere
+  ): [Giraffe!]!
+}
+
+type Mutation {
+  createGiraffe(data: GiraffeCreateInput!): Giraffe!
+  deleteGiraffe(id: ID!): Giraffe
+  updateGiraffe(data: GiraffeUpdateInput!): Giraffe!
+}
+
+input FloatMikroComparisonOperators {
+  """
+  <@
+  """
+  contained: [Float!]
+
+  """
+  @>
+  """
+  contains: [Float!]
+
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: Float
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: Float
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: Float
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [Float!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: Float
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: Float
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: Float
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [Float!]
+
+  """
+  &&
+  """
+  overlap: [Float!]
+}
+
+type Giraffe {
+  birthday: String!
+  height: Float
+  id: ID!
+  name: String!
+}
+
+input GiraffeCreateInput {
+  birthday: String!
+  height: Float
+  id: ID
+  name: String!
+}
+
+input GiraffeFindManyOptionsOrderBy {
+  birthday: MikroQueryOrder
+  height: MikroQueryOrder
+  id: MikroQueryOrder
+  name: MikroQueryOrder
+}
+
+input GiraffeFindManyOptionsWhere {
+  birthday: StringMikroComparisonOperators
+  height: FloatMikroComparisonOperators
+  id: IDMikroComparisonOperators
+  name: StringMikroComparisonOperators
+}
+
+input GiraffeUpdateInput {
+  birthday: String
+  height: Float
+  id: ID!
+  name: String
+}
+
+input IDMikroComparisonOperators {
+  """
+  <@
+  """
+  contained: [ID!]
+
+  """
+  @>
+  """
+  contains: [ID!]
+
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: ID
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: ID
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: ID
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [ID!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: ID
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: ID
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: ID
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [ID!]
+
+  """
+  &&
+  """
+  overlap: [ID!]
+}
+
+enum MikroQueryOrder {
+  ASC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
+  DESC
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
+}
+
+input StringMikroComparisonOperators {
+  """
+  <@
+  """
+  contained: [String!]
+
+  """
+  @>
+  """
+  contains: [String!]
+
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: String
+
+  """
+  Full text. A driver specific full text search function.
+  """
+  fulltext: String
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: String
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: String
+
+  """
+  ilike
+  """
+  ilike: String
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [String!]
+
+  """
+  Like. Uses LIKE operator
+  """
+  like: String
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: String
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: String
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: String
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [String!]
+
+  """
+  &&
+  """
+  overlap: [String!]
+
+  """
+  Regexp. Uses REGEXP operator
+  """
+  re: String
+}
+```

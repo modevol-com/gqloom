@@ -43,20 +43,10 @@ const Giraffe = mikroSilk(
   new EntitySchema<IGiraffe>({
     name: "Giraffe",
     properties: {
-      id: {
-        type: "number",
-        primary: true,
-      },
-      name: {
-        type: "string",
-      },
-      birthday: {
-        type: "Date",
-      },
-      height: {
-        type: "number",
-        nullable: true,
-      },
+      id: { type: "number", primary: true },
+      name: { type: "string" },
+      birthday: { type: "Date" },
+      height: { type: "number", nullable: true },
     },
   })
 )
