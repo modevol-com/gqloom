@@ -258,6 +258,50 @@ type Mutation {
   updateGiraffe(data: GiraffeUpdateInput!): Giraffe!
 }
 
+type Giraffe {
+  birthday: String!
+  height: Float
+  id: ID!
+  name: String!
+}
+
+input GiraffeCreateInput {
+  birthday: String!
+  height: Float
+  id: ID
+  name: String!
+}
+
+input GiraffeFindManyOptionsOrderBy {
+  birthday: MikroQueryOrder
+  height: MikroQueryOrder
+  id: MikroQueryOrder
+  name: MikroQueryOrder
+}
+
+input GiraffeFindManyOptionsWhere {
+  birthday: StringMikroComparisonOperators
+  height: FloatMikroComparisonOperators
+  id: IDMikroComparisonOperators
+  name: StringMikroComparisonOperators
+}
+
+input GiraffeUpdateInput {
+  birthday: String
+  height: Float
+  id: ID!
+  name: String
+}
+
+enum MikroQueryOrder {
+  ASC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
+  DESC
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
+}
+
 input FloatMikroComparisonOperators {
   """
   <@
@@ -315,41 +359,6 @@ input FloatMikroComparisonOperators {
   overlap: [Float!]
 }
 
-type Giraffe {
-  birthday: String!
-  height: Float
-  id: ID!
-  name: String!
-}
-
-input GiraffeCreateInput {
-  birthday: String!
-  height: Float
-  id: ID
-  name: String!
-}
-
-input GiraffeFindManyOptionsOrderBy {
-  birthday: MikroQueryOrder
-  height: MikroQueryOrder
-  id: MikroQueryOrder
-  name: MikroQueryOrder
-}
-
-input GiraffeFindManyOptionsWhere {
-  birthday: StringMikroComparisonOperators
-  height: FloatMikroComparisonOperators
-  id: IDMikroComparisonOperators
-  name: StringMikroComparisonOperators
-}
-
-input GiraffeUpdateInput {
-  birthday: String
-  height: Float
-  id: ID!
-  name: String
-}
-
 input IDMikroComparisonOperators {
   """
   <@
@@ -405,15 +414,6 @@ input IDMikroComparisonOperators {
   &&
   """
   overlap: [ID!]
-}
-
-enum MikroQueryOrder {
-  ASC
-  ASC_NULLS_FIRST
-  ASC_NULLS_LAST
-  DESC
-  DESC_NULLS_FIRST
-  DESC_NULLS_LAST
 }
 
 input StringMikroComparisonOperators {
