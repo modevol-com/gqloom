@@ -527,7 +527,10 @@ describe("ZodSilk", () => {
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
           unwrap(name: String!, birthday: String): Dog!
-          dog(data: DogInput!): Dog!
+          dog(
+            """Does the dog love fish?"""
+            data: DogInput!
+          ): Dog!
           dogs(data: [DogInput!]!, required: [DogInput!]!, names: [String!]!): [Dog!]!
           mustDog(data: DataInput!): DogRequired!
         }

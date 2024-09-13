@@ -10,6 +10,7 @@ import {
   mergeExtensions,
   type GraphQLSilkIO,
   isSilk,
+  collectNames,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -58,6 +59,7 @@ import {
   ZodEffects,
   type ZodSchema,
   type ZodDiscriminatedUnionOption,
+  z,
 } from "zod"
 import { ZodIDKinds } from "./utils"
 import { resolveTypeByDiscriminatedUnion } from "./utils"
@@ -409,16 +411,30 @@ export function zodSilk<TSilk>(silk: TSilk): TSilk
 
 export function zodSilk(schema: ZodType | GraphQLSilk) {
   if (isSilk(schema)) return schema
+  if (isZodSchemaRecord(schema)) {
+    const inputSchema = z.object(schema)
+    collectNames({ _: inputSchema })
+    return ZodWeaver.unravel(inputSchema)
+  }
   return ZodWeaver.unravel(schema)
 }
 
-zodSilk.isSilk = (schema: any) => isSilk(schema) || isZodSchema(schema)
+zodSilk.isSilk = (schema: any) =>
+  isSilk(schema) || isZodSchema(schema) || isZodSchemaRecord(schema)
 
 export type ZodSchemaIO = [Schema, "_input", "_output"]
 
 export const { query, mutation, field, resolver } = createLoom<
   ZodSchemaIO | GraphQLSilkIO
 >(zodSilk, zodSilk.isSilk)
+
+function isZodSchemaRecord(target: any): target is Record<string, Schema> {
+  return (
+    typeof target === "object" &&
+    target !== null &&
+    Object.values(target).every(isZodSchema)
+  )
+}
 
 function isZodSchema(target: any): target is Schema {
   return target instanceof ZodType
