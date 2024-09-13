@@ -14,11 +14,10 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 - 🪄 随处可达的 Context 和 DataLoader。
 - 🔮 无需代码生成和实验性装饰器功能。
 
-## 你好，世界！
+## 你好 世界
 
 ```ts
-import { weave } from "@gqloom/core"
-import { resolver, query } from "@gqloom/valibot"
+import { resolver, query, weave } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const HelloResolver = resolver({
