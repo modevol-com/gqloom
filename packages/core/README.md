@@ -17,8 +17,7 @@ GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphq
 ## Hello, World!
 
 ```ts
-import { weave } from "@gqloom/core"
-import { resolver, query } from "@gqloom/valibot"
+import { resolver, query, weave } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const HelloResolver = resolver({
