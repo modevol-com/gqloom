@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-GQLoom is a GraphQL weaver for TypeScript/JavaScript that happily weaves GraphQL Schema using Zod, Yup, or Valibot, with support for sophisticated type inference to provide the best development experience.
+GQLoom is a GraphQL weaver for TypeScript/JavaScript that delightedly weaves GraphQL Schema using Zod, Yup, or Valibot, with fully support for automatic type-safety to provide the best development experience.
 
 The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), [Pothos](https://pothos-graphql.dev/).
 
