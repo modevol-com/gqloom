@@ -24,7 +24,7 @@
     "dist"
   ],
   "peerDependencies": {
-    "@gqloom/core": ">= 0.1.0",
+    "@gqloom/core": ">= 0.2.0",
     "@apollo/subgraph": ">= 2.0.0",
     "graphql": ">= 16.8.0"
   },
@@ -42,5 +42,8 @@
   },
   "keywords": [],
   "author": "xcfox",
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

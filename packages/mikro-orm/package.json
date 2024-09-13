@@ -28,12 +28,15 @@
   "license": "MIT",
   "peerDependencies": {
     "graphql": ">= 16.8.0",
-    "@gqloom/core": ">= 0.1.0",
+    "@gqloom/core": ">= 0.2.0",
     "@mikro-orm/core": ">= 6.0.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@mikro-orm/better-sqlite": "^6.2.8",
     "@mikro-orm/core": "^6.2.8"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

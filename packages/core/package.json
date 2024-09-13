@@ -28,5 +28,8 @@
   },
   "keywords": [],
   "author": "xcfox",
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }
