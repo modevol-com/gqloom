@@ -1,3 +1,5 @@
+![GQLoom Logo](./gqloom.svg)
+
 # GQLoom
 
 [English](./README.md) | 简体中文
