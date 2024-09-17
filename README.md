@@ -1,4 +1,4 @@
-![GQLoom Logo](./gqloom.svg)
+![GQLoom Logo](https://github.com/modevol-com/gqloom/blob/main/gqloom.svg?raw=true)
 
 # GQLoom
 
