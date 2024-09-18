@@ -3,6 +3,7 @@ import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
 # 快速开始
 
 在本教程中，我们将引导你完成创建一个简单的 GraphQL 后端应用程序。
+我们将使用 `GQLoom` 搭配你喜欢的 schema builder 来定义 GraphQL Resolver 和 Schema，构建一个简单的猫舍应用，能够查询猫舍中的猫并能给猫舍中添加新的猫。
 
 你将使用以下技术：
 
@@ -12,7 +13,7 @@ import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
 - [graphql-yoga](https://the-guild.dev/graphql/yoga-server)：一个用于构建 GraphQL 服务器的适配器；
 - `GQLoom`：更简单、更高效地定义 GraphQL Schema。
 
-你可以选择你熟悉的 schema builder，比如 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/)，甚至 [GraphQL.js](https://graphql.org/graphql-js/)
+你可以选择你熟悉的 schema builder，比如 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/)，甚至直接使用 [GraphQL.js](https://graphql.org/graphql-js/)
 
 ## 前提条件
 在开始之前，请确保你已经安装了以下软件：
@@ -161,5 +162,81 @@ query {
   "data": {
     "hello": "Hello, World"
   }
+}
+```
+
+## 编写代码
+现在，你已经成功地启动了你的 GraphQL 服务，让我们尝试构造稍微复杂的功能。
+
+### 定义 Cat 类型
+接下来，我们定义一个 `Cat` 类型，它有一个 `name` 字段和一个 `birthDate` 字段。
+<Tabs groupId='schema-builder'>
+  <Tab label="valibot">
+```ts title="src/index.ts"
+import * as v from "valibot"
+
+const Cat = v.object({
+  __typename: v.nullish(v.literal("Cat")),
+  name: v.string(),
+  birthDate: v.string(),
+})
+
+interface ICat extends v.InferOutput<typeof Cat> {}
+```
+在上面的代码中，我们使用 `v.object` 来定义 `Cat` 类型：
+它有一个 `__typename` 字段，它的值是 `"Cat"`，当编织 GraphQL Schema 时，此值将作为此对象的名称，我们还将 `__typename` 设置为 `nullish`，如此一来就不必在运行时为每个 `Cat` 的实例对象携带 `__typename` 属性；
+还有一个 `name` 字段和一个 `birthDate` 字段，它们的类型都为字符串。
+
+最后，我们使用 `v.InferOutput` 轻易地获取了 `Cat` 的输出类型，并将其命名为 `ICat`。
+  </Tab>
+  <Tab label="zod">
+```ts title="src/index.ts"
+import { z } from "zod"
+
+const Cat = z.object({
+  __typename: z.literal("Cat").nullish(),
+  name: z.string(),
+  birthDate: z.string(),
+})
+
+interface ICat extends z.infer<typeof Cat> {}
+```
+在上面的代码中，我们使用 `z.object` 来定义 `Cat` 类型：
+它有一个 `__typename` 字段，它的值是 `"Cat"`，当编织 GraphQL Schema 时，此值将作为此对象的名称，我们还将 `__typename` 设置为 `nullish`，如此一来就不必在运行时为每个 `Cat` 的实例对象携带 `__typename` 属性；
+还有一个 `name` 字段和一个 `birthDate` 字段，它们的类型都为字符串。
+
+最后，我们使用 `z.infer` 轻易地获取了 `Cat` 的输出类型，并将其命名为 `ICat`。
+  </Tab>
+  <Tab label="graphql.js">
+```ts title="src/index.ts"
+import { silk } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+
+interface ICat {
+  name: string
+  birthDate: string
+}
+
+const Cat = silk<ICat>(
+  new GraphQLObjectType({
+    name: "Cat",
+    fields: {
+      name: { type: GraphQLString },
+      birthDate: { type: GraphQLString },
+    },
+  })
+)
+```
+在上面的代码中，我们使用 `silk` 来定义 `Cat` 类型：
+`silk` 接受 `ICat` 作为泛型参数，`ICat` 是一个接口，它定义了 `Cat` 类型应该具有的字段；
+然后我们使用 `GraphQLObjectType` 来定义 `Cat` 类型，它有两个字段：`name` 和 `birthDate`，它们的类型都为 `GraphQLString`。
+  </Tab>
+</Tabs>
+
+`GQLoom` 将把我们刚刚定义的 `Cat` 类型编织成 GraphQL Schema：
+```gql
+type Cat {
+  name: String!
+  birthDate: String!
 }
 ```

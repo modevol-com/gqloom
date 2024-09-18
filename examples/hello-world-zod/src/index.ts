@@ -3,6 +3,14 @@ import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
+const Cat = z.object({
+  __typename: z.literal("Cat").nullish(),
+  name: z.string(),
+  birthDate: z.string(),
+})
+
+interface ICat extends z.infer<typeof Cat> {}
+
 const CatResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
