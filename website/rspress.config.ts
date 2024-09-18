@@ -9,6 +9,8 @@ export default defineConfig({
   // 文档根目录
   root: "docs",
   lang: "en",
+  logo: { dark: "/gqloom-name.svg", light: "/gqloom-name-light.svg" },
+  icon: "/gqloom.svg",
   locales: [
     {
       lang: "en",
