@@ -1,3 +1,113 @@
+import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
+
 # 快速开始
 
-## 安装
+在本教程中，我们将引导你完成创建一个简单的 GraphQL 后端应用程序。
+
+你将使用以下技术：
+
+- [Node.js](https://nodejs.org/en/)：服务器端 JavaScript 运行时；
+- [TypeScript](https://www.typescriptlang.org/)：JavaScript 的超集，增加了静态类型和面向对象编程的功能；
+- [GraphQL.js](https://github.com/graphql/graphql-js)：JavaScript 的 GraphQL 参考实现；
+- [graphql-yoga](https://the-guild.dev/graphql/yoga-server)：一个用于构建 GraphQL 服务器的适配器；
+- `GQLoom`：更简单、更高效地定义 GraphQL Schema。
+
+你可以选择你熟悉的 schema builder，比如 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/)，甚至 [GraphQL.js](https://graphql.org/graphql-js/)
+
+## 前提条件
+在开始之前，请确保你已经安装了以下软件：
+
+- [Node.js](https://nodejs.org/)：版本 20 或更高；
+
+## 初始化项目
+首先，我们需要创建一个新的 Node.js 项目。
+
+打开你的命令行，运行以下命令：
+```sh
+mkdir cattery-node-ts
+cd cattery-node-ts
+npm init -y
+```
+在上面的命令中：我们创建了一个名为 `cattery-node-ts` 的新目录，并进入该目录。然后，我们使用 `npm init -y` 命令初始化一个新的 Node.js 项目，并自动生成一个默认的 `package.json` 文件。
+
+## 安装依赖
+接下来，我们需要安装一些必要的依赖项。
+<PackageManagerTabs command="install -D typescript @types/node tsx" />
+在这一步，我们安装了 TypeScript、Node.js 的类型定义以及 [tsx](https://tsx.is/)。[tsx](https://tsx.is/) 是一个用于在 Node.js 中运行 TypeScript 的工具。
+
+<PackageManagerTabs command="install graphql graphql-yoga" />
+我们还安装了 [graphql](https://github.com/graphql/graphql-js) 和 [graphql-yoga](https://the-guild.dev/graphql/yoga-server)，来帮助我们运行 GraphQL 服务。
+
+### 根据你的偏好选择一个 schema builder
+<Tabs groupId='schema-builder'>
+  <Tab label="valibot">
+    <PackageManagerTabs command="install @gqloom/core valibot @gqloom/valibot" />
+  </Tab>
+  <Tab  label="zod">
+    <PackageManagerTabs command="install @gqloom/core zod @gqloom/zod" />
+  </Tab>
+  <Tab  label="graphql.js">
+    <PackageManagerTabs command="install @gqloom/core" />
+  </Tab>
+</Tabs>
+
+## 启动项目
+首先，我们在 `package.json` 中添加一个 `dev` 脚本，用于启动我们的应用程序：
+```json title="package.json"
+{
+  // ...
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  }
+  // ...
+}
+```
+
+然后，我们创建一个 `src/index.ts` 文件，并添加以下代码：
+```ts title="src/index.ts"
+import { loom, silk, weave } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+const { resolver, query } = loom
+
+const CatResolver = resolver({
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "Hello, World"
+  ),
+})
+
+export const schema = weave(CatResolver)
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+现在，你可以运行以下命令来启动你的应用程序：
+
+<PackageManagerTabs command="run dev" />
+
+你应该会看到类似以下的输出：
+```sh
+Server is running on http://localhost:4000/graphql
+```
+
+你可以打开浏览器并访问 [http://localhost:4000/graphql](http://localhost:4000/graphql)，你将看到一个 GraphQL Playground，你可以在这里测试你的 GraphQL 查询：
+
+例如，当我们输入：
+```gql
+query {
+  hello
+}
+```
+你应该会看到以下输出：
+```json
+{
+  "data": {
+    "hello": "Hello, World"
+  }
+}
+```
