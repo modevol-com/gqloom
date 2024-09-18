@@ -62,6 +62,18 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0(@types/node@20.11.30)(terser@5.32.0)
 
+  examples/hello-world:
+    dependencies:
+      '@gqloom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      graphql-yoga:
+        specifier: ^5.6.0
+        version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+
   packages/core:
     dependencies:
       graphql:
