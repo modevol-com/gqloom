@@ -11,8 +11,14 @@ const Cat = v.object({
 
 interface ICat extends v.InferOutput<typeof Cat> {}
 
+const catMap = new Map<string, ICat>([
+  ["Tom", { name: "Tom", birthDate: "2023-03-03" }],
+])
+
 const CatResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
+
+  cats: query(v.array(Cat), () => Array.from(catMap.values())),
 })
 
 export const schema = weave(CatResolver)

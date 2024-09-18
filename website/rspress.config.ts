@@ -1,5 +1,9 @@
 import { defineConfig } from "rspress/config"
-import { pluginShiki } from "@rspress/plugin-shiki"
+import {
+  createTransformerDiff,
+  createTransformerHighlight,
+  pluginShiki,
+} from "@rspress/plugin-shiki"
 
 export default defineConfig({
   // 文档根目录
@@ -21,5 +25,9 @@ export default defineConfig({
       description: "GraphQL 纺织机",
     },
   ],
-  plugins: [pluginShiki()],
+  plugins: [
+    pluginShiki({
+      transformers: [createTransformerDiff(), createTransformerHighlight()],
+    }),
+  ],
 })

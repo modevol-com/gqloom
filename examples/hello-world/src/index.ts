@@ -47,11 +47,7 @@ const CatResolver = resolver.of(Cat, {
     },
   }),
 
-  cats: query(silk.list(Cat), {
-    resolve: () => {
-      return Array.from(catMap.values())
-    },
-  }),
+  cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   createCat: mutation(Cat, {
     input: {

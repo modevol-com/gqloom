@@ -11,8 +11,14 @@ const Cat = z.object({
 
 interface ICat extends z.infer<typeof Cat> {}
 
+const catMap = new Map<string, ICat>([
+  ["Tom", { name: "Tom", birthDate: "2023-03-03" }],
+])
+
 const CatResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
+
+  cats: query(z.array(Cat), () => Array.from(catMap.values())),
 })
 
 export const schema = weave(CatResolver)

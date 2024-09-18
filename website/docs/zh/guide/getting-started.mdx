@@ -240,3 +240,74 @@ type Cat {
   birthDate: String!
 }
 ```
+
+### 管理数据
+
+为了管理我们的数据，我们简单地使用一个 [Map](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Map) 对象来存储 `Cat` 实例：
+
+```ts title="src/index.ts"
+const catMap = new Map<string, ICat>([
+  ["Tom", { name: "Tom", birthDate: "2023-03-03" }],
+])
+```
+:::tip
+在本篇教程中，为了代码的简洁性，我们直接使用 JavaScript 的 `Map` 对象来存储数据。这将把数据存储在内存中，当服务器重启时，数据将丢失。
+
+在实际应用中，你可能需要使用更复杂的数据持久化存储解决方案，例如数据库。
+:::
+
+### 定义 Resolver
+
+现在，让我们定义一个 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例：
+
+<Tabs groupId='schema-builder'>
+  <Tab label="valibot">
+```ts title="src/index.ts"
+import { resolver, query } from "@gqloom/valibot"
+import * as v from "valibot"
+
+const CatResolver = resolver({
+  hello: query(v.string(), () => "Hello, World"),
+
+  cats: query(v.array(Cat), () => Array.from(catMap.values())), // [!code hl]
+})
+```
+在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
+`query` 函数接受两个参数：
+  - 第一个参数是 `cats` 的输出类型，你可以直接将 `valibot` schema 传入，在这里我们传入的是 `v.array(Cat)`;
+  - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
+  </Tab>
+  <Tab label="zod">
+```ts title="src/index.ts"
+import { resolver, query } from "@gqloom/zod"
+import { z } from "zod"
+
+const CatResolver = resolver({
+  hello: query(z.string(), () => "Hello, World"),
+
+  cats: query(z.array(Cat), () => Array.from(catMap.values())), // [!code hl]
+})
+```
+在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
+`query` 函数接受两个参数：
+  - 第一个参数是 `cats` 的输出类型，你可以直接将 `zod` schema 传入，在这里我们传入的是 `z.array(Cat)`;
+  - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
+  </Tab>
+  <Tab label="graphql.js">
+```ts title="src/index.ts"
+import { silk, loom } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+const { resolver, query } = loom
+
+const CatResolver = resolver({
+  hello: query(GraphQLString, () => "Hello, World"),
+
+  cats: query(silk.list(Cat), () => Array.from(catMap.values())),, // [!code hl]
+})
+```
+在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
+`query` 函数接受两个参数：
+  - 第一个参数是 `cats` 的输出类型，接受一个 `silk` 对象，在这里我们传入的是 `silk.list(Cat)`（`silk.list` 函数接受一个 `silk` 对象作为参数，并返回一个表示该对象数组的 `silk` 对象）;
+  - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
+  </Tab>
+</Tabs>
