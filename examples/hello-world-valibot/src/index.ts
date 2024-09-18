@@ -1,4 +1,4 @@
-import { weave, resolver, query } from "@gqloom/valibot"
+import { weave, resolver, query, mutation } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -25,6 +25,18 @@ const CatResolver = resolver({
       name: v.string(),
     },
     resolve: ({ name }) => catMap.get(name),
+  }),
+
+  createCat: mutation(Cat, {
+    input: {
+      name: v.string(),
+      birthDate: v.string(),
+    },
+    resolve: ({ name, birthDate }) => {
+      const cat = { name, birthDate }
+      catMap.set(name, cat)
+      return cat
+    },
   }),
 })
 

@@ -1,4 +1,4 @@
-import { weave, resolver, query } from "@gqloom/zod"
+import { weave, resolver, query, mutation } from "@gqloom/zod"
 import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -25,6 +25,18 @@ const CatResolver = resolver({
       name: z.string(),
     },
     resolve: ({ name }) => catMap.get(name),
+  }),
+
+  createCat: mutation(Cat, {
+    input: {
+      name: z.string(),
+      birthDate: z.string(),
+    },
+    resolve: ({ name, birthDate }) => {
+      const cat = { name, birthDate }
+      catMap.set(name, cat)
+      return cat
+    },
   }),
 })
 

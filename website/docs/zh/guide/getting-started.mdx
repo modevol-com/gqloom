@@ -256,7 +256,9 @@ const catMap = new Map<string, ICat>([
 在实际应用中，你可能需要使用更复杂的数据持久化存储解决方案，例如数据库。
 :::
 
-### 定义 Resolver
+### 定义 query 操作
+
+`query` 操作是 GraphQL Schema 的入口点，它允许客户端查询数据。
 
 现在，让我们回到最开始的 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例：
 
@@ -444,6 +446,186 @@ query cat {
       "name": "Tom",
       "birthDate": "2023-03-03"
     }
+  }
+}
+```
+
+### 定义 mutation 操作
+
+`mutation` 操作用于修改数据，例如创建、更新或删除数据。
+
+现在，让我们为 `CatResolver` 添加一个 `createCat` 的 `mutation` 操作，该操作接受一个 `name` 参数，并返回一个 `Cat` 实例。
+
+
+<Tabs groupId='schema-builder'>
+  <Tab label="valibot">
+```ts title="src/index.ts"
+import { resolver, query, mutation } from "@gqloom/valibot"
+import * as v from "valibot"
+
+const CatResolver = resolver({
+  hello: query(v.string(), () => "Hello, World"),
+
+  cats: query(v.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(v.nullish(Cat), {
+    input: {
+      name: v.string(),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  createCat: mutation(Cat, { // [!code hl]
+    input: { // [!code hl]
+      name: v.string(), // [!code hl]
+      birthDate: v.string(), // [!code hl]
+    }, // [!code hl]
+    resolve: ({ name, birthDate }) => { // [!code hl]
+      const cat = { name, birthDate } // [!code hl]
+      catMap.set(name, cat) // [!code hl]
+      return cat // [!code hl]
+    }, // [!code hl]
+  }), // [!code hl]
+})
+```
+
+在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
+
+`mutation` 函数的输入与 `query` 函数一致。
+
+在这里，`createCat` 操作的返回类型为 `Cat`，同时接受两个参数 `name` 和 `birthDate` 作为输入，它们的类型均为 `string`。
+
+在解析函数中，我们可以轻松从第一个参数中获取 `name` 和 `birthDate` 参数的值，TypeScript 将会为我们推导其类型，然后我们创建一个新的 `Cat` 实例，并将其添加到 `catMap` 中，最后返回该 `Cat` 实例。
+  </Tab>
+  <Tab label="zod">
+```ts title="src/index.ts"
+import { resolver, query, mutation } from "@gqloom/zod"
+import { z } from "zod"
+
+const CatResolver = resolver({
+  hello: query(z.string(), () => "Hello, World"),
+
+  cats: query(z.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(Cat.nullish(), {
+    input: {
+      name: z.string(),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  createCat: mutation(Cat, { // [!code hl]
+    input: { // [!code hl]
+      name: z.string(), // [!code hl]
+      birthDate: z.string(), // [!code hl]
+    }, // [!code hl]
+    resolve: ({ name, birthDate }) => { // [!code hl]
+      const cat = { name, birthDate } // [!code hl]
+      catMap.set(name, cat) // [!code hl]
+      return cat // [!code hl]
+    }, // [!code hl]
+  }), // [!code hl]
+})
+```
+在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
+
+`mutation` 函数的输入与 `query` 函数一致。
+
+在这里，`createCat` 操作的返回类型为 `Cat`，同时接受两个参数 `name` 和 `birthDate` 作为输入，它们的类型均为 `string`。
+
+在解析函数中，我们可以轻松从第一个参数中获取 `name` 和 `birthDate` 参数的值，TypeScript 将会为我们推导其类型，然后我们创建一个新的 `Cat` 实例，并将其添加到 `catMap` 中，最后返回该 `Cat` 实例。
+  </Tab>
+  <Tab label="graphql.js">
+```ts title="src/index.ts"
+import { loom, silk, weave } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql"
+
+const CatResolver = resolver({
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "hello, World"
+  ),
+
+  cats: query(silk.list(Cat), () => Array.from(catMap.values())),
+
+  cat: query(silk.nullable(Cat), {
+    input: {
+      name: silk<string>(new GraphQLNonNull(GraphQLString)),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  createCat: mutation(Cat, { // [!code hl]
+    input: { // [!code hl]
+      name: silk<string>(new GraphQLNonNull(GraphQLString)), // [!code hl]
+      birthDate: silk<string>(new GraphQLNonNull(GraphQLString)), // [!code hl]
+    }, // [!code hl]
+    resolve: ({ name, birthDate }) => { // [!code hl]
+      const cat = { name, birthDate } // [!code hl]
+      catMap.set(cat.name, cat) // [!code hl]
+      return cat // [!code hl]
+    }, // [!code hl]
+  }), // [!code hl]
+})
+```
+在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
+
+`mutation` 函数的输入与 `query` 函数一致。
+
+在这里，`createCat` 操作的返回类型为 `Cat`，同时接受两个参数 `name` 和 `birthDate` 作为输入，它们的类型均为 `string`。
+
+在解析函数中，我们可以轻松从第一个参数中获取 `name` 和 `birthDate` 参数的值，TypeScript 将会为我们推导其类型，然后我们创建一个新的 `Cat` 实例，并将其添加到 `catMap` 中，最后返回该 `Cat` 实例。
+  </Tab>
+</Tabs>
+
+让我们在演练场尝试创建新的 `Cat` 实例：
+
+```gql
+mutation createCat {
+  createCat(name: "Nala", birthDate: "2020-01-01") {
+    name
+    birthDate
+  }
+}
+```
+你应该会看到类似下面的结果：
+
+```json
+{
+  "data": {
+    "createCat": {
+      "name": "Nala",
+      "birthDate": "2020-01-01"
+    }
+  }
+}
+```
+
+让我们使用 `cats` 查询来获取所有 `Cat` 实例：
+
+```gql
+query cats {
+  cats {
+    name
+    birthDate
+  }
+}
+```
+你应该会看到类似下面的结果：
+
+```json
+{
+  "data": {
+    "cats": [
+      {
+        "name": "Tom",
+        "birthDate": "2023-03-03"
+      },
+      {
+        "name": "Nala",
+        "birthDate": "2020-01-01"
+      }
+    ]
   }
 }
 ```
