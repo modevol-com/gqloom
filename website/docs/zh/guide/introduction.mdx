@@ -2,11 +2,11 @@ import { Tab, Tabs } from "rspress/theme"
 
 # 介绍
 
-GraphQL 使得 API 的开发变得简单，但编写和维护 GraphQL Schema 是一项繁琐的工作。
+GraphQL 使得 API 的开发变得简单，但编写和维护 GraphQL Schema ，并使其与 TypeScript 类型保持一致并不是一件简单的工作。
 
 在传统的 GraphQL 开发中，开发者需要手动编写 Schema，这会导致代码冗余，并且难以维护。如果使用 TypeScript，还需要手动编写类型声明。这意味开发者需要同时编写维护 `GraphQL` schema、解析器逻辑实现、 `TypeScript` 类型声明三套代码，这无疑增加了开发者的负担。
 
-GQLoom 的目标是通过使用已有的 schema builder (Zod、Yup 或者 Valibot) 来编写类型声明，并自动生成 GraphQL Schema，为开发者提供一种更简单、更高效的方式来编写和维护 GraphQL 服务。
+GQLoom 的目标是通过使用已有的 schema builder (Valibot、Zod 或者 Yup) 来编写类型声明，并自动生成 GraphQL Schema，为开发者提供一种更简单、更高效的方式来编写和维护 GraphQL 服务。
 
 GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)、[Pothos](https://pothos-graphql.dev/) 启发。
 
