@@ -148,7 +148,7 @@ createServer(yoga).listen(4000, () => {
 Server is running on http://localhost:4000/graphql
 ```
 
-你可以打开浏览器并访问 [http://localhost:4000/graphql](http://localhost:4000/graphql)，你将看到一个 GraphQL Playground，你可以在这里测试你的 GraphQL 查询：
+你可以打开浏览器并访问 [http://localhost:4000/graphql](http://localhost:4000/graphql)，你将看到一个 GraphQL 演练场，你可以在这里测试你的 GraphQL 查询：
 
 例如，当我们输入：
 ```gql
@@ -312,6 +312,30 @@ const CatResolver = resolver({
   </Tab>
 </Tabs>
 
+让我们在演练场尝试访问 `cats` 操作：
+```gql
+query cats {
+  cats {
+    name
+    birthDate
+  }
+}
+```
+你应该会看到以下输出：
+```json
+{
+  "data": {
+    "cats": [
+      {
+        "name": "Tom",
+        "birthDate": "2023-03-03"
+      }
+    ]
+  }
+}
+```
+
+
 ### 定义输入
 
 接下来，我们定义一个名为 `cat` 的 `query` 操作，该操作接受一个 `name` 参数，并返回与该 `name` 对应的 `Cat` 实例：
@@ -400,3 +424,26 @@ const CatResolver = resolver({
 在解析函数中，我们从 `resolve` 函数的第一个参数中获取 `name` 参数的值，TypeScript 会把 `name` 参数的类型推断为 `string`，然后我们使用 `catMap.get` 方法获取与 `name` 对应的 `Cat` 实例，并将其作为 `cat` 操作的返回值。
   </Tab>
 </Tabs>
+
+让我们在演练场尝试访问 `cat` 操作：
+
+```gql
+query cat {
+  cat(name: "Tom") {
+    name
+    birthDate
+  }
+}
+```
+
+你应该会看到以下输出：
+```json
+{
+  "data": {
+    "cat": {
+      "name": "Tom",
+      "birthDate": "2023-03-03"
+    }
+  }
+}
+```
