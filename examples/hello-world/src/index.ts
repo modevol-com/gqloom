@@ -40,14 +40,14 @@ const CatResolver = resolver.of(Cat, {
     () => "hello, World"
   ),
 
-  cat: query(silk.nullable(Cat), {
-    input: { name: silk<string>(new GraphQLNonNull(GraphQLString)) },
-    resolve: ({ name }) => {
-      return catMap.get(name)
-    },
-  }),
-
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
+
+  cat: query(silk.nullable(Cat), {
+    input: {
+      name: silk<string>(new GraphQLNonNull(GraphQLString)),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
 
   createCat: mutation(Cat, {
     input: {

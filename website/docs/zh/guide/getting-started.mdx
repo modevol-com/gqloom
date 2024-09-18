@@ -39,7 +39,7 @@ npm init -y
 <PackageManagerTabs command="install graphql graphql-yoga" />
 我们还安装了 [graphql](https://github.com/graphql/graphql-js) 和 [graphql-yoga](https://the-guild.dev/graphql/yoga-server)，来帮助我们运行 GraphQL 服务。
 
-### 根据你的偏好选择一个 schema builder
+### 你选择一个 Schema Builder
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
     <PackageManagerTabs command="install @gqloom/core valibot @gqloom/valibot" />
@@ -309,5 +309,94 @@ const CatResolver = resolver({
 `query` 函数接受两个参数：
   - 第一个参数是 `cats` 的输出类型，接受一个 `silk` 对象，在这里我们传入的是 `silk.list(Cat)`（`silk.list` 函数接受一个 `silk` 对象作为参数，并返回一个表示该对象数组的 `silk` 对象）;
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
+  </Tab>
+</Tabs>
+
+### 定义输入
+
+接下来，我们定义一个名为 `cat` 的 `query` 操作，该操作接受一个 `name` 参数，并返回与该 `name` 对应的 `Cat` 实例：
+<Tabs groupId='schema-builder'>
+  <Tab label="valibot">
+```ts title="src/index.ts"
+import { resolver, query } from "@gqloom/valibot"
+import * as v from "valibot"
+
+const CatResolver = resolver({
+  hello: query(v.string(), () => "Hello, World"),
+
+  cats: query(v.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(v.nullish(Cat), { // [!code hl]
+    input: { // [!code hl]
+      name: v.string(), // [!code hl]
+    }, // [!code hl]
+    resolve: ({ name }) => catMap.get(name), // [!code hl]
+  }), // [!code hl]
+})
+```
+在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
+
+与 `cats` 类似，构建 `cat` 使用的 `query` 函数的第一个参数为 `Cat` 的 `nullish` 类型，表示 `cat` 操作的返回值可以为 `null` 或 `Cat` 类型。
+
+在第二个参数中，我们依旧传入了一个解析函数，但这次我们传入了一个额外的 `input` 参数，该参数定义了 `cat` 操作的输入类型。
+`input` 参数是一个对象，其中包含一个名为 `name` 的属性，该属性的类型为 `string`。当 `cat` 操作被访问时，`GQLoom` 会在内部调用 `valibot` 的 `parse` 函数以确保 `name` 参数的值符合 `string` 类型。
+
+在解析函数中，我们从 `resolve` 函数的第一个参数中获取 `name` 参数的值，TypeScript 会把 `name` 参数的类型推断为 `string`，然后我们使用 `catMap.get` 方法获取与 `name` 对应的 `Cat` 实例，并将其作为 `cat` 操作的返回值。
+  </Tab>
+  <Tab label="zod">
+```ts title="src/index.ts"
+import { resolver, query } from "@gqloom/zod"
+import { z } from "zod"
+
+const CatResolver = resolver({
+  hello: query(z.string(), () => "Hello, World"),
+
+  cats: query(z.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(Cat.nullish(), { // [!code hl]
+    input: { // [!code hl]
+      name: z.string(), // [!code hl]
+    }, // [!code hl]
+    resolve: ({ name }) => catMap.get(name), // [!code hl]
+  }), // [!code hl]
+})
+```
+在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
+
+与 `cats` 类似，构建 `cat` 使用的 `query` 函数的第一个参数为 `Cat` 的 `nullish` 类型，表示 `cat` 操作的返回值可以为 `null` 或 `Cat` 类型。
+
+在第二个参数中，我们依旧传入了一个解析函数，但这次我们传入了一个额外的 `input` 参数，该参数定义了 `cat` 操作的输入类型。
+`input` 参数是一个对象，其中包含一个名为 `name` 的属性，该属性的类型为 `string`。当 `cat` 操作被访问时，`GQLoom` 会在内部调用 `zod` 的 `parse` 函数以确保 `name` 参数的值符合 `string` 类型。
+
+在解析函数中，我们从 `resolve` 函数的第一个参数中获取 `name` 参数的值，TypeScript 会把 `name` 参数的类型推断为 `string`，然后我们使用 `catMap.get` 方法获取与 `name` 对应的 `Cat` 实例，并将其作为 `cat` 操作的返回值。
+ </Tab>
+  <Tab label="graphql.js">
+```ts title="src/index.ts"
+import { silk, loom } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+const { resolver, query } = loom
+
+const CatResolver = resolver({
+  hello: query(GraphQLString, () => "Hello, World"),
+
+  cats: query(silk.list(Cat), () => Array.from(catMap.values())),
+
+  cat: query(silk.nullable(Cat), { // [!code hl]
+    input: { // [!code hl]
+      name: silk<string>(new GraphQLNonNull(GraphQLString)), // [!code hl]
+    }, // [!code hl]
+    resolve: ({ name }) => catMap.get(name), // [!code hl]
+  }), // [!code hl]
+})
+```
+
+在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
+
+与 `cats` 类似，构建 `cat` 使用的 `query` 函数的第一个参数为 `Cat` 的 `nullish` 类型，表示 `cat` 操作的返回值可以为 `null` 或 `Cat` 类型。
+
+在第二个参数中，我们依旧传入了一个解析函数，但这次我们传入了一个额外的 `input` 参数，该参数定义了 `cat` 操作的输入类型。
+`input` 参数是一个对象，其中包含一个名为 `name` 的属性，该属性的类型为 `string`。
+
+在解析函数中，我们从 `resolve` 函数的第一个参数中获取 `name` 参数的值，TypeScript 会把 `name` 参数的类型推断为 `string`，然后我们使用 `catMap.get` 方法获取与 `name` 对应的 `Cat` 实例，并将其作为 `cat` 操作的返回值。
   </Tab>
 </Tabs>

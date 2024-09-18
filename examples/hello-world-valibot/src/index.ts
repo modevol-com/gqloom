@@ -19,6 +19,13 @@ const CatResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(v.nullish(Cat), {
+    input: {
+      name: v.string(),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
 })
 
 export const schema = weave(CatResolver)
