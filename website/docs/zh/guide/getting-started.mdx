@@ -269,9 +269,9 @@ import { resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const CatResolver = resolver({
-  hello: query(v.string(), () => "Hello, World"),
-
   cats: query(v.array(Cat), () => Array.from(catMap.values())), // [!code hl]
+
+  hello: query(v.string(), () => "Hello, World"),
 })
 ```
 在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
@@ -285,9 +285,9 @@ import { resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
 const CatResolver = resolver({
-  hello: query(z.string(), () => "Hello, World"),
-
   cats: query(z.array(Cat), () => Array.from(catMap.values())), // [!code hl]
+
+  hello: query(z.string(), () => "Hello, World"),
 })
 ```
 在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
@@ -302,9 +302,12 @@ import { GraphQLNonNull, GraphQLString } from "graphql"
 const { resolver, query } = loom
 
 const CatResolver = resolver({
-  hello: query(GraphQLString, () => "Hello, World"),
-
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),, // [!code hl]
+
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "hello, World"
+  ),
 })
 ```
 在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
@@ -348,8 +351,6 @@ import { resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const CatResolver = resolver({
-  hello: query(v.string(), () => "Hello, World"),
-
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), { // [!code hl]
@@ -358,6 +359,8 @@ const CatResolver = resolver({
     }, // [!code hl]
     resolve: ({ name }) => catMap.get(name), // [!code hl]
   }), // [!code hl]
+
+  hello: query(v.string(), () => "Hello, World"),
 })
 ```
 在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
@@ -375,8 +378,6 @@ import { resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
 const CatResolver = resolver({
-  hello: query(z.string(), () => "Hello, World"),
-
   cats: query(z.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(Cat.nullish(), { // [!code hl]
@@ -385,6 +386,8 @@ const CatResolver = resolver({
     }, // [!code hl]
     resolve: ({ name }) => catMap.get(name), // [!code hl]
   }), // [!code hl]
+
+  hello: query(z.string(), () => "Hello, World"),
 })
 ```
 在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
@@ -403,8 +406,6 @@ import { GraphQLNonNull, GraphQLString } from "graphql"
 const { resolver, query } = loom
 
 const CatResolver = resolver({
-  hello: query(GraphQLString, () => "Hello, World"),
-
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   cat: query(silk.nullable(Cat), { // [!code hl]
@@ -413,6 +414,11 @@ const CatResolver = resolver({
     }, // [!code hl]
     resolve: ({ name }) => catMap.get(name), // [!code hl]
   }), // [!code hl]
+
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "hello, World"
+  ),
 })
 ```
 
@@ -464,8 +470,6 @@ import { resolver, query, mutation } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const CatResolver = resolver({
-  hello: query(v.string(), () => "Hello, World"),
-
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), {
@@ -486,6 +490,8 @@ const CatResolver = resolver({
       return cat // [!code hl]
     }, // [!code hl]
   }), // [!code hl]
+
+  hello: query(v.string(), () => "Hello, World"),
 })
 ```
 
@@ -503,8 +509,6 @@ import { resolver, query, mutation } from "@gqloom/zod"
 import { z } from "zod"
 
 const CatResolver = resolver({
-  hello: query(z.string(), () => "Hello, World"),
-
   cats: query(z.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(Cat.nullish(), {
@@ -525,6 +529,8 @@ const CatResolver = resolver({
       return cat // [!code hl]
     }, // [!code hl]
   }), // [!code hl]
+
+  hello: query(z.string(), () => "Hello, World"),
 })
 ```
 在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
@@ -541,11 +547,6 @@ import { loom, silk, weave } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql"
 
 const CatResolver = resolver({
-  hello: query(
-    silk<string>(new GraphQLNonNull(GraphQLString)),
-    () => "hello, World"
-  ),
-
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   cat: query(silk.nullable(Cat), {
@@ -566,6 +567,11 @@ const CatResolver = resolver({
       return cat // [!code hl]
     }, // [!code hl]
   }), // [!code hl]
+
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "hello, World"
+  ),
 })
 ```
 在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。

@@ -35,11 +35,6 @@ const CatResolver = resolver.of(Cat, {
     return new Date().getFullYear() - birthDate.getFullYear()
   }),
 
-  hello: query(
-    silk<string>(new GraphQLNonNull(GraphQLString)),
-    () => "hello, World"
-  ),
-
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   cat: query(silk.nullable(Cat), {
@@ -60,6 +55,11 @@ const CatResolver = resolver.of(Cat, {
       return cat
     },
   }),
+
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "hello, World"
+  ),
 })
 
 export const schema = weave(CatResolver)

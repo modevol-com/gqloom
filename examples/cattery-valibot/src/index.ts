@@ -16,8 +16,6 @@ const catMap = new Map<string, ICat>([
 ])
 
 const CatResolver = resolver({
-  hello: query(v.string(), () => "Hello, World"),
-
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), {
@@ -38,6 +36,8 @@ const CatResolver = resolver({
       return cat
     },
   }),
+
+  hello: query(v.string(), () => "Hello, World"),
 })
 
 export const schema = weave(CatResolver)
