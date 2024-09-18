@@ -86,6 +86,8 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
+在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `CatResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
+
 现在，你可以运行以下命令来启动你的应用程序：
 
 <PackageManagerTabs command="run dev" />
