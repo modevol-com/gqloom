@@ -74,6 +74,42 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
 
+  examples/hello-world-valibot:
+    dependencies:
+      '@gqloom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@gqloom/valibot':
+        specifier: ^0.2.0
+        version: 0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@0.37.0(typescript@5.4.3))
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      graphql-yoga:
+        specifier: ^5.6.0
+        version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.4.3)
+
+  examples/hello-world-zod:
+    dependencies:
+      '@gqloom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@gqloom/zod':
+        specifier: ^0.2.0
+        version: 0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.22.4)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      graphql-yoga:
+        specifier: ^5.6.0
+        version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+
   packages/core:
     dependencies:
       graphql:
@@ -650,6 +686,20 @@ packages:
 
   '@fastify/websocket@10.0.1':
     resolution: {integrity: sha512-8/pQIxTPRD8U94aILTeJ+2O3el/r19+Ej5z1O1mXlqplsUH7KzCjAI0sgd5DM/NoPjAi5qLFNIjgM5+9/rGSNw==}
+
+  '@gqloom/valibot@0.2.0':
+    resolution: {integrity: sha512-Tk3lsTUNmQBnjjD9lxd6OZQOUzlamWjWHiWel67oEKr6KdEK1/afch1GcJcnkqP77EDu1dLlPdYas8kgKEggJQ==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.2.0'
+      graphql: '>= 16.8.0'
+      valibot: '>= 0.37.0'
+
+  '@gqloom/zod@0.2.0':
+    resolution: {integrity: sha512-TA9fn61/AYFWreYOMtmyc5qtcko/9thi76uQuzZ1D3JVvsgEeTLbWRtFxqq6WxsZndjF1GdJkpt+NKcsntwjfw==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.2.0'
+      graphql: '>= 16.8.0'
+      zod: '>= 3.0.0'
 
   '@graphql-tools/executor@1.2.8':
     resolution: {integrity: sha512-0qZs/iuRiYRir7bBkA7oN+21wwmSMPQuFK8WcAcxUYJZRhvnlrJ8Nid++PN4OCzTgHPV70GNFyXOajseVCCffA==}
@@ -4764,6 +4814,18 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@gqloom/valibot@0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@0.37.0(typescript@5.4.3))':
+    dependencies:
+      '@gqloom/core': link:packages/core
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      valibot: 0.37.0(typescript@5.4.3)
+
+  '@gqloom/zod@0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.22.4)':
+    dependencies:
+      '@gqloom/core': link:packages/core
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      zod: 3.22.4
 
   '@graphql-tools/executor@1.2.8(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
