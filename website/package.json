@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@rspress/plugin-shiki": "^1.31.0",
     "rspress": "^1.31.0",
     "typescript": "^5.4.3"
   }
