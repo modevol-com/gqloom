@@ -888,6 +888,30 @@ const CatResolver = resolver.of(Cat, {
   </Tab>
 </Tabs>
 
+让我们在演练场尝试访问 `cat` 操作：
+
+```gql
+query cat {
+  cat(name: "Tom") {
+    name
+    birthDate
+    age(year: 2026)
+  }
+}
+```
+
+你应该会看到以下输出：
+```json
+{
+  "data": {
+    "cat": {
+      "name": "Tom",
+      "birthDate": "2023-03-03",
+      "age": 3
+    }
+  }
+}
+```
 ### 总结
 非常好，我们编写了一个简单的 GraphQL APP，它包含一个 `CatResolver`。
 在刚刚的例子中，我们学习了：
