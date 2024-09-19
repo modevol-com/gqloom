@@ -6,7 +6,11 @@ GraphQL 使得 API 的开发变得简单，但编写和维护 GraphQL Schema ，
 
 在传统的 GraphQL 开发中，开发者需要手动编写 Schema，这会导致代码冗余，并且难以维护。如果使用 TypeScript，还需要手动编写类型声明。这意味开发者需要同时编写维护 `GraphQL` schema、解析器逻辑实现、 `TypeScript` 类型声明三套代码，这无疑增加了开发者的负担。
 
-GQLoom 的目标是通过使用已有的 schema builder (Valibot、Zod 或者 Yup) 来编写类型声明，并自动生成 GraphQL Schema，为开发者提供一种更简单、更高效的方式来编写和维护 GraphQL 服务。
+近年来，TypeScript 社区中开始逐渐普及运行时的类型检查，如 [Zod](https://zod.dev/) 和 [Valibot](https://valibot.dev/) 等，这些库允许开发者使用 JavaScript 来编写类型声明，在开发时为开发者提供健全的类型安全，并在运行时进行类型检查。
+更关键的一点时，由于这些库运行时类型检查的特性，实际上其 Schema 里已经包含了完整的类型信息，`GQLoom` 正是利用这一点，将使用 `Zod`、`Valibot` 编写的 Schema 直接作为事实来源，从而避免了手动编写 `GraphQL` Schema 的繁琐工作，同时提供更健壮的类型安全。
+
+此为，在 TypeScript 生态中的诸多 ORM 也需要在开发时声明表结构，比如：[Prisma](https://www.prisma.io/)、[Drizzle](https://orm.drizzle.team/)、[MikroORM](https://mikro-orm.io/)。
+`GQLoom` 的目标是直接将这些 ORM 的表结构作为 Schema，从而进一步降低开发者的负担。
 
 GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)、[Pothos](https://pothos-graphql.dev/) 启发。
 
