@@ -191,7 +191,7 @@ export const Cat = v.pipe(
 )
 ```
 
-在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元信息，该元信息将在 GraphQL Schema 中呈现：
+在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元信息，最终得到如下 GraphQL Schema：
 
 ```gql
 """
@@ -210,11 +210,16 @@ type Cat {
 
 ## 声明联合类型
 
-使用 `variant` 或 `union` 定义联合类型。
+在使用 `Valibot` 时，我们可以使用 `variant` 或 `union` 定义联合类型。
 
 #### 使用 variant
 
+我们推荐使用 `variant` 来定义联合类型：
+
 ```ts
+import * as v from "valibot"
+import { asUnionType } from "@gqloom/valibot"
+
 const Cat = v.object({
   __typename: v.literal("Cat"),
   name: v.string(),
@@ -229,12 +234,17 @@ const Dog = v.object({
   loveBone: v.nullish(v.boolean()),
 })
 
-const Animal = v.pipe(v.variant("__typename", [Cat, Dog]))
-
-collectNames({ Cat, Dog, Animal }) // 为 GraphQL 收集名称
+const Animal = v.pipe(
+  v.variant("__typename", [Cat, Dog]),
+  asUnionType({ name: "Animal" })
+)
 ```
 
+在上面的代码中，我们使用 `variant` 函数创建了一个联合类型。对于 `Animal` 来说，它通过 `__typename` 字段来区分具体的类型。
+
 #### 使用 union
+
+我们还可以使用 `union` 来定义联合类型：
 
 ```ts
 import * as v from "valibot"
@@ -256,13 +266,15 @@ const Dog = v.object({
 const Animal = v.pipe(
   v.union([Cat, Dog]),
   asUnionType({
-    // 定义 resolveType 函数运行时在获取对象的类型名称
     resolveType: (it) => (it.loveFish ? "Cat" : "Dog"),
   })
 )
 
-collectNames({ Cat, Dog, Animal }) // 为 GraphQL 收集名称
+collectNames({ Cat, Dog, Animal })
 ```
+
+在上面的代码中，我们使用 `union` 函数创建了一个联合类型。对于 `Animal` 来说，它通过 `resolveType` 函数来区分具体的类型。
+在这里，如果一个动物它喜欢鱼，那么它就是一只猫，否则就是一只狗。
 
 ## 声明枚举类型
 
