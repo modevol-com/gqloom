@@ -101,6 +101,33 @@ describe("valibotSilk", () => {
         )
       )
     ).toEqual(GraphQLDate)
+
+    const Cat = v.pipe(
+      v.object({
+        name: v.string(),
+        age: v.pipe(
+          v.number(),
+          asField({ type: GraphQLInt, description: "How old is the cat" })
+        ),
+        loveFish: v.nullish(v.boolean()),
+      }),
+      asObjectType({
+        name: "Cat",
+        description: "A cute cat",
+      })
+    )
+    expect(
+      printType(getGraphQLType(valibotSilk(v.nullish(Cat))) as GraphQLNamedType)
+    ).toMatchInlineSnapshot(`
+      """"A cute cat"""
+      type Cat {
+        name: String!
+
+        """How old is the cat"""
+        age: Int
+        loveFish: Boolean
+      }"
+    `)
   })
 
   it("should handle hidden field", () => {
