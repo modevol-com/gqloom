@@ -776,6 +776,118 @@ query cat {
   }
 }
 ```
+
+#### 为 field 添加输入
+我们可以在 `field` 中添加一个 `input` 对象，它将作为该 `field` 的输入参数。
+
+<Tabs>
+  <Tab label="valibot">
+```ts title="src/index.ts"
+import { resolver, query, mutation, field } from "@gqloom/valibot"
+import * as v from "valibot"
+
+const CatResolver = resolver.of(Cat, {
+  age: field(v.pipe(v.number(), v.integer()), { // [!code hl]
+    input: { // [!code hl]
+      year: v.nullish(v.pipe(v.number(), v.integer()), () => // [!code hl]
+        new Date().getFullYear() // [!code hl]
+      ), // [!code hl]
+    }, // [!code hl]
+    resolve: (cat, { year }) => { // [!code hl]
+      const birthDate = new Date(cat.birthDate) // [!code hl]
+      return year - birthDate.getFullYear() // [!code hl]
+    }, // [!code hl]
+  }), // [!code hl]
+
+  cats: query(v.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(v.nullish(Cat), {
+    input: {
+      name: v.string(),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  // ...
+})
+```
+在上面的代码中，我们为 `age` 字段添加了一个 `input` 对象，它包含一个名为 `year` 的字段，该字段为 `Int` 类型，若未提供 `year` 输入，则使用当前年份作为默认值。
+在 `field` 解析函数中，我们可以从第二个参数中轻易地获取 `year` 的值。
+  </Tab>
+  <Tab label="zod">
+```ts title="src/index.ts"
+import { resolver, query, mutation, field } from "@gqloom/zod"
+import { z } from "zod"
+
+const CatResolver = resolver.of(Cat, {
+  age: field(z.number().int(), { // [!code hl]
+    input: { // [!code hl]
+      year: z // [!code hl]
+        .number() // [!code hl]
+        .int() // [!code hl]
+        .nullish() // [!code hl]
+        .transform((value) => value ?? new Date().getFullYear()), // [!code hl]
+    }, // [!code hl]
+    resolve: (cat, { year }) => { // [!code hl]
+      const birthDate = new Date(cat.birthDate) // [!code hl]
+      return year - birthDate.getFullYear() // [!code hl]
+    }, // [!code hl]
+  }), // [!code hl]
+
+  cats: query(z.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(Cat.nullish(), {
+    input: {
+      name: z.string(),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  // ...
+})
+```
+在上面的代码中，我们为 `age` 字段添加了一个 `input` 对象，它包含一个名为 `year` 的字段，该字段为 `Int` 类型，若未提供 `year` 输入，则使用当前年份作为默认值。
+在 `field` 解析函数中，我们可以从第二个参数中轻易地获取 `year` 的值。
+  </Tab>
+  <Tab label="graphql.js">
+```ts 
+import { loom, silk, weave } from "@gqloom/core"
+import {
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
+} from "graphql"
+const { resolver, query, mutation, field } = loom
+
+const CatResolver = resolver.of(Cat, {
+  age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), { // [!code hl]
+    input: { // [!code hl]
+      year: silk<number | undefined>(GraphQLInt), // [!code hl]
+    }, // [!code hl]
+    resolve: (cat, { year = new Date().getFullYear() }) => { // [!code hl]
+      const birthDate = new Date(cat.birthDate) // [!code hl]
+      return year - birthDate.getFullYear() // [!code hl]
+    }, // [!code hl]
+  }), // [!code hl]
+
+  cats: query(silk.list(Cat), () => Array.from(catMap.values())),
+
+  cat: query(silk.nullable(Cat), {
+    input: {
+      name: silk<string>(new GraphQLNonNull(GraphQLString)),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  // ...
+})
+```
+在上面的代码中，我们为 `age` 字段添加了一个 `input` 对象，它包含一个名为 `year` 的字段，该字段为 `number` 类型，并且可以为 `undefined`。
+在 `field` 解析函数中，我们可以从第二个参数中轻易地获取 `year` 的值，如果 `year` 为 `undefined`，则使用当前年份作为默认值。
+  </Tab>
+</Tabs>
+
 ### 总结
 非常好，我们编写了一个简单的 GraphQL APP，它包含一个 `CatResolver`。
 在刚刚的例子中，我们学习了：

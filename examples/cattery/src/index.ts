@@ -30,9 +30,14 @@ const catMap = new Map<string, ICat>([
 ])
 
 const CatResolver = resolver.of(Cat, {
-  age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), (cat) => {
-    const birthDate = new Date(cat.birthDate)
-    return new Date().getFullYear() - birthDate.getFullYear()
+  age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), {
+    input: {
+      year: silk<number | undefined>(GraphQLInt),
+    },
+    resolve: (cat, { year = new Date().getFullYear() }) => {
+      const birthDate = new Date(cat.birthDate)
+      return year - birthDate.getFullYear()
+    },
   }),
 
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),

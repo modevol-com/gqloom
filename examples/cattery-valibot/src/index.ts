@@ -16,9 +16,16 @@ const catMap = new Map<string, ICat>([
 ])
 
 const CatResolver = resolver.of(Cat, {
-  age: field(v.pipe(v.number(), v.integer()), (cat) => {
-    const birthDate = new Date(cat.birthDate)
-    return new Date().getFullYear() - birthDate.getFullYear()
+  age: field(v.pipe(v.number(), v.integer()), {
+    input: {
+      year: v.nullish(v.pipe(v.number(), v.integer()), () =>
+        new Date().getFullYear()
+      ),
+    },
+    resolve: (cat, { year }) => {
+      const birthDate = new Date(cat.birthDate)
+      return year - birthDate.getFullYear()
+    },
   }),
 
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
