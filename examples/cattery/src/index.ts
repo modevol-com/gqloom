@@ -30,7 +30,7 @@ const catMap = new Map<string, ICat>([
 ])
 
 const CatResolver = resolver.of(Cat, {
-  age: field(silk(GraphQLInt), (cat) => {
+  age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), (cat) => {
     const birthDate = new Date(cat.birthDate)
     return new Date().getFullYear() - birthDate.getFullYear()
   }),

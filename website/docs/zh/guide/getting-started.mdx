@@ -3,6 +3,7 @@ import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
 # 快速开始
 
 在本教程中，我们将引导你完成创建一个简单的 GraphQL 后端应用程序。
+
 我们将使用 `GQLoom` 搭配你喜欢的 schema builder 来定义 GraphQL Resolver 和 Schema，构建一个简单的猫舍应用，能够查询猫舍中的猫并能给猫舍中添加新的猫。
 
 你将使用以下技术：
@@ -13,7 +14,7 @@ import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
 - [graphql-yoga](https://the-guild.dev/graphql/yoga-server)：一个用于构建 GraphQL 服务器的适配器；
 - `GQLoom`：更简单、更高效地定义 GraphQL Schema。
 
-你可以选择你熟悉的 schema builder，比如 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/)，甚至直接使用 [GraphQL.js](https://graphql.org/graphql-js/)
+你可以选择你熟悉的 Schema Builder，比如 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/)，甚至直接使用 [GraphQL.js](https://graphql.org/graphql-js/)。
 
 ## 前提条件
 在开始之前，请确保你已经安装了以下软件：
@@ -635,3 +636,151 @@ query cats {
   }
 }
 ```
+
+### 定义 field
+
+现在，让我们尝试为 `Cat` 类型定义一个 `age` 字段。
+
+`age` 字段并不保存在 `Cat` 实例中，而是在每次查询时计算。
+
+<Tabs>
+  <Tab label="valibot">
+```ts title="src/index.ts"
+import { resolver, query, mutation, field } from "@gqloom/valibot"
+import * as v from "valibot"
+
+const CatResolver = resolver.of(Cat, { // [!code hl]
+  age: field(v.pipe(v.number(), v.integer()), (cat) => { // [!code hl]
+    const birthDate = new Date(cat.birthDate) // [!code hl]
+    return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
+  }), // [!code hl]
+
+  cats: query(v.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(v.nullish(Cat), {
+    input: {
+      name: v.string(),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  // ...
+})
+```
+在上面的代码中，我们为 `CatResolver` 添加了一个名为 `age` 的 `field`。
+
+注意，我们使用 `resolver.of` 函数替代了 `resolver`。
+`resolver.of` 函数的第一个参数为一个对象，在此处为 `Cat`，它将作为 `CatResolver` 的 `source` 类型；
+在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `CatResolver`。
+
+在名为 `age` 的 `field` 中，我们使用 `v.pipe(v.number(), v.integer())` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。注意，`GQLoom` 默认不会对解析函数的输出执行 `parse` 步骤，这是因为在解析函数内部产生的结果通常可控且符合 TypeScript 推导的类型。
+
+在解析函数中，我们轻松地从第一个参数中获取 `cat` 实例的值，TypeScript 将会为我们推导其类型，然后我们将 `cat` 实例的 `birthDate` 字段转换为 `Date` 实例，并计算当前年份与 `birthDate` 的年份之差，最后返回该差值即为猫咪的年龄。
+
+  </Tab>
+  <Tab label="zod">
+```ts title="src/index.ts"
+import { resolver, query, mutation, field } from "@gqloom/zod"
+import { z } from "zod"
+
+const CatResolver = resolver.of(Cat, { // [!code hl]
+  age: field(z.number().int(), (cat) => { // [!code hl]
+    const birthDate = new Date(cat.birthDate) // [!code hl]
+    return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
+  }), // [!code hl]
+
+  cats: query(z.array(Cat), () => Array.from(catMap.values())),
+
+  cat: query(Cat.nullish(), {
+    input: {
+      name: z.string(),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  // ...
+})
+```
+在上面的代码中，我们为 `CatResolver` 添加了一个名为 `age` 的 `field`。
+
+注意，我们使用 `resolver.of` 函数替代了 `resolver`。
+`resolver.of` 函数的第一个参数为一个对象，在此处为 `Cat`，它将作为 `CatResolver` 的 `source` 类型；
+在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `CatResolver`。
+在名为 `age` 的 `field` 中，我们使用 `z.number().int()` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。注意，`GQLoom` 默认不会对解析函数的输出执行 `parse` 步骤，这是因为在解析函数内部产生的结果通常可控且符合 TypeScript 推导的类型。
+
+在解析函数中，我们轻松地从第一个参数中获取 `cat` 实例的值，TypeScript 将会为我们推导其类型，然后我们将 `cat` 实例的 `birthDate` 字段转换为 `Date` 实例，并计算当前年份与 `birthDate` 的年份之差，最后返回该差值即为猫咪的年龄。
+  </Tab>
+  <Tab label="graphql.js">
+```ts 
+import { loom, silk, weave } from "@gqloom/core"
+import {
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
+} from "graphql"
+const { resolver, query, mutation, field } = loom
+
+
+const CatResolver = resolver.of(Cat, { // [!code hl]
+  age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), (cat) => { // [!code hl]
+    const birthDate = new Date(cat.birthDate) // [!code hl]
+    return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
+  }), // [!code hl]
+
+  cats: query(silk.list(Cat), () => Array.from(catMap.values())),
+
+  cat: query(silk.nullable(Cat), {
+    input: {
+      name: silk<string>(new GraphQLNonNull(GraphQLString)),
+    },
+    resolve: ({ name }) => catMap.get(name),
+  }),
+
+  // ...
+})
+```
+在上面的代码中，我们为 `CatResolver` 添加了一个名为 `age` 的 `field`。
+
+注意，我们使用 `resolver.of` 函数替代了 `resolver`。
+`resolver.of` 函数的第一个参数为一个对象，在此处为 `Cat`，它将作为 `CatResolver` 的 `source` 类型；
+在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `CatResolver`。
+在名为 `age` 的 `field` 中，我们使用 `silk<number>(new GraphQLNonNull(GraphQLInt)` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。
+
+在解析函数中，我们轻松地从第一个参数中获取 `cat` 实例的值，TypeScript 将会为我们推导其类型，然后我们将 `cat` 实例的 `birthDate` 字段转换为 `Date` 实例，并计算当前年份与 `birthDate` 的年份之差，最后返回该差值即为猫咪的年龄。
+  </Tab>
+</Tabs>
+
+
+让我们在演练场尝试访问 `cat` 操作：
+
+```gql
+query cat {
+  cat(name: "Tom") {
+    name
+    birthDate
+    age
+  }
+}
+```
+
+你应该会看到以下输出：
+```json
+{
+  "data": {
+    "cat": {
+      "name": "Tom",
+      "birthDate": "2023-03-03",
+      "age": 1
+    }
+  }
+}
+```
+### 总结
+非常好，我们编写了一个简单的 GraphQL APP，它包含一个 `CatResolver`。
+在刚刚的例子中，我们学习了：
+
+- 在 `resolver` 中定义 `query`、`mutation` 的方法；
+- 使用 `valibot`、`zod` 或 `graphql.js` 来定义对象和字段；
+- 在 `query`, `mutation`, `field` 中定义解析函数和输入参数；
+- 使用 `weave 函数` 将 `CatResolver` 编织为 GraphQL Schema，并使用 `graphql-yoga` 启动我们的 GraphQL APP。

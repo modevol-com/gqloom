@@ -1,4 +1,4 @@
-import { weave, resolver, query, mutation } from "@gqloom/zod"
+import { weave, resolver, query, mutation, field } from "@gqloom/zod"
 import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -15,7 +15,12 @@ const catMap = new Map<string, ICat>([
   ["Tom", { name: "Tom", birthDate: "2023-03-03" }],
 ])
 
-const CatResolver = resolver({
+const CatResolver = resolver.of(Cat, {
+  age: field(z.number().int(), (cat) => {
+    const birthDate = new Date(cat.birthDate)
+    return new Date().getFullYear() - birthDate.getFullYear()
+  }),
+
   cats: query(z.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(Cat.nullish(), {
