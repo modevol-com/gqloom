@@ -17,7 +17,7 @@ hero:
     alt: GQLoom-Logo
 features:
   - title: "GraphQL"
-    details: 使用流行的模式库（Zod、Yup、Valibot）构建 GraphQL Schema 并验证输入。
+    details: 灵活高效，减少冗余数据传输。
     icon: 🚀
   - title: "健壮的类型安全"
     details: 在开发时享受智能提示，在编辑时发现潜在问题
