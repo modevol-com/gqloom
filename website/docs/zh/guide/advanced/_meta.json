@@ -1,0 +1,6 @@
+[
+  { "type": "dir", "name": "adapters", "label": "适配器" },
+  "printing-schema",
+  "subscription",
+  "federation"
+]

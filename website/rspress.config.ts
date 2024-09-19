@@ -38,9 +38,7 @@ export default defineConfig({
         content: "https://github.com/modevol-com/gqloom",
       },
     ],
-    // 开启 View Transition 过渡
     enableContentAnimation: true,
-    enableAppearanceAnimation: true,
     locales: [
       {
         label: "English",
