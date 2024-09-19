@@ -2,9 +2,22 @@ import { Tab, Tabs } from "rspress/theme"
 
 # 介绍
 
-GraphQL 使得 API 的开发变得简单，但编写和维护 GraphQL Schema ，并使其与 TypeScript 类型保持一致并不是一件简单的工作。
+## 什么是 GraphQL
 
-在传统的 GraphQL 开发中，开发者需要手动编写 Schema，这会导致代码冗余，并且难以维护。如果使用 TypeScript，还需要手动编写类型声明。这意味开发者需要同时编写维护 `GraphQL` schema、解析器逻辑实现、 `TypeScript` 类型声明三套代码，这无疑增加了开发者的负担。
+GraphQL 是一种用于 API 的查询语言，由 Facebook 开发并开源。它允许客户端指定所需的数据结构，从而减少不必要的数据传输，提高 API 的性能和可维护性。
+
+GraphQL 带来了一下优点：
+- **灵活性**：客户端可以指定所需的数据结构，从而减少不必要的数据传输，提高 API 的性能和可维护性。
+- **强类型**：GraphQL 使用强类型系统，可以确保数据的一致性和安全性。
+- **自动聚合**：GraphQL 可以自动聚合多个查询，既减少客户端的请求次数，也保证服务端 API 的简洁性。
+- **高效沟通**：GraphQL 使用单一的 Schema，在团队开发中可以减少沟通成本，提高开发效率。
+- **易于扩展**：GraphQL 可以通过添加新的字段和类型来扩展 API，而不需要修改现有的代码。
+
+## 什么是 GQLoom
+
+GraphQL 使得 API 的开发变得简单，但编写和维护 GraphQL Schema ，并使其与 TypeScript 类型和服务逻辑保持一致并不是一件简单的工作。
+
+在传统的 GraphQL 开发中，开发者需要手动编写 Schema，这会导致代码冗余，并且难以维护。如果使用 TypeScript，还需要生成或手动编辑类型声明。这意味开发者需要同时编写维护 `GraphQL` schema、解析器逻辑实现、 `TypeScript` 类型声明三套代码，这无疑增加了开发者的负担。
 
 近年来，TypeScript 社区中开始逐渐普及运行时的类型检查，如 [Zod](https://zod.dev/) 和 [Valibot](https://valibot.dev/) 等，这些库允许开发者使用 JavaScript 来编写类型声明，在开发时为开发者提供健全的类型安全，并在运行时进行类型检查。
 更关键的一点时，由于这些库运行时类型检查的特性，实际上其 Schema 里已经包含了完整的类型信息，`GQLoom` 正是利用这一点，将使用 `Zod`、`Valibot` 编写的 Schema 直接作为事实来源，从而避免了手动编写 `GraphQL` Schema 的繁琐工作，同时提供更健壮的类型安全。
