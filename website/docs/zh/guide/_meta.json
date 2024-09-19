@@ -1,1 +1,6 @@
-["introduction", "getting-started"]
+[
+  "introduction",
+  "getting-started",
+  { "type": "dir", "name": "feature", "label": "核心功能" },
+  { "type": "dir", "name": "schema-integration", "label": "Schema 集成" }
+]
