@@ -50,11 +50,13 @@ const CatResolver = resolver.of(Cat, {
       return cat
     },
   }),
+})
 
+const HelloResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 
-export const schema = weave(CatResolver)
+export const schema = weave(HelloResolver, CatResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {

@@ -21,6 +21,8 @@ import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
 
 - [Node.js](https://nodejs.org/)：版本 20 或更高；
 
+本教程假设你已经掌握 [TypeScript](https://www.typescriptlang.org/)、[Node.js](https://nodejs.org/en/)、[GraphQL](https://graphql.org/) 的基础知识，并对 Valibot 或者 Zod 有一定认识。如果你是初学者，我们建议你先学习一下这些基础知识。
+
 ## 初始化项目
 首先，我们需要创建一个新的 Node.js 项目。
 
@@ -74,11 +76,11 @@ import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const CatResolver = resolver({
+const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(CatResolver)
+export const schema = weave(HelloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -96,11 +98,11 @@ import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const CatResolver = resolver({
+const HelloResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 
-export const schema = weave(CatResolver)
+export const schema = weave(HelloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -120,14 +122,14 @@ import { createYoga } from "graphql-yoga"
 
 const { resolver, query } = loom
 
-const CatResolver = resolver({
+const HelloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "Hello, World"
   ),
 })
 
-export const schema = weave(CatResolver)
+export const schema = weave(HelloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -266,55 +268,73 @@ const catMap = new Map<string, ICat>([
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query } from "@gqloom/valibot"
+import { weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const CatResolver = resolver({
+const CatResolver = resolver({ // [!code hl]
   cats: query(v.array(Cat), () => Array.from(catMap.values())), // [!code hl]
+}) // [!code hl]
 
+const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
+
+export const schema = weave(HelloResolver, CatResolver) // [!code hl]
 ```
 在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
 `query` 函数接受两个参数：
   - 第一个参数是 `cats` 的输出类型，你可以直接将 `valibot` schema 传入，在这里我们传入的是 `v.array(Cat)`;
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
+
+另外，我们还将 `CatResolver` 和 `HelloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
   </Tab>
   <Tab label="zod">
 ```ts title="src/index.ts"
-import { resolver, query } from "@gqloom/zod"
+import { weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
 const CatResolver = resolver({
   cats: query(z.array(Cat), () => Array.from(catMap.values())), // [!code hl]
+})
 
+const HelloResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
+
+export const schema = weave(HelloResolver, CatResolver)
 ```
 在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
 `query` 函数接受两个参数：
   - 第一个参数是 `cats` 的输出类型，你可以直接将 `zod` schema 传入，在这里我们传入的是 `z.array(Cat)`;
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
+
+另外，我们还将 `CatResolver` 和 `HelloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
   </Tab>
   <Tab label="graphql.js">
 ```ts title="src/index.ts"
-import { silk, loom } from "@gqloom/core"
+import { weave, silk, loom } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 const { resolver, query } = loom
 
 const CatResolver = resolver({
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),, // [!code hl]
+})
 
+const HelloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "hello, World"
   ),
 })
+
+export const schema = weave(HelloResolver, CatResolver)
 ```
 在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
 `query` 函数接受两个参数：
   - 第一个参数是 `cats` 的输出类型，接受一个 `silk` 对象，在这里我们传入的是 `silk.list(Cat)`（`silk.list` 函数接受一个 `silk` 对象作为参数，并返回一个表示该对象数组的 `silk` 对象）;
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
+
+另外，我们还将 `CatResolver` 和 `HelloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
   </Tab>
 </Tabs>
 
@@ -912,11 +932,16 @@ query cat {
   }
 }
 ```
-### 总结
+## 总结
 非常好，我们编写了一个简单的 GraphQL APP，它包含一个 `CatResolver`。
 在刚刚的例子中，我们学习了：
 
 - 在 `resolver` 中定义 `query`、`mutation` 的方法；
 - 使用 `valibot`、`zod` 或 `graphql.js` 来定义对象和字段；
-- 在 `query`, `mutation`, `field` 中定义解析函数和输入参数；
-- 使用 `weave 函数` 将 `CatResolver` 编织为 GraphQL Schema，并使用 `graphql-yoga` 启动我们的 GraphQL APP。
+- 在 `query`、`mutation`、`field` 中定义解析函数和输入参数；
+- 使用 `weave` 函数将 `CatResolver` 和 `HelloResolver` 编织为 GraphQL Schema，并使用 `graphql-yoga` 启动我们的 GraphQL APP。
+
+## 下一步
+
+- 查看 [Valibot 集成] 文档，了解如何使用 `Valibot` 构建更复杂的 GraphQL 对象以及 Union、Interface 和 Enum 等高级类型。
+- 查看 [Zod 集成] 文档，了解如何使用 `Zod` 构建更复杂的 GraphQL 对象以及 Union、Interface 和 Enum 等高级类型。

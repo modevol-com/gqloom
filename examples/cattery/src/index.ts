@@ -60,14 +60,16 @@ const CatResolver = resolver.of(Cat, {
       return cat
     },
   }),
+})
 
+const HelloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "hello, World"
   ),
 })
 
-export const schema = weave(CatResolver)
+export const schema = weave(HelloResolver, CatResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
