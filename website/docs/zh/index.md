@@ -16,13 +16,22 @@ hero:
     src: /gqloom.svg
     alt: GQLoom-Logo
 features:
-  - title: "天然集成 Zod、Valibot"
+  - title: "GraphQL"
     details: 使用流行的模式库（Zod、Yup、Valibot）构建 GraphQL Schema 并验证输入。
-    icon: 📦
-  - title: "完善的类型安全"
+    icon: 🚀
+  - title: "健壮的类型安全"
     details: 在开发时享受智能提示，在编辑时发现潜在问题
-    icon: 🛡️
-  - title: "经典中间件"
-    details: 经典的中间件系统：认证、缓存、日志记录等。
+    icon: 🔒
+  - title: "整装待发"
+    details: 中间件、上下文、订阅、联邦图已经准备就绪。
+    icon: 🔋
+  - title: "没有额外魔法"
+    details: 没有装饰器、没有元数据和反射、没有代码生成，你只需要 JavaScript/TypeScript。
+    icon: 🔮
+  - title: "熟悉的模式库"
+    details: 使用你已熟识的模式库（Zod、Yup、Valibot）构建 GraphQL Schema 并验证输入。
     icon: 🧩
+  - title: "愉快地开发"
+    details: 高可读性和语义化的 API 设计，使你的代码整洁。
+    icon: 🧑‍💻
 ---
