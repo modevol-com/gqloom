@@ -20,7 +20,7 @@ export interface ResolverPayload<
    */
   readonly root: any
   /**
-   * The payload provided to the field in the GraphQL query.
+   * The arguments provided to the field in the GraphQL query.
    */
   readonly args: Record<string, any>
   /**
@@ -28,7 +28,7 @@ export interface ResolverPayload<
    */
   readonly context: TContext
   /**
-   * The source object that contains the field in the parent type.
+   * A custom object each resolver can read from/write to.
    */
   readonly info: GraphQLResolveInfo
 

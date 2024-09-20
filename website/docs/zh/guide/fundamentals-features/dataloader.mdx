@@ -104,7 +104,7 @@ const BookResolver = resolver.of(Book, {
 ```ts
 import { resolver, query, field } from "@gqloom/zod"
 
-export const BookResolver = resolver.of(Book, {
+const BookResolver = resolver.of(Book, {
   books: query(Book.array(), () => books),
   author: field(User.nullish(), (book) =>
     users.find((u) => u.id === book.authorID)
