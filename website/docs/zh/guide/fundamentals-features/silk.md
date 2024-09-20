@@ -88,7 +88,7 @@ const Cat = valibotSilk(
 )
 ```
 
-在上面的代码中，我们使用 [Valibot](https://valibot.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Valibot 集成](/zh/guide/schema-integration/valibot)章节中了解如何使用 [Valibot](https://valibot.dev/) 创建更复杂的类型。
+在上面的代码中，我们使用 [Valibot](https://valibot.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Valibot 集成](../schema-integration/valibot)章节中了解如何使用 [Valibot](https://valibot.dev/) 创建更复杂的类型。
 
 ### 使用 [Zod](https://zod.dev/) 创建丝线：
 
@@ -109,4 +109,4 @@ const Cat = zodSilk(
 )
 ```
 
-在上面的代码中，我们使用 [Zod](https://zod.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Zod 集成](/zh/guide/schema-integration/zod)章节中了解如何使用 [Zod](https://zod.dev/) 创建更复杂的类型。
+在上面的代码中，我们使用 [Zod](https://zod.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Zod 集成](../schema-integration/zod)章节中了解如何使用 [Zod](https://zod.dev/) 创建更复杂的类型。
