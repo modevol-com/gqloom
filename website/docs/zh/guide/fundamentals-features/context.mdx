@@ -12,6 +12,7 @@ import { Tab, Tabs } from 'rspress/theme';
 
 GQLoom 的 `useContext` 函数的设计参考了 [React](https://zh-hans.react.dev/) 的 `useContext` 函数。
 你可以在[解析器](/zh/guide/fundamentals-features/resolver)内的任何地方调用 `useContext` 函数以访问当前请求的上下文，而不需要显式地传递 `context` 函数。
+在幕后，`useContext` 使用 node.js 的 [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) 来隐式传递上下文。
 
 接下来，让我们尝试在各个地方访问上下文。
 我们将使用 [graphql-yoga](https://the-guild.dev/graphql/yoga-server) 作为适配器。
