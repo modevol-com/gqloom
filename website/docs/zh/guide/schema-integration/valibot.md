@@ -208,6 +208,29 @@ type Cat {
 }
 ```
 
+#### 省略字段
+
+我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
+
+```ts
+import * as v from "valibot"
+import { asField } from "@gqloom/valibot"
+
+const Dog = v.object({
+  __typename: v.nullish(v.literal("Dog")),
+  name: v.nullish(v.string()),
+  birthday: v.pipe(v.nullish(v.date()), asField({ type: null })),
+})
+```
+
+将得到如下 GraphQL Schema：
+
+```gql
+type Dog {
+  name: String
+}
+```
+
 ## 声明联合类型
 
 在使用 `Valibot` 时，我们可以使用 `variant` 或 `union` 定义联合类型。
