@@ -31,4 +31,4 @@ GraphQL Schema 可以用于很多用途，常见的用途包括：
 
 - 在客户端使用[代码生成](https://the-guild.dev/graphql/codegen)进行开发和类型检查。
 
-- 在客户端开发时与 TypeScript 集成，以便在开发过程中获得更好的类型检查和自动补全，更多信息请参阅[gql.tada](https://gql-tada.0no.co/)。
+- 在客户端开发时与 TypeScript 集成，以便在开发过程中获得更好的类型检查和自动补全，更多信息请参阅 [gql.tada](https://gql-tada.0no.co/)。
