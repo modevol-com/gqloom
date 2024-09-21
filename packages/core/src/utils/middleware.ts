@@ -11,18 +11,22 @@ import type { MayPromise } from "./types"
 export interface MiddlewarePayload<
   TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 > {
+  /** The Output Silk of the field */
   outputSilk: InferSilkO<InferFieldOutput<TField>>
 
+  /** The previous object, which for a field on the root Query type is often not used. */
   parent: TField extends FieldOrOperation<infer TParent, any, any, any>
     ? TParent extends undefined
       ? undefined
       : InferSilkO<NonNullable<TParent>>
     : never
 
+  /** A function to parse the input of the field */
   parseInput: TField extends FieldOrOperation<any, any, infer TInput, any>
     ? CallableInputParser<TInput>
     : undefined
 
+  /** The type of the field: `query`, `mutation`, `subscription` or `field` */
   type: FieldOrOperationType
 }
 
