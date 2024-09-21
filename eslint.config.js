@@ -15,7 +15,7 @@ module.exports = ts.config(
     },
     rules: {
       "no-unused-vars": "off",
-      "no-console": ["warn"],
+      "no-console": ["warn", { allow: ["info"] }],
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/consistent-type-definitions": "error", // Enforce declaring types using `interface` keyword for better TS performance.
       "@typescript-eslint/no-empty-object-type": "off",
