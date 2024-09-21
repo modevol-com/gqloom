@@ -17,14 +17,12 @@ export default defineConfig({
   locales: [
     {
       lang: "en",
-      // 导航栏切换语言的标签
       label: "English",
       title: "GQLoom",
       description: "GraphQL Loom",
     },
     {
       lang: "zh",
-      // 导航栏切换语言的标签
       label: "简体中文",
       title: "GQLoom",
       description: "GraphQL 纺织机",
@@ -44,13 +42,17 @@ export default defineConfig({
         label: "English",
         description: "GraphQL Loom",
         lang: "en",
-        outlineTitle: "ON THIS Page",
       },
       {
         label: "简体中文",
         description: "GraphQL 织布机",
         lang: "zh",
-        outlineTitle: "目录 ",
+        prevPageText: "上一篇",
+        nextPageText: "下一篇",
+        outlineTitle: "目录",
+        searchPlaceholderText: "搜索",
+        searchNoResultsText: "未搜索到相关结果",
+        searchSuggestedQueryText: "可更换不同的关键字后重试",
       },
     ],
   },
