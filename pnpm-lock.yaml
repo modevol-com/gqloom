@@ -64,6 +64,9 @@ importers:
 
   examples/adapters:
     dependencies:
+      '@apollo/server':
+        specifier: ^4.10.4
+        version: 4.10.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/core':
         specifier: ^0.2.0
         version: 0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
