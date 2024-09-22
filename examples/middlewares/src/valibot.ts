@@ -16,6 +16,5 @@ export const schema = weave(HelloResolver, ValibotExceptionFilter)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
-  // eslint-disable-next-line no-console
   console.info("Server is running on http://localhost:4000/graphql")
 })

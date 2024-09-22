@@ -155,6 +155,30 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
 
+  examples/subscriptions:
+    dependencies:
+      '@gqloom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@gqloom/valibot':
+        specifier: workspace:*
+        version: link:../../packages/valibot
+      '@gqloom/zod':
+        specifier: workspace:*
+        version: link:../../packages/zod
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      graphql-yoga:
+        specifier: ^5.6.0
+        version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      valibot:
+        specifier: ^0.37.0
+        version: 0.37.0(typescript@5.4.3)
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+
   packages/core:
     dependencies:
       graphql:
