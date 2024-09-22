@@ -4,7 +4,7 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 [Valibot](https://valibot.dev/) 是一个通用的数据验证库，考虑了捆绑包大小、类型安全和开发体验。
 
-GQLoom Valibot 提供了 GQLoom 与 Valibot 的集成，以便将 Valibot Schema 编织成 GraphQL Schema。
+`@gqloom/valibot` 提供了 GQLoom 与 Valibot 的集成，以便将 Valibot Schema 编织成 GraphQL Schema。
 
 ## 安装
 
@@ -27,9 +27,10 @@ const FloatScalar = valibotSilk(v.number()) // GraphQLFloat
 const IntScalar = valibotSilk(v.pipe(v.nullable(v.number()), v.integer())) // GraphQLInt
 ```
 
-## 解析器｜Resolver
+## 解析器 | Resolver
 
-为了将 Valibot Schema 作为丝线使用，我们需要为其包裹 `valibotSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/valibot` 提供重新导出了解析器和操作构造函数来简化这个过程。从 `@gqloom/valibot` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `valibotSilk`，这样在大部分情况下，我们可以直接使用 Valibot Schema。
+为了将 Valibot Schema 作为丝线使用，我们需要为其包裹 `valibotSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/valibot` 提供了重新导出的解析器和操作构造函数来简化这个过程。
+从 `@gqloom/valibot` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `valibotSilk`，这样在大部分情况下，我们可以直接使用 Valibot Schema。
 
 ```ts
 import { resolver, query } from "@gqloom/valibot"

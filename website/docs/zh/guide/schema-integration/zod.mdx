@@ -1,1 +1,43 @@
+import { PackageManagerTabs } from 'rspress/theme';
+
 # Zod
+
+[Zod](https://zod.dev/) 是 TypeScript 优先的 Schema 声明和验证库。我使用的 “Schema” 一词泛指任何数据类型，从简单的字符串到复杂的嵌套对象。
+
+Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复的类型声明。有了 Zod，你只需声明一次验证器，Zod 就会自动推断出 TypeScript 的静态类型。将较简单的类型组成复杂的数据结构也很容易。
+
+`@gqloom/zod` 提供了 GQLoom 与 Zod 的集成，以便将 Zod Schema 编织成 GraphQL Schema。
+
+## 安装
+
+<PackageManagerTabs command="install @gqloom/core zod @gqloom/zod" />
+
+## 声明简单标量
+
+## 解析器｜Resolver
+
+## 声明对象
+
+## 名称和更多元数据
+
+### 为对象定义名称
+
+#### 使用 `__typename` 字面量
+
+#### 使用 `collectNames`
+
+#### 使用 `asObjectType`
+
+### 添加更多元信息
+
+#### 声明接口
+
+#### 省略字段
+
+## 声明联合类型
+
+## 声明枚举类型
+
+## 自定义类型映射
+
+## 默认类型映射
