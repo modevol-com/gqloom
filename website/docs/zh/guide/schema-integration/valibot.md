@@ -274,7 +274,6 @@ const Animal = v.pipe(
 ```ts
 import * as v from "valibot"
 import { asUnionType, valibotSilk, collectNames } from "@gqloom/valibot"
-import { printType } from "graphql"
 
 const Cat = v.object({
   name: v.string(),
@@ -305,11 +304,13 @@ collectNames({ Cat, Dog, Animal })
 
 使用 `v.picklist` 或 `v.enum_` 定义枚举类型。
 
+通常，我们更推荐使用 `v.picklist` 来定义枚举类型：
+
 ```ts
 import * as v from "valibot"
 import { asEnumType, valibotSilk } from "@gqloom/valibot"
 
-const Fruit = v.pipe(
+export const Fruit = v.pipe(
   v.picklist(["apple", "banana", "orange"]),
   asEnumType({
     name: "Fruit",
@@ -320,16 +321,20 @@ const Fruit = v.pipe(
     },
   })
 )
+
+export type IFruit = v.InferOutput<typeof Fruit>
 ```
 
+我们也可以使用 `v.enum_` 来定义枚举类型：
+
 ```ts
-enum Fruit {
+export enum Fruit {
   apple = "apple",
   banana = "banana",
   orange = "orange",
 }
 
-const FruitE = v.pipe(
+export const FruitE = v.pipe(
   v.enum_(Fruit),
   asEnumType({
     name: "Fruit",
