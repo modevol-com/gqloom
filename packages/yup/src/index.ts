@@ -344,9 +344,6 @@ function parseYup(this: Schema, input: any) {
   })
 }
 
-export const yupLoom = createLoom<YupSchemaIO | GraphQLSilkIO>(
-  yupSilk,
-  yupSilk.isSilk
-)
-
-export const { query, mutation, field, resolver } = yupLoom
+export const { query, mutation, field, resolver, subscription } = createLoom<
+  YupSchemaIO | GraphQLSilkIO
+>(yupSilk, yupSilk.isSilk)

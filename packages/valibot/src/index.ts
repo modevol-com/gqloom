@@ -354,7 +354,7 @@ export type ValibotSchemaIO = [
   "_types.output",
 ]
 
-export const { query, mutation, field, resolver } = createLoom<
+export const { query, mutation, field, resolver, subscription } = createLoom<
   ValibotSchemaIO | GraphQLSilkIO
 >(valibotSilk, valibotSilk.isSilk)
 

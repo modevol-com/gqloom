@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/valibot",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Create GraphQL schema and resolvers easily using Valibot!",
   "type": "module",
   "main": "./dist/index.js",

@@ -424,7 +424,7 @@ zodSilk.isSilk = (schema: any) =>
 
 export type ZodSchemaIO = [Schema, "_input", "_output"]
 
-export const { query, mutation, field, resolver } = createLoom<
+export const { query, mutation, field, resolver, subscription } = createLoom<
   ZodSchemaIO | GraphQLSilkIO
 >(zodSilk, zodSilk.isSilk)
 
