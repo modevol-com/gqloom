@@ -208,6 +208,8 @@ type Cat {
 }
 ```
 
+#### 声明接口
+
 #### 省略字段
 
 我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
@@ -376,3 +378,33 @@ import { weave } from "@gqloom/valibot"
 
 export const schema = weave(valibotWeaverConfig, HelloResolver)
 ```
+
+## 默认类型映射
+
+下表列出了 GQLoom 中 Valibot 类型与 GraphQL 类型之间的默认映射关系。
+
+| Valibot 类型                      | GraphQL 类型        |
+| --------------------------------- | ------------------- |
+| `v.array()`                       | `GraphQLList`       |
+| `v.bigint()`                      | `GraphQLInt`        |
+| `v.date()`                        | `GraphQLString`     |
+| `v.enum_()`                       | `GraphQLEnumType`   |
+| `v.picklist()`                    | `GraphQLEnumType`   |
+| `v.literal(false)`                | `GraphQLBoolean`    |
+| `v.literal(0)`                    | `GraphQLFloat`      |
+| `v.literal("")`                   | `GraphQLString`     |
+| `v.looseObject()`                 | `GraphQLObjectType` |
+| `v.object()`                      | `GraphQLObjectType` |
+| `v.objectWithRest()`              | `GraphQLObjectType` |
+| `v.strict_object()`               | `GraphQLObjectType` |
+| `v.nonNullable()`                 | `GraphQLNonNull`    |
+| `v.nonNullish()`                  | `GraphQLNonNull`    |
+| `v.nonOptional()`                 | `GraphQLNonNull`    |
+| `v.number()`                      | `GraphQLFloat`      |
+| `v.pipe(v.number(), v.integer())` | `GraphQLInt`        |
+| `v.string()`                      | `GraphQLString`     |
+| `v.pipe(v.string(), v.cuid2())`   | `GraphQLID`         |
+| `v.pipe(v.string(), v.ulid())`    | `GraphQLID`         |
+| `v.pipe(v.string(), v.uuid())`    | `GraphQLID`         |
+| `v.union()`                       | `GraphQLUnionType`  |
+| `v.variant()`                     | `GraphQLUnionType`  |
