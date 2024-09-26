@@ -70,7 +70,7 @@ export function asObjectType(
  *
  * @return zod superRefine refinement
  */
-export function asFieldType(
+export function asField(
   config: FieldConfig
 ): (arg: any, ctx: RefinementCtx) => void {
   return Object.assign(() => {}, {

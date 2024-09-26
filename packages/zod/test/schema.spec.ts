@@ -4,7 +4,7 @@ import {
   ZodWeaver,
   asEnumType,
   field,
-  asFieldType,
+  asField,
   asUnionType,
   asObjectType,
   query,
@@ -111,7 +111,7 @@ describe("ZodSilk", () => {
           z
             .date()
             .optional()
-            .superRefine(asFieldType({ type: GraphQLDate }))
+            .superRefine(asField({ type: GraphQLDate }))
         )
       )
     ).toEqual(GraphQLDate)
@@ -124,7 +124,7 @@ describe("ZodSilk", () => {
       birthday: z
         .date()
         .optional()
-        .superRefine(asFieldType({ type: null })),
+        .superRefine(asField({ type: null })),
     })
 
     expect(printZodSilk(Dog)).toMatchInlineSnapshot(`

@@ -289,8 +289,8 @@ export class ZodWeaver {
 
     return {
       name,
-      ...objectConfig,
       description: schema.description,
+      ...objectConfig,
       interfaces,
       extensions: mergeExtensions(
         objectConfig?.extensions

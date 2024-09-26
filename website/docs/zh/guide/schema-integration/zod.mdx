@@ -14,25 +14,223 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 ## 声明简单标量
 
-## 解析器｜Resolver
+在 GQLoom 中，可以使用 `zodSilk` 将 Zod Schema 作为[丝线](../fundamentals-features/silk)使用
+
+```ts
+import { z } from "zod"
+import { zodSilk } from "@gqloom/zod"
+
+const StringScalar = zodSilk(z.string()) // GraphQLString
+
+const BooleanScalar = zodSilk(z.boolean()) // GraphQLBoolean
+
+const FloatScalar = zodSilk(z.number()) // GraphQLFloat
+
+const IntScalar = zodSilk(z.number().int()) // GraphQLInt
+```
+
+## 解析器 | Resolver
+
+为了将 Zod Schema 作为丝线使用，我们需要为其包裹 `zodSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/zod` 提供了重新导出的解析器和操作构造函数来简化这个过程。
+从 `@gqloom/zod` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `zodSilk`，这样在大部分情况下，我们可以直接使用 Zod Schema。
+
+```ts
+import { z } from "zod"
+import { resolver, query } from "@gqloom/zod"
+
+export const HelloResolver = resolver({
+  hello: query(z.string(), () => "Hello, World!"),
+})
+```
 
 ## 声明对象
 
+我们可以使用 Zod 定义对象，并将其作为[丝线](../fundamentals-features/silk)使用。
+```ts
+import { z } from "zod"
+import { collectNames } from "@gqloom/zod"
+
+export const Cat = z.object({
+  name: z.string(),
+  age: z.number().int(),
+  loveFish: z.boolean().nullish(),
+})
+
+collectNames({ Cat })
+```
+
 ## 名称和更多元数据
+
 
 ### 为对象定义名称
 
+在 `GQLoom` 中，我们有多种方法来为对象定义名称。
+
 #### 使用 `__typename` 字面量
+```ts
+import { z } from "zod"
+
+export const Cat = z.object({
+  __typename: z.literal("Cat").nullish(),
+  name: z.string(),
+  age: z.number().int(),
+  loveFish: z.boolean().nullish(),
+})
+```
+在上面的代码中，我们使用 `__typename` 字面量来为对象定义名称。我们还将 `__typename` 字面量设置为 `nullish`，这意味着 `__typename` 字段是可选的，如果存在，则必须为 "Cat"。
+
+```ts
+import { z } from "zod"
+
+export const Cat = z.object({
+  __typename: z.literal("Cat"),
+  name: z.string(),
+  age: z.number().int(),
+  loveFish: z.boolean().nullish(),
+})
+```
+在上面的代码中，我们仍旧使用 `__typename` 字面量来为对象定义名称，但这次我们将 `__typename` 字面量设置为 "Cat"，这意味着 `__typename` 字段是必须的，且必须为 "Cat"，当使用 GraphQL `interface` 和 `union` 时，必填的 `__typename` 将非常有用。
 
 #### 使用 `collectNames`
 
+```ts
+import { z } from "zod"
+import { collectNames } from "@gqloom/zod"
+
+export const Cat = z.object({
+  name: z.string(),
+  age: z.number().int(),
+  loveFish: z.boolean().nullish(),
+})
+
+collectNames({ Cat })
+```
+
+在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
+
+```ts
+import { z } from "zod"
+import { collectNames } from "@gqloom/zod"
+
+export const { Cat } = collectNames({
+  Cat: z.object({
+    name: z.string(),
+    age: z.number().int(),
+    loveFish: z.boolean().nullish(),
+  }),
+})
+```
+在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
+
 #### 使用 `asObjectType`
+```ts
+import { z } from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z.number().int(),
+    loveFish: z.boolean().nullish(),
+  })
+  .superRefine(asObjectType({ name: "Cat" }))
+```
+
+在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `superRefine()` 中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
 
 ### 添加更多元信息
+
+通过 `asObjectType` 函数，我们可以为对象添加更多元信息，例如 `description`、`deprecationReason`、`extensions` 等。
+
+```ts
+import { z } from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z.number().int(),
+    loveFish: z.boolean().nullish(),
+  })
+  .superRefine(
+    asObjectType({
+      name: "Cat",
+      description: "A cute cat",
+    })
+  )
+```
+
+在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元信息，该元信息将在 GraphQL Schema 中呈现：
+```graphql
+"""A cute cat"""
+type Cat {
+  name: String!
+  age: Int!
+  loveFish: Boolean
+}
+```
+
+我们还可以使用 asField 函数为字段添加元信息，例如 description、type 等。
+```ts
+import { z } from "zod"
+import { asFieldType, asObjectType } from "@gqloom/zod"
+import { GraphQLInt } from "graphql"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z
+      .number()
+      .superRefine(
+        asFieldType({ type: GraphQLInt, description: "How old is the cat" })
+      ),
+    loveFish: z.boolean().nullish(),
+  })
+  .superRefine(
+    asObjectType({
+      name: "Cat",
+      description: "A cute cat",
+    })
+  )
+```
+
+在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元信息，最终得到如下 GraphQL Schema：
+
+```graphql
+"""A cute cat"""
+type Cat {
+  name: String!
+
+  """How old is the cat"""
+  age: Int
+  loveFish: Boolean
+}
+```
 
 #### 声明接口
 
 #### 省略字段
+
+我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
+```ts
+import { z } from "zod"
+import { asField } from "@gqloom/zod"
+
+const Dog = z.object({
+  __typename: z.literal("Dog").nullish(),
+  name: z.string().nullish(),
+  birthday: z
+    .date()
+    .nullish()
+    .superRefine(asField({ type: null })),
+})
+```
+将得到如下 GraphQL Schema：
+```graphql
+type Dog {
+  name: String
+}
+```
 
 ## 声明联合类型
 

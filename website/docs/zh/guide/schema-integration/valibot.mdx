@@ -12,7 +12,7 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## 声明简单标量
 
-在 GQLoom 中，可以使用 `valibotSilk` 将 Valibot 的标量类型作为丝线使用。
+在 GQLoom 中，可以使用 `valibotSilk` 将 Valibot Schema 作为[丝线](../fundamentals-features/silk)使用。
 
 ```ts
 import * as v from "valibot"
@@ -42,7 +42,7 @@ export const HelloResolver = resolver({
 
 ## 声明对象
 
-我们可以使用 Valibot 定义对象，并将其作为丝线使用。
+我们可以使用 Valibot 定义对象，并将其作为[丝线](../fundamentals-features/silk)使用。
 
 ```ts
 import * as v from "valibot"
@@ -54,14 +54,14 @@ export const Cat = v.object({
   loveFish: v.nullish(v.boolean()),
 })
 
-collectNames({ Cat }) // 为 Cat 收集名称，在编织后将呈现在 GraphQL Schema 中
+collectNames({ Cat })
 ```
 
 ## 名称和更多元数据
 
-在 `GQLoom` 中，我们有多种方法来为对象定义名称。
-
 ### 为对象定义名称
+
+在 `GQLoom` 中，我们有多种方法来为对象定义名称。
 
 #### 使用 `__typename` 字面量
 
@@ -89,7 +89,7 @@ export const Cat = v.object({
 })
 ```
 
-在上面的代码中，我们仍旧使用 `__typename` 字面量来为对象定义名称，但这次我们将 `__typename` 字面量设置为 "Cat"，这意味着 `__typename` 字段是必须的，且必须为 "Cat"，当使用 GraphQL `interface` 和 `union` 时，必填单 `__typename` 将非常有用。
+在上面的代码中，我们仍旧使用 `__typename` 字面量来为对象定义名称，但这次我们将 `__typename` 字面量设置为 "Cat"，这意味着 `__typename` 字段是必须的，且必须为 "Cat"，当使用 GraphQL `interface` 和 `union` 时，必填的 `__typename` 将非常有用。
 
 #### 使用 `collectNames`
 
@@ -139,7 +139,7 @@ export const Cat = v.pipe(
 )
 ```
 
-在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `Valibot` 管道中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据对。
+在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `Valibot` 管道中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
 
 ### 添加更多元信息
 
@@ -165,9 +165,7 @@ export const Cat = v.pipe(
 在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元信息，该元信息将在 GraphQL Schema 中呈现：
 
 ```gql
-"""
-A cute cat
-"""
+"""A cute cat"""
 type Cat {
   name: String!
   age: Int!
@@ -201,15 +199,11 @@ export const Cat = v.pipe(
 在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元信息，最终得到如下 GraphQL Schema：
 
 ```gql
-"""
-A cute cat
-"""
+"""A cute cat"""
 type Cat {
   name: String!
 
-  """
-  How old is the cat
-  """
+  """How old is the cat"""
   age: Int
   loveFish: Boolean
 }
