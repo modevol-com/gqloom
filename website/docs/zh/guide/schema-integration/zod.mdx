@@ -61,7 +61,6 @@ collectNames({ Cat })
 
 ## 名称和更多元数据
 
-
 ### 为对象定义名称
 
 在 `GQLoom` 中，我们有多种方法来为对象定义名称。
@@ -209,6 +208,30 @@ type Cat {
 
 #### 声明接口
 
+我们还可以使用 `asObjectType` 函数来声明接口，例如：
+```ts
+import { z } from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+const Fruit = z
+  .object({
+    __typename: z.literal("Fruit").nullish(),
+    name: z.string(),
+    color: z.string(),
+    prize: z.number(),
+  })
+  .describe("Some fruits you might like")
+
+const Orange = z
+  .object({
+    name: z.string(),
+    color: z.string(),
+    prize: z.number(),
+  })
+  .superRefine(asObjectType({ name: "Orange", interfaces: [Fruit] }))
+```
+在上面的代码中，我们使用 `asObjectType` 函数创建了一个接口 `Fruit`，并使用 `interfaces` 选项将 `Orange` 对象声明为 `Fruit` 接口的实现。
+
 #### 省略字段
 
 我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
@@ -346,6 +369,7 @@ export const Fruit = z.nativeEnum(FruitEnum).superRefine(
 
 export type IFruit = z.infer<typeof Fruit>
 ```
+
 ## 自定义类型映射
 
 为了适应更多的 Valibot 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
