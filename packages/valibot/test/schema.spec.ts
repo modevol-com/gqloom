@@ -323,7 +323,6 @@ describe("valibotSilk", () => {
   it("should handle interfere", () => {
     const Fruit = v.object({
       __typename: v.nullish(v.literal("Fruit")),
-      _Fruit: v.boolean(),
       name: v.string(),
       color: v.string(),
       prize: v.number(),
@@ -332,7 +331,6 @@ describe("valibotSilk", () => {
     const Orange = v.pipe(
       v.object({
         __typename: v.nullish(v.literal("Orange")),
-        _Orange: v.boolean(),
         name: v.string(),
         color: v.string(),
         prize: v.number(),
@@ -350,14 +348,12 @@ describe("valibotSilk", () => {
       }
 
       type Orange implements Fruit {
-        _Orange: Boolean!
         name: String!
         color: String!
         prize: Float!
       }
 
       interface Fruit {
-        _Fruit: Boolean!
         name: String!
         color: String!
         prize: Float!

@@ -211,6 +211,30 @@ type Cat {
 
 #### 声明接口
 
+我们还可以使用 `asObjectType` 函数来声明接口，例如：
+```ts
+import * as v from "valibot"
+import { asObjectType } from "../src"
+
+const Fruit = v.object({
+  __typename: v.nullish(v.literal("Fruit")),
+  name: v.string(),
+  color: v.string(),
+  prize: v.number(),
+})
+
+const Orange = v.pipe(
+  v.object({
+    __typename: v.nullish(v.literal("Orange")),
+    name: v.string(),
+    color: v.string(),
+    prize: v.number(),
+  }),
+  asObjectType({ interfaces: [Fruit] })
+)
+```
+在上面的代码中，我们使用 `asObjectType` 函数创建了一个接口 `Fruit`，并使用 `interfaces` 选项将 `Orange` 对象声明为 `Fruit` 接口的实现。
+
 #### 省略字段
 
 我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
