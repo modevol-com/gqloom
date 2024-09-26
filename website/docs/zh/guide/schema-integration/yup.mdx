@@ -1,12 +1,51 @@
+import { PackageManagerTabs } from 'rspress/theme';
+
 # Yup
+
+[Yup](https://github.com/jquense/yup) 是一个用于运行时值解析和验证的模式构建器。
+您可以定义模式、转换值以匹配、断言现有值的形状，或两者兼而有之。
+Yup 模式具有极强的表现力，可对复杂、相互依赖的验证或值转换进行建模。
+
+`@gqloom/yup` 提供了 GQLoom 与 Yup 的集成，以便将 Yup Schema 编织成 GraphQL Schema。
 
 ## 安装
 
+<PackageManagerTabs command="install @gqloom/core yup @gqloom/yup" />
+
 ## 声明简单标量
+
+在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../fundamentals-features/silk)使用。
+
+```ts
+import { number, string, boolean } from "yup"
+import { yupSilk } from "../src"
+
+const StringScalar = yupSilk(string())
+
+const BooleanScalar = yupSilk(boolean())
+
+const FloadtScalar = yupSilk(number())
+
+const IntScalar = yupSilk(number().integer())
+```
 
 ## 解析器 | Resolver
 
+为了将 Yup Schema 作为丝线使用，我们需要为其包裹 `yupSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/yup` 提供了重新导出的解析器和操作构造函数来简化这个过程。
+从 `@gqloom/yup` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `yupSilk`，这样在大部分情况下，我们可以直接使用 Yup Schema。
+
+```ts
+import { string } from "yup"
+import { resolver, query } from "../src"
+
+export const HelloResolver = resolver({
+  hello: query(string(), () => "Hello, World!"),
+})
+
+```
 ## 声明对象
+
+我们可以使用 Yup 定义对象，并将其作为[丝线](../fundamentals-features/silk)使用。
 
 ## 名称和更多元数据
 
