@@ -279,7 +279,19 @@ describe("ZodSilk", () => {
 
     expect(printZodSilk(fruitN)).toEqual(printZodSilk(fruitZ))
 
-    expect(printZodSilk(fruitZ)).toMatchInlineSnapshot()
+    expect(printZodSilk(fruitZ)).toMatchInlineSnapshot(`
+      """"Some fruits you might like"""
+      enum Fruit {
+        """red"""
+        apple
+
+        """yellow"""
+        banana
+
+        """orange"""
+        orange
+      }"
+    `)
   })
 
   it("should handle interfere", () => {
