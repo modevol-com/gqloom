@@ -29,7 +29,6 @@ import {
   isObjectType,
   type GraphQLInterfaceType,
   isInterfaceType,
-  type GraphQLEnumTypeConfig,
   type GraphQLObjectTypeConfig,
   type GraphQLUnionTypeConfig,
   type GraphQLObjectTypeExtensions,
@@ -205,18 +204,22 @@ export class ZodWeaver {
     }
 
     if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
-      const { name, ...enumConfig } = ZodWeaver.getEnumConfig(schema, config)
+      const { name, valuesConfig, ...enumConfig } = ZodWeaver.getEnumConfig(
+        schema,
+        config
+      )
 
       const values: GraphQLEnumValueConfigMap = {}
 
       if ("options" in schema) {
-        for (const value of schema.options as string[]) {
-          values[value] = { value }
+        for (const value of schema.options) {
+          const key = String(value)
+          values[key] = { value, ...valuesConfig?.[key] }
         }
       } else {
         Object.entries(schema.enum as EnumLike).forEach(([key, value]) => {
           if (typeof schema.enum?.[schema.enum[key]] === "number") return
-          values[key] = { value }
+          values[key] = { value, ...valuesConfig?.[key] }
         })
       }
 
@@ -322,7 +325,7 @@ export class ZodWeaver {
   protected static getEnumConfig(
     schema: ZodEnum<any> | ZodNativeEnum<any>,
     config?: TypeOrFieldConfig
-  ): Partial<GraphQLEnumTypeConfig> {
+  ): EnumConfig {
     const enumConfig = config as EnumConfig | undefined
 
     return {

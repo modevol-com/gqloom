@@ -236,7 +236,16 @@ describe("ZodSilk", () => {
   it("should handle enum", () => {
     const fruitZ = z
       .enum(["apple", "banana", "orange"])
-      .superRefine(asEnumType("Fruit"))
+      .superRefine(
+        asEnumType({
+          name: "Fruit",
+          valuesConfig: {
+            apple: { description: "red" },
+            banana: { description: "yellow" },
+            orange: { description: "orange" },
+          },
+        })
+      )
       .describe("Some fruits you might like")
 
     enum Fruit {
@@ -248,15 +257,29 @@ describe("ZodSilk", () => {
     const fruitN = z
       .nativeEnum(Fruit)
       .describe("Some fruits you might like")
-      .superRefine(asEnumType("Fruit"))
+      .superRefine(
+        asEnumType({
+          name: "Fruit",
+          valuesConfig: {
+            apple: { description: "red" },
+            banana: { description: "yellow" },
+            orange: { description: "orange" },
+          },
+        })
+      )
 
     expect(printZodSilk(fruitN)).toEqual(printZodSilk(fruitZ))
 
     expect(printZodSilk(fruitZ)).toMatchInlineSnapshot(`
       """"Some fruits you might like"""
       enum Fruit {
+        """red"""
         apple
+
+        """yellow"""
         banana
+
+        """orange"""
         orange
       }"
     `)

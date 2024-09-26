@@ -6,6 +6,7 @@ import {
   type GraphQLObjectTypeConfig,
   type GraphQLInterfaceType,
   type GraphQLOutputType,
+  type GraphQLEnumValueConfig,
 } from "graphql"
 import { type Schema, type ZodObject, type ZodRawShape } from "zod"
 
@@ -23,9 +24,12 @@ export interface FieldConfig
   type?: GraphQLOutputType | undefined | null
 }
 
-export interface EnumConfig
-  extends Omit<GraphQLEnumTypeConfig, "values">,
-    Partial<Pick<GraphQLEnumTypeConfig, "values">> {}
+export interface EnumConfig<TKey = string>
+  extends Partial<GraphQLEnumTypeConfig> {
+  valuesConfig?: TKey extends string
+    ? Partial<Record<TKey, GraphQLEnumValueConfig>>
+    : Partial<Record<string, GraphQLEnumValueConfig>>
+}
 
 export interface UnionConfig
   extends Omit<GraphQLUnionTypeConfig<any, any>, "types">,

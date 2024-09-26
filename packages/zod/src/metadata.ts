@@ -1,34 +1,11 @@
+import { ZodEffects, type RefinementCtx, type Schema } from "zod"
 import {
-  type GraphQLUnionTypeConfig,
-  type GraphQLEnumTypeConfig,
-  type GraphQLObjectTypeConfig,
-  type GraphQLInterfaceType,
-} from "graphql"
-import {
-  ZodEffects,
-  type RefinementCtx,
-  type ZodObject,
-  type ZodRawShape,
-  type Schema,
-} from "zod"
-import { type FieldConfig, type TypeOrFieldConfig } from "./types"
-
-interface ObjectConfig
-  extends Partial<
-    Omit<GraphQLObjectTypeConfig<any, any>, "fields" | "interfaces">
-  > {
-  interfaces?: (ZodObject<ZodRawShape> | GraphQLInterfaceType)[]
-}
-
-// interface ArgumentConfig extends
-
-interface EnumConfig
-  extends Omit<GraphQLEnumTypeConfig, "values">,
-    Partial<Pick<GraphQLEnumTypeConfig, "values">> {}
-
-interface UnionConfig
-  extends Omit<GraphQLUnionTypeConfig<any, any>, "types">,
-    Partial<Pick<GraphQLUnionTypeConfig<any, any>, "types">> {}
+  type ObjectConfig,
+  type UnionConfig,
+  type EnumConfig,
+  type FieldConfig,
+  type TypeOrFieldConfig,
+} from "./types"
 
 const CONFIG = Symbol.for("gqloom.zod.config")
 
@@ -85,9 +62,9 @@ export function asField(
  *
  * @return zod superRefine refinement
  */
-export function asEnumType(
-  config: EnumConfig
-): (arg: any, ctx: RefinementCtx) => void
+export function asEnumType<TArg>(
+  config: EnumConfig<TArg>
+): (arg: TArg, ctx: RefinementCtx) => void
 /**
  * Register as a GraphQL enum type.
  *
