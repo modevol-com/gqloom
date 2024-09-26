@@ -304,7 +304,7 @@ collectNames({ Cat, Dog, Animal })
 通常，我们更推荐使用 `z.enum` 来声明枚举类型，例如：
 ```ts
 import { z } from "zod"
-import { asEnumType } from "../src"
+import { asEnumType } from "@gqloom/zod"
 
 export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
   asEnumType({
@@ -325,7 +325,7 @@ export type IFruit = z.infer<typeof Fruit>
 我们还可以使用 `z.nativeEnum` 来声明枚举类型，例如：
 ```ts
 import { z } from "zod"
-import { asEnumType } from "../src"
+import { asEnumType } from "@gqloom/zod"
 
 enum FruitEnum {
   apple,
@@ -347,5 +347,37 @@ export const Fruit = z.nativeEnum(FruitEnum).superRefine(
 export type IFruit = z.infer<typeof Fruit>
 ```
 ## 自定义类型映射
+
+为了适应更多的 Valibot 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
+
+首先我们使用 `ZodWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
+
+```ts
+import {
+  GraphQLDateTime,
+  GraphQLJSON,
+  GraphQLJSONObject,
+} from "graphql-scalars"
+import { z } from "zod"
+import { ZodWeaver } from "@gqloom/zod"
+
+export const valibotWeaverConfig = ZodWeaver.config({
+  presetGraphQLType: (schema) => {
+    if (schema instanceof z.ZodDate) return GraphQLDateTime
+
+    if (schema instanceof z.ZodAny) return GraphQLJSON
+
+    if (schema instanceof z.ZodRecord) return GraphQLJSONObject
+  },
+})
+```
+
+在编织 GraphQL Schema 时传入配置到 `weave` 函数中：
+
+```ts
+import { weave } from "@gqloom/zod"
+
+export const schema = weave(valibotWeaverConfig, HelloResolver)
+```
 
 ## 默认类型映射
