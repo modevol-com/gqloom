@@ -234,6 +234,67 @@ type Dog {
 
 ## 声明联合类型
 
+#### 使用 z.discriminatedUnion
+
+我们推荐使用 `z.discriminatedUnion` 来声明联合类型，例如：
+```ts
+import { z } from "zod"
+import { asUnionType } from "@gqloom/zod"
+
+const Cat = z.object({
+  __typename: z.literal("Cat"),
+  name: z.string(),
+  age: z.number(),
+  loveFish: z.boolean().optional(),
+})
+
+const Dog = z.object({
+  __typename: z.literal("Dog"),
+  name: z.string(),
+  age: z.number(),
+  loveBone: z.boolean().optional(),
+})
+
+const Animal = z
+  .discriminatedUnion("__typename", [Cat, Dog])
+  .superRefine(asUnionType("Animal"))
+
+```
+在上面的代码中，我们使用 `z.discriminatedUnion` 函数创建了一个联合类型。对于 `Animal` 来说，它通过 `__typename` 字段来区分具体的类型。
+
+#### 使用 z.union
+
+我们还可以使用 `union` 来定义联合类型：
+
+```ts
+import { z } from "zod"
+import { asUnionType, collectNames } from "@gqloom/zod"
+
+const Cat = z.object({
+  name: z.string(),
+  age: z.number(),
+  loveFish: z.boolean().optional(),
+})
+
+const Dog = z.object({
+  name: z.string(),
+  age: z.number(),
+  loveBone: z.boolean().optional(),
+})
+
+const Animal = z.union([Cat, Dog]).superRefine(
+  asUnionType({
+    name: "Animal",
+    resolveType: (it) => (it.loveFish ? "Cat" : "Dog"),
+  })
+)
+
+collectNames({ Cat, Dog, Animal })
+```
+在上面的代码中，我们使用 `z.union` 函数创建了一个联合类型。对于 `Animal` 来说，我们通过 `resolveType` 函数来区分具体的类型。
+在这里，如果一个动物它喜欢鱼，那么它就是一只猫，否则就是一只狗。
+
+
 ## 声明枚举类型
 
 ## 自定义类型映射
