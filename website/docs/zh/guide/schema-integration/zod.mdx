@@ -381,3 +381,25 @@ export const schema = weave(valibotWeaverConfig, HelloResolver)
 ```
 
 ## 默认类型映射
+
+下表列出了 GQLoom 中 Zod 类型与 GraphQL 类型之间的默认映射关系。
+
+| Zod 类型                 | GraphQL 类型        |
+| ------------------------ | ------------------- |
+| `z.array()`              | `GraphQLList`       |
+| `z.string()`             | `GraphQLString`     |
+| `z.string().cuid()`      | `GraphQLID`         |
+| `z.string().cuid2()`     | `GraphQLID`         |
+| `z.string().ulid()`      | `GraphQLID`         |
+| `z.string().uuid()`      | `GraphQLID`         |
+| `z.literal("")`          | `GraphQLString`     |
+| `z.literal(false)`       | `GraphQLBoolean`    |
+| `z.literal(0)`           | `GraphQLInt`        |
+| `z.number()`             | `GraphQLFloat`      |
+| `z.number().int()`       | `GraphQLFloat`      |
+| `z.boolean()`            | `GraphQLBoolean`    |
+| `z.object()`             | `GraphQLObjectType` |
+| `z.enum()`               | `GraphQLEnumType`   |
+| `z.nativeEnum()`         | `GraphQLEnumType`   |
+| `z.union()`              | `GraphQLUnionType`  |
+| `z.discriminatedUnion()` | `GraphQLUnionType`  |
