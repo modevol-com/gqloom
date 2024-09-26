@@ -14,7 +14,7 @@ Yup 模式具有极强的表现力，可对复杂、相互依赖的验证或值�
 
 ## 声明简单标量
 
-在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../fundamentals-features/silk)使用。
+在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../fundamentals-features/silk)使用：
 
 ```ts
 import { number, string, boolean } from "yup"
@@ -45,11 +45,66 @@ export const HelloResolver = resolver({
 ```
 ## 声明对象
 
-我们可以使用 Yup 定义对象，并将其作为[丝线](../fundamentals-features/silk)使用。
+我们可以使用 Yup 定义对象，并将其作为[丝线](../fundamentals-features/silk)使用：
+```ts
+import { string, boolean, object, number } from "yup"
+
+export const Cat = object({
+  name: string().required(),
+  age: number().integer().required(),
+  loveFish: boolean(),
+}).label("Cat")
+```
 
 ## 名称和更多元数据
 
 ### 为对象定义名称
+
+#### 使用 `label()`
+
+```ts
+import { string, boolean, object, number } from "yup"
+
+export const Cat = object({
+  name: string().required(),
+  age: number().integer().required(),
+  loveFish: boolean(),
+}).label("Cat")
+```
+在上面的代码中，我们使用 `label` 为对象定义了名称，这样在生成的 GraphQL Schema 中，该对象将具有名称 `Cat`。
+
+#### 使用 `collectNames`
+
+```ts
+import { string, boolean, object, number } from "yup"
+import { collectNames } from "../src"
+
+export const Cat = object({
+  name: string().required(),
+  age: number().integer().required(),
+  loveFish: boolean(),
+})
+
+collectNames({ Cat })
+```
+
+在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
+
+```ts
+import { string, boolean, object, number } from "yup"
+import { collectNames } from "../src"
+
+export const { Cat } = collectNames({
+  Cat: object({
+    name: string().required(),
+    age: number().integer().required(),
+    loveFish: boolean(),
+  }),
+})
+```
+在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
+
+#### 使用 `asObjectType`
 
 ### 添加更多元信息
 
