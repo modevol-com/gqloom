@@ -1,6 +1,5 @@
 import { type SYMBOLS, type WeaverConfig } from "@gqloom/core"
 import {
-  type ThunkReadonlyArray,
   type GraphQLEnumValueConfig,
   type GraphQLObjectTypeConfig,
   type GraphQLInterfaceTypeConfig,
@@ -14,25 +13,41 @@ import {
 import { type SchemaDescription, type Schema } from "yup"
 
 export interface GQLoomMetadata {
-  name?: string
   description?: string
-  enum?: Record<string, any>
-  enumValues?: Record<string, string | GraphQLEnumValueConfig>
-
-  interfaces?: ThunkReadonlyArray<Schema>
 
   extension?:
     | GraphQLObjectTypeExtensions
     | GraphQLFieldExtensions<any, any, any>
 
-  type?: (() => GraphQLOutputType) | null
+  asField?: FieldConfig
 
-  field?: GraphQLFieldConfig<any, any, any>
-  objectType?: GraphQLObjectTypeConfig<any, any>
-  interfaceType?: GraphQLInterfaceTypeConfig<any, any>
-  enumType?: GraphQLEnumTypeConfig
-  unionType?: GraphQLUnionTypeConfig<any, any>
+  asObjectType?: ObjectTypeConfig
+
+  asInterfaceType?: Partial<GraphQLInterfaceTypeConfig<any, any>>
+
+  asEnumType?: EnumTypeConfig
+
+  asUnionType?: Partial<GraphQLUnionTypeConfig<any, any>>
 }
+
+export interface FieldConfig
+  extends Partial<Omit<GraphQLFieldConfig<any, any>, "type">> {
+  type?: GraphQLOutputType | (() => GraphQLOutputType) | undefined | null
+}
+
+export interface ObjectTypeConfig
+  extends Partial<
+    Omit<GraphQLObjectTypeConfig<any, any>, "fields" | "interfaces">
+  > {
+  interfaces?: Schema[]
+}
+
+export interface EnumTypeConfig extends Partial<GraphQLEnumTypeConfig> {
+  enum?: Record<string, any>
+  valuesConfig?: Record<string, GraphQLEnumValueConfig>
+}
+
+export interface GQLoomMetadataOptions {}
 
 export interface YupWeaverOptions {
   yupPresetGraphQLType?: (

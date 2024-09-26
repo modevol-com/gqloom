@@ -44,6 +44,7 @@ import {
   type YupWeaverConfig,
 } from "./types"
 import { type UnionSchema } from "./union"
+export * from "@gqloom/core"
 
 export * from "./types"
 export * from "./union"
@@ -86,9 +87,11 @@ export class YupWeaver {
 
   static toGraphQLType(schema: Schema): GraphQLOutputType {
     const description = YupWeaver.describe(schema)
-    const customTypeOrFn = description.meta?.type
+    const customTypeOrFn = description.meta?.asField?.type
+
     const customType =
       typeof customTypeOrFn === "function" ? customTypeOrFn() : customTypeOrFn
+
     if (customType) return customType
 
     const config = weaverContext.getConfig<YupWeaverConfig>("gqloom.yup")
@@ -115,8 +118,10 @@ export class YupWeaver {
       case "date":
         return GraphQLString
       case "object": {
+        const { interfaces, ...objectConfig } =
+          description.meta?.asObjectType ?? {}
         const name =
-          description.meta?.name ??
+          objectConfig.name ??
           description.label ??
           weaverContext.names.get(schema)
         if (!name) throw new Error("object type must have a name")
@@ -128,9 +133,7 @@ export class YupWeaver {
         >
         const strictSchema = objectSchema.strict().noUnknown()
         return new GraphQLObjectType({
-          interfaces: YupWeaver.ensureInterfaceTypes(
-            description.meta?.interfaces
-          ),
+          interfaces: YupWeaver.ensureInterfaceTypes(interfaces),
           name,
           extensions: mergeExtensions(
             { defaultValue: description.default },
@@ -141,7 +144,8 @@ export class YupWeaver {
             if (key.startsWith("__")) return mapValue.SKIP
             const fieldSchema = YupWeaver.ensureSchema(fieldSchemaOrigin)
             const fieldDesc = fieldSchema.describe()
-            if (fieldDesc.meta?.type === null) return mapValue.SKIP
+            if (fieldDesc.meta?.asField?.type === null) return mapValue.SKIP
+            const { type: _, ...rest } = fieldDesc.meta?.asField ?? {}
             return {
               extensions: mergeExtensions(
                 { defaultValue: fieldDesc.default },
@@ -149,10 +153,11 @@ export class YupWeaver {
               ),
               type: YupWeaver.toNullableGraphQLType(fieldSchema),
               description: fieldDesc?.meta?.description,
+              ...rest,
             } as GraphQLFieldConfig<any, any>
           }),
           isTypeOf: (source) => strictSchema.isValid(source),
-          ...description.meta?.objectType,
+          ...objectConfig,
         })
       }
       case "array": {
@@ -175,7 +180,7 @@ export class YupWeaver {
         const innerTypes = unionSchema.spec.types
 
         const name =
-          description.meta?.name ??
+          description.meta?.asUnionType?.name ??
           description.label ??
           weaverContext.names.get(unionSchema)
         if (!name) throw new Error("union type must have a name")
@@ -194,7 +199,7 @@ export class YupWeaver {
           name,
           types,
           description: description.meta?.description,
-          ...description.meta?.unionType,
+          ...description.meta?.asUnionType,
         })
       }
       default:
@@ -218,20 +223,23 @@ export class YupWeaver {
     return list.map((yupSchema) =>
       ensureInterfaceType(
         getGraphQLType.call(yupSchema),
-        yupSchema.describe().meta?.interfaceType
+        yupSchema.describe().meta?.asInterfaceType
       )
     )
   }
 
   static isEnumType(description: SchemaDescription): boolean {
-    return description.oneOf.length > 0
+    if (description.meta?.asEnumType) return true
+    if (description.oneOf.length <= 0) return false
+    return description.oneOf.every((value) => typeof value === "string")
   }
 
   static getEnumType(description: SchemaDescription): GraphQLEnumType | null {
     if (!YupWeaver.isEnumType(description)) return null
     const meta: GQLoomMetadata | undefined = description.meta
 
-    const name = meta?.name ?? description.label
+    const name = description.meta?.asEnumType?.name ?? description.label
+
     if (!name)
       throw new Error(
         `enum type ${description.oneOf.join("|")} must have a name`
@@ -241,27 +249,26 @@ export class YupWeaver {
 
     const values: GraphQLEnumValueConfigMap = {}
 
-    if (meta?.enum) {
-      Object.entries(meta.enum).forEach(([key, value]) => {
-        if (typeof meta.enum?.[meta.enum[key]] === "number") return
-        const config = meta?.enumValues?.[key]
-        if (typeof config === "object") values[key] = config
-        else values[key] = { value, description: config }
-      })
+    if (meta?.asEnumType?.enum) {
+      for (const [key, value] of Object.entries(meta.asEnumType.enum)) {
+        if (typeof meta.asEnumType.enum[meta.asEnumType.enum[key]] === "number")
+          continue
+        const config = meta?.asEnumType?.valuesConfig?.[key]
+        values[key] = { value, ...config }
+      }
     } else {
       description.oneOf.forEach((value) => {
         const key = String(value)
-        const config = meta?.enumValues?.[key]
-        if (typeof config === "object") values[key] = config
-        else values[key] = { value, description: config }
+        const config = meta?.asEnumType?.valuesConfig?.[key]
+        values[key] = { value, ...config }
       })
     }
 
     return new GraphQLEnumType({
-      name: meta?.name ?? description.label ?? "",
+      name,
       description: meta?.description,
       values,
-      ...meta?.enumType,
+      ...meta?.asEnumType,
     })
   }
 

@@ -31,6 +31,7 @@ import {
   printSchema,
   GraphQLScalarType,
   type GraphQLObjectType,
+  type GraphQLEnumValueConfig,
 } from "graphql"
 import {
   type GQLoomExtensions,
@@ -93,14 +94,16 @@ describe("YupWeaver", () => {
 
   it("should handle custom type", () => {
     expect(
-      getGraphQLType(yupSilk(date().meta({ type: () => GraphQLDate })))
+      getGraphQLType(
+        yupSilk(date().meta({ asField: { type: () => GraphQLDate } }))
+      )
     ).toEqual(GraphQLDate)
   })
 
   it("should handle hidden field", () => {
     const Dog = object({
       name: string(),
-      birthday: date().meta({ type: null }),
+      birthday: date().meta({ asField: { type: null } }),
     }).label("Dog")
 
     expect(printYupSilk(Dog)).toMatchInlineSnapshot(`
@@ -168,7 +171,7 @@ describe("YupWeaver", () => {
     const d = getGraphQLType(
       yupSilk(
         date()
-          .meta({ type: () => GraphQLDate })
+          .meta({ asField: { type: () => GraphQLDate } })
           .required()
       )
     )
@@ -194,7 +197,7 @@ describe("YupWeaver", () => {
     expect(i).toMatchObject({ ofType: GraphQLInt })
 
     const d = getGraphQLType(
-      yupSilk(array(date().meta({ type: () => GraphQLDate })))
+      yupSilk(array(date().meta({ asField: { type: () => GraphQLDate } })))
     )
     expect(d).toBeInstanceOf(GraphQLList)
     expect(d).toMatchObject({ ofType: GraphQLDate })
@@ -204,18 +207,18 @@ describe("YupWeaver", () => {
     const Giraffe = object({
       name: string().required(),
       birthday: date()
-        .meta({ type: () => GraphQLDate })
-        .required(),
+        .required()
+        .meta({ asField: { type: () => GraphQLDate } }),
       height: number().meta({
-        description: "The giraffe's height in meters",
+        asField: {
+          description: "The giraffe's height in meters",
+        },
       }),
       hobbies: array(string().required()),
       friends: array(string()).required(),
     })
       .label("Giraffe")
-      .meta({
-        description: "A giraffe",
-      })
+      .meta({ asObjectType: { description: "A giraffe" } })
 
     expect(printYupSilk(Giraffe)).toMatchInlineSnapshot(`
       """"A giraffe"""
@@ -232,17 +235,19 @@ describe("YupWeaver", () => {
   })
 
   it("should handle enum", () => {
-    const enumValueDescriptions = {
-      apple: "Apple is red",
-      banana: "Banana is yellow",
-      orange: "Orange is orange",
+    const enumValueDescriptions: Record<string, GraphQLEnumValueConfig> = {
+      apple: { description: "Apple is red" },
+      banana: { description: "Banana is yellow" },
+      orange: { description: "Orange is orange" },
     }
     const fruitS = string()
       .oneOf(["apple", "banana", "orange"])
       .label("Fruit")
       .meta({
-        description: "Some fruits you might like",
-        enumValues: enumValueDescriptions,
+        asEnumType: {
+          description: "Some fruits you might like",
+          valuesConfig: enumValueDescriptions,
+        },
       })
 
     type Fruit1 = InferType<typeof fruitS>
@@ -254,8 +259,10 @@ describe("YupWeaver", () => {
       .oneOf(["apple", "banana", "orange"])
       .label("Fruit")
       .meta({
-        description: "Some fruits you might like",
-        enumValues: enumValueDescriptions,
+        asEnumType: {
+          description: "Some fruits you might like",
+          valuesConfig: enumValueDescriptions,
+        },
       })
 
     expectTypeOf<InferType<typeof fruitM>>().toEqualTypeOf<
@@ -272,9 +279,11 @@ describe("YupWeaver", () => {
       .oneOf(Object.values(Fruit) as Fruit[])
       .label("Fruit")
       .meta({
-        enum: Fruit,
-        description: "Some fruits you might like",
-        enumValues: enumValueDescriptions,
+        asEnumType: {
+          enum: Fruit,
+          description: "Some fruits you might like",
+          valuesConfig: enumValueDescriptions,
+        },
       })
 
     expectTypeOf<InferType<typeof fruitE>>().toEqualTypeOf<Fruit | undefined>()
@@ -312,7 +321,7 @@ describe("YupWeaver", () => {
       color: string().required(),
       prize: number().required(),
     })
-      .meta({ interfaces: [Fruit] })
+      .meta({ asObjectType: { interfaces: [Fruit] } })
       .label("Orange")
 
     const simpleResolver = resolver({
@@ -549,11 +558,11 @@ describe("YupWeaver", () => {
       const Fruit = object({ color: string() }).label("Fruit")
       const Orange = object({ color: string(), flavor: string() })
         .label("Orange")
-        .meta({ interfaces: [Fruit] })
+        .meta({ asObjectType: { interfaces: [Fruit] } })
 
       const Apple = object({ color: string(), flavor: string() })
         .label("Apple")
-        .meta({ interfaces: [Fruit.clone()] })
+        .meta({ asObjectType: { interfaces: [Fruit.clone()] } })
 
       const r1 = resolver({
         apple: query(Apple, () => ({ flavor: "" })),
