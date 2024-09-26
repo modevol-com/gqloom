@@ -306,11 +306,12 @@ describe("ZodSilk", () => {
 
     const Orange = z
       .object({
+        __typename: z.literal("Orange"),
         name: z.string(),
         color: z.string(),
         prize: z.number(),
       })
-      .superRefine(asObjectType({ name: "Orange", interfaces: [Fruit] }))
+      .superRefine(asObjectType({ interfaces: [Fruit] }))
 
     const r = resolver({
       orange: query(Orange, () => 0 as any),
