@@ -161,7 +161,15 @@ export class ZodWeaver {
     }
 
     if (schema instanceof ZodLiteral) {
-      return GraphQLString
+      switch (typeof schema.value) {
+        case "boolean":
+          return GraphQLBoolean
+        case "number":
+          return GraphQLFloat
+        case "string":
+        default:
+          return GraphQLString
+      }
     }
 
     if (schema instanceof ZodNumber) {

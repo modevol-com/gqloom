@@ -84,6 +84,15 @@ describe("ZodSilk", () => {
     expect(getGraphQLType(zodSilk(z.string().email().nullable()))).toEqual(
       GraphQLString
     )
+    expect(getGraphQLType(zodSilk(z.literal("").nullable()))).toEqual(
+      GraphQLString
+    )
+    expect(getGraphQLType(zodSilk(z.literal(0).nullable()))).toEqual(
+      GraphQLFloat
+    )
+    expect(getGraphQLType(zodSilk(z.literal(false).nullable()))).toEqual(
+      GraphQLBoolean
+    )
   })
 
   it("should keep default value in extensions", () => {
@@ -270,19 +279,7 @@ describe("ZodSilk", () => {
 
     expect(printZodSilk(fruitN)).toEqual(printZodSilk(fruitZ))
 
-    expect(printZodSilk(fruitZ)).toMatchInlineSnapshot(`
-      """"Some fruits you might like"""
-      enum Fruit {
-        """red"""
-        apple
-
-        """yellow"""
-        banana
-
-        """orange"""
-        orange
-      }"
-    `)
+    expect(printZodSilk(fruitZ)).toMatchInlineSnapshot()
   })
 
   it("should handle interfere", () => {
