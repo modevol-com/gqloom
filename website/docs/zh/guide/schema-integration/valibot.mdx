@@ -303,7 +303,9 @@ collectNames({ Cat, Dog, Animal })
 
 ## 声明枚举类型
 
-使用 `v.picklist` 或 `v.enum_` 定义枚举类型。
+我们可以使用 `v.picklist` 或 `v.enum_` 定义枚举类型。
+
+#### 使用 picklist
 
 通常，我们更推荐使用 `v.picklist` 来定义枚举类型：
 
@@ -325,6 +327,8 @@ export const Fruit = v.pipe(
 
 export type IFruit = v.InferOutput<typeof Fruit>
 ```
+
+#### 使用 enum_
 
 我们也可以使用 `v.enum_` 来定义枚举类型：
 

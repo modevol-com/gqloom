@@ -297,6 +297,55 @@ collectNames({ Cat, Dog, Animal })
 
 ## 声明枚举类型
 
+我们可以使用 `z.enum` 或 `z.nativeEnum` 定义枚举类型。
+
+#### 使用 z.enum
+
+通常，我们更推荐使用 `z.enum` 来声明枚举类型，例如：
+```ts
+import { z } from "zod"
+import { asEnumType } from "../src"
+
+export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
+  asEnumType({
+    name: "Fruit",
+    valuesConfig: {
+      apple: { description: "red" },
+      banana: { description: "yellow" },
+      orange: { description: "orange" },
+    },
+  })
+)
+
+export type IFruit = z.infer<typeof Fruit>
+```
+
+#### 使用 z.nativeEnum
+
+我们还可以使用 `z.nativeEnum` 来声明枚举类型，例如：
+```ts
+import { z } from "zod"
+import { asEnumType } from "../src"
+
+enum FruitEnum {
+  apple,
+  banana,
+  orange,
+}
+
+export const Fruit = z.nativeEnum(FruitEnum).superRefine(
+  asEnumType({
+    name: "Fruit",
+    valuesConfig: {
+      apple: { description: "red" },
+      banana: { description: "yellow" },
+      orange: { description: "orange" },
+    },
+  })
+)
+
+export type IFruit = z.infer<typeof Fruit>
+```
 ## 自定义类型映射
 
 ## 默认类型映射
