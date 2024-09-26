@@ -11,7 +11,7 @@ import { getCacheType } from "./object"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,
-  interfaceConfig?: GraphQLInterfaceTypeConfig<any, any>
+  interfaceConfig?: Partial<GraphQLInterfaceTypeConfig<any, any>>
 ): GraphQLInterfaceType {
   if (isInterfaceType(gqlType)) return gqlType
 
