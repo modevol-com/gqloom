@@ -1,15 +1,15 @@
 [
   "introduction",
-  "getting-started"
-  // {
-  //   "type": "dir",
-  //   "name": "fundamentals",
-  //   "label": "Fundamentals Features"
-  // },
-  // {
-  //   "type": "dir",
-  //   "name": "schema-integration",
-  //   "label": "Schema Integration"
-  // },
-  // { "type": "dir", "name": "advanced", "label": "Advanced Usages" }
+  "getting-started",
+  {
+    "type": "dir",
+    "name": "fundamentals",
+    "label": "Fundamentals Features"
+  },
+  {
+    "type": "dir",
+    "name": "schema-integration",
+    "label": "Schema Integration"
+  },
+  { "type": "dir", "name": "advanced", "label": "Advanced Usages" }
 ]

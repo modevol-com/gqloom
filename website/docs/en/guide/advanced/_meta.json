@@ -1,0 +1,6 @@
+[
+  { "type": "dir", "name": "adapters", "label": "Adapters" },
+  "printing-schema",
+  "subscription",
+  "federation"
+]
