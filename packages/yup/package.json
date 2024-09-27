@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/yup",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Create GraphQL schema and resolvers with TypeScript using Yup!",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,7 +23,15 @@
   "files": [
     "dist"
   ],
-  "keywords": [],
+  "keywords": [
+    "gqloom",
+    "graphql",
+    "schema",
+    "typescript",
+    "valibot",
+    "validation",
+    "validate"
+  ],
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
@@ -34,5 +42,8 @@
   "devDependencies": {
     "yup": "^1.4.0",
     "@gqloom/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
