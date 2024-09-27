@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/federation",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Building subGraphs with GQLoom",
   "type": "module",
   "main": "./dist/index.js",
@@ -40,7 +40,15 @@
     "mercurius": "^14.1.0",
     "mercurius-integration-testing": "^8.2.0"
   },
-  "keywords": [],
+  "keywords": [
+    "gqloom",
+    "graphql",
+    "schema",
+    "typescript",
+    "apollo",
+    "federation",
+    "subgraph"
+  ],
   "author": "xcfox",
   "license": "MIT",
   "publishConfig": {
