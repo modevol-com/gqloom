@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/valibot",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Create GraphQL schema and resolvers easily using Valibot!",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,7 +23,15 @@
   "files": [
     "dist"
   ],
-  "keywords": [],
+  "keywords": [
+    "gqloom",
+    "graphql",
+    "schema",
+    "typescript",
+    "valibot",
+    "validation",
+    "validate"
+  ],
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {

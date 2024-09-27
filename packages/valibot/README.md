@@ -1,11 +1,11 @@
+![GQLoom Logo](https://github.com/modevol-com/gqloom/blob/main/gqloom.svg?raw=true)
+
 # GQLoom
 
-English | [简体中文](./README.zh-CN.md)
+GQLoom is a GraphQL weaver for TypeScript/JavaScript that weaves GraphQL Schema using Valibot, Zod, or Yup, and supports sophisticated type inference to provide the best development experience.
 
-GQLoom is a GraphQL weaver for TypeScript/JavaScript, using Zod, Yup, or Valibot to easily weave GraphQL schemas, providing the best development experience with complete type inference.
+# @gqloom/valibot
 
-# GQLoom Valibot
+This package provides GQLoom integration with Valibot to weave Valibot Schema to GraphQL Schema.
 
-Validate unknown data with Valibot, the open source schema library with bundle size, type safety and developer experience in mind.
-
-GQLoom Valibot provides GQLoom integration with Valibot to weave Valibot Schema to GraphQL Schema.
+Read more at [GQLoom Document](https://gqloom.dev/guide/schema-integration/valibot).
