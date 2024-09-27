@@ -2,6 +2,10 @@
 
 # GQLoom
 
+[![License: MIT][license-image]][license-url]
+[![NPM version][npm-image]][npm-url]
+[![Downloads][downloads-image]][npm-url]
+
 [English](./README.md) | 简体中文
 
 GQLoom 是一个用于 TypeScript/JavaScript 的 GraphQL 编织器，使用 Valibot、Zod 或者 Yup 编织 GraphQL Schema, 支持完善的类型推断以提供最好的开发体验。
@@ -43,3 +47,9 @@ export const schema = weave(HelloResolver)
 - [GQLoom Yup](./packages/yup/README.md): GQLoom 与 Yup 的集成；
 
 - [GQLoom Zod](./packages/zod/README.md): GQLoom 与 Zod 的集成；
+
+[license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
+[license-url]: https://opensource.org/licenses/MIT
+[npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/@gqloom/core
+[downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat-square

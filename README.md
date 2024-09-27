@@ -2,6 +2,10 @@
 
 # GQLoom
 
+[![License: MIT][license-image]][license-url]
+[![NPM version][npm-image]][npm-url]
+[![Downloads][downloads-image]][npm-url]
+
 English | [简体中文](./README.zh-CN.md)
 
 GQLoom is a GraphQL weaver for TypeScript/JavaScript that weaves GraphQL Schema using Valibot, Zod, or Yup, and supports sophisticated type inference to provide the best development experience.
@@ -43,3 +47,9 @@ export const schema = weave(HelloResolver)
 - [GQLoom Yup](./packages/yup/README.md): GQLoom integration with Yup;
 
 - [GQLoom Zod](./packages/zod/README.md): GQLoom integration with Zod;
+
+[license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
+[license-url]: https://opensource.org/licenses/MIT
+[npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/@gqloom/core
+[downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat-square
