@@ -4,7 +4,7 @@ import { Tab, Tabs } from 'rspress/theme';
 
 在 GQLoom 中，`weave` 函数用于将多个解析器（Resolver）或丝线（Silk）编织到一张 GraphQL Schema 中。
 
-`weave` 函数可以接收[解析器](../fundamentals-features/resolver)、[丝线](../fundamentals-features/silk)、编织器配置、全局[中间件](../fundamentals-features/middleware)
+`weave` 函数可以接收[解析器](../fundamentals/resolver)、[丝线](../fundamentals/silk)、编织器配置、全局[中间件](../fundamentals/middleware)
 
 ## 编织解析器
 最常见的用法是将多个解析器编织到一起，例如：
@@ -16,7 +16,7 @@ export const schema = weave(HelloResolver, CatResolver);
 ```
 ## 编织单独丝线
 
-有时候，我们需要将一个单独的[丝线](../fundamentals-features/silk)编织到 GraphQL Schema 中，例如：
+有时候，我们需要将一个单独的[丝线](../fundamentals/silk)编织到 GraphQL Schema 中，例如：
 
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
@@ -198,4 +198,4 @@ import { logger } from './middlewares';
 
 export const schema = weave(HelloResolver, CatResolver, logger)
 ```
-在[中间件章节](../fundamentals-features/middleware)中查看更多关于中间件的用法。
+在[中间件章节](../fundamentals/middleware)中查看更多关于中间件的用法。
