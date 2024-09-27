@@ -34,6 +34,12 @@ const HelloResolver = resolver({
 export const schema = weave(HelloResolver)
 ```
 
+Read [Introduction](https://gqloom.dev/guide/introduction.html) to learn more about GQLoom.
+
+## Getting Started
+
+See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn how to use GQLoom.
+
 ## In this Repository
 
 - [GQLoom Core](./packages/core/README.md): GraphQL Loom Core Features;

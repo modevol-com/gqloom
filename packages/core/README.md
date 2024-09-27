@@ -1,20 +1,21 @@
+![GQLoom Logo](https://github.com/modevol-com/gqloom/blob/main/gqloom.svg?raw=true)
+
 # GQLoom
 
-English | [简体中文](./README.zh-CN.md)
+GQLoom is a GraphQL weaver for TypeScript/JavaScript that weaves GraphQL Schema using Valibot, Zod, or Yup, and supports sophisticated type inference to provide the best development experience.
 
-GQLoom is a GraphQL weaver for TypeScript/JavaScript, using Zod, Yup, or Valibot to easily weave GraphQL schemas, providing the best development experience with complete type inference.
-
-GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), and [Pothos](https://pothos-graphql.dev/).
+The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), [Pothos](https://pothos-graphql.dev/).
 
 ## Features
 
-- 📦 Use popular pattern libraries (Zod, Yup, Valibot) to build and validate GraphQL schemas.
-- 🔒 Complete type safety, discover potential issues during compilation.
-- 🧩 Classic middleware system: authentication, caching, logging, etc.
-- 🪄 Accessible Context and DataLoader everywhere.
-- 🔮 No code generation and experimental decorator features.
+- 🚀 GraphQL: flexible and efficient, reducing redundant data transfers;
+- 🔒 Robust type safety: enjoy smart hints during development and spot potential problems during editing;
+- 🔋 Ready to go: middleware, contexts, subscriptions, federated graphs are ready to go;
+- 🔮 No extra magic: no decorators, no metadata and reflection, no code generation, you just need JavaScript/TypeScript;
+- 🧩 Familiar schema libraries: use the schema libraries you already know (Zod, Yup, Valibot) to build GraphQL Schema and validate inputs;
+- 🧑‍💻 Develop happily: highly readable and semantic APIs designed to keep your code tidy;
 
-## Hello, World!
+## Hello World
 
 ```ts
 import { resolver, query, weave } from "@gqloom/valibot"
@@ -26,3 +27,9 @@ const HelloResolver = resolver({
 
 export const schema = weave(HelloResolver)
 ```
+
+Read [Introduction](https://gqloom.dev/guide/introduction.html) to learn more about GQLoom.
+
+## Getting Started
+
+See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn how to use GQLoom.
