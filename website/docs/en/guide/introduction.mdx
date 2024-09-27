@@ -1,0 +1,56 @@
+import { Tab, Tabs } from "rspress/theme"
+
+# Introduction
+
+## What is GraphQL
+
+GraphQL is a query language for APIs, developed and open-sourced by Facebook. It allows clients to specify the required data structures, thus reducing unnecessary data transfers and improving the performance and maintainability of APIs.
+
+GraphQL brings the following benefits:
+- **Flexibility**: Clients can specify the required data structures, thus reducing unnecessary data transfers and improving API performance and maintainability.
+- **Strong Typing**: GraphQL uses a strong typing system that ensures data consistency and security.
+- **Automatic Aggregation**: GraphQL can automatically aggregate multiple queries, which not only reduces the number of client requests, but also ensures the simplicity of the server-side API.
+- **Efficient Communication**: GraphQL uses a single Schema, which reduces communication costs and improves development efficiency in team development.
+- **Easy to Extend**: GraphQL can extend the API by adding new fields and types without modifying existing code.
+
+## What is GQLoom
+
+GraphQL makes API development easy, but writing and maintaining GraphQL Schema and aligning it with TypeScript types and service logic is not a simple task.
+
+In traditional GraphQL development, developers need to write the Schema manually, which leads to code redundancy and is difficult to maintain. With TypeScript, you also need to generate or manually edit type declarations. This means that the developer needs to write and maintain three sets of code at the same time: the `GraphQL` schema, the resolver logic implementation, and the `TypeScript` type declarations, which increases the burden on the developer.
+
+In recent years, runtime type checking has become increasingly popular in the TypeScript community, with libraries such as [Zod](https://zod.dev/) and [Valibot](https://valibot.dev/) allowing developers to write type declarations in JavaScript, providing robust type safety at development time and type safety at runtime.
+More importantly, due to the runtime type checking nature of these libraries, the complete type information is already contained in their Schema. `GQLoom` takes advantage of this by using the Schema written in `Zod` and `Valibot` as the source of facts, thus avoiding the tedious task of writing `GraphQL` Schema manually, and providing more robust type safety. This eliminates the need to manually write `GraphQL` Schema and provides more robust type safety.
+
+In addition, many ORMs in the TypeScript ecosystem require table structures to be declared at development time, e.g., [Prisma](https://www.prisma.io/), [Drizzle](https://orm.drizzle.team/), [MikroORM](https://mikro-orm.io/).
+The goal of `GQLoom` is to further reduce the burden on developers by directly using the table structures of these ORMs as Schema.
+
+The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), [Pothos](https://pothos-graphql.dev/).
+## Hello World
+
+<Tabs>
+<Tab label="valibot">
+```ts
+import { resolver, query, weave } from "@gqloom/valibot"
+import * as v from "valibot"
+
+const HelloResolver = resolver({
+  hello: query(v.string(), () => "world"),
+})
+
+export const schema = weave(HelloResolver)
+```
+</Tab>
+<Tab  label="zod">
+```ts
+import { resolver, query, weave } from "@gqloom/zod"
+import { z } from "zod"
+
+const HelloResolver = resolver({
+  hello: query(z.string(), () => "world"),
+})
+
+export const schema = weave(HelloResolver)
+```
+</Tab>
+</Tabs>
