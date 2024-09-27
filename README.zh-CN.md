@@ -15,7 +15,7 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 ## 特性
 
 - 🚀 GraphQL：灵活高效，减少冗余数据传输；
-- 🔒 健壮的类型安全：在开发时享受智能提示，在编辑时发现潜在问题；
+- 🔒 健壮的类型安全：在开发时享受智能提示，在编译时发现潜在问题；
 - 🔋 整装待发：中间件、上下文、订阅、联邦图已经准备就绪；
 - 🔮 没有额外魔法：没有装饰器、没有元数据和反射、没有代码生成，你只需要 JavaScript/TypeScript；
 - 🧩 熟悉的模式库：使用你已熟识的模式库（Zod、Yup、Valibot）构建 GraphQL Schema 并验证输入；

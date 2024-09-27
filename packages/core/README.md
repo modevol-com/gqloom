@@ -9,7 +9,7 @@ The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](http
 ## Features
 
 - 🚀 GraphQL: flexible and efficient, reducing redundant data transfers;
-- 🔒 Robust type safety: enjoy smart hints during development and spot potential problems during editing;
+- 🔒 Robust type safety: enjoy intelligent hints at development time to detect potential problems at compile time;
 - 🔋 Ready to go: middleware, contexts, subscriptions, federated graphs are ready to go;
 - 🔮 No extra magic: no decorators, no metadata and reflection, no code generation, you just need JavaScript/TypeScript;
 - 🧩 Familiar schema libraries: use the schema libraries you already know (Zod, Yup, Valibot) to build GraphQL Schema and validate inputs;
