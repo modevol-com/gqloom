@@ -10,4 +10,4 @@
 
 - [Apollo](./adapters/apollo): 🌍 符合规范且可用于生产的 JavaScript GraphQL 服务器，可让您以模式优先的方式进行开发。专为 Express、Connect、Hapi、Koa 等而构建。
 
-- [Mercurius](./adapters/mercurius): 使用 Fastify 实现 GraphQL 服务器和网关
+- [Mercurius](./adapters/mercurius): 使用 Fastify 实现 GraphQL 服务器和网关。
