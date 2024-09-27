@@ -4,17 +4,18 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-GQLoom is a GraphQL weaver for TypeScript/JavaScript that delightedly weaves GraphQL Schema using Zod, Yup, or Valibot, with fully support for automatic type-safety to provide the best development experience.
+GQLoom is a GraphQL weaver for TypeScript/JavaScript that weaves GraphQL Schema using Valibot, Zod, or Yup, and supports sophisticated type inference to provide the best development experience.
 
 The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), [Pothos](https://pothos-graphql.dev/).
 
 ## Features
 
-- 📦 Build GraphQL Schema and validate inputs using popular schema libraries (Zod, Yup, Valibot).
-- 🛡️ Well-formed type safety to find potential problems at compile time.
-- 🧩 Classic middleware systems: authentication, caching, logging, etc.
-- 🪄 Context and DataLoader everywhere.
-- 🔮 No code generation and experimental decorator features.
+- 🚀 GraphQL: flexible and efficient, reducing redundant data transfers;
+- 🔒 Robust type safety: enjoy smart hints during development and spot potential problems during editing;
+- 🔋 Ready to go: middleware, contexts, subscriptions, federated graphs are ready to go;
+- 🔮 No extra magic: no decorators, no metadata and reflection, no code generation, you just need JavaScript/TypeScript;
+- 🧩 Familiar schema libraries: use the schema libraries you already know (Zod, Yup, Valibot) to build GraphQL Schema and validate inputs;
+- 🧑‍💻 Develop happily: highly readable and semantic APIs designed to keep your code tidy;
 
 ## Hello World
 
@@ -28,3 +29,17 @@ const HelloResolver = resolver({
 
 export const schema = weave(HelloResolver)
 ```
+
+## In this Repository
+
+- [GQLoom Core](./packages/core/README.md): GraphQL Loom Core Features;
+
+- [GQLoom Federation](./packages/federation/README.md): Provides GQLoom support for Apollo Federation;
+
+- [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom integration with Mikro ORM;
+
+- [GQLoom Valibot](./packages/valibot/README.md): GQLoom integration with Valibot;
+
+- [GQLoom Yup](./packages/yup/README.md): GQLoom integration with Yup;
+
+- [GQLoom Zod](./packages/zod/README.md): GQLoom integration with Zod;

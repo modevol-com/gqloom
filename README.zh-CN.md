@@ -4,17 +4,18 @@
 
 [English](./README.md) | 简体中文
 
-GQLoom 是一个用于 TypeScript/JavaScript 的 GraphQL 编织器，使用 Zod、Yup 或者 Valibot 来愉快地编织 GraphQL Schema, 支持完善的类型推断以提供最好的开发体验。
+GQLoom 是一个用于 TypeScript/JavaScript 的 GraphQL 编织器，使用 Valibot、Zod 或者 Yup 编织 GraphQL Schema, 支持完善的类型推断以提供最好的开发体验。
 
 GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)、[Pothos](https://pothos-graphql.dev/) 启发。
 
 ## 特性
 
-- 📦 使用流行的模式库（Zod、Yup、Valibot）构建 GraphQL Schema 并验证输入。
-- 🛡️ 完善的类型安全，在编译时发现潜在的问题。
-- 🧩 经典的中间件系统：认证、缓存、日志记录等。
-- 🪄 随处可达的 Context 和 DataLoader。
-- 🔮 无需代码生成和实验性装饰器功能。
+- 🚀 GraphQL：灵活高效，减少冗余数据传输；
+- 🔒 健壮的类型安全：在开发时享受智能提示，在编辑时发现潜在问题；
+- 🔋 整装待发：中间件、上下文、订阅、联邦图已经准备就绪；
+- 🔮 没有额外魔法：没有装饰器、没有元数据和反射、没有代码生成，你只需要 JavaScript/TypeScript；
+- 🧩 熟悉的模式库：使用你已熟识的模式库（Zod、Yup、Valibot）构建 GraphQL Schema 并验证输入；
+- 🧑‍💻 愉快地开发：高可读性和语义化的 API 设计，使你的代码整洁；
 
 ## 你好 世界
 
@@ -31,10 +32,14 @@ export const schema = weave(HelloResolver)
 
 ## 仓库导航
 
-- [GQLoom Core](./packages/core/README.zh-CN.md): GraphQL 织布机核心功能。
+- [GQLoom Core](./packages/core/README.md): GraphQL 织布机核心功能；
 
-- [GQLoom Valibot](./packages/valibot/README.zh-CN.md): GQLoom 与 Valibot 的集成。
+- [GQLoom Federation](./packages/federation/README.md): 提供 GQLoom 对 Apollo Federation 的支持；
 
-- [GQLoom Mikro ORM](./packages/mikro-orm/README.zh-CN.md): GQLoom 与 Mikro ORM 的集成。
+- [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom 与 Mikro ORM 的集成；
 
-- [GQLoom Federation](./packages/federation/README.zh-CN.md): GQLoom 与 Apollo Federation 的集成。
+- [GQLoom Valibot](./packages/valibot/README.md): GQLoom 与 Valibot 的集成；
+
+- [GQLoom Yup](./packages/yup/README.md): GQLoom 与 Yup 的集成；
+
+- [GQLoom Zod](./packages/zod/README.md): GQLoom 与 Zod 的集成；
