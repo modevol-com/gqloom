@@ -12,6 +12,17 @@ Yup 模式具有极强的表现力，可对复杂、相互依赖的验证或值�
 
 <PackageManagerTabs command="install @gqloom/core yup @gqloom/yup" />
 
+另外，我们还需要在项目中为 Yup 声明来自 GQLoom 的元数据：
+
+```ts yup.d.ts
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+```
+
 ## 声明简单标量
 
 在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../fundamentals-features/silk)使用：
@@ -104,14 +115,118 @@ export const { Cat } = collectNames({
 ```
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
 
-#### 使用 `asObjectType`
+#### 使用 `asObjectType` 元数据
 
-### 添加更多元信息
+```ts
+import { string, boolean, object, number } from "yup"
+
+export const Cat = object({
+  name: string().required(),
+  age: number().integer().required(),
+  loveFish: boolean(),
+}).meta({ asObjectType: { name: "Cat" } })
+```
+在上面的代码中，我们在 Yup Schema 中使用 `meta` 函数来为对象定义名称。
+在这里，我们定义了名称为 `asObjectType` 元数据，并将其设置为 `{ name: "Cat" }`，这样在生成的 GraphQL Schema 中，该对象将具有名称 `Cat`。
+
+### 添加更多元数据
+
+我们可以在 Yup Schema 中使用 `meta` 函数来添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
+```ts
+import { string, boolean, object, number } from "yup"
+
+export const Cat = object({
+  name: string().required(),
+  age: number().integer().required(),
+  loveFish: boolean(),
+}).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
+```
+
+在上面的代码中，我们为 `Cat` 对象添加了 `description` 元数据，这样在生成的 GraphQL Schema 中，该对象将具有描述 `A cute cat`：
+
+```graphql
+"""A cute cat"""
+type Cat {
+  name: String!
+  age: Int!
+  loveFish: Boolean
+}
+```
+
+我们还可以使用元数据中的 `asField` 属性为字段添加元数据，例如 `description` 等：
+
+```ts
+import { string, boolean, object, number } from "yup"
+
+export const Cat = object({
+  name: string().required(),
+  age: number()
+    .integer()
+    .meta({ asField: { description: "How old is the cat" } }),
+  loveFish: boolean(),
+}).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
+```
+
+在上面的代码中，我们为 `age` 字段添加了 `description` 元数据，最终得到如下 GraphQL Schema：
+
+```graphql
+"""A cute cat"""
+type Cat {
+  name: String!
+
+  """How old is the cat"""
+  age: Int
+  loveFish: Boolean
+}
+```
 
 #### 声明接口
 
+我们还可以使用 asObjectType 函数来声明接口，例如：
+```ts
+
+import { string, object, number } from "yup"
+
+const Fruit = object({
+  name: string().required(),
+  color: string().required(),
+  prize: number()
+    .required()
+    .meta({ description: "How much do you want to win?" }),
+})
+  .meta({ description: "Fruit Interface" })
+  .label("Fruit")
+
+const Orange = object({
+  name: string().required(),
+  color: string().required(),
+  prize: number().required(),
+})
+  .meta({ asObjectType: { interfaces: [Fruit] } })
+  .label("Orange")
+```
+在上面的代码中，我们使用 `asObjectType` 中的 `interfaces` 属性将 `Orange` 对象声明为 `Fruit` 接口的实现。
+
 #### 省略字段
 
+我们还可以使用 asField 函数将 type 设置为 null 来省略字段，例如：
+```ts
+import { string, boolean, object, number } from "yup"
+
+export const Cat = object({
+  name: string().required(),
+  age: number()
+    .integer()
+    .meta({ asField: { description: "How old is the cat" } }),
+  loveFish: boolean(),
+}).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
+```
+将得到如下 GraphQL Schema：
+```graphql
+type Dog {
+  name: String
+}
+```
 ## 声明联合类型
 
 ## 声明枚举类型

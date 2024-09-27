@@ -137,9 +137,9 @@ export const Cat = z
 
 在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `superRefine()` 中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
 
-### 添加更多元信息
+### 添加更多元数据
 
-通过 `asObjectType` 函数，我们可以为对象添加更多元信息，例如 `description`、`deprecationReason`、`extensions` 等。
+通过 `asObjectType` 函数，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
 
 ```ts
 import { z } from "zod"
@@ -159,7 +159,7 @@ export const Cat = z
   )
 ```
 
-在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元信息，该元信息将在 GraphQL Schema 中呈现：
+在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元数据，该元数据将在 GraphQL Schema 中呈现：
 ```graphql
 """A cute cat"""
 type Cat {
@@ -169,7 +169,7 @@ type Cat {
 }
 ```
 
-我们还可以使用 asField 函数为字段添加元信息，例如 description、type 等。
+我们还可以使用 asField 函数为字段添加元数据，例如 description、type 等。
 ```ts
 import { z } from "zod"
 import { asFieldType, asObjectType } from "@gqloom/zod"
@@ -193,7 +193,7 @@ export const Cat = z
   )
 ```
 
-在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元信息，最终得到如下 GraphQL Schema：
+在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
 ```graphql
 """A cute cat"""
