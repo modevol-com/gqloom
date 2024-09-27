@@ -229,7 +229,76 @@ type Dog {
 ```
 ## 声明联合类型
 
+使用来自 `@gqloom/yup` 的 `union` 声明联合类型，例如：
+```ts
+import { object, string, number } from "yup"
+import { union } from "@gqloom/yup"
+
+const Cat = object({
+  name: string(). required(),
+  color: string().required(),
+}).label("Cat")
+
+const Dog = object({
+  name: string().required(),
+  height: number().required(),
+}).label("Dog")
+
+const Animal = union([Cat, Dog]).label("Animal")
+```
+在上面的代码中，我们使用 `union` 函数将 `Cat` 和 `Dog` 对象声明为 `Animal` 联合类型的成员。
+
 ## 声明枚举类型
+
+#### 使用 `oneof()`
+
+我们可以使用 `string().oneof()` 来声明枚举类型，例如：
+
+```ts
+import { string } from "yup"
+
+const Fruit = string()
+  .oneOf(["apple", "banana", "orange"])
+  .label("Fruit")
+  .meta({
+    asEnumType: {
+      description: "Some fruits you might like",
+      valuesConfig: {
+        apple: { description: "Apple is red" },
+        banana: { description: "Banana is yellow" },
+        orange: { description: "Orange is orange" },
+      },
+    },
+  })
+```
+
+#### 使用 `enum`
+
+我们还可以使用 `enum` 来声明枚举类型，例如：
+```ts
+import { mixed } from "yup"
+
+enum FruitEnum {
+  apple,
+  banana,
+  orange,
+}
+
+const Fruit = mixed()
+  .oneOf(Object.values(FruitEnum) as FruitEnum[])
+  .label("Fruit")
+  .meta({
+    asEnumType: {
+      enum: FruitEnum,
+      description: "Some fruits you might like",
+      valuesConfig: {
+        apple: { description: "Apple is red" },
+        banana: { description: "Banana is yellow" },
+        orange: { description: "Orange is orange" },
+      },
+    },
+  })
+```
 
 ## 自定义类型映射
 
