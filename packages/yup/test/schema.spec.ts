@@ -81,7 +81,7 @@ describe("YupWeaver", () => {
       foo: string()
         .optional()
         .default("foo")
-        .meta({ extension: { defaultValue: fooGetter } }),
+        .meta({ asField: { extensions: { defaultValue: fooGetter } } }),
     }).label("ObjectType")
 
     const objectE1Silk = yupSilk(objectE1Type)

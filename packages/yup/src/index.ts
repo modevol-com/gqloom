@@ -137,7 +137,7 @@ export class YupWeaver {
           name,
           extensions: mergeExtensions(
             { defaultValue: description.default },
-            description.meta?.extension
+            description.meta?.asField?.extensions
           ) as GraphQLObjectTypeExtensions,
           description: description.meta?.description,
           fields: mapValue(objectSchema.fields, (fieldSchemaOrigin, key) => {
@@ -149,7 +149,7 @@ export class YupWeaver {
             return {
               extensions: mergeExtensions(
                 { defaultValue: fieldDesc.default },
-                fieldDesc.meta?.extension
+                fieldDesc.meta?.asField?.extensions
               ),
               type: YupWeaver.toNullableGraphQLType(fieldSchema),
               description: fieldDesc?.meta?.description,
