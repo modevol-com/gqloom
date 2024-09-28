@@ -7,10 +7,9 @@ import {
 import * as path from "path"
 
 export default defineConfig({
-  // 文档根目录
   root: "docs",
   title: "GQLoom",
-  lang: "zh",
+  lang: "en",
   logo: { dark: "/gqloom-name.svg", light: "/gqloom-name-light.svg" },
   icon: "/gqloom.svg",
   globalStyles: path.join(__dirname, "styles/index.css"),
