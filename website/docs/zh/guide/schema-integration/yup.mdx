@@ -153,21 +153,22 @@ type Cat {
 }
 ```
 
-我们还可以使用元数据中的 `asField` 属性为字段添加元数据，例如 `description` 等：
+我们还可以使用元数据中的 `asField` 属性为字段添加元数据，例如 `description`、`type` 等：
 
 ```ts
 import { string, boolean, object, number } from "yup"
+import { GraphQLInt } from "graphql"
 
 export const Cat = object({
   name: string().required(),
-  age: number()
-    .integer()
-    .meta({ asField: { description: "How old is the cat" } }),
+  age: number().meta({
+    asField: { type: () => GraphQLInt, description: "How old is the cat" },
+  }),
   loveFish: boolean(),
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
 ```
 
-在上面的代码中，我们为 `age` 字段添加了 `description` 元数据，最终得到如下 GraphQL Schema：
+在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
 ```graphql
 """A cute cat"""
