@@ -2,7 +2,7 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 # Mercurius
 
-[Mercurius](https://fastify.dev/) 是用于 [Fastify](https://www.fastify.io) 的 GraphQL 适配器
+[Mercurius](https://mercurius.dev/) 是用于 [Fastify](https://www.fastify.io/) 的 GraphQL 适配器
 
 ## 安装
 
@@ -26,7 +26,7 @@ app.listen({ port: 4000 }, () => {
 
 ## 上下文
 
-在与 `Mercurius` 同时使用 GQLoom 时，你可以使用 `YogaInitialContext` 来标注上下的类型：
+在与 `Mercurius` 同时使用 GQLoom 时，你可以使用 `MercuriusContext` 来标注上下的类型：
 
 ```ts
 import { useContext } from "@gqloom/core"
