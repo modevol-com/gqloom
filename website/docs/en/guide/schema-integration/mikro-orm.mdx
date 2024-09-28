@@ -1,3 +1,500 @@
 import { PackageManagerTabs } from 'rspress/theme';
 
 # Mikro ORM
+
+:::warning 警告
+GQLoom's foundation for Mikro ORM is currently in an experimental stage. Some common features may be missing. Existing features are not well-tested. Please feel free to report any issues on [GitHub](https://github.com/modevol-com/gqloom/issues).
+:::
+
+[MikroORM](https://mikro-orm.io/) is an excellent TypeScript ORM with support for a variety of databases, such as MySQL, PostgreSQL, SQLite, and so on.
+
+`@gqloom/mikro-orm` provides integration of GQLoom with MikroORM:
+- Using MikroORM's Entity Schema as silk;
+- Weaving silk into MikroORM's Entity Schema;
+- Generate GraphQL operations from MikroORM's Entity Schema.
+
+## Installation
+
+<PackageManagerTabs command="install @gqloom/mikro-orm @mikro-orm/core" />
+
+You can find more information about the installation in the [Mikro ORM documentation](https://mikro-orm.io/docs/quick-start#installation).
+
+## Using MikroORM's Entity Schema as a Silk Thread
+
+Use the `mikroSilk` method to use MikroORM's Entity Schema as a silk:
+
+```ts
+interface IBook {
+  ISBN: string
+  sales: number
+  title: string
+  isPublished: boolean
+  price: number
+  tags: string[]
+  author: Ref<IAuthor>
+}
+
+interface IAuthor {
+  name: string
+}
+
+const Author = mikroSilk(
+  new EntitySchema<IAuthor>({
+    name: "Author",
+    properties: {
+      name: { type: "string" },
+    },
+  })
+)
+
+const Book = mikroSilk(
+  new EntitySchema<IBook>({
+    name: "Book",
+    properties: {
+      ISBN: { type: "string", primary: true },
+      sales: { type: "number", hidden: false },
+      title: { type: "string" },
+      isPublished: { type: Boolean },
+      price: { type: "number", nullable },
+      tags: { type: "string[]", array: true },
+      author: { entity: () => Author, kind: "m:1", ref: true },
+    },
+  }),
+  { description: "A book" }
+)
+```
+
+### Customizing type mappings
+
+To accommodate more database column types, we can extend GQLoom to add more type mappings.
+
+First we use `MikroWeaver.config` to configure the type mappings. Here we import the `GraphQLDateTime` and `GraphQLJSONObject` scalars from `graphql-scalars`, and when we encounter the `date`, `jsonb` types, we map them to the corresponding GraphQL scalars.
+
+```ts
+import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
+import { MikroWeaver } from "@gqloom/mikro-orm"
+
+const mikroWeaverConfig = MikroWeaver.config({
+  presetGraphQLType: (property: EntityProperty) => {
+    switch (MikroWeaver.extractSimpleType(property.type)) {
+      case "date":
+        return GraphQLDateTime
+      case "json":
+        return GraphQLJSONObject
+    }
+  },
+})
+```
+
+## Weaving Silk into MikroORM's Entity Schema
+
+GQLoom's ability to weave silk into MikroORM's Entity Schema allows us to define Entity Schema with less code.
+In the following example, we will use `Valibot` Schema as the silk to define MikroORM's Entity Schema.
+
+### Creating the weaver
+
+First, we need to create a function that weaves the `Valibot` Schema into MikroORM's Entity Schema:
+
+```ts
+import {
+  type CallableEntitySchemaWeaver,
+  EntitySchemaWeaver,
+} from "@gqloom/mikro-orm"
+import {
+  type ValibotSchemaIO,
+  valibotSilk,
+  ValibotWeaver,
+} from "@gqloom/Valibot"
+
+// Use only `valibotSilk` without additional configuration.
+export const weaveEntitySchema: CallableEntitySchemaWeaver<ValibotSchemaIO> =
+  EntitySchemaWeaver.createWeaver<ValibotSchemaIO>(valibotSilk)
+
+// Using `valibotSilk` with additional configuration
+export const weaveEntitySchema1: CallableEntitySchemaWeaver<ValibotSchemaIO> =
+  EntitySchemaWeaver.createWeaver<ValibotSchemaIO>(
+    ValibotWeaver.useConfig(valibotWeaverConfig)
+  )
+
+// Customizing the Mapping of GraphQL Types to Database Column Types
+export const weaveEntitySchema2: CallableEntitySchemaWeaver<ValibotSchemaIO> =
+  EntitySchemaWeaver.createWeaver<ValibotSchemaIO>(valibotSilk，{
+    getProperty: (gqlType, field) => {
+      const columnType = (() => {
+        if (extensions.mikroProperty?.primary === true) return PostgresColumn.id
+        if (gqlType instanceof GraphQLObjectType) return PostgresColumn.jsonb
+        switch (gqlType) {
+          case GraphQLString:
+            return PostgresColumn.text
+          case GraphQLInt:
+            return PostgresColumn.integer
+          case GraphQLFloat:
+            return PostgresColumn.float
+          case GraphQLBoolean:
+            return PostgresColumn.bool
+          case GraphQLJSON:
+          case GraphQLJSONObject:
+            return PostgresColumn.jsonb
+          case GraphQLID:
+            return PostgresColumn.id
+        }
+      })()
+      return columnType ? { columnType } : undefined
+    },
+  })
+```
+
+### Defining MikroORM's Entity Schema
+
+In the above code, we created the `weaveEntitySchema` function to weave the `Valibot` silk into the Entity Schema of MikroORM.
+Now we will use the `weaveEntitySchema` function to define the Mikro Entity Schema.
+
+```ts
+import * as v from "valibot"
+import { asField } from "@gqloom/valibot"
+import { weaveEntitySchema } from "./weaveEntitySchema"
+
+const Author = weaveEntitySchema(
+  v.object({
+    id: v.pipe(
+      v.string(),
+      asField({ extensions: { mikroProperty: { primary: true } } })
+    ),
+    name: v.string(),
+  }),
+  {
+    name: "Author",
+    indexes: [{ properties: ["name"] }],
+  }
+)
+```
+
+In the above code, we take the object of `Valibot` as the first parameter of `weaveEntitySchema` and pass the configuration of the EntitySchema in the second parameter. Here, we have defined an `Author` entity with `id` and `name` attributes, where `id` is the primary key of the entity, and in this case, we have also added an index to the `name` attribute.
+
+### Defining Relationships
+
+In MikroORM, a [relationship](https://mikro-orm.io/docs/relationships) is a way to link multiple entities together. In GQLoom, we can use `weaveEntitySchema.withRelations` to define relationships for entities.
+
+```ts
+import * as v from "valibot"
+import { asField } from "@gqloom/valibot"
+import { manyToOne } from "@gqloom/mikro-orm"
+import { weaveEntitySchema } from "./weaveEntitySchema"
+
+const Book = weaveEntitySchema.withRelations(
+  v.object({
+    ISBN: v.pipe(
+      v.string(),
+      asField({ extensions: { mikroProperty: { primary: true } } })
+    ),
+    sales: v.number(),
+    title: v.string(),
+  }),
+  {
+    author: manyToOne(() => Author, { nullable: true }),
+  }
+)
+```
+
+In the code above, we used `weaveEntitySchema.withRelations` to define a many-to-one relationship on `author` for the `Book` entity, which points to the `Author` entity, and the relationship is optional, and you can define more information about the configuration of the `author` relationship in the second parameter of `manyToOne`. configuration of the relationship.
+
+## Generating GraphQL Operations from MikroORM's Entity Schema
+
+GQLoom provides the ability to generate GraphQL operations directly from MikroORM's Entity Schema, which greatly simplifies the development process.
+
+First, we need to create the wire bobbin from the Entity Schema.
+
+```ts
+import { EntitySchema } from "@mikro-orm/core"
+import { MikroOperationBobbin, mikroSilk } from "@gqloom/mikro-orm"
+
+interface IGiraffe {
+  id: string
+  name: string
+  birthday: Date
+  height?: number | null
+}
+
+const Giraffe = mikroSilk(
+  new EntitySchema<IGiraffe>({
+    name: "Giraffe",
+    properties: {
+      id: { type: "number", primary: true },
+      name: { type: "string" },
+      birthday: { type: "Date" },
+      height: { type: "number", nullable: true },
+    },
+  })
+)
+
+const giraffeBobbin = new MikroOperationBobbin(Giraffe, () => orm.em)
+```
+
+In the code above, we first define a `Giraffe` entity and then create a bobbin using `MikroOperationBobbin`. From the bobbin, we can generate GraphQL operations directly.
+```ts
+const GiraffeResolver = resolver.of(Giraffe, {
+  giraffe: giraffeBobbin.FindOneQuery(),
+  giraffes: giraffeBobbin.FindManyQuery(),
+  createGiraffe: giraffeBobbin.CreateMutation(),
+  updateGiraffe: giraffeBobbin.UpdateMutation(),
+  deleteGiraffe: giraffeBobbin.DeleteOneMutation(),
+})
+
+const schema = weave(GiraffeResolver)
+```
+
+With the above simple code, we can generate GraphQL operations from `Giraffe` entities and weave them into a GraphQL Schema using the `weave` function.
+The resulting complete GraphQL Schema looks like this:
+
+```graphql
+type Query {
+  giraffe(id: ID!): Giraffe!
+  giraffes(
+    limit: Int
+    orderBy: GiraffeFindManyOptionsOrderBy
+    skip: Int
+    where: GiraffeFindManyOptionsWhere
+  ): [Giraffe!]!
+}
+
+type Mutation {
+  createGiraffe(data: GiraffeCreateInput!): Giraffe!
+  deleteGiraffe(id: ID!): Giraffe
+  updateGiraffe(data: GiraffeUpdateInput!): Giraffe!
+}
+
+type Giraffe {
+  birthday: String!
+  height: Float
+  id: ID!
+  name: String!
+}
+
+input GiraffeCreateInput {
+  birthday: String!
+  height: Float
+  id: ID
+  name: String!
+}
+
+input GiraffeFindManyOptionsOrderBy {
+  birthday: MikroQueryOrder
+  height: MikroQueryOrder
+  id: MikroQueryOrder
+  name: MikroQueryOrder
+}
+
+input GiraffeFindManyOptionsWhere {
+  birthday: StringMikroComparisonOperators
+  height: FloatMikroComparisonOperators
+  id: IDMikroComparisonOperators
+  name: StringMikroComparisonOperators
+}
+
+input GiraffeUpdateInput {
+  birthday: String
+  height: Float
+  id: ID!
+  name: String
+}
+
+enum MikroQueryOrder {
+  ASC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
+  DESC
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
+}
+
+input FloatMikroComparisonOperators {
+  """
+  <@
+  """
+  contained: [Float!]
+
+  """
+  @>
+  """
+  contains: [Float!]
+
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: Float
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: Float
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: Float
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [Float!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: Float
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: Float
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: Float
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [Float!]
+
+  """
+  &&
+  """
+  overlap: [Float!]
+}
+
+input IDMikroComparisonOperators {
+  """
+  <@
+  """
+  contained: [ID!]
+
+  """
+  @>
+  """
+  contains: [ID!]
+
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: ID
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: ID
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: ID
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [ID!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: ID
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: ID
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: ID
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [ID!]
+
+  """
+  &&
+  """
+  overlap: [ID!]
+}
+
+input StringMikroComparisonOperators {
+  """
+  <@
+  """
+  contained: [String!]
+
+  """
+  @>
+  """
+  contains: [String!]
+
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: String
+
+  """
+  Full text. A driver specific full text search function.
+  """
+  fulltext: String
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: String
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: String
+
+  """
+  ilike
+  """
+  ilike: String
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [String!]
+
+  """
+  Like. Uses LIKE operator
+  """
+  like: String
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: String
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: String
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: String
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [String!]
+
+  """
+  &&
+  """
+  overlap: [String!]
+
+  """
+  Regexp. Uses REGEXP operator
+  """
+  re: String
+}
+```
