@@ -1,3 +1,43 @@
 import { PackageManagerTabs } from 'rspress/theme';
 
 # Yoga
+
+GraphQL Yoga is a batteries-included cross-platform [GraphQL over HTTP spec-compliant](https://github.com/enisdenjo/graphql-http/tree/master/implementations/graphql-yoga) GraphQL server 
+powered by [Envelop](https://envelop.dev) and [GraphQL Tools](https://graphql-tools.com) that runs anywhere; 
+focused on easy setup, performance and great developer experience.
+
+## Installation
+
+<PackageManagerTabs command="install graphql graphql-yoga @gqloom/core" />
+
+## Usage
+
+```ts
+import { weave } from "@gqloom/core"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+import { HelloResolver } from "./resolvers"
+
+const schema = weave(HelloResolver)
+
+const yoga = createYoga({ schema })
+
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+## Contexts
+
+When using GQLoom together with `Yoga`, you can use `YogaInitialContext` to label the type of context:
+
+```ts
+import { useContext } from "@gqloom/core"
+import { type YogaInitialContext } from "graphql-yoga"
+
+export function useAuthorization() {
+  return useContext<YogaInitialContext>().request.headers.get("Authorization")
+}
+```
+
+You can also learn more about contexts in the [Yoga documentation](https://the-guild.dev/graphql/yoga-server/docs/features/context).
