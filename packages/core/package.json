@@ -37,6 +37,12 @@
   ],
   "author": "xcfox",
   "license": "MIT",
+  "homepage": "https://gqloom.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/modevol-com/gqloom.git",
+    "directory": "packages/core"
+  },
   "publishConfig": {
     "access": "public"
   }

@@ -43,6 +43,12 @@
     "@gqloom/core": "workspace:*",
     "valibot": "^0.37.0"
   },
+  "homepage": "https://gqloom.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/modevol-com/gqloom.git",
+    "directory": "packages/valibot"
+  },
   "publishConfig": {
     "access": "public"
   }

@@ -43,6 +43,12 @@
     "yup": "^1.4.0",
     "@gqloom/core": "workspace:*"
   },
+  "homepage": "https://gqloom.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/modevol-com/gqloom.git",
+    "directory": "packages/yup"
+  },
   "publishConfig": {
     "access": "public"
   }
