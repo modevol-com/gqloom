@@ -1,1 +1,1 @@
-["valibot", "zod", "yup", "mikro-orm", "prisma"]
+["valibot", "zod", "yup", "mikro-orm", "prisma", "drizzle"]
