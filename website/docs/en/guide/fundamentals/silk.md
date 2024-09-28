@@ -69,7 +69,7 @@ Duplicate definitions cost the code simplicity and increased maintenance costs.
 The good thing is that we have schema libraries like [Valibot](https://valibot.dev/), [Zod](https://zod.dev/) that create Schemas that will carry TypeScript types and remain typed at runtime.
 `GQLoom` can use these Schemas directly as silks without duplicating definitions.
 
-### Use [Valibot](https://valibot.dev/) to create silk:
+### Use Valibot to create silk:
 
 ```ts
 import * as v from "valibot"
@@ -90,7 +90,7 @@ const Cat = valibotSilk(
 
 In the code above, we have created some simple Schema as silk using [Valibot](https://valibot.dev/), you can learn how to create more complex types using [Valibot integration](../schema-integration/valibot) section to learn how to create more complex types using [Valibot](https://valibot.dev/).
 
-### Use [Zod](https://zod.dev/) to create silk:
+### Use Zod to create silk:
 
 ```ts
 import { z } from "zod"
