@@ -12,7 +12,7 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 <PackageManagerTabs command="install @gqloom/core zod @gqloom/zod" />
 
-## 声明简单标量
+## 定义简单标量
 
 在 GQLoom 中，可以使用 `zodSilk` 将 Zod Schema 作为[丝线](../fundamentals/silk)使用：
 
@@ -43,7 +43,7 @@ export const HelloResolver = resolver({
 })
 ```
 
-## 声明对象
+## 定义对象
 
 我们可以使用 Zod 定义对象，并将其作为[丝线](../fundamentals/silk)使用：
 ```ts
@@ -255,11 +255,11 @@ type Dog {
 }
 ```
 
-## 声明联合类型
+## 定义联合类型
 
 #### 使用 z.discriminatedUnion
 
-我们推荐使用 `z.discriminatedUnion` 来声明联合类型，例如：
+我们推荐使用 `z.discriminatedUnion` 来定义联合类型，例如：
 ```ts
 import { z } from "zod"
 import { asUnionType } from "@gqloom/zod"
@@ -287,7 +287,7 @@ const Animal = z
 
 #### 使用 z.union
 
-我们还可以使用 `union` 来定义联合类型：
+我们还可以使用 `z.union` 来定义联合类型：
 
 ```ts
 import { z } from "zod"
@@ -317,14 +317,13 @@ collectNames({ Cat, Dog, Animal })
 在上面的代码中，我们使用 `z.union` 函数创建了一个联合类型。对于 `Animal` 来说，我们通过 `resolveType` 函数来区分具体的类型。
 在这里，如果一个动物它喜欢鱼，那么它就是一只猫，否则就是一只狗。
 
-
-## 声明枚举类型
+## 定义枚举类型
 
 我们可以使用 `z.enum` 或 `z.nativeEnum` 定义枚举类型。
 
 #### 使用 z.enum
 
-通常，我们更推荐使用 `z.enum` 来声明枚举类型，例如：
+通常，我们更推荐使用 `z.enum` 来定义枚举类型，例如：
 ```ts
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
@@ -345,7 +344,7 @@ export type IFruit = z.infer<typeof Fruit>
 
 #### 使用 z.nativeEnum
 
-我们还可以使用 `z.nativeEnum` 来声明枚举类型，例如：
+我们还可以使用 `z.nativeEnum` 来定义枚举类型，例如：
 ```ts
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"

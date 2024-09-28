@@ -23,7 +23,7 @@ declare module "yup" {
 }
 ```
 
-## 声明简单标量
+## 定义简单标量
 
 在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../fundamentals/silk)使用：
 
@@ -54,7 +54,7 @@ export const HelloResolver = resolver({
 })
 
 ```
-## 声明对象
+## 定义对象
 
 我们可以使用 Yup 定义对象，并将其作为[丝线](../fundamentals/silk)使用：
 ```ts
@@ -228,9 +228,9 @@ type Dog {
   name: String
 }
 ```
-## 声明联合类型
+## 定义联合类型
 
-使用来自 `@gqloom/yup` 的 `union` 声明联合类型，例如：
+使用来自 `@gqloom/yup` 的 `union` 定义联合类型，例如：
 ```ts
 import { object, string, number } from "yup"
 import { union } from "@gqloom/yup"
@@ -249,11 +249,11 @@ const Animal = union([Cat, Dog]).label("Animal")
 ```
 在上面的代码中，我们使用 `union` 函数将 `Cat` 和 `Dog` 对象声明为 `Animal` 联合类型的成员。
 
-## 声明枚举类型
+## 定义枚举类型
 
 #### 使用 `oneof()`
 
-我们可以使用 `string().oneof()` 来声明枚举类型，例如：
+我们可以使用 `string().oneof()` 来定义枚举类型，例如：
 
 ```ts
 import { string } from "yup"
@@ -275,7 +275,7 @@ const Fruit = string()
 
 #### 使用 `enum`
 
-我们还可以使用 `enum` 来声明枚举类型，例如：
+我们还可以使用 `enum` 来定义枚举类型，例如：
 ```ts
 import { mixed } from "yup"
 

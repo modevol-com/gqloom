@@ -23,7 +23,7 @@ declare module "yup" {
 }
 ```
 
-## Declare simple scalars
+## Defining simple scalars
 
 Yup Schema can be used as a [silk](../fundamentals/silk) in GQLoom using `yupSilk`:
 
@@ -42,7 +42,7 @@ const IntScalar = yupSilk(number().integer())
 
 ## Resolver
 
-In order to use Yup Schema as a Silk, we need to wrap `yupSilk` around it, and a lot of wrapping can be a bit cumbersome in development, so `@gqloom/yup` provides re-exported parser and operation constructors to simplify the process.
+In order to use Yup Schema as a Silk, we need to wrap `yupSilk` around it, and a lot of wrapping can be a bit cumbersome in development, so `@gqloom/yup` provides re-exported resolver and operation constructors to simplify the process.
 The `resolver`, `query`, `mutation`, and `field` imported from `@gqloom/yup` will automatically wrap `yupSilk` internally so that in most cases we can use Yup Schema directly.
 
 ```ts
@@ -54,7 +54,7 @@ export const HelloResolver = resolver({
 })
 
 ```
-## Declaring objects
+## Defining objects
 
 We can use Yup to define objects and use them as [silk](../fundamentals/silk) to use:
 ```ts
@@ -327,7 +327,7 @@ import { weave } from "@gqloom/yup"
 export const schema = weave(yupWeaverConfig, HelloResolver)
 ```
 
-## Default Type Mapping
+## Default Type Mappings
 
 The following table lists the default mappings between Yup types and GraphQL types in GQLoom:
 

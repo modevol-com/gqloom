@@ -10,7 +10,7 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 <PackageManagerTabs command="install @gqloom/core valibot @gqloom/valibot" />
 
-## Declare simple scalars
+## Defining simple scalars
 
 Valibot Schema can be used as a [silk](../fundamentals/silk) in GQLoom using `valibotSilk`:
 
@@ -29,7 +29,7 @@ const IntScalar = valibotSilk(v.pipe(v.nullable(v.number()), v.integer())) // Gr
 
 ## Resolver
 
-In order to use Valibot Schema as a silk, we need to wrap `valibotSilk` around it, and a lot of wrapping can be a bit cumbersome in development, so `@gqloom/valibot` provides re-exported resolver and operations constructors to simplify the process.
+In order to use Valibot Schema as a silk, we need to wrap `valibotSilk` around it, and a lot of wrapping can be a bit cumbersome in development, so `@gqloom/valibot` provides re-exported resolver and operation constructors to simplify the process.
 The `resolver`, `query`, `mutation`, and `field` imported from `@gqloom/valibot` will automatically wrap `valibotSilk` internally so that in most cases we can use the Valibot Schema directly.
 
 ```ts
@@ -412,7 +412,7 @@ import { weave } from "@gqloom/valibot"
 export const schema = weave(valibotWeaverConfig, HelloResolver)
 ```
 
-## Default Type Mapping
+## Default Type Mappings
 
 The following table lists the default mappings between Valibot types and GraphQL types in GQLoom:
 
