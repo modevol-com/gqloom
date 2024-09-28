@@ -67,7 +67,6 @@ createServer(yoga).listen(4000, () => {
 在上面的代码中，我们使用 `useContext` 函数从上下文中获取当前请求的 `Authorization` 头部，并将其与 `Hello` 字符串连接起来。
 `useContext` 函数接受一个泛型参数，该参数指定上下文的类型，在这里，我们传入了 `YogaInitialContext` 类型。
 
-
 让我们尝试调用这个查询：
 ```shell
 curl -X POST http://localhost:4000/graphql -H "content-type: application/json" -H "authorization: Tom" --data-raw '{"query": "query { hello }"}'
