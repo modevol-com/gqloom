@@ -33,14 +33,15 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "graphql": ">= 16.8.0",
     "@gqloom/core": ">= 0.2.0",
-    "@mikro-orm/core": ">= 6.0.0"
+    "@mikro-orm/core": ">= 6.0.0",
+    "graphql": ">= 16.8.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@mikro-orm/better-sqlite": "^6.2.8",
-    "@mikro-orm/core": "^6.2.8"
+    "@mikro-orm/core": "^6.2.8",
+    "prisma": "^5.20.0"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
@@ -50,5 +51,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@prisma/client": "5.20.0"
   }
 }
