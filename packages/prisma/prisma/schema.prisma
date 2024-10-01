@@ -16,10 +16,12 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+  id        Int      @id @default(autoincrement())
+  /// user's email is unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  posts     Post[]
 }
 
 model Post {
