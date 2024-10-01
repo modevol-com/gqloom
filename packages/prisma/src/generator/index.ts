@@ -40,7 +40,13 @@ generatorHandler({
       JSON.stringify({ models }, null, 2)
     )
     await genJSFile(options.dmmf, {
-      outputDir,
+      outputFile: path.resolve(outputDir, "./index.js"),
+      esm: true,
+      ...config,
+    })
+    await genJSFile(options.dmmf, {
+      outputFile: path.resolve(outputDir, "./index.cjs"),
+      esm: false,
       ...config,
     })
     await genTsDeclaration(options.dmmf, {

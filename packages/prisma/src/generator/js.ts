@@ -1,19 +1,28 @@
 import { type DMMF } from "@prisma/generator-helper"
 import { type GQLoomGeneratorConfig } from "."
-import * as path from "path"
 import * as fs from "fs/promises"
 
 export async function genJSFile(
   dmmf: DMMF.Document,
-  config: { outputDir: string } & GQLoomGeneratorConfig
+  config: { outputFile: string; esm?: boolean } & GQLoomGeneratorConfig
 ) {
   const lines: string[] = []
 
-  lines.push(
-    `const { PrismaWeaver } = require("${config.gqloomPath ?? "@gqloom/prisma"}")`
-  )
+  if (config.esm) {
+    lines.push(
+      `import { PrismaWeaver } from "${config.gqloomPath ?? "@gqloom/prisma"}"`
+    )
+  } else {
+    lines.push(
+      `const { PrismaWeaver } = require("${config.gqloomPath ?? "@gqloom/prisma"}")`
+    )
+  }
 
-  lines.push(`const datamodel = require("./datamodel.json")`)
+  if (config.esm) {
+    lines.push(`import datamodel from "./datamodel.json"`)
+  } else {
+    lines.push(`const datamodel = require("./datamodel.json")`)
+  }
   lines.push("\n")
   for (const model of dmmf.datamodel.models) {
     lines.push(
@@ -23,14 +32,13 @@ export async function genJSFile(
 
   // export silks
   lines.push("\n")
-  lines.push("module.exports = {")
+  if (config.esm) lines.push("export {")
+  else lines.push("module.exports = {")
+
   for (const model of dmmf.datamodel.models) {
     lines.push(`  ${model.name}Silk,`)
   }
   lines.push("}")
 
-  await fs.writeFile(
-    path.resolve(config.outputDir, "./index.js"),
-    lines.join("\n")
-  )
+  await fs.writeFile(config.outputFile, lines.join("\n"))
 }
