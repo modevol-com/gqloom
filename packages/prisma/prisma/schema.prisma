@@ -5,6 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator gqloom {
+  provider   = "node ./dist/generator.cjs"
+  gqloomPath = "../dist"
+}
+
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
