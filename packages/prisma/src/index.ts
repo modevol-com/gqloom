@@ -17,6 +17,7 @@ import {
   GraphQLFloat,
   GraphQLNonNull,
   type GraphQLOutputType,
+  GraphQLEnumType,
 } from "graphql"
 
 export class PrismaWeaver {
@@ -30,6 +31,15 @@ export class PrismaWeaver {
       list() {
         return silk.list(this) as GraphQLSilk<TModal[]>
       },
+    }
+  }
+
+  static unravelEnum<TEnum = any>(
+    enumType: DMMF.DatamodelEnum
+  ): PrismaEnumSilk<TEnum> {
+    return {
+      [SYMBOLS.GET_GRAPHQL_TYPE]: () =>
+        PrismaWeaver.getGraphQLEnumType(enumType),
     }
   }
 
@@ -103,12 +113,30 @@ export class PrismaWeaver {
         throw new Error(`Unsupported scalar type: ${field.type}`)
     }
   }
+
+  static getGraphQLEnumType(enumType: DMMF.DatamodelEnum): GraphQLEnumType {
+    const existing = weaverContext.getNamedType(
+      enumType.name
+    ) as GraphQLEnumType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLEnumType({
+        name: enumType.name,
+        values: Object.fromEntries(
+          enumType.values.map((it) => [it.name, { value: it.name }])
+        ),
+      })
+    )
+  }
 }
 
 export interface PrismaModelSilk<TModel> extends GraphQLSilk<TModel> {
   nullable(): GraphQLSilk<TModel | null>
   list(): GraphQLSilk<TModel[]>
 }
+
+export interface PrismaEnumSilk<TEnum> extends GraphQLSilk<TEnum> {}
 
 export interface PrismaWeaverConfigOptions {
   presetGraphQLType?: (field: DMMF.Field) => GraphQLOutputType | undefined

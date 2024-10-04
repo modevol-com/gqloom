@@ -1,6 +1,6 @@
 import { type DMMF } from "@prisma/generator-helper"
 import { describe, it, expect } from "vitest"
-import { type GraphQLObjectType, printType, type GraphQLNonNull } from "graphql"
+import { printType, GraphQLNonNull, type GraphQLNamedType } from "graphql"
 import { PrismaWeaver } from "../src"
 import { getGraphQLType, type GraphQLSilk } from "@gqloom/core"
 
@@ -92,8 +92,23 @@ const UserModel: DMMF.Model = {
   isGenerated: false,
 }
 
+const RoleEnum: DMMF.DatamodelEnum = {
+  name: "Role",
+  values: [
+    {
+      name: "USER",
+      dbName: null,
+    },
+    {
+      name: "ADMIN",
+      dbName: null,
+    },
+  ],
+  dbName: null,
+}
+
 describe("PrismaWeaver", () => {
-  it("should unravel silk", () => {
+  it("should unravel model silk", () => {
     const UserSilk = PrismaWeaver.unravel(UserModel)
     expect(printSilk(UserSilk)).toMatchInlineSnapshot(`
       "type User {
@@ -106,9 +121,20 @@ describe("PrismaWeaver", () => {
       }"
     `)
   })
+  it("should unravel enum silk", () => {
+    const RoleSilk = PrismaWeaver.unravelEnum(RoleEnum)
+    expect(printSilk(RoleSilk)).toMatchInlineSnapshot(`
+      "enum Role {
+        USER
+        ADMIN
+      }"
+    `)
+  })
 })
 
 function printSilk(silk: GraphQLSilk) {
-  const type = getGraphQLType(silk) as GraphQLNonNull<GraphQLObjectType>
-  return printType(type.ofType)
+  const type = getGraphQLType(silk) as GraphQLNonNull<GraphQLNamedType>
+  return type instanceof GraphQLNonNull
+    ? printType(type.ofType)
+    : printType(type)
 }

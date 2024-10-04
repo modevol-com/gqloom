@@ -3,9 +3,7 @@ import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 import * as g from "./generated/gqloom"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { PrismaClient, type Prisma } from "@prisma/client"
 
 const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
