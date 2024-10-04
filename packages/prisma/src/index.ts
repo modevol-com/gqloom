@@ -26,6 +26,8 @@ export class PrismaWeaver {
     data?: PrismaDataModel
   ): PrismaModelSilk<TModal> {
     return {
+      model,
+      data,
       [SYMBOLS.GET_GRAPHQL_TYPE]: () =>
         PrismaWeaver.getGraphQLTypeByModel(model, data),
       nullable() {
@@ -41,6 +43,7 @@ export class PrismaWeaver {
     enumType: DMMF.DatamodelEnum
   ): PrismaEnumSilk<TEnum> {
     return {
+      enumType,
       [SYMBOLS.GET_GRAPHQL_TYPE]: () =>
         PrismaWeaver.getGraphQLEnumType(enumType),
     }
@@ -143,12 +146,20 @@ export class PrismaWeaver {
   }
 }
 
-export interface PrismaModelSilk<TModel> extends GraphQLSilk<TModel> {
+export interface PrismaModelSilk<TModel, TRelation extends string = never>
+  extends GraphQLSilk<TModel> {
   nullable(): GraphQLSilk<TModel | null>
   list(): GraphQLSilk<TModel[]>
+
+  model: DMMF.Model
+  data?: PrismaDataModel
+
+  relations?: TRelation
 }
 
-export interface PrismaEnumSilk<TEnum> extends GraphQLSilk<TEnum> {}
+export interface PrismaEnumSilk<TEnum> extends GraphQLSilk<TEnum> {
+  enumType: DMMF.DatamodelEnum
+}
 
 export interface PrismaWeaverConfigOptions {
   presetGraphQLType?: (field: DMMF.Field) => GraphQLOutputType | undefined

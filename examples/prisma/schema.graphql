@@ -9,9 +9,19 @@ type User {
   email: String!
   name: String
   role: Role!
+  posts: [Post!]!
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+type Post {
+  id: ID!
+  createdAt: String!
+  updatedAt: String!
+  published: Boolean!
+  title: String!
+  authorId: Int
 }

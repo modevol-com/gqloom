@@ -37,13 +37,18 @@ export async function genTsDeclaration(
   })
 
   for (const model of dmmf.datamodel.models) {
+    const relations = model.fields.filter((f) => f.kind === "object")
+    const relationsGenerics =
+      relations.length > 0
+        ? ", " + relations.map((r) => `"${r.name}"`).join("|")
+        : ""
     sourceFile.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
       isExported: true,
       declarations: [
         {
           name: `${model.name}`,
-          type: `PrismaModelSilk<I${model.name}>`,
+          type: `PrismaModelSilk<I${model.name}${relationsGenerics}>`,
         },
       ],
     })
