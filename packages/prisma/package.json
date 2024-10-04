@@ -30,6 +30,9 @@
   "scripts": {
     "build": "tsup"
   },
+  "bin": {
+    "prisma-gqloom": "./bin/generator.cjs"
+  },
   "files": [
     "dist"
   ],

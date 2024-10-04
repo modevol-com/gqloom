@@ -26,7 +26,7 @@ export async function genJSFile(
   lines.push("\n")
   for (const model of dmmf.datamodel.models) {
     lines.push(
-      `const ${model.name}Silk = PrismaWeaver.unravel(datamodel.models.${model.name})`
+      `const ${model.name} = PrismaWeaver.unravel(datamodel.models.${model.name})`
     )
   }
 
@@ -36,7 +36,7 @@ export async function genJSFile(
   else lines.push("module.exports = {")
 
   for (const model of dmmf.datamodel.models) {
-    lines.push(`  ${model.name}Silk,`)
+    lines.push(`  ${model.name},`)
   }
   lines.push("}")
 

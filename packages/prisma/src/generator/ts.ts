@@ -23,7 +23,10 @@ export async function genTsDeclaration(
 
   sourceFile.addImportDeclaration({
     moduleSpecifier: config.prismaLocation ?? "@prisma/client",
-    namedImports: dmmf.datamodel.models.map((m) => m.name),
+    namedImports: dmmf.datamodel.models.map((m) => ({
+      name: m.name,
+      alias: `I${m.name}`,
+    })),
     isTypeOnly: true,
   })
 
@@ -33,8 +36,8 @@ export async function genTsDeclaration(
       isExported: true,
       declarations: [
         {
-          name: `${model.name}Silk`,
-          type: `PrismaModelSilk<${model.name}>`,
+          name: `${model.name}`,
+          type: `PrismaModelSilk<I${model.name}>`,
         },
       ],
     })

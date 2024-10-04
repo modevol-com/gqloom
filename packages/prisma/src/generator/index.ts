@@ -9,6 +9,7 @@ const defaultOutput = path.resolve(findPackageRoot(), "./generated")
 export interface GQLoomGeneratorConfig {
   gqloomPath?: string
   clientOutput?: string
+  output?: string
 }
 
 generatorHandler({
