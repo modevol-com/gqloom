@@ -21,10 +21,13 @@ import {
 } from "graphql"
 
 export class PrismaWeaver {
-  static unravel<TModal>(model: DMMF.Model): PrismaModelSilk<TModal> {
+  static unravel<TModal>(
+    model: DMMF.Model,
+    data?: PrismaDataModel
+  ): PrismaModelSilk<TModal> {
     return {
       [SYMBOLS.GET_GRAPHQL_TYPE]: () =>
-        PrismaWeaver.getGraphQLTypeByModel(model),
+        PrismaWeaver.getGraphQLTypeByModel(model, data),
       nullable() {
         return silk.nullable(this as GraphQLSilk)
       },
@@ -43,7 +46,7 @@ export class PrismaWeaver {
     }
   }
 
-  static getGraphQLTypeByModel(model: DMMF.Model) {
+  static getGraphQLTypeByModel(model: DMMF.Model, data?: PrismaDataModel) {
     const existing = weaverContext.getNamedType(model.name)
     if (existing != null) return new GraphQLNonNull(existing)
 
@@ -55,7 +58,7 @@ export class PrismaWeaver {
             Object.fromEntries(
               model.fields
                 .map((field) => {
-                  const fieldConfig = PrismaWeaver.getGraphQLField(field)
+                  const fieldConfig = PrismaWeaver.getGraphQLField(field, data)
                   return fieldConfig
                     ? ([field.name, fieldConfig] as [
                         string,
@@ -71,14 +74,23 @@ export class PrismaWeaver {
   }
 
   static getGraphQLField(
-    field: DMMF.Field
+    field: DMMF.Field,
+    data?: PrismaDataModel
   ): GraphQLFieldConfig<any, any> | undefined {
-    if (field.kind !== "scalar") return
+    const unwrappedType = (() => {
+      switch (field.kind) {
+        case "enum": {
+          const enumType = data?.enums[field.type]
+          if (enumType == null) return
+          return PrismaWeaver.getGraphQLEnumType(enumType)
+        }
+        case "scalar":
+          return PrismaWeaver.getGraphQLTypeByField(field)
+      }
+    })()
+    if (!unwrappedType) return
 
     const description = field.documentation
-    const unwrappedType = PrismaWeaver.getGraphQLTypeByField(field)
-
-    if (!unwrappedType) return
 
     const type = field.isRequired
       ? new GraphQLNonNull(unwrappedType)
@@ -146,4 +158,9 @@ export interface PrismaWeaverConfig
   extends WeaverConfig,
     PrismaWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.prisma"
+}
+
+export interface PrismaDataModel {
+  models: Record<string, DMMF.Model>
+  enums: Record<string, DMMF.DatamodelEnum>
 }

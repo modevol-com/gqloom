@@ -92,6 +92,27 @@ const UserModel: DMMF.Model = {
   isGenerated: false,
 }
 
+const UserWithRoleModel: DMMF.Model = {
+  ...UserModel,
+  fields: [
+    ...UserModel.fields,
+    {
+      name: "role",
+      kind: "enum",
+      isList: false,
+      isRequired: true,
+      isUnique: false,
+      isId: false,
+      isReadOnly: false,
+      hasDefaultValue: true,
+      type: "Role",
+      default: "USER",
+      isGenerated: false,
+      isUpdatedAt: false,
+    },
+  ],
+}
+
 const RoleEnum: DMMF.DatamodelEnum = {
   name: "Role",
   values: [
@@ -127,6 +148,25 @@ describe("PrismaWeaver", () => {
       "enum Role {
         USER
         ADMIN
+      }"
+    `)
+  })
+
+  it("should unravel model with enum silk", () => {
+    const UserWithRoleSilk = PrismaWeaver.unravel(UserWithRoleModel, {
+      enums: { Role: RoleEnum },
+      models: {},
+    })
+
+    expect(printSilk(UserWithRoleSilk)).toMatchInlineSnapshot(`
+      "type User {
+        id: ID!
+
+        """user's email is unique"""
+        email: String!
+        name: String
+        createdAt: String!
+        role: Role!
       }"
     `)
   })
