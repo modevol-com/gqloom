@@ -23,20 +23,31 @@ export async function genJSFile(
   } else {
     lines.push(`const datamodel = require("./datamodel.json")`)
   }
-  lines.push("\n")
+  lines.push("")
   for (const model of dmmf.datamodel.models) {
     lines.push(
-      `const ${model.name} = PrismaWeaver.unravel(datamodel.models.${model.name})`
+      `const ${model.name} = PrismaWeaver.unravel(datamodel.models.${model.name}, datamodel)`
+    )
+  }
+
+  lines.push("")
+
+  for (const enumType of dmmf.datamodel.enums) {
+    lines.push(
+      `const ${enumType.name} = PrismaWeaver.unravelEnum(datamodel.enums.${enumType.name})`
     )
   }
 
   // export silks
-  lines.push("\n")
+  lines.push("")
   if (config.esm) lines.push("export {")
   else lines.push("module.exports = {")
 
   for (const model of dmmf.datamodel.models) {
     lines.push(`  ${model.name},`)
+  }
+  for (const enumType of dmmf.datamodel.enums) {
+    lines.push(`  ${enumType.name},`)
   }
   lines.push("}")
 

@@ -17,16 +17,22 @@ export async function genTsDeclaration(
 
   sourceFile.addImportDeclaration({
     moduleSpecifier: config.gqloomPath ?? "@gqloom/prisma",
-    namedImports: ["PrismaModelSilk"],
+    namedImports: ["PrismaModelSilk", "PrismaEnumSilk"],
     isTypeOnly: true,
   })
 
   sourceFile.addImportDeclaration({
     moduleSpecifier: config.prismaLocation ?? "@prisma/client",
-    namedImports: dmmf.datamodel.models.map((m) => ({
-      name: m.name,
-      alias: `I${m.name}`,
-    })),
+    namedImports: [
+      ...dmmf.datamodel.models.map((m) => ({
+        name: m.name,
+        alias: `I${m.name}`,
+      })),
+      ...dmmf.datamodel.enums.map((m) => ({
+        name: m.name,
+        alias: `I${m.name}`,
+      })),
+    ],
     isTypeOnly: true,
   })
 
@@ -42,6 +48,29 @@ export async function genTsDeclaration(
       ],
     })
   }
+  for (const enumType of dmmf.datamodel.enums) {
+    sourceFile.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
+      isExported: true,
+      declarations: [
+        {
+          name: `${enumType.name}`,
+          type: `PrismaEnumSilk<I${enumType.name}>`,
+        },
+      ],
+    })
+  }
+
+  sourceFile.addExportDeclaration({
+    namedExports: [
+      ...dmmf.datamodel.models.map((m) => ({
+        name: `I${m.name}`,
+      })),
+      ...dmmf.datamodel.enums.map((m) => ({
+        name: `I${m.name}`,
+      })),
+    ],
+  })
 
   await sourceFile.save()
 }
