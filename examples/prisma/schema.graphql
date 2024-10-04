@@ -1,0 +1,17 @@
+type Query {
+  hello: String!
+  user: User
+}
+
+type User {
+  id: ID!
+  createdAt: String!
+  email: String!
+  name: String
+  role: Role!
+}
+
+enum Role {
+  USER
+  ADMIN
+}
