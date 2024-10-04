@@ -4,7 +4,7 @@ import { Tab, Tabs } from 'rspress/theme';
 
 In GQLoom, the `weave` function is used to weave multiple Resolvers or Silks into a single GraphQL Schema.
 
-The `weave` function can take [resolver](... /fundamentals/resolver), [silk](... /fundamentals/silk), weaver configuration, global [middleware](... /fundamentals/middleware)
+The `weave` function can take [resolver](../fundamentals/resolver), [silk](../fundamentals/silk), weaver configuration, global [middleware](../fundamentals/middleware)
 
 ## Weaving resolvers
 The most common usage is to weave multiple resolvers together, for example:
@@ -16,7 +16,7 @@ export const schema = weave(HelloResolver, CatResolver);
 ```
 ## Weaving a single silk
 
-Sometimes we need to weave a single [silk] (... /fundamentals/silk) woven into a GraphQL Schema, for example:
+Sometimes we need to weave a single [silk](../fundamentals/silk) woven into a GraphQL Schema, for example:
 
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
@@ -52,7 +52,7 @@ export const schema = weave(HelloResolver, CatResolver, zodSilk(Dog));
 ## Weaver configuration
 
 ### Input type naming conversion
-In GraphQL, objects are recognized as [type](https://graphql.org/graphql-js/object-types/) and [input](https://graphql.org/graphql-js/mutations-and-input- types/).
+In GraphQL, objects are recognized as [type](https://graphql.org/graphql-js/object-types/) and [input](https://graphql.org/graphql-js/mutations-and-input-types/).
 
 When using `GQLoom`, we usually only use the `object` type, and behind the scenes `GQLoom` will automatically convert the `object` type to the `input` type.
 The advantage of this is that we can use the `object` type directly to define input parameters without having to define the `input` type manually.
