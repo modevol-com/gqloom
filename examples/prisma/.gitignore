@@ -1,2 +1,4 @@
 .env
 prisma/migrations
+
+src/generated
