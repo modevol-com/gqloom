@@ -40,7 +40,7 @@ export async function genTsDeclaration(
     const relations = model.fields.filter((f) => f.kind === "object")
     const relationsGenerics =
       relations.length > 0
-        ? ", " + relations.map((r) => `"${r.name}"`).join("|")
+        ? ", { " + relations.map((r) => `${r.name}: I${r.type}`).join(";") + "}"
         : ""
     sourceFile.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,

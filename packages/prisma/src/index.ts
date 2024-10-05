@@ -4,7 +4,6 @@ import {
   silk,
   notNullish,
   weaverContext,
-  type WeaverConfig,
 } from "@gqloom/core"
 import { type DMMF } from "@prisma/generator-helper"
 import {
@@ -19,6 +18,12 @@ import {
   type GraphQLOutputType,
   GraphQLEnumType,
 } from "graphql"
+import type {
+  PrismaModelSilk,
+  PrismaDataModel,
+  PrismaEnumSilk,
+  PrismaWeaverConfig,
+} from "./types"
 
 export class PrismaWeaver {
   static unravel<TModal>(
@@ -146,32 +151,5 @@ export class PrismaWeaver {
   }
 }
 
-export interface PrismaModelSilk<TModel, TRelation extends string = never>
-  extends GraphQLSilk<TModel> {
-  nullable(): GraphQLSilk<TModel | null>
-  list(): GraphQLSilk<TModel[]>
-
-  model: DMMF.Model
-  data?: PrismaDataModel
-
-  relations?: TRelation
-}
-
-export interface PrismaEnumSilk<TEnum> extends GraphQLSilk<TEnum> {
-  enumType: DMMF.DatamodelEnum
-}
-
-export interface PrismaWeaverConfigOptions {
-  presetGraphQLType?: (field: DMMF.Field) => GraphQLOutputType | undefined
-}
-
-export interface PrismaWeaverConfig
-  extends WeaverConfig,
-    PrismaWeaverConfigOptions {
-  [SYMBOLS.WEAVER_CONFIG]: "gqloom.prisma"
-}
-
-export interface PrismaDataModel {
-  models: Record<string, DMMF.Model>
-  enums: Record<string, DMMF.DatamodelEnum>
-}
+export * from "./bobbin"
+export * from "./types"
