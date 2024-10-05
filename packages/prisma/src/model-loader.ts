@@ -46,9 +46,8 @@ export class EasyDataLoader<TKey, TData> {
   protected async executeBatchLoad(): Promise<void> {
     if (this.queue.length === 0) return
 
-    const keys = this.queue
+    const [keys, resolvers] = [this.queue, this.resolvers]
     this.queue = []
-    const resolvers = new Map(this.resolvers)
     this.resolvers = new Map()
 
     try {
