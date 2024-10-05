@@ -29,6 +29,7 @@ export class EasyDataLoader<TKey, TData> {
   }
 
   public clearByKey(key: TKey): void {
+    this.queue = this.queue.filter((k) => k !== key)
     this.cache.delete(key)
     this.resolvers.delete(key)
   }
