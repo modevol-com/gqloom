@@ -9,6 +9,30 @@ export class EasyDataLoader<TKey, TData> {
     this.resolvers = new Map()
   }
 
+  public load(key: TKey): Promise<TData> {
+    const existing = this.cache.get(key)
+    if (existing) return existing
+
+    const promise = new Promise<TData>((resolve, reject) => {
+      this.queue.push(key)
+      this.resolvers.set(key, [resolve, reject])
+      this.nextTickBatchLoad()
+    })
+    this.cache.set(key, promise)
+    return promise
+  }
+
+  public clear(): void {
+    this.queue = []
+    this.cache = new Map()
+    this.resolvers = new Map()
+  }
+
+  public clearByKey(key: TKey): void {
+    this.cache.delete(key)
+    this.resolvers.delete(key)
+  }
+
   protected queue: TKey[]
   protected cache: Map<TKey, Promise<TData>>
   protected resolvers: Map<
@@ -45,19 +69,6 @@ export class EasyDataLoader<TKey, TData> {
         reject?.(error)
       }
     }
-  }
-
-  public load(key: TKey): Promise<TData> {
-    const existing = this.cache.get(key)
-    if (existing) return existing
-
-    const promise = new Promise<TData>((resolve, reject) => {
-      this.queue.push(key)
-      this.resolvers.set(key, [resolve, reject])
-      this.nextTickBatchLoad()
-    })
-    this.cache.set(key, promise)
-    return promise
   }
 
   protected nextTickPromise?: Promise<void>
