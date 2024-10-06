@@ -28,7 +28,7 @@ import type {
 export class PrismaWeaver {
   static unravel<TModal>(
     model: DMMF.Model,
-    data?: PrismaDataModel
+    data: PrismaDataModel
   ): PrismaModelSilk<TModal> {
     return {
       model,

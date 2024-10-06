@@ -7,9 +7,6 @@ import { printSchema } from "graphql"
 import * as fs from "fs"
 import * as path from "path"
 import { PrismaClient } from "@prisma/client"
-import { PrismaModelBobbin } from "@gqloom/prisma"
-
-const bobbin = new PrismaModelBobbin(g.User)
 
 const db = new PrismaClient({ log: ["query"] })
 

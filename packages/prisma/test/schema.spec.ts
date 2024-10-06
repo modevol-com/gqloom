@@ -130,7 +130,10 @@ const RoleEnum: DMMF.DatamodelEnum = {
 
 describe("PrismaWeaver", () => {
   it("should unravel model silk", () => {
-    const UserSilk = PrismaWeaver.unravel(UserModel)
+    const UserSilk = PrismaWeaver.unravel(UserModel, {
+      models: { User: UserModel },
+      enums: { Role: RoleEnum },
+    })
     expect(printSilk(UserSilk)).toMatchInlineSnapshot(`
       "type User {
         id: ID!
