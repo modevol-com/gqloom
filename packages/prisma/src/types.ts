@@ -42,3 +42,8 @@ export interface PrismaClient {
 
   $disconnect: () => Promise<void>
 }
+
+export interface PrismaDelegate {
+  findUnique: (args: { where: any }) => any
+  findUniqueOrThrow: (args: { where: any }) => any
+}
