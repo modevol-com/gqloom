@@ -9,3 +9,7 @@
 This package provides GQLoom integration with [Prisma](https://www.prisma.io/):
 
 Read more at [GQLoom Document](https://gqloom.dev/guide/schema-integration/prisma).
+
+## TODO:
+
+- [ ] field.hidden in resolver
