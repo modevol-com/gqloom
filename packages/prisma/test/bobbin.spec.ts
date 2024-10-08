@@ -86,9 +86,6 @@ describe("Bobbin", () => {
         },
       })
 
-      const UserBobbin = new PrismaModelBobbin(g.User, db)
-      const PostBobbin = new PrismaModelBobbin(g.Post, db)
-
       const r1 = resolver.of(g.User, {
         users: query(g.User.list(), () => db.user.findMany()),
 
