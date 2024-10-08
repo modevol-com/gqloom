@@ -1,8 +1,11 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, beforeEach } from "vitest"
 import * as g from "./generated"
 import { PrismaClient } from "@prisma/client"
 import { PrismaModelBobbin, type PrismaModelSilk } from "../src"
-import { type InferSilkO } from "@gqloom/core"
+import { type InferSilkO, loom, weave } from "@gqloom/core"
+import { createYoga } from "graphql-yoga"
+
+const { resolver, query } = loom
 
 class TestablePrismaModelBobbin<
   TModalSilk extends PrismaModelSilk<any, any>,
@@ -14,9 +17,7 @@ class TestablePrismaModelBobbin<
 
 describe("Bobbin", () => {
   const db = new PrismaClient()
-  db.cat.findUnique({
-    where: { firstName_lastName: { firstName: "", lastName: "" } },
-  })
+
   it("should be able to create a bobbin", () => {
     const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
     expect(UserBobbin).toBeDefined()
@@ -54,6 +55,10 @@ describe("Bobbin", () => {
   })
 
   describe("relationField", () => {
+    beforeEach(async () => {
+      await db.user.deleteMany()
+      await db.post.deleteMany()
+    })
     const UserBobbin = new PrismaModelBobbin(g.User, db)
     const PostBobbin = new PrismaModelBobbin(g.Post, db)
     it("should be able to create a relationField", () => {
@@ -68,6 +73,76 @@ describe("Bobbin", () => {
       expect(userField.output).toBeTypeOf("object")
       expect(userField.type).toEqual("field")
       expect(userField.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to resolve a relationField", async () => {
+      await db.user.create({
+        data: {
+          name: "John",
+          email: "john@example.com",
+          posts: {
+            create: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
+          },
+        },
+      })
+
+      const UserBobbin = new PrismaModelBobbin(g.User, db)
+      const PostBobbin = new PrismaModelBobbin(g.Post, db)
+
+      const r1 = resolver.of(g.User, {
+        users: query(g.User.list(), () => db.user.findMany()),
+
+        posts: UserBobbin.relationField("posts"),
+      })
+
+      const r2 = resolver.of(g.Post, {
+        posts: query(g.Post.list(), () => db.post.findMany()),
+
+        author: PostBobbin.relationField("author"),
+      })
+      const schema = weave(r1, r2)
+      const yoga = createYoga({ schema })
+      const response = await yoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              users {
+                name
+                posts {
+                  title
+                }
+              }
+              posts {
+                title
+                author {
+                  name
+                }
+              }
+            }
+          `,
+        }),
+      })
+
+      if (response.status !== 200) throw new Error("unexpected")
+      const json = await response.json()
+      expect(json).toMatchObject({
+        data: {
+          users: [
+            {
+              name: "John",
+              posts: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
+            },
+          ],
+          posts: [
+            { title: "Hello World", author: { name: "John" } },
+            { title: "Hello GQLoom", author: { name: "John" } },
+          ],
+        },
+      })
     })
   })
 })
