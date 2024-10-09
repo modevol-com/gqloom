@@ -179,6 +179,19 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
   })
+
+  it("should be able to create countQueryInput", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.countQueryInput())).toMatchInlineSnapshot(`
+      "type UserCountQueryInput {
+        where: UserWhereInput
+        orderBy: UserOrderByWithRelationInput
+        cursor: UserWhereUniqueInput
+        skip: Int
+        take: Int
+      }"
+    `)
+  })
 })
 
 describe("PrismaModelBobbin", () => {
@@ -310,9 +323,15 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("countQuery", () => {
-    it("should be able to create a countQuery", () => {
+    it("should be able to create a countQuery", async () => {
       const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
-      UserBobbin.modelDelegate.count({ where: {} })
+
+      const q = UserBobbin.countQuery()
+
+      expect(q).toBeDefined()
+      expect(q.output).toBeTypeOf("object")
+      expect(q.type).toEqual("query")
+      expect(q.resolve).toBeTypeOf("function")
     })
   })
 })

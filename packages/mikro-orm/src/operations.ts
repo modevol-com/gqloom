@@ -282,7 +282,7 @@ export class MikroOperationBobbin<
       input,
       output: entity,
       type,
-      resolve: async (inputValue, extraOptions) => {
+      resolve: (inputValue, extraOptions) => {
         const parseInput = createInputParser(input, inputValue)
         return applyMiddlewares(
           compose(extraOptions?.middlewares, options.middlewares),

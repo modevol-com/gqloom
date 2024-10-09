@@ -48,6 +48,7 @@ export interface PrismaClient {
 export interface PrismaDelegate {
   findUnique: (args: { where: any }) => any
   findUniqueOrThrow: (args: { where: any }) => any
+  count: (args: any) => any
 }
 
 export type InferPrismaDelegate<
@@ -56,3 +57,9 @@ export type InferPrismaDelegate<
 > = TClient extends PrismaClient & { [key in TName]: PrismaDelegate }
   ? TClient[TName]
   : PrismaDelegate
+
+export type InferDelegateCountArgs<TDelegate> = TDelegate extends {
+  count: (args: infer TArgs) => any
+}
+  ? TArgs
+  : never

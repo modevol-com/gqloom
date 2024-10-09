@@ -6,6 +6,7 @@ import {
   type PrismaModelSilk,
   type PrismaDelegate,
   type InferPrismaDelegate,
+  type InferDelegateCountArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -13,9 +14,17 @@ import {
   type GraphQLSilk,
   weaverContext,
   notNullish,
+  type GraphQLFieldOptions,
+  type Middleware,
+  getFieldOptions,
+  silk,
+  createInputParser,
+  applyMiddlewares,
+  compose,
 } from "@gqloom/core"
 import {
   GraphQLEnumType,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -78,8 +87,8 @@ export class PrismaModelTypeBuilder<
     modelOrName?: string | DMMF.Model
   ): GraphQLObjectType | null {
     const model = this.getModel(modelOrName)
-
     if (model.primaryKey == null) return null
+
     let primaryKeyName =
       model.primaryKey.name ?? model.primaryKey.fields.join("_")
 
@@ -235,6 +244,7 @@ export class PrismaModelTypeBuilder<
 
     return weaverContext.memoNamedType(input)
   }
+
   public orderByRelationAggregateInput(
     modelName?: string | DMMF.Model
   ): GraphQLObjectType {
@@ -252,6 +262,27 @@ export class PrismaModelTypeBuilder<
 
     return weaverContext.memoNamedType(input)
   }
+
+  public countQueryInput(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}CountQueryInput`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.whereInput({ model }) },
+        orderBy: { type: this.orderByWithRelationInput(model) },
+        cursor: { type: this.whereInput({ model, unique: true }) },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
 }
 
 export class PrismaModelBobbin<
@@ -260,7 +291,7 @@ export class PrismaModelBobbin<
 > {
   protected modelData: PrismaDataModel
   protected delegate: InferPrismaDelegate<TClient, TModalSilk["name"]>
-  protected typeBobbin: PrismaModelTypeBuilder<TModalSilk>
+  protected typeBuilder: PrismaModelTypeBuilder<TModalSilk>
   constructor(
     protected readonly silk: TModalSilk,
     protected readonly client: TClient
@@ -270,7 +301,7 @@ export class PrismaModelBobbin<
       silk.model.name,
       client
     ) as InferPrismaDelegate<TClient, TModalSilk["name"]>
-    this.typeBobbin = new PrismaModelTypeBuilder(silk)
+    this.typeBuilder = new PrismaModelTypeBuilder(silk)
   }
 
   public relationField<TKey extends keyof NonNullable<TModalSilk["relations"]>>(
@@ -337,8 +368,46 @@ export class PrismaModelBobbin<
     return { [primaryKeyName]: primaryCondition }
   }
 
-  protected countQuery() {
-    // TODO
+  public countQuery<
+    TInputSilk extends GraphQLSilk<
+      InferDelegateCountArgs<typeof this.delegate>,
+      any
+    >,
+  >({
+    input,
+    ...options
+  }: {
+    input?: TInputSilk
+    middlewares?: Middleware<
+      FieldOrOperation<undefined, GraphQLSilk<number>, TInputSilk, "query">
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    GraphQLSilk<number>,
+    TInputSilk,
+    "query"
+  > {
+    input ??= silk(this.typeBuilder.countQueryInput()) as TInputSilk
+
+    const type = "query"
+    const output = silk<number>(new GraphQLNonNull(GraphQLInt))
+    return {
+      ...getFieldOptions(options),
+      type,
+      input,
+      output,
+      resolve: (inputValue, extraOptions) => {
+        const parseInput = createInputParser(input, inputValue)
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, options.middlewares),
+          async () => {
+            const inputResult = await parseInput()
+            return this.delegate.count(inputResult)
+          },
+          { parseInput, parent: undefined, outputSilk: output, type }
+        )
+      },
+    }
   }
 
   protected findFirstQuery() {
