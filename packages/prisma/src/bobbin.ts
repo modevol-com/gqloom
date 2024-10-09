@@ -10,18 +10,93 @@ import {
   type InferSilkO,
   type FieldOrOperation,
   type GraphQLSilk,
-  // createMemoization,
+  SYMBOLS,
+  weaverContext,
+  notNullish,
 } from "@gqloom/core"
+import {
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLString,
+} from "graphql"
+
+export class PrismaModelTypeBuilder<
+  TModalSilk extends PrismaModelSilk<any, any>,
+> {
+  constructor(protected readonly silk: TModalSilk) {}
+
+  public static scalarFilter(scalar: GraphQLScalarType): GraphQLObjectType {
+    const existing = weaverContext.getGraphQLType(scalar)
+    if (existing) return existing as GraphQLObjectType
+    const filter: GraphQLObjectType = new GraphQLObjectType({
+      name: `${scalar.name}Filter`,
+      fields: () => ({
+        equals: { type: scalar },
+        in: { type: new GraphQLList(new GraphQLNonNull(scalar)) },
+        notIn: { type: new GraphQLList(new GraphQLNonNull(scalar)) },
+        lt: { type: scalar },
+        lte: { type: scalar },
+        gt: { type: scalar },
+        gte: { type: scalar },
+        not: { type: filter },
+        ...(scalar === GraphQLString && {
+          contains: { type: scalar },
+          startsWith: { type: scalar },
+          endsWith: { type: scalar },
+        }),
+      }),
+    })
+    return weaverContext.memoGraphQLType(scalar, filter)
+  }
+
+  public whereInput(): GraphQLSilk<any> {
+    const name = `${this.silk.model.name}WhereInput`
+
+    return {
+      [SYMBOLS.GET_GRAPHQL_TYPE]: () => {
+        const existing = weaverContext.getNamedType(name)
+        if (existing) return existing
+        const input: GraphQLObjectType = new GraphQLObjectType({
+          name,
+          fields: () => ({
+            AND: { type: new GraphQLList(new GraphQLNonNull(input)) },
+            OR: { type: new GraphQLList(new GraphQLNonNull(input)) },
+            NOT: { type: new GraphQLList(new GraphQLNonNull(input)) },
+            ...Object.fromEntries(
+              this.silk.model.fields
+                .filter((f) => f.kind === "scalar")
+                .map((f) => {
+                  const scalar = PrismaWeaver.getGraphQLTypeByField(f)
+                  if (scalar == null) return
+                  if (!(scalar instanceof GraphQLScalarType)) return
+                  return [
+                    f.name,
+                    { type: PrismaModelTypeBuilder.scalarFilter(scalar) },
+                  ]
+                })
+                .filter(notNullish)
+            ),
+          }),
+        })
+        return weaverContext.memoNamedType(input)
+      },
+    }
+  }
+}
 
 export class PrismaModelBobbin<TModalSilk extends PrismaModelSilk<any, any>> {
   protected modelData: PrismaDataModel
   protected delegate: PrismaDelegate
+  protected typeBobbin: PrismaModelTypeBuilder<TModalSilk>
   constructor(
     protected readonly silk: TModalSilk,
     protected readonly client: PrismaClient
   ) {
     this.modelData = silk.data
     this.delegate = PrismaModelBobbin.getDelegate(silk.model.name, client)
+    this.typeBobbin = new PrismaModelTypeBuilder(silk)
   }
 
   public relationField<TKey extends keyof NonNullable<TModalSilk["relations"]>>(

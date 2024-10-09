@@ -1,9 +1,20 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import * as g from "./generated"
 import { PrismaClient } from "@prisma/client"
-import { PrismaModelBobbin, type PrismaModelSilk } from "../src"
-import { type InferSilkO, loom, weave } from "@gqloom/core"
+import {
+  PrismaModelBobbin,
+  PrismaModelTypeBuilder,
+  type PrismaModelSilk,
+} from "../src"
+import { type InferSilkO, loom, weave, silk } from "@gqloom/core"
 import { createYoga } from "graphql-yoga"
+import {
+  printType,
+  GraphQLInt,
+  GraphQLString,
+  type GraphQLObjectType,
+  GraphQLID,
+} from "graphql"
 
 const { resolver, query } = loom
 
@@ -15,7 +26,77 @@ class TestablePrismaModelBobbin<
   }
 }
 
-describe("Bobbin", () => {
+describe("PrismaModelTypeBuilder", () => {
+  it("should be able to create a type builder", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(UserTypeBuilder).toBeDefined()
+  })
+
+  it("should be able to create scalar filter", () => {
+    const stringFilter = PrismaModelTypeBuilder.scalarFilter(GraphQLString)
+    expect(printType(stringFilter)).toMatchInlineSnapshot(`
+      "type StringFilter {
+        equals: String
+        in: [String!]
+        notIn: [String!]
+        lt: String
+        lte: String
+        gt: String
+        gte: String
+        not: StringFilter
+        contains: String
+        startsWith: String
+        endsWith: String
+      }"
+    `)
+
+    const intFilter = PrismaModelTypeBuilder.scalarFilter(GraphQLInt)
+    expect(printType(intFilter)).toMatchInlineSnapshot(`
+      "type IntFilter {
+        equals: Int
+        in: [Int!]
+        notIn: [Int!]
+        lt: Int
+        lte: Int
+        gt: Int
+        gte: Int
+        not: IntFilter
+      }"
+    `)
+
+    const idFilter = PrismaModelTypeBuilder.scalarFilter(GraphQLID)
+    expect(printType(idFilter)).toMatchInlineSnapshot(`
+      "type IDFilter {
+        equals: ID
+        in: [ID!]
+        notIn: [ID!]
+        lt: ID
+        lte: ID
+        gt: ID
+        gte: ID
+        not: IDFilter
+      }"
+    `)
+  })
+
+  it("should be able to create whereInput", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(
+      printType(silk.getType(UserTypeBuilder.whereInput()) as GraphQLObjectType)
+    ).toMatchInlineSnapshot(`
+      "type UserWhereInput {
+        AND: [UserWhereInput!]
+        OR: [UserWhereInput!]
+        NOT: [UserWhereInput!]
+        id: IDFilter
+        email: StringFilter
+        name: StringFilter
+      }"
+    `)
+  })
+})
+
+describe("PrismaModelBobbin", () => {
   const db = new PrismaClient()
 
   it("should be able to create a bobbin", () => {
@@ -141,5 +222,9 @@ describe("Bobbin", () => {
         },
       })
     })
+  })
+
+  describe("countQuery", () => {
+    it("should be able to create a countQuery", () => {})
   })
 })
