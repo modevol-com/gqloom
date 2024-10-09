@@ -45,8 +45,6 @@ import {
   ZodString,
   ZodType,
   type Schema,
-  type input,
-  type output,
   ZodEnum,
   ZodNativeEnum,
   type EnumLike,
@@ -84,7 +82,7 @@ export class ZodWeaver {
    */
   static unravel<TSchema extends Schema>(
     schema: TSchema
-  ): TSchema & GraphQLSilk<output<TSchema>, input<TSchema>> {
+  ): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>> {
     const config = weaverContext.value?.getConfig<ZodWeaverConfig>("gqloom.zod")
     return Object.assign(schema, {
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
@@ -190,7 +188,10 @@ export class ZodWeaver {
         schema,
         config
       )
-      if (!name) throw new Error("Object must have a name")
+      if (!name)
+        throw new Error(
+          `Object { ${Object.keys(schema.shape).join(", ")} } must have a name`
+        )
 
       const strictSchema = schema.strict()
 
@@ -411,14 +412,14 @@ export class ZodWeaver {
  */
 export function zodSilk<TSchema extends Schema>(
   schema: TSchema
-): TSchema & GraphQLSilk<output<TSchema>, input<TSchema>>
+): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>>
 
 /**
  * get GraphQL Silk from Zod Schema
  * @param silk GraphQL Silk
  * @returns GraphQL Silk
  */
-export function zodSilk<TSilk>(silk: TSilk): TSilk
+export function zodSilk<TSilk extends GraphQLSilk>(silk: TSilk): TSilk
 
 export function zodSilk(schema: ZodType | GraphQLSilk) {
   if (isSilk(schema)) return schema
@@ -433,7 +434,26 @@ export function zodSilk(schema: ZodType | GraphQLSilk) {
 zodSilk.isSilk = (schema: any) =>
   isSilk(schema) || isZodSchema(schema) || isZodSchemaRecord(schema)
 
+zodSilk.input = <TInput extends Record<string, Schema>>(
+  input: TInput
+): InferInputSilk<TInput> => {
+  return zodSilk(input as any)
+}
+
 export type ZodSchemaIO = [Schema, "_input", "_output"]
+
+export type InferInputSilk<TInput extends Record<string, Schema>> = GraphQLSilk<
+  InferInputO<TInput>,
+  InferInputI<TInput>
+>
+
+export type InferInputI<TInput extends Record<string, Schema>> = {
+  [K in keyof TInput]: z.input<TInput[K]>
+}
+
+export type InferInputO<TInput extends Record<string, Schema>> = {
+  [K in keyof TInput]: z.output<TInput[K]>
+}
 
 export const { query, mutation, field, resolver, subscription } = createLoom<
   ZodSchemaIO | GraphQLSilkIO
