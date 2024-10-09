@@ -354,7 +354,7 @@ export class PrismaModelBobbin<
 
             return null
           },
-          { parseInput, parent: undefined, outputSilk: output, type }
+          { parseInput, parent, outputSilk: output, type }
         )
       },
     }
