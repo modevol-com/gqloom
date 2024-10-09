@@ -2,11 +2,12 @@ import type {
   SubscriptionBobbin,
   Subscription,
   ResolverOptionsWithParent,
+  QueryBobbin,
+  MutationBobbin,
 } from "../resolver"
 import {
   type GraphQLSilk,
   type FieldBobbin,
-  type QueryMutationBobbin,
   type ResolverBobbin,
   type AbstractSchemaIO,
   type FieldOrOperation,
@@ -67,7 +68,7 @@ export function createFieldBobbin<TSchemaIO extends AbstractSchemaIO>(
 export function createQueryBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): QueryMutationBobbin<TSchemaIO> {
+): QueryBobbin<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
       any,
@@ -85,7 +86,7 @@ export function createQueryBobbin<TSchemaIO extends AbstractSchemaIO>(
 export function createMutationBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): QueryMutationBobbin<TSchemaIO> {
+): MutationBobbin<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
       any,
@@ -121,8 +122,8 @@ export function createLoom<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): {
-  query: QueryMutationBobbin<TSchemaIO>
-  mutation: QueryMutationBobbin<TSchemaIO>
+  query: QueryBobbin<TSchemaIO>
+  mutation: MutationBobbin<TSchemaIO>
   field: FieldBobbin<TSchemaIO>
   resolver: ResolverBobbin<TSchemaIO>
   subscription: SubscriptionBobbin<TSchemaIO>

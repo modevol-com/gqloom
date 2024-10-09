@@ -9,7 +9,6 @@ import {
 import { createInputParser } from "./input"
 import type {
   FieldBobbin,
-  QueryMutationBobbin,
   ResolvingOptions,
   ResolverBobbin,
   FieldOrOperation,
@@ -17,9 +16,11 @@ import type {
   GraphQLSilkIO,
   SubscriptionBobbin,
   Subscription,
+  QueryBobbin,
+  MutationBobbin,
 } from "./types"
 
-export const silkQuery: QueryMutationBobbin<GraphQLSilkIO> = (
+export const silkQuery: QueryBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -41,7 +42,7 @@ export const silkQuery: QueryMutationBobbin<GraphQLSilkIO> = (
   }
 }
 
-export const silkMutation: QueryMutationBobbin<GraphQLSilkIO> = (
+export const silkMutation: MutationBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {

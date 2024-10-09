@@ -203,6 +203,46 @@ export interface QueryMutationBobbin<TSchemaIO extends AbstractSchemaIO> {
 }
 
 /**
+ * Function to create a GraphQL query.
+ */
+export interface QueryBobbin<TSchemaIO extends AbstractSchemaIO> {
+  <
+    TOutput extends TSchemaIO[0],
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  >(
+    output: TOutput,
+    resolveOrOptions:
+      | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
+      | QueryMutationOptions<TSchemaIO, TOutput, TInput>
+  ): FieldOrOperation<
+    undefined,
+    SchemaToSilk<TSchemaIO, TOutput>,
+    InputSchemaToSilk<TSchemaIO, TInput>,
+    "query"
+  >
+}
+
+/**
+ * Function to create a GraphQL mutation.
+ */
+export interface MutationBobbin<TSchemaIO extends AbstractSchemaIO> {
+  <
+    TOutput extends TSchemaIO[0],
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  >(
+    output: TOutput,
+    resolveOrOptions:
+      | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
+      | QueryMutationOptions<TSchemaIO, TOutput, TInput>
+  ): FieldOrOperation<
+    undefined,
+    SchemaToSilk<TSchemaIO, TOutput>,
+    InputSchemaToSilk<TSchemaIO, TInput>,
+    "mutation"
+  >
+}
+
+/**
  * Options for External Filed of existing GraphQL Object.
  */
 export interface FieldOptions<

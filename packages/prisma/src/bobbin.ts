@@ -16,11 +16,8 @@ import {
   notNullish,
   type GraphQLFieldOptions,
   type Middleware,
-  getFieldOptions,
   silk,
-  createInputParser,
-  applyMiddlewares,
-  compose,
+  loom,
 } from "@gqloom/core"
 import {
   GraphQLEnumType,
@@ -332,32 +329,17 @@ export class PrismaModelBobbin<
     if (field.kind !== "object" || field.relationName == null)
       throw new Error(`Field ${String(key)} is not a relation`)
 
-    const type = "field"
-    const output = this.relationFieldOutput(field)
-    const input = void 0
-
-    return {
-      ...getFieldOptions(options),
-      type,
-      input,
-      output,
-      resolve: (parent, inputValue, extraOptions) => {
-        const parseInput = createInputParser(input, inputValue)
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, options.middlewares),
-          async () => {
-            const promise = this.delegate.findUnique({
-              where: this.uniqueWhere(parent),
-            })
-            if (key in promise && typeof promise[key] === "function")
-              return promise[key]()
-
-            return null
-          },
-          { parseInput, parent, outputSilk: output, type }
-        )
+    return loom.field(this.relationFieldOutput(field), {
+      ...options,
+      resolve: (parent) => {
+        const promise = this.delegate.findUnique({
+          where: this.uniqueWhere(parent),
+        })
+        if (key in promise && typeof promise[key] === "function")
+          return promise[key]()
+        return null
       },
-    }
+    })
   }
 
   protected relationFieldOutput(field: DMMF.Field): GraphQLSilk<any> {
@@ -426,25 +408,11 @@ export class PrismaModelBobbin<
       any
     >
 
-    const type = "query"
-    const output = silk<number>(new GraphQLNonNull(GraphQLInt))
-    return {
-      ...getFieldOptions(options),
-      type,
+    return loom.query(silk<number>(new GraphQLNonNull(GraphQLInt)), {
+      ...options,
       input,
-      output,
-      resolve: (inputValue, extraOptions) => {
-        const parseInput = createInputParser(input, inputValue)
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, options.middlewares),
-          async () => {
-            const inputResult = await parseInput()
-            return this.delegate.count(inputResult)
-          },
-          { parseInput, parent: undefined, outputSilk: output, type }
-        )
-      },
-    }
+      resolve: (input) => this.delegate.count(input),
+    })
   }
 
   protected findFirstQuery() {
