@@ -33,6 +33,7 @@ export class PrismaWeaver {
     return {
       model,
       data,
+      name: model.name,
       [SYMBOLS.GET_GRAPHQL_TYPE]: () =>
         PrismaWeaver.getGraphQLTypeByModel(model, data),
       nullable() {

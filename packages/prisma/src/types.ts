@@ -4,6 +4,7 @@ import { type GraphQLOutputType } from "graphql"
 
 export interface PrismaModelSilk<
   TModel,
+  TName extends string = string,
   TRelation extends Record<string, any> = {},
 > extends GraphQLSilk<TModel> {
   nullable(): GraphQLSilk<TModel | null>
@@ -11,6 +12,7 @@ export interface PrismaModelSilk<
 
   model: DMMF.Model
   data: PrismaDataModel
+  name: TName
 
   relations?: TRelation
 }
@@ -47,3 +49,10 @@ export interface PrismaDelegate {
   findUnique: (args: { where: any }) => any
   findUniqueOrThrow: (args: { where: any }) => any
 }
+
+export type InferPrismaDelegate<
+  TClient extends PrismaClient,
+  TName extends string,
+> = TClient extends PrismaClient & { [key in TName]: PrismaDelegate }
+  ? TClient[TName]
+  : PrismaDelegate

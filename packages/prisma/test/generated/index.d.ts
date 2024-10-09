@@ -10,15 +10,21 @@ import type {
 
 export const User: PrismaModelSilk<
   IUser,
+  "user",
   { posts: IPost[]; Profile?: IProfile }
 >
-export const Profile: PrismaModelSilk<IProfile, { user: IUser }>
+export const Profile: PrismaModelSilk<IProfile, "profile", { user: IUser }>
 export const Post: PrismaModelSilk<
   IPost,
+  "post",
   { author?: IUser; categories: ICategory[] }
 >
-export const Category: PrismaModelSilk<ICategory, { posts: IPost[] }>
-export const Cat: PrismaModelSilk<ICat>
-export const Dog: PrismaModelSilk<IDog>
+export const Category: PrismaModelSilk<
+  ICategory,
+  "category",
+  { posts: IPost[] }
+>
+export const Cat: PrismaModelSilk<ICat, "cat">
+export const Dog: PrismaModelSilk<IDog, "dog">
 
 export { IUser, IProfile, IPost, ICategory, ICat, IDog }

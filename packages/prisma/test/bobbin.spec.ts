@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import * as g from "./generated"
 import { PrismaClient } from "@prisma/client"
 import {
+  type InferPrismaDelegate,
   PrismaModelBobbin,
   PrismaModelTypeBuilder,
   type PrismaModelSilk,
@@ -13,10 +14,15 @@ import { printType, GraphQLInt, GraphQLString, GraphQLID } from "graphql"
 const { resolver, query } = loom
 
 class TestablePrismaModelBobbin<
-  TModalSilk extends PrismaModelSilk<any, any>,
-> extends PrismaModelBobbin<TModalSilk> {
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+> extends PrismaModelBobbin<TModalSilk, TClient> {
   public uniqueWhere(instance: InferSilkO<NonNullable<TModalSilk>>): any {
     return super.uniqueWhere(instance)
+  }
+
+  public get modelDelegate(): InferPrismaDelegate<TClient, TModalSilk["name"]> {
+    return this.delegate
   }
 }
 
@@ -304,7 +310,9 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("countQuery", () => {
-    db.user.count({ where: {} })
-    it("should be able to create a countQuery", () => {})
+    it("should be able to create a countQuery", () => {
+      const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+      UserBobbin.modelDelegate.count({ where: {} })
+    })
   })
 })

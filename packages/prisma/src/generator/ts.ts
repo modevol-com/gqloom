@@ -56,7 +56,7 @@ export async function genTsDeclaration(
       declarations: [
         {
           name: `${model.name}`,
-          type: `PrismaModelSilk<I${model.name}${relationsGenerics}>`,
+          type: `PrismaModelSilk<I${model.name}, "${lowerCase(model.name)}"${relationsGenerics}>`,
         },
       ],
     })
@@ -86,4 +86,8 @@ export async function genTsDeclaration(
   })
 
   await sourceFile.save()
+}
+
+function lowerCase(string: string) {
+  return string.charAt(0).toLowerCase() + string.slice(1)
 }

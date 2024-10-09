@@ -5,6 +5,7 @@ import {
   type PrismaClient,
   type PrismaModelSilk,
   type PrismaDelegate,
+  type InferPrismaDelegate,
 } from "./types"
 import {
   type InferSilkO,
@@ -253,16 +254,22 @@ export class PrismaModelTypeBuilder<
   }
 }
 
-export class PrismaModelBobbin<TModalSilk extends PrismaModelSilk<any, any>> {
+export class PrismaModelBobbin<
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+> {
   protected modelData: PrismaDataModel
-  protected delegate: PrismaDelegate
+  protected delegate: InferPrismaDelegate<TClient, TModalSilk["name"]>
   protected typeBobbin: PrismaModelTypeBuilder<TModalSilk>
   constructor(
     protected readonly silk: TModalSilk,
-    protected readonly client: PrismaClient
+    protected readonly client: TClient
   ) {
     this.modelData = silk.data
-    this.delegate = PrismaModelBobbin.getDelegate(silk.model.name, client)
+    this.delegate = PrismaModelBobbin.getDelegate(
+      silk.model.name,
+      client
+    ) as InferPrismaDelegate<TClient, TModalSilk["name"]>
     this.typeBobbin = new PrismaModelTypeBuilder(silk)
   }
 
