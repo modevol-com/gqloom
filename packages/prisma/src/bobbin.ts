@@ -88,6 +88,50 @@ export class PrismaModelBobbin<TModalSilk extends PrismaModelSilk<any, any>> {
     return { [primaryKeyName]: primaryCondition }
   }
 
+  protected countQuery() {
+    // TODO
+  }
+
+  protected findFirstQuery() {
+    // TODO
+  }
+
+  protected findManyQuery() {
+    // TODO
+  }
+
+  protected findUniqueQuery() {
+    // TODO
+  }
+
+  protected createMutation() {
+    // TODO
+  }
+
+  protected createManyMutation() {
+    // TODO
+  }
+
+  protected deleteMutation() {
+    // TODO
+  }
+
+  protected deleteManyMutation() {
+    // TODO
+  }
+
+  protected updateMutation() {
+    // TODO
+  }
+
+  protected updateManyMutation() {
+    // TODO
+  }
+
+  protected upsertMutation() {
+    // TODO
+  }
+
   protected static getDelegate(
     modelName: string,
     client: PrismaClient
