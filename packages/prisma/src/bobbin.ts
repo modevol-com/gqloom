@@ -14,6 +14,7 @@ import {
   notNullish,
 } from "@gqloom/core"
 import {
+  GraphQLEnumType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -59,6 +60,17 @@ export class PrismaModelTypeBuilder<
       }),
     })
     return weaverContext.memoGraphQLType(scalar, filter)
+  }
+
+  public static sortOrder(): GraphQLEnumType {
+    const existing = weaverContext.getNamedType("SortOrder")
+    if (existing) return existing as GraphQLEnumType
+
+    const sortOrder = new GraphQLEnumType({
+      name: "SortOrder",
+      values: { asc: { value: "asc" }, desc: { value: "desc" } },
+    })
+    return weaverContext.memoNamedType(sortOrder)
   }
 
   public primaryKeyInput(
@@ -150,7 +162,7 @@ export class PrismaModelTypeBuilder<
                 f.name,
                 {
                   type: f.isList
-                    ? this.ListRelationFilter(fieldModel)
+                    ? this.listRelationFilter(fieldModel)
                     : this.whereInput({ model: fieldModel }),
                 },
               ]
@@ -168,7 +180,7 @@ export class PrismaModelTypeBuilder<
     return weaverContext.memoNamedType(input)
   }
 
-  public ListRelationFilter(
+  public listRelationFilter(
     modelName?: string | DMMF.Model
   ): GraphQLObjectType {
     const model = this.getModel(modelName)
@@ -185,6 +197,58 @@ export class PrismaModelTypeBuilder<
         none: { type: this.whereInput({ model }) },
       }),
     })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public orderByWithRelationInput(
+    modelName?: string | DMMF.Model
+  ): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}OrderByWithRelationInput`
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        ...Object.fromEntries(
+          model.fields
+            .map((f) => {
+              if (f.kind === "scalar") {
+                return [f.name, { type: PrismaModelTypeBuilder.sortOrder() }]
+              }
+              if (f.kind === "object") {
+                if (f.isList) {
+                  return [
+                    f.name,
+                    { type: this.orderByRelationAggregateInput(f.type) },
+                  ]
+                }
+                return [f.name, { type: this.orderByWithRelationInput(f.type) }]
+              }
+            })
+            .filter(notNullish)
+        ),
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+  public orderByRelationAggregateInput(
+    modelName?: string | DMMF.Model
+  ): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}OrderByRelationAggregateInput`
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        _count: { type: PrismaModelTypeBuilder.sortOrder() },
+      }),
+    })
+
     return weaverContext.memoNamedType(input)
   }
 }

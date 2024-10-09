@@ -149,6 +149,30 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
   })
+
+  it("should be able to create orderByWithRelationInput", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.orderByWithRelationInput()))
+      .toMatchInlineSnapshot(`
+      "type UserOrderByWithRelationInput {
+        id: SortOrder
+        email: SortOrder
+        name: SortOrder
+        posts: PostOrderByRelationAggregateInput
+        Profile: ProfileOrderByWithRelationInput
+      }"
+    `)
+  })
+
+  it("should be able to create orderByRelationAggregateInput", () => {
+    const PostTypeBuilder = new PrismaModelTypeBuilder(g.Post)
+    expect(printType(PostTypeBuilder.orderByRelationAggregateInput()))
+      .toMatchInlineSnapshot(`
+      "type PostOrderByRelationAggregateInput {
+        _count: SortOrder
+      }"
+    `)
+  })
 })
 
 describe("PrismaModelBobbin", () => {
@@ -280,6 +304,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("countQuery", () => {
+    db.user.count({ where: {} })
     it("should be able to create a countQuery", () => {})
   })
 })
