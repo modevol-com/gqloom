@@ -40,7 +40,7 @@ export class PrismaModelTypeBuilder<
     this.modelData = silk.data
   }
 
-  getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
+  protected getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
     if (modelOrName == null) return this.silk.model
     if (typeof modelOrName === "object") return modelOrName
     const model = this.silk.data.models[modelOrName]
@@ -306,7 +306,17 @@ export class PrismaModelBobbin<
   }
 
   public relationField<TKey extends keyof NonNullable<TModalSilk["relations"]>>(
-    key: TKey
+    key: TKey,
+    options: {
+      middlewares?: Middleware<
+        FieldOrOperation<
+          TModalSilk,
+          GraphQLSilk<NonNullable<TModalSilk["relations"]>[TKey]>,
+          undefined,
+          "field"
+        >
+      >[]
+    } & GraphQLFieldOptions = {}
   ): FieldOrOperation<
     TModalSilk,
     GraphQLSilk<NonNullable<TModalSilk["relations"]>[TKey]>,
@@ -322,18 +332,30 @@ export class PrismaModelBobbin<
     if (field.kind !== "object" || field.relationName == null)
       throw new Error(`Field ${String(key)} is not a relation`)
 
-    return {
-      type: "field",
-      input: undefined,
-      output: this.relationFieldOutput(field) as any,
-      resolve: (parent) => {
-        const promise = this.delegate.findUnique({
-          where: this.uniqueWhere(parent),
-        })
-        if (key in promise && typeof promise[key] === "function")
-          return promise[key]()
+    const type = "field"
+    const output = this.relationFieldOutput(field)
+    const input = void 0
 
-        return null
+    return {
+      ...getFieldOptions(options),
+      type,
+      input,
+      output,
+      resolve: (parent, inputValue, extraOptions) => {
+        const parseInput = createInputParser(input, inputValue)
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, options.middlewares),
+          async () => {
+            const promise = this.delegate.findUnique({
+              where: this.uniqueWhere(parent),
+            })
+            if (key in promise && typeof promise[key] === "function")
+              return promise[key]()
+
+            return null
+          },
+          { parseInput, parent: undefined, outputSilk: output, type }
+        )
       },
     }
   }
@@ -367,10 +389,6 @@ export class PrismaModelBobbin<
       primaryCondition[field] = instance[field]
     }
     return { [primaryKeyName]: primaryCondition }
-  }
-
-  public c(): InferDelegateCountArgs<typeof this.delegate> {
-    return 0 as any
   }
 
   public countQuery({
