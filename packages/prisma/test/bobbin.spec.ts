@@ -6,15 +6,9 @@ import {
   PrismaModelTypeBuilder,
   type PrismaModelSilk,
 } from "../src"
-import { type InferSilkO, loom, weave, silk } from "@gqloom/core"
+import { type InferSilkO, loom, weave } from "@gqloom/core"
 import { createYoga } from "graphql-yoga"
-import {
-  printType,
-  GraphQLInt,
-  GraphQLString,
-  type GraphQLObjectType,
-  GraphQLID,
-} from "graphql"
+import { printType, GraphQLInt, GraphQLString, GraphQLID } from "graphql"
 
 const { resolver, query } = loom
 
@@ -81,9 +75,7 @@ describe("PrismaModelTypeBuilder", () => {
 
   it("should be able to create whereInput", () => {
     const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
-    expect(
-      printType(silk.getType(UserTypeBuilder.whereInput()) as GraphQLObjectType)
-    ).toMatchInlineSnapshot(`
+    expect(printType(UserTypeBuilder.whereInput())).toMatchInlineSnapshot(`
       "type UserWhereInput {
         AND: [UserWhereInput!]
         OR: [UserWhereInput!]
@@ -91,6 +83,63 @@ describe("PrismaModelTypeBuilder", () => {
         id: IDFilter
         email: StringFilter
         name: StringFilter
+      }"
+    `)
+  })
+
+  it("should be able to create primaryKeyInput", () => {
+    const DogTypeBuilder = new PrismaModelTypeBuilder(g.Dog)
+    expect(printType(DogTypeBuilder.primaryKeyInput()!)).toMatchInlineSnapshot(`
+      "type DogFullNameInput {
+        firstName: String
+        lastName: String
+      }"
+    `)
+
+    const CatTypeBuilder = new PrismaModelTypeBuilder(g.Cat)
+    expect(printType(CatTypeBuilder.primaryKeyInput()!)).toMatchInlineSnapshot(`
+      "type CatFirstName_lastNameInput {
+        firstName: String
+        lastName: String
+      }"
+    `)
+  })
+
+  it("should be able to create whereUniqueInput", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.whereUniqueInput()))
+      .toMatchInlineSnapshot(`
+      "type UserWhereUniqueInput {
+        AND: [UserWhereInput!]
+        OR: [UserWhereInput!]
+        NOT: [UserWhereInput!]
+        id: ID
+        email: StringFilter
+        name: StringFilter
+      }"
+    `)
+
+    const CatTypeBuilder = new PrismaModelTypeBuilder(g.Cat)
+    expect(printType(CatTypeBuilder.whereUniqueInput())).toMatchInlineSnapshot(`
+      "type CatWhereUniqueInput {
+        AND: [CatWhereInput!]
+        OR: [CatWhereInput!]
+        NOT: [CatWhereInput!]
+        firstName: StringFilter
+        lastName: StringFilter
+        firstName_lastName: CatFirstName_lastNameInput
+      }"
+    `)
+
+    const DogTypeBuilder = new PrismaModelTypeBuilder(g.Dog)
+    expect(printType(DogTypeBuilder.whereUniqueInput())).toMatchInlineSnapshot(`
+      "type DogWhereUniqueInput {
+        AND: [DogWhereInput!]
+        OR: [DogWhereInput!]
+        NOT: [DogWhereInput!]
+        firstName: StringFilter
+        lastName: StringFilter
+        fullName: DogFullNameInput
       }"
     `)
   })
@@ -225,6 +274,8 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("countQuery", () => {
+    db.user.count({ cursor: { email: "" } })
+
     it("should be able to create a countQuery", () => {})
   })
 })
