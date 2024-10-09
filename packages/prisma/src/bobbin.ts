@@ -292,6 +292,7 @@ export class PrismaModelBobbin<
   protected modelData: PrismaDataModel
   protected delegate: InferPrismaDelegate<TClient, TModalSilk["name"]>
   protected typeBuilder: PrismaModelTypeBuilder<TModalSilk>
+
   constructor(
     protected readonly silk: TModalSilk,
     protected readonly client: TClient
@@ -368,26 +369,44 @@ export class PrismaModelBobbin<
     return { [primaryKeyName]: primaryCondition }
   }
 
-  public countQuery<
-    TInputSilk extends GraphQLSilk<
-      InferDelegateCountArgs<typeof this.delegate>,
-      any
-    >,
-  >({
+  public c(): InferDelegateCountArgs<typeof this.delegate> {
+    return 0 as any
+  }
+
+  public countQuery({
     input,
     ...options
   }: {
-    input?: TInputSilk
+    input?: GraphQLSilk<
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      any
+    >
     middlewares?: Middleware<
-      FieldOrOperation<undefined, GraphQLSilk<number>, TInputSilk, "query">
+      FieldOrOperation<
+        undefined,
+        GraphQLSilk<number>,
+        GraphQLSilk<
+          InferDelegateCountArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          any
+        >,
+        "query"
+      >
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
     GraphQLSilk<number>,
-    TInputSilk,
+    GraphQLSilk<
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      any
+    >,
     "query"
   > {
-    input ??= silk(this.typeBuilder.countQueryInput()) as TInputSilk
+    input ??= silk(this.typeBuilder.countQueryInput()) as GraphQLSilk<
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      any
+    >
 
     const type = "query"
     const output = silk<number>(new GraphQLNonNull(GraphQLInt))

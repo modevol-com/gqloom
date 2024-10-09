@@ -54,9 +54,7 @@ export interface PrismaDelegate {
 export type InferPrismaDelegate<
   TClient extends PrismaClient,
   TName extends string,
-> = TClient extends PrismaClient & { [key in TName]: PrismaDelegate }
-  ? TClient[TName]
-  : PrismaDelegate
+> = TClient extends { [key in TName]: any } ? TClient[TName] : never
 
 export type InferDelegateCountArgs<TDelegate> = TDelegate extends {
   count: (args: infer TArgs) => any

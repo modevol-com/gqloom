@@ -8,8 +8,16 @@ import {
   type PrismaModelSilk,
 } from "../src"
 import { type InferSilkO, loom, weave } from "@gqloom/core"
+import { zodSilk, asInputArgs } from "@gqloom/zod"
+import { z } from "zod"
 import { createYoga } from "graphql-yoga"
-import { printType, GraphQLInt, GraphQLString, GraphQLID } from "graphql"
+import {
+  printType,
+  GraphQLInt,
+  GraphQLString,
+  GraphQLID,
+  printSchema,
+} from "graphql"
 
 const { resolver, query } = loom
 
@@ -20,6 +28,8 @@ class TestablePrismaModelBobbin<
   public uniqueWhere(instance: InferSilkO<NonNullable<TModalSilk>>): any {
     return super.uniqueWhere(instance)
   }
+
+  name?: TModalSilk["name"]
 
   public get modelDelegate(): InferPrismaDelegate<TClient, TModalSilk["name"]> {
     return this.delegate
@@ -332,6 +342,34 @@ describe("PrismaModelBobbin", () => {
       expect(q.output).toBeTypeOf("object")
       expect(q.type).toEqual("query")
       expect(q.resolve).toBeTypeOf("function")
+
+      const UserWhereInput = z.object({
+        __typename: z.literal("UserWhereInput"),
+        name: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        countUser: UserBobbin.countQuery({
+          input: zodSilk(
+            z
+              .object({
+                where: UserWhereInput,
+              })
+              .superRefine(asInputArgs())
+          ),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          countUser(where: UserWhereInput!): Int!
+        }
+
+        input UserWhereInput {
+          name: String!
+        }"
+      `)
     })
   })
 })
