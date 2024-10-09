@@ -23,7 +23,7 @@ import {
   getGraphQLType,
 } from "../resolver"
 import { mapValue, tryIn } from "../utils"
-import { weaverContext } from "./weaver-context"
+import { provideWeaverContext, weaverContext } from "./weaver-context"
 import { type CoreSchemaWeaverConfig } from "./types"
 
 export function inputToArgs(
@@ -94,10 +94,16 @@ export function ensureInputObjectType(
     weaverContext.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
       ?.getInputObjectName ?? ((name) => name)
 
+  const weaverContextRef = weaverContext.value
+
   const input = new GraphQLInputObjectType({
     ...config,
     name: getInputObjectName(object.name),
-    fields: () => mapValue(fields, (it) => toInputFieldConfig(it)),
+    fields: () =>
+      provideWeaverContext(
+        () => mapValue(fields, (it) => toInputFieldConfig(it)),
+        weaverContextRef
+      ),
   })
 
   weaverContext.inputMap?.set(object, input)
