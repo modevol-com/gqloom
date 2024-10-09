@@ -80,6 +80,31 @@ export class PrismaModelTypeBuilder<
     return weaverContext.memoNamedType(sortOrder)
   }
 
+  public scalarFieldEnum(modelOrName?: string | DMMF.Model): GraphQLEnumType {
+    const model = this.getModel(modelOrName)
+    const name = `${model.name}ScalarFieldEnum`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLEnumType
+
+    const fieldEnum = new GraphQLEnumType({
+      name,
+      values: Object.fromEntries(
+        model.fields
+          .map((field) => {
+            if (field.kind !== "scalar" && field.kind !== "enum") return
+            return [
+              field.name,
+              { value: field.name, description: field.documentation },
+            ]
+          })
+          .filter(notNullish)
+      ),
+    })
+
+    return weaverContext.memoNamedType(fieldEnum)
+  }
+
   public primaryKeyInput(
     modelOrName?: string | DMMF.Model
   ): GraphQLObjectType | null {

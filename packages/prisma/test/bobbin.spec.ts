@@ -202,6 +202,25 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
   })
+
+  it("should be able to create scalarFieldEnum", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.scalarFieldEnum())).toMatchInlineSnapshot(`
+      "enum UserScalarFieldEnum {
+        id
+        email
+        name
+      }"
+    `)
+
+    const CatTypeBuilder = new PrismaModelTypeBuilder(g.Cat)
+    expect(printType(CatTypeBuilder.scalarFieldEnum())).toMatchInlineSnapshot(`
+      "enum CatScalarFieldEnum {
+        firstName
+        lastName
+      }"
+    `)
+  })
 })
 
 describe("PrismaModelBobbin", () => {
@@ -333,16 +352,17 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("countQuery", () => {
-    it("should be able to create a countQuery", async () => {
-      const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
-
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    it("should be able to create a countQuery", () => {
       const q = UserBobbin.countQuery()
 
       expect(q).toBeDefined()
       expect(q.output).toBeTypeOf("object")
       expect(q.type).toEqual("query")
       expect(q.resolve).toBeTypeOf("function")
+    })
 
+    it("should be able to use custom input", () => {
       const UserWhereInput = z.object({
         __typename: z.literal("UserWhereInput"),
         name: z.string(),
@@ -371,5 +391,11 @@ describe("PrismaModelBobbin", () => {
         }"
       `)
     })
+  })
+
+  describe("findFirstQuery", () => {
+    // const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    // const u = db.user.findFirst()
+    it("should be able to create a findFirstQuery", () => {})
   })
 })
