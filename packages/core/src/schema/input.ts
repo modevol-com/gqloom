@@ -97,7 +97,7 @@ export function ensureInputObjectType(
   const input = new GraphQLInputObjectType({
     ...config,
     name: getInputObjectName(object.name),
-    fields: mapValue(fields, (it) => toInputFieldConfig(it)),
+    fields: () => mapValue(fields, (it) => toInputFieldConfig(it)),
   })
 
   weaverContext.inputMap?.set(object, input)

@@ -18,12 +18,13 @@ import { silk } from "../resolver"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 describe("toInputObjectType", () => {
-  const Dog = new GraphQLObjectType({
+  const Dog: GraphQLObjectType = new GraphQLObjectType({
     name: "Dog",
-    fields: {
+    fields: () => ({
       name: { type: GraphQLString },
       age: { type: GraphQLInt },
-    },
+      parent: { type: Dog },
+    }),
   })
   it("should convert ObjectType to InputObjectType", () => {
     const DogInput = ensureInputObjectType(Dog)
@@ -32,6 +33,7 @@ describe("toInputObjectType", () => {
       "input Dog {
         name: String
         age: Int
+        parent: Dog
       }"
     `)
   })
