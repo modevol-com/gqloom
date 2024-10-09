@@ -24,7 +24,18 @@ import {
 export class PrismaModelTypeBuilder<
   TModalSilk extends PrismaModelSilk<any, any>,
 > {
-  constructor(protected readonly silk: TModalSilk) {}
+  protected modelData: PrismaDataModel
+  constructor(protected readonly silk: TModalSilk) {
+    this.modelData = silk.data
+  }
+
+  getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
+    if (modelOrName == null) return this.silk.model
+    if (typeof modelOrName === "object") return modelOrName
+    const model = this.silk.data.models[modelOrName]
+    if (model == null) throw new Error(`Model ${modelOrName} not found`)
+    return model
+  }
 
   public static scalarFilter(scalar: GraphQLScalarType): GraphQLObjectType {
     const existing = weaverContext.getGraphQLType(scalar)
@@ -50,58 +61,31 @@ export class PrismaModelTypeBuilder<
     return weaverContext.memoGraphQLType(scalar, filter)
   }
 
-  public whereInput(): GraphQLObjectType {
-    const name = `${this.silk.model.name}WhereInput`
+  public primaryKeyInput(
+    modelOrName?: string | DMMF.Model
+  ): GraphQLObjectType | null {
+    const model = this.getModel(modelOrName)
 
-    const existing = weaverContext.getNamedType(name)
-    if (existing) return existing as GraphQLObjectType
-    const input: GraphQLObjectType = new GraphQLObjectType({
-      name,
-      fields: () => ({
-        AND: { type: new GraphQLList(new GraphQLNonNull(input)) },
-        OR: { type: new GraphQLList(new GraphQLNonNull(input)) },
-        NOT: { type: new GraphQLList(new GraphQLNonNull(input)) },
-        ...Object.fromEntries(
-          this.silk.model.fields
-            .filter((f) => f.kind === "scalar")
-            .map((f) => {
-              const scalar = PrismaWeaver.getGraphQLTypeByField(f)
-              if (scalar == null) return
-              if (!(scalar instanceof GraphQLScalarType)) return
-              return [
-                f.name,
-                { type: PrismaModelTypeBuilder.scalarFilter(scalar) },
-              ]
-            })
-            .filter(notNullish)
-        ),
-      }),
-    })
-    return weaverContext.memoNamedType(input)
-  }
-
-  public primaryKeyInput(): GraphQLObjectType | null {
-    if (this.silk.model.primaryKey == null) return null
+    if (model.primaryKey == null) return null
     let primaryKeyName =
-      this.silk.model.primaryKey.name ??
-      this.silk.model.primaryKey.fields.join("_")
+      model.primaryKey.name ?? model.primaryKey.fields.join("_")
 
     primaryKeyName =
       primaryKeyName.slice(0, 1).toUpperCase() + primaryKeyName.slice(1)
 
-    const name = `${this.silk.model.name}${primaryKeyName}Input`
+    const name = `${model.name}${primaryKeyName}Input`
 
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
 
-    const primaryKey = this.silk.model.primaryKey
+    const primaryKey = model.primaryKey
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: () => ({
         ...Object.fromEntries(
           primaryKey.fields
             .map((name) => {
-              const f = this.silk.model.fields.find((f) => f.name === name)
+              const f = model.fields.find((f) => f.name === name)
               if (f == null) return
               const scalar = PrismaWeaver.getGraphQLTypeByField(f)
               if (scalar == null) return
@@ -115,26 +99,41 @@ export class PrismaModelTypeBuilder<
     return weaverContext.memoNamedType(input)
   }
 
-  public whereUniqueInput(): GraphQLObjectType {
-    const name = `${this.silk.model.name}WhereUniqueInput`
+  public whereInput({
+    unique,
+    model: modelName,
+  }: {
+    unique?: boolean
+    model?: string | DMMF.Model
+  } = {}): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = unique
+      ? `${model.name}WhereUniqueInput`
+      : `${model.name}WhereInput`
 
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: () => ({
-        AND: { type: new GraphQLList(new GraphQLNonNull(this.whereInput())) },
-        OR: { type: new GraphQLList(new GraphQLNonNull(this.whereInput())) },
-        NOT: { type: new GraphQLList(new GraphQLNonNull(this.whereInput())) },
+        AND: {
+          type: new GraphQLList(new GraphQLNonNull(this.whereInput({ model }))),
+        },
+        OR: {
+          type: new GraphQLList(new GraphQLNonNull(this.whereInput({ model }))),
+        },
+        NOT: {
+          type: new GraphQLList(new GraphQLNonNull(this.whereInput({ model }))),
+        },
         ...Object.fromEntries(
-          this.silk.model.fields
+          model.fields
             .filter((f) => f.kind === "scalar")
             .map((f) => {
               const scalar = PrismaWeaver.getGraphQLTypeByField(f)
               if (scalar == null) return
               if (!(scalar instanceof GraphQLScalarType)) return
 
-              if (f.isId) return [f.name, { type: scalar }]
+              if (unique && f.isId) return [f.name, { type: scalar }]
               return [
                 f.name,
                 { type: PrismaModelTypeBuilder.scalarFilter(scalar) },
@@ -142,12 +141,48 @@ export class PrismaModelTypeBuilder<
             })
             .filter(notNullish)
         ),
-        ...(this.silk.model.primaryKey && {
-          [this.silk.model.primaryKey.name ??
-          this.silk.model.primaryKey.fields.join("_")]: {
-            type: this.primaryKeyInput(),
-          },
-        }),
+        ...Object.fromEntries(
+          model.fields
+            .filter((f) => f.kind === "object")
+            .map((f) => {
+              const fieldModel = this.getModel(f.type)
+              return [
+                f.name,
+                {
+                  type: f.isList
+                    ? this.ListRelationFilter(fieldModel)
+                    : this.whereInput({ model: fieldModel }),
+                },
+              ]
+            })
+            .filter(notNullish)
+        ),
+        ...(unique &&
+          model.primaryKey && {
+            [model.primaryKey.name ?? model.primaryKey.fields.join("_")]: {
+              type: this.primaryKeyInput(model),
+            },
+          }),
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public ListRelationFilter(
+    modelName?: string | DMMF.Model
+  ): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}ListRelationFilter`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        every: { type: this.whereInput({ model }) },
+        some: { type: this.whereInput({ model }) },
+        none: { type: this.whereInput({ model }) },
       }),
     })
     return weaverContext.memoNamedType(input)

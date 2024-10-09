@@ -83,6 +83,8 @@ describe("PrismaModelTypeBuilder", () => {
         id: IDFilter
         email: StringFilter
         name: StringFilter
+        posts: PostListRelationFilter
+        Profile: ProfileWhereInput
       }"
     `)
   })
@@ -107,7 +109,7 @@ describe("PrismaModelTypeBuilder", () => {
 
   it("should be able to create whereUniqueInput", () => {
     const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
-    expect(printType(UserTypeBuilder.whereUniqueInput()))
+    expect(printType(UserTypeBuilder.whereInput({ unique: true })))
       .toMatchInlineSnapshot(`
       "type UserWhereUniqueInput {
         AND: [UserWhereInput!]
@@ -116,11 +118,14 @@ describe("PrismaModelTypeBuilder", () => {
         id: ID
         email: StringFilter
         name: StringFilter
+        posts: PostListRelationFilter
+        Profile: ProfileWhereInput
       }"
     `)
 
-    const CatTypeBuilder = new PrismaModelTypeBuilder(g.Cat)
-    expect(printType(CatTypeBuilder.whereUniqueInput())).toMatchInlineSnapshot(`
+    expect(
+      printType(UserTypeBuilder.whereInput({ unique: true, model: "Cat" }))
+    ).toMatchInlineSnapshot(`
       "type CatWhereUniqueInput {
         AND: [CatWhereInput!]
         OR: [CatWhereInput!]
@@ -131,8 +136,9 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
 
-    const DogTypeBuilder = new PrismaModelTypeBuilder(g.Dog)
-    expect(printType(DogTypeBuilder.whereUniqueInput())).toMatchInlineSnapshot(`
+    expect(
+      printType(UserTypeBuilder.whereInput({ unique: true, model: "Dog" }))
+    ).toMatchInlineSnapshot(`
       "type DogWhereUniqueInput {
         AND: [DogWhereInput!]
         OR: [DogWhereInput!]
@@ -274,8 +280,6 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("countQuery", () => {
-    db.user.count({ cursor: { email: "" } })
-
     it("should be able to create a countQuery", () => {})
   })
 })
