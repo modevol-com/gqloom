@@ -285,7 +285,7 @@ export class PrismaModelTypeBuilder<
     return weaverContext.memoNamedType(input)
   }
 
-  public countQueryInput(modelName?: string | DMMF.Model): GraphQLObjectType {
+  public countArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
     const model = this.getModel(modelName)
     const name = `${model.name}CountQueryInput`
 
@@ -300,6 +300,28 @@ export class PrismaModelTypeBuilder<
         cursor: { type: this.whereInput({ model, unique: true }) },
         skip: { type: GraphQLInt },
         take: { type: GraphQLInt },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public findFirstArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}FindFirstArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.whereInput({ model }) },
+        orderBy: { type: this.orderByWithRelationInput(model) },
+        cursor: { type: this.whereInput({ model, unique: true }) },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
+        distinct: { type: new GraphQLList(this.scalarFieldEnum(model)) },
       }),
     })
 
@@ -428,7 +450,7 @@ export class PrismaModelBobbin<
     >,
     "query"
   > {
-    input ??= silk(this.typeBuilder.countQueryInput()) as GraphQLSilk<
+    input ??= silk(this.typeBuilder.countArgs()) as GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
       any
     >
@@ -440,9 +462,7 @@ export class PrismaModelBobbin<
     })
   }
 
-  protected findFirstQuery() {
-    // TODO
-  }
+  protected findFirstQuery() {}
 
   protected findManyQuery() {
     // TODO

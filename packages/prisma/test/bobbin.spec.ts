@@ -190,9 +190,9 @@ describe("PrismaModelTypeBuilder", () => {
     `)
   })
 
-  it("should be able to create countQueryInput", () => {
+  it("should be able to create countArgs", () => {
     const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
-    expect(printType(UserTypeBuilder.countQueryInput())).toMatchInlineSnapshot(`
+    expect(printType(UserTypeBuilder.countArgs())).toMatchInlineSnapshot(`
       "type UserCountQueryInput {
         where: UserWhereInput
         orderBy: UserOrderByWithRelationInput
@@ -218,6 +218,20 @@ describe("PrismaModelTypeBuilder", () => {
       "enum CatScalarFieldEnum {
         firstName
         lastName
+      }"
+    `)
+  })
+
+  it("should be able to create findFirstArgs", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.findFirstArgs())).toMatchInlineSnapshot(`
+      "type UserFindFirstArgs {
+        where: UserWhereInput
+        orderBy: UserOrderByWithRelationInput
+        cursor: UserWhereUniqueInput
+        skip: Int
+        take: Int
+        distinct: [UserScalarFieldEnum]
       }"
     `)
   })
