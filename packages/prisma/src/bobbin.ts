@@ -7,6 +7,7 @@ import {
   type PrismaDelegate,
   type InferPrismaDelegate,
   type InferDelegateCountArgs,
+  type InferDelegateFindFirstArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -462,7 +463,50 @@ export class PrismaModelBobbin<
     })
   }
 
-  protected findFirstQuery() {}
+  public findFirstQuery({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateFindFirstArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      any
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        ReturnType<TModalSilk["nullable"]>,
+        GraphQLSilk<
+          InferDelegateFindFirstArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          any
+        >,
+        "query"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    ReturnType<TModalSilk["nullable"]>,
+    GraphQLSilk<
+      InferDelegateFindFirstArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      any
+    >,
+    "query"
+  > {
+    input ??= silk(this.typeBuilder.findFirstArgs())
+
+    const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
+
+    return loom.query(output.nullable(), {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.findFirst(input),
+    }) as any
+  }
 
   protected findManyQuery() {
     // TODO

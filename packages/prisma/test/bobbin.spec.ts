@@ -407,9 +407,47 @@ describe("PrismaModelBobbin", () => {
     })
   })
 
-  describe("findFirstQuery", () => {
-    // const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
-    // const u = db.user.findFirst()
-    it("should be able to create a findFirstQuery", () => {})
+  describe("findFirstQuery", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    it("should be able to create a findFirstQuery", () => {
+      const q = UserBobbin.findFirstQuery()
+
+      expect(q).toBeDefined()
+      expect(q.output).toBeTypeOf("object")
+      expect(q.type).toEqual("query")
+      expect(q.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserWhereInput = z.object({
+        __typename: z.literal("UserWhereInput"),
+        name: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        findFirstUser: UserBobbin.findFirstQuery({
+          input: zodSilk.input({
+            where: UserWhereInput.optional(),
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          findFirstUser(where: UserWhereInput): User
+        }
+
+        type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        input UserWhereInput {
+          name: String!
+        }"
+      `)
+    })
   })
 })
