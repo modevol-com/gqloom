@@ -369,6 +369,32 @@ export class PrismaModelTypeBuilder<
     })
     return weaverContext.memoNamedType(input)
   }
+
+  public createInput(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}CreateInput`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () =>
+        Object.fromEntries(
+          model.fields
+            .filter((f) => f.kind === "scalar")
+            .map((field) => {
+              const scalar = PrismaWeaver.getGraphQLTypeByField(field)
+              if (scalar == null) return
+              const isOptional = !field.isRequired || field.hasDefaultValue
+              const type = isOptional ? scalar : new GraphQLNonNull(scalar)
+              return [field.name, { type }]
+            })
+            .filter(notNullish)
+        ),
+    })
+    return weaverContext.memoNamedType(input)
+  }
 }
 
 export class PrismaModelBobbin<

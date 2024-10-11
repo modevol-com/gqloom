@@ -258,6 +258,17 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
   })
+
+  it("should be able to create CreateInput", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.createInput())).toMatchInlineSnapshot(`
+      "type UserCreateInput {
+        id: ID
+        email: String!
+        name: String
+      }"
+    `)
+  })
 })
 
 describe("PrismaModelBobbin", () => {
@@ -563,4 +574,9 @@ describe("PrismaModelBobbin", () => {
       `)
     })
   })
+
+  // describe("createMutation", async () => {
+  //   const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+  //   db.user.create({ data: {} })
+  // })
 })
