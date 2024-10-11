@@ -465,13 +465,11 @@ describe("PrismaModelBobbin", () => {
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Mutation {
-          createManyUser(data: [UserCreateManyInput!]!): User
+          createManyUser(data: [UserCreateManyInput!]!): BatchPayload
         }
 
-        type User {
-          id: ID!
-          email: String!
-          name: String
+        type BatchPayload {
+          count: Int!
         }
 
         input UserCreateManyInput {
