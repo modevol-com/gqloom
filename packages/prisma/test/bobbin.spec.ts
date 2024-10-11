@@ -303,6 +303,20 @@ describe("PrismaModelTypeBuilder", () => {
         categories: CategoryCreateNestedManyWithoutPostsInput
       }"
     `)
+
+    expect(
+      printType(PostTypeBuilder.createInput({ withoutRelation: "publishedBy" }))
+    ).toMatchInlineSnapshot(`
+      "type PostCreateWithoutPublishedByInput {
+        id: ID
+        title: String!
+        content: String
+        published: Boolean
+        authorId: Int!
+        author: UserCreateNestedOneWithoutPostsInput
+        categories: CategoryCreateNestedManyWithoutPostsInput
+      }"
+    `)
   })
 })
 
