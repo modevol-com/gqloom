@@ -11,13 +11,13 @@ import type {
 export const User: PrismaModelSilk<
   IUser,
   "user",
-  { posts: IPost[]; Profile?: IProfile }
+  { posts: IPost[]; publishedPosts: IPost[]; Profile?: IProfile }
 >
 export const Profile: PrismaModelSilk<IProfile, "profile", { user: IUser }>
 export const Post: PrismaModelSilk<
   IPost,
   "post",
-  { author?: IUser; categories: ICategory[] }
+  { author: IUser; publishedBy?: IUser; categories: ICategory[] }
 >
 export const Category: PrismaModelSilk<
   ICategory,

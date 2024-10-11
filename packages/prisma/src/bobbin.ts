@@ -28,9 +28,11 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
+  type GraphQLOutputType,
   GraphQLScalarType,
   GraphQLString,
 } from "graphql"
+import { capitalize } from "./utils"
 
 export class PrismaModelTypeBuilder<
   TModalSilk extends PrismaModelSilk<any, any>,
@@ -370,28 +372,116 @@ export class PrismaModelTypeBuilder<
     return weaverContext.memoNamedType(input)
   }
 
-  public createInput(modelName?: string | DMMF.Model): GraphQLObjectType {
+  public createNested({
+    model: modelName,
+    without,
+    many,
+  }: {
+    model?: string | DMMF.Model
+    without: string
+    many?: boolean
+  }): GraphQLObjectType {
     const model = this.getModel(modelName)
-    const name = `${model.name}CreateInput`
+
+    const oneOrMany = many ? "Many" : "One"
+    const name = `${model.name}CreateNested${oneOrMany}Without${capitalize(without)}Input`
 
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
+      fields: () => {
+        let createInput: GraphQLOutputType = this.createInput({
+          model,
+          withoutRelation: without,
+        })
+        if (many) createInput = new GraphQLList(new GraphQLNonNull(createInput))
+
+        let connectInput: GraphQLOutputType = this.whereInput({
+          model,
+          unique: true,
+        })
+
+        if (many)
+          connectInput = new GraphQLList(new GraphQLNonNull(connectInput))
+        return {
+          create: { type: createInput },
+          connect: { type: connectInput },
+        }
+      },
+    })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public createInput({
+    model: modelName,
+    withoutRelation,
+  }: {
+    model?: string | DMMF.Model
+    withoutRelation?: string
+  } = {}): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const withoutName = withoutRelation
+      ? `Without${capitalize(withoutRelation)}`
+      : ""
+    const name = `${model.name}Create${withoutName}Input`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const withoutFields = new Set(withoutRelation ? [withoutRelation] : [])
+
+    if (withoutRelation) {
+      model.fields
+        .filter((f) => f.kind === "object")
+        .forEach((field) => {
+          if (field.name !== withoutRelation) return
+          withoutFields.add(field.name)
+          if (field.relationFromFields == null) return
+          for (const f of field.relationFromFields) {
+            withoutFields.add(f)
+          }
+        })
+    }
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
       fields: () =>
-        Object.fromEntries(
-          model.fields
+        Object.fromEntries([
+          ...model.fields
             .filter((f) => f.kind === "scalar")
             .map((field) => {
+              if (withoutFields.has(field.name)) return
               const scalar = PrismaWeaver.getGraphQLTypeByField(field)
               if (scalar == null) return
               const isOptional = !field.isRequired || field.hasDefaultValue
               const type = isOptional ? scalar : new GraphQLNonNull(scalar)
               return [field.name, { type }]
             })
-            .filter(notNullish)
-        ),
+            .filter(notNullish),
+          ...model.fields
+            .filter((f) => f.kind === "object")
+            .map((field) => {
+              if (withoutFields.has(field.name)) return
+              const fieldModel = this.getModel(field.type)
+              const relationField = fieldModel.fields.find(
+                (f) => f.relationName === field.relationName
+              )
+              if (relationField == null) return
+              return [
+                field.name,
+                {
+                  type: this.createNested({
+                    model: fieldModel,
+                    without: relationField.name,
+                    many: field.isList,
+                  }),
+                },
+              ]
+            })
+            .filter(notNullish),
+        ]),
     })
     return weaverContext.memoNamedType(input)
   }

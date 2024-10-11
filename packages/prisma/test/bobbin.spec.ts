@@ -100,6 +100,7 @@ describe("PrismaModelTypeBuilder", () => {
         email: StringFilter
         name: StringFilter
         posts: PostListRelationFilter
+        publishedPosts: PostListRelationFilter
         Profile: ProfileWhereInput
       }"
     `)
@@ -127,17 +128,18 @@ describe("PrismaModelTypeBuilder", () => {
     const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
     expect(printType(UserTypeBuilder.whereInput({ unique: true })))
       .toMatchInlineSnapshot(`
-      "type UserWhereUniqueInput {
-        AND: [UserWhereInput!]
-        OR: [UserWhereInput!]
-        NOT: [UserWhereInput!]
-        id: ID
-        email: StringFilter
-        name: StringFilter
-        posts: PostListRelationFilter
-        Profile: ProfileWhereInput
-      }"
-    `)
+        "type UserWhereUniqueInput {
+          AND: [UserWhereInput!]
+          OR: [UserWhereInput!]
+          NOT: [UserWhereInput!]
+          id: ID
+          email: StringFilter
+          name: StringFilter
+          posts: PostListRelationFilter
+          publishedPosts: PostListRelationFilter
+          Profile: ProfileWhereInput
+        }"
+      `)
 
     expect(
       printType(UserTypeBuilder.whereInput({ unique: true, model: "Cat" }))
@@ -170,14 +172,15 @@ describe("PrismaModelTypeBuilder", () => {
     const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
     expect(printType(UserTypeBuilder.orderByWithRelationInput()))
       .toMatchInlineSnapshot(`
-      "type UserOrderByWithRelationInput {
-        id: SortOrder
-        email: SortOrder
-        name: SortOrder
-        posts: PostOrderByRelationAggregateInput
-        Profile: ProfileOrderByWithRelationInput
-      }"
-    `)
+        "type UserOrderByWithRelationInput {
+          id: SortOrder
+          email: SortOrder
+          name: SortOrder
+          posts: PostOrderByRelationAggregateInput
+          publishedPosts: PostOrderByRelationAggregateInput
+          Profile: ProfileOrderByWithRelationInput
+        }"
+      `)
   })
 
   it("should be able to create orderByRelationAggregateInput", () => {
@@ -266,6 +269,38 @@ describe("PrismaModelTypeBuilder", () => {
         id: ID
         email: String!
         name: String
+        posts: PostCreateNestedManyWithoutAuthorInput
+        publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+        Profile: ProfileCreateNestedOneWithoutUserInput
+      }"
+    `)
+
+    const PostTypeBuilder = new PrismaModelTypeBuilder(g.Post)
+    expect(printType(PostTypeBuilder.createInput())).toMatchInlineSnapshot(`
+      "type PostCreateInput {
+        id: ID
+        title: String!
+        content: String
+        published: Boolean
+        authorId: Int!
+        publishedById: Int
+        author: UserCreateNestedOneWithoutPostsInput
+        publishedBy: UserCreateNestedOneWithoutPublishedPostsInput
+        categories: CategoryCreateNestedManyWithoutPostsInput
+      }"
+    `)
+
+    expect(
+      printType(PostTypeBuilder.createInput({ withoutRelation: "author" }))
+    ).toMatchInlineSnapshot(`
+      "type PostCreateWithoutAuthorInput {
+        id: ID
+        title: String!
+        content: String
+        published: Boolean
+        publishedById: Int
+        publishedBy: UserCreateNestedOneWithoutPublishedPostsInput
+        categories: CategoryCreateNestedManyWithoutPostsInput
       }"
     `)
   })
