@@ -290,7 +290,27 @@ describe("PrismaModelTypeBuilder", () => {
     const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
     expect(printType(UserTypeBuilder.createArgs())).toMatchInlineSnapshot(`
       "type UserCreateArgs {
-        data: UserCreateInput
+        data: UserCreateInput!
+      }"
+    `)
+  })
+
+  it("should be able to create createManyInput", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.createManyInput())).toMatchInlineSnapshot(`
+      "type UserCreateManyInput {
+        id: ID
+        email: String!
+        name: String
+      }"
+    `)
+  })
+
+  it("should be able to create createManyArgs", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.createManyArgs())).toMatchInlineSnapshot(`
+      "type UserCreateManyArgs {
+        data: [UserCreateManyInput!]!
       }"
     `)
   })

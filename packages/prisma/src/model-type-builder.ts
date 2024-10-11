@@ -65,6 +65,20 @@ export class PrismaModelTypeBuilder<
     return weaverContext.memoNamedType(sortOrder)
   }
 
+  public static BatchPayload(): GraphQLObjectType {
+    const existing = weaverContext.getNamedType("BatchPayload")
+    if (existing) return existing as GraphQLObjectType
+
+    const batchPayload = new GraphQLObjectType({
+      name: "BatchPayload",
+      fields: () => ({
+        count: { type: new GraphQLNonNull(GraphQLInt) },
+      }),
+    })
+
+    return weaverContext.memoNamedType(batchPayload)
+  }
+
   public scalarFieldEnum(modelOrName?: string | DMMF.Model): GraphQLEnumType {
     const model = this.getModel(modelOrName)
     const name = `${model.name}ScalarFieldEnum`
@@ -476,10 +490,56 @@ export class PrismaModelTypeBuilder<
       name,
       fields: () => ({
         data: {
-          type: this.createInput({ model }),
+          type: new GraphQLNonNull(this.createInput({ model })),
         },
       }),
     })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public createManyInput(modelOrName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelOrName)
+    const name = `${model.name}CreateManyInput`
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input = new GraphQLObjectType({
+      name,
+      fields: () =>
+        Object.fromEntries(
+          model.fields
+            .filter((f) => f.kind === "scalar")
+            .map((field) => {
+              const scalar = PrismaWeaver.getGraphQLTypeByField(field)
+              if (scalar == null) return
+              const isOptional = !field.isRequired || field.hasDefaultValue
+              const type = isOptional ? scalar : new GraphQLNonNull(scalar)
+              return [field.name, { type }]
+            })
+            .filter(notNullish)
+        ),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public createManyArgs(model?: string | DMMF.Model): GraphQLObjectType {
+    const modelData = this.getModel(model)
+    const name = `${modelData.name}CreateManyArgs`
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        data: {
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(this.createManyInput()))
+          ),
+        },
+      }),
+    })
+
     return weaverContext.memoNamedType(input)
   }
 }

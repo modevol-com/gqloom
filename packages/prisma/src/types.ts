@@ -85,3 +85,13 @@ export type InferDelegateCreateArgs<TDelegate> = TDelegate extends {
 }
   ? TArgs
   : never
+
+export type InferDelegateCreateManyArgs<TDelegate> = TDelegate extends {
+  createMany: (args: infer TArgs) => any
+}
+  ? TArgs
+  : never
+
+export interface IBatchPayload {
+  count: number
+}

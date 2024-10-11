@@ -11,6 +11,8 @@ import {
   type InferDelegateFindManyArgs,
   type InferDelegateFindUniqueArgs,
   type InferDelegateCreateArgs,
+  type InferDelegateCreateManyArgs,
+  type IBatchPayload,
 } from "./types"
 import {
   type InferSilkO,
@@ -372,7 +374,7 @@ export class PrismaModelBobbin<
     >,
     "mutation"
   > {
-    input ??= silk(this.typeBuilder.createArgs())
+    input ??= silk(new GraphQLNonNull(this.typeBuilder.createArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -393,8 +395,66 @@ export class PrismaModelBobbin<
     >
   }
 
-  protected createManyMutation() {
-    // TODO
+  public createManyMutation<
+    TInputI = InferDelegateCreateManyArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateCreateManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      TInputI
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        GraphQLSilk<IBatchPayload, IBatchPayload>,
+        GraphQLSilk<
+          InferDelegateCreateManyArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          TInputI
+        >,
+        "mutation"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    GraphQLSilk<IBatchPayload, IBatchPayload>,
+    GraphQLSilk<
+      InferDelegateCreateManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      TInputI
+    >,
+    "mutation"
+  > {
+    input ??= silk(new GraphQLNonNull(this.typeBuilder.createManyArgs()))
+
+    const output = silk(PrismaModelTypeBuilder.BatchPayload()) as GraphQLSilk<
+      IBatchPayload,
+      IBatchPayload
+    >
+
+    return loom.mutation(output, {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.createMany(input),
+    }) as FieldOrOperation<
+      undefined,
+      GraphQLSilk<IBatchPayload, IBatchPayload>,
+      GraphQLSilk<
+        InferDelegateCreateManyArgs<
+          InferPrismaDelegate<TClient, TModalSilk["name"]>
+        >,
+        TInputI
+      >,
+      "mutation"
+    >
   }
 
   protected deleteMutation() {
