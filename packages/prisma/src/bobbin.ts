@@ -578,13 +578,17 @@ export class PrismaModelBobbin<
     return { [primaryKeyName]: primaryCondition }
   }
 
-  public countQuery({
+  public countQuery<
+    TInputI = InferDelegateCountArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
     input,
     ...options
   }: {
     input?: GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
-      any
+      TInputI
     >
     middlewares?: Middleware<
       FieldOrOperation<
@@ -594,7 +598,7 @@ export class PrismaModelBobbin<
           InferDelegateCountArgs<
             InferPrismaDelegate<TClient, TModalSilk["name"]>
           >,
-          any
+          TInputI
         >,
         "query"
       >
@@ -604,13 +608,13 @@ export class PrismaModelBobbin<
     GraphQLSilk<number>,
     GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
-      any
+      TInputI
     >,
     "query"
   > {
     input ??= silk(this.typeBuilder.countArgs()) as GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
-      any
+      TInputI
     >
 
     return loom.query(silk<number>(new GraphQLNonNull(GraphQLInt)), {
@@ -620,7 +624,11 @@ export class PrismaModelBobbin<
     })
   }
 
-  public findFirstQuery({
+  public findFirstQuery<
+    TInputI = InferDelegateFindFirstArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
     input,
     ...options
   }: {
@@ -628,7 +636,7 @@ export class PrismaModelBobbin<
       InferDelegateFindFirstArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      any
+      TInputI
     >
     middlewares?: Middleware<
       FieldOrOperation<
@@ -638,7 +646,7 @@ export class PrismaModelBobbin<
           InferDelegateFindFirstArgs<
             InferPrismaDelegate<TClient, TModalSilk["name"]>
           >,
-          any
+          TInputI
         >,
         "query"
       >
@@ -650,7 +658,7 @@ export class PrismaModelBobbin<
       InferDelegateFindFirstArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      any
+      TInputI
     >,
     "query"
   > {
@@ -669,13 +677,17 @@ export class PrismaModelBobbin<
         InferDelegateFindFirstArgs<
           InferPrismaDelegate<TClient, TModalSilk["name"]>
         >,
-        any
+        TInputI
       >,
       "query"
     >
   }
 
-  public findManyQuery({
+  public findManyQuery<
+    TInputI = InferDelegateFindManyArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
     input,
     ...options
   }: {
@@ -683,7 +695,7 @@ export class PrismaModelBobbin<
       InferDelegateFindManyArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      any
+      TInputI
     >
     middlewares?: Middleware<
       FieldOrOperation<
@@ -693,7 +705,7 @@ export class PrismaModelBobbin<
           InferDelegateFindManyArgs<
             InferPrismaDelegate<TClient, TModalSilk["name"]>
           >,
-          any
+          TInputI
         >,
         "query"
       >
@@ -705,7 +717,7 @@ export class PrismaModelBobbin<
       InferDelegateFindManyArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      any
+      TInputI
     >,
     "query"
   > {
@@ -724,13 +736,17 @@ export class PrismaModelBobbin<
         InferDelegateFindManyArgs<
           InferPrismaDelegate<TClient, TModalSilk["name"]>
         >,
-        any
+        TInputI
       >,
       "query"
     >
   }
 
-  public findUniqueQuery({
+  public findUniqueQuery<
+    TInputI = InferDelegateFindUniqueArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
     input,
     ...options
   }: {
@@ -738,7 +754,7 @@ export class PrismaModelBobbin<
       InferDelegateFindUniqueArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      any
+      TInputI
     >
     middlewares?: Middleware<
       FieldOrOperation<
@@ -748,7 +764,7 @@ export class PrismaModelBobbin<
           InferDelegateFindUniqueArgs<
             InferPrismaDelegate<TClient, TModalSilk["name"]>
           >,
-          any
+          TInputI
         >,
         "query"
       >
@@ -760,7 +776,7 @@ export class PrismaModelBobbin<
       InferDelegateFindUniqueArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      any
+      TInputI
     >,
     "query"
   > {
@@ -779,7 +795,7 @@ export class PrismaModelBobbin<
         InferDelegateFindUniqueArgs<
           InferPrismaDelegate<TClient, TModalSilk["name"]>
         >,
-        any
+        TInputI
       >,
       "query"
     >

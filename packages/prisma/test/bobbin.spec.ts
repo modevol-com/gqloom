@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, expectTypeOf } from "vitest"
 import * as g from "./generated"
 import { PrismaClient } from "@prisma/client"
 import {
@@ -451,7 +451,17 @@ describe("PrismaModelBobbin", () => {
   describe("countQuery", () => {
     const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
     it("should be able to create a countQuery", () => {
-      const q = UserBobbin.countQuery()
+      const q = UserBobbin.countQuery({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.count>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
 
       expect(q).toBeDefined()
       expect(q.output).toBeTypeOf("object")
@@ -493,7 +503,17 @@ describe("PrismaModelBobbin", () => {
   describe("findFirstQuery", async () => {
     const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
     it("should be able to create a findFirstQuery", () => {
-      const q = UserBobbin.findFirstQuery()
+      const q = UserBobbin.findFirstQuery({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.findFirst>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
 
       expect(q).toBeDefined()
       expect(q.output).toBeTypeOf("object")
@@ -538,7 +558,17 @@ describe("PrismaModelBobbin", () => {
     const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
 
     it("should be able to create a findManyQuery", () => {
-      const q = UserBobbin.findManyQuery()
+      const q = UserBobbin.findManyQuery({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.findMany>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
 
       expect(q).toBeDefined()
       expect(q.output).toBeTypeOf("object")
@@ -583,7 +613,17 @@ describe("PrismaModelBobbin", () => {
     const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
 
     it("should be able to create a findUniqueQuery", () => {
-      const q = UserBobbin.findUniqueQuery()
+      const q = UserBobbin.findUniqueQuery({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.findUnique>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
 
       expect(q).toBeDefined()
       expect(q.output).toBeTypeOf("object")
