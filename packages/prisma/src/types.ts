@@ -79,3 +79,9 @@ export type InferDelegateFindUniqueArgs<TDelegate> = TDelegate extends {
 }
   ? TArgs
   : never
+
+export type InferDelegateCreateArgs<TDelegate> = TDelegate extends {
+  create: (args: infer TArgs) => any
+}
+  ? TArgs
+  : never

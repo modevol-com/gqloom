@@ -10,6 +10,7 @@ import {
   type InferDelegateFindFirstArgs,
   type InferDelegateFindManyArgs,
   type InferDelegateFindUniqueArgs,
+  type InferDelegateCreateArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -337,8 +338,59 @@ export class PrismaModelBobbin<
     >
   }
 
-  protected createMutation() {
-    // TODO
+  public createMutation<
+    TInputI = InferDelegateCreateArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      TInputI
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        ReturnType<TModalSilk["nullable"]>,
+        GraphQLSilk<
+          InferDelegateCreateArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          TInputI
+        >,
+        "mutation"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    ReturnType<TModalSilk["nullable"]>,
+    GraphQLSilk<
+      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      TInputI
+    >,
+    "mutation"
+  > {
+    input ??= silk(this.typeBuilder.createArgs())
+
+    const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
+
+    return loom.mutation(output.nullable(), {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.create(input),
+    }) as FieldOrOperation<
+      undefined,
+      ReturnType<TModalSilk["nullable"]>,
+      GraphQLSilk<
+        InferDelegateCreateArgs<
+          InferPrismaDelegate<TClient, TModalSilk["name"]>
+        >,
+        TInputI
+      >,
+      "mutation"
+    >
   }
 
   protected createManyMutation() {

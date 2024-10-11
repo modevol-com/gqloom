@@ -373,8 +373,58 @@ describe("PrismaModelBobbin", () => {
     })
   })
 
-  // describe("createMutation", async () => {
-  //   const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
-  //   const u = await db.user.create({ data: {} })
-  // })
+  describe("createMutation", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+
+    it("should be able to create a createMutation", () => {
+      const m = UserBobbin.createMutation({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.create>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
+
+      expect(m).toBeDefined()
+      expect(m.output).toBeTypeOf("object")
+      expect(m.type).toEqual("mutation")
+      expect(m.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserCreateInput = z.object({
+        __typename: z.literal("UserCreateInput"),
+        email: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        createUser: UserBobbin.createMutation({
+          input: zodSilk.input({
+            data: UserCreateInput,
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          createUser(data: UserCreateInput!): User
+        }
+
+        type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        input UserCreateInput {
+          email: String!
+        }"
+      `)
+    })
+  })
 })
