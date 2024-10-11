@@ -249,6 +249,15 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
   })
+
+  it("should be able to create findUniqueArgs", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.findUniqueArgs())).toMatchInlineSnapshot(`
+      "type UserFindUniqueArgs {
+        where: UserWhereUniqueInput!
+      }"
+    `)
+  })
 })
 
 describe("PrismaModelBobbin", () => {
@@ -505,6 +514,51 @@ describe("PrismaModelBobbin", () => {
 
         input UserWhereInput {
           name: String!
+        }"
+      `)
+    })
+  })
+
+  describe("findUniqueQuery", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+
+    it("should be able to create a findUniqueQuery", () => {
+      const q = UserBobbin.findUniqueQuery()
+
+      expect(q).toBeDefined()
+      expect(q.output).toBeTypeOf("object")
+      expect(q.type).toEqual("query")
+      expect(q.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserWhereInput = z.object({
+        __typename: z.literal("UserWhereInput"),
+        id: z.number(),
+      })
+
+      const r = resolver.of(g.User, {
+        findUniqueUser: UserBobbin.findUniqueQuery({
+          input: zodSilk.input({
+            where: UserWhereInput,
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          findUniqueUser(where: UserWhereInput!): User
+        }
+
+        type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        input UserWhereInput {
+          id: Float!
         }"
       `)
     })

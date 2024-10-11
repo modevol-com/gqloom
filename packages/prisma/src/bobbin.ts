@@ -9,6 +9,7 @@ import {
   type InferDelegateCountArgs,
   type InferDelegateFindFirstArgs,
   type InferDelegateFindManyArgs,
+  type InferDelegateFindUniqueArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -350,6 +351,24 @@ export class PrismaModelTypeBuilder<
     })
     return weaverContext.memoNamedType(input)
   }
+
+  public findUniqueArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}FindUniqueArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: {
+          type: new GraphQLNonNull(this.whereInput({ model, unique: true })),
+        },
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
 }
 
 export class PrismaModelBobbin<
@@ -595,8 +614,59 @@ export class PrismaModelBobbin<
     >
   }
 
-  protected findUniqueQuery() {
-    // TODO
+  public findUniqueQuery({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateFindUniqueArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      any
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        ReturnType<TModalSilk["nullable"]>,
+        GraphQLSilk<
+          InferDelegateFindUniqueArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          any
+        >,
+        "query"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    ReturnType<TModalSilk["nullable"]>,
+    GraphQLSilk<
+      InferDelegateFindUniqueArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      any
+    >,
+    "query"
+  > {
+    input ??= silk(this.typeBuilder.findUniqueArgs())
+
+    const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
+
+    return loom.query(output.nullable(), {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.findUnique(input),
+    }) as FieldOrOperation<
+      undefined,
+      ReturnType<TModalSilk["nullable"]>,
+      GraphQLSilk<
+        InferDelegateFindUniqueArgs<
+          InferPrismaDelegate<TClient, TModalSilk["name"]>
+        >,
+        any
+      >,
+      "query"
+    >
   }
 
   protected createMutation() {
