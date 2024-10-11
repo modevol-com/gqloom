@@ -67,3 +67,9 @@ export type InferDelegateFindFirstArgs<TDelegate> = TDelegate extends {
 }
   ? TArgs
   : never
+
+export type InferDelegateFindManyArgs<TDelegate> = TDelegate extends {
+  findMany: (args: infer TArgs) => any
+}
+  ? TArgs
+  : never

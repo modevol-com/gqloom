@@ -235,6 +235,20 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
   })
+
+  it("should be able to create findManyArgs", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.findManyArgs())).toMatchInlineSnapshot(`
+      "type UserFindManyArgs {
+        where: UserWhereInput
+        orderBy: UserOrderByWithRelationInput
+        cursor: UserWhereUniqueInput
+        skip: Int
+        take: Int
+        distinct: [UserScalarFieldEnum]
+      }"
+    `)
+  })
 })
 
 describe("PrismaModelBobbin", () => {
@@ -436,6 +450,51 @@ describe("PrismaModelBobbin", () => {
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {
           findFirstUser(where: UserWhereInput): User
+        }
+
+        type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        input UserWhereInput {
+          name: String!
+        }"
+      `)
+    })
+  })
+
+  describe("findManyQuery", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+
+    it("should be able to create a findManyQuery", () => {
+      const q = UserBobbin.findManyQuery()
+
+      expect(q).toBeDefined()
+      expect(q.output).toBeTypeOf("object")
+      expect(q.type).toEqual("query")
+      expect(q.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserWhereInput = z.object({
+        __typename: z.literal("UserWhereInput"),
+        name: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        findManyUser: UserBobbin.findManyQuery({
+          input: zodSilk.input({
+            where: UserWhereInput.optional(),
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          findManyUser(where: UserWhereInput): [User!]!
         }
 
         type User {

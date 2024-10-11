@@ -8,6 +8,7 @@ import {
   type InferPrismaDelegate,
   type InferDelegateCountArgs,
   type InferDelegateFindFirstArgs,
+  type InferDelegateFindManyArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -328,6 +329,27 @@ export class PrismaModelTypeBuilder<
 
     return weaverContext.memoNamedType(input)
   }
+
+  public findManyArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}FindManyArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.whereInput({ model }) },
+        orderBy: { type: this.orderByWithRelationInput(model) },
+        cursor: { type: this.whereInput({ model, unique: true }) },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
+        distinct: { type: new GraphQLList(this.scalarFieldEnum(model)) },
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
 }
 
 export class PrismaModelBobbin<
@@ -505,11 +527,72 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.findFirst(input),
-    }) as any
+    }) as FieldOrOperation<
+      undefined,
+      ReturnType<TModalSilk["nullable"]>,
+      GraphQLSilk<
+        InferDelegateFindFirstArgs<
+          InferPrismaDelegate<TClient, TModalSilk["name"]>
+        >,
+        any
+      >,
+      "query"
+    >
   }
 
-  protected findManyQuery() {
-    // TODO
+  public findManyQuery({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateFindManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      any
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        ReturnType<TModalSilk["list"]>,
+        GraphQLSilk<
+          InferDelegateFindManyArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          any
+        >,
+        "query"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    ReturnType<TModalSilk["list"]>,
+    GraphQLSilk<
+      InferDelegateFindManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      any
+    >,
+    "query"
+  > {
+    input ??= silk(this.typeBuilder.findManyArgs())
+
+    const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
+
+    return loom.query(output.list(), {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.findMany(input),
+    }) as FieldOrOperation<
+      undefined,
+      ReturnType<TModalSilk["list"]>,
+      GraphQLSilk<
+        InferDelegateFindManyArgs<
+          InferPrismaDelegate<TClient, TModalSilk["name"]>
+        >,
+        any
+      >,
+      "query"
+    >
   }
 
   protected findUniqueQuery() {
