@@ -437,7 +437,7 @@ export class PrismaModelBobbin<
   > {
     input ??= silk(new GraphQLNonNull(this.typeBuilder.createManyArgs()))
 
-    const output = silk(PrismaModelTypeBuilder.BatchPayload()) as GraphQLSilk<
+    const output = silk(PrismaModelTypeBuilder.batchPayload()) as GraphQLSilk<
       IBatchPayload,
       IBatchPayload
     >
@@ -561,7 +561,7 @@ export class PrismaModelBobbin<
     "mutation"
   > {
     input ??= silk(new GraphQLNonNull(this.typeBuilder.deleteManyArgs()))
-    const output = silk(PrismaModelTypeBuilder.BatchPayload()) as GraphQLSilk<
+    const output = silk(PrismaModelTypeBuilder.batchPayload()) as GraphQLSilk<
       IBatchPayload,
       IBatchPayload
     >

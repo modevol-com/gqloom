@@ -410,6 +410,45 @@
           "type": "String",
           "isGenerated": false,
           "isUpdatedAt": false
+        },
+        {
+          "name": "height",
+          "kind": "scalar",
+          "isList": false,
+          "isRequired": true,
+          "isUnique": false,
+          "isId": false,
+          "isReadOnly": false,
+          "hasDefaultValue": false,
+          "type": "Float",
+          "isGenerated": false,
+          "isUpdatedAt": false
+        },
+        {
+          "name": "weight",
+          "kind": "scalar",
+          "isList": false,
+          "isRequired": true,
+          "isUnique": false,
+          "isId": false,
+          "isReadOnly": false,
+          "hasDefaultValue": false,
+          "type": "Int",
+          "isGenerated": false,
+          "isUpdatedAt": false
+        },
+        {
+          "name": "birthDate",
+          "kind": "scalar",
+          "isList": false,
+          "isRequired": true,
+          "isUnique": false,
+          "isId": false,
+          "isReadOnly": false,
+          "hasDefaultValue": false,
+          "type": "DateTime",
+          "isGenerated": false,
+          "isUpdatedAt": false
         }
       ],
       "primaryKey": {

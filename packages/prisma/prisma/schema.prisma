@@ -62,5 +62,10 @@ model Dog {
   firstName String
   lastName  String
 
+  height Float
+  weight Int
+
+  birthDate DateTime
+
   @@id(name: "fullName", fields: [firstName, lastName])
 }

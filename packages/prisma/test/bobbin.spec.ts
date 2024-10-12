@@ -59,6 +59,9 @@ describe("PrismaModelBobbin", () => {
     const dogCondition = DogBobbin.uniqueWhere({
       firstName: "foo",
       lastName: "bar",
+      height: 10,
+      weight: 10,
+      birthDate: new Date(),
     })
     expect(dogCondition).toEqual({
       fullName: {
@@ -583,6 +586,17 @@ describe("PrismaModelBobbin", () => {
           email: String!
         }"
       `)
+    })
+  })
+
+  describe("updateMutation", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+
+    it("should be able to create a deleteMutation", async () => {
+      // const u = await db.user.update({
+      //   where: { id: 2 },
+      //   data: {},
+      // })
     })
   })
 })

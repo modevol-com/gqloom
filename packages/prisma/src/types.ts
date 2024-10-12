@@ -104,6 +104,24 @@ export type InferDelegateDeleteManyArgs<TDelegate> = TDelegate extends {
   ? TArgs
   : never
 
+export type InferDelegateUpdateArgs<TDelegate> = TDelegate extends {
+  update: (args: infer TArgs) => any
+}
+  ? TArgs
+  : never
+
+export type InferDelegateUpdateManyArgs<TDelegate> = TDelegate extends {
+  updateMany: (args: infer TArgs) => any
+}
+  ? TArgs
+  : never
+
+export type InferDelegateUpsertArgs<TDelegate> = TDelegate extends {
+  upsert: (args: infer TArgs) => any
+}
+  ? TArgs
+  : never
+
 export interface IBatchPayload {
   count: number
 }
