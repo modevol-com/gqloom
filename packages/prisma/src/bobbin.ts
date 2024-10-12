@@ -499,7 +499,15 @@ export class PrismaModelBobbin<
     return loom.mutation(output.nullable(), {
       ...options,
       input,
-      resolve: (input) => this.delegate.delete(input),
+      resolve: async (input) => {
+        // we should return null if the row is not found
+        // https://github.com/prisma/prisma/issues/4072
+        try {
+          return await this.delegate.delete(input)
+        } catch (_err) {
+          return null
+        }
+      },
     }) as FieldOrOperation<
       undefined,
       ReturnType<TModalSilk["nullable"]>,

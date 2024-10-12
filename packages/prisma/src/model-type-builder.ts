@@ -176,7 +176,8 @@ export class PrismaModelTypeBuilder<
               if (scalar == null) return
               if (!(scalar instanceof GraphQLScalarType)) return
 
-              if (unique && f.isId) return [f.name, { type: scalar }]
+              if (unique && (f.isId || f.isUnique))
+                return [f.name, { type: scalar }]
               return [
                 f.name,
                 { type: PrismaModelTypeBuilder.scalarFilter(scalar) },

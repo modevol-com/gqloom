@@ -100,7 +100,7 @@ describe("PrismaModelTypeBuilder", () => {
           OR: [UserWhereInput!]
           NOT: [UserWhereInput!]
           id: ID
-          email: StringFilter
+          email: String
           name: StringFilter
           posts: PostListRelationFilter
           publishedPosts: PostListRelationFilter

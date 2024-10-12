@@ -532,5 +532,34 @@ describe("PrismaModelBobbin", () => {
         }"
       `)
     })
+
+    it("should execute mutation", async () => {
+      const r = resolver.of(g.User, {
+        deleteUser: UserBobbin.deleteMutation(),
+
+        user: UserBobbin.findUniqueQuery(),
+      })
+      const schema = weave(r)
+      const yoga = createYoga({ schema })
+      const response = await yoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            mutation deleteUser {
+              deleteUser(where: { email: "bob@example.com" }) {
+                id
+              }
+            }
+          `,
+        }),
+      })
+
+      expect(response.status).toEqual(200)
+      const json = await response.json()
+      expect(json).toEqual({ data: { deleteUser: null } })
+    })
   })
 })
