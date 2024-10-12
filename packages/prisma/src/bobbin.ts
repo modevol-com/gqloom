@@ -14,6 +14,7 @@ import {
   type InferDelegateCreateManyArgs,
   type IBatchPayload,
   type InferDelegateDeleteArgs,
+  type InferDelegateDeleteManyArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -521,8 +522,56 @@ export class PrismaModelBobbin<
     >
   }
 
-  protected deleteManyMutation() {
-    // TODO
+  public deleteManyMutation<
+    TInputI = InferDelegateDeleteManyArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateDeleteManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      TInputI
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        GraphQLSilk<IBatchPayload, IBatchPayload>,
+        GraphQLSilk<
+          InferDelegateDeleteManyArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          TInputI
+        >,
+        "mutation"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    GraphQLSilk<IBatchPayload, IBatchPayload>,
+    GraphQLSilk<
+      InferDelegateDeleteManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      TInputI
+    >,
+    "mutation"
+  > {
+    input ??= silk(new GraphQLNonNull(this.typeBuilder.deleteManyArgs()))
+    const output = silk(PrismaModelTypeBuilder.BatchPayload()) as GraphQLSilk<
+      IBatchPayload,
+      IBatchPayload
+    >
+    return loom.mutation(output, {
+      ...options,
+      input,
+      resolve: async (input) => {
+        return await this.delegate.deleteMany(input)
+      },
+    })
   }
 
   protected updateMutation() {

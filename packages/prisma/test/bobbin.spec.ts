@@ -532,34 +532,57 @@ describe("PrismaModelBobbin", () => {
         }"
       `)
     })
+  })
 
-    it("should execute mutation", async () => {
-      const r = resolver.of(g.User, {
-        deleteUser: UserBobbin.deleteMutation(),
+  describe("deleteManyMutation", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
 
-        user: UserBobbin.findUniqueQuery(),
+    it("should be able to create a deleteManyMutation", async () => {
+      const m = UserBobbin.deleteManyMutation({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.deleteMany>[0]>
+            >()
+            return next()
+          },
+        ],
       })
-      const schema = weave(r)
-      const yoga = createYoga({ schema })
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            mutation deleteUser {
-              deleteUser(where: { email: "bob@example.com" }) {
-                id
-              }
-            }
-          `,
+
+      expect(m).toBeDefined()
+      expect(m.output).toBeTypeOf("object")
+      expect(m.type).toEqual("mutation")
+      expect(m.resolve).toBeTypeOf("function")
+    })
+    it("should be able to use custom input", async () => {
+      const UserDeleteManyInput = z.object({
+        __typename: z.literal("UserDeleteManyInput"),
+        email: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        deleteManyUser: UserBobbin.deleteManyMutation({
+          input: zodSilk.input({
+            where: UserDeleteManyInput,
+          }),
         }),
       })
 
-      expect(response.status).toEqual(200)
-      const json = await response.json()
-      expect(json).toEqual({ data: { deleteUser: null } })
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          deleteManyUser(where: UserDeleteManyInput!): BatchPayload
+        }
+
+        type BatchPayload {
+          count: Int!
+        }
+
+        input UserDeleteManyInput {
+          email: String!
+        }"
+      `)
     })
   })
 })

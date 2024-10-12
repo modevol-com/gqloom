@@ -561,4 +561,22 @@ export class PrismaModelTypeBuilder<
 
     return weaverContext.memoNamedType(input)
   }
+
+  public deleteManyArgs(modelOrName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelOrName)
+    const name = `${model.name}DeleteManyArgs`
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: {
+          type: this.whereInput({ model }),
+        },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
 }
