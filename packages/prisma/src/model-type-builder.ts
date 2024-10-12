@@ -32,14 +32,15 @@ export class PrismaModelTypeBuilder<
   }
 
   public static scalarFilter(scalar: GraphQLScalarType): GraphQLObjectType {
-    const existing = weaverContext.getGraphQLType(scalar)
+    const name = `${scalar.name}Filter`
+    const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
     const filter: GraphQLObjectType = new GraphQLObjectType({
-      name: `${scalar.name}Filter`,
+      name,
       fields: () => ({
         equals: { type: scalar },
-        in: { type: new GraphQLList(new GraphQLNonNull(scalar)) },
-        notIn: { type: new GraphQLList(new GraphQLNonNull(scalar)) },
+        in: { type: list(scalar) },
+        notIn: { type: list(scalar) },
         lt: { type: scalar },
         lte: { type: scalar },
         gt: { type: scalar },
@@ -52,7 +53,7 @@ export class PrismaModelTypeBuilder<
         }),
       }),
     })
-    return weaverContext.memoGraphQLType(scalar, filter)
+    return weaverContext.memoNamedType(filter)
   }
 
   public static sortOrder(): GraphQLEnumType {
@@ -83,11 +84,12 @@ export class PrismaModelTypeBuilder<
   public static fieldUpdateOperationsInput(
     scalar: GraphQLScalarType
   ): GraphQLObjectType {
-    const existing = weaverContext.getGraphQLType(scalar)
+    const name = `${scalar.name}FieldUpdateOperationsInput`
+    const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
 
     const fieldUpdateOperationsInput = new GraphQLObjectType({
-      name: `${scalar.name}FieldUpdateOperationsInput`,
+      name,
       fields: () => ({
         set: { type: scalar },
         ...((scalar === GraphQLInt || scalar === GraphQLFloat) && {
@@ -99,7 +101,7 @@ export class PrismaModelTypeBuilder<
       }),
     })
 
-    return weaverContext.memoGraphQLType(scalar, fieldUpdateOperationsInput)
+    return weaverContext.memoNamedType(fieldUpdateOperationsInput)
   }
 
   public scalarFieldEnum(modelOrName?: string | DMMF.Model): GraphQLEnumType {
@@ -183,13 +185,13 @@ export class PrismaModelTypeBuilder<
       name,
       fields: () => ({
         AND: {
-          type: new GraphQLList(new GraphQLNonNull(this.whereInput({ model }))),
+          type: list(this.whereInput({ model })),
         },
         OR: {
-          type: new GraphQLList(new GraphQLNonNull(this.whereInput({ model }))),
+          type: list(this.whereInput({ model })),
         },
         NOT: {
-          type: new GraphQLList(new GraphQLNonNull(this.whereInput({ model }))),
+          type: list(this.whereInput({ model })),
         },
         ...Object.fromEntries(
           model.fields
@@ -344,7 +346,7 @@ export class PrismaModelTypeBuilder<
         cursor: { type: this.whereInput({ model, unique: true }) },
         skip: { type: GraphQLInt },
         take: { type: GraphQLInt },
-        distinct: { type: new GraphQLList(this.scalarFieldEnum(model)) },
+        distinct: { type: list(this.scalarFieldEnum(model)) },
       }),
     })
 
@@ -366,7 +368,7 @@ export class PrismaModelTypeBuilder<
         cursor: { type: this.whereInput({ model, unique: true }) },
         skip: { type: GraphQLInt },
         take: { type: GraphQLInt },
-        distinct: { type: new GraphQLList(this.scalarFieldEnum(model)) },
+        distinct: { type: list(this.scalarFieldEnum(model)) },
       }),
     })
     return weaverContext.memoNamedType(input)
@@ -414,15 +416,14 @@ export class PrismaModelTypeBuilder<
           model,
           without,
         })
-        if (many) createInput = new GraphQLList(new GraphQLNonNull(createInput))
+        if (many) createInput = list(createInput)
 
         let connectInput: GraphQLOutputType = this.whereInput({
           model,
           unique: true,
         })
 
-        if (many)
-          connectInput = new GraphQLList(new GraphQLNonNull(connectInput))
+        if (many) connectInput = list(connectInput)
         return {
           create: { type: createInput },
           connect: { type: connectInput },
@@ -555,9 +556,7 @@ export class PrismaModelTypeBuilder<
       name,
       fields: () => ({
         data: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(this.createManyInput()))
-          ),
+          type: new GraphQLNonNull(list(this.createManyInput())),
         },
       }),
     })
@@ -609,7 +608,7 @@ export class PrismaModelTypeBuilder<
     without: string
   }): GraphQLObjectType {
     const model = this.getModel(modelName)
-    const name = `${model.name}ConnectOrCreateWithout${capitalize(without)}Input`
+    const name = `${model.name}CreateOrConnectWithout${capitalize(without)}Input`
 
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
@@ -637,7 +636,7 @@ export class PrismaModelTypeBuilder<
     without: string
   }): GraphQLObjectType {
     const model = this.getModel(modelName)
-    const name = `${model.name}UpdateToOneWithout${capitalize(without)}WithWhereUniqueInput`
+    const name = `${model.name}UpdateToOneWithWhereWithout${capitalize(without)}Input`
 
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
@@ -649,47 +648,105 @@ export class PrismaModelTypeBuilder<
       }),
     })
 
-    return weaverContext.memoNamedType(input)
-  }
-
-  public updateWithWhereInput({
-    model: modelName,
-    without,
-    many,
-    unique,
-  }: {
-    model?: string | DMMF.Model
-    without: string
-    many?: boolean
-    unique?: boolean
-  }): GraphQLObjectType {
-    const model = this.getModel(modelName)
-
-    const oneOrMany = many ? "Many" : ""
-    const uniqueName = unique ? "Unique" : ""
-    const name = `${model.name}UpdateWithWhere${oneOrMany}${uniqueName}Without${capitalize(without)}Input`
-
-    const existing = weaverContext.getNamedType(name)
-    if (existing) return existing as GraphQLObjectType
-
-    const input = new GraphQLObjectType({
-      name,
-      fields: () => ({
-        // TODO
-      }),
-    })
     return weaverContext.memoNamedType(input)
   }
 
   public upsertInput({
     model: modelName,
     without,
+    unique,
+  }: {
+    model?: string | DMMF.Model
+    without: string
+    unique?: boolean
+  }): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const uniqueInName = unique ? "WithWhereUnique" : ""
+    const name = `${model.name}Upsert${uniqueInName}Without${capitalize(without)}Input`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        // TODO
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public scalarWhereInput(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}ScalarWhereInput`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        // TODO
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public updateManyWithWhereInput({
+    model: modelName,
+    without,
   }: {
     model?: string | DMMF.Model
     without: string
   }): GraphQLObjectType {
     const model = this.getModel(modelName)
-    const name = `${model.name}UpsertWithout${capitalize(without)}Input`
+    const name = `${model.name}UpdateManyWithWhereWithout${capitalize(without)}Input`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        // TODO
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public updateWithWhereUniqueInput({
+    model: modelName,
+    without,
+  }: {
+    model?: string | DMMF.Model
+    without: string
+  }): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}UpdateWithWhereUniqueWithout${capitalize(without)}Input`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        // TODO
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public createManyInputEnvelope(
+    modelName: string | DMMF.Model,
+    fromField: string
+  ): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const fromModel = model.fields.find((field) => field.name === fromField)
+    if (!fromModel) throw new Error(`Field ${fromField} not found`)
+    // const from = this.getModel(fromModel.type)
+    const name = `${model.name}CreateMany${capitalize(fromField)}InputEnvelope`
 
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
@@ -705,39 +762,88 @@ export class PrismaModelTypeBuilder<
 
   public updateNestedInput({
     model: modelName,
-    without,
-    many,
-    required,
+    from,
   }: {
     model?: string | DMMF.Model
-    without: string
+    from: string
     many?: boolean
     required?: boolean
   }): GraphQLObjectType {
     const model = this.getModel(modelName)
+    const relationField = model.fields.find((f) => f.name === from)
+    if (!relationField) throw new Error(`Field ${from} not found`)
+
+    const fromModel = this.getModel(relationField.type)
+    const field = fromModel.fields.find(
+      (f) => f.relationName === relationField.relationName
+    )
+    if (!field)
+      throw new Error(`relation ${relationField.relationName} not found`)
+    const many = field.isList
+    const required = !field.isList && field.isRequired
 
     const oneOrMany = many ? "Many" : "One"
     const requiredName = required ? "Required" : ""
-    const name = `${model.name}Update${oneOrMany}${requiredName}Without${capitalize(without)}NestedInput`
+    const name = `${model.name}Update${oneOrMany}${requiredName}Without${capitalize(from)}NestedInput`
 
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
 
+    const mayList = (
+      type: GraphQLOutputType
+    ): GraphQLList<GraphQLNonNull<GraphQLOutputType>> | GraphQLOutputType => {
+      return many ? list(type) : type
+    }
+
+    const createMany = field.isList && !relationField.isList
+
     const input = new GraphQLObjectType({
       name,
       fields: () => ({
-        create: { type: this.createInput({ model, without }) },
+        create: { type: mayList(this.createInput({ model, without: from })) },
         connectOrCreate: {
-          type: this.connectOrCreateInput({ model, without }),
+          type: mayList(this.connectOrCreateInput({ model, without: from })),
         },
-        upsert: { type: this.upsertInput({ model, without }) },
-        connect: { type: this.whereInput({ model, unique: true }) },
+        upsert: {
+          type: many
+            ? list(this.upsertInput({ model, without: from, unique: true }))
+            : this.upsertInput({ model, without: from }),
+        },
+        ...(createMany && {
+          createMany: {
+            type: this.createManyInputEnvelope(model.name, from),
+          },
+        }),
+        ...(many && {
+          set: {
+            type: list(this.whereInput({ model, unique: true })),
+          },
+        }),
+        ...(!required && {
+          disconnect: {
+            type: many
+              ? list(this.whereInput({ model, unique: true }))
+              : this.whereInput({ model }),
+          },
+          delete: {
+            type: many
+              ? list(this.whereInput({ model, unique: true }))
+              : this.whereInput({ model }),
+          },
+        }),
+        connect: { type: mayList(this.whereInput({ model, unique: true })) },
         update: {
-          type: this.updateToOneWithWhereWInput({ model, without }),
+          type: many
+            ? list(this.updateWithWhereUniqueInput({ model, without: from }))
+            : this.updateToOneWithWhereWInput({ model, without: from }),
         },
-        ...(required && {
-          disconnect: { type: this.whereInput({ model }) },
-          delete: { type: this.whereInput({ model }) },
+        ...(many && {
+          updateMany: {
+            type: list(this.updateManyWithWhereInput({ model, without: from })),
+          },
+          deleteMany: {
+            type: list(this.scalarWhereInput(model)),
+          },
         }),
       }),
     })
@@ -787,15 +893,15 @@ export class PrismaModelTypeBuilder<
               const relationField = fieldModel.fields.find(
                 (f) => f.relationName === field.relationName
               )
-              if (relationField == null) return
+              if (relationField == null)
+                throw new Error("Relation field not found")
+
               return [
                 field.name,
                 {
                   type: this.updateNestedInput({
                     model: fieldModel,
-                    without: relationField.name,
-                    many: field.isList,
-                    required: !field.isList && field.isRequired,
+                    from: relationField.name,
                   }),
                 },
               ]
@@ -807,4 +913,8 @@ export class PrismaModelTypeBuilder<
 
     return weaverContext.memoNamedType(input)
   }
+}
+
+function list(type: GraphQLOutputType): GraphQLList<GraphQLOutputType> {
+  return new GraphQLList(new GraphQLNonNull(type))
 }

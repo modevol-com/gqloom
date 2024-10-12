@@ -210,7 +210,7 @@ describe("PrismaModelTypeBuilder", () => {
         cursor: UserWhereUniqueInput
         skip: Int
         take: Int
-        distinct: [UserScalarFieldEnum]
+        distinct: [UserScalarFieldEnum!]
       }"
     `)
   })
@@ -224,7 +224,7 @@ describe("PrismaModelTypeBuilder", () => {
         cursor: UserWhereUniqueInput
         skip: Int
         take: Int
-        distinct: [UserScalarFieldEnum]
+        distinct: [UserScalarFieldEnum!]
       }"
     `)
   })
@@ -344,45 +344,32 @@ describe("PrismaModelTypeBuilder", () => {
     expect(
       printType(PrismaModelTypeBuilder.fieldUpdateOperationsInput(GraphQLInt))
     ).toMatchInlineSnapshot(`
-      "type IntFilter {
-        equals: Int
-        in: [Int!]
-        notIn: [Int!]
-        lt: Int
-        lte: Int
-        gt: Int
-        gte: Int
-        not: IntFilter
+      "type IntFieldUpdateOperationsInput {
+        set: Int
+        increment: Int
+        decrement: Int
+        multiply: Float
+        divide: Float
       }"
     `)
 
     expect(
       printType(PrismaModelTypeBuilder.fieldUpdateOperationsInput(GraphQLFloat))
     ).toMatchInlineSnapshot(`
-      "type FloatFilter {
-        equals: Float
-        in: [Float!]
-        notIn: [Float!]
-        lt: Float
-        lte: Float
-        gt: Float
-        gte: Float
-        not: FloatFilter
+      "type FloatFieldUpdateOperationsInput {
+        set: Float
+        increment: Float
+        decrement: Float
+        multiply: Float
+        divide: Float
       }"
     `)
 
     expect(
       printType(PrismaModelTypeBuilder.fieldUpdateOperationsInput(GraphQLID))
     ).toMatchInlineSnapshot(`
-      "type IDFilter {
-        equals: ID
-        in: [ID!]
-        notIn: [ID!]
-        lt: ID
-        lte: ID
-        gt: ID
-        gte: ID
-        not: IDFilter
+      "type IDFieldUpdateOperationsInput {
+        set: ID
       }"
     `)
 
@@ -391,18 +378,8 @@ describe("PrismaModelTypeBuilder", () => {
         PrismaModelTypeBuilder.fieldUpdateOperationsInput(GraphQLString)
       )
     ).toMatchInlineSnapshot(`
-      "type StringFilter {
-        equals: String
-        in: [String!]
-        notIn: [String!]
-        lt: String
-        lte: String
-        gt: String
-        gte: String
-        not: StringFilter
-        contains: String
-        startsWith: String
-        endsWith: String
+      "type StringFieldUpdateOperationsInput {
+        set: String
       }"
     `)
   })
@@ -411,8 +388,8 @@ describe("PrismaModelTypeBuilder", () => {
     const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
     expect(printType(UserTypeBuilder.updateInput())).toMatchInlineSnapshot(`
       "type UserUpdateInput {
-        email: StringFilter
-        name: StringFilter
+        email: StringFieldUpdateOperationsInput
+        name: StringFieldUpdateOperationsInput
         posts: PostUpdateManyWithoutAuthorNestedInput
         publishedPosts: PostUpdateManyWithoutPublishedByNestedInput
         Profile: ProfileUpdateOneWithoutUserNestedInput
@@ -422,11 +399,11 @@ describe("PrismaModelTypeBuilder", () => {
     const DogTypeBuilder = new PrismaModelTypeBuilder(g.Dog)
     expect(printType(DogTypeBuilder.updateInput())).toMatchInlineSnapshot(`
       "type DogUpdateInput {
-        firstName: StringFilter
-        lastName: StringFilter
-        height: FloatFilter
-        weight: IntFilter
-        birthDate: StringFilter
+        firstName: StringFieldUpdateOperationsInput
+        lastName: StringFieldUpdateOperationsInput
+        height: FloatFieldUpdateOperationsInput
+        weight: IntFieldUpdateOperationsInput
+        birthDate: StringFieldUpdateOperationsInput
       }"
     `)
 
@@ -434,12 +411,125 @@ describe("PrismaModelTypeBuilder", () => {
 
     expect(printType(PostTypeBuilder.updateInput())).toMatchInlineSnapshot(`
       "type PostUpdateInput {
-        title: StringFilter
-        content: StringFilter
+        title: StringFieldUpdateOperationsInput
+        content: StringFieldUpdateOperationsInput
         published: BooleanFieldUpdateOperationsInput
         author: UserUpdateOneRequiredWithoutPostsNestedInput
         publishedBy: UserUpdateOneWithoutPublishedPostsNestedInput
         categories: CategoryUpdateManyWithoutPostsNestedInput
+      }"
+    `)
+  })
+
+  it("should be able to create updateNestedInput", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+
+    expect(
+      printType(
+        UserTypeBuilder.updateNestedInput({ from: "posts", required: true })
+      )
+    ).toMatchInlineSnapshot(`
+      "type UserUpdateOneRequiredWithoutPostsNestedInput {
+        create: UserCreateWithoutPostsInput
+        connectOrCreate: UserCreateOrConnectWithoutPostsInput
+        upsert: UserUpsertWithoutPostsInput
+        connect: UserWhereUniqueInput
+        update: UserUpdateToOneWithWhereWithoutPostsInput
+      }"
+    `)
+
+    expect(
+      printType(UserTypeBuilder.updateNestedInput({ from: "publishedPosts" }))
+    ).toMatchInlineSnapshot(`
+      "type UserUpdateOneWithoutPublishedPostsNestedInput {
+        create: UserCreateWithoutPublishedPostsInput
+        connectOrCreate: UserCreateOrConnectWithoutPublishedPostsInput
+        upsert: UserUpsertWithoutPublishedPostsInput
+        disconnect: UserWhereInput
+        delete: UserWhereInput
+        connect: UserWhereUniqueInput
+        update: UserUpdateToOneWithWhereWithoutPublishedPostsInput
+      }"
+    `)
+
+    const CategoryTypeBuilder = new PrismaModelTypeBuilder(g.Category)
+
+    expect(
+      printType(
+        CategoryTypeBuilder.updateNestedInput({ from: "posts", many: true })
+      )
+    ).toMatchInlineSnapshot(`
+      "type CategoryUpdateManyWithoutPostsNestedInput {
+        create: [CategoryCreateWithoutPostsInput!]
+        connectOrCreate: [CategoryCreateOrConnectWithoutPostsInput!]
+        upsert: [CategoryUpsertWithWhereUniqueWithoutPostsInput!]
+        set: [CategoryWhereUniqueInput!]
+        disconnect: [CategoryWhereUniqueInput!]
+        delete: [CategoryWhereUniqueInput!]
+        connect: [CategoryWhereUniqueInput!]
+        update: [CategoryUpdateWithWhereUniqueWithoutPostsInput!]
+        updateMany: [CategoryUpdateManyWithWhereWithoutPostsInput!]
+        deleteMany: [CategoryScalarWhereInput!]
+      }"
+    `)
+
+    const PostTypeBuilder = new PrismaModelTypeBuilder(g.Post)
+
+    expect(
+      printType(
+        PostTypeBuilder.updateNestedInput({ from: "author", many: true })
+      )
+    ).toMatchInlineSnapshot(`
+      "type PostUpdateManyWithoutAuthorNestedInput {
+        create: [PostCreateWithoutAuthorInput!]
+        connectOrCreate: [PostCreateOrConnectWithoutAuthorInput!]
+        upsert: [PostUpsertWithWhereUniqueWithoutAuthorInput!]
+        createMany: PostCreateManyAuthorInputEnvelope
+        set: [PostWhereUniqueInput!]
+        disconnect: [PostWhereUniqueInput!]
+        delete: [PostWhereUniqueInput!]
+        connect: [PostWhereUniqueInput!]
+        update: [PostUpdateWithWhereUniqueWithoutAuthorInput!]
+        updateMany: [PostUpdateManyWithWhereWithoutAuthorInput!]
+        deleteMany: [PostScalarWhereInput!]
+      }"
+    `)
+
+    expect(
+      printType(
+        PostTypeBuilder.updateNestedInput({
+          from: "publishedBy",
+          many: true,
+        })
+      )
+    ).toMatchInlineSnapshot(`
+      "type PostUpdateManyWithoutPublishedByNestedInput {
+        create: [PostCreateWithoutPublishedByInput!]
+        connectOrCreate: [PostCreateOrConnectWithoutPublishedByInput!]
+        upsert: [PostUpsertWithWhereUniqueWithoutPublishedByInput!]
+        createMany: PostCreateManyPublishedByInputEnvelope
+        set: [PostWhereUniqueInput!]
+        disconnect: [PostWhereUniqueInput!]
+        delete: [PostWhereUniqueInput!]
+        connect: [PostWhereUniqueInput!]
+        update: [PostUpdateWithWhereUniqueWithoutPublishedByInput!]
+        updateMany: [PostUpdateManyWithWhereWithoutPublishedByInput!]
+        deleteMany: [PostScalarWhereInput!]
+      }"
+    `)
+
+    const Profile = new PrismaModelTypeBuilder(g.Profile)
+
+    expect(printType(Profile.updateNestedInput({ from: "user" })))
+      .toMatchInlineSnapshot(`
+      "type ProfileUpdateOneWithoutUserNestedInput {
+        create: ProfileCreateWithoutUserInput
+        connectOrCreate: ProfileCreateOrConnectWithoutUserInput
+        upsert: ProfileUpsertWithoutUserInput
+        disconnect: ProfileWhereInput
+        delete: ProfileWhereInput
+        connect: ProfileWhereUniqueInput
+        update: ProfileUpdateToOneWithWhereWithoutUserInput
       }"
     `)
   })
@@ -449,7 +539,7 @@ describe("PrismaModelTypeBuilder", () => {
     expect(
       printType(PostTypeBuilder.connectOrCreateInput({ without: "author" }))
     ).toMatchInlineSnapshot(`
-      "type PostConnectOrCreateWithoutAuthorInput {
+      "type PostCreateOrConnectWithoutAuthorInput {
         where: PostWhereUniqueInput!
         create: PostCreateWithoutAuthorInput!
       }"
@@ -460,7 +550,7 @@ describe("PrismaModelTypeBuilder", () => {
         PostTypeBuilder.connectOrCreateInput({ without: "publishedBy" })
       )
     ).toMatchInlineSnapshot(`
-      "type PostConnectOrCreateWithoutPublishedByInput {
+      "type PostCreateOrConnectWithoutPublishedByInput {
         where: PostWhereUniqueInput!
         create: PostCreateWithoutPublishedByInput!
       }"
