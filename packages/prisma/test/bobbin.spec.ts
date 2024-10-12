@@ -478,4 +478,59 @@ describe("PrismaModelBobbin", () => {
       `)
     })
   })
+
+  describe("deleteMutation", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+
+    it("should be able to create a deleteMutation", () => {
+      const m = UserBobbin.deleteMutation({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.delete>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
+
+      expect(m).toBeDefined()
+      expect(m.output).toBeTypeOf("object")
+      expect(m.type).toEqual("mutation")
+      expect(m.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserDeleteInput = z.object({
+        __typename: z.literal("UserDeleteInput"),
+        email: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        deleteUser: UserBobbin.deleteMutation({
+          input: zodSilk.input({
+            where: UserDeleteInput,
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          deleteUser(where: UserDeleteInput!): User
+        }
+
+        type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        input UserDeleteInput {
+          email: String!
+        }"
+      `)
+    })
+  })
 })

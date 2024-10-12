@@ -314,4 +314,13 @@ describe("PrismaModelTypeBuilder", () => {
       }"
     `)
   })
+
+  it("should be able to create deleteArgs", () => {
+    const UserTypeBuilder = new PrismaModelTypeBuilder(g.User)
+    expect(printType(UserTypeBuilder.deleteArgs())).toMatchInlineSnapshot(`
+      "type UserDeleteArgs {
+        where: UserWhereUniqueInput!
+      }"
+    `)
+  })
 })
