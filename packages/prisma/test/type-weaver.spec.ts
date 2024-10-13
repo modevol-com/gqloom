@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import * as g from "./generated"
-import { PrismaTypeWeaver } from "../src"
+import { PrismaTypeWeaver, PrismaActionArgsWeaver } from "../src"
 import { printType } from "graphql"
 
 describe("PrismaModelTypeWeaver", () => {
@@ -55,5 +55,20 @@ describe("PrismaModelTypeWeaver", () => {
         }"
       `)
     })
+  })
+})
+
+describe("PrismaActionArgsWeaver", () => {
+  it("should be able to create countArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    expect(printType(UserTypeBuilder.countArgs())).toMatchInlineSnapshot(`
+      "type UserCountArgs {
+        where: UserWhereInput
+        orderBy: [UserOrderByWithRelationInput!]
+        cursor: UserWhereUniqueInput
+        skip: Int
+        take: Int
+      }"
+    `)
   })
 })

@@ -1,6 +1,6 @@
 import { type DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
-import { type PrismaModelMeta } from "./types"
+import { type PrismaModelSilk, type PrismaModelMeta } from "./types"
 import { weaverContext } from "@gqloom/core"
 import {
   GraphQLList,
@@ -10,13 +10,15 @@ import {
   type GraphQLFieldConfig,
   GraphQLEnumType,
   type GraphQLEnumValueConfig,
+  GraphQLInt,
 } from "graphql"
+import { gqlType } from "./utils"
 
 export class PrismaTypeWeaver {
   protected modelMeta: Required<PrismaModelMeta>
 
-  constructor(modelData: PrismaModelMeta) {
-    this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelData)
+  constructor(modelMeta: PrismaModelMeta) {
+    this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
   }
 
   public inputType(name: string): GraphQLObjectType {
@@ -163,4 +165,53 @@ export class PrismaTypeWeaver {
     }
     return map
   }
+}
+
+export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
+  constructor(protected readonly silk: PrismaModelSilk<any>) {
+    super(silk.data)
+  }
+
+  protected getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
+    if (modelOrName == null) return this.silk.model
+    if (typeof modelOrName === "object") return modelOrName
+    const model = this.silk.data.models[modelOrName]
+    if (model == null) throw new Error(`Model ${modelOrName} not found`)
+    return model
+  }
+
+  public countArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}CountArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.inputType(`${model.name}WhereInput`) },
+        orderBy: {
+          type: gqlType.list(
+            this.inputType(`${model.name}OrderByWithRelationInput`)
+          ),
+        },
+        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+  // TODO: findFirstArgs
+  // TODO: findManyArgs
+  // TODO: findUniqueArgs
+  // TODO: createArgs
+  // TODO: createManyArgs
+  // TODO: deleteArgs
+  // TODO: deleteManyArgs
+  // TODO: updateArgs
+  // TODO: updateManyArgs
+  // TODO: upsertArgs
 }
