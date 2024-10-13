@@ -590,7 +590,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("updateMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    // const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
 
     it("should be able to create a deleteMutation", async () => {
       // const u = await db.user.update({

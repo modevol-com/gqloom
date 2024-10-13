@@ -1,7 +1,7 @@
 import { type DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
 import {
-  type PrismaDataModel,
+  type PrismaModelMeta,
   type PrismaClient,
   type PrismaModelSilk,
   type PrismaDelegate,
@@ -32,7 +32,7 @@ export class PrismaModelBobbin<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > {
-  protected modelData: PrismaDataModel
+  protected modelData: PrismaModelMeta
   protected delegate: InferPrismaDelegate<TClient, TModalSilk["name"]>
   protected typeBuilder: PrismaModelTypeBuilder<TModalSilk>
 

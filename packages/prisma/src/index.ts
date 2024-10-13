@@ -20,7 +20,7 @@ import {
 } from "graphql"
 import type {
   PrismaModelSilk,
-  PrismaDataModel,
+  PrismaModelMeta,
   PrismaEnumSilk,
   PrismaWeaverConfig,
 } from "./types"
@@ -28,7 +28,7 @@ import type {
 export class PrismaWeaver {
   static unravel<TModal>(
     model: DMMF.Model,
-    data: PrismaDataModel
+    data: PrismaModelMeta
   ): PrismaModelSilk<TModal> {
     return {
       model,
@@ -55,7 +55,7 @@ export class PrismaWeaver {
     }
   }
 
-  static getGraphQLTypeByModel(model: DMMF.Model, data?: PrismaDataModel) {
+  static getGraphQLTypeByModel(model: DMMF.Model, data?: PrismaModelMeta) {
     const existing = weaverContext.getNamedType(model.name)
     if (existing != null) return new GraphQLNonNull(existing)
 
@@ -84,7 +84,7 @@ export class PrismaWeaver {
 
   static getGraphQLField(
     field: DMMF.Field,
-    data?: PrismaDataModel
+    data?: PrismaModelMeta
   ): GraphQLFieldConfig<any, any> | undefined {
     const unwrappedType = (() => {
       switch (field.kind) {
@@ -94,7 +94,7 @@ export class PrismaWeaver {
           return PrismaWeaver.getGraphQLEnumType(enumType)
         }
         case "scalar":
-          return PrismaWeaver.getGraphQLTypeByField(field)
+          return PrismaWeaver.getGraphQLTypeByField(field.type, field)
       }
     })()
     if (!unwrappedType) return
@@ -109,16 +109,15 @@ export class PrismaWeaver {
   }
 
   static getGraphQLTypeByField(
-    field: DMMF.Field
+    type: string,
+    field?: DMMF.Field
   ): GraphQLOutputType | undefined {
     const config = weaverContext.getConfig<PrismaWeaverConfig>("gqloom.prisma")
 
-    if (field.kind !== "scalar") return
-
-    const presetType = config?.presetGraphQLType?.(field)
+    const presetType = config?.presetGraphQLType?.(type, field)
     if (presetType) return presetType
-    if (field.isId) return GraphQLID
-    switch (field.type) {
+    if (field?.isId) return GraphQLID
+    switch (type) {
       case "BigInt":
       case "Int":
         return GraphQLInt
@@ -131,7 +130,7 @@ export class PrismaWeaver {
       case "String":
         return GraphQLString
       default:
-        throw new Error(`Unsupported scalar type: ${field.type}`)
+        throw new Error(`Unsupported scalar type: ${type}`)
     }
   }
 

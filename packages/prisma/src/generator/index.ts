@@ -36,6 +36,8 @@ generatorHandler({
       enums[enumType.name] = enumType
     }
 
+    const schema = options.dmmf.schema
+
     const outputDir = options.generator.output?.value ?? defaultOutput
 
     // create output directory if it doesn't exist
@@ -43,7 +45,7 @@ generatorHandler({
 
     fs.writeFileSync(
       path.resolve(outputDir, "./datamodel.json"),
-      JSON.stringify({ models, enums }, null, 2)
+      JSON.stringify({ models, enums, schema }, null, 2)
     )
     await genJSFile(options.dmmf, {
       outputFile: path.resolve(outputDir, "./index.js"),

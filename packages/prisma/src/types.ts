@@ -11,7 +11,7 @@ export interface PrismaModelSilk<
   list(): GraphQLSilk<TModel[]>
 
   model: DMMF.Model
-  data: PrismaDataModel
+  data: PrismaModelMeta
   name: TName
 
   relations?: TRelation
@@ -25,7 +25,10 @@ export interface PrismaEnumSilk<TEnum> extends GraphQLSilk<TEnum> {
 }
 
 export interface PrismaWeaverConfigOptions {
-  presetGraphQLType?: (field: DMMF.Field) => GraphQLOutputType | undefined
+  presetGraphQLType?: (
+    type: string,
+    field?: DMMF.Field
+  ) => GraphQLOutputType | undefined
 }
 
 export interface PrismaWeaverConfig
@@ -34,9 +37,12 @@ export interface PrismaWeaverConfig
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.prisma"
 }
 
-export interface PrismaDataModel {
+export interface PrismaModelMeta {
   models: Record<string, DMMF.Model>
   enums: Record<string, DMMF.DatamodelEnum>
+  schema: DMMF.Schema
+
+  inputTypes?: Map<string, DMMF.InputType>
 }
 
 export interface PrismaClient {

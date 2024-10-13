@@ -1,6 +1,6 @@
 import { type DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
-import { type PrismaDataModel, type PrismaModelSilk } from "./types"
+import { type PrismaModelMeta, type PrismaModelSilk } from "./types"
 import { weaverContext, notNullish } from "@gqloom/core"
 import {
   GraphQLEnumType,
@@ -12,13 +12,123 @@ import {
   GraphQLScalarType,
   GraphQLString,
   GraphQLFloat,
+  type GraphQLFieldConfig,
 } from "graphql"
 import { capitalize } from "./utils"
+
+export class PrismaTypeWeaver {
+  protected modelMeta: Required<PrismaModelMeta>
+
+  constructor(modelData: PrismaModelMeta) {
+    this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelData)
+  }
+
+  public inputType(name: string): GraphQLObjectType {
+    const input = this.modelMeta.inputTypes.get(name)
+    if (!input) throw new Error(`Input type ${name} not found`)
+    const existing = weaverContext.getNamedType(name) as
+      | GraphQLObjectType
+      | undefined
+
+    if (existing) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: () => ({
+          ...Object.fromEntries(
+            input.fields.map((field) => {
+              const isNonNull = field.isRequired && !field.isNullable
+              const fieldInput = PrismaTypeWeaver.getMostRankInputType(
+                field.inputTypes
+              )
+
+              const isList = fieldInput.isList
+              let type: GraphQLOutputType = (() => {
+                switch (fieldInput.location) {
+                  case "inputObjectTypes":
+                    return this.inputType(fieldInput.type)
+                  case "scalar":
+                    return PrismaWeaver.getGraphQLTypeByField(fieldInput.type)!
+                  default:
+                    throw new Error(
+                      `Unknown input type location: ${fieldInput.location}`
+                    )
+                }
+              })()
+
+              if (isList) type = new GraphQLList(new GraphQLNonNull(type))
+              if (isNonNull) type = new GraphQLNonNull(type)
+
+              return [
+                field.name,
+                {
+                  description: field.comment,
+                  deprecationReason: field.deprecation?.reason,
+                  type,
+                } as GraphQLFieldConfig<any, any, any>,
+              ]
+            })
+          ),
+        }),
+      })
+    )
+  }
+
+  protected static getMostRankInputType(
+    inputTypes: readonly DMMF.InputTypeRef[]
+  ): DMMF.InputTypeRef {
+    const rankList = inputTypes
+      .map((item) => ({
+        item,
+        rank: PrismaTypeWeaver.getInputTypeRank(item),
+      }))
+      .sort((a, b) => b.rank - a.rank)
+
+    return rankList[0].item
+  }
+
+  protected static getInputTypeRank(inputType: DMMF.InputTypeRef): number {
+    let rank = inputType.type.length
+    if (inputType.isList) rank += 10
+    switch (inputType.location) {
+      case "scalar":
+        rank += 10
+        break
+      case "enumTypes":
+        rank += 20
+        break
+      case "fieldRefTypes":
+        rank -= 30
+        break
+      case "inputObjectTypes":
+        rank += 40
+    }
+    return rank
+  }
+
+  protected static indexModelMeta(
+    modelMeta: PrismaModelMeta
+  ): Required<PrismaModelMeta> {
+    modelMeta.inputTypes ??= PrismaTypeWeaver.indexInputTypes(modelMeta.schema)
+    return modelMeta as Required<PrismaModelMeta>
+  }
+
+  protected static indexInputTypes(
+    schema: DMMF.Schema
+  ): Map<string, DMMF.InputType> {
+    const map = new Map<string, DMMF.InputType>()
+    for (const inputType of schema.inputObjectTypes.prisma) {
+      map.set(inputType.name, inputType)
+    }
+    return map
+  }
+}
 
 export class PrismaModelTypeBuilder<
   TModalSilk extends PrismaModelSilk<any, any>,
 > {
-  protected modelData: PrismaDataModel
+  protected modelData: PrismaModelMeta
   constructor(protected readonly silk: TModalSilk) {
     this.modelData = silk.data
   }
@@ -155,7 +265,7 @@ export class PrismaModelTypeBuilder<
             .map((name) => {
               const f = model.fields.find((f) => f.name === name)
               if (f == null) return
-              const scalar = PrismaWeaver.getGraphQLTypeByField(f)
+              const scalar = PrismaWeaver.getGraphQLTypeByField(f.type, f)
               if (scalar == null) return
               if (!(scalar instanceof GraphQLScalarType)) return
               return [f.name, { type: scalar }]
@@ -197,7 +307,7 @@ export class PrismaModelTypeBuilder<
           model.fields
             .filter((f) => f.kind === "scalar")
             .map((f) => {
-              const scalar = PrismaWeaver.getGraphQLTypeByField(f)
+              const scalar = PrismaWeaver.getGraphQLTypeByField(f.type, f)
               if (scalar == null) return
               if (!(scalar instanceof GraphQLScalarType)) return
 
@@ -470,7 +580,10 @@ export class PrismaModelTypeBuilder<
             .filter((f) => f.kind === "scalar")
             .map((field) => {
               if (withoutFields.has(field.name)) return
-              const scalar = PrismaWeaver.getGraphQLTypeByField(field)
+              const scalar = PrismaWeaver.getGraphQLTypeByField(
+                field.type,
+                field
+              )
               if (scalar == null) return
               const isOptional = !field.isRequired || field.hasDefaultValue
               const type = isOptional ? scalar : new GraphQLNonNull(scalar)
@@ -533,7 +646,10 @@ export class PrismaModelTypeBuilder<
           model.fields
             .filter((f) => f.kind === "scalar")
             .map((field) => {
-              const scalar = PrismaWeaver.getGraphQLTypeByField(field)
+              const scalar = PrismaWeaver.getGraphQLTypeByField(
+                field.type,
+                field
+              )
               if (scalar == null) return
               const isOptional = !field.isRequired || field.hasDefaultValue
               const type = isOptional ? scalar : new GraphQLNonNull(scalar)
@@ -873,7 +989,7 @@ export class PrismaModelTypeBuilder<
             .map((f) => {
               if (f.isId) return
               if (relationFields.has(f.name)) return null
-              const scalar = PrismaWeaver.getGraphQLTypeByField(f)
+              const scalar = PrismaWeaver.getGraphQLTypeByField(f.type, f)
               if (scalar == null) return
               if (!(scalar instanceof GraphQLScalarType)) return
 

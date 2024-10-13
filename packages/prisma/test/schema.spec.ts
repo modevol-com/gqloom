@@ -133,6 +133,7 @@ describe("PrismaWeaver", () => {
     const UserSilk = PrismaWeaver.unravel(UserModel, {
       models: { User: UserModel },
       enums: { Role: RoleEnum },
+      schema: {} as any,
     })
     expect(printSilk(UserSilk)).toMatchInlineSnapshot(`
       "type User {
@@ -159,6 +160,7 @@ describe("PrismaWeaver", () => {
     const UserWithRoleSilk = PrismaWeaver.unravel(UserWithRoleModel, {
       enums: { Role: RoleEnum },
       models: {},
+      schema: {} as any,
     })
 
     expect(printSilk(UserWithRoleSilk)).toMatchInlineSnapshot(`
