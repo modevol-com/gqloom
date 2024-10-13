@@ -43,6 +43,7 @@ export interface PrismaModelMeta {
   schema: DMMF.Schema
 
   inputTypes?: Map<string, DMMF.InputType>
+  enumTypes?: Map<string, DMMF.SchemaEnum>
 }
 
 export interface PrismaClient {
