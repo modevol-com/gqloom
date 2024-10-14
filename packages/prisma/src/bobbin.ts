@@ -26,7 +26,7 @@ import {
   loom,
 } from "@gqloom/core"
 import { GraphQLInt, GraphQLNonNull } from "graphql"
-import { PrismaModelTypeBuilder } from "./model-type-builder"
+import { PrismaActionArgsWeaver } from "./type-weaver"
 
 export class PrismaModelBobbin<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
@@ -34,7 +34,7 @@ export class PrismaModelBobbin<
 > {
   protected modelData: PrismaModelMeta
   protected delegate: InferPrismaDelegate<TClient, TModalSilk["name"]>
-  protected typeBuilder: PrismaModelTypeBuilder<TModalSilk>
+  protected typeWeaver: PrismaActionArgsWeaver
 
   constructor(
     protected readonly silk: TModalSilk,
@@ -45,7 +45,7 @@ export class PrismaModelBobbin<
       silk.model.name,
       client
     ) as InferPrismaDelegate<TClient, TModalSilk["name"]>
-    this.typeBuilder = new PrismaModelTypeBuilder(silk)
+    this.typeWeaver = new PrismaActionArgsWeaver(silk)
   }
 
   public relationField<TKey extends keyof NonNullable<TModalSilk["relations"]>>(
@@ -153,7 +153,7 @@ export class PrismaModelBobbin<
     >,
     "query"
   > {
-    input ??= silk(this.typeBuilder.countArgs()) as GraphQLSilk<
+    input ??= silk(this.typeWeaver.countArgs()) as GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
       TInputI
     >
@@ -203,7 +203,7 @@ export class PrismaModelBobbin<
     >,
     "query"
   > {
-    input ??= silk(this.typeBuilder.findFirstArgs())
+    input ??= silk(this.typeWeaver.findFirstArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -262,7 +262,7 @@ export class PrismaModelBobbin<
     >,
     "query"
   > {
-    input ??= silk(this.typeBuilder.findManyArgs())
+    input ??= silk(this.typeWeaver.findManyArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -321,7 +321,7 @@ export class PrismaModelBobbin<
     >,
     "query"
   > {
-    input ??= silk(this.typeBuilder.findUniqueArgs())
+    input ??= silk(this.typeWeaver.findUniqueArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -376,7 +376,7 @@ export class PrismaModelBobbin<
     >,
     "mutation"
   > {
-    input ??= silk(new GraphQLNonNull(this.typeBuilder.createArgs()))
+    input ??= silk(new GraphQLNonNull(this.typeWeaver.createArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -435,9 +435,9 @@ export class PrismaModelBobbin<
     >,
     "mutation"
   > {
-    input ??= silk(new GraphQLNonNull(this.typeBuilder.createManyArgs()))
+    input ??= silk(new GraphQLNonNull(this.typeWeaver.createManyArgs()))
 
-    const output = silk(PrismaModelTypeBuilder.batchPayload()) as GraphQLSilk<
+    const output = silk(PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
       IBatchPayload,
       IBatchPayload
     >
@@ -493,7 +493,7 @@ export class PrismaModelBobbin<
     >,
     "mutation"
   > {
-    input ??= silk(new GraphQLNonNull(this.typeBuilder.deleteArgs()))
+    input ??= silk(new GraphQLNonNull(this.typeWeaver.deleteArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -560,8 +560,8 @@ export class PrismaModelBobbin<
     >,
     "mutation"
   > {
-    input ??= silk(new GraphQLNonNull(this.typeBuilder.deleteManyArgs()))
-    const output = silk(PrismaModelTypeBuilder.batchPayload()) as GraphQLSilk<
+    input ??= silk(new GraphQLNonNull(this.typeWeaver.deleteManyArgs()))
+    const output = silk(PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
       IBatchPayload,
       IBatchPayload
     >

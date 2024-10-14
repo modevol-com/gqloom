@@ -153,5 +153,4 @@ export class PrismaWeaver {
 
 export * from "./bobbin"
 export * from "./types"
-export * from "./model-type-builder"
 export * from "./type-weaver"

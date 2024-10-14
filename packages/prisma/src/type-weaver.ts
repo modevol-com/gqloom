@@ -418,4 +418,20 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
     })
     return weaverContext.memoNamedType(input)
   }
+
+  static batchPayload(): GraphQLObjectType {
+    const name = "BatchPayload"
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        count: { type: gt.nonNull(gt.int) },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
 }
