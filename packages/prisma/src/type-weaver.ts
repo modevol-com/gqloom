@@ -204,9 +204,80 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     return weaverContext.memoNamedType(input)
   }
-  // TODO: findFirstArgs
-  // TODO: findManyArgs
-  // TODO: findUniqueArgs
+
+  public findFirstArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}FindFirstArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.inputType(`${model.name}WhereInput`) },
+        orderBy: {
+          type: gqlType.list(
+            this.inputType(`${model.name}OrderByWithRelationInput`)
+          ),
+        },
+        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
+        distinct: {
+          type: gqlType.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+        },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public findManyArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}FindManyArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.inputType(`${model.name}WhereInput`) },
+        orderBy: {
+          type: gqlType.list(
+            this.inputType(`${model.name}OrderByWithRelationInput`)
+          ),
+        },
+        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
+        distinct: {
+          type: gqlType.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+        },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public findUniqueArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}FindUniqueArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
   // TODO: createArgs
   // TODO: createManyArgs
   // TODO: deleteArgs

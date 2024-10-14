@@ -71,4 +71,41 @@ describe("PrismaActionArgsWeaver", () => {
       }"
     `)
   })
+
+  it("should be able to create findFirstArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    expect(printType(UserTypeBuilder.findFirstArgs())).toMatchInlineSnapshot(`
+      "type UserFindFirstArgs {
+        where: UserWhereInput
+        orderBy: [UserOrderByWithRelationInput!]
+        cursor: UserWhereUniqueInput
+        skip: Int
+        take: Int
+        distinct: [UserScalarFieldEnum!]
+      }"
+    `)
+  })
+
+  it("should be able to create findManyArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    expect(printType(UserTypeBuilder.findManyArgs())).toMatchInlineSnapshot(`
+      "type UserFindManyArgs {
+        where: UserWhereInput
+        orderBy: [UserOrderByWithRelationInput!]
+        cursor: UserWhereUniqueInput
+        skip: Int
+        take: Int
+        distinct: [UserScalarFieldEnum!]
+      }"
+    `)
+  })
+
+  it("should be able to create findUniqueArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    expect(printType(UserTypeBuilder.findUniqueArgs())).toMatchInlineSnapshot(`
+      "type UserFindUniqueArgs {
+        where: UserWhereUniqueInput
+      }"
+    `)
+  })
 })
