@@ -30,6 +30,7 @@ import {
 } from "@gqloom/core"
 import { GraphQLInt, GraphQLNonNull } from "graphql"
 import { PrismaActionArgsWeaver } from "./type-weaver"
+import { capitalize } from "./utils"
 
 export class PrismaModelBobbin<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
@@ -734,6 +735,16 @@ export class PrismaModelBobbin<
     >
   }
 
+  public resolver(): BobbinResolver<TModalSilk, TClient> {
+    const name = capitalize(this.silk.name)
+    return {
+      [`count${name}`]: this.countQuery(),
+      [`findFirst${name}`]: this.findFirstQuery(),
+      [`findMany${name}`]: this.findManyQuery(),
+      [`findUnique${name}`]: this.findUniqueQuery(),
+    } as BobbinResolver<TModalSilk, TClient>
+  }
+
   protected static getDelegate(
     modelName: string,
     client: PrismaClient
@@ -751,4 +762,61 @@ export class PrismaModelBobbin<
 
     return delegate as PrismaDelegate
   }
+}
+
+export type BobbinResolver<
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+> = {
+  [key in `count${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+    undefined,
+    GraphQLSilk<number>,
+    GraphQLSilk<
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>
+    >,
+    "query"
+  >
+} & {
+  [key in `findFirst${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+    undefined,
+    ReturnType<TModalSilk["nullable"]>,
+    GraphQLSilk<
+      InferDelegateFindFirstArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      InferDelegateFindFirstArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >
+    >,
+    "query"
+  >
+} & {
+  [key in `findMany${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+    undefined,
+    ReturnType<TModalSilk["list"]>,
+    GraphQLSilk<
+      InferDelegateFindManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      InferDelegateFindManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >
+    >,
+    "query"
+  >
+} & {
+  [key in `findUnique${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+    undefined,
+    ReturnType<TModalSilk["nullable"]>,
+    GraphQLSilk<
+      InferDelegateFindUniqueArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      InferDelegateFindUniqueArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >
+    >,
+    "query"
+  >
 }

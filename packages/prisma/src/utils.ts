@@ -9,8 +9,8 @@ import {
   GraphQLBoolean,
 } from "graphql"
 
-export function capitalize(str: string) {
-  return str.slice(0, 1).toUpperCase() + str.slice(1)
+export function capitalize<T extends string>(str: T): Capitalize<T> {
+  return (str.slice(0, 1).toUpperCase() + str.slice(1)) as Capitalize<T>
 }
 
 export const gqlType = {
