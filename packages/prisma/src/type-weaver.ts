@@ -11,7 +11,7 @@ import {
   GraphQLEnumType,
   type GraphQLEnumValueConfig,
 } from "graphql"
-import { gqlType } from "./utils"
+import { gqlType as gt } from "./utils"
 
 export class PrismaTypeWeaver {
   protected modelMeta: Required<PrismaModelMeta>
@@ -121,6 +121,7 @@ export class PrismaTypeWeaver {
   protected static getInputTypeRank(inputType: DMMF.InputTypeRef): number {
     let rank = inputType.type.length
     if (inputType.isList) rank += 10
+    if (inputType.type.includes("Unchecked")) rank -= 50
     switch (inputType.location) {
       case "scalar":
         rank += 10
@@ -191,13 +192,13 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
       fields: () => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gqlType.list(
+          type: gt.list(
             this.inputType(`${model.name}OrderByWithRelationInput`)
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gqlType.int },
-        take: { type: gqlType.int },
+        skip: { type: gt.int },
+        take: { type: gt.int },
       }),
     })
 
@@ -216,15 +217,15 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
       fields: () => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gqlType.list(
+          type: gt.list(
             this.inputType(`${model.name}OrderByWithRelationInput`)
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gqlType.int },
-        take: { type: gqlType.int },
+        skip: { type: gt.int },
+        take: { type: gt.int },
         distinct: {
-          type: gqlType.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+          type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
         },
       }),
     })
@@ -244,15 +245,15 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
       fields: () => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gqlType.list(
+          type: gt.list(
             this.inputType(`${model.name}OrderByWithRelationInput`)
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gqlType.int },
-        take: { type: gqlType.int },
+        skip: { type: gt.int },
+        take: { type: gt.int },
         distinct: {
-          type: gqlType.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+          type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
         },
       }),
     })
@@ -288,7 +289,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
       name,
       fields: () => ({
         data: {
-          type: gqlType.nonNull(this.inputType(`${model.name}CreateInput`)),
+          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
         },
       }),
     })
@@ -306,8 +307,8 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
       name,
       fields: () => ({
         data: {
-          type: gqlType.nonNull(
-            gqlType.list(this.inputType(`${model.name}CreateManyInput`))
+          type: gt.nonNull(
+            gt.list(this.inputType(`${model.name}CreateManyInput`))
           ),
         },
       }),
@@ -326,9 +327,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
       name,
       fields: () => ({
         where: {
-          type: gqlType.nonNull(
-            this.inputType(`${model.name}WhereUniqueInput`)
-          ),
+          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
         },
       }),
     })
@@ -353,7 +352,70 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
     return weaverContext.memoNamedType(input)
   }
 
-  // TODO: updateArgs
-  // TODO: updateManyArgs
-  // TODO: upsertArgs
+  public updateArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}UpdateArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        data: {
+          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+        },
+        where: {
+          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+        },
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public updateManyArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}UpdateManyArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        data: {
+          type: gt.nonNull(
+            this.inputType(`${model.name}UpdateManyMutationInput`)
+          ),
+        },
+        where: { type: this.inputType(`${model.name}WhereInput`) },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public upsertArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}UpsertArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: {
+          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+        },
+        create: {
+          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
+        },
+        update: {
+          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+        },
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
 }

@@ -65,6 +65,18 @@ describe("PrismaModelTypeWeaver", () => {
         }"
       `)
     })
+
+    it("should be able to create UpdateManyMutationInput", () => {
+      const UserUpdateManyMutationInput = typeWeaver.inputType(
+        "UserUpdateManyMutationInput"
+      )
+      expect(printType(UserUpdateManyMutationInput)).toMatchInlineSnapshot(`
+        "type UserUpdateManyMutationInput {
+          email: StringFieldUpdateOperationsInput
+          name: NullableStringFieldUpdateOperationsInput
+        }"
+      `)
+    })
   })
 
   describe("enumType", () => {
@@ -166,6 +178,40 @@ describe("PrismaActionArgsWeaver", () => {
     expect(printType(UserTypeBuilder.deleteManyArgs())).toMatchInlineSnapshot(`
       "type UserDeleteManyArgs {
         where: UserWhereInput
+      }"
+    `)
+  })
+
+  it("should be able to create updateArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+
+    expect(printType(UserTypeBuilder.updateArgs())).toMatchInlineSnapshot(`
+      "type UserUpdateArgs {
+        data: UserUpdateInput!
+        where: UserWhereUniqueInput!
+      }"
+    `)
+  })
+
+  it("should be able to create updateManyArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+
+    expect(printType(UserTypeBuilder.updateManyArgs())).toMatchInlineSnapshot(`
+      "type UserUpdateManyArgs {
+        data: UserUpdateManyMutationInput!
+        where: UserWhereInput
+      }"
+    `)
+  })
+
+  it("should be able to create upsertArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+
+    expect(printType(UserTypeBuilder.upsertArgs())).toMatchInlineSnapshot(`
+      "type UserUpsertArgs {
+        where: UserWhereUniqueInput!
+        create: UserCreateInput!
+        update: UserUpdateInput!
       }"
     `)
   })
