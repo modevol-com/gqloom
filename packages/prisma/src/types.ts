@@ -11,7 +11,7 @@ export interface PrismaModelSilk<
   list(): GraphQLSilk<TModel[]>
 
   model: DMMF.Model
-  data: PrismaModelMeta
+  meta: PrismaModelMeta
   name: TName
 
   relations?: TRelation

@@ -28,14 +28,14 @@ import type {
 export class PrismaWeaver {
   static unravel<TModal>(
     model: DMMF.Model,
-    data: PrismaModelMeta
+    meta: PrismaModelMeta
   ): PrismaModelSilk<TModal> {
     return {
       model,
-      data,
+      meta,
       name: model.name,
       [SYMBOLS.GET_GRAPHQL_TYPE]: () =>
-        PrismaWeaver.getGraphQLTypeByModel(model, data),
+        PrismaWeaver.getGraphQLTypeByModel(model, meta),
       nullable() {
         return silk.nullable(this as GraphQLSilk)
       },
@@ -55,7 +55,7 @@ export class PrismaWeaver {
     }
   }
 
-  static getGraphQLTypeByModel(model: DMMF.Model, data?: PrismaModelMeta) {
+  static getGraphQLTypeByModel(model: DMMF.Model, meta?: PrismaModelMeta) {
     const existing = weaverContext.getNamedType(model.name)
     if (existing != null) return new GraphQLNonNull(existing)
 
@@ -67,7 +67,7 @@ export class PrismaWeaver {
             Object.fromEntries(
               model.fields
                 .map((field) => {
-                  const fieldConfig = PrismaWeaver.getGraphQLField(field, data)
+                  const fieldConfig = PrismaWeaver.getGraphQLField(field, meta)
                   return fieldConfig
                     ? ([field.name, fieldConfig] as [
                         string,
@@ -84,12 +84,12 @@ export class PrismaWeaver {
 
   static getGraphQLField(
     field: DMMF.Field,
-    data?: PrismaModelMeta
+    meta?: PrismaModelMeta
   ): GraphQLFieldConfig<any, any> | undefined {
     const unwrappedType = (() => {
       switch (field.kind) {
         case "enum": {
-          const enumType = data?.enums[field.type]
+          const enumType = meta?.enums[field.type]
           if (enumType == null) return
           return PrismaWeaver.getGraphQLEnumType(enumType)
         }

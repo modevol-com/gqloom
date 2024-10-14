@@ -40,7 +40,7 @@ export class PrismaModelBobbin<
     protected readonly silk: TModalSilk,
     protected readonly client: TClient
   ) {
-    this.modelData = silk.data
+    this.modelData = silk.meta
     this.delegate = PrismaModelBobbin.getDelegate(
       silk.model.name,
       client

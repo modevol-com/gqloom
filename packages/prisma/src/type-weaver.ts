@@ -169,13 +169,13 @@ export class PrismaTypeWeaver {
 
 export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
   constructor(protected readonly silk: PrismaModelSilk<any>) {
-    super(silk.data)
+    super(silk.meta)
   }
 
   protected getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
     if (modelOrName == null) return this.silk.model
     if (typeof modelOrName === "object") return modelOrName
-    const model = this.silk.data.models[modelOrName]
+    const model = this.silk.meta.models[modelOrName]
     if (model == null) throw new Error(`Model ${modelOrName} not found`)
     return model
   }

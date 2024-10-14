@@ -4,7 +4,7 @@ import { PrismaTypeWeaver, PrismaActionArgsWeaver } from "../src"
 import { printType } from "graphql"
 
 describe("PrismaModelTypeWeaver", () => {
-  const typeWeaver = new PrismaTypeWeaver(g.User.data)
+  const typeWeaver = new PrismaTypeWeaver(g.User.meta)
   it("should be able to create a type weaver", () => {
     expect(typeWeaver).toBeDefined()
   })
