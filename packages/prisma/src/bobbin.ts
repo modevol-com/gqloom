@@ -15,6 +15,7 @@ import {
   type IBatchPayload,
   type InferDelegateDeleteArgs,
   type InferDelegateDeleteManyArgs,
+  type InferDelegateUpdateArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -574,8 +575,39 @@ export class PrismaModelBobbin<
     })
   }
 
-  protected updateMutation() {
-    // TODO
+  public updateMutation<
+    TInputI = InferDelegateUpdateArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      TInputI
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        TModalSilk,
+        GraphQLSilk<
+          InferDelegateUpdateArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          TInputI
+        >,
+        "mutation"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}) {
+    input ??= silk(new GraphQLNonNull(this.typeWeaver.updateArgs()))
+    const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
+    return loom.mutation(output, {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.update(input),
+    })
   }
 
   protected updateManyMutation() {

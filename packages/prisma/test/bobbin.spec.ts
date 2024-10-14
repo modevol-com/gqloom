@@ -590,13 +590,67 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("updateMutation", async () => {
-    // const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
 
     it("should be able to create a deleteMutation", async () => {
-      // const u = await db.user.update({
-      //   where: { id: 2 },
-      //   data: {},
-      // })
+      const m = UserBobbin.updateMutation({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.update>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
+
+      expect(m).toBeDefined()
+      expect(m.output).toBeTypeOf("object")
+      expect(m.type).toEqual("mutation")
+      expect(m.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserUpdateInput = z.object({
+        __typename: z.literal("UserUpdateInput"),
+        email: z.string(),
+      })
+
+      const UserWhereInput = z.object({
+        __typename: z.literal("UserWhereInput"),
+        email: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        updateUser: UserBobbin.updateMutation({
+          input: zodSilk.input({
+            data: UserUpdateInput,
+            where: UserWhereInput,
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          updateUser(data: UserUpdateInput!, where: UserWhereInput!): User!
+        }
+
+        type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        input UserUpdateInput {
+          email: String!
+        }
+
+        input UserWhereInput {
+          email: String!
+        }"
+      `)
     })
   })
 })
