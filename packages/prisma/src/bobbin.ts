@@ -16,6 +16,7 @@ import {
   type InferDelegateDeleteArgs,
   type InferDelegateDeleteManyArgs,
   type InferDelegateUpdateArgs,
+  type InferDelegateUpdateManyArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -600,18 +601,83 @@ export class PrismaModelBobbin<
         "mutation"
       >
     >[]
-  } & GraphQLFieldOptions = {}) {
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    TModalSilk,
+    GraphQLSilk<
+      InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      TInputI
+    >,
+    "mutation"
+  > {
     input ??= silk(new GraphQLNonNull(this.typeWeaver.updateArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return loom.mutation(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.update(input),
-    })
+    }) as FieldOrOperation<
+      undefined,
+      TModalSilk,
+      GraphQLSilk<
+        InferDelegateUpdateArgs<
+          InferPrismaDelegate<TClient, TModalSilk["name"]>
+        >,
+        TInputI
+      >,
+      "mutation"
+    >
   }
 
-  protected updateManyMutation() {
-    // TODO
+  public updateManyMutation<
+    TInputI = InferDelegateUpdateManyArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateUpdateManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      TInputI
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        GraphQLSilk<IBatchPayload, IBatchPayload>,
+        GraphQLSilk<
+          InferDelegateUpdateManyArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          TInputI
+        >,
+        "mutation"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    GraphQLSilk<IBatchPayload, IBatchPayload>,
+    GraphQLSilk<
+      InferDelegateUpdateManyArgs<
+        InferPrismaDelegate<TClient, TModalSilk["name"]>
+      >,
+      TInputI
+    >,
+    "mutation"
+  > {
+    input ??= silk(new GraphQLNonNull(this.typeWeaver.updateManyArgs()))
+    const output = silk(PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
+      IBatchPayload,
+      IBatchPayload
+    >
+
+    return loom.mutation(output, {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.updateMany(input),
+    })
   }
 
   protected upsertMutation() {

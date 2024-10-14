@@ -653,4 +653,67 @@ describe("PrismaModelBobbin", () => {
       `)
     })
   })
+
+  describe("updateManyMutation", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+
+    it("should be able to create a deleteMutation", async () => {
+      const m = UserBobbin.updateManyMutation({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.updateMany>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
+
+      expect(m).toBeDefined()
+      expect(m.output).toBeTypeOf("object")
+      expect(m.type).toEqual("mutation")
+      expect(m.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserUpdateManyInput = z.object({
+        __typename: z.literal("UserUpdateManyInput"),
+        email: z.string(),
+      })
+
+      const UserWhereInput = z.object({
+        __typename: z.literal("UserWhereInput"),
+        email: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        updateManyUser: UserBobbin.updateManyMutation({
+          input: zodSilk.input({
+            data: UserUpdateManyInput,
+            where: UserWhereInput,
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          updateManyUser(data: UserUpdateManyInput!, where: UserWhereInput!): BatchPayload
+        }
+
+        type BatchPayload {
+          count: Int!
+        }
+
+        input UserUpdateManyInput {
+          email: String!
+        }
+
+        input UserWhereInput {
+          email: String!
+        }"
+      `)
+    })
+  })
 })
