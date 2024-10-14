@@ -149,4 +149,24 @@ describe("PrismaActionArgsWeaver", () => {
       }"
     `)
   })
+
+  it("should be able to create deleteArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+
+    expect(printType(UserTypeBuilder.deleteArgs())).toMatchInlineSnapshot(`
+      "type UserDeleteArgs {
+        where: UserWhereUniqueInput!
+      }"
+    `)
+  })
+
+  it("should be able to create deleteManyArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+
+    expect(printType(UserTypeBuilder.deleteManyArgs())).toMatchInlineSnapshot(`
+      "type UserDeleteManyArgs {
+        where: UserWhereInput
+      }"
+    `)
+  })
 })

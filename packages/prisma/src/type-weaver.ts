@@ -315,8 +315,44 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
     return weaverContext.memoNamedType(input)
   }
 
-  // TODO: deleteArgs
-  // TODO: deleteManyArgs
+  public deleteArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}DeleteArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: {
+          type: gqlType.nonNull(
+            this.inputType(`${model.name}WhereUniqueInput`)
+          ),
+        },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
+  public deleteManyArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}DeleteManyArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        where: { type: this.inputType(`${model.name}WhereInput`) },
+      }),
+    })
+
+    return weaverContext.memoNamedType(input)
+  }
+
   // TODO: updateArgs
   // TODO: updateManyArgs
   // TODO: upsertArgs
