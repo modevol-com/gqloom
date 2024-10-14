@@ -716,4 +716,70 @@ describe("PrismaModelBobbin", () => {
       `)
     })
   })
+
+  describe("upsertMutation", async () => {
+    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+
+    it("should be able to create a deleteMutation", async () => {
+      const m = UserBobbin.upsertMutation({
+        middlewares: [
+          async (next, { parseInput }) => {
+            const input = await parseInput()
+            expectTypeOf(input).toEqualTypeOf<
+              NonNullable<Parameters<typeof db.user.upsert>[0]>
+            >()
+            return next()
+          },
+        ],
+      })
+
+      expect(m).toBeDefined()
+      expect(m.output).toBeTypeOf("object")
+      expect(m.type).toEqual("mutation")
+      expect(m.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to use custom input", async () => {
+      const UserUpsertInput = z.object({
+        __typename: z.literal("UserUpsertInput"),
+        email: z.string(),
+      })
+
+      const UserWhereUniqueInput = z.object({
+        __typename: z.literal("UserWhereUniqueInput"),
+        email: z.string(),
+      })
+
+      const r = resolver.of(g.User, {
+        upsertUser: UserBobbin.upsertMutation({
+          input: zodSilk.input({
+            where: UserWhereUniqueInput,
+            create: UserUpsertInput,
+            update: UserUpsertInput,
+          }),
+        }),
+      })
+
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Mutation {
+          upsertUser(where: UserWhereUniqueInput!, create: UserUpsertInput!, update: UserUpsertInput!): User!
+        }
+
+        type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        input UserWhereUniqueInput {
+          email: String!
+        }
+
+        input UserUpsertInput {
+          email: String!
+        }"
+      `)
+    })
+  })
 })

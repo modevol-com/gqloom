@@ -17,6 +17,7 @@ import {
   type InferDelegateDeleteManyArgs,
   type InferDelegateUpdateArgs,
   type InferDelegateUpdateManyArgs,
+  type InferDelegateUpsertArgs,
 } from "./types"
 import {
   type InferSilkO,
@@ -680,8 +681,57 @@ export class PrismaModelBobbin<
     })
   }
 
-  protected upsertMutation() {
-    // TODO
+  public upsertMutation<
+    TInputI = InferDelegateUpsertArgs<
+      InferPrismaDelegate<TClient, TModalSilk["name"]>
+    >,
+  >({
+    input,
+    ...options
+  }: {
+    input?: GraphQLSilk<
+      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      TInputI
+    >
+    middlewares?: Middleware<
+      FieldOrOperation<
+        undefined,
+        GraphQLSilk<IBatchPayload, IBatchPayload>,
+        GraphQLSilk<
+          InferDelegateUpsertArgs<
+            InferPrismaDelegate<TClient, TModalSilk["name"]>
+          >,
+          TInputI
+        >,
+        "mutation"
+      >
+    >[]
+  } & GraphQLFieldOptions = {}): FieldOrOperation<
+    undefined,
+    TModalSilk,
+    GraphQLSilk<
+      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      TInputI
+    >,
+    "mutation"
+  > {
+    input ??= silk(new GraphQLNonNull(this.typeWeaver.upsertArgs()))
+    const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
+    return loom.mutation(output, {
+      ...options,
+      input,
+      resolve: (input) => this.delegate.upsert(input),
+    }) as FieldOrOperation<
+      undefined,
+      TModalSilk,
+      GraphQLSilk<
+        InferDelegateUpsertArgs<
+          InferPrismaDelegate<TClient, TModalSilk["name"]>
+        >,
+        TInputI
+      >,
+      "mutation"
+    >
   }
 
   protected static getDelegate(
