@@ -10,7 +10,6 @@ import {
   type GraphQLFieldConfig,
   GraphQLEnumType,
   type GraphQLEnumValueConfig,
-  GraphQLInt,
 } from "graphql"
 import { gqlType } from "./utils"
 
@@ -197,8 +196,8 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: GraphQLInt },
-        take: { type: GraphQLInt },
+        skip: { type: gqlType.int },
+        take: { type: gqlType.int },
       }),
     })
 
@@ -222,8 +221,8 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: GraphQLInt },
-        take: { type: GraphQLInt },
+        skip: { type: gqlType.int },
+        take: { type: gqlType.int },
         distinct: {
           type: gqlType.list(this.enumType(`${model.name}ScalarFieldEnum`)),
         },
@@ -250,8 +249,8 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: GraphQLInt },
-        take: { type: GraphQLInt },
+        skip: { type: gqlType.int },
+        take: { type: gqlType.int },
         distinct: {
           type: gqlType.list(this.enumType(`${model.name}ScalarFieldEnum`)),
         },
@@ -278,8 +277,44 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
     return weaverContext.memoNamedType(input)
   }
 
-  // TODO: createArgs
-  // TODO: createManyArgs
+  public createArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}CreateArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        data: {
+          type: gqlType.nonNull(this.inputType(`${model.name}CreateInput`)),
+        },
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
+
+  public createManyArgs(modelName?: string | DMMF.Model): GraphQLObjectType {
+    const model = this.getModel(modelName)
+    const name = `${model.name}CreateManyArgs`
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    const input: GraphQLObjectType = new GraphQLObjectType({
+      name,
+      fields: () => ({
+        data: {
+          type: gqlType.nonNull(
+            gqlType.list(this.inputType(`${model.name}CreateManyInput`))
+          ),
+        },
+      }),
+    })
+    return weaverContext.memoNamedType(input)
+  }
+
   // TODO: deleteArgs
   // TODO: deleteManyArgs
   // TODO: updateArgs

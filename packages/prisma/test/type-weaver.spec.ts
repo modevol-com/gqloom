@@ -42,6 +42,29 @@ describe("PrismaModelTypeWeaver", () => {
       }"
     `)
     })
+
+    it("should be able to create CreateInput", () => {
+      const UserCreateInput = typeWeaver.inputType("UserCreateInput")
+      expect(printType(UserCreateInput)).toMatchInlineSnapshot(`
+        "type UserCreateInput {
+          email: String!
+          name: String
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+          Profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+    })
+    it("should be able to create CreateManyInput", () => {
+      const UserCreateManyInput = typeWeaver.inputType("UserCreateManyInput")
+      expect(printType(UserCreateManyInput)).toMatchInlineSnapshot(`
+        "type UserCreateManyInput {
+          id: Int
+          email: String!
+          name: String
+        }"
+      `)
+    })
   })
 
   describe("enumType", () => {
@@ -105,6 +128,24 @@ describe("PrismaActionArgsWeaver", () => {
     expect(printType(UserTypeBuilder.findUniqueArgs())).toMatchInlineSnapshot(`
       "type UserFindUniqueArgs {
         where: UserWhereUniqueInput
+      }"
+    `)
+  })
+
+  it("should be able to create createArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    expect(printType(UserTypeBuilder.createArgs())).toMatchInlineSnapshot(`
+      "type UserCreateArgs {
+        data: UserCreateInput!
+      }"
+    `)
+  })
+
+  it("should be able to create createManyArgs", () => {
+    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    expect(printType(UserTypeBuilder.createManyArgs())).toMatchInlineSnapshot(`
+      "type UserCreateManyArgs {
+        data: [UserCreateManyInput!]!
       }"
     `)
   })
