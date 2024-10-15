@@ -1,0 +1,2 @@
+schema: "./test/bobbin-resolver.spec.gql"
+documents: "test/**/*.{graphql,js,ts,jsx,tsx}"

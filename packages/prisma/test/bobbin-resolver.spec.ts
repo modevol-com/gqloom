@@ -108,7 +108,7 @@ describe("Bobbin Resolver", () => {
     )
   })
 
-  describe("queries", () => {
+  describe("mutations", () => {
     const postResolver = new PrismaModelBobbin(p.Post, db).resolver()
     const profileResolver = new PrismaModelBobbin(p.Profile, db).resolver()
     const catResolver = new PrismaModelBobbin(p.Cat, db).resolver()
@@ -133,11 +133,12 @@ describe("Bobbin Resolver", () => {
         }),
       })
 
+      const { data, errors } = await response.json()
+
       if (response.status !== 200) {
-        console.log(await response.json())
-        throw new Error("unexpected")
+        throw new Error(JSON.stringify(errors))
       }
-      return (await response.json()).data
+      return data
     }
     beforeEach(async () => {
       await db.user.deleteMany()
@@ -264,7 +265,7 @@ describe("Bobbin Resolver", () => {
       })
     })
 
-    it("should be able to delete many post", async () => {
+    it("should be able to delete many posts", async () => {
       const user = await db.user.create({ data: { email: "bob@bob.com" } })
 
       await db.post.createMany({
@@ -289,6 +290,114 @@ describe("Bobbin Resolver", () => {
       expect(response).toMatchObject({
         deleteManyPost: {
           count: 2,
+        },
+      })
+    })
+
+    it("should be able to update a post", async () => {
+      const user = await db.user.create({ data: { email: "bob@bob.com" } })
+      const post = await db.post.create({
+        data: { title: "Hello", authorId: user.id },
+      })
+
+      const query = /* GraphQL */ `
+        mutation updatePost(
+          $where: PostWhereUniqueInput!
+          $data: PostUpdateInput!
+        ) {
+          updatePost(where: $where, data: $data) {
+            id
+            title
+          }
+        }
+      `
+
+      const response = await execute(query, {
+        where: { id: post.id },
+        data: { title: { set: "Hello World" } },
+      })
+
+      expect(response).toMatchObject({
+        updatePost: {
+          id: expect.any(String),
+          title: "Hello World",
+        },
+      })
+    })
+
+    it("should be able to update many posts", async () => {
+      const user = await db.user.create({ data: { email: "bob@bob.com" } })
+
+      await db.post.createMany({
+        data: [
+          { title: "Hello", authorId: user.id },
+          { title: "World", authorId: user.id },
+        ],
+      })
+
+      const query = /* GraphQL */ `
+        mutation updateManyPost(
+          $where: PostWhereInput!
+          $data: PostUpdateManyMutationInput!
+        ) {
+          updateManyPost(where: $where, data: $data) {
+            count
+          }
+        }
+      `
+
+      const response = await execute(query, {
+        where: { author: { is: { id: { equals: user.id } } } },
+        data: { title: { set: "Hello World" } },
+      })
+
+      expect(response).toMatchObject({
+        updateManyPost: {
+          count: 2,
+        },
+      })
+    })
+
+    it("should be able to upsert a user", async () => {
+      const query = /* GraphQL */ `
+        mutation upsertUser(
+          $where: UserWhereUniqueInput!
+          $create: UserCreateInput!
+          $update: UserUpdateInput!
+        ) {
+          upsertUser(where: $where, create: $create, update: $update) {
+            id
+            email
+            name
+          }
+        }
+      `
+
+      const res1 = await execute(query, {
+        where: { email: "bob@bob.com" },
+        create: { email: "bob@bob.com", name: "Bob" },
+        update: { name: { set: "Bob Smith" } },
+      })
+
+      expect(res1).toMatchObject({
+        upsertUser: {
+          id: expect.any(String),
+          email: "bob@bob.com",
+          name: "Bob",
+        },
+      })
+
+      const res2 = await execute(query, {
+        where: { email: "bob@bob.com" },
+        create: { email: "bob@bob.com", name: "Bob" },
+        update: { name: { set: "Bob Smith" } },
+      })
+
+      expect(res2).toMatchObject({
+        upsertUser: {
+          id: expect.any(String),
+          email: "bob@bob.com",
+          name: "Bob Smith",
         },
       })
     })
