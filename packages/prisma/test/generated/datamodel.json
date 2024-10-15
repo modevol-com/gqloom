@@ -135,6 +135,7 @@
           "relationName": "ProfileToUser",
           "relationFromFields": ["userId"],
           "relationToFields": ["id"],
+          "relationOnDelete": "Cascade",
           "isGenerated": false,
           "isUpdatedAt": false
         },
@@ -148,6 +149,19 @@
           "isReadOnly": true,
           "hasDefaultValue": false,
           "type": "Int",
+          "isGenerated": false,
+          "isUpdatedAt": false
+        },
+        {
+          "name": "introduction",
+          "kind": "scalar",
+          "isList": false,
+          "isRequired": true,
+          "isUnique": false,
+          "isId": false,
+          "isReadOnly": false,
+          "hasDefaultValue": false,
+          "type": "String",
           "isGenerated": false,
           "isUpdatedAt": false
         }
@@ -1230,6 +1244,24 @@
               ]
             },
             {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "StringFilter",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                },
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
+            },
+            {
               "name": "user",
               "isRequired": false,
               "isNullable": false,
@@ -1272,6 +1304,19 @@
             },
             {
               "name": "userId",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "SortOrder",
+                  "namespace": "prisma",
+                  "location": "enumTypes",
+                  "isList": false
+                }
+              ]
+            },
+            {
+              "name": "introduction",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -1385,6 +1430,24 @@
               ]
             },
             {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "StringFilter",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                },
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
+            },
+            {
               "name": "user",
               "isRequired": false,
               "isNullable": false,
@@ -1427,6 +1490,19 @@
             },
             {
               "name": "userId",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "SortOrder",
+                  "namespace": "prisma",
+                  "location": "enumTypes",
+                  "isList": false
+                }
+              ]
+            },
+            {
+              "name": "introduction",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -1597,6 +1673,24 @@
                 },
                 {
                   "type": "Int",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "StringWithAggregatesFilter",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                },
+                {
+                  "type": "String",
                   "location": "scalar",
                   "isList": false
                 }
@@ -4586,6 +4680,18 @@
           },
           "fields": [
             {
+              "name": "introduction",
+              "isRequired": true,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
+            },
+            {
               "name": "user",
               "isRequired": true,
               "isNullable": false,
@@ -4630,6 +4736,18 @@
                   "isList": false
                 }
               ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": true,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
             }
           ]
         },
@@ -4640,6 +4758,24 @@
             "minNumFields": null
           },
           "fields": [
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                },
+                {
+                  "type": "StringFieldUpdateOperationsInput",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                }
+              ]
+            },
             {
               "name": "user",
               "isRequired": false,
@@ -4697,6 +4833,24 @@
                   "isList": false
                 }
               ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                },
+                {
+                  "type": "StringFieldUpdateOperationsInput",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                }
+              ]
             }
           ]
         },
@@ -4730,6 +4884,18 @@
                   "isList": false
                 }
               ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": true,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
             }
           ]
         },
@@ -4739,7 +4905,26 @@
             "maxNumFields": null,
             "minNumFields": null
           },
-          "fields": []
+          "fields": [
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                },
+                {
+                  "type": "StringFieldUpdateOperationsInput",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "ProfileUncheckedUpdateManyInput",
@@ -4778,6 +4963,24 @@
                 },
                 {
                   "type": "IntFieldUpdateOperationsInput",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                }
+              ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                },
+                {
+                  "type": "StringFieldUpdateOperationsInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -8218,6 +8421,19 @@
                   "isList": false
                 }
               ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "SortOrder",
+                  "namespace": "prisma",
+                  "location": "enumTypes",
+                  "isList": false
+                }
+              ]
             }
           ]
         },
@@ -8288,6 +8504,19 @@
                   "isList": false
                 }
               ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "SortOrder",
+                  "namespace": "prisma",
+                  "location": "enumTypes",
+                  "isList": false
+                }
+              ]
             }
           ]
         },
@@ -8313,6 +8542,19 @@
             },
             {
               "name": "userId",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "SortOrder",
+                  "namespace": "prisma",
+                  "location": "enumTypes",
+                  "isList": false
+                }
+              ]
+            },
+            {
+              "name": "introduction",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -17210,7 +17452,20 @@
             "maxNumFields": null,
             "minNumFields": null
           },
-          "fields": []
+          "fields": [
+            {
+              "name": "introduction",
+              "isRequired": true,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "ProfileUncheckedCreateWithoutUserInput",
@@ -17226,6 +17481,18 @@
               "inputTypes": [
                 {
                   "type": "Int",
+                  "location": "scalar",
+                  "isList": false
+                }
+              ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": true,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
                   "location": "scalar",
                   "isList": false
                 }
@@ -17846,7 +18113,26 @@
             "maxNumFields": null,
             "minNumFields": null
           },
-          "fields": []
+          "fields": [
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                },
+                {
+                  "type": "StringFieldUpdateOperationsInput",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "ProfileUncheckedUpdateWithoutUserInput",
@@ -17867,6 +18153,24 @@
                 },
                 {
                   "type": "IntFieldUpdateOperationsInput",
+                  "namespace": "prisma",
+                  "location": "inputObjectTypes",
+                  "isList": false
+                }
+              ]
+            },
+            {
+              "name": "introduction",
+              "isRequired": false,
+              "isNullable": false,
+              "inputTypes": [
+                {
+                  "type": "String",
+                  "location": "scalar",
+                  "isList": false
+                },
+                {
+                  "type": "StringFieldUpdateOperationsInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -26345,6 +26649,16 @@
               }
             },
             {
+              "name": "introduction",
+              "args": [],
+              "isNullable": false,
+              "outputType": {
+                "type": "String",
+                "location": "scalar",
+                "isList": false
+              }
+            },
+            {
               "name": "_count",
               "args": [],
               "isNullable": true,
@@ -27214,6 +27528,16 @@
               }
             },
             {
+              "name": "introduction",
+              "args": [],
+              "isNullable": false,
+              "outputType": {
+                "type": "Int",
+                "location": "scalar",
+                "isList": false
+              }
+            },
+            {
               "name": "_all",
               "args": [],
               "isNullable": false,
@@ -27297,6 +27621,16 @@
                 "location": "scalar",
                 "isList": false
               }
+            },
+            {
+              "name": "introduction",
+              "args": [],
+              "isNullable": true,
+              "outputType": {
+                "type": "String",
+                "location": "scalar",
+                "isList": false
+              }
             }
           ]
         },
@@ -27319,6 +27653,16 @@
               "isNullable": true,
               "outputType": {
                 "type": "Int",
+                "location": "scalar",
+                "isList": false
+              }
+            },
+            {
+              "name": "introduction",
+              "args": [],
+              "isNullable": true,
+              "outputType": {
+                "type": "String",
                 "location": "scalar",
                 "isList": false
               }
@@ -28350,6 +28694,16 @@
               }
             },
             {
+              "name": "introduction",
+              "args": [],
+              "isNullable": false,
+              "outputType": {
+                "type": "String",
+                "location": "scalar",
+                "isList": false
+              }
+            },
+            {
               "name": "user",
               "args": [],
               "isNullable": false,
@@ -28839,6 +29193,16 @@
               }
             },
             {
+              "name": "introduction",
+              "args": [],
+              "isNullable": false,
+              "outputType": {
+                "type": "String",
+                "location": "scalar",
+                "isList": false
+              }
+            },
+            {
               "name": "user",
               "args": [],
               "isNullable": false,
@@ -29061,7 +29425,7 @@
         },
         {
           "name": "ProfileScalarFieldEnum",
-          "values": ["id", "userId"]
+          "values": ["id", "userId", "introduction"]
         },
         {
           "name": "PostScalarFieldEnum",

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest"
+import { describe, it, expect, beforeEach, beforeAll } from "vitest"
 import { PrismaModelBobbin } from "../src"
 import * as p from "./generated"
 import { PrismaClient } from "@prisma/client"
@@ -80,17 +80,7 @@ describe("Bobbin Resolver", () => {
   })
 
   it("should be able to weave schema", () => {
-    const postResolver = new PrismaModelBobbin(p.Post, db).resolver()
-    const profileResolver = new PrismaModelBobbin(p.Profile, db).resolver()
-    const catResolver = new PrismaModelBobbin(p.Cat, db).resolver()
-    const dogResolver = new PrismaModelBobbin(p.Dog, db).resolver()
-    const schema = weave(
-      userResolver,
-      postResolver,
-      profileResolver,
-      catResolver,
-      dogResolver
-    )
+    const schema = weaveSchema()
 
     expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
       "type User {
@@ -109,17 +99,7 @@ describe("Bobbin Resolver", () => {
   })
 
   describe("mutations", () => {
-    const postResolver = new PrismaModelBobbin(p.Post, db).resolver()
-    const profileResolver = new PrismaModelBobbin(p.Profile, db).resolver()
-    const catResolver = new PrismaModelBobbin(p.Cat, db).resolver()
-    const dogResolver = new PrismaModelBobbin(p.Dog, db).resolver()
-    const schema = weave(
-      userResolver,
-      postResolver,
-      profileResolver,
-      catResolver,
-      dogResolver
-    )
+    const schema = weaveSchema()
     const yoga = createYoga({ schema })
     const execute = async (query: string, variables?: Record<string, any>) => {
       const response = await yoga.fetch("http://localhost/graphql", {
@@ -141,12 +121,8 @@ describe("Bobbin Resolver", () => {
       return data
     }
     beforeEach(async () => {
-      await db.user.deleteMany()
       await db.post.deleteMany()
-    })
-    afterAll(async () => {
       await db.user.deleteMany()
-      await db.post.deleteMany()
     })
 
     it("should be able to create a user", async () => {
@@ -402,4 +378,155 @@ describe("Bobbin Resolver", () => {
       })
     })
   })
+
+  describe("queries", () => {
+    const db = new PrismaClient()
+    const schema = weaveSchema()
+    const yoga = createYoga({ schema })
+    const execute = async (query: string, variables?: Record<string, any>) => {
+      const response = await yoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
+      })
+
+      const { data, errors } = await response.json()
+
+      if (response.status !== 200) {
+        throw new Error(JSON.stringify(errors))
+      }
+      return data
+    }
+
+    beforeAll(async () => {
+      await db.post.deleteMany()
+      await db.profile.deleteMany()
+      await db.user.deleteMany()
+      const Bob = await db.user.create({
+        data: { email: "bob@bob.com", name: "Bob" },
+      })
+      const Alice = await db.user.create({
+        data: { email: "alice@alice.com", name: "Alice" },
+      })
+      await db.user.createMany({
+        data: [
+          { email: "dave@qq.com", name: "Dave" },
+          { email: "charlie@qq.com", name: "Charlie" },
+        ],
+      })
+
+      await db.post.createMany({
+        data: [
+          { title: "Hello Bob", content: "Hello world", authorId: Bob.id },
+          { title: "Goodbye", content: "Goodbye world", authorId: Bob.id },
+        ],
+      })
+
+      await db.post.createMany({
+        data: [
+          { title: "Hello Alice", content: "Hello world", authorId: Alice.id },
+        ],
+      })
+
+      await db.profile.create({
+        data: { introduction: "I am Bob", userId: Bob.id },
+      })
+    })
+
+    it("should query users", async () => {
+      const res = await execute(/* GraphQL */ `
+        query users {
+          findManyUser {
+            name
+            email
+          }
+        }
+      `)
+
+      expect(res.findManyUser).toHaveLength(4)
+
+      expect(new Set(res.findManyUser)).toMatchObject(
+        new Set([
+          { name: "Bob", email: "bob@bob.com" },
+          { name: "Alice", email: "alice@alice.com" },
+          { name: "Dave", email: "dave@qq.com" },
+          { name: "Charlie", email: "charlie@qq.com" },
+        ])
+      )
+    })
+
+    it("should query users with pagination", async () => {
+      const res = await execute(/* GraphQL */ `
+        query users {
+          findManyUser(skip: 1, take: 2, orderBy: [{ name: { sort: asc } }]) {
+            name
+          }
+        }
+      `)
+
+      expect(res.findManyUser).toHaveLength(2)
+      expect(res.findManyUser).toMatchObject([
+        { name: "Bob" },
+        { name: "Charlie" },
+      ])
+    })
+
+    it("should query users with posts", async () => {
+      const res = await execute(/* GraphQL */ `
+        query users {
+          findFirstUser(where: { email: { startsWith: "bob" } }) {
+            name
+            email
+            posts {
+              title
+            }
+          }
+        }
+      `)
+
+      expect(new Set(res.findFirstUser.posts)).toEqual(
+        new Set([{ title: "Hello Bob" }, { title: "Goodbye" }])
+      )
+    })
+
+    it("should query users with profile", async () => {
+      const res = await execute(/* GraphQL */ `
+        query users {
+          findUniqueUser(where: { email: "bob@bob.com" }) {
+            name
+            email
+            profile {
+              introduction
+            }
+          }
+        }
+      `)
+
+      expect(res.findUniqueUser.profile).toMatchObject({
+        introduction: "I am Bob",
+      })
+    })
+  })
 })
+
+function weaveSchema() {
+  const db = new PrismaClient()
+  const userResolver = new PrismaModelBobbin(p.User, db).resolver()
+  const postResolver = new PrismaModelBobbin(p.Post, db).resolver()
+  const profileResolver = new PrismaModelBobbin(p.Profile, db).resolver()
+  const catResolver = new PrismaModelBobbin(p.Cat, db).resolver()
+  const dogResolver = new PrismaModelBobbin(p.Dog, db).resolver()
+  const schema = weave(
+    userResolver,
+    postResolver,
+    profileResolver,
+    catResolver,
+    dogResolver
+  )
+  return schema
+}

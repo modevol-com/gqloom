@@ -322,7 +322,7 @@ type Mutation {
   updateManyCat(data: CatUpdateManyMutationInput!, where: CatWhereInput): BatchPayload
   updateManyDog(data: DogUpdateManyMutationInput!, where: DogWhereInput): BatchPayload
   updateManyPost(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload
-  updateManyProfile(data: EmptyInput!, where: ProfileWhereInput): BatchPayload
+  updateManyProfile(data: ProfileUpdateManyMutationInput!, where: ProfileWhereInput): BatchPayload
   updateManyUser(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post!
   updateProfile(data: ProfileUpdateInput!, where: ProfileWhereUniqueInput!): Profile!
@@ -680,28 +680,35 @@ input PostWhereUniqueInput {
 
 type Profile {
   id: ID!
+  introduction: String!
   user: User!
   userId: Int!
 }
 
 input ProfileCreateInput {
+  introduction: String!
   user: UserCreateNestedOneWithoutProfileInput!
 }
 
 input ProfileCreateManyInput {
   id: Int
+  introduction: String!
   userId: Int!
 }
 
 input ProfileCreateNestedOneWithoutUserInput {
   connect: ProfileWhereUniqueInput
   connectOrCreate: ProfileCreateOrConnectWithoutUserInput
-  create: EmptyInput
+  create: ProfileCreateWithoutUserInput
 }
 
 input ProfileCreateOrConnectWithoutUserInput {
-  create: EmptyInput!
+  create: ProfileCreateWithoutUserInput!
   where: ProfileWhereUniqueInput!
+}
+
+input ProfileCreateWithoutUserInput {
+  introduction: String!
 }
 
 input ProfileNullableRelationFilter {
@@ -711,23 +718,30 @@ input ProfileNullableRelationFilter {
 
 input ProfileOrderByWithRelationInput {
   id: SortOrder
+  introduction: SortOrder
   user: UserOrderByWithRelationInput
   userId: SortOrder
 }
 
 enum ProfileScalarFieldEnum {
   id
+  introduction
   userId
 }
 
 input ProfileUpdateInput {
+  introduction: StringFieldUpdateOperationsInput
   user: UserUpdateOneRequiredWithoutProfileNestedInput
+}
+
+input ProfileUpdateManyMutationInput {
+  introduction: StringFieldUpdateOperationsInput
 }
 
 input ProfileUpdateOneWithoutUserNestedInput {
   connect: ProfileWhereUniqueInput
   connectOrCreate: ProfileCreateOrConnectWithoutUserInput
-  create: EmptyInput
+  create: ProfileCreateWithoutUserInput
   delete: ProfileWhereInput
   disconnect: ProfileWhereInput
   update: ProfileUpdateToOneWithWhereWithoutUserInput
@@ -735,13 +749,17 @@ input ProfileUpdateOneWithoutUserNestedInput {
 }
 
 input ProfileUpdateToOneWithWhereWithoutUserInput {
-  data: EmptyInput!
+  data: ProfileUpdateWithoutUserInput!
   where: ProfileWhereInput
 }
 
+input ProfileUpdateWithoutUserInput {
+  introduction: StringFieldUpdateOperationsInput
+}
+
 input ProfileUpsertWithoutUserInput {
-  create: EmptyInput!
-  update: EmptyInput!
+  create: ProfileCreateWithoutUserInput!
+  update: ProfileUpdateWithoutUserInput!
   where: ProfileWhereInput
 }
 
@@ -750,6 +768,7 @@ input ProfileWhereInput {
   NOT: [ProfileWhereInput!]
   OR: [ProfileWhereInput!]
   id: IntFilter
+  introduction: StringFilter
   user: UserRelationFilter
   userId: IntFilter
 }
@@ -759,6 +778,7 @@ input ProfileWhereUniqueInput {
   NOT: [ProfileWhereInput!]
   OR: [ProfileWhereInput!]
   id: Int
+  introduction: StringFilter
   user: UserRelationFilter
   userId: Int
 }
