@@ -170,6 +170,7 @@ describe("PrismaModelBobbin", () => {
             expectTypeOf(input).toEqualTypeOf<
               NonNullable<Parameters<typeof db.user.count>[0]>
             >()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<number>()
             return next()
           },
         ],
@@ -222,6 +223,7 @@ describe("PrismaModelBobbin", () => {
             expectTypeOf(input).toEqualTypeOf<
               NonNullable<Parameters<typeof db.user.findFirst>[0]>
             >()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
             return next()
           },
         ],
@@ -277,6 +279,7 @@ describe("PrismaModelBobbin", () => {
             expectTypeOf(input).toEqualTypeOf<
               NonNullable<Parameters<typeof db.user.findMany>[0]>
             >()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser[]>()
             return next()
           },
         ],
@@ -332,6 +335,7 @@ describe("PrismaModelBobbin", () => {
             expectTypeOf(input).toEqualTypeOf<
               NonNullable<Parameters<typeof db.user.findUnique>[0]>
             >()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
             return next()
           },
         ],
@@ -387,6 +391,7 @@ describe("PrismaModelBobbin", () => {
             expectTypeOf(input).toEqualTypeOf<
               NonNullable<Parameters<typeof db.user.create>[0]>
             >()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser>()
             return next()
           },
         ],

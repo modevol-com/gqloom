@@ -135,27 +135,11 @@ export class PrismaModelBobbin<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
       TInputI
     >
-    middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
-        GraphQLSilk<number>,
-        GraphQLSilk<
-          InferDelegateCountArgs<
-            InferPrismaDelegate<TClient, TModalSilk["name"]>
-          >,
-          TInputI
-        >,
-        "query"
-      >
-    >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
-    GraphQLSilk<number>,
-    GraphQLSilk<
-      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
-      TInputI
-    >,
-    "query"
+    middlewares?: Middleware<BobbinCountQuery<TModalSilk, TClient, TInputI>>[]
+  } & GraphQLFieldOptions = {}): BobbinCountQuery<
+    TModalSilk,
+    TClient,
+    TInputI
   > {
     input ??= silk(this.typeWeaver.countArgs()) as GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
@@ -184,28 +168,12 @@ export class PrismaModelBobbin<
       TInputI
     >
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
-        ReturnType<TModalSilk["nullable"]>,
-        GraphQLSilk<
-          InferDelegateFindFirstArgs<
-            InferPrismaDelegate<TClient, TModalSilk["name"]>
-          >,
-          TInputI
-        >,
-        "query"
-      >
+      BobbinFindFirstQuery<TModalSilk, TClient, TInputI>
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
-    ReturnType<TModalSilk["nullable"]>,
-    GraphQLSilk<
-      InferDelegateFindFirstArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
-      >,
-      TInputI
-    >,
-    "query"
+  } & GraphQLFieldOptions = {}): BobbinFindFirstQuery<
+    TModalSilk,
+    TClient,
+    TInputI
   > {
     input ??= silk(this.typeWeaver.findFirstArgs())
 
@@ -215,17 +183,7 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.findFirst(input),
-    }) as FieldOrOperation<
-      undefined,
-      ReturnType<TModalSilk["nullable"]>,
-      GraphQLSilk<
-        InferDelegateFindFirstArgs<
-          InferPrismaDelegate<TClient, TModalSilk["name"]>
-        >,
-        TInputI
-      >,
-      "query"
-    >
+    }) as BobbinFindFirstQuery<TModalSilk, TClient, TInputI>
   }
 
   public findManyQuery<
@@ -243,28 +201,12 @@ export class PrismaModelBobbin<
       TInputI
     >
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
-        ReturnType<TModalSilk["list"]>,
-        GraphQLSilk<
-          InferDelegateFindManyArgs<
-            InferPrismaDelegate<TClient, TModalSilk["name"]>
-          >,
-          TInputI
-        >,
-        "query"
-      >
+      BobbinFindManyQuery<TModalSilk, TClient, TInputI>
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
-    ReturnType<TModalSilk["list"]>,
-    GraphQLSilk<
-      InferDelegateFindManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
-      >,
-      TInputI
-    >,
-    "query"
+  } & GraphQLFieldOptions = {}): BobbinFindManyQuery<
+    TModalSilk,
+    TClient,
+    TInputI
   > {
     input ??= silk(this.typeWeaver.findManyArgs())
 
@@ -274,17 +216,7 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.findMany(input),
-    }) as FieldOrOperation<
-      undefined,
-      ReturnType<TModalSilk["list"]>,
-      GraphQLSilk<
-        InferDelegateFindManyArgs<
-          InferPrismaDelegate<TClient, TModalSilk["name"]>
-        >,
-        TInputI
-      >,
-      "query"
-    >
+    }) as BobbinFindManyQuery<TModalSilk, TClient, TInputI>
   }
 
   public findUniqueQuery<
@@ -302,28 +234,12 @@ export class PrismaModelBobbin<
       TInputI
     >
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
-        ReturnType<TModalSilk["nullable"]>,
-        GraphQLSilk<
-          InferDelegateFindUniqueArgs<
-            InferPrismaDelegate<TClient, TModalSilk["name"]>
-          >,
-          TInputI
-        >,
-        "query"
-      >
+      BobbinFindUniqueQuery<TModalSilk, TClient, TInputI>
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
-    ReturnType<TModalSilk["nullable"]>,
-    GraphQLSilk<
-      InferDelegateFindUniqueArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
-      >,
-      TInputI
-    >,
-    "query"
+  } & GraphQLFieldOptions = {}): BobbinFindUniqueQuery<
+    TModalSilk,
+    TClient,
+    TInputI
   > {
     input ??= silk(this.typeWeaver.findUniqueArgs())
 
@@ -333,17 +249,7 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.findUnique(input),
-    }) as FieldOrOperation<
-      undefined,
-      ReturnType<TModalSilk["nullable"]>,
-      GraphQLSilk<
-        InferDelegateFindUniqueArgs<
-          InferPrismaDelegate<TClient, TModalSilk["name"]>
-        >,
-        TInputI
-      >,
-      "query"
-    >
+    }) as BobbinFindUniqueQuery<TModalSilk, TClient, TInputI>
   }
 
   public createMutation<
@@ -361,7 +267,7 @@ export class PrismaModelBobbin<
     middlewares?: Middleware<
       FieldOrOperation<
         undefined,
-        ReturnType<TModalSilk["nullable"]>,
+        TModalSilk,
         GraphQLSilk<
           InferDelegateCreateArgs<
             InferPrismaDelegate<TClient, TModalSilk["name"]>
@@ -373,7 +279,7 @@ export class PrismaModelBobbin<
     >[]
   } & GraphQLFieldOptions = {}): FieldOrOperation<
     undefined,
-    ReturnType<TModalSilk["nullable"]>,
+    TModalSilk,
     GraphQLSilk<
       InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
       TInputI
@@ -390,7 +296,7 @@ export class PrismaModelBobbin<
       resolve: (input) => this.delegate.create(input),
     }) as FieldOrOperation<
       undefined,
-      ReturnType<TModalSilk["nullable"]>,
+      TModalSilk,
       GraphQLSilk<
         InferDelegateCreateArgs<
           InferPrismaDelegate<TClient, TModalSilk["name"]>
@@ -764,59 +670,97 @@ export class PrismaModelBobbin<
   }
 }
 
-export type BobbinResolver<
+export interface BobbinCountQuery<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
-> = {
-  [key in `count${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+  TInputI = InferDelegateCountArgs<
+    InferPrismaDelegate<TClient, TModalSilk["name"]>
+  >,
+> extends FieldOrOperation<
     undefined,
     GraphQLSilk<number>,
     GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
-      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>
+      TInputI
     >,
     "query"
-  >
-} & {
-  [key in `findFirst${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+  > {}
+
+export interface BobbinFindFirstQuery<
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+  TInputI = InferDelegateFindFirstArgs<
+    InferPrismaDelegate<TClient, TModalSilk["name"]>
+  >,
+> extends FieldOrOperation<
     undefined,
     ReturnType<TModalSilk["nullable"]>,
     GraphQLSilk<
       InferDelegateFindFirstArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      InferDelegateFindFirstArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
-      >
+      TInputI
     >,
     "query"
-  >
-} & {
-  [key in `findMany${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+  > {}
+
+export interface BobbinFindManyQuery<
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+  TInputI = InferDelegateFindManyArgs<
+    InferPrismaDelegate<TClient, TModalSilk["name"]>
+  >,
+> extends FieldOrOperation<
     undefined,
     ReturnType<TModalSilk["list"]>,
     GraphQLSilk<
       InferDelegateFindManyArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      InferDelegateFindManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
-      >
+      TInputI
     >,
     "query"
-  >
-} & {
-  [key in `findUnique${Capitalize<TModalSilk["name"]>}`]: FieldOrOperation<
+  > {}
+
+export interface BobbinFindUniqueQuery<
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+  TInputI = InferDelegateFindUniqueArgs<
+    InferPrismaDelegate<TClient, TModalSilk["name"]>
+  >,
+> extends FieldOrOperation<
     undefined,
     ReturnType<TModalSilk["nullable"]>,
     GraphQLSilk<
       InferDelegateFindUniqueArgs<
         InferPrismaDelegate<TClient, TModalSilk["name"]>
       >,
-      InferDelegateFindUniqueArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
-      >
+      TInputI
     >,
     "query"
+  > {}
+
+export type BobbinResolver<
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+> = {
+  [key in `count${Capitalize<TModalSilk["name"]>}`]: BobbinCountQuery<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `findFirst${Capitalize<TModalSilk["name"]>}`]: BobbinFindFirstQuery<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `findMany${Capitalize<TModalSilk["name"]>}`]: BobbinFindManyQuery<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `findUnique${Capitalize<TModalSilk["name"]>}`]: BobbinFindUniqueQuery<
+    TModalSilk,
+    TClient
   >
 }
