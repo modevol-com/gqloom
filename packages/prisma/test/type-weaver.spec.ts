@@ -22,7 +22,7 @@ describe("PrismaModelTypeWeaver", () => {
           name: StringNullableFilter
           posts: PostListRelationFilter
           publishedPosts: PostListRelationFilter
-          Profile: ProfileNullableRelationFilter
+          profile: ProfileNullableRelationFilter
         }"
       `)
     })
@@ -51,7 +51,7 @@ describe("PrismaModelTypeWeaver", () => {
           name: String
           posts: PostCreateNestedManyWithoutAuthorInput
           publishedPosts: PostCreateNestedManyWithoutPublishedByInput
-          Profile: ProfileCreateNestedOneWithoutUserInput
+          profile: ProfileCreateNestedOneWithoutUserInput
         }"
       `)
     })

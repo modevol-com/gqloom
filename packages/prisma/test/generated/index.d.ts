@@ -11,7 +11,7 @@ import type {
 export const User: PrismaModelSilk<
   IUser,
   "user",
-  { posts: IPost[]; publishedPosts: IPost[]; Profile?: IProfile }
+  { posts: IPost[]; publishedPosts: IPost[]; profile?: IProfile }
 >
 export const Profile: PrismaModelSilk<IProfile, "profile", { user: IUser }>
 export const Post: PrismaModelSilk<

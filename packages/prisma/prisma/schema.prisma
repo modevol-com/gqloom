@@ -22,7 +22,7 @@ model User {
   name           String?
   posts          Post[]
   publishedPosts Post[]   @relation("UserToPublishedPost")
-  Profile        Profile?
+  profile        Profile?
 }
 
 model Profile {

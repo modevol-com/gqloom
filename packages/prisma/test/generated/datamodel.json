@@ -80,7 +80,7 @@
           "isUpdatedAt": false
         },
         {
-          "name": "Profile",
+          "name": "profile",
           "kind": "object",
           "isList": false,
           "isRequired": false,
@@ -611,7 +611,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -715,7 +715,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -865,7 +865,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -4110,7 +4110,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -4199,7 +4199,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -4288,7 +4288,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -4395,7 +4395,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -18376,7 +18376,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -18452,7 +18452,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -18557,7 +18557,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -18633,7 +18633,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -18921,7 +18921,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -19015,7 +19015,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -19192,7 +19192,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -19286,7 +19286,7 @@
               ]
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -28288,7 +28288,7 @@
               }
             },
             {
-              "name": "Profile",
+              "name": "profile",
               "args": [
                 {
                   "name": "where",

@@ -54,21 +54,9 @@ export class PrismaModelBobbin<
   public relationField<TKey extends keyof NonNullable<TModalSilk["relations"]>>(
     key: TKey,
     options: {
-      middlewares?: Middleware<
-        FieldOrOperation<
-          TModalSilk,
-          GraphQLSilk<NonNullable<TModalSilk["relations"]>[TKey]>,
-          undefined,
-          "field"
-        >
-      >[]
+      middlewares?: Middleware<BobbinRelationField<TModalSilk, TKey>>[]
     } & GraphQLFieldOptions = {}
-  ): FieldOrOperation<
-    TModalSilk,
-    GraphQLSilk<NonNullable<TModalSilk["relations"]>[TKey]>,
-    undefined,
-    "field"
-  > {
+  ): BobbinRelationField<TModalSilk, TKey> {
     const field = this.silk.model.fields.find((field) => field.name === key)
     if (field == null)
       throw new Error(
@@ -124,7 +112,7 @@ export class PrismaModelBobbin<
 
   public resolver(): BobbinResolver<TModalSilk, TClient> {
     const name = capitalize(this.silk.name)
-    return {
+    return loom.resolver.of(this.silk, {
       [`count${name}`]: this.countQuery(),
       [`findFirst${name}`]: this.findFirstQuery(),
       [`findMany${name}`]: this.findManyQuery(),
@@ -134,7 +122,12 @@ export class PrismaModelBobbin<
       [`update${name}`]: this.updateMutation(),
       [`updateMany${name}`]: this.updateManyMutation(),
       [`upsert${name}`]: this.upsertMutation(),
-    } as BobbinResolver<TModalSilk, TClient>
+      ...Object.fromEntries(
+        this.silk.model.fields
+          .filter((it) => it.kind === "object")
+          .map((field) => [field.name, this.relationField(field.name)])
+      ),
+    }) as BobbinResolver<TModalSilk, TClient>
   }
 
   public countQuery<
@@ -477,6 +470,16 @@ export class PrismaModelBobbin<
   }
 }
 
+export interface BobbinRelationField<
+  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TKey extends keyof NonNullable<TModalSilk["relations"]>,
+> extends FieldOrOperation<
+    TModalSilk,
+    GraphQLSilk<NonNullable<TModalSilk["relations"]>[TKey]>,
+    undefined,
+    "field"
+  > {}
+
 export interface BobbinCountQuery<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
@@ -668,6 +671,11 @@ export type BobbinResolver<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > = {
+  [TKey in keyof NonNullable<TModalSilk["relations"]>]-?: BobbinRelationField<
+    TModalSilk,
+    TKey
+  >
+} & {
   [key in `count${Capitalize<TModalSilk["name"]>}`]: BobbinCountQuery<
     TModalSilk,
     TClient

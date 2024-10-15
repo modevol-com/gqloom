@@ -3,7 +3,7 @@ import { PrismaModelBobbin } from "../src"
 import * as p from "./generated"
 import { PrismaClient } from "@prisma/client"
 import { weave } from "@gqloom/core"
-import { printSchema } from "graphql"
+import { lexicographicSortSchema, printSchema, printType } from "graphql"
 
 describe("Bobbin Resolver", () => {
   const db = new PrismaClient()
@@ -12,6 +12,16 @@ describe("Bobbin Resolver", () => {
 
   it("should be able to create Bobbin", () => {
     expect(userResolver).toBeDefined()
+  })
+
+  it("should be able to create relationFields", () => {
+    expect(userResolver.posts).toBeDefined()
+    expect(userResolver.posts.type).toEqual("field")
+    expect(userResolver.posts.resolve).toBeTypeOf("function")
+
+    expect(userResolver.profile).toBeDefined()
+    expect(userResolver.profile.type).toEqual("field")
+    expect(userResolver.profile.resolve).toBeTypeOf("function")
   })
 
   it("should be able to create countQuery", async () => {
@@ -81,7 +91,18 @@ describe("Bobbin Resolver", () => {
       dogResolver
     )
 
-    expect(printSchema(schema)).toMatchFileSnapshot(
+    expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
+      "type User {
+        id: ID!
+        email: String!
+        name: String
+        posts: [Post!]!
+        publishedPosts: [Post!]!
+        profile: Profile
+      }"
+    `)
+
+    expect(printSchema(lexicographicSortSchema(schema))).toMatchFileSnapshot(
       "./bobbin-resolver.spec.gql"
     )
   })

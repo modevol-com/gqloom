@@ -10,7 +10,7 @@ import { type InferSilkO, loom, weave } from "@gqloom/core"
 import { zodSilk, asInputArgs } from "@gqloom/zod"
 import { z } from "zod"
 import { createYoga } from "graphql-yoga"
-import { printSchema } from "graphql"
+import { printSchema, printType } from "graphql"
 
 const { resolver, query } = loom
 
@@ -115,6 +115,14 @@ describe("PrismaModelBobbin", () => {
         author: PostBobbin.relationField("author"),
       })
       const schema = weave(r1, r2)
+      expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
+        "type User {
+          id: ID!
+          email: String!
+          name: String
+          posts: [Post!]!
+        }"
+      `)
       const yoga = createYoga({ schema })
       const response = await yoga.fetch("http://localhost/graphql", {
         method: "POST",
