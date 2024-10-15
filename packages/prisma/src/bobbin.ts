@@ -27,6 +27,7 @@ import {
   type Middleware,
   silk,
   loom,
+  type ResolverOptionsWithExtensions,
 } from "@gqloom/core"
 import { PrismaActionArgsWeaver } from "./type-weaver"
 import { capitalize, gqlType as gt } from "./utils"
@@ -110,24 +111,30 @@ export class PrismaModelBobbin<
     return { [primaryKeyName]: primaryCondition }
   }
 
-  public resolver(): BobbinResolver<TModalSilk, TClient> {
+  public resolver(
+    options?: ResolverOptionsWithExtensions
+  ): BobbinResolver<TModalSilk, TClient> {
     const name = capitalize(this.silk.name)
-    return loom.resolver.of(this.silk, {
-      [`count${name}`]: this.countQuery(),
-      [`findFirst${name}`]: this.findFirstQuery(),
-      [`findMany${name}`]: this.findManyQuery(),
-      [`findUnique${name}`]: this.findUniqueQuery(),
-      [`delete${name}`]: this.deleteMutation(),
-      [`deleteMany${name}`]: this.deleteManyMutation(),
-      [`update${name}`]: this.updateMutation(),
-      [`updateMany${name}`]: this.updateManyMutation(),
-      [`upsert${name}`]: this.upsertMutation(),
-      ...Object.fromEntries(
-        this.silk.model.fields
-          .filter((it) => it.kind === "object")
-          .map((field) => [field.name, this.relationField(field.name)])
-      ),
-    }) as BobbinResolver<TModalSilk, TClient>
+    return loom.resolver.of(
+      this.silk,
+      {
+        [`count${name}`]: this.countQuery(),
+        [`findFirst${name}`]: this.findFirstQuery(),
+        [`findMany${name}`]: this.findManyQuery(),
+        [`findUnique${name}`]: this.findUniqueQuery(),
+        [`delete${name}`]: this.deleteMutation(),
+        [`deleteMany${name}`]: this.deleteManyMutation(),
+        [`update${name}`]: this.updateMutation(),
+        [`updateMany${name}`]: this.updateManyMutation(),
+        [`upsert${name}`]: this.upsertMutation(),
+        ...Object.fromEntries(
+          this.silk.model.fields
+            .filter((it) => it.kind === "object")
+            .map((field) => [field.name, this.relationField(field.name)])
+        ),
+      },
+      options
+    ) as BobbinResolver<TModalSilk, TClient>
   }
 
   public countQuery<
