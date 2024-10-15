@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, expectTypeOf } from "vitest"
+import { describe, it, expect, expectTypeOf, beforeAll } from "vitest"
 import * as g from "./generated"
 import { PrismaClient } from "@prisma/client"
 import {
@@ -72,9 +72,18 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("relationField", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       await db.user.deleteMany()
       await db.post.deleteMany()
+      await db.user.create({
+        data: {
+          name: "John",
+          email: "john@example.com",
+          posts: {
+            create: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
+          },
+        },
+      })
     })
     const UserBobbin = new PrismaModelBobbin(g.User, db)
     const PostBobbin = new PrismaModelBobbin(g.Post, db)
@@ -93,16 +102,6 @@ describe("PrismaModelBobbin", () => {
     })
 
     it("should be able to resolve a relationField", async () => {
-      await db.user.create({
-        data: {
-          name: "John",
-          email: "john@example.com",
-          posts: {
-            create: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
-          },
-        },
-      })
-
       const r1 = resolver.of(g.User, {
         users: query(g.User.list(), () => db.user.findMany()),
 
