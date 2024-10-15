@@ -450,6 +450,11 @@ export class PrismaModelBobbin<
       [`findFirst${name}`]: this.findFirstQuery(),
       [`findMany${name}`]: this.findManyQuery(),
       [`findUnique${name}`]: this.findUniqueQuery(),
+      [`delete${name}`]: this.deleteMutation(),
+      [`deleteMany${name}`]: this.deleteManyMutation(),
+      [`update${name}`]: this.updateMutation(),
+      [`updateMany${name}`]: this.updateManyMutation(),
+      [`upsert${name}`]: this.upsertMutation(),
     } as BobbinResolver<TModalSilk, TClient>
   }
 
@@ -679,6 +684,41 @@ export type BobbinResolver<
   >
 } & {
   [key in `findUnique${Capitalize<TModalSilk["name"]>}`]: BobbinFindUniqueQuery<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `create${Capitalize<TModalSilk["name"]>}`]: BobbinCreateMutation<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `createMany${Capitalize<TModalSilk["name"]>}`]: BobbinCreateManyMutation<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `delete${Capitalize<TModalSilk["name"]>}`]: BobbinDeleteMutation<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `deleteMany${Capitalize<TModalSilk["name"]>}`]: BobbinDeleteManyMutation<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `update${Capitalize<TModalSilk["name"]>}`]: BobbinUpdateMutation<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `updateMany${Capitalize<TModalSilk["name"]>}`]: BobbinUpdateManyMutation<
+    TModalSilk,
+    TClient
+  >
+} & {
+  [key in `upsert${Capitalize<TModalSilk["name"]>}`]: BobbinUpsertMutation<
     TModalSilk,
     TClient
   >
