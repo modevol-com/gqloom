@@ -1,0 +1,1003 @@
+type Query {
+  countUser(where: UserWhereInput, orderBy: [UserOrderByWithRelationInput!], cursor: UserWhereUniqueInput, skip: Int, take: Int): Int!
+  findFirstUser(where: UserWhereInput, orderBy: [UserOrderByWithRelationInput!], cursor: UserWhereUniqueInput, skip: Int, take: Int, distinct: [UserScalarFieldEnum!]): User
+  findManyUser(where: UserWhereInput, orderBy: [UserOrderByWithRelationInput!], cursor: UserWhereUniqueInput, skip: Int, take: Int, distinct: [UserScalarFieldEnum!]): [User!]!
+  findUniqueUser(where: UserWhereUniqueInput): User
+  countPost(where: PostWhereInput, orderBy: [PostOrderByWithRelationInput!], cursor: PostWhereUniqueInput, skip: Int, take: Int): Int!
+  findFirstPost(where: PostWhereInput, orderBy: [PostOrderByWithRelationInput!], cursor: PostWhereUniqueInput, skip: Int, take: Int, distinct: [PostScalarFieldEnum!]): Post
+  findManyPost(where: PostWhereInput, orderBy: [PostOrderByWithRelationInput!], cursor: PostWhereUniqueInput, skip: Int, take: Int, distinct: [PostScalarFieldEnum!]): [Post!]!
+  findUniquePost(where: PostWhereUniqueInput): Post
+  countProfile(where: ProfileWhereInput, orderBy: [ProfileOrderByWithRelationInput!], cursor: ProfileWhereUniqueInput, skip: Int, take: Int): Int!
+  findFirstProfile(where: ProfileWhereInput, orderBy: [ProfileOrderByWithRelationInput!], cursor: ProfileWhereUniqueInput, skip: Int, take: Int, distinct: [ProfileScalarFieldEnum!]): Profile
+  findManyProfile(where: ProfileWhereInput, orderBy: [ProfileOrderByWithRelationInput!], cursor: ProfileWhereUniqueInput, skip: Int, take: Int, distinct: [ProfileScalarFieldEnum!]): [Profile!]!
+  findUniqueProfile(where: ProfileWhereUniqueInput): Profile
+  countCat(where: CatWhereInput, orderBy: [CatOrderByWithRelationInput!], cursor: CatWhereUniqueInput, skip: Int, take: Int): Int!
+  findFirstCat(where: CatWhereInput, orderBy: [CatOrderByWithRelationInput!], cursor: CatWhereUniqueInput, skip: Int, take: Int, distinct: [CatScalarFieldEnum!]): Cat
+  findManyCat(where: CatWhereInput, orderBy: [CatOrderByWithRelationInput!], cursor: CatWhereUniqueInput, skip: Int, take: Int, distinct: [CatScalarFieldEnum!]): [Cat!]!
+  findUniqueCat(where: CatWhereUniqueInput): Cat
+  countDog(where: DogWhereInput, orderBy: [DogOrderByWithRelationInput!], cursor: DogWhereUniqueInput, skip: Int, take: Int): Int!
+  findFirstDog(where: DogWhereInput, orderBy: [DogOrderByWithRelationInput!], cursor: DogWhereUniqueInput, skip: Int, take: Int, distinct: [DogScalarFieldEnum!]): Dog
+  findManyDog(where: DogWhereInput, orderBy: [DogOrderByWithRelationInput!], cursor: DogWhereUniqueInput, skip: Int, take: Int, distinct: [DogScalarFieldEnum!]): [Dog!]!
+  findUniqueDog(where: DogWhereUniqueInput): Dog
+}
+
+input UserWhereInput {
+  AND: [UserWhereInput!]
+  OR: [UserWhereInput!]
+  NOT: [UserWhereInput!]
+  id: IntFilter
+  email: StringFilter
+  name: StringNullableFilter
+  posts: PostListRelationFilter
+  publishedPosts: PostListRelationFilter
+  Profile: ProfileNullableRelationFilter
+}
+
+input IntFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntFilter
+}
+
+input NestedIntFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntFilter
+}
+
+input StringFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringFilter
+}
+
+input NestedStringFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringFilter
+}
+
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringNullableFilter
+}
+
+input NestedStringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  not: NestedStringNullableFilter
+}
+
+input PostListRelationFilter {
+  every: PostWhereInput
+  some: PostWhereInput
+  none: PostWhereInput
+}
+
+input PostWhereInput {
+  AND: [PostWhereInput!]
+  OR: [PostWhereInput!]
+  NOT: [PostWhereInput!]
+  id: IntFilter
+  title: StringFilter
+  content: StringNullableFilter
+  published: BoolFilter
+  authorId: IntFilter
+  publishedById: IntNullableFilter
+  author: UserRelationFilter
+  publishedBy: UserNullableRelationFilter
+  categories: CategoryListRelationFilter
+}
+
+input BoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
+}
+
+input NestedBoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
+}
+
+input IntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableFilter
+}
+
+input NestedIntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntNullableFilter
+}
+
+input UserRelationFilter {
+  is: UserWhereInput
+  isNot: UserWhereInput
+}
+
+input UserNullableRelationFilter {
+  is: UserWhereInput
+  isNot: UserWhereInput
+}
+
+input CategoryListRelationFilter {
+  every: CategoryWhereInput
+  some: CategoryWhereInput
+  none: CategoryWhereInput
+}
+
+input CategoryWhereInput {
+  AND: [CategoryWhereInput!]
+  OR: [CategoryWhereInput!]
+  NOT: [CategoryWhereInput!]
+  id: IntFilter
+  posts: PostListRelationFilter
+}
+
+input ProfileNullableRelationFilter {
+  is: ProfileWhereInput
+  isNot: ProfileWhereInput
+}
+
+input ProfileWhereInput {
+  AND: [ProfileWhereInput!]
+  OR: [ProfileWhereInput!]
+  NOT: [ProfileWhereInput!]
+  id: IntFilter
+  userId: IntFilter
+  user: UserRelationFilter
+}
+
+input UserOrderByWithRelationInput {
+  id: SortOrder
+  email: SortOrder
+  name: SortOrderInput
+  posts: PostOrderByRelationAggregateInput
+  publishedPosts: PostOrderByRelationAggregateInput
+  Profile: ProfileOrderByWithRelationInput
+}
+
+enum SortOrder {
+  asc
+  desc
+}
+
+input SortOrderInput {
+  sort: SortOrder!
+  nulls: NullsOrder
+}
+
+enum NullsOrder {
+  first
+  last
+}
+
+input PostOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input ProfileOrderByWithRelationInput {
+  id: SortOrder
+  userId: SortOrder
+  user: UserOrderByWithRelationInput
+}
+
+input UserWhereUniqueInput {
+  id: Int
+  email: String
+  AND: [UserWhereInput!]
+  OR: [UserWhereInput!]
+  NOT: [UserWhereInput!]
+  name: StringNullableFilter
+  posts: PostListRelationFilter
+  publishedPosts: PostListRelationFilter
+  Profile: ProfileNullableRelationFilter
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String
+}
+
+enum UserScalarFieldEnum {
+  id
+  email
+  name
+}
+
+input PostOrderByWithRelationInput {
+  id: SortOrder
+  title: SortOrder
+  content: SortOrderInput
+  published: SortOrder
+  authorId: SortOrder
+  publishedById: SortOrderInput
+  author: UserOrderByWithRelationInput
+  publishedBy: UserOrderByWithRelationInput
+  categories: CategoryOrderByRelationAggregateInput
+}
+
+input CategoryOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input PostWhereUniqueInput {
+  id: Int
+  AND: [PostWhereInput!]
+  OR: [PostWhereInput!]
+  NOT: [PostWhereInput!]
+  title: StringFilter
+  content: StringNullableFilter
+  published: BoolFilter
+  authorId: IntFilter
+  publishedById: IntNullableFilter
+  author: UserRelationFilter
+  publishedBy: UserNullableRelationFilter
+  categories: CategoryListRelationFilter
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String
+  published: Boolean!
+  authorId: Int!
+  publishedById: Int
+}
+
+enum PostScalarFieldEnum {
+  id
+  title
+  content
+  published
+  authorId
+  publishedById
+}
+
+input ProfileWhereUniqueInput {
+  id: Int
+  userId: Int
+  AND: [ProfileWhereInput!]
+  OR: [ProfileWhereInput!]
+  NOT: [ProfileWhereInput!]
+  user: UserRelationFilter
+}
+
+type Profile {
+  id: ID!
+  userId: Int!
+}
+
+enum ProfileScalarFieldEnum {
+  id
+  userId
+}
+
+input CatWhereInput {
+  AND: [CatWhereInput!]
+  OR: [CatWhereInput!]
+  NOT: [CatWhereInput!]
+  firstName: StringFilter
+  lastName: StringFilter
+}
+
+input CatOrderByWithRelationInput {
+  firstName: SortOrder
+  lastName: SortOrder
+}
+
+input CatWhereUniqueInput {
+  firstName_lastName: CatFirstNameLastNameCompoundUniqueInput
+  AND: [CatWhereInput!]
+  OR: [CatWhereInput!]
+  NOT: [CatWhereInput!]
+  firstName: StringFilter
+  lastName: StringFilter
+}
+
+input CatFirstNameLastNameCompoundUniqueInput {
+  firstName: String!
+  lastName: String!
+}
+
+type Cat {
+  firstName: String!
+  lastName: String!
+}
+
+enum CatScalarFieldEnum {
+  firstName
+  lastName
+}
+
+input DogWhereInput {
+  AND: [DogWhereInput!]
+  OR: [DogWhereInput!]
+  NOT: [DogWhereInput!]
+  firstName: StringFilter
+  lastName: StringFilter
+  height: FloatFilter
+  weight: IntFilter
+  birthDate: DateTimeFilter
+}
+
+input FloatFilter {
+  equals: Float
+  in: [Float!]
+  notIn: [Float!]
+  lt: Float
+  lte: Float
+  gt: Float
+  gte: Float
+  not: NestedFloatFilter
+}
+
+input NestedFloatFilter {
+  equals: Float
+  in: [Float!]
+  notIn: [Float!]
+  lt: Float
+  lte: Float
+  gt: Float
+  gte: Float
+  not: NestedFloatFilter
+}
+
+input DateTimeFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  not: NestedDateTimeFilter
+}
+
+input NestedDateTimeFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  not: NestedDateTimeFilter
+}
+
+input DogOrderByWithRelationInput {
+  firstName: SortOrder
+  lastName: SortOrder
+  height: SortOrder
+  weight: SortOrder
+  birthDate: SortOrder
+}
+
+input DogWhereUniqueInput {
+  fullName: DogFullNameCompoundUniqueInput
+  AND: [DogWhereInput!]
+  OR: [DogWhereInput!]
+  NOT: [DogWhereInput!]
+  firstName: StringFilter
+  lastName: StringFilter
+  height: FloatFilter
+  weight: IntFilter
+  birthDate: DateTimeFilter
+}
+
+input DogFullNameCompoundUniqueInput {
+  firstName: String!
+  lastName: String!
+}
+
+type Dog {
+  firstName: String!
+  lastName: String!
+  height: Float!
+  weight: Int!
+  birthDate: String!
+}
+
+enum DogScalarFieldEnum {
+  firstName
+  lastName
+  height
+  weight
+  birthDate
+}
+
+type Mutation {
+  deleteUser(where: UserWhereUniqueInput!): User
+  deleteManyUser(where: UserWhereInput): BatchPayload
+  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User!
+  updateManyUser(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+  deletePost(where: PostWhereUniqueInput!): Post
+  deleteManyPost(where: PostWhereInput): BatchPayload
+  updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post!
+  updateManyPost(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload
+  upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
+  deleteProfile(where: ProfileWhereUniqueInput!): Profile
+  deleteManyProfile(where: ProfileWhereInput): BatchPayload
+  updateProfile(data: ProfileUpdateInput!, where: ProfileWhereUniqueInput!): Profile!
+  updateManyProfile(data: ProfileUpdateManyMutationInput!, where: ProfileWhereInput): BatchPayload
+  upsertProfile(where: ProfileWhereUniqueInput!, create: ProfileCreateInput!, update: ProfileUpdateInput!): Profile!
+  deleteCat(where: CatWhereUniqueInput!): Cat
+  deleteManyCat(where: CatWhereInput): BatchPayload
+  updateCat(data: CatUpdateInput!, where: CatWhereUniqueInput!): Cat!
+  updateManyCat(data: CatUpdateManyMutationInput!, where: CatWhereInput): BatchPayload
+  upsertCat(where: CatWhereUniqueInput!, create: CatCreateInput!, update: CatUpdateInput!): Cat!
+  deleteDog(where: DogWhereUniqueInput!): Dog
+  deleteManyDog(where: DogWhereInput): BatchPayload
+  updateDog(data: DogUpdateInput!, where: DogWhereUniqueInput!): Dog!
+  updateManyDog(data: DogUpdateManyMutationInput!, where: DogWhereInput): BatchPayload
+  upsertDog(where: DogWhereUniqueInput!, create: DogCreateInput!, update: DogUpdateInput!): Dog!
+}
+
+type BatchPayload {
+  count: Int!
+}
+
+input UserUpdateInput {
+  email: StringFieldUpdateOperationsInput
+  name: NullableStringFieldUpdateOperationsInput
+  posts: PostUpdateManyWithoutAuthorNestedInput
+  publishedPosts: PostUpdateManyWithoutPublishedByNestedInput
+  Profile: ProfileUpdateOneWithoutUserNestedInput
+}
+
+input StringFieldUpdateOperationsInput {
+  set: String
+}
+
+input NullableStringFieldUpdateOperationsInput {
+  set: String
+}
+
+input PostUpdateManyWithoutAuthorNestedInput {
+  create: [PostCreateWithoutAuthorInput!]
+  connectOrCreate: [PostCreateOrConnectWithoutAuthorInput!]
+  upsert: [PostUpsertWithWhereUniqueWithoutAuthorInput!]
+  createMany: PostCreateManyAuthorInputEnvelope
+  set: [PostWhereUniqueInput!]
+  disconnect: [PostWhereUniqueInput!]
+  delete: [PostWhereUniqueInput!]
+  connect: [PostWhereUniqueInput!]
+  update: [PostUpdateWithWhereUniqueWithoutAuthorInput!]
+  updateMany: [PostUpdateManyWithWhereWithoutAuthorInput!]
+  deleteMany: [PostScalarWhereInput!]
+}
+
+input PostCreateWithoutAuthorInput {
+  title: String!
+  content: String
+  published: Boolean
+  publishedBy: UserCreateNestedOneWithoutPublishedPostsInput
+  categories: CategoryCreateNestedManyWithoutPostsInput
+}
+
+input UserCreateNestedOneWithoutPublishedPostsInput {
+  create: UserCreateWithoutPublishedPostsInput
+  connectOrCreate: UserCreateOrConnectWithoutPublishedPostsInput
+  connect: UserWhereUniqueInput
+}
+
+input UserCreateWithoutPublishedPostsInput {
+  email: String!
+  name: String
+  posts: PostCreateNestedManyWithoutAuthorInput
+  Profile: ProfileCreateNestedOneWithoutUserInput
+}
+
+input PostCreateNestedManyWithoutAuthorInput {
+  create: [PostCreateWithoutAuthorInput!]
+  connectOrCreate: [PostCreateOrConnectWithoutAuthorInput!]
+  createMany: PostCreateManyAuthorInputEnvelope
+  connect: [PostWhereUniqueInput!]
+}
+
+input PostCreateOrConnectWithoutAuthorInput {
+  where: PostWhereUniqueInput!
+  create: PostCreateWithoutAuthorInput!
+}
+
+input PostCreateManyAuthorInputEnvelope {
+  data: [PostCreateManyAuthorInput!]!
+}
+
+input PostCreateManyAuthorInput {
+  id: Int
+  title: String!
+  content: String
+  published: Boolean
+  publishedById: Int
+}
+
+input ProfileCreateNestedOneWithoutUserInput {
+  create: ProfileCreateWithoutUserInput
+  connectOrCreate: ProfileCreateOrConnectWithoutUserInput
+  connect: ProfileWhereUniqueInput
+}
+
+input ProfileCreateWithoutUserInput
+
+input ProfileCreateOrConnectWithoutUserInput {
+  where: ProfileWhereUniqueInput!
+  create: ProfileCreateWithoutUserInput!
+}
+
+input UserCreateOrConnectWithoutPublishedPostsInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateWithoutPublishedPostsInput!
+}
+
+input CategoryCreateNestedManyWithoutPostsInput {
+  create: [CategoryCreateWithoutPostsInput!]
+  connectOrCreate: [CategoryCreateOrConnectWithoutPostsInput!]
+  connect: [CategoryWhereUniqueInput!]
+}
+
+input CategoryCreateWithoutPostsInput
+
+input CategoryCreateOrConnectWithoutPostsInput {
+  where: CategoryWhereUniqueInput!
+  create: CategoryCreateWithoutPostsInput!
+}
+
+input CategoryWhereUniqueInput {
+  id: Int
+  AND: [CategoryWhereInput!]
+  OR: [CategoryWhereInput!]
+  NOT: [CategoryWhereInput!]
+  posts: PostListRelationFilter
+}
+
+input PostUpsertWithWhereUniqueWithoutAuthorInput {
+  where: PostWhereUniqueInput!
+  update: PostUpdateWithoutAuthorInput!
+  create: PostCreateWithoutAuthorInput!
+}
+
+input PostUpdateWithoutAuthorInput {
+  title: StringFieldUpdateOperationsInput
+  content: NullableStringFieldUpdateOperationsInput
+  published: BoolFieldUpdateOperationsInput
+  publishedBy: UserUpdateOneWithoutPublishedPostsNestedInput
+  categories: CategoryUpdateManyWithoutPostsNestedInput
+}
+
+input BoolFieldUpdateOperationsInput {
+  set: Boolean
+}
+
+input UserUpdateOneWithoutPublishedPostsNestedInput {
+  create: UserCreateWithoutPublishedPostsInput
+  connectOrCreate: UserCreateOrConnectWithoutPublishedPostsInput
+  upsert: UserUpsertWithoutPublishedPostsInput
+  disconnect: UserWhereInput
+  delete: UserWhereInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateToOneWithWhereWithoutPublishedPostsInput
+}
+
+input UserUpsertWithoutPublishedPostsInput {
+  update: UserUpdateWithoutPublishedPostsInput!
+  create: UserCreateWithoutPublishedPostsInput!
+  where: UserWhereInput
+}
+
+input UserUpdateWithoutPublishedPostsInput {
+  email: StringFieldUpdateOperationsInput
+  name: NullableStringFieldUpdateOperationsInput
+  posts: PostUpdateManyWithoutAuthorNestedInput
+  Profile: ProfileUpdateOneWithoutUserNestedInput
+}
+
+input ProfileUpdateOneWithoutUserNestedInput {
+  create: ProfileCreateWithoutUserInput
+  connectOrCreate: ProfileCreateOrConnectWithoutUserInput
+  upsert: ProfileUpsertWithoutUserInput
+  disconnect: ProfileWhereInput
+  delete: ProfileWhereInput
+  connect: ProfileWhereUniqueInput
+  update: ProfileUpdateToOneWithWhereWithoutUserInput
+}
+
+input ProfileUpsertWithoutUserInput {
+  update: ProfileUpdateWithoutUserInput!
+  create: ProfileCreateWithoutUserInput!
+  where: ProfileWhereInput
+}
+
+input ProfileUpdateWithoutUserInput
+
+input ProfileUpdateToOneWithWhereWithoutUserInput {
+  where: ProfileWhereInput
+  data: ProfileUpdateWithoutUserInput!
+}
+
+input UserUpdateToOneWithWhereWithoutPublishedPostsInput {
+  where: UserWhereInput
+  data: UserUpdateWithoutPublishedPostsInput!
+}
+
+input CategoryUpdateManyWithoutPostsNestedInput {
+  create: [CategoryCreateWithoutPostsInput!]
+  connectOrCreate: [CategoryCreateOrConnectWithoutPostsInput!]
+  upsert: [CategoryUpsertWithWhereUniqueWithoutPostsInput!]
+  set: [CategoryWhereUniqueInput!]
+  disconnect: [CategoryWhereUniqueInput!]
+  delete: [CategoryWhereUniqueInput!]
+  connect: [CategoryWhereUniqueInput!]
+  update: [CategoryUpdateWithWhereUniqueWithoutPostsInput!]
+  updateMany: [CategoryUpdateManyWithWhereWithoutPostsInput!]
+  deleteMany: [CategoryScalarWhereInput!]
+}
+
+input CategoryUpsertWithWhereUniqueWithoutPostsInput {
+  where: CategoryWhereUniqueInput!
+  update: CategoryUpdateWithoutPostsInput!
+  create: CategoryCreateWithoutPostsInput!
+}
+
+input CategoryUpdateWithoutPostsInput
+
+input CategoryUpdateWithWhereUniqueWithoutPostsInput {
+  where: CategoryWhereUniqueInput!
+  data: CategoryUpdateWithoutPostsInput!
+}
+
+input CategoryUpdateManyWithWhereWithoutPostsInput {
+  where: CategoryScalarWhereInput!
+  data: CategoryUpdateManyMutationInput!
+}
+
+input CategoryScalarWhereInput {
+  AND: [CategoryScalarWhereInput!]
+  OR: [CategoryScalarWhereInput!]
+  NOT: [CategoryScalarWhereInput!]
+  id: IntFilter
+}
+
+input CategoryUpdateManyMutationInput
+
+input PostUpdateWithWhereUniqueWithoutAuthorInput {
+  where: PostWhereUniqueInput!
+  data: PostUpdateWithoutAuthorInput!
+}
+
+input PostUpdateManyWithWhereWithoutAuthorInput {
+  where: PostScalarWhereInput!
+  data: PostUpdateManyMutationInput!
+}
+
+input PostScalarWhereInput {
+  AND: [PostScalarWhereInput!]
+  OR: [PostScalarWhereInput!]
+  NOT: [PostScalarWhereInput!]
+  id: IntFilter
+  title: StringFilter
+  content: StringNullableFilter
+  published: BoolFilter
+  authorId: IntFilter
+  publishedById: IntNullableFilter
+}
+
+input PostUpdateManyMutationInput {
+  title: StringFieldUpdateOperationsInput
+  content: NullableStringFieldUpdateOperationsInput
+  published: BoolFieldUpdateOperationsInput
+}
+
+input PostUpdateManyWithoutPublishedByNestedInput {
+  create: [PostCreateWithoutPublishedByInput!]
+  connectOrCreate: [PostCreateOrConnectWithoutPublishedByInput!]
+  upsert: [PostUpsertWithWhereUniqueWithoutPublishedByInput!]
+  createMany: PostCreateManyPublishedByInputEnvelope
+  set: [PostWhereUniqueInput!]
+  disconnect: [PostWhereUniqueInput!]
+  delete: [PostWhereUniqueInput!]
+  connect: [PostWhereUniqueInput!]
+  update: [PostUpdateWithWhereUniqueWithoutPublishedByInput!]
+  updateMany: [PostUpdateManyWithWhereWithoutPublishedByInput!]
+  deleteMany: [PostScalarWhereInput!]
+}
+
+input PostCreateWithoutPublishedByInput {
+  title: String!
+  content: String
+  published: Boolean
+  author: UserCreateNestedOneWithoutPostsInput!
+  categories: CategoryCreateNestedManyWithoutPostsInput
+}
+
+input UserCreateNestedOneWithoutPostsInput {
+  create: UserCreateWithoutPostsInput
+  connectOrCreate: UserCreateOrConnectWithoutPostsInput
+  connect: UserWhereUniqueInput
+}
+
+input UserCreateWithoutPostsInput {
+  email: String!
+  name: String
+  publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+  Profile: ProfileCreateNestedOneWithoutUserInput
+}
+
+input PostCreateNestedManyWithoutPublishedByInput {
+  create: [PostCreateWithoutPublishedByInput!]
+  connectOrCreate: [PostCreateOrConnectWithoutPublishedByInput!]
+  createMany: PostCreateManyPublishedByInputEnvelope
+  connect: [PostWhereUniqueInput!]
+}
+
+input PostCreateOrConnectWithoutPublishedByInput {
+  where: PostWhereUniqueInput!
+  create: PostCreateWithoutPublishedByInput!
+}
+
+input PostCreateManyPublishedByInputEnvelope {
+  data: [PostCreateManyPublishedByInput!]!
+}
+
+input PostCreateManyPublishedByInput {
+  id: Int
+  title: String!
+  content: String
+  published: Boolean
+  authorId: Int!
+}
+
+input UserCreateOrConnectWithoutPostsInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateWithoutPostsInput!
+}
+
+input PostUpsertWithWhereUniqueWithoutPublishedByInput {
+  where: PostWhereUniqueInput!
+  update: PostUpdateWithoutPublishedByInput!
+  create: PostCreateWithoutPublishedByInput!
+}
+
+input PostUpdateWithoutPublishedByInput {
+  title: StringFieldUpdateOperationsInput
+  content: NullableStringFieldUpdateOperationsInput
+  published: BoolFieldUpdateOperationsInput
+  author: UserUpdateOneRequiredWithoutPostsNestedInput
+  categories: CategoryUpdateManyWithoutPostsNestedInput
+}
+
+input UserUpdateOneRequiredWithoutPostsNestedInput {
+  create: UserCreateWithoutPostsInput
+  connectOrCreate: UserCreateOrConnectWithoutPostsInput
+  upsert: UserUpsertWithoutPostsInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateToOneWithWhereWithoutPostsInput
+}
+
+input UserUpsertWithoutPostsInput {
+  update: UserUpdateWithoutPostsInput!
+  create: UserCreateWithoutPostsInput!
+  where: UserWhereInput
+}
+
+input UserUpdateWithoutPostsInput {
+  email: StringFieldUpdateOperationsInput
+  name: NullableStringFieldUpdateOperationsInput
+  publishedPosts: PostUpdateManyWithoutPublishedByNestedInput
+  Profile: ProfileUpdateOneWithoutUserNestedInput
+}
+
+input UserUpdateToOneWithWhereWithoutPostsInput {
+  where: UserWhereInput
+  data: UserUpdateWithoutPostsInput!
+}
+
+input PostUpdateWithWhereUniqueWithoutPublishedByInput {
+  where: PostWhereUniqueInput!
+  data: PostUpdateWithoutPublishedByInput!
+}
+
+input PostUpdateManyWithWhereWithoutPublishedByInput {
+  where: PostScalarWhereInput!
+  data: PostUpdateManyMutationInput!
+}
+
+input UserUpdateManyMutationInput {
+  email: StringFieldUpdateOperationsInput
+  name: NullableStringFieldUpdateOperationsInput
+}
+
+input UserCreateInput {
+  email: String!
+  name: String
+  posts: PostCreateNestedManyWithoutAuthorInput
+  publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+  Profile: ProfileCreateNestedOneWithoutUserInput
+}
+
+input PostUpdateInput {
+  title: StringFieldUpdateOperationsInput
+  content: NullableStringFieldUpdateOperationsInput
+  published: BoolFieldUpdateOperationsInput
+  author: UserUpdateOneRequiredWithoutPostsNestedInput
+  publishedBy: UserUpdateOneWithoutPublishedPostsNestedInput
+  categories: CategoryUpdateManyWithoutPostsNestedInput
+}
+
+input PostCreateInput {
+  title: String!
+  content: String
+  published: Boolean
+  author: UserCreateNestedOneWithoutPostsInput!
+  publishedBy: UserCreateNestedOneWithoutPublishedPostsInput
+  categories: CategoryCreateNestedManyWithoutPostsInput
+}
+
+input ProfileUpdateInput {
+  user: UserUpdateOneRequiredWithoutProfileNestedInput
+}
+
+input UserUpdateOneRequiredWithoutProfileNestedInput {
+  create: UserCreateWithoutProfileInput
+  connectOrCreate: UserCreateOrConnectWithoutProfileInput
+  upsert: UserUpsertWithoutProfileInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateToOneWithWhereWithoutProfileInput
+}
+
+input UserCreateWithoutProfileInput {
+  email: String!
+  name: String
+  posts: PostCreateNestedManyWithoutAuthorInput
+  publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+}
+
+input UserCreateOrConnectWithoutProfileInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateWithoutProfileInput!
+}
+
+input UserUpsertWithoutProfileInput {
+  update: UserUpdateWithoutProfileInput!
+  create: UserCreateWithoutProfileInput!
+  where: UserWhereInput
+}
+
+input UserUpdateWithoutProfileInput {
+  email: StringFieldUpdateOperationsInput
+  name: NullableStringFieldUpdateOperationsInput
+  posts: PostUpdateManyWithoutAuthorNestedInput
+  publishedPosts: PostUpdateManyWithoutPublishedByNestedInput
+}
+
+input UserUpdateToOneWithWhereWithoutProfileInput {
+  where: UserWhereInput
+  data: UserUpdateWithoutProfileInput!
+}
+
+input ProfileUpdateManyMutationInput
+
+input ProfileCreateInput {
+  user: UserCreateNestedOneWithoutProfileInput!
+}
+
+input UserCreateNestedOneWithoutProfileInput {
+  create: UserCreateWithoutProfileInput
+  connectOrCreate: UserCreateOrConnectWithoutProfileInput
+  connect: UserWhereUniqueInput
+}
+
+input CatUpdateInput {
+  firstName: StringFieldUpdateOperationsInput
+  lastName: StringFieldUpdateOperationsInput
+}
+
+input CatUpdateManyMutationInput {
+  firstName: StringFieldUpdateOperationsInput
+  lastName: StringFieldUpdateOperationsInput
+}
+
+input CatCreateInput {
+  firstName: String!
+  lastName: String!
+}
+
+input DogUpdateInput {
+  firstName: StringFieldUpdateOperationsInput
+  lastName: StringFieldUpdateOperationsInput
+  height: FloatFieldUpdateOperationsInput
+  weight: IntFieldUpdateOperationsInput
+  birthDate: DateTimeFieldUpdateOperationsInput
+}
+
+input FloatFieldUpdateOperationsInput {
+  set: Float
+  increment: Float
+  decrement: Float
+  multiply: Float
+  divide: Float
+}
+
+input IntFieldUpdateOperationsInput {
+  set: Int
+  increment: Int
+  decrement: Int
+  multiply: Int
+  divide: Int
+}
+
+input DateTimeFieldUpdateOperationsInput {
+  set: String
+}
+
+input DogUpdateManyMutationInput {
+  firstName: StringFieldUpdateOperationsInput
+  lastName: StringFieldUpdateOperationsInput
+  height: FloatFieldUpdateOperationsInput
+  weight: IntFieldUpdateOperationsInput
+  birthDate: DateTimeFieldUpdateOperationsInput
+}
+
+input DogCreateInput {
+  firstName: String!
+  lastName: String!
+  height: Float!
+  weight: Int!
+  birthDate: String!
+}

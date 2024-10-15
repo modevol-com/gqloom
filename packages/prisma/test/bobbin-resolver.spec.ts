@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest"
 import { PrismaModelBobbin } from "../src"
 import * as p from "./generated"
 import { PrismaClient } from "@prisma/client"
+import { weave } from "@gqloom/core"
+import { printSchema } from "graphql"
 
 describe("Bobbin Resolver", () => {
   const db = new PrismaClient()
@@ -64,5 +66,23 @@ describe("Bobbin Resolver", () => {
     expect(userResolver.upsertUser).toBeDefined()
     expect(userResolver.upsertUser.type).toEqual("mutation")
     expect(userResolver.upsertUser.resolve).toBeTypeOf("function")
+  })
+
+  it("should be able to weave schema", () => {
+    const postResolver = new PrismaModelBobbin(p.Post, db).resolver()
+    const profileResolver = new PrismaModelBobbin(p.Profile, db).resolver()
+    const catResolver = new PrismaModelBobbin(p.Cat, db).resolver()
+    const dogResolver = new PrismaModelBobbin(p.Dog, db).resolver()
+    const schema = weave(
+      userResolver,
+      postResolver,
+      profileResolver,
+      catResolver,
+      dogResolver
+    )
+
+    expect(printSchema(schema)).toMatchFileSnapshot(
+      "./bobbin-resolver.spec.gql"
+    )
   })
 })

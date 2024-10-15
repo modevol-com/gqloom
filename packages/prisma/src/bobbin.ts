@@ -28,9 +28,8 @@ import {
   silk,
   loom,
 } from "@gqloom/core"
-import { GraphQLInt, GraphQLNonNull } from "graphql"
 import { PrismaActionArgsWeaver } from "./type-weaver"
-import { capitalize } from "./utils"
+import { capitalize, gqlType as gt } from "./utils"
 
 export class PrismaModelBobbin<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
@@ -123,6 +122,21 @@ export class PrismaModelBobbin<
     return { [primaryKeyName]: primaryCondition }
   }
 
+  public resolver(): BobbinResolver<TModalSilk, TClient> {
+    const name = capitalize(this.silk.name)
+    return {
+      [`count${name}`]: this.countQuery(),
+      [`findFirst${name}`]: this.findFirstQuery(),
+      [`findMany${name}`]: this.findManyQuery(),
+      [`findUnique${name}`]: this.findUniqueQuery(),
+      [`delete${name}`]: this.deleteMutation(),
+      [`deleteMany${name}`]: this.deleteManyMutation(),
+      [`update${name}`]: this.updateMutation(),
+      [`updateMany${name}`]: this.updateManyMutation(),
+      [`upsert${name}`]: this.upsertMutation(),
+    } as BobbinResolver<TModalSilk, TClient>
+  }
+
   public countQuery<
     TInputI = InferDelegateCountArgs<
       InferPrismaDelegate<TClient, TModalSilk["name"]>
@@ -137,16 +151,19 @@ export class PrismaModelBobbin<
     >
     middlewares?: Middleware<BobbinCountQuery<TModalSilk, TClient, TInputI>>[]
   } = {}): BobbinCountQuery<TModalSilk, TClient, TInputI> {
-    input ??= silk(this.typeWeaver.countArgs()) as GraphQLSilk<
+    input ??= silk(() => this.typeWeaver.countArgs()) as GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
       TInputI
     >
 
-    return loom.query(silk<number>(new GraphQLNonNull(GraphQLInt)), {
-      ...options,
-      input,
-      resolve: (input) => this.delegate.count(input),
-    })
+    return loom.query(
+      silk<number>(() => gt.nonNull(gt.int)),
+      {
+        ...options,
+        input,
+        resolve: (input) => this.delegate.count(input),
+      }
+    )
   }
 
   public findFirstQuery<
@@ -167,7 +184,7 @@ export class PrismaModelBobbin<
       BobbinFindFirstQuery<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinFindFirstQuery<TModalSilk, TClient, TInputI> {
-    input ??= silk(this.typeWeaver.findFirstArgs())
+    input ??= silk(() => this.typeWeaver.findFirstArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -196,7 +213,7 @@ export class PrismaModelBobbin<
       BobbinFindManyQuery<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinFindManyQuery<TModalSilk, TClient, TInputI> {
-    input ??= silk(this.typeWeaver.findManyArgs())
+    input ??= silk(() => this.typeWeaver.findManyArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -225,7 +242,7 @@ export class PrismaModelBobbin<
       BobbinFindUniqueQuery<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinFindUniqueQuery<TModalSilk, TClient, TInputI> {
-    input ??= silk(this.typeWeaver.findUniqueArgs())
+    input ??= silk(() => this.typeWeaver.findUniqueArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -252,7 +269,7 @@ export class PrismaModelBobbin<
       BobbinCreateMutation<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinCreateMutation<TModalSilk, TClient, TInputI> {
-    input ??= silk(new GraphQLNonNull(this.typeWeaver.createArgs()))
+    input ??= silk(() => gt.nonNull(this.typeWeaver.createArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -281,12 +298,9 @@ export class PrismaModelBobbin<
       BobbinCreateManyMutation<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinCreateManyMutation<TModalSilk, TClient, TInputI> {
-    input ??= silk(new GraphQLNonNull(this.typeWeaver.createManyArgs()))
+    input ??= silk(() => gt.nonNull(this.typeWeaver.createManyArgs()))
 
-    const output = silk(PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
-      IBatchPayload,
-      IBatchPayload
-    >
+    const output = PrismaModelBobbin.batchPayloadSilk()
 
     return loom.mutation(output, {
       ...options,
@@ -311,7 +325,7 @@ export class PrismaModelBobbin<
       BobbinDeleteMutation<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinDeleteMutation<TModalSilk, TClient, TInputI> {
-    input ??= silk(new GraphQLNonNull(this.typeWeaver.deleteArgs()))
+    input ??= silk(() => gt.nonNull(this.typeWeaver.deleteArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -348,11 +362,8 @@ export class PrismaModelBobbin<
       BobbinDeleteManyMutation<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinDeleteManyMutation<TModalSilk, TClient, TInputI> {
-    input ??= silk(new GraphQLNonNull(this.typeWeaver.deleteManyArgs()))
-    const output = silk(PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
-      IBatchPayload,
-      IBatchPayload
-    >
+    input ??= silk(() => gt.nonNull(this.typeWeaver.deleteManyArgs()))
+    const output = PrismaModelBobbin.batchPayloadSilk()
     return loom.mutation(output, {
       ...options,
       input,
@@ -378,7 +389,7 @@ export class PrismaModelBobbin<
       BobbinUpdateMutation<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinUpdateMutation<TModalSilk, TClient, TInputI> {
-    input ??= silk(new GraphQLNonNull(this.typeWeaver.updateArgs()))
+    input ??= silk(() => gt.nonNull(this.typeWeaver.updateArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return loom.mutation(output, {
       ...options,
@@ -405,11 +416,8 @@ export class PrismaModelBobbin<
       BobbinUpdateManyMutation<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinUpdateManyMutation<TModalSilk, TClient, TInputI> {
-    input ??= silk(new GraphQLNonNull(this.typeWeaver.updateManyArgs()))
-    const output = silk(PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
-      IBatchPayload,
-      IBatchPayload
-    >
+    input ??= silk(() => gt.nonNull(this.typeWeaver.updateManyArgs()))
+    const output = PrismaModelBobbin.batchPayloadSilk()
 
     return loom.mutation(output, {
       ...options,
@@ -434,28 +442,13 @@ export class PrismaModelBobbin<
       BobbinUpsertMutation<TModalSilk, TClient, TInputI>
     >[]
   } = {}): BobbinUpsertMutation<TModalSilk, TClient, TInputI> {
-    input ??= silk(new GraphQLNonNull(this.typeWeaver.upsertArgs()))
+    input ??= silk(() => gt.nonNull(this.typeWeaver.upsertArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return loom.mutation(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.upsert(input),
     }) as BobbinUpsertMutation<TModalSilk, TClient, TInputI>
-  }
-
-  public resolver(): BobbinResolver<TModalSilk, TClient> {
-    const name = capitalize(this.silk.name)
-    return {
-      [`count${name}`]: this.countQuery(),
-      [`findFirst${name}`]: this.findFirstQuery(),
-      [`findMany${name}`]: this.findManyQuery(),
-      [`findUnique${name}`]: this.findUniqueQuery(),
-      [`delete${name}`]: this.deleteMutation(),
-      [`deleteMany${name}`]: this.deleteManyMutation(),
-      [`update${name}`]: this.updateMutation(),
-      [`updateMany${name}`]: this.updateManyMutation(),
-      [`upsert${name}`]: this.upsertMutation(),
-    } as BobbinResolver<TModalSilk, TClient>
   }
 
   protected static getDelegate(
@@ -474,6 +467,13 @@ export class PrismaModelBobbin<
     }
 
     return delegate as PrismaDelegate
+  }
+
+  static batchPayloadSilk(): GraphQLSilk<IBatchPayload, IBatchPayload> {
+    return silk(() => PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
+      IBatchPayload,
+      IBatchPayload
+    >
   }
 }
 

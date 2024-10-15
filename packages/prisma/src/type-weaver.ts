@@ -1,7 +1,7 @@
 import { type DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
 import { type PrismaModelSilk, type PrismaModelMeta } from "./types"
-import { weaverContext } from "@gqloom/core"
+import { provideWeaverContext, weaverContext } from "@gqloom/core"
 import {
   GraphQLList,
   GraphQLNonNull,
@@ -32,7 +32,7 @@ export class PrismaTypeWeaver {
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
-        fields: () => ({
+        fields: provideWeaverContext.inherit(() => ({
           ...Object.fromEntries(
             input.fields.map((field) => {
               const isNonNull = field.isRequired && !field.isNullable
@@ -46,14 +46,16 @@ export class PrismaTypeWeaver {
                   case "inputObjectTypes":
                     return this.inputType(fieldInput.type)
                   case "scalar": {
-                    const t = PrismaWeaver.getGraphQLTypeByField(
-                      fieldInput.type
-                    )
-                    if (!t)
+                    try {
+                      const t = PrismaWeaver.getGraphQLTypeByField(
+                        fieldInput.type
+                      )
+                      return t
+                    } catch (_err) {
                       throw new Error(
                         `Can not find GraphQL type for scalar ${fieldInput.type}`
                       )
-                    return t
+                    }
                   }
                   case "enumTypes":
                     return this.enumType(fieldInput.type)
@@ -77,7 +79,7 @@ export class PrismaTypeWeaver {
               ]
             })
           ),
-        }),
+        })),
       })
     )
   }
@@ -122,6 +124,7 @@ export class PrismaTypeWeaver {
     let rank = inputType.type.length
     if (inputType.isList) rank += 10
     if (inputType.type.includes("Unchecked")) rank -= 50
+    if (inputType.type === "Null") rank -= Infinity
     switch (inputType.location) {
       case "scalar":
         rank += 10
@@ -189,7 +192,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
           type: gt.list(
@@ -199,7 +202,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
         skip: { type: gt.int },
         take: { type: gt.int },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)
@@ -214,7 +217,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
           type: gt.list(
@@ -227,7 +230,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
         distinct: {
           type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
         },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)
@@ -242,7 +245,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
           type: gt.list(
@@ -255,7 +258,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
         distinct: {
           type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
         },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)
@@ -270,9 +273,9 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)
@@ -287,11 +290,11 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
         },
-      }),
+      })),
     })
     return weaverContext.memoNamedType(input)
   }
@@ -305,13 +308,13 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(
             gt.list(this.inputType(`${model.name}CreateManyInput`))
           ),
         },
-      }),
+      })),
     })
     return weaverContext.memoNamedType(input)
   }
@@ -325,11 +328,11 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         where: {
           type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
         },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)
@@ -344,9 +347,9 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)
@@ -361,14 +364,14 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
         },
         where: {
           type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
         },
-      }),
+      })),
     })
     return weaverContext.memoNamedType(input)
   }
@@ -382,14 +385,14 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(
             this.inputType(`${model.name}UpdateManyMutationInput`)
           ),
         },
         where: { type: this.inputType(`${model.name}WhereInput`) },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)
@@ -404,7 +407,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
 
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         where: {
           type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
         },
@@ -414,22 +417,20 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
         update: {
           type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
         },
-      }),
+      })),
     })
     return weaverContext.memoNamedType(input)
   }
 
   static batchPayload(): GraphQLObjectType {
     const name = "BatchPayload"
-
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
-
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
-      fields: () => ({
+      fields: provideWeaverContext.inherit(() => ({
         count: { type: gt.nonNull(gt.int) },
-      }),
+      })),
     })
 
     return weaverContext.memoNamedType(input)

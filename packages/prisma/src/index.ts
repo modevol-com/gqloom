@@ -111,7 +111,7 @@ export class PrismaWeaver {
   static getGraphQLTypeByField(
     type: string,
     field?: DMMF.Field
-  ): GraphQLOutputType | undefined {
+  ): GraphQLOutputType {
     const config = weaverContext.getConfig<PrismaWeaverConfig>("gqloom.prisma")
 
     const presetType = config?.presetGraphQLType?.(type, field)
