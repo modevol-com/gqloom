@@ -1,11 +1,11 @@
 import { PrismaWeaver } from "../../dist"
-import datamodel from "./datamodel.json"
+import mm from "./model-meta.json"
 
-const User = PrismaWeaver.unravel(datamodel.models.User, datamodel)
-const Profile = PrismaWeaver.unravel(datamodel.models.Profile, datamodel)
-const Post = PrismaWeaver.unravel(datamodel.models.Post, datamodel)
-const Category = PrismaWeaver.unravel(datamodel.models.Category, datamodel)
-const Cat = PrismaWeaver.unravel(datamodel.models.Cat, datamodel)
-const Dog = PrismaWeaver.unravel(datamodel.models.Dog, datamodel)
+const User = PrismaWeaver.unravel(mm.models.User, mm)
+const Profile = PrismaWeaver.unravel(mm.models.Profile, mm)
+const Post = PrismaWeaver.unravel(mm.models.Post, mm)
+const Category = PrismaWeaver.unravel(mm.models.Category, mm)
+const Cat = PrismaWeaver.unravel(mm.models.Cat, mm)
+const Dog = PrismaWeaver.unravel(mm.models.Dog, mm)
 
 export { User, Profile, Post, Category, Cat, Dog }

@@ -10,6 +10,9 @@ export interface GQLoomGeneratorConfig {
   gqloomPath?: string
   clientOutput?: string
   output?: string
+  commonjsFile?: string
+  moduleFile?: string
+  typesFiles?: string[]
 }
 
 generatorHandler({
@@ -20,6 +23,11 @@ generatorHandler({
   }),
   onGenerate: async (options) => {
     const config = options.generator.config as GQLoomGeneratorConfig
+
+    config.commonjsFile ??= "index.cjs"
+    config.moduleFile ??= "index.js"
+    config.typesFiles ??= ["index.d.ts"]
+
     const prismaLocation =
       config.clientOutput ??
       options.otherGenerators.find(
@@ -44,24 +52,31 @@ generatorHandler({
     fs.mkdirSync(outputDir, { recursive: true })
 
     fs.writeFileSync(
-      path.resolve(outputDir, "./datamodel.json"),
+      path.resolve(outputDir, "./model-meta.json"),
       JSON.stringify({ models, enums, schema }, null, 2)
     )
-    await genJSFile(options.dmmf, {
-      outputFile: path.resolve(outputDir, "./index.js"),
-      esm: true,
-      ...config,
-    })
-    await genJSFile(options.dmmf, {
-      outputFile: path.resolve(outputDir, "./index.cjs"),
-      esm: false,
-      ...config,
-    })
-    await genTsDeclaration(options.dmmf, {
-      outputDir,
-      prismaLocation,
-      ...config,
-    })
+    if (config.commonjsFile) {
+      await genJSFile(options.dmmf, {
+        outputFile: path.resolve(outputDir, config.commonjsFile),
+        esm: false,
+        ...config,
+      })
+    }
+    if (config.moduleFile) {
+      await genJSFile(options.dmmf, {
+        outputFile: path.resolve(outputDir, config.moduleFile),
+        esm: true,
+        ...config,
+      })
+    }
+
+    for (const file of config.typesFiles) {
+      await genTsDeclaration(options.dmmf, {
+        outputFile: path.resolve(outputDir, file),
+        prismaLocation,
+        ...config,
+      })
+    }
   },
 })
 

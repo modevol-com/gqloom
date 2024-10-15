@@ -72,6 +72,21 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("relationField", () => {
+    const UserBobbin = new PrismaModelBobbin(g.User, db)
+    const PostBobbin = new PrismaModelBobbin(g.Post, db)
+    const r1 = resolver.of(g.User, {
+      users: query(g.User.list(), () => db.user.findMany()),
+
+      posts: UserBobbin.relationField("posts"),
+    })
+
+    const r2 = resolver.of(g.Post, {
+      posts: query(g.Post.list(), () => db.post.findMany()),
+
+      author: PostBobbin.relationField("author"),
+    })
+    const schema = weave(r1, r2)
+    const yoga = createYoga({ schema })
     beforeAll(async () => {
       await db.user.deleteMany()
       await db.post.deleteMany()
@@ -85,8 +100,6 @@ describe("PrismaModelBobbin", () => {
         },
       })
     })
-    const UserBobbin = new PrismaModelBobbin(g.User, db)
-    const PostBobbin = new PrismaModelBobbin(g.Post, db)
     it("should be able to create a relationField", () => {
       const postsField = UserBobbin.relationField("posts")
       expect(postsField).toBeDefined()
@@ -101,19 +114,7 @@ describe("PrismaModelBobbin", () => {
       expect(userField.resolve).toBeTypeOf("function")
     })
 
-    it("should be able to resolve a relationField", async () => {
-      const r1 = resolver.of(g.User, {
-        users: query(g.User.list(), () => db.user.findMany()),
-
-        posts: UserBobbin.relationField("posts"),
-      })
-
-      const r2 = resolver.of(g.Post, {
-        posts: query(g.Post.list(), () => db.post.findMany()),
-
-        author: PostBobbin.relationField("author"),
-      })
-      const schema = weave(r1, r2)
+    it("should be able to weave user schema", () => {
       expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -122,7 +123,9 @@ describe("PrismaModelBobbin", () => {
           posts: [Post!]!
         }"
       `)
-      const yoga = createYoga({ schema })
+    })
+
+    it("should be able to resolve a relationField", async () => {
       const response = await yoga.fetch("http://localhost/graphql", {
         method: "POST",
         headers: {

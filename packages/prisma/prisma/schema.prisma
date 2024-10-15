@@ -6,9 +6,12 @@ generator client {
 }
 
 generator gqloom {
-  provider   = "node ./bin/generator.cjs"
-  output     = "../test/generated"
-  gqloomPath = "../../dist"
+  provider     = "node ./bin/generator.cjs"
+  output       = "../test/generated"
+  commonjsFile = ""
+  moduleFile   = "index.js"
+  typesFiles   = ["index.d.ts"]
+  gqloomPath   = "../../dist"
 }
 
 datasource db {

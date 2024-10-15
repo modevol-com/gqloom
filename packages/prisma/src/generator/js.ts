@@ -19,14 +19,14 @@ export async function genJSFile(
   }
 
   if (config.esm) {
-    lines.push(`import datamodel from "./datamodel.json"`)
+    lines.push(`import mm from "./model-meta.json"`)
   } else {
-    lines.push(`const datamodel = require("./datamodel.json")`)
+    lines.push(`const mm = require("./model-meta.json")`)
   }
   lines.push("")
   for (const model of dmmf.datamodel.models) {
     lines.push(
-      `const ${model.name} = PrismaWeaver.unravel(datamodel.models.${model.name}, datamodel)`
+      `const ${model.name} = PrismaWeaver.unravel(mm.models.${model.name}, mm)`
     )
   }
 
@@ -34,7 +34,7 @@ export async function genJSFile(
 
   for (const enumType of dmmf.datamodel.enums) {
     lines.push(
-      `const ${enumType.name} = PrismaWeaver.unravelEnum(datamodel.enums.${enumType.name})`
+      `const ${enumType.name} = PrismaWeaver.unravelEnum(mm.enums.${enumType.name})`
     )
   }
 

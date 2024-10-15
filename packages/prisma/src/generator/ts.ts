@@ -1,19 +1,16 @@
 import { Project, VariableDeclarationKind } from "ts-morph"
-import * as path from "path"
 import { type GQLoomGeneratorConfig } from "."
 import { type DMMF } from "@prisma/generator-helper"
 
 export async function genTsDeclaration(
   dmmf: DMMF.Document,
-  config: { outputDir: string; prismaLocation: string } & GQLoomGeneratorConfig
+  config: { outputFile: string; prismaLocation: string } & GQLoomGeneratorConfig
 ) {
   const project = new Project()
 
-  const sourceFile = project.createSourceFile(
-    path.resolve(config.outputDir, "./index.d.ts"),
-    "",
-    { overwrite: true }
-  )
+  const sourceFile = project.createSourceFile(config.outputFile, "", {
+    overwrite: true,
+  })
 
   sourceFile.addImportDeclaration({
     moduleSpecifier: config.gqloomPath ?? "@gqloom/prisma",
