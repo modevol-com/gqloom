@@ -21,6 +21,11 @@ input CatCreateInput {
   lastName: String!
 }
 
+input CatCreateManyInput {
+  firstName: String!
+  lastName: String!
+}
+
 input CatFirstNameLastNameCompoundUniqueInput {
   firstName: String!
   lastName: String!
@@ -70,15 +75,13 @@ type Category {
 input CategoryCreateNestedManyWithoutPostsInput {
   connect: [CategoryWhereUniqueInput!]
   connectOrCreate: [CategoryCreateOrConnectWithoutPostsInput!]
-  create: [CategoryCreateWithoutPostsInput!]
+  create: [EmptyInput!]
 }
 
 input CategoryCreateOrConnectWithoutPostsInput {
-  create: CategoryCreateWithoutPostsInput!
+  create: EmptyInput!
   where: CategoryWhereUniqueInput!
 }
-
-input CategoryCreateWithoutPostsInput
 
 input CategoryListRelationFilter {
   every: CategoryWhereInput
@@ -97,17 +100,15 @@ input CategoryScalarWhereInput {
   id: IntFilter
 }
 
-input CategoryUpdateManyMutationInput
-
 input CategoryUpdateManyWithWhereWithoutPostsInput {
-  data: CategoryUpdateManyMutationInput!
+  data: EmptyInput!
   where: CategoryScalarWhereInput!
 }
 
 input CategoryUpdateManyWithoutPostsNestedInput {
   connect: [CategoryWhereUniqueInput!]
   connectOrCreate: [CategoryCreateOrConnectWithoutPostsInput!]
-  create: [CategoryCreateWithoutPostsInput!]
+  create: [EmptyInput!]
   delete: [CategoryWhereUniqueInput!]
   deleteMany: [CategoryScalarWhereInput!]
   disconnect: [CategoryWhereUniqueInput!]
@@ -118,15 +119,13 @@ input CategoryUpdateManyWithoutPostsNestedInput {
 }
 
 input CategoryUpdateWithWhereUniqueWithoutPostsInput {
-  data: CategoryUpdateWithoutPostsInput!
+  data: EmptyInput!
   where: CategoryWhereUniqueInput!
 }
 
-input CategoryUpdateWithoutPostsInput
-
 input CategoryUpsertWithWhereUniqueWithoutPostsInput {
-  create: CategoryCreateWithoutPostsInput!
-  update: CategoryUpdateWithoutPostsInput!
+  create: EmptyInput!
+  update: EmptyInput!
   where: CategoryWhereUniqueInput!
 }
 
@@ -170,6 +169,14 @@ type Dog {
 }
 
 input DogCreateInput {
+  birthDate: String!
+  firstName: String!
+  height: Float!
+  lastName: String!
+  weight: Int!
+}
+
+input DogCreateManyInput {
   birthDate: String!
   firstName: String!
   height: Float!
@@ -237,6 +244,9 @@ input DogWhereUniqueInput {
   weight: IntFilter
 }
 
+"""Empty input scalar"""
+scalar EmptyInput
+
 input FloatFieldUpdateOperationsInput {
   decrement: Float
   divide: Float
@@ -287,6 +297,16 @@ input IntNullableFilter {
 }
 
 type Mutation {
+  createCat(data: CatCreateInput!): Cat
+  createDog(data: DogCreateInput!): Dog
+  createManyCat(data: [CatCreateManyInput!]!): BatchPayload
+  createManyDog(data: [DogCreateManyInput!]!): BatchPayload
+  createManyPost(data: [PostCreateManyInput!]!): BatchPayload
+  createManyProfile(data: [ProfileCreateManyInput!]!): BatchPayload
+  createManyUser(data: [UserCreateManyInput!]!): BatchPayload
+  createPost(data: PostCreateInput!): Post
+  createProfile(data: ProfileCreateInput!): Profile
+  createUser(data: UserCreateInput!): User
   deleteCat(where: CatWhereUniqueInput!): Cat
   deleteDog(where: DogWhereUniqueInput!): Dog
   deleteManyCat(where: CatWhereInput): BatchPayload
@@ -302,7 +322,7 @@ type Mutation {
   updateManyCat(data: CatUpdateManyMutationInput!, where: CatWhereInput): BatchPayload
   updateManyDog(data: DogUpdateManyMutationInput!, where: DogWhereInput): BatchPayload
   updateManyPost(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload
-  updateManyProfile(data: ProfileUpdateManyMutationInput!, where: ProfileWhereInput): BatchPayload
+  updateManyProfile(data: EmptyInput!, where: ProfileWhereInput): BatchPayload
   updateManyUser(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post!
   updateProfile(data: ProfileUpdateInput!, where: ProfileWhereUniqueInput!): Profile!
@@ -407,8 +427,8 @@ type Post {
   content: String
   id: ID!
   published: Boolean!
-  publishedBy: User
-  publishedById: Int
+  publisher: User
+  publisherId: Int
   title: String!
 }
 
@@ -417,7 +437,7 @@ input PostCreateInput {
   categories: CategoryCreateNestedManyWithoutPostsInput
   content: String
   published: Boolean
-  publishedBy: UserCreateNestedOneWithoutPublishedPostsInput
+  publisher: UserCreateNestedOneWithoutPublishedPostsInput
   title: String!
 }
 
@@ -425,7 +445,7 @@ input PostCreateManyAuthorInput {
   content: String
   id: Int
   published: Boolean
-  publishedById: Int
+  publisherId: Int
   title: String!
 }
 
@@ -433,7 +453,16 @@ input PostCreateManyAuthorInputEnvelope {
   data: [PostCreateManyAuthorInput!]!
 }
 
-input PostCreateManyPublishedByInput {
+input PostCreateManyInput {
+  authorId: Int!
+  content: String
+  id: Int
+  published: Boolean
+  publisherId: Int
+  title: String!
+}
+
+input PostCreateManyPublisherInput {
   authorId: Int!
   content: String
   id: Int
@@ -441,8 +470,8 @@ input PostCreateManyPublishedByInput {
   title: String!
 }
 
-input PostCreateManyPublishedByInputEnvelope {
-  data: [PostCreateManyPublishedByInput!]!
+input PostCreateManyPublisherInputEnvelope {
+  data: [PostCreateManyPublisherInput!]!
 }
 
 input PostCreateNestedManyWithoutAuthorInput {
@@ -452,11 +481,11 @@ input PostCreateNestedManyWithoutAuthorInput {
   createMany: PostCreateManyAuthorInputEnvelope
 }
 
-input PostCreateNestedManyWithoutPublishedByInput {
+input PostCreateNestedManyWithoutPublisherInput {
   connect: [PostWhereUniqueInput!]
-  connectOrCreate: [PostCreateOrConnectWithoutPublishedByInput!]
-  create: [PostCreateWithoutPublishedByInput!]
-  createMany: PostCreateManyPublishedByInputEnvelope
+  connectOrCreate: [PostCreateOrConnectWithoutPublisherInput!]
+  create: [PostCreateWithoutPublisherInput!]
+  createMany: PostCreateManyPublisherInputEnvelope
 }
 
 input PostCreateOrConnectWithoutAuthorInput {
@@ -464,8 +493,8 @@ input PostCreateOrConnectWithoutAuthorInput {
   where: PostWhereUniqueInput!
 }
 
-input PostCreateOrConnectWithoutPublishedByInput {
-  create: PostCreateWithoutPublishedByInput!
+input PostCreateOrConnectWithoutPublisherInput {
+  create: PostCreateWithoutPublisherInput!
   where: PostWhereUniqueInput!
 }
 
@@ -473,11 +502,11 @@ input PostCreateWithoutAuthorInput {
   categories: CategoryCreateNestedManyWithoutPostsInput
   content: String
   published: Boolean
-  publishedBy: UserCreateNestedOneWithoutPublishedPostsInput
+  publisher: UserCreateNestedOneWithoutPublishedPostsInput
   title: String!
 }
 
-input PostCreateWithoutPublishedByInput {
+input PostCreateWithoutPublisherInput {
   author: UserCreateNestedOneWithoutPostsInput!
   categories: CategoryCreateNestedManyWithoutPostsInput
   content: String
@@ -502,8 +531,8 @@ input PostOrderByWithRelationInput {
   content: SortOrderInput
   id: SortOrder
   published: SortOrder
-  publishedBy: UserOrderByWithRelationInput
-  publishedById: SortOrderInput
+  publisher: UserOrderByWithRelationInput
+  publisherId: SortOrderInput
   title: SortOrder
 }
 
@@ -512,7 +541,7 @@ enum PostScalarFieldEnum {
   content
   id
   published
-  publishedById
+  publisherId
   title
 }
 
@@ -524,7 +553,7 @@ input PostScalarWhereInput {
   content: StringNullableFilter
   id: IntFilter
   published: BoolFilter
-  publishedById: IntNullableFilter
+  publisherId: IntNullableFilter
   title: StringFilter
 }
 
@@ -533,7 +562,7 @@ input PostUpdateInput {
   categories: CategoryUpdateManyWithoutPostsNestedInput
   content: NullableStringFieldUpdateOperationsInput
   published: BoolFieldUpdateOperationsInput
-  publishedBy: UserUpdateOneWithoutPublishedPostsNestedInput
+  publisher: UserUpdateOneWithoutPublishedPostsNestedInput
   title: StringFieldUpdateOperationsInput
 }
 
@@ -548,7 +577,7 @@ input PostUpdateManyWithWhereWithoutAuthorInput {
   where: PostScalarWhereInput!
 }
 
-input PostUpdateManyWithWhereWithoutPublishedByInput {
+input PostUpdateManyWithWhereWithoutPublisherInput {
   data: PostUpdateManyMutationInput!
   where: PostScalarWhereInput!
 }
@@ -567,18 +596,18 @@ input PostUpdateManyWithoutAuthorNestedInput {
   upsert: [PostUpsertWithWhereUniqueWithoutAuthorInput!]
 }
 
-input PostUpdateManyWithoutPublishedByNestedInput {
+input PostUpdateManyWithoutPublisherNestedInput {
   connect: [PostWhereUniqueInput!]
-  connectOrCreate: [PostCreateOrConnectWithoutPublishedByInput!]
-  create: [PostCreateWithoutPublishedByInput!]
-  createMany: PostCreateManyPublishedByInputEnvelope
+  connectOrCreate: [PostCreateOrConnectWithoutPublisherInput!]
+  create: [PostCreateWithoutPublisherInput!]
+  createMany: PostCreateManyPublisherInputEnvelope
   delete: [PostWhereUniqueInput!]
   deleteMany: [PostScalarWhereInput!]
   disconnect: [PostWhereUniqueInput!]
   set: [PostWhereUniqueInput!]
-  update: [PostUpdateWithWhereUniqueWithoutPublishedByInput!]
-  updateMany: [PostUpdateManyWithWhereWithoutPublishedByInput!]
-  upsert: [PostUpsertWithWhereUniqueWithoutPublishedByInput!]
+  update: [PostUpdateWithWhereUniqueWithoutPublisherInput!]
+  updateMany: [PostUpdateManyWithWhereWithoutPublisherInput!]
+  upsert: [PostUpsertWithWhereUniqueWithoutPublisherInput!]
 }
 
 input PostUpdateWithWhereUniqueWithoutAuthorInput {
@@ -586,8 +615,8 @@ input PostUpdateWithWhereUniqueWithoutAuthorInput {
   where: PostWhereUniqueInput!
 }
 
-input PostUpdateWithWhereUniqueWithoutPublishedByInput {
-  data: PostUpdateWithoutPublishedByInput!
+input PostUpdateWithWhereUniqueWithoutPublisherInput {
+  data: PostUpdateWithoutPublisherInput!
   where: PostWhereUniqueInput!
 }
 
@@ -595,11 +624,11 @@ input PostUpdateWithoutAuthorInput {
   categories: CategoryUpdateManyWithoutPostsNestedInput
   content: NullableStringFieldUpdateOperationsInput
   published: BoolFieldUpdateOperationsInput
-  publishedBy: UserUpdateOneWithoutPublishedPostsNestedInput
+  publisher: UserUpdateOneWithoutPublishedPostsNestedInput
   title: StringFieldUpdateOperationsInput
 }
 
-input PostUpdateWithoutPublishedByInput {
+input PostUpdateWithoutPublisherInput {
   author: UserUpdateOneRequiredWithoutPostsNestedInput
   categories: CategoryUpdateManyWithoutPostsNestedInput
   content: NullableStringFieldUpdateOperationsInput
@@ -613,9 +642,9 @@ input PostUpsertWithWhereUniqueWithoutAuthorInput {
   where: PostWhereUniqueInput!
 }
 
-input PostUpsertWithWhereUniqueWithoutPublishedByInput {
-  create: PostCreateWithoutPublishedByInput!
-  update: PostUpdateWithoutPublishedByInput!
+input PostUpsertWithWhereUniqueWithoutPublisherInput {
+  create: PostCreateWithoutPublisherInput!
+  update: PostUpdateWithoutPublisherInput!
   where: PostWhereUniqueInput!
 }
 
@@ -629,8 +658,8 @@ input PostWhereInput {
   content: StringNullableFilter
   id: IntFilter
   published: BoolFilter
-  publishedBy: UserNullableRelationFilter
-  publishedById: IntNullableFilter
+  publisher: UserNullableRelationFilter
+  publisherId: IntNullableFilter
   title: StringFilter
 }
 
@@ -644,8 +673,8 @@ input PostWhereUniqueInput {
   content: StringNullableFilter
   id: Int
   published: BoolFilter
-  publishedBy: UserNullableRelationFilter
-  publishedById: IntNullableFilter
+  publisher: UserNullableRelationFilter
+  publisherId: IntNullableFilter
   title: StringFilter
 }
 
@@ -659,18 +688,21 @@ input ProfileCreateInput {
   user: UserCreateNestedOneWithoutProfileInput!
 }
 
+input ProfileCreateManyInput {
+  id: Int
+  userId: Int!
+}
+
 input ProfileCreateNestedOneWithoutUserInput {
   connect: ProfileWhereUniqueInput
   connectOrCreate: ProfileCreateOrConnectWithoutUserInput
-  create: ProfileCreateWithoutUserInput
+  create: EmptyInput
 }
 
 input ProfileCreateOrConnectWithoutUserInput {
-  create: ProfileCreateWithoutUserInput!
+  create: EmptyInput!
   where: ProfileWhereUniqueInput!
 }
-
-input ProfileCreateWithoutUserInput
 
 input ProfileNullableRelationFilter {
   is: ProfileWhereInput
@@ -692,12 +724,10 @@ input ProfileUpdateInput {
   user: UserUpdateOneRequiredWithoutProfileNestedInput
 }
 
-input ProfileUpdateManyMutationInput
-
 input ProfileUpdateOneWithoutUserNestedInput {
   connect: ProfileWhereUniqueInput
   connectOrCreate: ProfileCreateOrConnectWithoutUserInput
-  create: ProfileCreateWithoutUserInput
+  create: EmptyInput
   delete: ProfileWhereInput
   disconnect: ProfileWhereInput
   update: ProfileUpdateToOneWithWhereWithoutUserInput
@@ -705,15 +735,13 @@ input ProfileUpdateOneWithoutUserNestedInput {
 }
 
 input ProfileUpdateToOneWithWhereWithoutUserInput {
-  data: ProfileUpdateWithoutUserInput!
+  data: EmptyInput!
   where: ProfileWhereInput
 }
 
-input ProfileUpdateWithoutUserInput
-
 input ProfileUpsertWithoutUserInput {
-  create: ProfileCreateWithoutUserInput!
-  update: ProfileUpdateWithoutUserInput!
+  create: EmptyInput!
+  update: EmptyInput!
   where: ProfileWhereInput
 }
 
@@ -814,7 +842,13 @@ input UserCreateInput {
   name: String
   posts: PostCreateNestedManyWithoutAuthorInput
   profile: ProfileCreateNestedOneWithoutUserInput
-  publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+  publishedPosts: PostCreateNestedManyWithoutPublisherInput
+}
+
+input UserCreateManyInput {
+  email: String!
+  id: Int
+  name: String
 }
 
 input UserCreateNestedOneWithoutPostsInput {
@@ -854,14 +888,14 @@ input UserCreateWithoutPostsInput {
   email: String!
   name: String
   profile: ProfileCreateNestedOneWithoutUserInput
-  publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+  publishedPosts: PostCreateNestedManyWithoutPublisherInput
 }
 
 input UserCreateWithoutProfileInput {
   email: String!
   name: String
   posts: PostCreateNestedManyWithoutAuthorInput
-  publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+  publishedPosts: PostCreateNestedManyWithoutPublisherInput
 }
 
 input UserCreateWithoutPublishedPostsInput {
@@ -901,7 +935,7 @@ input UserUpdateInput {
   name: NullableStringFieldUpdateOperationsInput
   posts: PostUpdateManyWithoutAuthorNestedInput
   profile: ProfileUpdateOneWithoutUserNestedInput
-  publishedPosts: PostUpdateManyWithoutPublishedByNestedInput
+  publishedPosts: PostUpdateManyWithoutPublisherNestedInput
 }
 
 input UserUpdateManyMutationInput {
@@ -954,14 +988,14 @@ input UserUpdateWithoutPostsInput {
   email: StringFieldUpdateOperationsInput
   name: NullableStringFieldUpdateOperationsInput
   profile: ProfileUpdateOneWithoutUserNestedInput
-  publishedPosts: PostUpdateManyWithoutPublishedByNestedInput
+  publishedPosts: PostUpdateManyWithoutPublisherNestedInput
 }
 
 input UserUpdateWithoutProfileInput {
   email: StringFieldUpdateOperationsInput
   name: NullableStringFieldUpdateOperationsInput
   posts: PostUpdateManyWithoutAuthorNestedInput
-  publishedPosts: PostUpdateManyWithoutPublishedByNestedInput
+  publishedPosts: PostUpdateManyWithoutPublisherNestedInput
 }
 
 input UserUpdateWithoutPublishedPostsInput {

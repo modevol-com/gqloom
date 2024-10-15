@@ -7,6 +7,7 @@ import {
   isUnionType,
   type GraphQLOutputType,
   type GraphQLUnionType,
+  isScalarType,
 } from "graphql"
 import { type LoomObjectType } from "./object"
 import { WEAVER_CONFIG } from "../utils/symbols"
@@ -71,7 +72,8 @@ export function initWeaverContext(): WeaverContext {
       if (
         isObjectType(gqlType) ||
         isUnionType(gqlType) ||
-        isEnumType(gqlType)
+        isEnumType(gqlType) ||
+        isScalarType(gqlType)
       ) {
         this.namedTypes.set(gqlType.name, gqlType)
       }

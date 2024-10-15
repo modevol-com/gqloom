@@ -249,7 +249,7 @@
           "isUpdatedAt": false
         },
         {
-          "name": "publishedBy",
+          "name": "publisher",
           "kind": "object",
           "isList": false,
           "isRequired": false,
@@ -259,13 +259,14 @@
           "hasDefaultValue": false,
           "type": "User",
           "relationName": "UserToPublishedPost",
-          "relationFromFields": ["publishedById"],
+          "relationFromFields": ["publisherId"],
           "relationToFields": ["id"],
           "isGenerated": false,
           "isUpdatedAt": false
         },
         {
-          "name": "publishedById",
+          "name": "publisherId",
+          "dbName": "publishedById",
           "kind": "scalar",
           "isList": false,
           "isRequired": false,
@@ -1760,7 +1761,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -1802,7 +1803,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -1919,7 +1920,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -1951,7 +1952,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -2130,7 +2131,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -2172,7 +2173,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -2289,7 +2290,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -2531,7 +2532,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -4102,7 +4103,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateNestedManyWithoutPublishedByInput",
+                  "type": "PostCreateNestedManyWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -4191,7 +4192,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUncheckedCreateNestedManyWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateNestedManyWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -4280,7 +4281,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateManyWithoutPublishedByNestedInput",
+                  "type": "PostUpdateManyWithoutPublisherNestedInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -4387,7 +4388,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUncheckedUpdateManyWithoutPublishedByNestedInput",
+                  "type": "PostUncheckedUpdateManyWithoutPublisherNestedInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -4847,7 +4848,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -4947,7 +4948,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -5058,7 +5059,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -5188,7 +5189,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -5298,7 +5299,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -5487,7 +5488,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -8754,7 +8755,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -8802,7 +8803,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -8889,7 +8890,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -8976,7 +8977,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -9024,7 +9025,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -10681,7 +10682,7 @@
           ]
         },
         {
-          "name": "PostCreateNestedManyWithoutPublishedByInput",
+          "name": "PostCreateNestedManyWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -10693,25 +10694,25 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -10724,13 +10725,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -10743,7 +10744,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateManyPublishedByInputEnvelope",
+                  "type": "PostCreateManyPublisherInputEnvelope",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -10917,7 +10918,7 @@
           ]
         },
         {
-          "name": "PostUncheckedCreateNestedManyWithoutPublishedByInput",
+          "name": "PostUncheckedCreateNestedManyWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -10929,25 +10930,25 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -10960,13 +10961,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -10979,7 +10980,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateManyPublishedByInputEnvelope",
+                  "type": "PostCreateManyPublisherInputEnvelope",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -11333,7 +11334,7 @@
           ]
         },
         {
-          "name": "PostUpdateManyWithoutPublishedByNestedInput",
+          "name": "PostUpdateManyWithoutPublisherNestedInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -11345,25 +11346,25 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -11376,13 +11377,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -11395,13 +11396,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpsertWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpsertWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUpsertWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpsertWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -11414,7 +11415,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateManyPublishedByInputEnvelope",
+                  "type": "PostCreateManyPublisherInputEnvelope",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -11503,13 +11504,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpdateWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUpdateWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpdateWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -11522,13 +11523,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateManyWithWhereWithoutPublishedByInput",
+                  "type": "PostUpdateManyWithWhereWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUpdateManyWithWhereWithoutPublishedByInput",
+                  "type": "PostUpdateManyWithWhereWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -11978,7 +11979,7 @@
           ]
         },
         {
-          "name": "PostUncheckedUpdateManyWithoutPublishedByNestedInput",
+          "name": "PostUncheckedUpdateManyWithoutPublisherNestedInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -11990,25 +11991,25 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -12021,13 +12022,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateOrConnectWithoutPublishedByInput",
+                  "type": "PostCreateOrConnectWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -12040,13 +12041,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpsertWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpsertWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUpsertWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpsertWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -12059,7 +12060,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateManyPublishedByInputEnvelope",
+                  "type": "PostCreateManyPublisherInputEnvelope",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -12148,13 +12149,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpdateWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUpdateWithWhereUniqueWithoutPublishedByInput",
+                  "type": "PostUpdateWithWhereUniqueWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -12167,13 +12168,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateManyWithWhereWithoutPublishedByInput",
+                  "type": "PostUpdateManyWithWhereWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUpdateManyWithWhereWithoutPublishedByInput",
+                  "type": "PostUpdateManyWithWhereWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -16783,7 +16784,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -16871,7 +16872,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -16972,7 +16973,7 @@
           ]
         },
         {
-          "name": "PostCreateWithoutPublishedByInput",
+          "name": "PostCreateWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -17048,7 +17049,7 @@
           ]
         },
         {
-          "name": "PostUncheckedCreateWithoutPublishedByInput",
+          "name": "PostUncheckedCreateWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -17135,7 +17136,7 @@
           ]
         },
         {
-          "name": "PostCreateOrConnectWithoutPublishedByInput",
+          "name": "PostCreateOrConnectWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -17160,13 +17161,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -17176,7 +17177,7 @@
           ]
         },
         {
-          "name": "PostCreateManyPublishedByInputEnvelope",
+          "name": "PostCreateManyPublisherInputEnvelope",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -17188,13 +17189,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateManyPublishedByInput",
+                  "type": "PostCreateManyPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostCreateManyPublishedByInput",
+                  "type": "PostCreateManyPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": true
@@ -17572,7 +17573,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -17597,7 +17598,7 @@
           ]
         },
         {
-          "name": "PostUpsertWithWhereUniqueWithoutPublishedByInput",
+          "name": "PostUpsertWithWhereUniqueWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -17622,13 +17623,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateWithoutPublishedByInput",
+                  "type": "PostUpdateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedUpdateWithoutPublishedByInput",
+                  "type": "PostUncheckedUpdateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -17641,13 +17642,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateWithoutPublishedByInput",
+                  "type": "PostCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedCreateWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -17657,7 +17658,7 @@
           ]
         },
         {
-          "name": "PostUpdateWithWhereUniqueWithoutPublishedByInput",
+          "name": "PostUpdateWithWhereUniqueWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -17682,13 +17683,13 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateWithoutPublishedByInput",
+                  "type": "PostUpdateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedUpdateWithoutPublishedByInput",
+                  "type": "PostUncheckedUpdateWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -17698,7 +17699,7 @@
           ]
         },
         {
-          "name": "PostUpdateManyWithWhereWithoutPublishedByInput",
+          "name": "PostUpdateManyWithWhereWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -17729,7 +17730,7 @@
                   "isList": false
                 },
                 {
-                  "type": "PostUncheckedUpdateManyWithoutPublishedByInput",
+                  "type": "PostUncheckedUpdateManyWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -17929,7 +17930,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateNestedManyWithoutPublishedByInput",
+                  "type": "PostCreateNestedManyWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -18005,7 +18006,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUncheckedCreateNestedManyWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateNestedManyWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -18223,7 +18224,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateManyWithoutPublishedByNestedInput",
+                  "type": "PostUpdateManyWithoutPublisherNestedInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -18317,7 +18318,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUncheckedUpdateManyWithoutPublishedByNestedInput",
+                  "type": "PostUncheckedUpdateManyWithoutPublisherNestedInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -18368,7 +18369,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostCreateNestedManyWithoutPublishedByInput",
+                  "type": "PostCreateNestedManyWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -18444,7 +18445,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUncheckedCreateNestedManyWithoutPublishedByInput",
+                  "type": "PostUncheckedCreateNestedManyWithoutPublisherInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -18913,7 +18914,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUpdateManyWithoutPublishedByNestedInput",
+                  "type": "PostUpdateManyWithoutPublisherNestedInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -19007,7 +19008,7 @@
               "isNullable": false,
               "inputTypes": [
                 {
-                  "type": "PostUncheckedUpdateManyWithoutPublishedByNestedInput",
+                  "type": "PostUncheckedUpdateManyWithoutPublisherNestedInput",
                   "namespace": "prisma",
                   "location": "inputObjectTypes",
                   "isList": false
@@ -19585,7 +19586,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -19672,7 +19673,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -19934,7 +19935,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -19953,7 +19954,7 @@
           ]
         },
         {
-          "name": "PostCreateManyPublishedByInput",
+          "name": "PostCreateManyPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -20093,7 +20094,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -20205,7 +20206,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -20327,7 +20328,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -20352,7 +20353,7 @@
           ]
         },
         {
-          "name": "PostUpdateWithoutPublishedByInput",
+          "name": "PostUpdateWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -20446,7 +20447,7 @@
           ]
         },
         {
-          "name": "PostUncheckedUpdateWithoutPublishedByInput",
+          "name": "PostUncheckedUpdateWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -20563,7 +20564,7 @@
           ]
         },
         {
-          "name": "PostUncheckedUpdateManyWithoutPublishedByInput",
+          "name": "PostUncheckedUpdateManyWithoutPublisherInput",
           "constraints": {
             "maxNumFields": null,
             "minNumFields": null
@@ -20808,7 +20809,7 @@
               ]
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "isRequired": false,
               "isNullable": false,
               "inputTypes": [
@@ -20925,7 +20926,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -21052,7 +21053,7 @@
               ]
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "isRequired": false,
               "isNullable": true,
               "inputTypes": [
@@ -26514,7 +26515,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": true,
               "outputType": {
@@ -27407,7 +27408,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": false,
               "outputType": {
@@ -27452,7 +27453,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": true,
               "outputType": {
@@ -27487,7 +27488,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": true,
               "outputType": {
@@ -27552,7 +27553,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": true,
               "outputType": {
@@ -27617,7 +27618,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": true,
               "outputType": {
@@ -28415,7 +28416,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": true,
               "outputType": {
@@ -28436,7 +28437,7 @@
               }
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "args": [
                 {
                   "name": "where",
@@ -28904,7 +28905,7 @@
               }
             },
             {
-              "name": "publishedById",
+              "name": "publisherId",
               "args": [],
               "isNullable": true,
               "outputType": {
@@ -28925,7 +28926,7 @@
               }
             },
             {
-              "name": "publishedBy",
+              "name": "publisher",
               "args": [
                 {
                   "name": "where",
@@ -29070,7 +29071,7 @@
             "content",
             "published",
             "authorId",
-            "publishedById"
+            "publisherId"
           ]
         },
         {

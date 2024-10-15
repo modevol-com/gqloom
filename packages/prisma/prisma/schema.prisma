@@ -40,8 +40,8 @@ model Post {
   author   User @relation(fields: authorId, references: id, onDelete: Cascade)
   authorId Int
 
-  publishedBy   User? @relation("UserToPublishedPost", fields: publishedById, references: id)
-  publishedById Int?
+  publisher   User? @relation("UserToPublishedPost", fields: publisherId, references: id)
+  publisherId Int?  @map("publishedById")
 
   categories Category[]
 }

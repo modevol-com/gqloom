@@ -10,6 +10,7 @@ import {
   type GraphQLFieldConfig,
   GraphQLEnumType,
   type GraphQLEnumValueConfig,
+  GraphQLScalarType,
 } from "graphql"
 import { gqlType as gt } from "./utils"
 
@@ -20,9 +21,11 @@ export class PrismaTypeWeaver {
     this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
   }
 
-  public inputType(name: string): GraphQLObjectType {
+  public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
     const input = this.modelMeta.inputTypes.get(name)
     if (!input) throw new Error(`Input type ${name} not found`)
+
+    if (input.fields.length === 0) return PrismaTypeWeaver.emptyInputScalar()
     const existing = weaverContext.getNamedType(name) as
       | GraphQLObjectType
       | undefined
@@ -103,6 +106,22 @@ export class PrismaTypeWeaver {
             { value } as GraphQLEnumValueConfig,
           ])
         ),
+      })
+    )
+  }
+
+  protected static emptyInputScalar(): GraphQLScalarType {
+    const name = "EmptyInput"
+
+    const existing = weaverContext.getNamedType(name) as
+      | GraphQLScalarType
+      | undefined
+    if (existing) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLScalarType({
+        name,
+        description: "Empty input scalar",
       })
     )
   }

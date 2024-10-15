@@ -50,7 +50,7 @@ describe("PrismaModelTypeWeaver", () => {
           email: String!
           name: String
           posts: PostCreateNestedManyWithoutAuthorInput
-          publishedPosts: PostCreateNestedManyWithoutPublishedByInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
           profile: ProfileCreateNestedOneWithoutUserInput
         }"
       `)

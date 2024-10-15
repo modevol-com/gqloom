@@ -17,7 +17,7 @@ export const Profile: PrismaModelSilk<IProfile, "profile", { user: IUser }>
 export const Post: PrismaModelSilk<
   IPost,
   "post",
-  { author: IUser; publishedBy?: IUser; categories: ICategory[] }
+  { author: IUser; publisher?: IUser; categories: ICategory[] }
 >
 export const Category: PrismaModelSilk<
   ICategory,

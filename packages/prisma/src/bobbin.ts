@@ -122,6 +122,8 @@ export class PrismaModelBobbin<
         [`findFirst${name}`]: this.findFirstQuery(),
         [`findMany${name}`]: this.findManyQuery(),
         [`findUnique${name}`]: this.findUniqueQuery(),
+        [`create${name}`]: this.createMutation(),
+        [`createMany${name}`]: this.createManyMutation(),
         [`delete${name}`]: this.deleteMutation(),
         [`deleteMany${name}`]: this.deleteManyMutation(),
         [`update${name}`]: this.updateMutation(),

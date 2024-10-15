@@ -1,9 +1,10 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, beforeEach, afterAll } from "vitest"
 import { PrismaModelBobbin } from "../src"
 import * as p from "./generated"
 import { PrismaClient } from "@prisma/client"
 import { weave } from "@gqloom/core"
 import { lexicographicSortSchema, printSchema, printType } from "graphql"
+import { createYoga } from "graphql-yoga"
 
 describe("Bobbin Resolver", () => {
   const db = new PrismaClient()
@@ -105,5 +106,191 @@ describe("Bobbin Resolver", () => {
     expect(printSchema(lexicographicSortSchema(schema))).toMatchFileSnapshot(
       "./bobbin-resolver.spec.gql"
     )
+  })
+
+  describe("queries", () => {
+    const postResolver = new PrismaModelBobbin(p.Post, db).resolver()
+    const profileResolver = new PrismaModelBobbin(p.Profile, db).resolver()
+    const catResolver = new PrismaModelBobbin(p.Cat, db).resolver()
+    const dogResolver = new PrismaModelBobbin(p.Dog, db).resolver()
+    const schema = weave(
+      userResolver,
+      postResolver,
+      profileResolver,
+      catResolver,
+      dogResolver
+    )
+    const yoga = createYoga({ schema })
+    const execute = async (query: string, variables?: Record<string, any>) => {
+      const response = await yoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
+      })
+
+      if (response.status !== 200) {
+        console.log(await response.json())
+        throw new Error("unexpected")
+      }
+      return (await response.json()).data
+    }
+    beforeEach(async () => {
+      await db.user.deleteMany()
+      await db.post.deleteMany()
+    })
+    afterAll(async () => {
+      await db.user.deleteMany()
+      await db.post.deleteMany()
+    })
+
+    it("should be able to create a user", async () => {
+      const query = /* GraphQL */ `
+        mutation createUser($data: UserCreateInput!) {
+          createUser(data: $data) {
+            id
+            email
+          }
+        }
+      `
+      const response = await execute(query, {
+        data: {
+          email: "bob@bob.com",
+          name: "Bob",
+        },
+      })
+
+      expect(response).toMatchObject({
+        createUser: {
+          id: expect.any(String),
+          email: "bob@bob.com",
+        },
+      })
+    })
+
+    it("should be able to create many users", async () => {
+      const query = /* GraphQL */ `
+        mutation createUsers($data: [UserCreateManyInput!]!) {
+          createManyUser(data: $data) {
+            count
+          }
+        }
+      `
+      const response = await execute(query, {
+        data: [
+          { email: "bob@bob.com", name: "Bob" },
+          { email: "alice@alice.com", name: "Alice" },
+        ],
+      })
+
+      expect(response).toMatchObject({
+        createManyUser: {
+          count: 2,
+        },
+      })
+    })
+
+    it("should be able to create a post with a author", async () => {
+      const query = /* GraphQL */ `
+        mutation createPost($data: PostCreateInput!) {
+          createPost(data: $data) {
+            id
+            title
+            author {
+              id
+              name
+              email
+            }
+          }
+        }
+      `
+
+      const response = await execute(query, {
+        data: {
+          title: "Hello World",
+          author: {
+            connectOrCreate: {
+              where: {
+                email: "bob@bob.com",
+              },
+              create: {
+                email: "bob@bob.com",
+                name: "Bob",
+              },
+            },
+          },
+        },
+      })
+
+      expect(response).toMatchObject({
+        createPost: {
+          id: expect.any(String),
+          title: "Hello World",
+          author: {
+            id: expect.any(String),
+            name: "Bob",
+            email: "bob@bob.com",
+          },
+        },
+      })
+    })
+
+    it("should be able to delete a user", async () => {
+      await db.user.create({ data: { email: "bob@bob.com" } })
+
+      const query = /* GraphQL */ `
+        mutation deleteUser($where: UserWhereUniqueInput!) {
+          deleteUser(where: $where) {
+            id
+            email
+          }
+        }
+      `
+      const response = await execute(query, {
+        where: {
+          email: "bob@bob.com",
+        },
+      })
+
+      expect(response).toMatchObject({
+        deleteUser: {
+          id: expect.any(String),
+          email: "bob@bob.com",
+        },
+      })
+    })
+
+    it("should be able to delete many post", async () => {
+      const user = await db.user.create({ data: { email: "bob@bob.com" } })
+
+      await db.post.createMany({
+        data: [
+          { title: "Hello", authorId: user.id },
+          { title: "World", authorId: user.id },
+        ],
+      })
+
+      const query = /* GraphQL */ `
+        mutation deleteManyPost($where: PostWhereInput!) {
+          deleteManyPost(where: $where) {
+            count
+          }
+        }
+      `
+
+      const response = await execute(query, {
+        where: { author: { is: { id: { equals: user.id } } } },
+      })
+
+      expect(response).toMatchObject({
+        deleteManyPost: {
+          count: 2,
+        },
+      })
+    })
   })
 })
