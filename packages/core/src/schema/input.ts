@@ -94,16 +94,12 @@ export function ensureInputObjectType(
     weaverContext.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
       ?.getInputObjectName ?? ((name) => name)
 
-  const weaverContextRef = weaverContext.value
-
   const input = new GraphQLInputObjectType({
     ...config,
     name: getInputObjectName(object.name),
-    fields: () =>
-      provideWeaverContext(
-        () => mapValue(fields, (it) => toInputFieldConfig(it)),
-        weaverContextRef
-      ),
+    fields: provideWeaverContext.inherit(() =>
+      mapValue(fields, (it) => toInputFieldConfig(it))
+    ),
   })
 
   weaverContext.inputMap?.set(object, input)
