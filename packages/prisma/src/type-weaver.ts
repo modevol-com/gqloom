@@ -89,7 +89,11 @@ export class PrismaTypeWeaver {
 
   public enumType(name: string): GraphQLEnumType {
     const enumType = this.modelMeta.enumTypes.get(name)
-    if (!enumType) throw new Error(`Enum type ${name} not found`)
+    if (!enumType) {
+      const enumModel = this.modelMeta.enums[name]
+      if (!enumModel) throw new Error(`Enum type ${name} not found`)
+      return PrismaWeaver.getGraphQLEnumType(enumModel)
+    }
 
     const existing = weaverContext.getNamedType(name) as
       | GraphQLEnumType
