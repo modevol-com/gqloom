@@ -220,6 +220,20 @@ export function collectNames<TRecords extends Record<string, object>[]>(
   return namesRecord
 }
 
+/**
+ * collect name for schema
+ * @param name - name for
+ * @param schema - schema to be named
+ * @returns schema
+ */
+export function collectName<TSchema extends object>(
+  name: string,
+  schema: TSchema
+): TSchema {
+  names.set(schema, name)
+  return schema
+}
+
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
   k: infer I
 ) => void
