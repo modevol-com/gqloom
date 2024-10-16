@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator gqloom {
+  provider     = "node ./bin/generator.cjs"
+  output       = "../test/generated"
+  commonjsFile = ""
+  moduleFile   = "index.js"
+  typesFiles   = ["index.d.ts"]
+  gqloomPath   = "../../dist"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  name           String?
+  posts          Post[]
+  publishedPosts Post[]   @relation("UserToPublishedPost")
+  profile        Profile?
+}
+
+model Profile {
+  id           Int    @id @default(autoincrement())
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int    @unique // relation scalar field (used in the `@relation` attribute above)
+  introduction String
+}
+
+model Post {
+  id        Int     @id @default(autoincrement())
+  title     String
+  content   String?
+  published Boolean @default(false)
+
+  author   User @relation(fields: authorId, references: id, onDelete: Cascade)
+  authorId Int
+
+  publisher   User? @relation("UserToPublishedPost", fields: publisherId, references: id)
+  publisherId Int?  @map("publishedById")
+
+  categories Category[]
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  posts Post[]
+}
+
+model Cat {
+  firstName String
+  lastName  String
+
+  @@id([firstName, lastName])
+}
+
+model Dog {
+  firstName String
+  lastName  String
+
+  height Float
+  weight Int
+
+  birthDate DateTime
+
+  @@id(name: "fullName", fields: [firstName, lastName])
+}

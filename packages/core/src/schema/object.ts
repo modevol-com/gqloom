@@ -39,10 +39,11 @@ import {
   getGraphQLType,
 } from "../resolver"
 export class LoomObjectType extends GraphQLObjectType {
-  public extraFields = new Map<string, SilkFieldOrOperation>()
+  protected extraFields = new Map<string, SilkFieldOrOperation>()
+  protected hiddenFields = new Set<string>()
 
-  public weaverContext: WeaverContext
-  public resolverOptions?: ResolvingOptions
+  protected weaverContext: WeaverContext
+  protected resolverOptions?: ResolvingOptions
 
   constructor(
     objectOrGetter:
@@ -74,6 +75,10 @@ export class LoomObjectType extends GraphQLObjectType {
     this.weaverContext = options.weaverContext ?? initWeaverContext()
   }
 
+  hideField(name: string) {
+    this.hiddenFields.add(name)
+  }
+
   addField(name: string, resolver: SilkFieldOrOperation) {
     const existing = this.extraFields.get(name)
     if (existing && existing !== resolver) {
@@ -86,30 +91,34 @@ export class LoomObjectType extends GraphQLObjectType {
     this.extensions = deepMerge(this.extensions, extensions)
   }
 
-  private extraField?: GraphQLFieldMap<any, any>
+  private extraFieldMap?: GraphQLFieldMap<any, any>
   override getFields(): GraphQLFieldMap<any, any> {
-    const fields = super.getFields()
+    const fieldsBySuper = super.getFields()
 
-    Object.values(fields).forEach(
+    Object.values(fieldsBySuper).forEach(
       (field) => (field.type = this.getCacheType(field.type))
     )
 
-    const extraField = provideWeaverContext(
+    const extraFields = provideWeaverContext(
       () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
     )
 
     if (
-      Object.keys(this.extraField ?? {}).join() !==
-      Object.keys(extraField).join()
+      Object.keys(this.extraFieldMap ?? {}).join() !==
+      Object.keys(extraFields).join()
     ) {
-      this.extraField = extraField
+      this.extraFieldMap = extraFields
     }
 
-    return {
-      ...fields,
-      ...this.extraField,
+    const answer = {
+      ...fieldsBySuper,
+      ...this.extraFieldMap,
     }
+    for (const fieldName of this.hiddenFields) {
+      delete answer[fieldName]
+    }
+    return answer
   }
 
   protected mapToFieldConfig(

@@ -10,6 +10,7 @@ import {
   query,
   resolver,
   zodSilk,
+  asInputArgs,
 } from "../src"
 import {
   GraphQLID,
@@ -141,6 +142,21 @@ describe("ZodSilk", () => {
         name: String
       }"
     `)
+
+    const r = resolver.of(Dog, {
+      dog: query(Dog, () => ({})),
+      birthday: field.hidden,
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog!
+      }
+
+      type Dog {
+        name: String
+      }"
+    `)
   })
 
   it("should handle preset GraphQLType", () => {
@@ -220,6 +236,14 @@ describe("ZodSilk", () => {
       })
       .superRefine(asObjectType({ name: "Cat" }))
 
+    const Cat3 = z
+      .object({
+        name: z.string(),
+        age: z.number(),
+        loveFish: z.boolean().optional(),
+      })
+      .superRefine(asInputArgs("Cat"))
+
     const Cat = z.object({
       __typename: z.literal("Cat").nullish(),
       name: z.string(),
@@ -228,6 +252,8 @@ describe("ZodSilk", () => {
     })
 
     expect(printZodSilk(Cat)).toEqual(printZodSilk(Cat2))
+
+    expect(printZodSilk(Cat)).toEqual(printZodSilk(Cat3))
 
     expect(
       (getGraphQLType(zodSilk(Cat)) as GraphQLNonNull<any>).ofType

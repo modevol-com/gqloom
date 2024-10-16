@@ -14,7 +14,7 @@ const CONFIG = Symbol.for("gqloom.zod.config")
  *
  * @param config - The GraphQL object config.
  *
- * @returns zod superRefine refinement
+ * @returns zod superRefine refinement.
  */
 export function asObjectType(
   config: ObjectConfig
@@ -25,7 +25,7 @@ export function asObjectType(
  *
  * @param name - The GraphQL object name.
  *
- * @returns zod superRefine refinement
+ * @returns zod superRefine refinement.
  */
 export function asObjectType(
   name: string
@@ -41,11 +41,25 @@ export function asObjectType(
 }
 
 /**
+ * Register as GraphQL input args.
+ *
+ * @returns zod superRefine refinement.
+ */
+export function asInputArgs(
+  name?: string
+): (arg: object, ctx: RefinementCtx) => void {
+  name ??= `InputArgs${asInputArgs.increasingID++}`
+  return asObjectType({ name })
+}
+
+asInputArgs.increasingID = 1
+
+/**
  * Register as a GraphQL field.
  *
  * @param config - The GraphQL field config.
  *
- * @return zod superRefine refinement
+ * @return zod superRefine refinement.
  */
 export function asField(
   config: FieldConfig
@@ -60,7 +74,7 @@ export function asField(
  *
  * @param config - The GraphQL enum config.
  *
- * @return zod superRefine refinement
+ * @return zod superRefine refinement.
  */
 export function asEnumType<TArg>(
   config: EnumConfig<TArg>
@@ -70,7 +84,7 @@ export function asEnumType<TArg>(
  *
  * @param name - The GraphQL enum name.
  *
- * @return zod superRefine refinement
+ * @return zod superRefine refinement.
  */
 export function asEnumType(name: string): (arg: any, ctx: RefinementCtx) => void
 
@@ -87,7 +101,7 @@ export function asEnumType(
  *
  * @param config - The GraphQL union config.
  *
- * @return zod superRefine refinement
+ * @return zod superRefine refinement.
  */
 export function asUnionType(
   config: UnionConfig
@@ -98,7 +112,7 @@ export function asUnionType(
  *
  * @param name - The GraphQL union name.
  *
- * @return zod superRefine refinement
+ * @return zod superRefine refinement.
  */
 export function asUnionType(
   name: string
@@ -115,7 +129,7 @@ export function asUnionType(
 /**
  * Get configuration object from ZodEffects schema
  * @param refinement Refinement function in ZodEffects
- * @returns Configuration object
+ * @returns Configuration object.
  */
 export function getConfig(schema: Schema): TypeOrFieldConfig | undefined {
   if (!(schema instanceof ZodEffects)) return

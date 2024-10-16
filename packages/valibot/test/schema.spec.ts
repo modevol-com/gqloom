@@ -142,6 +142,21 @@ describe("valibotSilk", () => {
         name: String
       }"
     `)
+
+    const r = resolver.of(Dog, {
+      dog: query(Dog, () => ({})),
+      birthday: field.hidden,
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog!
+      }
+
+      type Dog {
+        name: String
+      }"
+    `)
   })
 
   it("should handle preset GraphQLType", () => {
