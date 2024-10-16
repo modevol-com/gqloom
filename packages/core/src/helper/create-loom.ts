@@ -4,6 +4,7 @@ import type {
   ResolverOptionsWithParent,
   QueryBobbin,
   MutationBobbin,
+  FieldBobbinWithUtils,
 } from "../resolver"
 import {
   type GraphQLSilk,
@@ -19,6 +20,7 @@ import {
 } from "../resolver"
 import type { InputSchema } from "../resolver/input"
 import { getOperationOptions, getSubscriptionOptions } from "../utils"
+import { FIELD_HIDDEN } from "../utils/symbols"
 
 function toSilkInput(
   schema: any,
@@ -53,8 +55,8 @@ export function createResolverBobbin<TSchemaIO extends AbstractSchemaIO>(
 export function createFieldBobbin<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): FieldBobbin<TSchemaIO> {
-  return (output, resolveOrOptions) => {
+): FieldBobbinWithUtils<TSchemaIO> {
+  const baseFieldFunc: FieldBobbin<TSchemaIO> = (output, resolveOrOptions) => {
     const options = getOperationOptions<"field">(
       resolveOrOptions
     ) as FieldOrOperation<any, any, any, "field">
@@ -63,6 +65,9 @@ export function createFieldBobbin<TSchemaIO extends AbstractSchemaIO>(
       input: toSilkInput(options.input, toSilk, isSchema),
     }) as FieldOrOperation<any, any, any, "field">
   }
+  return Object.assign(baseFieldFunc, {
+    hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN,
+  })
 }
 
 export function createQueryBobbin<TSchemaIO extends AbstractSchemaIO>(
@@ -124,7 +129,7 @@ export function createLoom<TSchemaIO extends AbstractSchemaIO>(
 ): {
   query: QueryBobbin<TSchemaIO>
   mutation: MutationBobbin<TSchemaIO>
-  field: FieldBobbin<TSchemaIO>
+  field: FieldBobbinWithUtils<TSchemaIO>
   resolver: ResolverBobbin<TSchemaIO>
   subscription: SubscriptionBobbin<TSchemaIO>
 } {

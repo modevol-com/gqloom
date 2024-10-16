@@ -27,7 +27,7 @@ import {
   type CoreSchemaWeaverConfig,
   type SilkResolver,
 } from "./types"
-import { WEAVER_CONFIG } from "../utils/symbols"
+import { FIELD_HIDDEN, WEAVER_CONFIG } from "../utils/symbols"
 
 interface SchemaWeaverParameters
   extends Partial<
@@ -149,7 +149,10 @@ export class SchemaWeaver {
       parentObject.mergeExtensions(resolverOptions.extensions)
 
     Object.entries(resolver).forEach(([name, operation]) => {
-      if (operation.type === "field") {
+      if (operation === FIELD_HIDDEN) {
+        if (parentObject == null) return
+        parentObject.hideField(name)
+      } else if (operation.type === "field") {
         if (parentObject == null) return
         parentObject.addField(name, operation)
       } else {

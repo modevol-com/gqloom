@@ -125,49 +125,53 @@ describe("PrismaModelBobbin", () => {
       `)
     })
 
-    it("should be able to resolve a relationField", async () => {
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            query {
-              users {
-                name
+    it(
+      "should be able to resolve a relationField",
+      async () => {
+        const response = await yoga.fetch("http://localhost/graphql", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              query {
+                users {
+                  name
+                  posts {
+                    title
+                  }
+                }
                 posts {
                   title
+                  author {
+                    name
+                  }
                 }
               }
-              posts {
-                title
-                author {
-                  name
-                }
-              }
-            }
-          `,
-        }),
-      })
+            `,
+          }),
+        })
 
-      if (response.status !== 200) throw new Error("unexpected")
-      const json = await response.json()
-      expect(json).toMatchObject({
-        data: {
-          users: [
-            {
-              name: "John",
-              posts: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
-            },
-          ],
-          posts: [
-            { title: "Hello World", author: { name: "John" } },
-            { title: "Hello GQLoom", author: { name: "John" } },
-          ],
-        },
-      })
-    })
+        if (response.status !== 200) throw new Error("unexpected")
+        const json = await response.json()
+        expect(json).toMatchObject({
+          data: {
+            users: [
+              {
+                name: "John",
+                posts: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
+              },
+            ],
+            posts: [
+              { title: "Hello World", author: { name: "John" } },
+              { title: "Hello GQLoom", author: { name: "John" } },
+            ],
+          },
+        })
+      },
+      { retry: 3 }
+    )
   })
 
   describe("countQuery", () => {

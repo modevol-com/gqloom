@@ -15,7 +15,11 @@ import type {
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
 } from "graphql"
-import { type PARSE, type GET_GRAPHQL_TYPE } from "../utils/symbols"
+import {
+  type PARSE,
+  type GET_GRAPHQL_TYPE,
+  type FIELD_HIDDEN,
+} from "../utils/symbols"
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
@@ -289,6 +293,12 @@ export interface FieldBobbin<TSchemaIO extends AbstractSchemaIO> {
   >
 }
 
+export interface FieldBobbinWithUtils<TSchemaIO extends AbstractSchemaIO>
+  extends FieldBobbin<TSchemaIO> {
+  /** Set fields to be hidden in GraphQL Schema */
+  hidden: typeof FIELD_HIDDEN
+}
+
 /**
  * Options for creating a GraphQL Subscription.
  */
@@ -357,11 +367,14 @@ export interface ResolverBobbin<TSchemaIO extends AbstractSchemaIO> {
       string,
       | FieldOrOperation<SchemaToSilk<TSchemaIO, TParent>, any, any>
       | FieldOrOperation<undefined, any, any, OperationType>
+      | typeof FIELD_HIDDEN
     >,
   >(
     parent: TParent,
     operationOrFields: TOperations,
-    options?: ResolverOptionsWithExtensions<ValueOf<TOperations>>
+    options?: ResolverOptionsWithExtensions<
+      OmitInUnion<ValueOf<TOperations>, typeof FIELD_HIDDEN>
+    >
   ): TOperations
 
   <
@@ -374,3 +387,9 @@ export interface ResolverBobbin<TSchemaIO extends AbstractSchemaIO> {
     options?: ResolverOptions<ValueOf<TOperations>>
   ): TOperations
 }
+
+type OmitInUnion<TUnion, TOmit> = TUnion extends infer T
+  ? T extends TOmit
+    ? never
+    : T
+  : never
