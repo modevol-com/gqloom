@@ -4,7 +4,7 @@ import {
   mapValue,
   ensureInterfaceType,
   weaverContext,
-  mergeExtensions,
+  deepMerge,
   SYMBOLS,
   type GraphQLSilkIO,
   isSilk,
@@ -135,7 +135,7 @@ export class YupWeaver {
         return new GraphQLObjectType({
           interfaces: YupWeaver.ensureInterfaceTypes(interfaces),
           name,
-          extensions: mergeExtensions(
+          extensions: deepMerge(
             { defaultValue: description.default },
             description.meta?.asField?.extensions
           ) as GraphQLObjectTypeExtensions,
@@ -147,7 +147,7 @@ export class YupWeaver {
             if (fieldDesc.meta?.asField?.type === null) return mapValue.SKIP
             const { type: _, ...rest } = fieldDesc.meta?.asField ?? {}
             return {
-              extensions: mergeExtensions(
+              extensions: deepMerge(
                 { defaultValue: fieldDesc.default },
                 fieldDesc.meta?.asField?.extensions
               ),
