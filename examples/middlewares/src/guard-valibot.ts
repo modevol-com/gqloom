@@ -2,7 +2,7 @@ import { resolver, mutation } from "@gqloom/valibot"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 
-const AdminResolver = resolver(
+export const AdminResolver = resolver(
   {
     deleteArticle: mutation(v.boolean(), () => true),
   },
@@ -11,7 +11,7 @@ const AdminResolver = resolver(
   }
 )
 
-const EditorResolver = resolver(
+export const EditorResolver = resolver(
   {
     createArticle: mutation(v.boolean(), () => true),
 

@@ -7,7 +7,7 @@ const prettier = require("eslint-config-prettier")
 module.exports = ts.config(
   js.configs.recommended,
   ...ts.configs.recommended,
-  { ignores: ["**/*.js", "**/dist/"] },
+  { ignores: ["**/*.js", "**/dist/", "**/generated/**"] },
   {
     languageOptions: {
       ecmaVersion: "latest",
