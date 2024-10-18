@@ -29,7 +29,7 @@ jobs:
         run: pnpm lint
 
   type-check:
-    name: Run lint
+    name: Run type check
     needs: install
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +37,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup pnpm
         uses: ./.github/actions/pnpm
+      - name: Build
+        run: pnpm run build
       - name: Type check
         run: pnpm run check:type
 
