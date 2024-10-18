@@ -168,7 +168,7 @@ describe("resolver", () => {
 
   it("should call middlewares in order", async () => {
     const logs: string[] = []
-    const queryMiddleware: Middleware = async (next) => {
+    const mutationMiddleware: Middleware = async (next) => {
       logs.push("query middleware")
       const result = await next()
       logs.push("query middleware end")
@@ -183,9 +183,9 @@ describe("resolver", () => {
 
     const r1 = resolver(
       {
-        hello: query(silk(GraphQLString), {
+        hello: mutation(silk(GraphQLString), {
           resolve: () => "world",
-          middlewares: [queryMiddleware],
+          middlewares: [mutationMiddleware],
         }),
       },
       { middlewares: [resolveMiddleware] }
