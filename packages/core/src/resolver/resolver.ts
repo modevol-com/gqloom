@@ -9,20 +9,20 @@ import {
 import { FIELD_HIDDEN } from "../utils/symbols"
 import { createInputParser } from "./input"
 import type {
-  FieldBobbin,
+  FieldFactory,
   ResolvingOptions,
-  ResolverBobbin,
+  ResolverFactory,
   FieldOrOperation,
   ResolverOptionsWithParent,
   GraphQLSilkIO,
-  SubscriptionBobbin,
+  SubscriptionFactory,
   Subscription,
-  QueryBobbin,
-  MutationBobbin,
-  FieldBobbinWithUtils,
+  QueryFactory,
+  MutationFactory,
+  FieldFactoryWithUtils,
 } from "./types"
 
-export const silkQuery: QueryBobbin<GraphQLSilkIO> = (
+export const silkQuery: QueryFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -44,7 +44,7 @@ export const silkQuery: QueryBobbin<GraphQLSilkIO> = (
   }
 }
 
-export const silkMutation: MutationBobbin<GraphQLSilkIO> = (
+export const silkMutation: MutationFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -66,7 +66,7 @@ export const silkMutation: MutationBobbin<GraphQLSilkIO> = (
   }
 }
 
-const baseSilkField: FieldBobbin<GraphQLSilkIO> = (
+const baseSilkField: FieldFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -88,7 +88,7 @@ const baseSilkField: FieldBobbin<GraphQLSilkIO> = (
   }
 }
 
-export const silkField: FieldBobbinWithUtils<GraphQLSilkIO> = Object.assign(
+export const silkField: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
   baseSilkField,
   {
     hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN,
@@ -97,7 +97,7 @@ export const silkField: FieldBobbinWithUtils<GraphQLSilkIO> = Object.assign(
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const silkSubscription: SubscriptionBobbin<GraphQLSilkIO> = (
+export const silkSubscription: SubscriptionFactory<GraphQLSilkIO> = (
   output,
   subscribeOrOptions
 ) => {
@@ -185,14 +185,14 @@ function extraOperationOptions<
   }
 }
 
-export const silkResolver: ResolverBobbin<GraphQLSilkIO> = Object.assign(
-  baseResolver as ResolverBobbin<GraphQLSilkIO>,
+export const silkResolver: ResolverFactory<GraphQLSilkIO> = Object.assign(
+  baseResolver as ResolverFactory<GraphQLSilkIO>,
   {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, FieldOrOperation<any, any, any>>,
         { ...options, parent } as ResolverOptionsWithParent
-      )) as ResolverBobbin<GraphQLSilkIO>["of"],
+      )) as ResolverFactory<GraphQLSilkIO>["of"],
   }
 )
 

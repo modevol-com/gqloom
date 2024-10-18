@@ -1,15 +1,15 @@
 import type {
-  SubscriptionBobbin,
+  SubscriptionFactory,
   Subscription,
   ResolverOptionsWithParent,
-  QueryBobbin,
-  MutationBobbin,
-  FieldBobbinWithUtils,
+  QueryFactory,
+  MutationFactory,
+  FieldFactoryWithUtils,
 } from "../resolver"
 import {
   type GraphQLSilk,
-  type FieldBobbin,
-  type ResolverBobbin,
+  type FieldFactory,
+  type ResolverFactory,
   type AbstractSchemaIO,
   type FieldOrOperation,
   baseResolver,
@@ -40,23 +40,23 @@ function toSilkInput(
   return record
 }
 
-export function createResolverBobbin<TSchemaIO extends AbstractSchemaIO>(
+export function createResolverFactory<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk
-): ResolverBobbin<TSchemaIO> {
+): ResolverFactory<TSchemaIO> {
   return Object.assign(baseResolver, {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, FieldOrOperation<any, any, any>>,
         { ...options, parent: toSilk(parent) } as ResolverOptionsWithParent<any>
-      )) as ResolverBobbin<TSchemaIO>["of"],
-  }) as ResolverBobbin<TSchemaIO>
+      )) as ResolverFactory<TSchemaIO>["of"],
+  }) as ResolverFactory<TSchemaIO>
 }
 
-export function createFieldBobbin<TSchemaIO extends AbstractSchemaIO>(
+export function createFieldFactory<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): FieldBobbinWithUtils<TSchemaIO> {
-  const baseFieldFunc: FieldBobbin<TSchemaIO> = (output, resolveOrOptions) => {
+): FieldFactoryWithUtils<TSchemaIO> {
+  const baseFieldFunc: FieldFactory<TSchemaIO> = (output, resolveOrOptions) => {
     const options = getOperationOptions<"field">(
       resolveOrOptions
     ) as FieldOrOperation<any, any, any, "field">
@@ -70,10 +70,10 @@ export function createFieldBobbin<TSchemaIO extends AbstractSchemaIO>(
   })
 }
 
-export function createQueryBobbin<TSchemaIO extends AbstractSchemaIO>(
+export function createQueryFactory<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): QueryBobbin<TSchemaIO> {
+): QueryFactory<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
       any,
@@ -88,10 +88,10 @@ export function createQueryBobbin<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createMutationBobbin<TSchemaIO extends AbstractSchemaIO>(
+export function createMutationFactory<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): MutationBobbin<TSchemaIO> {
+): MutationFactory<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getOperationOptions(resolveOrOptions) as FieldOrOperation<
       any,
@@ -106,10 +106,10 @@ export function createMutationBobbin<TSchemaIO extends AbstractSchemaIO>(
   }
 }
 
-export function createSubscriptionBobbin<TSchemaIO extends AbstractSchemaIO>(
+export function createSubscriptionFactory<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
-): SubscriptionBobbin<TSchemaIO> {
+): SubscriptionFactory<TSchemaIO> {
   return (output, resolveOrOptions) => {
     const options = getSubscriptionOptions(resolveOrOptions) as Subscription<
       any,
@@ -127,17 +127,17 @@ export function createLoom<TSchemaIO extends AbstractSchemaIO>(
   toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
   isSchema: (schema: InputSchema<TSchemaIO[0]>) => boolean
 ): {
-  query: QueryBobbin<TSchemaIO>
-  mutation: MutationBobbin<TSchemaIO>
-  field: FieldBobbinWithUtils<TSchemaIO>
-  resolver: ResolverBobbin<TSchemaIO>
-  subscription: SubscriptionBobbin<TSchemaIO>
+  query: QueryFactory<TSchemaIO>
+  mutation: MutationFactory<TSchemaIO>
+  field: FieldFactoryWithUtils<TSchemaIO>
+  resolver: ResolverFactory<TSchemaIO>
+  subscription: SubscriptionFactory<TSchemaIO>
 } {
   return {
-    query: createQueryBobbin<TSchemaIO>(toSilk, isSchema),
-    mutation: createMutationBobbin<TSchemaIO>(toSilk, isSchema),
-    field: createFieldBobbin<TSchemaIO>(toSilk, isSchema),
-    resolver: createResolverBobbin<TSchemaIO>(toSilk),
-    subscription: createSubscriptionBobbin<TSchemaIO>(toSilk, isSchema),
+    query: createQueryFactory<TSchemaIO>(toSilk, isSchema),
+    mutation: createMutationFactory<TSchemaIO>(toSilk, isSchema),
+    field: createFieldFactory<TSchemaIO>(toSilk, isSchema),
+    resolver: createResolverFactory<TSchemaIO>(toSilk),
+    subscription: createSubscriptionFactory<TSchemaIO>(toSilk, isSchema),
   }
 }

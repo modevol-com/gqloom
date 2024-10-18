@@ -187,29 +187,9 @@ export interface QueryMutationOptions<
 }
 
 /**
- * Function to create a GraphQL query or mutation.
- */
-export interface QueryMutationBobbin<TSchemaIO extends AbstractSchemaIO> {
-  <
-    TOutput extends TSchemaIO[0],
-    TInput extends InputSchema<TSchemaIO[0]> = undefined,
-  >(
-    output: TOutput,
-    resolveOrOptions:
-      | (() => MayPromise<InferSchemaO<TOutput, TSchemaIO>>)
-      | QueryMutationOptions<TSchemaIO, TOutput, TInput>
-  ): FieldOrOperation<
-    undefined,
-    SchemaToSilk<TSchemaIO, TOutput>,
-    InputSchemaToSilk<TSchemaIO, TInput>,
-    "query" | "mutation"
-  >
-}
-
-/**
  * Function to create a GraphQL query.
  */
-export interface QueryBobbin<TSchemaIO extends AbstractSchemaIO> {
+export interface QueryFactory<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -229,7 +209,7 @@ export interface QueryBobbin<TSchemaIO extends AbstractSchemaIO> {
 /**
  * Function to create a GraphQL mutation.
  */
-export interface MutationBobbin<TSchemaIO extends AbstractSchemaIO> {
+export interface MutationFactory<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -273,7 +253,7 @@ export interface FieldOptions<
 /**
  * Function to create a GraphQL Field.
  */
-export interface FieldBobbin<TSchemaIO extends AbstractSchemaIO> {
+export interface FieldFactory<TSchemaIO extends AbstractSchemaIO> {
   <
     TParent extends TSchemaIO[0],
     TOutput extends TSchemaIO[0],
@@ -293,8 +273,8 @@ export interface FieldBobbin<TSchemaIO extends AbstractSchemaIO> {
   >
 }
 
-export interface FieldBobbinWithUtils<TSchemaIO extends AbstractSchemaIO>
-  extends FieldBobbin<TSchemaIO> {
+export interface FieldFactoryWithUtils<TSchemaIO extends AbstractSchemaIO>
+  extends FieldFactory<TSchemaIO> {
   /** Set fields to be hidden in GraphQL Schema */
   hidden: typeof FIELD_HIDDEN
 }
@@ -343,7 +323,7 @@ export interface Subscription<
 /**
  * Function to create a GraphQL subscription.
  */
-export interface SubscriptionBobbin<TSchemaIO extends AbstractSchemaIO> {
+export interface SubscriptionFactory<TSchemaIO extends AbstractSchemaIO> {
   <
     TOutput extends TSchemaIO[0],
     TInput extends InputSchema<TSchemaIO[0]> = undefined,
@@ -360,7 +340,7 @@ export interface SubscriptionBobbin<TSchemaIO extends AbstractSchemaIO> {
   >
 }
 
-export interface ResolverBobbin<TSchemaIO extends AbstractSchemaIO> {
+export interface ResolverFactory<TSchemaIO extends AbstractSchemaIO> {
   of<
     TParent extends TSchemaIO[0],
     TOperations extends Record<
