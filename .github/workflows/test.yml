@@ -39,6 +39,8 @@ jobs:
         uses: ./.github/actions/pnpm
       - name: Build
         run: pnpm run build
+      - name: Init example Prisma
+        run: pnpm -F example-prisma run generate
       - name: Init Prisma
         run: pnpm -F @gqloom/prisma run init
       - name: Type check
