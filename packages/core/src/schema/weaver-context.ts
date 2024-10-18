@@ -7,11 +7,13 @@ import {
   isUnionType,
   type GraphQLOutputType,
   type GraphQLUnionType,
+  isScalarType,
 } from "graphql"
 import { type LoomObjectType } from "./object"
 import { WEAVER_CONFIG } from "../utils/symbols"
 
 export interface WeaverContext {
+  id: number
   loomObjectMap: Map<GraphQLObjectType, LoomObjectType>
   loomUnionMap: Map<GraphQLUnionType, GraphQLUnionType>
   inputMap: Map<
@@ -45,6 +47,7 @@ export interface WeaverConfig {
 
 export function initWeaverContext(): WeaverContext {
   return {
+    id: initWeaverContext.increasingID++,
     loomObjectMap: new Map(),
     loomUnionMap: new Map(),
     inputMap: new Map(),
@@ -69,7 +72,8 @@ export function initWeaverContext(): WeaverContext {
       if (
         isObjectType(gqlType) ||
         isUnionType(gqlType) ||
-        isEnumType(gqlType)
+        isEnumType(gqlType) ||
+        isScalarType(gqlType)
       ) {
         this.namedTypes.set(gqlType.name, gqlType)
       }
@@ -80,6 +84,8 @@ export function initWeaverContext(): WeaverContext {
     },
   }
 }
+
+initWeaverContext.increasingID = 1
 
 type GlobalContextRequiredKeys =
   | "names"
@@ -108,6 +114,9 @@ export interface GlobalWeaverContext
 }
 
 export const weaverContext: GlobalWeaverContext = {
+  get id() {
+    return ref?.id
+  },
   get loomObjectMap() {
     return ref?.loomObjectMap
   },
@@ -188,6 +197,11 @@ export function provideWeaverContext<T>(
   }
 }
 
+provideWeaverContext.inherit = <T>(func: () => T) => {
+  const weaverContextRef = weaverContext.value
+  return () => provideWeaverContext(func, weaverContextRef)
+}
+
 /**
  * collect names for schemas
  * @param namesList - names to collect
@@ -204,6 +218,20 @@ export function collectNames<TRecords extends Record<string, object>[]>(
     }
   }
   return namesRecord
+}
+
+/**
+ * collect name for schema
+ * @param name - name for
+ * @param schema - schema to be named
+ * @returns schema
+ */
+export function collectName<TSchema extends object>(
+  name: string,
+  schema: TSchema
+): TSchema {
+  names.set(schema, name)
+  return schema
 }
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (

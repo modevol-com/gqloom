@@ -12,7 +12,7 @@ import { GET_GRAPHQL_TYPE, PARSE } from "../utils/symbols"
  * Create a Silk from Scalar.
  */
 export function silk<TScalar extends GraphQLScalarType>(
-  type: TScalar,
+  type: TScalar | (() => TScalar),
   parse?: (
     input: InferScalarExternal<TScalar>
   ) => MayPromise<InferScalarInternal<TScalar>>
@@ -25,7 +25,7 @@ export function silk<TScalar extends GraphQLScalarType>(
  * Create a GraphQLSilk Object.
  */
 export function silk<TOutput, TInput = TOutput>(
-  type: GraphQLOutputType,
+  type: GraphQLOutputType | (() => GraphQLOutputType),
   parse?: (input: TInput) => MayPromise<TOutput>
 ): GraphQLSilk<TOutput, TInput>
 

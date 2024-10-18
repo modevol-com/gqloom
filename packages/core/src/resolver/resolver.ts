@@ -6,10 +6,10 @@ import {
   getSubscriptionOptions,
   getFieldOptions,
 } from "../utils"
+import { FIELD_HIDDEN } from "../utils/symbols"
 import { createInputParser } from "./input"
 import type {
   FieldBobbin,
-  QueryMutationBobbin,
   ResolvingOptions,
   ResolverBobbin,
   FieldOrOperation,
@@ -17,9 +17,12 @@ import type {
   GraphQLSilkIO,
   SubscriptionBobbin,
   Subscription,
+  QueryBobbin,
+  MutationBobbin,
+  FieldBobbinWithUtils,
 } from "./types"
 
-export const silkQuery: QueryMutationBobbin<GraphQLSilkIO> = (
+export const silkQuery: QueryBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -41,7 +44,7 @@ export const silkQuery: QueryMutationBobbin<GraphQLSilkIO> = (
   }
 }
 
-export const silkMutation: QueryMutationBobbin<GraphQLSilkIO> = (
+export const silkMutation: MutationBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -63,7 +66,7 @@ export const silkMutation: QueryMutationBobbin<GraphQLSilkIO> = (
   }
 }
 
-export const silkField: FieldBobbin<GraphQLSilkIO> = (
+const baseSilkField: FieldBobbin<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -84,6 +87,13 @@ export const silkField: FieldBobbin<GraphQLSilkIO> = (
     type,
   }
 }
+
+export const silkField: FieldBobbinWithUtils<GraphQLSilkIO> = Object.assign(
+  baseSilkField,
+  {
+    hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN,
+  }
+)
 
 export const defaultSubscriptionResolve = (source: any) => source
 
@@ -141,6 +151,8 @@ function extraOperationOptions<
   const composeMiddlewares = (
     extraOptions: { middlewares?: Middleware[] } | undefined
   ): Middleware[] => compose(extraOptions?.middlewares, options?.middlewares)
+
+  if (typeof operation === "symbol") return operation
 
   switch (operation.type) {
     case "field":

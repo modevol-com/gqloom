@@ -4,11 +4,13 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  printSchema,
 } from "graphql"
 import { describe, expect, it } from "vitest"
 import { silk } from "./silk"
 import { loom } from "./resolver"
 import type { Middleware } from "../utils"
+import { weave } from "../schema"
 
 const { resolver, query, mutation, field } = loom
 
@@ -137,6 +139,25 @@ describe("resolver", () => {
       expect(
         await giraffeResolver.nominalAge.resolve(Skyler, undefined)
       ).toEqual(new Date().getFullYear() - Skyler.birthday.getFullYear() + 1)
+    })
+
+    it("should hidden fields", () => {
+      const r1 = resolver.of(Giraffe, {
+        hello: query(Giraffe, () => 0 as any),
+
+        heightInMeters: field.hidden,
+      })
+      const schema = weave(r1)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          hello: Giraffe
+        }
+
+        type Giraffe {
+          name: String!
+          birthday: String!
+        }"
+      `)
     })
   })
 
