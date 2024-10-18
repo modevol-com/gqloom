@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "init": "exec prisma migrate dev --name init",
     "generate": "prisma generate"
   },
   "bin": {
