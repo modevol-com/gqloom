@@ -9,7 +9,7 @@
     "format": "prettier . --write",
     "lint": "eslint \"**/*.{ts,tsx}\" --fix",
     "check:type": "tsc --noEmit",
-    "build": "pnpm -F '*' run build",
+    "build": "pnpm -F '@gqloom/*' run build",
     "prepare": "husky"
   },
   "lint-staged": {
