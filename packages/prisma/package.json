@@ -28,7 +28,8 @@
     }
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "generate": "prisma generate"
   },
   "bin": {
     "prisma-gqloom": "./bin/generator.cjs"
