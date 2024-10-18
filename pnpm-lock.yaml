@@ -101,8 +101,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/core
       '@gqloom/valibot':
-        specifier: ^0.2.0
-        version: 0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@0.37.0(typescript@5.4.3))
+        specifier: workspace:*
+        version: link:../../packages/valibot
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -119,8 +119,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/core
       '@gqloom/zod':
-        specifier: ^0.2.0
-        version: 0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.22.4)
+        specifier: workspace:*
+        version: link:../../packages/zod
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -134,14 +134,14 @@ importers:
   examples/middlewares:
     dependencies:
       '@gqloom/core':
-        specifier: ^0.2.0
-        version: 0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+        specifier: workspace:*
+        version: link:../../packages/core
       '@gqloom/valibot':
-        specifier: ^0.2.0
-        version: 0.2.0(@gqloom/core@0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@0.37.0(typescript@5.4.3))
+        specifier: workspace:*
+        version: link:../../packages/valibot
       '@gqloom/zod':
-        specifier: ^0.2.0
-        version: 0.2.0(@gqloom/core@0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.22.4)
+        specifier: workspace:*
+        version: link:../../packages/zod
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -825,20 +825,6 @@ packages:
     resolution: {integrity: sha512-2DHHG3NClw45J77tptKfc2FUazS8F/8H3EoGt5IFjuYblWeZQINJhNIQ5GhjTOeZ6D7H3Ge+Cqr6F//UaC4akw==}
     peerDependencies:
       graphql: '>= 16.8.0'
-
-  '@gqloom/valibot@0.2.0':
-    resolution: {integrity: sha512-Tk3lsTUNmQBnjjD9lxd6OZQOUzlamWjWHiWel67oEKr6KdEK1/afch1GcJcnkqP77EDu1dLlPdYas8kgKEggJQ==}
-    peerDependencies:
-      '@gqloom/core': '>= 0.2.0'
-      graphql: '>= 16.8.0'
-      valibot: '>= 0.37.0'
-
-  '@gqloom/zod@0.2.0':
-    resolution: {integrity: sha512-TA9fn61/AYFWreYOMtmyc5qtcko/9thi76uQuzZ1D3JVvsgEeTLbWRtFxqq6WxsZndjF1GdJkpt+NKcsntwjfw==}
-    peerDependencies:
-      '@gqloom/core': '>= 0.2.0'
-      graphql: '>= 16.8.0'
-      zod: '>= 3.0.0'
 
   '@graphql-tools/executor@1.2.8':
     resolution: {integrity: sha512-0qZs/iuRiYRir7bBkA7oN+21wwmSMPQuFK8WcAcxUYJZRhvnlrJ8Nid++PN4OCzTgHPV70GNFyXOajseVCCffA==}
@@ -5006,30 +4992,6 @@ snapshots:
   '@gqloom/core@0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
       graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
-
-  '@gqloom/valibot@0.2.0(@gqloom/core@0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@0.37.0(typescript@5.4.3))':
-    dependencies:
-      '@gqloom/core': 0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
-      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
-      valibot: 0.37.0(typescript@5.4.3)
-
-  '@gqloom/valibot@0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@0.37.0(typescript@5.4.3))':
-    dependencies:
-      '@gqloom/core': link:packages/core
-      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
-      valibot: 0.37.0(typescript@5.4.3)
-
-  '@gqloom/zod@0.2.0(@gqloom/core@0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.22.4)':
-    dependencies:
-      '@gqloom/core': 0.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
-      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
-      zod: 3.22.4
-
-  '@gqloom/zod@0.2.0(@gqloom/core@packages+core)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.22.4)':
-    dependencies:
-      '@gqloom/core': link:packages/core
-      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
-      zod: 3.22.4
 
   '@graphql-tools/executor@1.2.8(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
