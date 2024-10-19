@@ -48,6 +48,8 @@ See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn ho
 
 - [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom integration with Mikro ORM;
 
+- [GQLoom Prisma](./packages/prisma/README.md): GQLoom integration with Prisma;
+
 - [GQLoom Valibot](./packages/valibot/README.md): GQLoom integration with Valibot;
 
 - [GQLoom Yup](./packages/yup/README.md): GQLoom integration with Yup;

@@ -42,6 +42,8 @@ export const schema = weave(HelloResolver)
 
 - [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom 与 Mikro ORM 的集成；
 
+- [GQLoom Prisma](./packages/prisma/README.md): GQLoom 与 Prisma 的集成；
+
 - [GQLoom Valibot](./packages/valibot/README.md): GQLoom 与 Valibot 的集成；
 
 - [GQLoom Yup](./packages/yup/README.md): GQLoom 与 Yup 的集成；
