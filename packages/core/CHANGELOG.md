@@ -5,3 +5,5 @@ All notable changes to this project will be documented in this file. See [commit
 ## 0.3.0 (2024-10-19)
 
 ## 0.3.0 (2024-10-19)
+
+## 0.3.0 (2024-10-19)
