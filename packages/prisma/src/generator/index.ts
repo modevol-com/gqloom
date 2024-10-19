@@ -7,11 +7,40 @@ import { genJSFile } from "./js"
 const defaultOutput = path.resolve(findPackageRoot(), "./generated")
 
 export interface GQLoomGeneratorConfig {
+  /**
+   * Path to the GQLoom package.
+   * @default "@gqloom/prisma"
+   */
   gqloomPath?: string
+
+  /**
+   * Path to the Prisma client.
+   * @default "./node_modules/@prisma/client"
+   */
   clientOutput?: string
+
+  /**
+   * Folder path to the generated files.
+   * @default "./node_modules/@gqloom/prisma/generated"
+   */
   output?: string
+
+  /**
+   * File name for the CommonJS file. Use "" to disable.
+   * @default "index.cjs"
+   */
   commonjsFile?: string
+
+  /**
+   * File name for the ES module file. Use "" to disable.
+   * @default "index.js"
+   */
   moduleFile?: string
+
+  /**
+   * File names for the TypeScript declaration files. Use [] to disable.
+   * @default ["index.d.ts"]
+   */
   typesFiles?: string[]
 }
 
