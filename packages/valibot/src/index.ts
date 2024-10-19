@@ -348,6 +348,24 @@ export function valibotSilk(schema: GenericSchemaOrAsync | GraphQLSilk) {
 valibotSilk.isSilk = (schema: any) =>
   isSilk(schema) || isValibotSchema(schema) || isValibotSchemaRecord(schema)
 
+valibotSilk.input = <TInput extends Record<string, GenericSchemaOrAsync>>(
+  input: GenericSchemaOrAsync
+): InferInputSilk<TInput> => {
+  return valibotSilk(input as any)
+}
+
+export type InferInputSilk<
+  TInput extends Record<string, GenericSchemaOrAsync>,
+> = GraphQLSilk<InferInputO<TInput>, InferInputI<TInput>>
+
+export type InferInputI<TInput extends Record<string, GenericSchemaOrAsync>> = {
+  [K in keyof TInput]: v.InferInput<TInput[K]>
+}
+
+export type InferInputO<TInput extends Record<string, GenericSchemaOrAsync>> = {
+  [K in keyof TInput]: v.InferOutput<TInput[K]>
+}
+
 export type ValibotSchemaIO = [
   GenericSchemaOrAsync,
   "_types.input",
