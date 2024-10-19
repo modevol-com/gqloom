@@ -1,0 +1,330 @@
+import { PackageManagerTabs } from 'rspress/theme';
+
+# Prisma
+
+[Prisma ORM](https://www.prisma.io/orm) unlocks a new level of developer experience when working with databases thanks to its intuitive data model, automated migrations, type-safety & auto-completion.
+
+`@gqloom/prisma` provides integration of GQLoom with Prisma:
+
+- Generate silks from Prisma Schema;
+- Quickly generate CRUD operations from Prisma.
+
+## Installation
+
+<PackageManagerTabs command="install -D prisma" />
+
+<PackageManagerTabs command="install @gqloom/core @gqloom/prisma" />
+
+You can find more information about installation in [Prisma documentation](https://www.prisma.io/docs/getting-started/quickstart).
+
+## Configuration
+
+Define your Prisma Schema in the `prisma/schema.prisma` file:
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator gqloom { // [!code hl]
+  provider = "prisma-gqloom" // [!code hl]
+} // [!code hl]
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+  posts Post[]
+}
+
+model Post {
+  id        Int     @id @default(autoincrement())
+  title     String
+  content   String?
+  published Boolean @default(false)
+  author    User    @relation(fields: [authorId], references: [id])
+  authorId  Int
+}
+```
+
+### generator parameters
+`generator` accepts the following arguments:
+
+| Arguments      | Description                                                         | Default value                           |
+| -------------- | ------------------------------------------------------------------- | --------------------------------------- |
+| `gqloomPath`   | Path to the GQLoom package.                                         | `@gqloom/prisma`                        |
+| `clientOutput` | Path to the Prisma client.                                          | `node_modules/@prisma/client`           |
+| `output`       | Folder path to the generated files.                                 | `node_modules/@gqloom/prisma/generated` |
+| `commonjsFile` | File name for the CommonJS file. Use "" to disable.                 | `index.cjs`                             |
+| `moduleFile`   | File name for the ES module file. Use "" to disable.                | `index.js`                              |
+| `typesFiles`   | File names for the TypeScript declaration files. Use [] to disable. | `["index.d.ts"]`                        |
+
+### Generating Silk
+```sh
+npx prisma generate
+```
+
+## Using Silk
+After generating the silk, we can use it in `resolver`:
+```ts
+import { resolver, query, field, weave } from '@gqloom/valibot'
+import * as p from '@gqloom/prisma/generated'
+import * as v from 'valibot'
+import { PrismaClient } from '@prisma/client'
+
+const db = new PrismaClient({})
+
+const userResolver = resolver.of(p.User, {
+  user: query(p.User.nullable(), {
+    input: { id: v.number() },
+    resolve: ({ id }) => {
+      return db.user.findUnique({ where: { id } })
+    },
+  }),
+
+  posts: field(p.Post.list(), async (user) => {
+    const posts = await db.user.findUnique({ where: { id: user.id } }).posts()
+    return posts ?? []
+  }),
+})
+
+const postResolver = resolver.of(p.Post, {
+  author: field(p.User, async (post) => {
+    const author = await db.post.findUnique({ where: { id: post.id } }).author()
+    return author!
+  }),
+})
+
+export const schema = weave(userResolver, postResolver)
+```
+
+### Hiding Fields
+`@gqloom/prisma` will expose all fields by default. If you wish to hide some fields, you can use `field.hidden`:
+
+```ts
+const postResolver = resolver.of(p.Post, {
+  author: field(p.User, async (post) => {
+    const author = await db.post.findUnique({ where: { id: post.id } }).author()
+    return author!
+  }),
+
+  authorId: field.hidden, // [!code hl]
+})
+```
+
+In the code above, we have hidden the `authorId` field, which means it will not appear in the generated GraphQL Schema.
+
+## Using Bobbins
+
+`@gqloom/prisma` provides `PrismaModelBobbin` to help you create Bobbins.  
+Using Bobbins, you can quickly define commonly used queries, mutations, and fields. Bobbins also come preconfigured with input types for common operational inputs, and using Bobbins can greatly reduce sample code, which is very useful during quick development.
+
+```ts
+import * as p from '@gqloom/prisma/generated'
+import { PrismaModelBobbin } from '@gqloom/prisma'
+
+import { PrismaClient } from '@prisma/client'
+
+const db = new PrismaClient({})
+
+const userBobbin = new PrismaModelBobbin(p.User, db)
+const postBobbin = new PrismaModelBobbin(p.Post, db)
+```
+In the code above, we have created `User` and `Post` models for the Bobbin. The `PrismaModelBobbin` accepts two parameters, the first being the model that will be used as the silk and the second being the `PrismaClient` instance.
+
+### Relation fields
+
+Bobbin provides the `relationField` method to define a relationship field:
+
+```ts
+const userResolver = resolver.of(p.User, {
+  user: query(p.User.nullable(), {
+    input: { id: v.number() },
+    resolve: ({ id }) => {
+      return db.user.findUnique({ where: { id } })
+    },
+  }),
+
+  posts: field(p.Post.list(), async (user) => { // [!code --]
+    const posts = await db.user.findUnique({ where: { id: user.id } }).posts() // [!code --]
+    return posts ?? [] // [!code --]
+  }), // [!code --]
+  posts: userBobbin.relationField('posts'), // [!code ++]
+})
+
+const postResolver = resolver.of(p.Post, {
+  author: field(p.User, async (post) => { // [!code --]
+    const author = await db.post.findUnique({ where: { id: post.id } }).author() // [!code --]
+    return author! // [!code --]
+  }), // [!code --]
+  author: postBobbin.relationField('author'), // [!code ++]
+
+  authorId: field.hidden,
+})
+```
+In the above code, we have used `userBobbin.relationField('posts')` and `postBobbin.relationField('author')` to define the relation fields.
+The `relationField` method accepts a string argument representing the name of the relationship field.
+
+### Queries
+
+Bobbin is preset with common queries and you can use them directly:
+
+```ts
+const userResolver = resolver.of(p.User, {
+  user: query(p.User.nullable(), { // [!code --]
+    input: { id: v.number() }, // [!code --]
+    resolve: ({ id }) => { // [!code --]
+      return db.user.findUnique({ where: { id } }) // [!code --]
+    }, // [!code --]
+  }), // [!code --]
+  user: userBobbin.findUniqueQuery(), // [!code ++]
+
+  posts: userBobbin.relationField('posts'),
+})
+```
+
+In the above code, we use `userBobbin.findUniqueQuery()` to define the `user` query. Bobbin will automatically create the input type and resolving function.
+
+#### Preset queries
+
+Bobbin is preset with the following queries:
+  - countQuery
+  - findFirstQuery
+  - findManyQuery
+  - findUniqueQuery
+
+### Mutations
+Bobbins are preset with common mutations and you can use them directly:
+
+```ts
+const postResolver = resolver.of(p.Post, {
+  createPost: postBobbin.createMutation(), // [!code hl]
+
+  author: postBobbin.relationField('author'),
+
+  authorId: field.hidden,
+})
+```
+
+In the code above, we use `postBobbin.createMutation()` to define the `createPost` mutation. Bobbin will automatically create the input type and parser function.
+
+#### Preset mutations
+
+The Bobbin is preset with the following mutations:
+  - createMutation
+  - createManyMutation
+  - deleteMutation
+  - deleteManyMutation
+  - updateMutation
+  - updateManyMutation
+  - updateManyMutation
+
+### Custom input
+
+Bobbin preset queries and mutations support custom inputs, you can define the input type with the `input` option:
+
+```ts
+const userResolver = resolver.of(p.User, {
+  user: userBobbin.findUniqueQuery({
+    input: valibotSilk(  // [!code hl]
+      v.pipe( // [!code hl]
+        v.object({ id: v.number() }), // [!code hl]
+        asInputArgs(), // [!code hl]
+        v.transform(({ id }) => ({ where: { id } })) // [!code hl]
+      ) // [!code hl]
+    ), // [!code hl]
+  }),
+
+  posts: userBobbin.relationField('posts'),
+})
+```
+
+In the code above, we used `valibotSilk` to define the input type, `v.object({ id: v.number( })` defines the type of the input object.
+`v.object({ id: v.number() })` defines the type of the input object.
+`asInputArgs()` to label this object as an input parameter for GraphQL.
+`v.transform(({ id }) => ({ where: { id } }))` transforms the input arguments into Prisma's query parameters.
+
+### Adding middleware
+
+Bobbin preconfigured queries, mutations and fields support adding middleware, which you can define with the `middlewares` option:
+
+```ts
+const postResolver = resolver.of(p.Post, {
+  createPost: postBobbin.createMutation({
+    middlewares: [ // [!code hl]
+      async (next) => { // [!code hl]
+        const user = await useLoggedUser() // [!code hl]
+        if (user == null) throw new GraphQLError('Please login first') // [!code hl]
+        return next() // [!code hl]
+      }, // [!code hl]
+    ], // [!code hl]
+  }),
+
+  author: postBobbin.relationField('author'),
+
+  authorId: field.hidden,
+})
+```
+
+In the above code, we define the middleware using the `middlewares` option, the
+`async (next) => { ... }` defines a middleware.
+`useLoggedUser()` is a custom function to get the currently logged in user.
+If the user is not logged in, an error is thrown, otherwise `next()` is called to continue execution.
+
+### Creating a Resolver
+
+You can create a Resolver directly from a Bobbin:
+
+```ts
+const userResolver = userBobbin.resolver()
+```
+In the above code, we have used `userBobbin.resolver()` to create a Resolver.
+This Resolver will contain all the queries, mutations and fields in the Bobbin.
+
+## Customize Type Mappings
+
+To accommodate more Prisma types, we can extend GQLoom to add more type mappings.
+
+First we use `PrismaWeaver.config` to define the type mapping configuration. Here we import `GraphQLDateTime` from [graphql-scalars](https://the-guild.dev/graphql/scalars) and when we encounter a `DateTime` type, we map it to the corresponding GraphQL scalar.
+
+```ts
+import { GraphQLDateTime } from 'graphql-scalars'
+import { PrismaWeaver } from '@gqloom/prisma'
+
+export const prismaWeaverConfig = PrismaWeaver.config({
+  presetGraphQLType: (type) => {
+    switch (type) {
+      case 'DateTime':
+        return GraphQLDateTime
+    }
+  },
+})
+```
+
+Configurations are passed into the weave function when weaving the GraphQL Schema:
+```ts
+import { weave } from "@gqloom/core"
+
+export const schema = weave(prismaWeaverConfig, userResolver, postResolver)
+```
+
+## Default Type Mappings
+
+The following table lists the default mappings between Prisma types and GraphQL types in GQLoom:
+
+| Prisma types | GraphQL types    |
+| ------------ | ---------------- |
+| Int @id      | `GraphQLID`      |
+| String @id   | `GraphQLID`      |
+| BigInt       | `GraphQLInt`     |
+| Int          | `GraphQLInt`     |
+| Decimal      | `GraphQLFloat`   |
+| Float        | `GraphQLFloat`   |
+| Boolean      | `GraphQLBoolean` |
+| DateTime     | `GraphQLString`  |
+| String       | `GraphQLString`  |
