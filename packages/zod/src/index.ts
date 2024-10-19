@@ -7,7 +7,6 @@ import {
   SYMBOLS,
   deepMerge,
   type GQLoomExtensions,
-  mergeExtensions,
   type GraphQLSilkIO,
   isSilk,
   collectNames,
@@ -304,7 +303,7 @@ export class ZodWeaver {
       description: schema.description,
       ...objectConfig,
       interfaces,
-      extensions: mergeExtensions(
+      extensions: deepMerge(
         objectConfig?.extensions
       ) as GraphQLObjectTypeExtensions,
     }
@@ -341,7 +340,7 @@ export class ZodWeaver {
       name: weaverContext.names.get(schema),
       description: schema.description,
       ...enumConfig,
-      extensions: mergeExtensions(enumConfig?.extensions),
+      extensions: deepMerge(enumConfig?.extensions),
     }
   }
 
@@ -354,7 +353,7 @@ export class ZodWeaver {
       name: weaverContext.names.get(schema),
       ...unionConfig,
       description: schema.description,
-      extensions: mergeExtensions(unionConfig?.extensions),
+      extensions: deepMerge(unionConfig?.extensions),
     }
   }
 
@@ -370,7 +369,10 @@ export class ZodWeaver {
     return {
       description: schema.description,
       ...config,
-      extensions: mergeExtensions(fromDefault, config?.extensions),
+      extensions: deepMerge(
+        fromDefault,
+        config?.extensions
+      ) as GraphQLObjectTypeExtensions,
     }
   }
 
