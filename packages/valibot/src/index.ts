@@ -349,7 +349,7 @@ valibotSilk.isSilk = (schema: any) =>
   isSilk(schema) || isValibotSchema(schema) || isValibotSchemaRecord(schema)
 
 valibotSilk.input = <TInput extends Record<string, GenericSchemaOrAsync>>(
-  input: GenericSchemaOrAsync
+  input: TInput
 ): InferInputSilk<TInput> => {
   return valibotSilk(input as any)
 }
