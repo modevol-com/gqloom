@@ -23,6 +23,7 @@ import type {
   PrismaModelMeta,
   PrismaEnumSilk,
   PrismaWeaverConfig,
+  PrismaWeaverConfigOptions,
 } from "./types"
 
 export class PrismaWeaver {
@@ -106,6 +107,13 @@ export class PrismaWeaver {
       : unwrappedType
 
     return { type, description }
+  }
+
+  static config(config: PrismaWeaverConfigOptions): PrismaWeaverConfig {
+    return {
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.prisma",
+    }
   }
 
   static getGraphQLTypeByField(
