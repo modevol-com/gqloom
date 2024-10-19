@@ -57,6 +57,20 @@ export default defineConfig({
   },
   plugins: [
     pluginShiki({
+      langs: [
+        "prisma",
+        "graphql",
+        "gql",
+        "sql",
+        "typescript",
+        "ts",
+        "tsx",
+        "javascript",
+        "js",
+        "json",
+        "jsx",
+        "bash",
+      ],
       transformers: [createTransformerDiff(), createTransformerHighlight()],
     }),
   ],

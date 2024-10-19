@@ -28,6 +28,7 @@
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^20.11.30",
     "@vitest/coverage-v8": "^1.5.0",
+    "commit-and-tag-version": "^12.5.0",
     "eslint": "^9.6.0",
     "eslint-config-prettier": "^9.1.0",
     "graphql": "^16.8.1",

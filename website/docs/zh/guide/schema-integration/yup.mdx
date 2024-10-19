@@ -308,7 +308,7 @@ const Fruit = mixed()
 首先我们使用 `YupWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`，当遇到 `date` 类型时，我们将其映射到对应的 GraphQL 标量。
 ```ts
 import { GraphQLDateTime } from "graphql-scalars"
-import { YupWeaver } from "../src"
+import { YupWeaver } from "@gqloom/yup"
 
 export const yupWeaverConfig = YupWeaver.config({
   presetGraphQLType: (description) => {
@@ -319,8 +319,8 @@ export const yupWeaverConfig = YupWeaver.config({
   },
 })
 ```
-在编织 GraphQL Schema 时传入配置到 weave 函数中：
 
+在编织 GraphQL Schema 时传入配置到 weave 函数中：
 ```ts
 import { weave } from "@gqloom/yup"
 
