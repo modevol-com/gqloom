@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "release": "commit-and-tag-version",
     "init": "exec prisma migrate dev --name init",
     "generate": "prisma generate"
   },
