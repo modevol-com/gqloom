@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/valibot",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Create GraphQL schema and resolvers easily using Valibot!",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,7 +18,8 @@
     }
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "release": "commit-and-tag-version"
   },
   "files": [
     "dist"
@@ -35,9 +36,9 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.2.0",
+    "@gqloom/core": ">= 0.3.0",
     "graphql": ">= 16.8.0",
-    "valibot": ">= 0.37.0"
+    "valibot": ">= 0.37.0 && < 1.0.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
