@@ -4,7 +4,6 @@ import {
   createTransformerHighlight,
   pluginShiki,
 } from "@rspress/plugin-shiki"
-import { TypedocPlugin } from "./plugins/typedoc"
 import * as path from "path"
 
 export default defineConfig({
@@ -57,7 +56,6 @@ export default defineConfig({
     ],
   },
   plugins: [
-    TypedocPlugin(),
     pluginShiki({
       langs: [
         "prisma",

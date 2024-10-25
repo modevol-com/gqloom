@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "rspress dev",
-    "build": "rspress build",
+    "build": "pnpm gen:api && rspress build",
+    "gen:api": "pnpm exec tsx scripts/typedoc.ts",
     "preview": "rspress preview"
   },
   "keywords": [],
