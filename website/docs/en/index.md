@@ -8,10 +8,10 @@ hero:
   actions:
     - theme: brand
       text: Introduction
-      link: /en/guide/introduction
+      link: /guide/introduction
     - theme: alt
       text: Get Started
-      link: /en/guide/getting-started
+      link: /guide/getting-started
   image:
     src: /gqloom.svg
     alt: GQLoom-Logo

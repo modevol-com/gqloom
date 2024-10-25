@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "description": "The website and docs of Valibot",
+  "description": "The website and docs of GQLoom",
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
@@ -12,8 +12,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@rspress/plugin-shiki": "^1.34.1",
-    "rspress": "^1.34.1",
+    "@rspress/plugin-shiki": "^1.35.1",
+    "@rspress/shared": "^1.35.1",
+    "rspress": "^1.35.1",
+    "typedoc": "^0.26.10",
+    "typedoc-plugin-markdown": "^4.2.9",
     "typescript": "^5.4.3"
   }
 }
