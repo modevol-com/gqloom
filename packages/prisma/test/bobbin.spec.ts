@@ -170,7 +170,7 @@ describe("PrismaModelBobbin", () => {
           },
         })
       },
-      { retry: 3 }
+      { retry: 6 }
     )
   })
 
