@@ -8,4 +8,12 @@ const Category = PrismaWeaver.unravel(mm.models.Category, mm)
 const Cat = PrismaWeaver.unravel(mm.models.Cat, mm)
 const Dog = PrismaWeaver.unravel(mm.models.Dog, mm)
 
-export { User, Profile, Post, Category, Cat, Dog }
+
+export {
+  User,
+  Profile,
+  Post,
+  Category,
+  Cat,
+  Dog,
+}

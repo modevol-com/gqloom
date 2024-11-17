@@ -133,8 +133,12 @@
           "hasDefaultValue": false,
           "type": "User",
           "relationName": "ProfileToUser",
-          "relationFromFields": ["userId"],
-          "relationToFields": ["id"],
+          "relationFromFields": [
+            "userId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
           "relationOnDelete": "Cascade",
           "isGenerated": false,
           "isUpdatedAt": false
@@ -243,8 +247,12 @@
           "hasDefaultValue": false,
           "type": "User",
           "relationName": "PostToUser",
-          "relationFromFields": ["authorId"],
-          "relationToFields": ["id"],
+          "relationFromFields": [
+            "authorId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
           "relationOnDelete": "Cascade",
           "isGenerated": false,
           "isUpdatedAt": false
@@ -273,8 +281,12 @@
           "hasDefaultValue": false,
           "type": "User",
           "relationName": "UserToPublishedPost",
-          "relationFromFields": ["publisherId"],
-          "relationToFields": ["id"],
+          "relationFromFields": [
+            "publisherId"
+          ],
+          "relationToFields": [
+            "id"
+          ],
           "isGenerated": false,
           "isUpdatedAt": false
         },
@@ -390,7 +402,10 @@
       ],
       "primaryKey": {
         "name": null,
-        "fields": ["firstName", "lastName"]
+        "fields": [
+          "firstName",
+          "lastName"
+        ]
       },
       "uniqueFields": [],
       "uniqueIndexes": [],
@@ -468,7 +483,10 @@
       ],
       "primaryKey": {
         "name": "fullName",
-        "fields": ["firstName", "lastName"]
+        "fields": [
+          "firstName",
+          "lastName"
+        ]
       },
       "uniqueFields": [],
       "uniqueIndexes": [],
@@ -752,7 +770,10 @@
           "constraints": {
             "maxNumFields": null,
             "minNumFields": 1,
-            "fields": ["id", "email"]
+            "fields": [
+              "id",
+              "email"
+            ]
           },
           "fields": [
             {
@@ -1351,7 +1372,10 @@
           "constraints": {
             "maxNumFields": null,
             "minNumFields": 1,
-            "fields": ["id", "userId"]
+            "fields": [
+              "id",
+              "userId"
+            ]
           },
           "fields": [
             {
@@ -2081,7 +2105,9 @@
           "constraints": {
             "maxNumFields": null,
             "minNumFields": 1,
-            "fields": ["id"]
+            "fields": [
+              "id"
+            ]
           },
           "fields": [
             {
@@ -2787,7 +2813,9 @@
           "constraints": {
             "maxNumFields": null,
             "minNumFields": 1,
-            "fields": ["id"]
+            "fields": [
+              "id"
+            ]
           },
           "fields": [
             {
@@ -3178,7 +3206,9 @@
           "constraints": {
             "maxNumFields": null,
             "minNumFields": 1,
-            "fields": ["firstName_lastName"]
+            "fields": [
+              "firstName_lastName"
+            ]
           },
           "fields": [
             {
@@ -3691,7 +3721,9 @@
           "constraints": {
             "maxNumFields": null,
             "minNumFields": 1,
-            "fields": ["fullName"]
+            "fields": [
+              "fullName"
+            ]
           },
           "fields": [
             {
@@ -29417,15 +29449,25 @@
       "prisma": [
         {
           "name": "TransactionIsolationLevel",
-          "values": ["Serializable"]
+          "values": [
+            "Serializable"
+          ]
         },
         {
           "name": "UserScalarFieldEnum",
-          "values": ["id", "email", "name"]
+          "values": [
+            "id",
+            "email",
+            "name"
+          ]
         },
         {
           "name": "ProfileScalarFieldEnum",
-          "values": ["id", "userId", "introduction"]
+          "values": [
+            "id",
+            "userId",
+            "introduction"
+          ]
         },
         {
           "name": "PostScalarFieldEnum",
@@ -29440,23 +29482,40 @@
         },
         {
           "name": "CategoryScalarFieldEnum",
-          "values": ["id"]
+          "values": [
+            "id"
+          ]
         },
         {
           "name": "CatScalarFieldEnum",
-          "values": ["firstName", "lastName"]
+          "values": [
+            "firstName",
+            "lastName"
+          ]
         },
         {
           "name": "DogScalarFieldEnum",
-          "values": ["firstName", "lastName", "height", "weight", "birthDate"]
+          "values": [
+            "firstName",
+            "lastName",
+            "height",
+            "weight",
+            "birthDate"
+          ]
         },
         {
           "name": "SortOrder",
-          "values": ["asc", "desc"]
+          "values": [
+            "asc",
+            "desc"
+          ]
         },
         {
           "name": "NullsOrder",
-          "values": ["first", "last"]
+          "values": [
+            "first",
+            "last"
+          ]
         }
       ]
     },
