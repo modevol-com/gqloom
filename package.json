@@ -13,7 +13,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["biome check --no-errors-on-unmatched --write"],
+    "*.{ts,tsx,js,jsx,json}": ["biome check --no-errors-on-unmatched --write"],
     "*.{json,toml,graphql,gql}": "biome format --no-errors-on-unmatched --write"
   },
   "keywords": [],
