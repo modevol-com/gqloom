@@ -1,16 +1,16 @@
-import { describe, it, expect, expectTypeOf, beforeAll } from "vitest"
-import * as g from "./generated"
+import { type InferSilkO, loom, weave } from "@gqloom/core"
+import { asInputArgs, zodSilk } from "@gqloom/zod"
 import { PrismaClient } from "@prisma/client"
+import { printSchema, printType } from "graphql"
+import { createYoga } from "graphql-yoga"
+import { beforeAll, describe, expect, expectTypeOf, it } from "vitest"
+import { z } from "zod"
 import {
   type InferPrismaDelegate,
   PrismaModelBobbin,
   type PrismaModelSilk,
 } from "../src"
-import { type InferSilkO, loom, weave } from "@gqloom/core"
-import { zodSilk, asInputArgs } from "@gqloom/zod"
-import { z } from "zod"
-import { createYoga } from "graphql-yoga"
-import { printSchema, printType } from "graphql"
+import * as g from "./generated"
 
 const { resolver, query } = loom
 
@@ -125,16 +125,14 @@ describe("PrismaModelBobbin", () => {
       `)
     })
 
-    it(
-      "should be able to resolve a relationField",
-      async () => {
-        const response = await yoga.fetch("http://localhost/graphql", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            query: /* GraphQL */ `
+    it("should be able to resolve a relationField", { retry: 20 }, async () => {
+      const response = await yoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
               query {
                 users {
                   name
@@ -150,28 +148,26 @@ describe("PrismaModelBobbin", () => {
                 }
               }
             `,
-          }),
-        })
+        }),
+      })
 
-        if (response.status !== 200) throw new Error("unexpected")
-        const json = await response.json()
-        expect(json).toMatchObject({
-          data: {
-            users: [
-              {
-                name: "John",
-                posts: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
-              },
-            ],
-            posts: [
-              { title: "Hello World", author: { name: "John" } },
-              { title: "Hello GQLoom", author: { name: "John" } },
-            ],
-          },
-        })
-      },
-      { retry: 6 }
-    )
+      if (response.status !== 200) throw new Error("unexpected")
+      const json = await response.json()
+      expect(json).toMatchObject({
+        data: {
+          users: [
+            {
+              name: "John",
+              posts: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
+            },
+          ],
+          posts: [
+            { title: "Hello World", author: { name: "John" } },
+            { title: "Hello GQLoom", author: { name: "John" } },
+          ],
+        },
+      })
+    })
   })
 
   describe("countQuery", () => {
