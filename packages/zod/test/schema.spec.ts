@@ -68,7 +68,7 @@ describe("ZodSilk", () => {
             .string()
             .cuid()
             .nullable()
-            .superRefine(() => {})
+            .superRefine(() => void 0)
         )
       )
     ).toEqual(GraphQLID)
@@ -284,9 +284,9 @@ describe("ZodSilk", () => {
       .describe("Some fruits you might like")
 
     enum Fruit {
-      apple,
-      banana,
-      orange,
+      apple = 0,
+      banana = 1,
+      orange = 2,
     }
 
     const fruitN = z

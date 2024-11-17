@@ -20,16 +20,8 @@
   "scripts": {
     "build": "tsup"
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "gqloom",
-    "graphql",
-    "schema",
-    "typescript",
-    "mikro-orm"
-  ],
+  "files": ["dist"],
+  "keywords": ["gqloom", "graphql", "schema", "typescript", "mikro-orm"],
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {

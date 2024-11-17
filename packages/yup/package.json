@@ -20,9 +20,7 @@
   "scripts": {
     "build": "tsup"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "keywords": [
     "gqloom",
     "graphql",

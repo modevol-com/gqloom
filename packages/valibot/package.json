@@ -21,9 +21,7 @@
     "build": "tsup",
     "release": "commit-and-tag-version"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "keywords": [
     "gqloom",
     "graphql",

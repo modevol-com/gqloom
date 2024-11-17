@@ -20,9 +20,7 @@
   "scripts": {
     "build": "tsup"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "peerDependencies": {
     "@gqloom/core": ">= 0.2.0",
     "@apollo/subgraph": ">= 2.0.0",

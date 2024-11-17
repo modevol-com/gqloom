@@ -42,7 +42,7 @@ import {
   type GraphQLField,
   type GraphQLObjectTypeConfig,
 } from "graphql"
-import { type GQLoomMikroFieldExtensions } from "./types"
+import type { GQLoomMikroFieldExtensions } from "./types"
 import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
 import { type EntitySilk, mikroSilk, type EntitySchemaSilk } from "."
 
@@ -140,7 +140,7 @@ export class EntitySchemaWeaver {
     const property: Partial<PropertyType> =
       typeof typeOrProperty === "string"
         ? { type: typeOrProperty }
-        : typeOrProperty ?? {}
+        : (typeOrProperty ?? {})
 
     const extensions = field.extensions as GQLoomMikroFieldExtensions &
       GQLoomExtensions
@@ -346,20 +346,19 @@ export type InferRelations<
 export type InferRelation<
   TRelations extends Record<string, RelationProperty<any, any>>,
   TKey extends keyof TRelations,
-> =
-  TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
+> = TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
+  ? Reference<TTarget>
+  : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
     ? Reference<TTarget>
-    : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
-      ? Reference<TTarget>
-      : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
+    : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
+      ? TTarget extends object
+        ? Collection<TTarget>
+        : never
+      : TRelations[TKey] extends ManyToManyProperty<infer TTarget, any>
         ? TTarget extends object
           ? Collection<TTarget>
           : never
-        : TRelations[TKey] extends ManyToManyProperty<infer TTarget, any>
-          ? TTarget extends object
-            ? Collection<TTarget>
-            : never
-          : never
+        : never
 
 export type RelationProperty<TTarget extends object, TOwner> =
   | ManyToOneProperty<TTarget, TOwner>

@@ -1,10 +1,10 @@
 import { ZodEffects, type RefinementCtx, type Schema } from "zod"
-import {
-  type ObjectConfig,
-  type UnionConfig,
-  type EnumConfig,
-  type FieldConfig,
-  type TypeOrFieldConfig,
+import type {
+  ObjectConfig,
+  UnionConfig,
+  EnumConfig,
+  FieldConfig,
+  TypeOrFieldConfig,
 } from "./types"
 
 const CONFIG = Symbol.for("gqloom.zod.config")
@@ -35,7 +35,7 @@ export function asObjectType(
 ): (arg: object, ctx: RefinementCtx) => void {
   const config: ObjectConfig =
     typeof configOrName === "string" ? { name: configOrName } : configOrName
-  return Object.assign(() => {}, {
+  return Object.assign(() => void 0, {
     [CONFIG]: config,
   })
 }
@@ -64,7 +64,7 @@ asInputArgs.increasingID = 1
 export function asField(
   config: FieldConfig
 ): (arg: any, ctx: RefinementCtx) => void {
-  return Object.assign(() => {}, {
+  return Object.assign(() => void 0, {
     [CONFIG]: config,
   })
 }
@@ -93,7 +93,7 @@ export function asEnumType(
 ): (arg: any, ctx: RefinementCtx) => void {
   const config: EnumConfig =
     typeof configOrName === "string" ? { name: configOrName } : configOrName
-  return Object.assign(() => {}, { [CONFIG]: config })
+  return Object.assign(() => void 0, { [CONFIG]: config })
 }
 
 /**
@@ -123,7 +123,7 @@ export function asUnionType(
 ): (arg: object, ctx: RefinementCtx) => void {
   const config: UnionConfig =
     typeof configOrName === "string" ? { name: configOrName } : configOrName
-  return Object.assign(() => {}, { [CONFIG]: config })
+  return Object.assign(() => void 0, { [CONFIG]: config })
 }
 
 /**

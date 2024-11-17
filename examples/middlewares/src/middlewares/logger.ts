@@ -7,7 +7,6 @@ export const logger: Middleware = async (next) => {
   const result = await next()
   const resolveTime = Date.now() - start
 
-  // eslint-disable-next-line no-console
-  console.log(`${info.parentType.name}.${info.fieldName} [${resolveTime} ms]`)
+  console.info(`${info.parentType.name}.${info.fieldName} [${resolveTime} ms]`)
   return result
 }

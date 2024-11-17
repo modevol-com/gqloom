@@ -37,16 +37,8 @@
   "bin": {
     "prisma-gqloom": "./bin/generator.cjs"
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "gqloom",
-    "graphql",
-    "schema",
-    "typescript",
-    "prisma"
-  ],
+  "files": ["dist"],
+  "keywords": ["gqloom", "graphql", "schema", "typescript", "prisma"],
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
