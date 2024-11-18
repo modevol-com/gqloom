@@ -3,7 +3,6 @@ import {
   type GenericFieldOrOperation,
   type GraphQLFieldOptions,
   type GraphQLSilk,
-  type InferSilkO,
   type ListSilk,
   type MayPromise,
   type Middleware,
@@ -11,8 +10,10 @@ import {
   compose,
   createInputParser,
   getFieldOptions,
+  getStandardValue,
   mapValue,
   silk,
+  type v1,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -93,7 +94,7 @@ export class MikroOperationBobbin<
         name: name + "Wrapper",
         fields: { data: { type: gqlType } },
       }),
-      (value) => value.data
+      (value) => ({ value: value.data })
     )
   }
 
@@ -139,7 +140,7 @@ export class MikroOperationBobbin<
           compose(extraOptions?.middlewares, middlewares),
           async () => {
             const em = await this.getEm()
-            const inputResult = await parseInput()
+            const inputResult = getStandardValue(await parseInput())
             const instance = em.create(entity, inputResult)
             em.persist(instance)
             return instance
@@ -170,7 +171,7 @@ export class MikroOperationBobbin<
         name: name + "Wrapper",
         fields: { data: { type: gqlType } },
       }),
-      (value) => value.data
+      (value) => ({ value: value.data })
     )
   }
 
@@ -216,7 +217,7 @@ export class MikroOperationBobbin<
           compose(extraOptions?.middlewares, middlewares),
           async () => {
             const em = await this.getEm()
-            const inputResult = await parseInput()
+            const inputResult = getStandardValue(await parseInput())
             const pk = Utils.extractPK(inputResult, entity.meta)
             const instance = await em.findOneOrFail(entity, pk)
             if (instance == null) return null
@@ -245,7 +246,7 @@ export class MikroOperationBobbin<
         })
       )
 
-    return silk(gqlType, (value) => value)
+    return silk(gqlType, (value) => ({ value }))
   }
 
   /**
@@ -288,7 +289,7 @@ export class MikroOperationBobbin<
           compose(extraOptions?.middlewares, options.middlewares),
           async () => {
             const em = await this.getEm()
-            const inputResult = await parseInput()
+            const inputResult = getStandardValue(await parseInput())
             const pk = Utils.extractPK(inputResult, entity.meta)
             const instance = await em.findOneOrFail(entity, pk)
             return instance
@@ -341,7 +342,7 @@ export class MikroOperationBobbin<
           compose(extraOptions?.middlewares, middlewares),
           async () => {
             const em = await this.getEm()
-            const inputResult = await parseInput()
+            const inputResult = getStandardValue(await parseInput())
             const pk = Utils.extractPK(inputResult, entity.meta)
             const instance = await em.findOne(entity, pk)
             if (instance == null) return null
@@ -354,7 +355,7 @@ export class MikroOperationBobbin<
     }
   }
 
-  FindManyOptions() {
+  FindManyOptions(): GraphQLSilk<any, any> {
     const name = `${this.entity.meta.name}FindManyOptions`
 
     const whereType = this.FindManyOptionsWhereType()
@@ -489,7 +490,7 @@ export class MikroOperationBobbin<
           compose(extraOptions?.middlewares, options.middlewares),
           async () => {
             const em = await this.getEm()
-            const inputResult = await parseInput()
+            const inputResult = getStandardValue(await parseInput())
             return em.findAll(entity, inputResult)
           },
           { parseInput, parent: undefined, outputSilk: entity, type }
@@ -622,7 +623,7 @@ export class MikroOperationBobbin<
 }
 
 type NullableSilk<T extends GraphQLSilk> = GraphQLSilk<
-  InferSilkO<T> | null,
+  v1.InferOutput<T> | null,
   undefined
 >
 

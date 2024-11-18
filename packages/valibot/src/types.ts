@@ -1,5 +1,6 @@
+import type { SchemaVendorWeaver, WeaverConfig } from "@gqloom/core"
 // biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
-import type { SYMBOLS, WeaverConfig } from "@gqloom/core"
+import type { SYMBOLS } from "@gqloom/core"
 import type { GraphQLOutputType } from "graphql"
 import type {
   ArraySchema,
@@ -132,4 +133,5 @@ export interface ValibotWeaverConfig
   extends WeaverConfig,
     ValibotWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot"
+  vendorWeaver: typeof SchemaVendorWeaver
 }

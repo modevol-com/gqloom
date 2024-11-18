@@ -5,6 +5,7 @@ import {
   mapValue,
   provideWeaverContext,
   silk,
+  type v1,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -35,6 +36,7 @@ import type {
 import { EntityGraphQLTypes } from "./utils"
 
 export class MikroWeaver {
+  static vendor = "gqloom.mikro-orm"
   /**
    * get GraphQL Silk from Mikro Entity Schema
    * @param schema Mikro Entity Schema
@@ -44,6 +46,13 @@ export class MikroWeaver {
     schema: TSchema
   ): EntitySchemaSilk<TSchema> {
     return Object.assign(schema, {
+      "~standard": {
+        version: 1,
+        vendor: MikroWeaver.vendor,
+        validate: (value: unknown) => ({
+          value: value as InferEntity<TSchema>,
+        }),
+      } satisfies v1.StandardSchemaProps<InferEntity<TSchema>, unknown>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLTypeBySelf,
       nullable() {
         return silk.nullable(this as unknown as GraphQLSilk)

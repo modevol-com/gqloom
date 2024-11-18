@@ -1,4 +1,4 @@
-import { type InferSilkO, loom, weave } from "@gqloom/core"
+import { loom, type v1, weave } from "@gqloom/core"
 import { asInputArgs, zodSilk } from "@gqloom/zod"
 import { PrismaClient } from "@prisma/client"
 import { printSchema, printType } from "graphql"
@@ -18,7 +18,7 @@ class TestablePrismaModelBobbin<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > extends PrismaModelBobbin<TModalSilk, TClient> {
-  public uniqueWhere(instance: InferSilkO<NonNullable<TModalSilk>>): any {
+  public uniqueWhere(instance: v1.InferOutput<NonNullable<TModalSilk>>): any {
     return super.uniqueWhere(instance)
   }
 
@@ -178,7 +178,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.count>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.count>[0]>
+              >
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<number>()
             return next()
@@ -231,7 +233,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.findFirst>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.findFirst>[0]>
+              >
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
             return next()
@@ -287,7 +291,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.findMany>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.findMany>[0]>
+              >
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser[]>()
             return next()
@@ -343,7 +349,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.findUnique>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.findUnique>[0]>
+              >
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
             return next()
@@ -399,7 +407,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.create>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.create>[0]>
+              >
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser>()
             return next()
@@ -455,7 +465,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.createMany>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.createMany>[0]>
+              >
             >()
             return next()
           },
@@ -506,7 +518,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.delete>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.delete>[0]>
+              >
             >()
             return next()
           },
@@ -561,7 +575,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.deleteMany>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.deleteMany>[0]>
+              >
             >()
             return next()
           },
@@ -613,7 +629,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.update>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.update>[0]>
+              >
             >()
             return next()
           },
@@ -678,7 +696,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.updateMany>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.updateMany>[0]>
+              >
             >()
             return next()
           },
@@ -741,7 +761,9 @@ describe("PrismaModelBobbin", () => {
           async (next, { parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
-              NonNullable<Parameters<typeof db.user.upsert>[0]>
+              v1.StandardResult<
+                NonNullable<Parameters<typeof db.user.upsert>[0]>
+              >
             >()
             return next()
           },

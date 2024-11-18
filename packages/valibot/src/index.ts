@@ -276,6 +276,7 @@ export class ValibotWeaver extends SchemaVendorWeaver {
   ): ValibotWeaverConfig {
     return {
       ...config,
+      vendorWeaver: ValibotWeaver,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot",
     }
   }

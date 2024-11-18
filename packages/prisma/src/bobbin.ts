@@ -2,11 +2,11 @@ import {
   type FieldOrOperation,
   type GraphQLFieldOptions,
   type GraphQLSilk,
-  type InferSilkO,
   type Middleware,
   type ResolverOptionsWithExtensions,
   loom,
   silk,
+  type v1,
 } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
@@ -90,7 +90,9 @@ export class PrismaModelBobbin<
   }
 
   protected idKey?: string
-  protected uniqueWhere(instance: InferSilkO<NonNullable<TModalSilk>>): any {
+  protected uniqueWhere(
+    instance: v1.InferOutput<NonNullable<TModalSilk>>
+  ): any {
     if (this.silk.model.primaryKey == null) {
       this.idKey ??= (() => {
         const idField = this.silk.model.fields.find((field) => field.isId)

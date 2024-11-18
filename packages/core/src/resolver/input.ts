@@ -65,7 +65,7 @@ export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
   /**
    * Parse the input and return the
    */
-  (): Promise<InferInputO<TSchema, GraphQLSilkIO>>
+  (): Promise<v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>>>
 
   /**
    * Result of parsing. Set it to `undefined` then the parser will run again.
@@ -84,7 +84,7 @@ export function createInputParser<
   const parse = async () => {
     if (result !== undefined) return result
     result = await parseInputValue(schema, value)
-    return result as InferInputO<TSchema, GraphQLSilkIO>
+    return result
   }
 
   Object.assign(parse, { schema, value })
@@ -93,7 +93,7 @@ export function createInputParser<
     set: (value) => (result = value),
   })
 
-  return parse as CallableInputParser<TSchema>
+  return parse as unknown as CallableInputParser<TSchema>
 }
 
 export function parseInputValue<

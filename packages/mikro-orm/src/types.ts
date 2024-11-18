@@ -1,4 +1,6 @@
 import type { WeaverConfig } from "@gqloom/core"
+// biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
+import type { SYMBOLS } from "@gqloom/core"
 import type {
   EntityProperty,
   EntitySchema,
