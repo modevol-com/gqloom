@@ -13,10 +13,10 @@ import {
   type AbstractSchemaIO,
   type FieldOrOperation,
   baseResolver,
-  silkField,
-  silkQuery,
-  silkMutation,
-  silkSubscription,
+  field,
+  query,
+  mutation,
+  subscription,
 } from "../resolver"
 import type { InputSchema } from "../resolver/input"
 import { getOperationOptions, getSubscriptionOptions } from "../utils"
@@ -60,7 +60,7 @@ export function createFieldFactory<TSchemaIO extends AbstractSchemaIO>(
     const options = getOperationOptions<"field">(
       resolveOrOptions
     ) as FieldOrOperation<any, any, any, "field">
-    return silkField(toSilk(output), {
+    return field(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
     }) as FieldOrOperation<any, any, any, "field">
@@ -81,7 +81,7 @@ export function createQueryFactory<TSchemaIO extends AbstractSchemaIO>(
       any,
       "query"
     >
-    return silkQuery(toSilk(output), {
+    return query(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
     }) as FieldOrOperation<any, any, any, "query">
@@ -99,7 +99,7 @@ export function createMutationFactory<TSchemaIO extends AbstractSchemaIO>(
       any,
       "mutation"
     >
-    return silkMutation(toSilk(output), {
+    return mutation(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
     }) as FieldOrOperation<any, any, any, "mutation">
@@ -116,7 +116,7 @@ export function createSubscriptionFactory<TSchemaIO extends AbstractSchemaIO>(
       any,
       any
     >
-    return silkSubscription(toSilk(output), {
+    return subscription(toSilk(output), {
       ...options,
       input: toSilkInput(options.input, toSilk, isSchema),
     }) as Subscription<any, any, any>

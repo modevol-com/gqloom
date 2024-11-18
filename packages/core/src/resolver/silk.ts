@@ -8,6 +8,7 @@ import {
 import type { MayPromise } from "../utils"
 import { GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type { GraphQLSilk } from "./types"
+import { weaverContext } from "../schema"
 
 /**
  * Create a Silk from Scalar.
@@ -141,7 +142,18 @@ export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
  * @returns GraphQL Output Type
  */
 export function getGraphQLType(silk: GraphQLSilk): GraphQLOutputType {
-  return silk[GET_GRAPHQL_TYPE]()
+  if (GET_GRAPHQL_TYPE in silk && silk[GET_GRAPHQL_TYPE] != null)
+    return silk[GET_GRAPHQL_TYPE]()
+
+  const vendorWeavers = weaverContext.vendorWeavers
+  if (vendorWeavers == null) throw new Error("Schema Weaver is not initialized")
+
+  const weaver = vendorWeavers.get(silk["~standard"].vendor)
+  if (weaver == null)
+    throw new Error(
+      `Schema Weaver for ${silk["~standard"].vendor} is not found`
+    )
+  return weaver.getGraphQLType(silk)
 }
 
 /**
@@ -160,7 +172,14 @@ export function parseSilk<TSilk extends GraphQLSilk>(
 export function isSilk(target: any): target is GraphQLSilk {
   if (typeof target !== "object") return false
   if (target == null) return false
-  return GET_GRAPHQL_TYPE in target
+  if (GET_GRAPHQL_TYPE in target) return true
+  if (!("~standard" in target)) return false
+  return (
+    "vendor" in target["~standard"] &&
+    typeof target["~standard"].vendor === "string" &&
+    "version" in target["~standard"] &&
+    typeof target["~standard"].version === "number"
+  )
 }
 
 type InferScalarInternal<T extends GraphQLScalarType> =

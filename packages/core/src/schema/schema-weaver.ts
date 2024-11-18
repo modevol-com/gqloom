@@ -6,6 +6,7 @@ import {
   isNonNullType,
   isEnumType,
   isUnionType,
+  GraphQLOutputType,
 } from "graphql"
 import {
   type GraphQLSilk,
@@ -77,6 +78,11 @@ export class SchemaWeaver {
 
   public add(resolver: SilkResolver) {
     provideWeaverContext(() => this.addResolver(resolver), this.context)
+    return this
+  }
+
+  public addVendor(weaver: typeof SchemaVendorWeaver) {
+    this.context.vendorWeavers.set(weaver.vendor, weaver)
     return this
   }
 
@@ -197,19 +203,30 @@ export class SchemaWeaver {
   }
 
   static optionsFrom(
-    ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
+    ...inputs: (
+      | SilkResolver
+      | Middleware
+      | typeof SchemaVendorWeaver
+      | WeaverConfig
+      | GraphQLSilk
+    )[]
   ) {
     const configs = new Set<WeaverConfig>()
     const middlewares = new Set<Middleware>()
     const resolvers = new Set<SilkResolver>()
     const silks = new Set<GraphQLSilk>()
+    const weavers = new Set<typeof SchemaVendorWeaver>()
     let context: WeaverContext | undefined
 
     for (const item of inputs) {
-      if (typeof item === "function") {
+      if (isSchemaVendorWeaver(item)) {
+        weavers.add(item)
+      } else if (typeof item === "function") {
         middlewares.add(item)
       } else if (WEAVER_CONFIG in item) {
         configs.add(item)
+        if (item.vendorWeaver) weavers.add(item.vendorWeaver)
+
         if (
           (item as CoreSchemaWeaverConfig)[WEAVER_CONFIG] ===
           "gqloom.core.schema"
@@ -223,7 +240,7 @@ export class SchemaWeaver {
       }
     }
 
-    return { context, configs, middlewares, resolvers, silks }
+    return { context, configs, middlewares, resolvers, silks, weavers }
   }
 
   /**
@@ -232,14 +249,21 @@ export class SchemaWeaver {
    * @returns GraphQ LSchema
    */
   static weave(
-    ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
+    ...inputs: (
+      | SilkResolver
+      | Middleware
+      | typeof SchemaVendorWeaver
+      | WeaverConfig
+      | GraphQLSilk
+    )[]
   ) {
-    const { context, configs, middlewares, resolvers, silks } =
+    const { context, configs, middlewares, resolvers, silks, weavers } =
       SchemaWeaver.optionsFrom(...inputs)
 
     const weaver = new SchemaWeaver({}, context)
 
     configs.forEach((it) => weaver.setConfig(it))
+    weavers.forEach((it) => weaver.addVendor(it))
     middlewares.forEach((it) => weaver.use(it))
     resolvers.forEach((it) => weaver.add(it))
     silks.forEach((it) => weaver.addType(it))
@@ -254,3 +278,17 @@ export class SchemaWeaver {
  * @returns GraphQ LSchema
  */
 export const weave = SchemaWeaver.weave
+
+export abstract class SchemaVendorWeaver {
+  static vendor: string
+  static getGraphQLType: (schema: any) => GraphQLOutputType
+}
+
+function isSchemaVendorWeaver(some: any): some is typeof SchemaVendorWeaver {
+  if (typeof some !== "object" && typeof some !== "function") return false
+  if (!("getGraphQLType" in some) || typeof some.getGraphQLType !== "function")
+    return false
+  if (!("vendor" in some) || typeof some.vendor !== "string") return false
+
+  return true
+}

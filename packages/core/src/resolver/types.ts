@@ -26,7 +26,7 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
   /**
    * GraphQL type for schema
    */
-  [GET_GRAPHQL_TYPE]: () => GraphQLOutputType
+  [GET_GRAPHQL_TYPE]?: () => GraphQLOutputType
 }
 
 export type AbstractSchemaIO = [

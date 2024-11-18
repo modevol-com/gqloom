@@ -3,10 +3,10 @@ import {
   type Middleware,
   loom,
   silk,
-  SchemaWeaver,
   useResolverPayload,
   type ResolverPayload,
   createMemoization,
+  SchemaWeaver,
 } from "../src"
 import {
   GraphQLString,

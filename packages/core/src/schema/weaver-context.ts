@@ -11,6 +11,7 @@ import {
 } from "graphql"
 import { type LoomObjectType } from "./object"
 import { WEAVER_CONFIG } from "../utils/symbols"
+import { SchemaVendorWeaver } from "./schema-weaver"
 
 export interface WeaverContext {
   id: number
@@ -35,6 +36,7 @@ export interface WeaverContext {
   ): TGraphQLType
   getNamedType<T extends GraphQLOutputType>(name: string): T | undefined
   names: WeakMap<object, string>
+  vendorWeavers: Map<string, typeof SchemaVendorWeaver>
 }
 
 let ref: WeaverContext | undefined
@@ -43,6 +45,7 @@ const names = new WeakMap<object, string>()
 
 export interface WeaverConfig {
   [WEAVER_CONFIG]: string | symbol
+  vendorWeaver?: typeof SchemaVendorWeaver
 }
 
 export function initWeaverContext(): WeaverContext {
@@ -82,6 +85,7 @@ export function initWeaverContext(): WeaverContext {
     getNamedType<T extends GraphQLOutputType>(name: string) {
       return this.namedTypes.get(name) as T | undefined
     },
+    vendorWeavers: new Map(),
   }
 }
 
@@ -132,6 +136,10 @@ export const weaverContext: GlobalWeaverContext = {
 
   get configs() {
     return ref?.configs
+  },
+
+  get vendorWeavers() {
+    return ref?.vendorWeavers
   },
 
   getConfig(key) {

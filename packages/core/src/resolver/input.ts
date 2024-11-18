@@ -150,9 +150,13 @@ export function getStandardValue<T>(
   result?: v1.StandardResult<T> | null
 ): T | null | undefined {
   if (result == null) return result
-  if ("value" in result) return result.value
   const { issues } = result
-  throw new GraphQLError(issues?.[0]?.message ?? "Invalid input", {
-    extensions: { issues },
-  })
+  if (issues?.length) {
+    throw new GraphQLError(issues?.[0]?.message ?? "Invalid input", {
+      extensions: { issues },
+    })
+  }
+
+  if ("value" in result) return result.value
+  else throw new GraphQLError("Invalid input")
 }

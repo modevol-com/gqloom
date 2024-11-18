@@ -2,10 +2,10 @@ import { describe, it, expect, assert } from "vitest"
 import {
   loom,
   silk,
-  SchemaWeaver,
   type Middleware,
   useResolverPayload,
   type ResolverPayload,
+  SchemaWeaver,
 } from "../src"
 import { GraphQLString, parse, subscribe } from "graphql"
 
