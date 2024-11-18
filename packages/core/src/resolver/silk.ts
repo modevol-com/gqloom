@@ -1,4 +1,4 @@
-import { v1 } from "@standard-schema/spec"
+import type { v1 } from "@standard-schema/spec"
 import {
   GraphQLList,
   GraphQLNonNull,
@@ -8,7 +8,7 @@ import {
 import type { MayPromise } from "../utils"
 import { GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type { GraphQLSilk } from "./types"
-import { weaverContext } from "../schema"
+import { weaverContext } from "../schema/weaver-context"
 
 /**
  * Create a Silk from Scalar.

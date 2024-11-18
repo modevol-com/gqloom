@@ -9,9 +9,9 @@ import {
   type GraphQLUnionType,
   isScalarType,
 } from "graphql"
-import { type LoomObjectType } from "./object"
+import type { LoomObjectType } from "./object"
 import { WEAVER_CONFIG } from "../utils/symbols"
-import { SchemaVendorWeaver } from "./schema-weaver"
+import type { SchemaVendorWeaver } from "./schema-vendor-weaver"
 
 export interface WeaverContext {
   id: number

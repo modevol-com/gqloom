@@ -6,7 +6,6 @@ import {
   isNonNullType,
   isEnumType,
   isUnionType,
-  GraphQLOutputType,
 } from "graphql"
 import {
   type GraphQLSilk,
@@ -16,19 +15,23 @@ import {
   isSilk,
 } from "../resolver"
 import { LoomObjectType } from "./object"
-import { type Middleware } from "../utils"
+import type { Middleware } from "../utils"
 import {
   type WeaverConfig,
   initWeaverContext,
   provideWeaverContext,
   type WeaverContext,
 } from "./weaver-context"
-import {
-  type CoreSchemaWeaverConfigOptions,
-  type CoreSchemaWeaverConfig,
-  type SilkResolver,
+import type {
+  CoreSchemaWeaverConfigOptions,
+  CoreSchemaWeaverConfig,
+  SilkResolver,
 } from "./types"
 import { FIELD_HIDDEN, WEAVER_CONFIG } from "../utils/symbols"
+import {
+  type SchemaVendorWeaver,
+  isSchemaVendorWeaver,
+} from "./schema-vendor-weaver"
 
 interface SchemaWeaverParameters
   extends Partial<
@@ -278,17 +281,3 @@ export class SchemaWeaver {
  * @returns GraphQ LSchema
  */
 export const weave = SchemaWeaver.weave
-
-export abstract class SchemaVendorWeaver {
-  static vendor: string
-  static getGraphQLType: (schema: any) => GraphQLOutputType
-}
-
-function isSchemaVendorWeaver(some: any): some is typeof SchemaVendorWeaver {
-  if (typeof some !== "object" && typeof some !== "function") return false
-  if (!("getGraphQLType" in some) || typeof some.getGraphQLType !== "function")
-    return false
-  if (!("vendor" in some) || typeof some.vendor !== "string") return false
-
-  return true
-}

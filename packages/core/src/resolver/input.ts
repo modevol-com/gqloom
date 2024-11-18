@@ -1,4 +1,4 @@
-import { v1 } from "@standard-schema/spec"
+import type { v1 } from "@standard-schema/spec"
 import { GraphQLError } from "graphql"
 import type { MayPromise, ObjectOrNever } from "../utils"
 import { isSilk } from "./silk"

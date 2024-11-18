@@ -147,6 +147,11 @@ describe("resolver", () => {
 
         heightInMeters: field.hidden,
       })
+      try {
+        weave(r1)
+      } catch (error) {
+        console.error(error)
+      }
       const schema = weave(r1)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {
