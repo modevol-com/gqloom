@@ -195,8 +195,10 @@ describe("zod resolver", () => {
         },
       }),
       (input) => ({
-        name: input.name ?? "",
-        age: input.age ?? 0,
+        value: {
+          name: input.name ?? "",
+          age: input.age ?? 0,
+        },
       })
     )
 

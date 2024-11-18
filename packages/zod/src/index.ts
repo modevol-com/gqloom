@@ -10,6 +10,7 @@ import {
   type GraphQLSilkIO,
   isSilk,
   collectNames,
+  v1,
 } from "@gqloom/core"
 import {
   type GraphQLOutputType,
@@ -84,6 +85,11 @@ export class ZodWeaver {
   ): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>> {
     const config = weaverContext.value?.getConfig<ZodWeaverConfig>("gqloom.zod")
     return Object.assign(schema, {
+      "~standard": {
+        version: 1,
+        vendor: "gqloom.zod",
+        validate: (value) => parseZod(schema, value),
+      } satisfies v1.StandardSchemaProps<z.input<TSchema>, z.output<TSchema>>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema) {
             return weaverContext.useConfig(config, () =>
@@ -91,7 +97,6 @@ export class ZodWeaver {
             )
           }
         : getGraphQLType,
-      [SYMBOLS.PARSE]: parseZod,
     })
   }
 
@@ -477,8 +482,21 @@ function getGraphQLType(this: Schema) {
   return ZodWeaver.toNullableGraphQLType(this)
 }
 
-function parseZod(this: Schema, data: any) {
-  return this.parseAsync(data)
+async function parseZod(
+  schema: Schema,
+  data: any
+): Promise<v1.StandardResult<unknown>> {
+  const result = await schema.safeParseAsync(data)
+  return result.success
+    ? { value: result.data }
+    : {
+        issues: result.error.issues.map((issue) => ({
+          zodIssue: issue,
+          error: result.error,
+          message: issue.message,
+          path: issue.path,
+        })),
+      }
 }
 
 export * from "@gqloom/core"
