@@ -1,25 +1,25 @@
 import {
   type Middleware,
-  getOperationOptions,
   applyMiddlewares,
   compose,
-  getSubscriptionOptions,
   getFieldOptions,
+  getOperationOptions,
+  getSubscriptionOptions,
 } from "../utils"
 import { FIELD_HIDDEN } from "../utils/symbols"
-import { createInputParser } from "./input"
+import { createInputParser, getStandardValue } from "./input"
 import type {
   FieldFactory,
-  ResolvingOptions,
-  ResolverFactory,
-  FieldOrOperation,
-  ResolverOptionsWithParent,
-  GraphQLSilkIO,
-  SubscriptionFactory,
-  Subscription,
-  QueryFactory,
-  MutationFactory,
   FieldFactoryWithUtils,
+  FieldOrOperation,
+  GraphQLSilkIO,
+  MutationFactory,
+  QueryFactory,
+  ResolverFactory,
+  ResolverOptionsWithParent,
+  ResolvingOptions,
+  Subscription,
+  SubscriptionFactory,
 } from "./types"
 
 export const silkQuery: QueryFactory<GraphQLSilkIO> = (
@@ -36,7 +36,7 @@ export const silkQuery: QueryFactory<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput()),
+        async () => options.resolve(getStandardValue(await parseInput())),
         { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
@@ -58,7 +58,7 @@ export const silkMutation: MutationFactory<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput()),
+        async () => options.resolve(getStandardValue(await parseInput())),
         { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
@@ -80,7 +80,8 @@ const baseSilkField: FieldFactory<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(parent, await parseInput()),
+        async () =>
+          options.resolve(parent, getStandardValue(await parseInput())),
         { parseInput, parent, outputSilk: output, type }
       )
     },
@@ -114,7 +115,7 @@ export const silkSubscription: SubscriptionFactory<GraphQLSilkIO> = (
           extraOptions?.middlewares,
           options.middlewares
         ),
-        async () => options.subscribe(await parseInput()),
+        async () => options.subscribe(getStandardValue(await parseInput())),
         { parseInput, parent: undefined, outputSilk: output, type }
       )
     },

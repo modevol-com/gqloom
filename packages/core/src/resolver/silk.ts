@@ -1,12 +1,13 @@
+import { v1 } from "@standard-schema/spec"
 import {
-  GraphQLNonNull,
   GraphQLList,
+  GraphQLNonNull,
   type GraphQLOutputType,
   type GraphQLScalarType,
 } from "graphql"
 import type { MayPromise } from "../utils"
-import type { GraphQLSilk, InferSilkI, InferSilkO } from "./types"
-import { GET_GRAPHQL_TYPE, PARSE } from "../utils/symbols"
+import { GET_GRAPHQL_TYPE } from "../utils/symbols"
+import type { GraphQLSilk } from "./types"
 
 /**
  * Create a Silk from Scalar.
@@ -14,8 +15,10 @@ import { GET_GRAPHQL_TYPE, PARSE } from "../utils/symbols"
 export function silk<TScalar extends GraphQLScalarType>(
   type: TScalar | (() => TScalar),
   parse?: (
-    input: InferScalarExternal<TScalar>
-  ) => MayPromise<InferScalarInternal<TScalar>>
+    value: InferScalarExternal<TScalar>
+  ) =>
+    | v1.StandardResult<InferScalarExternal<TScalar>>
+    | Promise<v1.StandardResult<InferScalarInternal<TScalar>>>
 ): GraphQLSilk<
   InferScalarInternal<TScalar> | undefined,
   InferScalarInternal<TScalar> | undefined
@@ -26,16 +29,26 @@ export function silk<TScalar extends GraphQLScalarType>(
  */
 export function silk<TOutput, TInput = TOutput>(
   type: GraphQLOutputType | (() => GraphQLOutputType),
-  parse?: (input: TInput) => MayPromise<TOutput>
+  validate?: (
+    value: TInput
+  ) => v1.StandardResult<TOutput> | Promise<v1.StandardResult<TOutput>>
 ): GraphQLSilk<TOutput, TInput>
 
 export function silk<TOutput, TInput = TOutput>(
   type: GraphQLOutputType | (() => GraphQLOutputType),
-  parse?: (input: TInput) => MayPromise<TOutput>
+  validate: (
+    value: TInput
+  ) => v1.StandardResult<TOutput> | Promise<v1.StandardResult<TOutput>> = (
+    value
+  ) => ({ value: (value ?? undefined) as unknown as TOutput })
 ): GraphQLSilk<TOutput, TInput> {
   return {
     [GET_GRAPHQL_TYPE]: typeof type === "function" ? type : () => type,
-    [PARSE]: parse,
+    "~standard": {
+      version: 1,
+      vendor: "gqloom.silk",
+      validate,
+    } as v1.StandardSchemaProps<TInput, TOutput>,
   }
 }
 
@@ -46,8 +59,8 @@ silk.list = listSilk
 silk.nullable = nullableSilk
 
 export type NonNullSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
-  NonNullable<InferSilkO<TSilk>>,
-  NonNullable<InferSilkI<TSilk>>
+  NonNullable<v1.InferOutput<TSilk>>,
+  NonNullable<v1.InferInput<TSilk>>
 >
 
 /**
@@ -57,6 +70,7 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
 ): NonNullSilk<TSilk> {
   return {
+    ...origin,
     [GET_GRAPHQL_TYPE]: () => {
       const originType = getGraphQLType(origin)
       if (originType instanceof GraphQLNonNull) {
@@ -65,13 +79,12 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
         return new GraphQLNonNull(originType)
       }
     },
-    [PARSE]: (input) => origin[PARSE]?.(input),
   }
 }
 
 export type ListSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
-  EnsureArray<InferSilkO<TSilk>>,
-  EnsureArray<InferSilkO<TSilk>>
+  EnsureArray<v1.InferOutput<TSilk>>,
+  EnsureArray<v1.InferOutput<TSilk>>
 >
 
 /**
@@ -81,6 +94,7 @@ export function listSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
 ): ListSilk<TSilk> {
   return {
+    ...origin,
     [GET_GRAPHQL_TYPE]: () => {
       let originType = getGraphQLType(origin)
       if (
@@ -98,8 +112,8 @@ export function listSilk<TSilk extends GraphQLSilk<any, any>>(
 }
 
 export type NullableSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
-  InferSilkO<TSilk> | null | undefined,
-  InferSilkI<TSilk>
+  v1.InferOutput<TSilk> | null | undefined,
+  v1.InferInput<TSilk>
 >
 
 /**
@@ -109,6 +123,7 @@ export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
   origin: TSilk
 ): NullableSilk<TSilk> {
   return {
+    ...origin,
     [GET_GRAPHQL_TYPE]: () => {
       const originType = getGraphQLType(origin)
       if (originType instanceof GraphQLNonNull) {
@@ -117,7 +132,6 @@ export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
         return originType
       }
     },
-    [PARSE]: (input) => origin[PARSE]?.(input),
   }
 }
 
@@ -138,10 +152,9 @@ export function getGraphQLType(silk: GraphQLSilk): GraphQLOutputType {
  */
 export function parseSilk<TSilk extends GraphQLSilk>(
   silk: TSilk,
-  input: InferSilkI<TSilk>
-): MayPromise<InferSilkO<TSilk>> {
-  if (silk[PARSE] == null) return input
-  return silk[PARSE](input)
+  input: v1.InferInput<TSilk>
+): MayPromise<v1.StandardResult<v1.InferOutput<TSilk>>> {
+  return silk["~standard"].validate(input)
 }
 
 export function isSilk(target: any): target is GraphQLSilk {

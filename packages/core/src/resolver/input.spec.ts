@@ -1,20 +1,22 @@
-import { describe, expect, it } from "vitest"
-import { createInputParser, parseInputValue } from "./input"
-import { silk } from "./silk"
 import {
-  GraphQLObjectType,
-  GraphQLNonNull,
-  GraphQLString,
   GraphQLFloat,
   GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
 } from "graphql"
+import { describe, expect, it } from "vitest"
+import { createInputParser, getStandardValue, parseInputValue } from "./input"
+import { silk } from "./silk"
 
 describe("parseInput", () => {
   it("should parse undefined", async () => {
-    expect(await parseInputValue(undefined, undefined)).toBeUndefined()
-    expect(await parseInputValue(undefined, 1)).toEqual(1)
-    expect(await parseInputValue(undefined, "abc")).toEqual("abc")
-    expect(await parseInputValue(undefined, {})).toEqual({})
+    expect(await parseInputValue(undefined, undefined)).toEqual({
+      value: undefined,
+    })
+    expect(await parseInputValue(undefined, 1)).toEqual({ value: 1 })
+    expect(await parseInputValue(undefined, "abc")).toEqual({ value: "abc" })
+    expect(await parseInputValue(undefined, {})).toEqual({ value: {} })
   })
 
   describe("should parse Silk", () => {
@@ -32,15 +34,16 @@ describe("parseInput", () => {
         birthday = new Date(),
         heightInMeters = 1.5,
       } = {}) => {
-        if (name.length > 10) throw new Error("Name too long")
-        return { name, birthday, heightInMeters }
+        if (name.length > 10) return { issues: [{ message: "Name too long" }] }
+        return { value: { name, birthday, heightInMeters } }
       }
     )
     it("should accept undefined", async () => {
       const output1 = await parseInputValue(Giraffe, undefined)
-      expect(output1.name).toBe("Tallulah")
-      expect(output1.birthday).toBeInstanceOf(Date)
-      expect(output1.heightInMeters).toBe(1.5)
+      if (!("value" in output1)) throw new Error("parse failed")
+      expect(output1.value.name).toBe("Tallulah")
+      expect(output1.value.birthday).toBeInstanceOf(Date)
+      expect(output1.value.heightInMeters).toBe(1.5)
     })
 
     it("should accept partial", async () => {
@@ -50,14 +53,18 @@ describe("parseInput", () => {
         heightInMeters: 1.5,
       }
 
-      expect(await parseInputValue(Giraffe, Twiga)).toEqual(Twiga)
+      expect(getStandardValue(await parseInputValue(Giraffe, Twiga))).toEqual(
+        Twiga
+      )
     })
 
-    it("should throw errors", () => {
+    it("should throw errors", async () => {
       const nameVeryLong = "this is a very long name, and it should fail"
-      expect(async () =>
-        parseInputValue(Giraffe, { name: nameVeryLong })
-      ).rejects.toThrowError("Name too long")
+      expect(
+        await parseInputValue(Giraffe, { name: nameVeryLong })
+      ).toMatchObject({
+        issues: [{ message: "Name too long" }],
+      })
     })
   })
 
@@ -66,28 +73,30 @@ describe("parseInput", () => {
       name: silk<string, string | undefined>(
         GraphQLString,
         async (input = "Twiga") => {
-          if (input.length > 10) throw new Error("Name too long")
-          return input
+          if (input.length > 10)
+            return { issues: [{ message: "Name too long" }] }
+          return { value: input }
         }
       ),
       birthday: silk<Date, Date | undefined>(
         GraphQLString,
         async (input = new Date()) => {
           await new Promise((resolve) => setTimeout(resolve, 6))
-          return input
+          return { value: input }
         }
       ),
       heightInMeters: silk<number, number | undefined>(
         GraphQLFloat,
-        (input = 1.5) => input
+        (input = 1.5) => ({ value: input })
       ),
     }
 
     it("should accept undefined", async () => {
       const output1 = await parseInputValue(Giraffe, undefined)
-      expect(output1.name).toBe("Twiga")
-      expect(output1.birthday).toBeInstanceOf(Date)
-      expect(output1.heightInMeters).toBe(1.5)
+      if (!("value" in output1)) throw new Error("parse failed")
+      expect(output1.value.name).toBe("Twiga")
+      expect(output1.value.birthday).toBeInstanceOf(Date)
+      expect(output1.value.heightInMeters).toBe(1.5)
     })
 
     it("should accept partial", async () => {
@@ -96,14 +105,16 @@ describe("parseInput", () => {
         birthday: new Date(),
         heightInMeters: 1.5,
       }
-      expect(await parseInputValue(Giraffe, Twiga)).toEqual(Twiga)
+      expect(await parseInputValue(Giraffe, Twiga)).toEqual({ value: Twiga })
     })
 
-    it("should throw errors", () => {
+    it("should get issues", async () => {
       const nameVeryLong = "this is a very long name, and it should fail"
-      expect(async () =>
-        parseInputValue(Giraffe, { name: nameVeryLong })
-      ).rejects.toThrowError("Name too long")
+      expect(
+        await parseInputValue(Giraffe, { name: nameVeryLong })
+      ).toMatchObject({
+        issues: [{ message: "Name too long" }],
+      })
     })
   })
 })
@@ -116,7 +127,7 @@ describe("CallableInputParser", () => {
     )
     const result = await parseInput()
 
-    expect(result).toEqual({ count: 1 })
+    expect(result).toEqual({ value: { count: 1 } })
   })
 
   it("should cache result", async () => {
@@ -136,7 +147,7 @@ describe("CallableInputParser", () => {
       {
         count: silk(GraphQLInt, (n) => {
           parseTime++
-          return n
+          return { value: n }
         }),
       },
       { count: 1 }
@@ -153,7 +164,7 @@ describe("CallableInputParser", () => {
       {
         count: silk(GraphQLInt, (n) => {
           parseTime++
-          return n
+          return { value: n }
         }),
       },
       { count: 1 }

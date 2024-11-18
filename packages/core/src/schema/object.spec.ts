@@ -5,7 +5,6 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { LoomObjectType } from "./object"
 import {
   defaultSubscriptionResolve,
   silk,
@@ -14,6 +13,7 @@ import {
   silkQuery,
   silkSubscription,
 } from "../resolver"
+import { LoomObjectType } from "./object"
 
 describe("printType", () => {
   it("should print type correctly", () => {
@@ -100,7 +100,7 @@ describe("toFieldConfig", () => {
   it("should parse input", async () => {
     const PlusOneSilk = silk<number, number>(GraphQLInt, async (n) => {
       await new Promise((ok) => setTimeout(ok, 6))
-      return n + 1
+      return { value: n + 1 }
     })
     const fieldConfig = loomObject.toFieldConfig(
       silkQuery(IntSilk, {
