@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup --dts-resolve",
     "check:type": "tsc --noEmit",
     "release": "commit-and-tag-version"
   },
