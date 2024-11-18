@@ -6,24 +6,24 @@ import {
   entitiesResolver,
 } from "@apollo/subgraph/dist/types"
 import {
-  SchemaWeaver,
-  silkResolver,
-  silkQuery,
-  silk,
-  useResolverPayload,
+  type GraphQLSilk,
   type Middleware,
+  SchemaWeaver,
   type SilkResolver,
   type WeaverConfig,
-  type GraphQLSilk,
+  silk,
+  silkQuery,
+  silkResolver,
+  useResolverPayload,
 } from "@gqloom/core"
 import {
   GraphQLList,
+  type GraphQLNamedType,
   GraphQLNonNull,
   type GraphQLResolveInfo,
+  type GraphQLSchema,
   GraphQLUnionType,
   isObjectType,
-  type GraphQLNamedType,
-  type GraphQLSchema,
   lexicographicSortSchema,
 } from "graphql"
 import { mockAst } from "./mock-ast"

@@ -7,10 +7,10 @@ import {
 import { describe, expect, it } from "vitest"
 import {
   defaultSubscriptionResolve,
-  silk,
   field,
   mutation,
   query,
+  silk,
   subscription,
 } from "../resolver"
 import { LoomObjectType } from "./object"

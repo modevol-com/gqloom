@@ -1,33 +1,33 @@
 import {
-  object,
-  string,
-  date,
-  number,
-  partial,
-  type InferInput,
-  type InferOutput,
-  nullish,
-  pipe,
-  minLength,
-  boolean,
-  integer,
-  optional,
-  union,
-  variant,
-  literal,
-} from "valibot"
-import { assertType, describe, expect, expectTypeOf, it } from "vitest"
-import { ValibotWeaver, asUnionType } from "../src"
-import {
   collectNames,
-  silk,
-  weave,
   field,
   mutation,
   query,
   resolver,
+  silk,
+  weave,
 } from "@gqloom/core"
 import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
+import {
+  type InferInput,
+  type InferOutput,
+  boolean,
+  date,
+  integer,
+  literal,
+  minLength,
+  nullish,
+  number,
+  object,
+  optional,
+  partial,
+  pipe,
+  string,
+  union,
+  variant,
+} from "valibot"
+import { assertType, describe, expect, expectTypeOf, it } from "vitest"
+import { ValibotWeaver, asUnionType } from "../src"
 
 describe("valibot resolver", () => {
   const Giraffe = object({

@@ -1,14 +1,15 @@
-import { type SYMBOLS, type WeaverConfig } from "@gqloom/core"
-import {
-  type GraphQLUnionTypeConfig,
-  type GraphQLEnumTypeConfig,
-  type GraphQLFieldConfig,
-  type GraphQLObjectTypeConfig,
-  type GraphQLInterfaceType,
-  type GraphQLOutputType,
-  type GraphQLEnumValueConfig,
+// biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
+import type { SYMBOLS, WeaverConfig } from "@gqloom/core"
+import type {
+  GraphQLEnumTypeConfig,
+  GraphQLEnumValueConfig,
+  GraphQLFieldConfig,
+  GraphQLInterfaceType,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+  GraphQLUnionTypeConfig,
 } from "graphql"
-import { type Schema, type ZodObject, type ZodRawShape } from "zod"
+import type { Schema, ZodObject, ZodRawShape } from "zod"
 
 export interface ObjectConfig
   extends Omit<

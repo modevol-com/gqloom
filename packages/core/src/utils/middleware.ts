@@ -1,10 +1,10 @@
-import { v1 } from "@standard-schema/spec"
-import {
-  type CallableInputParser,
-  type FieldOrOperation,
-  type FieldOrOperationType,
-  type GenericFieldOrOperation,
-  type InferFieldOutput,
+import type { v1 } from "@standard-schema/spec"
+import type {
+  CallableInputParser,
+  FieldOrOperation,
+  FieldOrOperationType,
+  GenericFieldOrOperation,
+  InferFieldOutput,
 } from "../resolver"
 import type { MayPromise } from "./types"
 

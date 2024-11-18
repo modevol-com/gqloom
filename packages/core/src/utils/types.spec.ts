@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from "vitest"
-import { type InferPropertyType, type WrapPropertyType } from "./types"
+import type { InferPropertyType, WrapPropertyType } from "./types"
 
 interface A {
   a?: { b?: { c: string } }

@@ -1,6 +1,6 @@
-import { weave } from "@gqloom/core"
 import { ApolloServer } from "@apollo/server"
 import { startStandaloneServer } from "@apollo/server/standalone"
+import { weave } from "@gqloom/core"
 import { HelloResolver } from "./resolvers"
 
 const schema = weave(HelloResolver)

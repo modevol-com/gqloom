@@ -1,7 +1,7 @@
-import { weave, resolver, query, mutation, field } from "@gqloom/valibot"
-import * as v from "valibot"
 import { createServer } from "node:http"
+import { field, mutation, query, resolver, weave } from "@gqloom/core"
 import { createYoga } from "graphql-yoga"
+import * as v from "valibot"
 
 const Cat = v.object({
   __typename: v.nullish(v.literal("Cat")),

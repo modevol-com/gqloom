@@ -1,4 +1,4 @@
-import { resolver, mutation } from "@gqloom/zod"
+import { mutation, resolver } from "@gqloom/zod"
 import { z } from "zod"
 import { authGuard } from "./middlewares"
 

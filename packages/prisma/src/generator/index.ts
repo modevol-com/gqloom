@@ -1,8 +1,8 @@
-import { generatorHandler } from "@prisma/generator-helper"
-import * as path from "path"
 import * as fs from "fs"
-import { genTsDeclaration } from "./ts"
+import * as path from "path"
+import { generatorHandler } from "@prisma/generator-helper"
 import { genJSFile } from "./js"
+import { genTsDeclaration } from "./ts"
 
 const defaultOutput = path.resolve(findPackageRoot(), "./generated")
 

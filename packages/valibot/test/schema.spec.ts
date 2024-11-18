@@ -1,3 +1,27 @@
+import {
+  type GQLoomExtensions,
+  SchemaWeaver,
+  type SilkResolver,
+  field,
+  query,
+  resolver,
+  weave,
+} from "@gqloom/core"
+import {
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  type GraphQLNamedType,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLString,
+  printSchema,
+  printType,
+} from "graphql"
+import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import {
   ValibotWeaver,
@@ -6,31 +30,7 @@ import {
   asObjectType,
   asUnionType,
 } from "../src"
-import {
-  GraphQLBoolean,
-  GraphQLFloat,
-  GraphQLID,
-  GraphQLInt,
-  GraphQLObjectType,
-  GraphQLScalarType,
-  GraphQLString,
-  GraphQLNonNull,
-  type GraphQLNamedType,
-  printType,
-  GraphQLList,
-  printSchema,
-} from "graphql"
-import {
-  type GQLoomExtensions,
-  type SilkResolver,
-  field,
-  query,
-  resolver,
-  weave,
-  SchemaWeaver,
-} from "@gqloom/core"
-import * as v from "valibot"
-import { type PipedSchema } from "../src/types"
+import type { PipedSchema } from "../src/types"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}

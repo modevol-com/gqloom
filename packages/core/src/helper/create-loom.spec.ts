@@ -1,15 +1,15 @@
-import { describe, expect, it } from "vitest"
-import {
-  createQueryFactory,
-  createMutationFactory,
-  createFieldFactory,
-  createSubscriptionFactory,
-  createResolverFactory,
-  createLoom,
-} from "./create-loom"
-import { silk, type GraphQLSilkIO } from "../resolver"
-import { SYMBOLS } from "../utils"
 import { GraphQLObjectType, GraphQLString } from "graphql"
+import { describe, expect, it } from "vitest"
+import { type GraphQLSilkIO, silk } from "../resolver"
+import { SYMBOLS } from "../utils"
+import {
+  createFieldFactory,
+  createLoom,
+  createMutationFactory,
+  createQueryFactory,
+  createResolverFactory,
+  createSubscriptionFactory,
+} from "./create-loom"
 
 function toSilk(schema: GraphQLSilkIO[0]) {
   return schema

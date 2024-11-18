@@ -1,17 +1,17 @@
-import { type DMMF } from "@prisma/generator-helper"
-import { PrismaWeaver } from "."
-import { type PrismaModelSilk, type PrismaModelMeta } from "./types"
 import { provideWeaverContext, weaverContext } from "@gqloom/core"
+import type { DMMF } from "@prisma/generator-helper"
 import {
+  GraphQLEnumType,
+  type GraphQLEnumValueConfig,
+  type GraphQLFieldConfig,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   type GraphQLOutputType,
-  type GraphQLFieldConfig,
-  GraphQLEnumType,
-  type GraphQLEnumValueConfig,
   GraphQLScalarType,
 } from "graphql"
+import { PrismaWeaver } from "."
+import type { PrismaModelMeta, PrismaModelSilk } from "./types"
 import { gqlType as gt } from "./utils"
 
 export class PrismaTypeWeaver {

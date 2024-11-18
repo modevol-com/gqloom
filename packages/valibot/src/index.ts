@@ -1,39 +1,39 @@
-import * as v from "valibot"
 import {
+  type GraphQLSilk,
   SYMBOLS,
+  SchemaVendorWeaver,
   ensureInterfaceType,
   mapValue,
   weaverContext,
-  type GraphQLSilk,
-  SchemaVendorWeaver,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  type GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  isNonNullType,
   type GraphQLOutputType,
-  GraphQLEnumType,
-  type GraphQLInterfaceType,
-  isInterfaceType,
-  isObjectType,
+  GraphQLString,
   GraphQLUnionType,
+  isInterfaceType,
+  isNonNullType,
+  isObjectType,
 } from "graphql"
+import * as v from "valibot"
 import { type AsObjectTypeMetadata, ValibotMetadataCollector } from "./metadata"
-import { flatVariant, nullishTypes } from "./utils"
-import {
-  type SupportedSchema,
-  type GenericSchemaOrAsync,
-  type EnumLike,
-  type ValibotWeaverConfigOptions,
-  type ValibotWeaverConfig,
+import type {
+  EnumLike,
+  GenericSchemaOrAsync,
+  SupportedSchema,
+  ValibotWeaverConfig,
+  ValibotWeaverConfigOptions,
 } from "./types"
+import { flatVariant, nullishTypes } from "./utils"
 
 export class ValibotWeaver extends SchemaVendorWeaver {
   static vendor = "valibot"

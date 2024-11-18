@@ -1,37 +1,37 @@
 import {
   type GraphQLNamedType,
   GraphQLSchema,
-  isObjectType,
   type GraphQLSchemaConfig,
-  isNonNullType,
   isEnumType,
+  isNonNullType,
+  isObjectType,
   isUnionType,
 } from "graphql"
 import {
   type GraphQLSilk,
   ResolverOptionsMap,
-  getGraphQLType,
   type ResolvingOptions,
+  getGraphQLType,
   isSilk,
 } from "../resolver"
-import { LoomObjectType } from "./object"
 import type { Middleware } from "../utils"
-import {
-  type WeaverConfig,
-  initWeaverContext,
-  provideWeaverContext,
-  type WeaverContext,
-} from "./weaver-context"
-import type {
-  CoreSchemaWeaverConfigOptions,
-  CoreSchemaWeaverConfig,
-  SilkResolver,
-} from "./types"
 import { FIELD_HIDDEN, WEAVER_CONFIG } from "../utils/symbols"
+import { LoomObjectType } from "./object"
 import {
   type SchemaVendorWeaver,
   isSchemaVendorWeaver,
 } from "./schema-vendor-weaver"
+import type {
+  CoreSchemaWeaverConfig,
+  CoreSchemaWeaverConfigOptions,
+  SilkResolver,
+} from "./types"
+import {
+  type WeaverConfig,
+  type WeaverContext,
+  initWeaverContext,
+  provideWeaverContext,
+} from "./weaver-context"
 
 interface SchemaWeaverParameters
   extends Partial<

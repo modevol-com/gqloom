@@ -1,4 +1,4 @@
-import { v1 } from "@standard-schema/spec"
+import type { v1 } from "@standard-schema/spec"
 import type {
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
@@ -10,7 +10,7 @@ import type {
   Middleware,
   ValueOf,
 } from "../utils"
-import { type FIELD_HIDDEN, type GET_GRAPHQL_TYPE } from "../utils/symbols"
+import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type {
   InferInputI,
   InferInputO,

@@ -1,7 +1,7 @@
-import { type GraphQLSchemaConfig } from "graphql"
+import type { GraphQLSchemaConfig } from "graphql"
 import type { FieldOrOperation, ResolvingOptions } from "../resolver"
-import { type FIELD_HIDDEN, type WEAVER_CONFIG } from "../utils/symbols"
-import { type WeaverContext, type WeaverConfig } from "./weaver-context"
+import type { FIELD_HIDDEN, WEAVER_CONFIG } from "../utils/symbols"
+import type { WeaverConfig, WeaverContext } from "./weaver-context"
 
 export type SilkFieldOrOperation = FieldOrOperation<any, any, any, any>
 

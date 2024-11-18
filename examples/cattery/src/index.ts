@@ -1,3 +1,4 @@
+import { createServer } from "node:http"
 import { loom, silk, weave } from "@gqloom/core"
 import {
   GraphQLInt,
@@ -5,7 +6,6 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from "graphql"
-import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
 const { resolver, query, mutation, field } = loom

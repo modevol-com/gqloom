@@ -1,8 +1,8 @@
-import { describe, expect, expectTypeOf, it, assertType } from "vitest"
-import { object, string, date, number, boolean, type InferType } from "yup"
-import { mutation, resolver, field, query, union } from "../src"
 import { collectNames, silk, weave } from "@gqloom/core"
 import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
+import { assertType, describe, expect, expectTypeOf, it } from "vitest"
+import { type InferType, boolean, date, number, object, string } from "yup"
+import { field, mutation, query, resolver, union } from "../src"
 
 describe("yup resolver", () => {
   const Giraffe = object({

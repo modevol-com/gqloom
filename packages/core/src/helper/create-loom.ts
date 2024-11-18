@@ -1,21 +1,21 @@
 import type {
-  SubscriptionFactory,
-  Subscription,
-  ResolverOptionsWithParent,
-  QueryFactory,
-  MutationFactory,
   FieldFactoryWithUtils,
+  MutationFactory,
+  QueryFactory,
+  ResolverOptionsWithParent,
+  Subscription,
+  SubscriptionFactory,
 } from "../resolver"
 import {
-  type GraphQLSilk,
-  type FieldFactory,
-  type ResolverFactory,
   type AbstractSchemaIO,
+  type FieldFactory,
   type FieldOrOperation,
+  type GraphQLSilk,
+  type ResolverFactory,
   baseResolver,
   field,
-  query,
   mutation,
+  query,
   subscription,
 } from "../resolver"
 import type { InputSchema } from "../resolver/input"

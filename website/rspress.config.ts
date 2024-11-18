@@ -1,10 +1,10 @@
-import { defineConfig } from "rspress/config"
+import * as path from "path"
 import {
   createTransformerDiff,
   createTransformerHighlight,
   pluginShiki,
 } from "@rspress/plugin-shiki"
-import * as path from "path"
+import { defineConfig } from "rspress/config"
 
 export default defineConfig({
   root: "docs",

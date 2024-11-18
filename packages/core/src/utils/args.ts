@@ -1,10 +1,10 @@
 import type {
   FieldOptions,
-  QueryMutationOptions,
   FieldOrOperationType,
-  OperationType,
-  SubscriptionOptions,
   GraphQLFieldOptions,
+  OperationType,
+  QueryMutationOptions,
+  SubscriptionOptions,
 } from "../resolver/types"
 
 export function getOperationOptions<

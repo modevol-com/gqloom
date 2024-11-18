@@ -1,7 +1,7 @@
-import { weave, resolver, query, subscription } from "@gqloom/valibot"
-import * as v from "valibot"
 import { createServer } from "node:http"
-import { createYoga, createPubSub } from "graphql-yoga"
+import { query, resolver, subscription, weave } from "@gqloom/valibot"
+import { createPubSub, createYoga } from "graphql-yoga"
+import * as v from "valibot"
 
 const CountdownResolver = resolver({
   countdown: subscription(v.number(), {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { number, object, string } from "yup"
 import { union } from "../src/union"
 

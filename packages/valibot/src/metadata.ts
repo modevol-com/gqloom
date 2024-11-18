@@ -1,24 +1,24 @@
-import {
-  type PipeItem,
-  type BaseIssue,
-  type PipeItemAsync,
-  type GenericSchema,
-  type GenericSchemaAsync,
-  type BaseMetadata,
-  type DescriptionAction,
-} from "valibot"
-import {
-  type GraphQLObjectTypeConfig,
-  type GraphQLFieldConfig,
-  type GraphQLEnumTypeConfig,
-  type GraphQLInterfaceType,
-  type GraphQLUnionTypeConfig,
-  type GraphQLOutputType,
-  type GraphQLEnumValueConfig,
-} from "graphql"
-import { type SupportedSchema, type PipedSchema } from "./types"
-import { isNullish } from "./utils"
 import { deepMerge, weaverContext } from "@gqloom/core"
+import type {
+  GraphQLEnumTypeConfig,
+  GraphQLEnumValueConfig,
+  GraphQLFieldConfig,
+  GraphQLInterfaceType,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+  GraphQLUnionTypeConfig,
+} from "graphql"
+import type {
+  BaseIssue,
+  BaseMetadata,
+  DescriptionAction,
+  GenericSchema,
+  GenericSchemaAsync,
+  PipeItem,
+  PipeItemAsync,
+} from "valibot"
+import type { PipedSchema, SupportedSchema } from "./types"
+import { isNullish } from "./utils"
 
 export class ValibotMetadataCollector {
   static getFieldConfig(...schemas: PipedSchema[]): FieldConfig | undefined {

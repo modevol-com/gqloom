@@ -1,41 +1,41 @@
 import {
-  type GraphQLSilk,
   type FieldOrOperation,
-  type Middleware,
+  type GenericFieldOrOperation,
   type GraphQLFieldOptions,
-  getFieldOptions,
-  createInputParser,
+  type GraphQLSilk,
+  type InferSilkO,
+  type ListSilk,
+  type MayPromise,
+  type Middleware,
   applyMiddlewares,
   compose,
-  type MayPromise,
+  createInputParser,
+  getFieldOptions,
+  mapValue,
   silk,
   weaverContext,
-  type GenericFieldOrOperation,
-  type InferSilkO,
-  mapValue,
-  type ListSilk,
 } from "@gqloom/core"
 import {
-  type RequiredEntityData,
-  type EntitySchema,
   type EntityManager,
-  Utils,
-  type PrimaryProperty,
+  type EntitySchema,
   type FindAllOptions,
+  type PrimaryProperty,
   QueryOrder,
+  type RequiredEntityData,
+  Utils,
 } from "@mikro-orm/core"
-import { type InferEntity } from "./types"
-import { MikroWeaver } from "."
 import {
+  GraphQLEnumType,
   type GraphQLFieldConfig,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLEnumType,
-  GraphQLInt,
 } from "graphql"
+import { MikroWeaver } from "."
+import type { InferEntity } from "./types"
 
 interface MikroOperationBobbinOptions {
   getEntityManager: () => MayPromise<EntityManager>

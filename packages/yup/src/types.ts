@@ -1,14 +1,15 @@
-import { type SYMBOLS, type WeaverConfig } from "@gqloom/core"
-import {
-  type GraphQLEnumValueConfig,
-  type GraphQLObjectTypeConfig,
-  type GraphQLInterfaceTypeConfig,
-  type GraphQLOutputType,
-  type GraphQLEnumTypeConfig,
-  type GraphQLUnionTypeConfig,
-  type GraphQLFieldConfig,
+// biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
+import type { SYMBOLS, WeaverConfig } from "@gqloom/core"
+import type {
+  GraphQLEnumTypeConfig,
+  GraphQLEnumValueConfig,
+  GraphQLFieldConfig,
+  GraphQLInterfaceTypeConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+  GraphQLUnionTypeConfig,
 } from "graphql"
-import { type SchemaDescription, type Schema } from "yup"
+import type { Schema, SchemaDescription } from "yup"
 
 export interface GQLoomMetadata {
   description?: string

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from "vitest"
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest"
 import { EasyDataLoader } from "../src/model-loader" // Adjust the import path as needed
 
 describe("EasyDataLoader", () => {

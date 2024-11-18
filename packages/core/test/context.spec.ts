@@ -1,22 +1,22 @@
+import {
+  type ExecutionResult,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLString,
+  execute,
+  parse,
+} from "graphql"
 import { beforeAll, describe, expect, it } from "vitest"
 import {
   type Middleware,
+  type ResolverPayload,
+  SchemaWeaver,
+  createMemoization,
   loom,
   silk,
   useResolverPayload,
-  type ResolverPayload,
-  createMemoization,
-  SchemaWeaver,
 } from "../src"
-import {
-  GraphQLString,
-  parse,
-  execute,
-  GraphQLObjectType,
-  GraphQLInt,
-  type ExecutionResult,
-  GraphQLFloat,
-} from "graphql"
 
 const { query, resolver, field } = loom
 

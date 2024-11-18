@@ -1,15 +1,15 @@
-import { describe, expect, it } from "vitest"
 import {
   type GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLString,
 } from "graphql"
-import { type GQLoomExtensions } from "./extensions"
-import { SchemaWeaver } from "./schema-weaver"
-import { loom, silk } from "../resolver"
-import { ensureInterfaceType } from "./interface"
+import { describe, expect, it } from "vitest"
 import { mockAst } from "../../../federation/src/mock-ast"
+import { loom, silk } from "../resolver"
+import type { GQLoomExtensions } from "./extensions"
+import { ensureInterfaceType } from "./interface"
+import { SchemaWeaver } from "./schema-weaver"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}

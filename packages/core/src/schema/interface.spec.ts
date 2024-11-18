@@ -1,11 +1,11 @@
-import { describe, expect, it } from "vitest"
-import { ensureInterfaceType } from "./interface"
 import {
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLString,
   printType,
 } from "graphql"
+import { describe, expect, it } from "vitest"
+import { ensureInterfaceType } from "./interface"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 describe("ensureInterfaceType", () => {

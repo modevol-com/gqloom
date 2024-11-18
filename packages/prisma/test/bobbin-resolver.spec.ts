@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, beforeAll } from "vitest"
-import { PrismaModelBobbin } from "../src"
-import * as p from "./generated"
-import { PrismaClient } from "@prisma/client"
 import { weave } from "@gqloom/core"
+import { PrismaClient } from "@prisma/client"
 import { lexicographicSortSchema, printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
+import { beforeAll, beforeEach, describe, expect, it } from "vitest"
+import { PrismaModelBobbin } from "../src"
+import * as p from "./generated"
 
 describe("Bobbin Resolver", () => {
   const db = new PrismaClient()

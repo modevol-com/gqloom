@@ -1,13 +1,13 @@
-import {
-  type GraphQLTypeResolver,
-  type GraphQLFieldConfig,
-  type GraphQLObjectTypeConfig,
+import type {
+  GraphQLFieldConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLTypeResolver,
 } from "graphql"
 import {
-  type ZodStringCheck,
   type ZodDiscriminatedUnion,
-  type ZodObject,
   ZodEffects,
+  type ZodObject,
+  type ZodStringCheck,
 } from "zod"
 import { ZodWeaver } from "."
 

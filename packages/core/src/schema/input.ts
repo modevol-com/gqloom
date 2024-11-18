@@ -4,27 +4,27 @@ import {
   type GraphQLInputFieldConfig,
   GraphQLInputObjectType,
   type GraphQLInputType,
+  type GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   type GraphQLObjectType,
   type GraphQLType,
+  isInputObjectType,
   isInterfaceType,
   isListType,
   isNonNullType,
   isObjectType,
   isUnionType,
-  type GraphQLInterfaceType,
-  isInputObjectType,
 } from "graphql"
 import {
   type GraphQLSilk,
   type InputSchema,
-  isSilk,
   getGraphQLType,
+  isSilk,
 } from "../resolver"
 import { mapValue, tryIn } from "../utils"
+import type { CoreSchemaWeaverConfig } from "./types"
 import { provideWeaverContext, weaverContext } from "./weaver-context"
-import { type CoreSchemaWeaverConfig } from "./types"
 
 export function inputToArgs(
   input: InputSchema<GraphQLSilk>

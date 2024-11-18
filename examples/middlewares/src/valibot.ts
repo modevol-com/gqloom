@@ -1,8 +1,8 @@
-import { weave, resolver, query } from "@gqloom/valibot"
-import * as v from "valibot"
 import { createServer } from "node:http"
+import { query, resolver, weave } from "@gqloom/valibot"
 import { createYoga } from "graphql-yoga"
-import { outputValidator, ValibotExceptionFilter } from "./middlewares"
+import * as v from "valibot"
+import { ValibotExceptionFilter, outputValidator } from "./middlewares"
 
 const HelloResolver = resolver({
   hello: query(v.pipe(v.string(), v.minLength(10)), {

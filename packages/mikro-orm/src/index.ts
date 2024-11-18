@@ -4,33 +4,33 @@ import {
   initWeaverContext,
   mapValue,
   provideWeaverContext,
-  weaverContext,
   silk,
+  weaverContext,
 } from "@gqloom/core"
 import {
-  ReferenceKind,
-  type RequiredEntityData,
   type EntityProperty,
   type EntitySchema,
+  ReferenceKind,
+  type RequiredEntityData,
 } from "@mikro-orm/core"
 import {
+  GraphQLBoolean,
+  type GraphQLField,
   type GraphQLFieldConfig,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
+  type GraphQLObjectTypeConfig,
   type GraphQLOutputType,
   GraphQLString,
-  GraphQLFloat,
-  GraphQLBoolean,
-  GraphQLList,
-  GraphQLInt,
-  GraphQLNonNull,
-  GraphQLID,
-  type GraphQLField,
-  type GraphQLObjectTypeConfig,
 } from "graphql"
-import {
-  type MikroWeaverConfig,
-  type MikroWeaverConfigOptions,
-  type InferEntity,
+import type {
+  InferEntity,
+  MikroWeaverConfig,
+  MikroWeaverConfigOptions,
 } from "./types"
 import { EntityGraphQLTypes } from "./utils"
 

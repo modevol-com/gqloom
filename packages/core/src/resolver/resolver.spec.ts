@@ -7,10 +7,10 @@ import {
   printSchema,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { silk } from "./silk"
-import { loom } from "./resolver"
-import type { Middleware } from "../utils"
 import { weave } from "../schema"
+import type { Middleware } from "../utils"
+import { loom } from "./resolver"
+import { silk } from "./silk"
 
 const { resolver, query, mutation, field } = loom
 
@@ -147,11 +147,6 @@ describe("resolver", () => {
 
         heightInMeters: field.hidden,
       })
-      try {
-        weave(r1)
-      } catch (error) {
-        console.error(error)
-      }
       const schema = weave(r1)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {

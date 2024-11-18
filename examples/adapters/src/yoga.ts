@@ -1,5 +1,5 @@
-import { weave } from "@gqloom/core"
 import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
 import { createYoga } from "graphql-yoga"
 import { HelloResolver } from "./resolvers"
 

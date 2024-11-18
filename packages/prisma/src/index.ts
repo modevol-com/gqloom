@@ -1,27 +1,27 @@
 import {
   type GraphQLSilk,
   SYMBOLS,
-  silk,
   notNullish,
+  silk,
   weaverContext,
 } from "@gqloom/core"
-import { type DMMF } from "@prisma/generator-helper"
+import type { DMMF } from "@prisma/generator-helper"
 import {
-  type GraphQLFieldConfig,
-  GraphQLObjectType,
-  GraphQLID,
-  GraphQLString,
   GraphQLBoolean,
-  GraphQLInt,
-  GraphQLFloat,
-  GraphQLNonNull,
-  type GraphQLOutputType,
   GraphQLEnumType,
+  type GraphQLFieldConfig,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  type GraphQLOutputType,
+  GraphQLString,
 } from "graphql"
 import type {
-  PrismaModelSilk,
-  PrismaModelMeta,
   PrismaEnumSilk,
+  PrismaModelMeta,
+  PrismaModelSilk,
   PrismaWeaverConfig,
   PrismaWeaverConfigOptions,
 } from "./types"

@@ -3,22 +3,26 @@ import {
   type GraphQLFieldConfig,
   type GraphQLFieldConfigArgumentMap,
   type GraphQLFieldMap,
-  type GraphQLObjectTypeConfig,
-  type ThunkObjMap,
-  GraphQLObjectType,
-  assertName,
-  isObjectType,
-  resolveObjMapThunk,
-  isListType,
+  type GraphQLFieldResolver,
   GraphQLList,
   GraphQLNonNull,
-  isNonNullType,
-  type GraphQLFieldResolver,
+  GraphQLObjectType,
+  type GraphQLObjectTypeConfig,
   type GraphQLOutputType,
-  isUnionType,
   GraphQLUnionType,
+  type ThunkObjMap,
+  assertName,
+  isListType,
+  isNonNullType,
+  isObjectType,
+  isUnionType,
+  resolveObjMapThunk,
 } from "graphql"
-import type { SilkFieldOrOperation } from "./types"
+import {
+  type ResolvingOptions,
+  defaultSubscriptionResolve,
+  getGraphQLType,
+} from "../resolver"
 import {
   deepMerge,
   mapValue,
@@ -26,18 +30,14 @@ import {
   resolverPayloadStorage,
   toObjMap,
 } from "../utils"
+import { inputToArgs } from "./input"
+import type { SilkFieldOrOperation } from "./types"
 import {
+  type WeaverContext,
   initWeaverContext,
   provideWeaverContext,
   weaverContext,
-  type WeaverContext,
 } from "./weaver-context"
-import { inputToArgs } from "./input"
-import {
-  type ResolvingOptions,
-  defaultSubscriptionResolve,
-  getGraphQLType,
-} from "../resolver"
 export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkFieldOrOperation>()
   protected hiddenFields = new Set<string>()

@@ -1,6 +1,6 @@
+import type { DMMF } from "@prisma/generator-helper"
 import { Project, VariableDeclarationKind } from "ts-morph"
-import { type GQLoomGeneratorConfig } from "."
-import { type DMMF } from "@prisma/generator-helper"
+import type { GQLoomGeneratorConfig } from "."
 
 export async function genTsDeclaration(
   dmmf: DMMF.Document,

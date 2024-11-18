@@ -1,6 +1,6 @@
-import { type DMMF } from "@prisma/generator-helper"
-import { type GQLoomGeneratorConfig } from "."
+import type { DMMF } from "@prisma/generator-helper"
 import * as fs from "fs/promises"
+import type { GQLoomGeneratorConfig } from "."
 
 export async function genJSFile(
   dmmf: DMMF.Document,

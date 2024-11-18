@@ -1,16 +1,16 @@
 import {
-  type GraphQLInterfaceType,
   type GraphQLInputObjectType,
+  type GraphQLInterfaceType,
   type GraphQLObjectType,
-  isEnumType,
-  isObjectType,
-  isUnionType,
   type GraphQLOutputType,
   type GraphQLUnionType,
+  isEnumType,
+  isObjectType,
   isScalarType,
+  isUnionType,
 } from "graphql"
-import type { LoomObjectType } from "./object"
 import { WEAVER_CONFIG } from "../utils/symbols"
+import type { LoomObjectType } from "./object"
 import type { SchemaVendorWeaver } from "./schema-vendor-weaver"
 
 export interface WeaverContext {

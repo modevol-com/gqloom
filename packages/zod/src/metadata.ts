@@ -1,10 +1,10 @@
-import { ZodEffects, type RefinementCtx, type Schema } from "zod"
+import { type RefinementCtx, type Schema, ZodEffects } from "zod"
 import type {
-  ObjectConfig,
-  UnionConfig,
   EnumConfig,
   FieldConfig,
+  ObjectConfig,
   TypeOrFieldConfig,
+  UnionConfig,
 } from "./types"
 
 const CONFIG = Symbol.for("gqloom.zod.config")

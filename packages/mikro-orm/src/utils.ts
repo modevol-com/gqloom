@@ -1,9 +1,9 @@
-import { type EntitySchema } from "@mikro-orm/core"
+import type { EntitySchema } from "@mikro-orm/core"
 import {
-  type GraphQLOutputType,
-  type GraphQLObjectType,
   GraphQLList,
   GraphQLNonNull,
+  type GraphQLObjectType,
+  type GraphQLOutputType,
 } from "graphql"
 
 /**

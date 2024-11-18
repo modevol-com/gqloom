@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
-  weaverContext,
-  provideWeaverContext,
   initWeaverContext,
+  provideWeaverContext,
+  weaverContext,
 } from "./weaver-context"
 
 describe("weaverContext", () => {

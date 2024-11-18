@@ -1,18 +1,18 @@
 import {
-  type Maybe,
-  Schema,
   type AnyObject,
+  type DefaultThunk,
+  type Defined,
   type Flags,
   type InferType,
+  type Maybe,
   type Message,
-  type DefaultThunk,
-  type ToggleDefault,
-  type Defined,
-  type UnsetFlag,
-  type SetFlag,
   type NotNull,
-  ValidationError,
+  Schema,
   type SchemaInnerTypeDescription,
+  type SetFlag,
+  type ToggleDefault,
+  type UnsetFlag,
+  ValidationError,
 } from "yup"
 
 export function union<

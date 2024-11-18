@@ -1,12 +1,12 @@
 import {
-  GraphQLList,
-  type GraphQLOutputType,
-  GraphQLNonNull,
-  GraphQLInt,
+  GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+  type GraphQLOutputType,
   GraphQLString,
-  GraphQLBoolean,
 } from "graphql"
 
 export function capitalize<T extends string>(str: T): Capitalize<T> {

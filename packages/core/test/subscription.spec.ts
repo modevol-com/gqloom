@@ -1,13 +1,13 @@
-import { describe, it, expect, assert } from "vitest"
+import { GraphQLString, parse, subscribe } from "graphql"
+import { assert, describe, expect, it } from "vitest"
 import {
-  loom,
-  silk,
   type Middleware,
-  useResolverPayload,
   type ResolverPayload,
   SchemaWeaver,
+  loom,
+  silk,
+  useResolverPayload,
 } from "../src"
-import { GraphQLString, parse, subscribe } from "graphql"
 
 const { subscription, resolver, query } = loom
 
