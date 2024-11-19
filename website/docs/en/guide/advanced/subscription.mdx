@@ -11,7 +11,8 @@ In `GQLoom`, we use the `subscription` function to define a subscription:.
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { weave, resolver, subscription } from "@gqloom/valibot"
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -76,7 +77,7 @@ We can also use the publish/subscribe feature provided by [GraphQL Yoga](https:/
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, subscription } from "@gqloom/valibot"
+import { resolver, query, subscription } from "@gqloom/core"
 import { createPubSub } from "graphql-yoga"
 import * as v from "valibot"
 

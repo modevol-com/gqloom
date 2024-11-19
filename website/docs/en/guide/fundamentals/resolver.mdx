@@ -54,27 +54,15 @@ Here, we're using the type definition provided by `graphql.js` directly, which a
   <Tab label="valibot">
 We can define the return type of the `hello` operation using [valibot](. /schema-integration/valibot) to define the return type of the `hello` operation:
 ```ts
-import { loom } from "@gqloom/core"
-import * as v from "valibot"
-import { valibotSilk } from '@gqloom/valibot'
-const { resolver, query } = loom
-
-const HelloResolver = resolver({
-  hello: query(valibotSilk(v.string()), () => "Hello, World"),
-})
-```
-In the code above, we use `v.sting()` to define the return type of the `hello` operation, and the `valibotSilk` function lets us use the Schema definition of `valibot` as a `silk`.
-
-We can also use the `resolver` and `query` functions exported from `@gqloom/valibot` directly to make the code more clean:
-
-```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 
 const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 ```
+In the code above, we use `v.string()` to define the return type of the `hello` operation. We can directly use the `valibot` schema as the `silk`.
+
   </Tab>
   <Tab label="zod">
 
@@ -111,7 +99,7 @@ Let's add an input parameter `name` to the `hello` operation:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const HelloResolver = resolver({
@@ -158,7 +146,7 @@ We can also add more information to the action, such as `description`, `deprecat
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const HelloResolver = resolver({
@@ -271,7 +259,7 @@ Next, we define a `BookResolver`:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const BookResolver = resolver.of(Book, {
@@ -298,7 +286,7 @@ Next, we will add an additional field called `author` to the `Book` object to ge
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, field } from '@gqloom/valibot'
+import { resolver, query, field } from '@gqloom/core'
 import * as v from "valibot"
 
 const BookResolver = resolver.of(Book, {
@@ -334,7 +322,7 @@ In `GQLoom`, we can use the second argument of the `field` function to define th
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, field } from '@gqloom/valibot'
+import { resolver, query, field } from '@gqloom/core'
 import * as v from "valibot"
 
 const BookResolver = resolver.of(Book, {

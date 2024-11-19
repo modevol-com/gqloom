@@ -22,7 +22,8 @@ We will use [graphql-yoga](https://the-guild.dev/graphql/yoga-server) as an adap
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { query, resolver, useContext, weave } from "@gqloom/valibot"
+import { query, resolver, useContext, weave } from "@gqloom/core"
+import { ValibotWeaver } } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
@@ -105,7 +106,8 @@ To learn more about middleware, see [middleware documentation](../fundamentals/m
   <Tab label="valibot">
 We can customize the validation or transformation in `valibot` and access the context directly within it.
 ```ts
-import { query, resolver, useContext, weave } from "@gqloom/valibot"
+import { query, resolver, useContext, weave } from "@gqloom/core"
+import { ValibotWeaver } } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"

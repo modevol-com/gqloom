@@ -21,7 +21,8 @@ export const schema = weave(HelloResolver, CatResolver);
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, field, valibotSilk, weave } from '@gqloom/valibot'
+import { resolver, query, field, valibotSilk, weave } from '@gqloom/core'
+import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
 
 const Dog = v.object({
@@ -30,7 +31,7 @@ const Dog = v.object({
   age: v.number(),
 })
 
-export const schema = weave(HelloResolver, CatResolver, valibotSilk(Dog));
+export const schema = weave(ValibotWeaver, HelloResolver, CatResolver, Dog);
 ```
   </Tab>
   <Tab label="zod">
@@ -63,7 +64,8 @@ export const schema = weave(HelloResolver, CatResolver, zodSilk(Dog));
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, mutation, weave } from '@gqloom/valibot'
+import { resolver, mutation, weave } from '@gqloom/core'
+import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
 
 const Cat = v.object({
@@ -81,7 +83,7 @@ const CatResolver = resolver({
   }),
 })
 
-export const schema = weave(CatResolver);
+export const schema = weave(ValibotWeaver, CatResolver);
 ```
   </Tab>
   <Tab label="zod">
@@ -119,7 +121,8 @@ Error: Schema must contain uniquely named types but contains multiple types name
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, mutation, weave, SchemaWeaver } from '@gqloom/valibot'
+import { resolver, mutation, weave, SchemaWeaver } from '@gqloom/core'
+import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
 
 const Cat = v.object({
@@ -139,6 +142,7 @@ const CatResolver = resolver({
 
 export const schema = weave(
   CatResolver,
+  ValibotWeaver,
   SchemaWeaver.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```

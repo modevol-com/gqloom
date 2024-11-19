@@ -90,7 +90,7 @@ Let's write a simple resolver for the `Book` object:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, field } from "@gqloom/valibot"
+import { resolver, query, field } from "@gqloom/core"
 
 const BookResolver = resolver.of(Book, {
   books: query(v.array(Book), () => books),
@@ -143,7 +143,7 @@ First we need to install the `dataloader` package:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, field, createMemoization } from "@gqloom/valibot"
+import { resolver, query, field, createMemoization } from "@gqloom/core"
 import DataLoader from "dataloader" // [!code hl]
 
 const useUserLoader = createMemoization( // [!code hl]

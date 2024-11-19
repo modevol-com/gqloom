@@ -94,7 +94,8 @@ export const outputValidator: Middleware = async (next, { outputSilk }) => {
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { weave, resolver, query } from "@gqloom/valibot"
+import { weave, resolver, query } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -108,7 +109,7 @@ const HelloResolver = resolver({
   }),
 })
 
-export const schema = weave(HelloResolver, ValibotExceptionFilter) // [!code hl]
+export const schema = weave(ValibotWeaver, HelloResolver, ValibotExceptionFilter) // [!code hl]
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -268,7 +269,7 @@ export function authGuard(role: "admin" | "editor"): Middleware {
 <Tabs groupId="schema-builder">
   <Tab label="valibot">
 ```ts
-import { resolver, mutation } from "@gqloom/valibot"
+import { resolver, mutation } from "@gqloom/core"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 
@@ -348,7 +349,7 @@ GQLoom 能够在各种范围内应用中间件，包括解析函数、解析器�
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { weave, resolver, query } from "@gqloom/valibot"
+import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 import { outputValidator } from "./middlewares"
 
@@ -385,7 +386,7 @@ const HelloResolver = resolver({
 <Tabs groupId="schema-builder">
   <Tab label="valibot">
 ```ts
-import { resolver, mutation } from "@gqloom/valibot"
+import { resolver, mutation } from "@gqloom/core"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 
