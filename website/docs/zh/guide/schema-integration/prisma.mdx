@@ -72,7 +72,8 @@ npx prisma generate
 ## 使用丝线
 在生成丝线后，我们可以在 `resolver` 中使用：
 ```ts
-import { resolver, query, field, weave } from '@gqloom/valibot'
+import { resolver, query, field, weave } from '@gqloom/core'
+import { ValibotWeaver } from '@gqloom/valibot'
 import * as p from '@gqloom/prisma/generated'
 import * as v from 'valibot'
 import { PrismaClient } from '@prisma/client'
@@ -100,7 +101,7 @@ const postResolver = resolver.of(p.Post, {
   }),
 })
 
-export const schema = weave(userResolver, postResolver)
+export const schema = weave(ValibotWeaver, userResolver, postResolver)
 ```
 
 ### 隐藏字段
