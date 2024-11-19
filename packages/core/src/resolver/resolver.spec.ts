@@ -4,6 +4,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  lexicographicSortSchema,
   printSchema,
 } from "graphql"
 import { describe, expect, it } from "vitest"
@@ -148,14 +149,16 @@ describe("resolver", () => {
         heightInMeters: field.hidden,
       })
       const schema = weave(r1)
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          hello: Giraffe
+      expect(
+        printSchema(lexicographicSortSchema(schema))
+      ).toMatchInlineSnapshot(`
+        "type Giraffe {
+          birthday: String!
+          name: String!
         }
 
-        type Giraffe {
-          name: String!
-          birthday: String!
+        type Query {
+          hello: Giraffe
         }"
       `)
     })

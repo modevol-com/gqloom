@@ -43,7 +43,7 @@ export class SchemaWeaver {
   public query?: LoomObjectType
   public mutation?: LoomObjectType
   public subscription?: LoomObjectType
-  public types?: GraphQLNamedType[] | null
+  public types: Set<GraphQLNamedType>
 
   public context: WeaverContext
 
@@ -68,7 +68,7 @@ export class SchemaWeaver {
     if (query != null) this.query = query
     if (mutation != null) this.mutation = mutation
     if (subscription != null) this.subscription = subscription
-    if (types != null) this.types = types.slice()
+    this.types = new Set(types ?? [])
     this.context = context ?? initWeaverContext()
   }
 
@@ -108,8 +108,7 @@ export class SchemaWeaver {
         `${(gqlType as any)?.name ?? gqlType.toString()} is not a named type`
       )
     }, this.context)
-    this.types ??= []
-    this.types.push(gqlType)
+    this.types.add(gqlType)
     return this
   }
 
@@ -142,16 +141,18 @@ export class SchemaWeaver {
 
       if (isNonNullType(gqlType)) gqlType = gqlType.ofType
 
-      if (isObjectType(gqlType)) {
-        const existing = this.context.loomObjectMap.get(gqlType)
-        if (existing != null) return existing
-        const extraObject = new LoomObjectType(gqlType, this.fieldOptions)
-        this.context.loomObjectMap.set(gqlType, extraObject)
-        return extraObject
+      if (!isObjectType(gqlType)) {
+        throw new Error(
+          `${(gqlType as any)?.name ?? gqlType.toString()} is not an object type`
+        )
       }
-      throw new Error(
-        `${(gqlType as any)?.name ?? gqlType.toString()} is not an object type`
-      )
+
+      const existing = this.context.loomObjectMap.get(gqlType)
+      if (existing != null) return existing
+      const extraObject = new LoomObjectType(gqlType, this.fieldOptions)
+      this.context.loomObjectMap.set(gqlType, extraObject)
+      this.types.add(extraObject)
+      return extraObject
     })()
 
     if (resolverOptions?.extensions && parentObject)

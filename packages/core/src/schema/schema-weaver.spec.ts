@@ -166,6 +166,16 @@ describe("SchemaWeaver", () => {
         name: String!
       }"
     `)
+
+    const giraffeResolver = resolver.of(Giraffe, {})
+    const schema2 = weave(giraffeResolver)
+    expect(
+      printSchema(lexicographicSortSchema(schema2))
+    ).toMatchInlineSnapshot(`
+      "type Giraffe {
+        name: String!
+      }"
+    `)
   })
 
   it("should avoid duplicate name", () => {
@@ -269,15 +279,15 @@ describe("SchemaWeaver", () => {
 
     const schema = new SchemaWeaver().add(r1).add(r2).weaveGraphQLSchema()
     expect(printSchema(schema)).toMatchInlineSnapshot(`
-      "type Query {
-        dog: Dog
-      }
-
-      type Dog {
+      "type Dog {
         name: String!
         birthday: String!
         age: Int
         greeting: String
+      }
+
+      type Query {
+        dog: Dog
       }"
     `)
   })
