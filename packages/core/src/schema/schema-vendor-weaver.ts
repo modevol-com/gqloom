@@ -1,10 +1,8 @@
 import type { GraphQLOutputType } from "graphql"
-import type { WeaverConfig } from "./weaver-context"
 
 export interface SchemaVendorWeaver {
   vendor: string
   getGraphQLType: (schema: any) => GraphQLOutputType
-  config?: (...args: any) => WeaverConfig
 }
 
 export function isSchemaVendorWeaver(some: any): some is SchemaVendorWeaver {
