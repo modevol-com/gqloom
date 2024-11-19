@@ -1,7 +1,6 @@
 import {
   type GraphQLSilk,
   SYMBOLS,
-  SchemaVendorWeaver,
   ensureInterfaceType,
   mapValue,
   weaverContext,
@@ -35,7 +34,7 @@ import type {
 } from "./types"
 import { flatVariant, nullishTypes } from "./utils"
 
-export class ValibotWeaver extends SchemaVendorWeaver {
+export class ValibotWeaver {
   static vendor = "valibot"
 
   /**

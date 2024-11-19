@@ -84,7 +84,7 @@ export class SchemaWeaver {
     return this
   }
 
-  public addVendor(weaver: typeof SchemaVendorWeaver) {
+  public addVendor(weaver: SchemaVendorWeaver) {
     this.context.vendorWeavers.set(weaver.vendor, weaver)
     return this
   }
@@ -209,7 +209,7 @@ export class SchemaWeaver {
     ...inputs: (
       | SilkResolver
       | Middleware
-      | typeof SchemaVendorWeaver
+      | SchemaVendorWeaver
       | WeaverConfig
       | GraphQLSilk
     )[]
@@ -218,7 +218,7 @@ export class SchemaWeaver {
     const middlewares = new Set<Middleware>()
     const resolvers = new Set<SilkResolver>()
     const silks = new Set<GraphQLSilk>()
-    const weavers = new Set<typeof SchemaVendorWeaver>()
+    const weavers = new Set<SchemaVendorWeaver>()
     let context: WeaverContext | undefined
 
     for (const item of inputs) {
@@ -255,7 +255,7 @@ export class SchemaWeaver {
     ...inputs: (
       | SilkResolver
       | Middleware
-      | typeof SchemaVendorWeaver
+      | SchemaVendorWeaver
       | WeaverConfig
       | GraphQLSilk
     )[]

@@ -1,12 +1,13 @@
 import type { GraphQLOutputType } from "graphql"
+import type { WeaverConfig } from "./weaver-context"
 
-export abstract class SchemaVendorWeaver {
-  static vendor: string
-  static getGraphQLType: (schema: any) => GraphQLOutputType
+export interface SchemaVendorWeaver {
+  vendor: string
+  getGraphQLType: (schema: any) => GraphQLOutputType
+  config?: (...args: any) => WeaverConfig
 }
-export function isSchemaVendorWeaver(
-  some: any
-): some is typeof SchemaVendorWeaver {
+
+export function isSchemaVendorWeaver(some: any): some is SchemaVendorWeaver {
   if (typeof some !== "object" && typeof some !== "function") return false
   if (!("getGraphQLType" in some) || typeof some.getGraphQLType !== "function")
     return false

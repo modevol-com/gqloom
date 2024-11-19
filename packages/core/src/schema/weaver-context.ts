@@ -36,7 +36,7 @@ export interface WeaverContext {
   ): TGraphQLType
   getNamedType<T extends GraphQLOutputType>(name: string): T | undefined
   names: WeakMap<object, string>
-  vendorWeavers: Map<string, typeof SchemaVendorWeaver>
+  vendorWeavers: Map<string, SchemaVendorWeaver>
 }
 
 let ref: WeaverContext | undefined
@@ -45,7 +45,7 @@ const names = new WeakMap<object, string>()
 
 export interface WeaverConfig {
   [WEAVER_CONFIG]: string | symbol
-  vendorWeaver?: typeof SchemaVendorWeaver
+  vendorWeaver?: SchemaVendorWeaver
 }
 
 export function initWeaverContext(): WeaverContext {

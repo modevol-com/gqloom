@@ -1,4 +1,4 @@
-import type { SchemaVendorWeaver, WeaverConfig } from "@gqloom/core"
+import type { WeaverConfig } from "@gqloom/core"
 // biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
 import type { SYMBOLS } from "@gqloom/core"
 import type { GraphQLOutputType } from "graphql"
@@ -56,6 +56,7 @@ import type {
   VariantSchema,
   VariantSchemaAsync,
 } from "valibot"
+import type { ValibotWeaver } from "."
 
 export type PipedSchema =
   | SchemaWithPipe<
@@ -133,5 +134,5 @@ export interface ValibotWeaverConfig
   extends WeaverConfig,
     ValibotWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot"
-  vendorWeaver: typeof SchemaVendorWeaver
+  vendorWeaver: typeof ValibotWeaver
 }
