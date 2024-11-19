@@ -76,7 +76,8 @@ Then, we create an `src/index.ts` file and add the following code:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/valibot"
+import { weave, resolver, query } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -85,7 +86,7 @@ const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = weave(ValibotWeaver, HelloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -273,7 +274,8 @@ Now, let's go back to the beginning with `CatResolver` and add a `query` operati
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/valibot"
+import { weave, resolver, query } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const CatResolver = resolver({ // [!code hl]
@@ -284,7 +286,7 @@ const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver, CatResolver) // [!code hl]
+export const schema = weave(ValibotWeaver, HelloResolver, CatResolver) // [!code hl]
 ```
 In the code above, we use the `resolver` function to define `CatResolver` and add a `query` operation named `cats` that returns all `Cat` instances.
 The `query` function takes two arguments:
@@ -372,7 +374,7 @@ Next, we define a `query` operation called `cat` that takes a `name` argument an
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query } from "@gqloom/valibot"
+import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver({
@@ -489,7 +491,7 @@ Now, let's add a `mutation` operation named `createCat` to `CatResolver` that ta
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query, mutation } from "@gqloom/valibot"
+import { resolver, query, mutation } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver({
@@ -667,7 +669,7 @@ The `age` field is not stored in the `Cat` instance, but is calculated on each q
 <Tabs>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query, mutation, field } from "@gqloom/valibot"
+import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver.of(Cat, { // [!code hl]
@@ -697,6 +699,7 @@ In the second argument, we still pass in `query`, `mutation`, and `field` to def
 In the `field` named `age`, we use `v.pipe(v.number(), v.integer())` to define the type of `age`, and `GQLoom` will weave the `age` field into a GraphQL `Int` type. Note that `GQLoom` does not execute a `parse` step on the output of a parser function by default, because the results produced inside a parser function are usually controllable and follow the TypeScript-derived type.
 
 In the resolve function, we easily get the value of the `cat` instance from the first parameter, TypeScript will infer its type for us, then we convert the `cat` instance's `birthDate` field to a `Date` instance and calculate the difference between the current year and the year of the `birthDate`, and finally return the difference as the cat's age.
+
   </Tab>
   <Tab label="zod">
 ```ts title="src/index.ts"
@@ -806,7 +809,7 @@ We can add an `input` object to a `field`, which will be used as the input param
 <Tabs>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query, mutation, field } from "@gqloom/valibot"
+import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver.of(Cat, {
