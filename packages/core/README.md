@@ -18,14 +18,15 @@ The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](http
 ## Hello World
 
 ```ts
-import { resolver, query, weave } from "@gqloom/valibot"
+import { resolver, query, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "world"),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
 Read [Introduction](https://gqloom.dev/guide/introduction.html) to learn more about GQLoom.
