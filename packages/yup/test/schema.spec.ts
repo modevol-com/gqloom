@@ -1,44 +1,44 @@
-import { describe, expect, expectTypeOf, it } from "vitest"
-import {
-  date,
-  number,
-  object,
-  string,
-  boolean,
-  array,
-  mixed,
-  type Schema,
-  type InferType,
-} from "yup"
-import {
-  type GQLoomMetadata,
-  field,
-  query,
-  resolver,
-  yupSilk,
-  union,
-  YupWeaver,
-} from "../src/index"
-import {
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLFloat,
-  GraphQLInt,
-  GraphQLNonNull,
-  printType,
-  GraphQLList,
-  type GraphQLNamedType,
-  printSchema,
-  GraphQLScalarType,
-  type GraphQLObjectType,
-  type GraphQLEnumValueConfig,
-} from "graphql"
 import {
   type GQLoomExtensions,
   type SilkResolver,
   getGraphQLType,
   weave,
 } from "@gqloom/core"
+import {
+  GraphQLBoolean,
+  type GraphQLEnumValueConfig,
+  GraphQLFloat,
+  GraphQLInt,
+  GraphQLList,
+  type GraphQLNamedType,
+  GraphQLNonNull,
+  type GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLString,
+  printSchema,
+  printType,
+} from "graphql"
+import { describe, expect, expectTypeOf, it } from "vitest"
+import {
+  type InferType,
+  type Schema,
+  array,
+  boolean,
+  date,
+  mixed,
+  number,
+  object,
+  string,
+} from "yup"
+import {
+  type GQLoomMetadata,
+  YupWeaver,
+  field,
+  query,
+  resolver,
+  union,
+  yupSilk,
+} from "../src/index"
 
 declare module "yup" {
   export interface CustomSchemaMetadata extends GQLoomMetadata {}

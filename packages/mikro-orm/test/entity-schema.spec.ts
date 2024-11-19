@@ -1,10 +1,12 @@
 import {
+  type GQLoomExtensions,
   type GraphQLSilk,
   getGraphQLType,
-  silk,
   isSilk,
-  type GQLoomExtensions,
+  silk,
 } from "@gqloom/core"
+import { defineConfig } from "@mikro-orm/better-sqlite"
+import { EntitySchema, MikroORM, RequestContext } from "@mikro-orm/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -14,16 +16,14 @@ import {
   type GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  printType,
   type GraphQLOutputType,
   GraphQLScalarType,
+  GraphQLString,
+  printType,
 } from "graphql"
-import { type GQLoomMikroFieldExtensions } from "../src/types"
 import { beforeAll, describe, expect, it } from "vitest"
-import { EntitySchema, MikroORM, RequestContext } from "@mikro-orm/core"
-import { defineConfig } from "@mikro-orm/better-sqlite"
 import { weaveEntitySchemaBySilk } from "../src/entity-schema"
+import type { GQLoomMikroFieldExtensions } from "../src/types"
 import { unwrapGraphQLType } from "../src/utils"
 
 declare module "graphql" {

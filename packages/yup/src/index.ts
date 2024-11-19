@@ -1,49 +1,51 @@
 import {
   type GraphQLSilk,
-  createLoom,
-  mapValue,
-  ensureInterfaceType,
-  weaverContext,
-  deepMerge,
-  SYMBOLS,
   type GraphQLSilkIO,
+  SYMBOLS,
+  createLoom,
+  deepMerge,
+  ensureInterfaceType,
   isSilk,
+  mapValue,
+  type v1,
+  weaverContext,
 } from "@gqloom/core"
 import {
-  GraphQLString,
-  GraphQLFloat,
   GraphQLBoolean,
-  GraphQLInt,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  type GraphQLOutputType,
-  type GraphQLFieldConfig,
-  GraphQLList,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
-  type ThunkReadonlyArray,
+  type GraphQLFieldConfig,
+  GraphQLFloat,
+  GraphQLInt,
   type GraphQLInterfaceType,
-  isObjectType,
-  GraphQLUnionType,
-  isNonNullType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
   type GraphQLObjectTypeExtensions,
+  type GraphQLOutputType,
+  GraphQLString,
+  GraphQLUnionType,
+  type ThunkReadonlyArray,
+  isNonNullType,
+  isObjectType,
 } from "graphql"
 import {
-  type SchemaDescription,
-  isSchema,
-  type InferType,
-  Schema,
   type ArraySchema,
+  type ISchema,
+  type InferType,
   type ObjectSchema,
   type Reference,
-  type ISchema,
+  Schema,
+  type SchemaDescription,
+  ValidationError,
+  isSchema,
 } from "yup"
-import {
-  type GQLoomMetadata,
-  type YupWeaverConfigOptions,
-  type YupWeaverConfig,
+import type {
+  GQLoomMetadata,
+  YupWeaverConfig,
+  YupWeaverConfigOptions,
 } from "./types"
-import { type UnionSchema } from "./union"
+import type { UnionSchema } from "./union"
 export * from "@gqloom/core"
 
 export * from "./types"
@@ -60,6 +62,14 @@ export class YupWeaver {
   ): TSchema & GraphQLSilk<InferType<TSchema>, InferType<TSchema>> {
     const config = weaverContext.value?.getConfig<YupWeaverConfig>("gqloom.yup")
     return Object.assign(schema, {
+      "~standard": {
+        version: 1,
+        vendor: "gqloom.yup",
+        validate: (value) => parseYup(schema, value),
+      } satisfies v1.StandardSchemaProps<
+        InferType<TSchema>,
+        InferType<TSchema>
+      >,
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema) {
             return weaverContext.useConfig(config, () =>
@@ -67,7 +77,6 @@ export class YupWeaver {
             )
           }
         : getGraphQLType,
-      [SYMBOLS.PARSE]: parseYup,
     })
   }
 
@@ -343,12 +352,32 @@ function getGraphQLType(this: Schema) {
   return YupWeaver.toNullableGraphQLType(this)
 }
 
-function parseYup(this: Schema, input: any) {
-  return this.validate(input, {
-    strict: true,
-    abortEarly: false,
-    stripUnknown: true,
-  })
+async function parseYup(
+  schema: Schema,
+  input: any
+): Promise<v1.StandardResult<any>> {
+  try {
+    const value = await schema.validate(input, {
+      strict: true,
+      abortEarly: false,
+      stripUnknown: true,
+    })
+    return { value }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return { issues: issuesFromValidationError(error) }
+    }
+    return {
+      issues: [{ message: error?.toString() ?? "Invalid input" }],
+    }
+  }
+}
+
+function issuesFromValidationError(err: ValidationError): v1.StandardIssue[] {
+  return [err, ...err.inner].map((e) => ({
+    message: e.message,
+    ...(e.path && { path: [e.path] }),
+  }))
 }
 
 export const { query, mutation, field, resolver, subscription } = createLoom<

@@ -1,38 +1,36 @@
-import { describe, expect, it } from "vitest"
 import {
-  ValibotWeaver,
+  type GQLoomExtensions,
+  SchemaWeaver,
+  type SilkResolver,
   field,
   query,
   resolver,
-  valibotSilk,
-  asEnumType,
-  asField,
-  asObjectType,
-  asUnionType,
-} from "../src"
+  weave,
+} from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLList,
+  type GraphQLNamedType,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
-  GraphQLNonNull,
-  type GraphQLNamedType,
-  printType,
-  GraphQLList,
   printSchema,
+  printType,
 } from "graphql"
-import {
-  type GQLoomExtensions,
-  getGraphQLType,
-  type SilkResolver,
-  SchemaWeaver,
-  weave,
-} from "@gqloom/core"
 import * as v from "valibot"
-import { type PipedSchema } from "../src/types"
+import { describe, expect, it } from "vitest"
+import {
+  ValibotWeaver,
+  asEnumType,
+  asField,
+  asObjectType,
+  asUnionType,
+} from "../src"
+import type { PipedSchema } from "../src/types"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -45,32 +43,34 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
   name: "Date",
 })
 
-describe("valibotSilk", () => {
+const getGraphQLType = ValibotWeaver.getGraphQLType
+
+describe("", () => {
   it("should handle scalar", () => {
     let schema: PipedSchema
     schema = v.nullable(v.string())
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLString)
+    expect(getGraphQLType(schema)).toEqual(GraphQLString)
 
     schema = v.nullable(v.boolean())
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLBoolean)
+    expect(getGraphQLType(schema)).toEqual(GraphQLBoolean)
     schema = v.nullable(v.number())
 
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLFloat)
+    expect(getGraphQLType(schema)).toEqual(GraphQLFloat)
 
-    schema = v.pipe(v.nullable(v.number()), v.integer())
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLInt)
+    schema = v.nullable(v.pipe(v.number(), v.integer()))
+    expect(getGraphQLType(schema)).toEqual(GraphQLInt)
 
-    schema = v.pipe(v.optional(v.string()), v.ulid())
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
+    schema = v.optional(v.pipe(v.string(), v.ulid()))
+    expect(getGraphQLType(schema)).toEqual(GraphQLID)
 
-    schema = v.pipe(v.optional(v.string()), v.uuid())
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
+    schema = v.optional(v.pipe(v.string(), v.uuid()))
+    expect(getGraphQLType(schema)).toEqual(GraphQLID)
 
-    schema = v.pipe(v.optional(v.string()), v.cuid2())
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLID)
+    schema = v.optional(v.pipe(v.string(), v.cuid2()))
+    expect(getGraphQLType(schema)).toEqual(GraphQLID)
 
-    schema = v.pipe(v.optional(v.string()), v.email())
-    expect(getGraphQLType(valibotSilk(schema))).toEqual(GraphQLString)
+    schema = v.optional(v.pipe(v.string(), v.email()))
+    expect(getGraphQLType(schema)).toEqual(GraphQLString)
   })
 
   it("should keep default value in extensions", () => {
@@ -82,9 +82,7 @@ describe("valibotSilk", () => {
     )
 
     const objectGqlType = (
-      getGraphQLType(
-        valibotSilk(objectType)
-      ) as GraphQLNonNull<GraphQLObjectType>
+      getGraphQLType(objectType) as GraphQLNonNull<GraphQLObjectType>
     ).ofType
 
     const extensions = objectGqlType.getFields().foo.extensions
@@ -96,9 +94,7 @@ describe("valibotSilk", () => {
   it("should handle custom type", () => {
     expect(
       getGraphQLType(
-        valibotSilk(
-          v.pipe(v.nullable(v.date()), asField({ type: GraphQLDate }))
-        )
+        v.pipe(v.nullable(v.date()), asField({ type: GraphQLDate }))
       )
     ).toEqual(GraphQLDate)
 
@@ -117,7 +113,7 @@ describe("valibotSilk", () => {
       })
     )
     expect(
-      printType(getGraphQLType(valibotSilk(v.nullish(Cat))) as GraphQLNamedType)
+      printType(getGraphQLType(v.nullish(Cat)) as GraphQLNamedType)
     ).toMatchInlineSnapshot(`
       """"A cute cat"""
       type Cat {
@@ -137,7 +133,7 @@ describe("valibotSilk", () => {
       birthday: v.pipe(v.optional(v.date()), asField({ type: null })),
     })
 
-    expect(printValibotSilk(Dog)).toMatchInlineSnapshot(`
+    expect(print(Dog)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }"
@@ -175,7 +171,7 @@ describe("valibotSilk", () => {
         }
       },
     })
-    const schema1 = weave(r1, config)
+    const schema1 = weave(r1, config, ValibotWeaver)
 
     const vSilk = ValibotWeaver.useConfig(config)
     const r2 = resolver({ dog: query(vSilk(Dog), () => ({})) })
@@ -198,45 +194,39 @@ describe("valibotSilk", () => {
   })
 
   it("should handle non null", () => {
-    expect(getGraphQLType(valibotSilk(v.string()))).toEqual(
+    expect(getGraphQLType(v.string())).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(v.nonNullable(v.string())))).toEqual(
+    expect(getGraphQLType(v.nonNullable(v.string()))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(v.nonOptional(v.string())))).toEqual(
+    expect(getGraphQLType(v.nonOptional(v.string()))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(valibotSilk(v.nonNullish(v.string())))).toEqual(
+    expect(getGraphQLType(v.nonNullish(v.string()))).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
 
-    expect(getGraphQLType(valibotSilk(v.nullable(v.string())))).toEqual(
-      GraphQLString
-    )
-    expect(getGraphQLType(valibotSilk(v.optional(v.string())))).toEqual(
-      GraphQLString
-    )
-    expect(getGraphQLType(valibotSilk(v.nullish(v.string())))).toEqual(
-      GraphQLString
-    )
+    expect(getGraphQLType(v.nullable(v.string()))).toEqual(GraphQLString)
+    expect(getGraphQLType(v.optional(v.string()))).toEqual(GraphQLString)
+    expect(getGraphQLType(v.nullish(v.string()))).toEqual(GraphQLString)
   })
   it("should handle array", () => {
-    expect(getGraphQLType(valibotSilk(v.array(v.string())))).toEqual(
+    expect(getGraphQLType(v.array(v.string()))).toEqual(
       new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
     )
 
-    expect(
-      getGraphQLType(valibotSilk(v.optional(v.array(v.string()))))
-    ).toEqual(new GraphQLList(new GraphQLNonNull(GraphQLString)))
+    expect(getGraphQLType(v.optional(v.array(v.string())))).toEqual(
+      new GraphQLList(new GraphQLNonNull(GraphQLString))
+    )
 
-    expect(
-      getGraphQLType(valibotSilk(v.array(v.nullable(v.string()))))
-    ).toEqual(new GraphQLNonNull(new GraphQLList(GraphQLString)))
+    expect(getGraphQLType(v.array(v.nullable(v.string())))).toEqual(
+      new GraphQLNonNull(new GraphQLList(GraphQLString))
+    )
 
-    expect(
-      getGraphQLType(valibotSilk(v.nullable(v.array(v.nullable(v.string())))))
-    ).toEqual(new GraphQLList(GraphQLString))
+    expect(getGraphQLType(v.nullable(v.array(v.nullable(v.string()))))).toEqual(
+      new GraphQLList(GraphQLString)
+    )
   })
 
   it("should handle object", () => {
@@ -263,14 +253,14 @@ describe("valibotSilk", () => {
       loveFish: v.optional(v.boolean()),
     })
 
-    expect(printValibotSilk(Cat)).toEqual(printValibotSilk(Cat1))
-    expect(printValibotSilk(Cat)).toEqual(printValibotSilk(Cat2))
+    expect(print(Cat)).toEqual(print(Cat1))
+    expect(print(Cat)).toEqual(print(Cat2))
 
-    expect(
-      (getGraphQLType(valibotSilk(Cat)) as GraphQLNonNull<any>).ofType
-    ).toBeInstanceOf(GraphQLObjectType)
+    expect((getGraphQLType(Cat) as GraphQLNonNull<any>).ofType).toBeInstanceOf(
+      GraphQLObjectType
+    )
 
-    expect(printValibotSilk(Cat)).toMatchInlineSnapshot(`
+    expect(print(Cat)).toMatchInlineSnapshot(`
       "type Cat {
         name: String!
         age: Int!
@@ -309,7 +299,7 @@ describe("valibotSilk", () => {
       })
     )
 
-    expect(printValibotSilk(FruitE)).toMatchInlineSnapshot(`
+    expect(print(FruitE)).toMatchInlineSnapshot(`
       "enum Fruit {
         """red"""
         apple
@@ -321,7 +311,7 @@ describe("valibotSilk", () => {
         orange
       }"
     `)
-    expect(printValibotSilk(FruitPL)).toMatchInlineSnapshot(`
+    expect(print(FruitPL)).toMatchInlineSnapshot(`
       "enum Fruit {
         """red"""
         apple
@@ -895,16 +885,17 @@ describe("valibotSilk", () => {
   })
 })
 
-function printValibotSilk(
+function print(
   schema: v.BaseSchema<any, any, any> | v.BaseSchemaAsync<any, any, any>
 ): string {
-  let gqlType = getGraphQLType(valibotSilk(schema))
+  let gqlType = getGraphQLType(schema)
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
 }
 
 function printResolver(...resolvers: SilkResolver[]): string {
   const weaver = new SchemaWeaver()
+  weaver.addVendor(ValibotWeaver)
   for (const r of resolvers) weaver.add(r)
 
   const schema = weaver.weaveGraphQLSchema()

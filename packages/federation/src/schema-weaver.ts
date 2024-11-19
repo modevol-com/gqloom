@@ -6,24 +6,24 @@ import {
   entitiesResolver,
 } from "@apollo/subgraph/dist/types"
 import {
-  SchemaWeaver,
-  silkResolver,
-  silkQuery,
-  silk,
-  useResolverPayload,
+  type GraphQLSilk,
   type Middleware,
+  SchemaWeaver,
   type SilkResolver,
   type WeaverConfig,
-  type GraphQLSilk,
+  query,
+  resolver,
+  silk,
+  useResolverPayload,
 } from "@gqloom/core"
 import {
   GraphQLList,
+  type GraphQLNamedType,
   GraphQLNonNull,
   type GraphQLResolveInfo,
+  type GraphQLSchema,
   GraphQLUnionType,
   isObjectType,
-  type GraphQLNamedType,
-  type GraphQLSchema,
   lexicographicSortSchema,
 } from "graphql"
 import { mockAst } from "./mock-ast"
@@ -53,9 +53,9 @@ export class FederatedSchemaWeaver extends SchemaWeaver {
     const ServiceSilk = silk(ServiceType)
 
     const hasEntities = entityTypes.length > 0
-    const federatedResolver = silkResolver({
+    const federatedResolver = resolver({
       ...(hasEntities && {
-        _entities: silkQuery(EntitiesSilk, {
+        _entities: query(EntitiesSilk, {
           input: { representations: RepresentationsSilk },
           resolve: ({ representations }) => {
             const { context, info = {} as GraphQLResolveInfo } =
@@ -64,7 +64,7 @@ export class FederatedSchemaWeaver extends SchemaWeaver {
           },
         }),
       }),
-      _service: silkQuery(ServiceSilk, () => ({ sdl })),
+      _service: query(ServiceSilk, () => ({ sdl })),
     })
 
     this.addResolver(federatedResolver)
@@ -104,10 +104,12 @@ export class FederatedSchemaWeaver extends SchemaWeaver {
   static override weave(
     ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
   ): GraphQLSchema {
-    const { context, configs, middlewares, resolvers, silks } =
+    const { context, configs, middlewares, resolvers, silks, weavers } =
       SchemaWeaver.optionsFrom(...inputs)
 
     const weaver = new FederatedSchemaWeaver({}, context)
+
+    weavers.forEach((it) => weaver.addVendor(it))
     configs.forEach((it) => weaver.setConfig(it))
     middlewares.forEach((it) => weaver.use(it))
     resolvers.forEach((it) => weaver.add(it))
@@ -116,3 +118,5 @@ export class FederatedSchemaWeaver extends SchemaWeaver {
     return weaver.weaveGraphQLSchema()
   }
 }
+
+export const weave = SchemaWeaver.weave

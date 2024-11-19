@@ -1,25 +1,33 @@
 import {
-  object,
-  string,
-  date,
-  number,
-  partial,
+  collectNames,
+  field,
+  mutation,
+  query,
+  resolver,
+  silk,
+  weave,
+} from "@gqloom/core"
+import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
+import {
   type InferInput,
   type InferOutput,
-  nullish,
-  pipe,
-  minLength,
   boolean,
+  date,
   integer,
+  literal,
+  minLength,
+  nullish,
+  number,
+  object,
   optional,
+  partial,
+  pipe,
+  string,
   union,
   variant,
-  literal,
 } from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
-import { asUnionType, field, mutation, query, resolver } from "../src"
-import { SchemaWeaver, collectNames, silk, weave } from "@gqloom/core"
-import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
+import { ValibotWeaver, asUnionType } from "../src"
 
 describe("valibot resolver", () => {
   const Giraffe = object({
@@ -101,12 +109,11 @@ describe("valibot resolver", () => {
   })
 
   it("should resolve mutation", async () => {
-    expect(
-      await simpleGiraffeResolver.createGiraffe.resolve({
-        name: "Giraffe",
-        birthday: new Date("2022-2-22"),
-      })
-    ).toEqual({
+    const output = await simpleGiraffeResolver.createGiraffe.resolve({
+      name: "Giraffe",
+      birthday: new Date("2022-2-22"),
+    })
+    expect(output).toEqual({
       name: "Giraffe",
       birthday: new Date("2022-2-22"),
       heightInMeters: 5,
@@ -162,7 +169,7 @@ describe("valibot resolver", () => {
       })),
     })
 
-    const schema = weave(animalResolver)
+    const schema = weave(ValibotWeaver, animalResolver)
 
     let result: any
     result = await graphql({
@@ -236,7 +243,7 @@ describe("valibot resolver", () => {
       })),
     })
 
-    const schema = new SchemaWeaver().add(animalResolver).weaveGraphQLSchema()
+    const schema = weave(animalResolver, ValibotWeaver)
     let result: any
     result = await graphql({
       schema,
@@ -304,8 +311,10 @@ describe("valibot resolver", () => {
         },
       }),
       (input) => ({
-        name: input.name ?? "",
-        age: input.age ?? 0,
+        value: {
+          name: input.name ?? "",
+          age: input.age ?? 0,
+        },
       })
     )
 

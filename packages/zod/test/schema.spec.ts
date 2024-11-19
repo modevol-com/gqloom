@@ -1,39 +1,39 @@
+import {
+  type GQLoomExtensions,
+  SchemaWeaver,
+  type SilkResolver,
+  collectNames,
+  getGraphQLType,
+  weave,
+} from "@gqloom/core"
+import {
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  type GraphQLNamedType,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLString,
+  printSchema,
+  printType,
+} from "graphql"
 import { describe, expect, it } from "vitest"
 import { type Schema, z } from "zod"
 import {
   ZodWeaver,
   asEnumType,
-  field,
   asField,
-  asUnionType,
+  asInputArgs,
   asObjectType,
+  asUnionType,
+  field,
   query,
   resolver,
   zodSilk,
-  asInputArgs,
 } from "../src"
-import {
-  GraphQLID,
-  GraphQLString,
-  GraphQLInt,
-  GraphQLFloat,
-  GraphQLBoolean,
-  GraphQLNonNull,
-  GraphQLList,
-  GraphQLObjectType,
-  printType,
-  type GraphQLNamedType,
-  printSchema,
-  GraphQLScalarType,
-} from "graphql"
-import {
-  type GQLoomExtensions,
-  SchemaWeaver,
-  type SilkResolver,
-  getGraphQLType,
-  collectNames,
-  weave,
-} from "@gqloom/core"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 
 declare module "graphql" {

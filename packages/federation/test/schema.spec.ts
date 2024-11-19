@@ -1,6 +1,7 @@
+import { ApolloServer } from "@apollo/server"
+import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
+import { printSubgraphSchema } from "@apollo/subgraph"
 import { loom, silk } from "@gqloom/core"
-import { describe, expect, it } from "vitest"
-import { resolveReference, FederatedSchemaWeaver } from "../src"
 import {
   GraphQLNonNull,
   GraphQLObjectType,
@@ -8,9 +9,8 @@ import {
   lexicographicSortSchema,
   printSchema,
 } from "graphql"
-import { printSubgraphSchema } from "@apollo/subgraph"
-import { ApolloServer } from "@apollo/server"
-import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
+import { describe, expect, it } from "vitest"
+import { FederatedSchemaWeaver, resolveReference } from "../src"
 
 describe("FederatedSchemaWeaver", () => {
   interface IUser {

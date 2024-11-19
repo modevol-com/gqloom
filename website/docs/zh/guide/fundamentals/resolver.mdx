@@ -54,27 +54,15 @@ const HelloResolver = resolver({
   <Tab label="valibot">
 我们可以使用 [valibot](../schema-integration/valibot) 来定义 `hello` 操作的返回类型：
 ```ts
-import { loom } from "@gqloom/core"
-import * as v from "valibot"
-import { valibotSilk } from '@gqloom/valibot'
-const { resolver, query } = loom
-
-const HelloResolver = resolver({
-  hello: query(valibotSilk(v.string()), () => "Hello, World"),
-})
-```
-在上面的代码中，我们使用 `v.sting()` 来定义 `hello` 操作的返回类型，`valibotSilk` 函数让我们把 `valibot` 的 Schema 定义作为`丝线`使用。
-
-我们还可以直接使用从 `@gqloom/valibot` 导出的 `resolver` 和 `query` 函数，以使得代码更加简洁：
-
-```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 
 const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 ```
+在上面的代码中，我们使用 `v.sting()` 来定义 `hello` 操作的返回类型，我们可以直接把 `valibot` 的 Schema 作为`丝线`使用。
+
   </Tab>
   <Tab label="zod">
 
@@ -111,7 +99,7 @@ const HelloResolver = resolver({
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const HelloResolver = resolver({
@@ -158,7 +146,7 @@ const HelloResolver = resolver({
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const HelloResolver = resolver({
@@ -271,7 +259,7 @@ const bookMap: Map<number, IBook> = new Map(
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query } from '@gqloom/valibot'
+import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const BookResolver = resolver.of(Book, {
@@ -298,7 +286,7 @@ const BookResolver = resolver.of(Book, {
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, field } from '@gqloom/valibot'
+import { resolver, query, field } from '@gqloom/core'
 import * as v from "valibot"
 
 const BookResolver = resolver.of(Book, {
@@ -334,7 +322,7 @@ const BookResolver = resolver.of(Book, {
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, field } from '@gqloom/valibot'
+import { resolver, query, field } from '@gqloom/core'
 import * as v from "valibot"
 
 const BookResolver = resolver.of(Book, {

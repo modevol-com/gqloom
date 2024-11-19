@@ -76,7 +76,8 @@ npx tsc --init
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/valibot"
+import { weave, resolver, query } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -85,7 +86,7 @@ const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = weave(ValibotWeaver, HelloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -273,7 +274,8 @@ const catMap = new Map<string, ICat>([
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/valibot"
+import { weave, resolver, query } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const CatResolver = resolver({ // [!code hl]
@@ -284,7 +286,7 @@ const HelloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver, CatResolver) // [!code hl]
+export const schema = weave(ValibotWeaver, HelloResolver, CatResolver) // [!code hl]
 ```
 在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
 `query` 函数接受两个参数：
@@ -372,7 +374,7 @@ query cats {
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query } from "@gqloom/valibot"
+import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver({
@@ -489,7 +491,7 @@ query cat {
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query, mutation } from "@gqloom/valibot"
+import { resolver, query, mutation } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver({
@@ -667,7 +669,7 @@ query cats {
 <Tabs>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query, mutation, field } from "@gqloom/valibot"
+import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver.of(Cat, { // [!code hl]
@@ -807,7 +809,7 @@ query cat {
 <Tabs>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { resolver, query, mutation, field } from "@gqloom/valibot"
+import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
 const CatResolver = resolver.of(Cat, {

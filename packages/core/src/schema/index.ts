@@ -1,4 +1,5 @@
 export * from "./object"
+export * from "./schema-vendor-weaver"
 export * from "./schema-weaver"
 export * from "./weaver-context"
 export * from "./input"

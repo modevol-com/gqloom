@@ -1,12 +1,12 @@
 import { AsyncLocalStorage } from "node:async_hooks"
+import { GraphQLString } from "graphql"
 import { describe, expect, it } from "vitest"
+import { createInputParser, silk } from "../resolver"
 import {
   type Middleware,
-  applyMiddlewares,
   type MiddlewarePayload,
+  applyMiddlewares,
 } from "./middleware"
-import { createInputParser, silk } from "../resolver"
-import { GraphQLString } from "graphql"
 
 function initPayload(): MiddlewarePayload {
   return {

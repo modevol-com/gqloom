@@ -1,13 +1,13 @@
-import {
-  type NullishSchema,
-  type OptionalSchema,
-  type NullableSchema,
-  type VariantOptions,
-  type VariantOptionsAsync,
-  type VariantSchema,
-  type VariantSchemaAsync,
+import type {
+  NullableSchema,
+  NullishSchema,
+  OptionalSchema,
+  VariantOptions,
+  VariantOptionsAsync,
+  VariantSchema,
+  VariantSchemaAsync,
 } from "valibot"
-import { type PipedSchema } from "./types"
+import type { PipedSchema } from "./types"
 
 export const nullishTypes: Set<string> = new Set<
   (

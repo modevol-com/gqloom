@@ -1,10 +1,12 @@
-import { type WeaverConfig, type SYMBOLS } from "@gqloom/core"
-import {
-  type EntityProperty,
-  type EntitySchema,
-  type PropertyOptions,
+import type { WeaverConfig } from "@gqloom/core"
+// biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
+import type { SYMBOLS } from "@gqloom/core"
+import type {
+  EntityProperty,
+  EntitySchema,
+  PropertyOptions,
 } from "@mikro-orm/core"
-import { type GraphQLOutputType } from "graphql"
+import type { GraphQLOutputType } from "graphql"
 
 export interface GQLoomMikroFieldExtensions {
   mikroProperty?: PropertyOptions<any>

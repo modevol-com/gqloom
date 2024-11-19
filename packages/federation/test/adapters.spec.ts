@@ -1,12 +1,12 @@
-import { describe, expect, it } from "vitest"
 import { ApolloServer } from "@apollo/server"
 import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
-import gql from "graphql-tag"
 import { buildSubgraphSchema } from "@apollo/subgraph"
-import { createYoga } from "graphql-yoga"
-import Fastify from "fastify"
 import { mercuriusFederationPlugin } from "@mercuriusjs/federation"
+import Fastify from "fastify"
+import gql from "graphql-tag"
+import { createYoga } from "graphql-yoga"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
+import { describe, expect, it } from "vitest"
 
 const typeDefs = gql`
   extend schema

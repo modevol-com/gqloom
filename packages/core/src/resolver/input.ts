@@ -1,13 +1,14 @@
-import { SYMBOLS } from "../utils"
+import type { v1 } from "@standard-schema/spec"
+import { GraphQLError } from "graphql"
 import type { MayPromise, ObjectOrNever } from "../utils"
 import { isSilk } from "./silk"
 import type {
-  InferSchemaI,
-  InferSchemaO,
-  SchemaToSilk,
   AbstractSchemaIO,
   GraphQLSilk,
   GraphQLSilkIO,
+  InferSchemaI,
+  InferSchemaO,
+  SchemaToSilk,
 } from "./types"
 
 export type InputSchema<TBaseSchema> =
@@ -64,12 +65,12 @@ export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
   /**
    * Parse the input and return the
    */
-  (): Promise<InferInputO<TSchema, GraphQLSilkIO>>
+  (): Promise<v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>>>
 
   /**
    * Result of parsing. Set it to `undefined` then the parser will run again.
    */
-  result: InferInputO<TSchema, GraphQLSilkIO> | undefined
+  result: v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>> | undefined
 }
 
 export function createInputParser<
@@ -78,12 +79,12 @@ export function createInputParser<
   schema: TSchema,
   value: InferInputI<TSchema, GraphQLSilkIO>
 ): CallableInputParser<TSchema> {
-  let result: InferInputO<TSchema, GraphQLSilkIO> | undefined
+  let result: v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>> | undefined
 
   const parse = async () => {
     if (result !== undefined) return result
     result = await parseInputValue(schema, value)
-    return result as InferInputO<TSchema, GraphQLSilkIO>
+    return result
   }
 
   Object.assign(parse, { schema, value })
@@ -92,7 +93,7 @@ export function createInputParser<
     set: (value) => (result = value),
   })
 
-  return parse as CallableInputParser<TSchema>
+  return parse as unknown as CallableInputParser<TSchema>
 }
 
 export function parseInputValue<
@@ -100,16 +101,15 @@ export function parseInputValue<
 >(
   inputSchema: TSchema,
   input: any
-): MayPromise<InferInputO<TSchema, GraphQLSilkIO>> {
+): MayPromise<v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>>> {
   if (inputSchema === undefined) {
-    return input as InferInputO<TSchema, GraphQLSilkIO>
+    return { value: input } as v1.StandardResult<
+      InferInputO<TSchema, GraphQLSilkIO>
+    >
   }
 
   if (isSilk(inputSchema)) {
-    if (typeof inputSchema[SYMBOLS.PARSE] === "function") {
-      return inputSchema[SYMBOLS.PARSE](input)
-    }
-    return input
+    return inputSchema["~standard"].validate(input)
   }
 
   return parseInputEntries(inputSchema, input) as InferInputO<
@@ -121,16 +121,42 @@ export function parseInputValue<
 async function parseInputEntries(
   inputSchema: Record<string, GraphQLSilk>,
   input: any = {}
-): Promise<Record<string, any>> {
+): Promise<v1.StandardResult<Record<string, any>>> {
   const result: Record<string, any> = {}
+  const issues: v1.StandardIssue[] = []
+
   await Promise.all(
     Object.entries(inputSchema).map(async ([key, value]) => {
-      if (typeof value[SYMBOLS.PARSE] === "function") {
-        result[key] = await value[SYMBOLS.PARSE](input[key])
-      } else {
-        result[key] = input[key]
+      const res = await value["~standard"].validate(input[key])
+      if ("value" in res) {
+        result[key] = res.value
+      }
+      if (res.issues) {
+        issues.push(...res.issues.slice())
       }
     })
   )
-  return result
+  return { value: result, ...(issues.length > 0 ? { issues } : null) }
+}
+
+export function getStandardValue<T>(result: v1.StandardResult<T>): T
+export function getStandardValue<T>(
+  result?: v1.StandardResult<T>
+): T | undefined
+export function getStandardValue<T>(
+  result: v1.StandardResult<T> | null
+): T | null
+export function getStandardValue<T>(
+  result?: v1.StandardResult<T> | null
+): T | null | undefined {
+  if (result == null) return result
+  const { issues } = result
+  if (issues?.length) {
+    throw new GraphQLError(issues?.[0]?.message ?? "Invalid input", {
+      extensions: { issues },
+    })
+  }
+
+  if ("value" in result) return result.value
+  else throw new GraphQLError("Invalid input")
 }

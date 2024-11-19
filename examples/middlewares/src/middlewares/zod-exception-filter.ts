@@ -1,6 +1,6 @@
-import { type Middleware } from "@gqloom/core"
-import { ZodError } from "zod"
+import type { Middleware } from "@gqloom/core"
 import { GraphQLError } from "graphql"
+import { ZodError } from "zod"
 
 export const ZodExceptionFilter: Middleware = async (next) => {
   try {

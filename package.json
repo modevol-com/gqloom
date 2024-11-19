@@ -8,6 +8,8 @@
     "coverage": "vitest run --coverage",
     "format": "biome format --write .",
     "lint": "biome lint --write .",
+    "fix": "biome check --write .",
+    "check": "biome check . && pnpm run check:type",
     "check:type": "tsc --noEmit",
     "build": "pnpm -F '@gqloom/*' run build",
     "prepare": "husky"

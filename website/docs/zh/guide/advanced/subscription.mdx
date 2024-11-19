@@ -11,7 +11,8 @@ import { Tab, Tabs } from 'rspress/theme';
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { weave, resolver, subscription } from "@gqloom/valibot"
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -56,7 +57,7 @@ const CountdownResolver = resolver({
   }),
 })
 
-const schema = weave(CountdownResolver)
+const schema = weave(ValibotWeaver, CountdownResolver)
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
 
@@ -76,7 +77,7 @@ server.listen(4000, () => {
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { resolver, query, subscription } from "@gqloom/valibot"
+import { resolver, query, subscription } from "@gqloom/core"
 import { createPubSub } from "graphql-yoga"
 import * as v from "valibot"
 

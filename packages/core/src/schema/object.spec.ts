@@ -5,15 +5,15 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { LoomObjectType } from "./object"
 import {
   defaultSubscriptionResolve,
+  field,
+  mutation,
+  query,
   silk,
-  silkField,
-  silkMutation,
-  silkQuery,
-  silkSubscription,
+  subscription,
 } from "../resolver"
+import { LoomObjectType } from "./object"
 
 describe("printType", () => {
   it("should print type correctly", () => {
@@ -39,11 +39,11 @@ describe("LoomObjectType", () => {
     const Dog = new LoomObjectType({ name: "Dog", fields: {} })
     Dog.addField(
       "name",
-      silkField(silk<string, string>(GraphQLString), () => "")
+      field(silk<string, string>(GraphQLString), () => "")
     )
     Dog.addField(
       "age",
-      silkField(silk<number, number>(GraphQLInt), () => 0)
+      field(silk<number, number>(GraphQLInt), () => 0)
     )
     expect(printType(Dog)).toMatchInlineSnapshot(`
       "type Dog {
@@ -60,9 +60,7 @@ describe("toFieldConfig", () => {
   const loomObject = new LoomObjectType("test")
 
   it("should work with Field", () => {
-    const fieldConfig = loomObject.toFieldConfig(
-      silkField(StringSilk, () => "")
-    )
+    const fieldConfig = loomObject.toFieldConfig(field(StringSilk, () => ""))
     expect(fieldConfig).toHaveProperty("type", GraphQLString)
     expect(fieldConfig).toHaveProperty("resolve")
     expect(fieldConfig).not.toHaveProperty("subscribe")
@@ -70,7 +68,7 @@ describe("toFieldConfig", () => {
 
   it("should work with Subscription", () => {
     const fieldConfig = loomObject.toFieldConfig(
-      silkSubscription(StringSilk, async function* () {
+      subscription(StringSilk, async function* () {
         yield ""
       })
     )
@@ -80,18 +78,14 @@ describe("toFieldConfig", () => {
   })
 
   it("should work with Query", () => {
-    const fieldConfig = loomObject.toFieldConfig(
-      silkQuery(StringSilk, () => "")
-    )
+    const fieldConfig = loomObject.toFieldConfig(query(StringSilk, () => ""))
     expect(fieldConfig).toHaveProperty("type", GraphQLString)
     expect(fieldConfig).toHaveProperty("resolve")
     expect(fieldConfig).not.toHaveProperty("subscribe")
   })
 
   it("should work with Mutation", () => {
-    const fieldConfig = loomObject.toFieldConfig(
-      silkMutation(StringSilk, () => "")
-    )
+    const fieldConfig = loomObject.toFieldConfig(mutation(StringSilk, () => ""))
     expect(fieldConfig).toHaveProperty("type", GraphQLString)
     expect(fieldConfig).toHaveProperty("resolve")
     expect(fieldConfig).not.toHaveProperty("subscribe")
@@ -100,10 +94,10 @@ describe("toFieldConfig", () => {
   it("should parse input", async () => {
     const PlusOneSilk = silk<number, number>(GraphQLInt, async (n) => {
       await new Promise((ok) => setTimeout(ok, 6))
-      return n + 1
+      return { value: n + 1 }
     })
     const fieldConfig = loomObject.toFieldConfig(
-      silkQuery(IntSilk, {
+      query(IntSilk, {
         input: { n: PlusOneSilk },
         resolve: ({ n }) => n,
       })
@@ -115,7 +109,7 @@ describe("toFieldConfig", () => {
   it("should provide Resolver Payload", async () => {
     let rootRef: any
     const fieldConfig = loomObject.toFieldConfig(
-      silkField(IntSilk, {
+      field(IntSilk, {
         resolve: (root) => {
           rootRef = root
           return 0

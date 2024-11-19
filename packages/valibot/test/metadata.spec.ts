@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest"
-import { asInputArgs, asObjectType, ValibotMetadataCollector } from "../src"
 import * as v from "valibot"
+import { describe, expect, it } from "vitest"
+import { ValibotMetadataCollector, asInputArgs, asObjectType } from "../src"
 
 describe("asInputArgs", () => {
   it("should return asInputArgs", () => {

@@ -1,7 +1,7 @@
-import { weave, resolver, query, mutation, field } from "@gqloom/zod"
-import { z } from "zod"
 import { createServer } from "node:http"
+import { field, mutation, query, resolver, weave } from "@gqloom/zod"
 import { createYoga } from "graphql-yoga"
+import { z } from "zod"
 
 const Cat = z.object({
   __typename: z.literal("Cat").nullish(),

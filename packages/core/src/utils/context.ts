@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
-import { type FieldOrOperation } from "../resolver/types"
+import type { FieldOrOperation } from "../resolver/types"
 import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 
 /**

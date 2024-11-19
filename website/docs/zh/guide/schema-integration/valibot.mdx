@@ -12,32 +12,33 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## 定义简单标量
 
-在 GQLoom 中，可以使用 `valibotSilk` 将 Valibot Schema 作为[丝线](../fundamentals/silk)使用：
+在 GQLoom 中，可以直接Valibot Schema 作为[丝线](../fundamentals/silk)使用：
 
 ```ts
 import * as v from "valibot"
-import { valibotSilk } from "@gqloom/valibot"
 
-const StringScalar = valibotSilk(v.string()) // GraphQLString
+const StringScalar = v.string() // GraphQLString
 
-const BooleanScalar = valibotSilk(v.boolean()) // GraphQLBoolean
+const BooleanScalar = v.boolean() // GraphQLBoolean
 
-const FloatScalar = valibotSilk(v.number()) // GraphQLFloat
+const FloatScalar = v.number() // GraphQLFloat
 
-const IntScalar = valibotSilk(v.pipe(v.nullable(v.number()), v.integer())) // GraphQLInt
+const IntScalar = v.pipe(v.nullable(v.number()), v.integer()) // GraphQLInt
 ```
 
-## 解析器 | Resolver
+## 编织 | Weave
 
-为了将 Valibot Schema 作为丝线使用，我们需要为其包裹 `valibotSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/valibot` 提供了重新导出的解析器和操作构造函数来简化这个过程。
-从 `@gqloom/valibot` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `valibotSilk`，这样在大部分情况下，我们可以直接使用 Valibot Schema。
+为了让 `GQLoom` 能正确地将 Valibot Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
 
 ```ts
-import { resolver, query } from "@gqloom/valibot"
+import { resolver, query ,weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 
-export const HelloResolver = resolver({
+export const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World!"),
 })
+
+export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
 ## 定义对象
@@ -46,7 +47,7 @@ export const HelloResolver = resolver({
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/valibot"
+import { collectNames } from "@gqloom/core"
 
 export const Cat = v.object({
   name: v.string(),
@@ -95,7 +96,7 @@ export const Cat = v.object({
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/valibot"
+import { collectNames } from "@gqloom/core"
 
 export const Cat = v.object({
   name: v.string(),
@@ -110,7 +111,7 @@ collectNames({ Cat }) // 为 Cat 收集名称，在编织后将呈现在 GraphQL
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/valibot"
+import { collectNames } from "@gqloom/core"
 
 export const { Cat } = collectNames({
   Cat: v.object({
@@ -297,8 +298,9 @@ const Animal = v.pipe(
 我们还可以使用 `union` 来定义联合类型：
 
 ```ts
+import { collectNames } from "@gqloom/core"
+import { asUnionType } from "@gqloom/valibot"
 import * as v from "valibot"
-import { asUnionType, valibotSilk, collectNames } from "@gqloom/valibot"
 
 const Cat = v.object({
   name: v.string(),
@@ -335,7 +337,7 @@ collectNames({ Cat, Dog, Animal })
 
 ```ts
 import * as v from "valibot"
-import { asEnumType, valibotSilk } from "@gqloom/valibot"
+import { asEnumType } from "@gqloom/valibot"
 
 export const Fruit = v.pipe(
   v.picklist(["apple", "banana", "orange"]),
@@ -407,7 +409,7 @@ export const valibotWeaverConfig = ValibotWeaver.config({
 在编织 GraphQL Schema 时传入配置到 `weave` 函数中：
 
 ```ts
-import { weave } from "@gqloom/valibot"
+import { weave } from "@gqloom/core"
 
 export const schema = weave(valibotWeaverConfig, HelloResolver)
 ```

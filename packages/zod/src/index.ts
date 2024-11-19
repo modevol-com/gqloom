@@ -1,75 +1,76 @@
 import {
-  type GraphQLSilk,
-  createLoom,
-  mapValue,
-  ensureInterfaceType,
-  weaverContext,
-  SYMBOLS,
-  deepMerge,
   type GQLoomExtensions,
+  type GraphQLSilk,
   type GraphQLSilkIO,
-  isSilk,
+  SYMBOLS,
   collectNames,
+  createLoom,
+  deepMerge,
+  ensureInterfaceType,
+  isSilk,
+  mapValue,
+  type v1,
+  weaverContext,
 } from "@gqloom/core"
 import {
-  type GraphQLOutputType,
-  GraphQLString,
-  GraphQLFloat,
-  GraphQLInt,
-  GraphQLID,
   GraphQLBoolean,
-  GraphQLNonNull,
-  isNonNullType,
-  GraphQLList,
-  GraphQLObjectType,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
-  GraphQLUnionType,
-  isObjectType,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
   type GraphQLInterfaceType,
-  isInterfaceType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
   type GraphQLObjectTypeConfig,
-  type GraphQLUnionTypeConfig,
   type GraphQLObjectTypeExtensions,
+  type GraphQLOutputType,
+  GraphQLString,
+  GraphQLUnionType,
+  type GraphQLUnionTypeConfig,
+  isInterfaceType,
+  isNonNullType,
+  isObjectType,
 } from "graphql"
 import {
+  type EnumLike,
+  type Schema,
   ZodArray,
   ZodBoolean,
   ZodDate,
+  ZodDefault,
+  ZodDiscriminatedUnion,
+  type ZodDiscriminatedUnionOption,
+  ZodEffects,
+  ZodEnum,
+  ZodLiteral,
+  ZodNativeEnum,
   ZodNullable,
   ZodNumber,
   ZodObject,
   ZodOptional,
   type ZodRawShape,
+  type ZodSchema,
   ZodString,
   ZodType,
-  type Schema,
-  ZodEnum,
-  ZodNativeEnum,
-  type EnumLike,
-  ZodUnion,
   type ZodTypeAny,
-  ZodDiscriminatedUnion,
-  ZodLiteral,
-  ZodDefault,
-  ZodEffects,
-  type ZodSchema,
-  type ZodDiscriminatedUnionOption,
+  ZodUnion,
   z,
 } from "zod"
+import { getConfig } from "./metadata"
+// import { metadataCollector } from "./metadata-collector"
+import type {
+  EnumConfig,
+  FieldConfig,
+  ObjectConfig,
+  TypeOrFieldConfig,
+  UnionConfig,
+  ZodWeaverConfig,
+  ZodWeaverConfigOptions,
+} from "./types"
 import { ZodIDKinds } from "./utils"
 import { resolveTypeByDiscriminatedUnion } from "./utils"
-// import { metadataCollector } from "./metadata-collector"
-import {
-  type UnionConfig,
-  type FieldConfig,
-  type TypeOrFieldConfig,
-  type EnumConfig,
-  type ObjectConfig,
-  type ZodWeaverConfigOptions,
-  type ZodWeaverConfig,
-} from "./types"
-import { getConfig } from "./metadata"
 
 export * from "./metadata"
 
@@ -84,6 +85,11 @@ export class ZodWeaver {
   ): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>> {
     const config = weaverContext.value?.getConfig<ZodWeaverConfig>("gqloom.zod")
     return Object.assign(schema, {
+      "~standard": {
+        version: 1,
+        vendor: "gqloom.zod",
+        validate: (value) => parseZod(schema, value),
+      } satisfies v1.StandardSchemaProps<z.input<TSchema>, z.output<TSchema>>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema) {
             return weaverContext.useConfig(config, () =>
@@ -91,7 +97,6 @@ export class ZodWeaver {
             )
           }
         : getGraphQLType,
-      [SYMBOLS.PARSE]: parseZod,
     })
   }
 
@@ -477,8 +482,21 @@ function getGraphQLType(this: Schema) {
   return ZodWeaver.toNullableGraphQLType(this)
 }
 
-function parseZod(this: Schema, data: any) {
-  return this.parseAsync(data)
+async function parseZod(
+  schema: Schema,
+  data: any
+): Promise<v1.StandardResult<unknown>> {
+  const result = await schema.safeParseAsync(data)
+  return result.success
+    ? { value: result.data }
+    : {
+        issues: result.error.issues.map((issue) => ({
+          zodIssue: issue,
+          error: result.error,
+          message: issue.message,
+          path: issue.path,
+        })),
+      }
 }
 
 export * from "@gqloom/core"

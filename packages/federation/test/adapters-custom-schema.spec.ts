@@ -1,23 +1,23 @@
-import { describe, expect, it } from "vitest"
+import { ApolloServer } from "@apollo/server"
+import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
+import { printSubgraphSchema } from "@apollo/subgraph"
+import { entitiesField } from "@apollo/subgraph/dist/types"
+import type { MayPromise } from "@gqloom/core"
+import { printSchemaWithDirectives } from "@graphql-tools/utils"
+import Fastify from "fastify"
 import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
+  type GraphQLResolveInfo,
   GraphQLSchema,
   GraphQLString,
   GraphQLUnionType,
-  type GraphQLResolveInfo,
 } from "graphql"
-import { printSubgraphSchema } from "@apollo/subgraph"
-import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
-import { printSchemaWithDirectives } from "@graphql-tools/utils"
-import { type MayPromise } from "@gqloom/core"
-import { ApolloServer } from "@apollo/server"
-import { entitiesField } from "@apollo/subgraph/dist/types"
 import { createYoga } from "graphql-yoga"
-import Fastify from "fastify"
 import Mercurius from "mercurius"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
+import { describe, expect, it } from "vitest"
 import { mockAst } from "../src/mock-ast"
 
 declare module "graphql" {

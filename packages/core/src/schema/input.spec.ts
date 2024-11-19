@@ -4,17 +4,17 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
-  GraphQLObjectType,
-  GraphQLString,
-  isInputObjectType,
-  printType,
   GraphQLList,
   GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
   GraphQLUnionType,
+  isInputObjectType,
+  printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { ensureInputType, inputToArgs, ensureInputObjectType } from "./input"
 import { silk } from "../resolver"
+import { ensureInputObjectType, ensureInputType, inputToArgs } from "./input"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 describe("toInputObjectType", () => {

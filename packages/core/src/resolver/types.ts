@@ -1,46 +1,32 @@
+import type { v1 } from "@standard-schema/spec"
+import type {
+  GraphQLFieldConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+} from "graphql"
 import type {
   InferPropertyType,
   MayPromise,
   Middleware,
   ValueOf,
 } from "../utils"
+import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type {
   InferInputI,
   InferInputO,
   InputSchema,
   InputSchemaToSilk,
 } from "./input"
-import type {
-  GraphQLFieldConfig,
-  GraphQLObjectTypeConfig,
-  GraphQLOutputType,
-} from "graphql"
-import {
-  type PARSE,
-  type GET_GRAPHQL_TYPE,
-  type FIELD_HIDDEN,
-} from "../utils/symbols"
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
  */
-export interface GraphQLSilk<TOutput = any, TInput = any> {
+export interface GraphQLSilk<TOutput = any, TInput = any>
+  extends v1.StandardSchema<TInput, TOutput> {
   /**
    * GraphQL type for schema
    */
-  [GET_GRAPHQL_TYPE]: () => GraphQLOutputType
-
-  /**
-   * validate and transform input to output
-   */
-  [PARSE]?: (input: TInput) => MayPromise<TOutput>
-
-  /**
-   * Input and output type.
-   *
-   * @internal
-   */
-  readonly "~types"?: { readonly input: TInput; readonly output: TOutput }
+  [GET_GRAPHQL_TYPE]?: () => GraphQLOutputType
 }
 
 export type AbstractSchemaIO = [
@@ -51,17 +37,9 @@ export type AbstractSchemaIO = [
 
 export type GraphQLSilkIO = [
   object: GraphQLSilk,
-  input: "~types.input",
-  output: "~types.output",
+  input: "~standard.types.input",
+  output: "~standard.types.output",
 ]
-
-export type InferSilkI<T extends GraphQLSilk> = NonNullable<
-  T["~types"]
->["input"]
-
-export type InferSilkO<T extends GraphQLSilk> = NonNullable<
-  T["~types"]
->["output"]
 
 export type InferSchemaI<
   TSchema,
@@ -127,19 +105,19 @@ export interface FieldOrOperation<
   output: TOutput
   resolve: TType extends "field"
     ? (
-        parent: InferSilkO<NonNullable<TParent>>,
+        parent: v1.InferOutput<NonNullable<TParent>>,
         input: InferInputI<TInput, GraphQLSilkIO>,
         options?: ResolvingOptions
-      ) => Promise<InferSilkO<TOutput>>
+      ) => Promise<v1.InferOutput<TOutput>>
     : TType extends "subscription"
       ? (
           value: any,
           input: InferInputI<TInput, GraphQLSilkIO>
-        ) => Promise<InferSilkO<TOutput>>
+        ) => Promise<v1.InferOutput<TOutput>>
       : (
           input: InferInputI<TInput, GraphQLSilkIO>,
           options?: ResolvingOptions
-        ) => Promise<InferSilkO<TOutput>>
+        ) => Promise<v1.InferOutput<TOutput>>
 
   subscribe?: TType extends "subscription"
     ? (
@@ -308,12 +286,12 @@ export interface SubscriptionOptions<
 export interface Subscription<
   TOutput extends GraphQLSilk,
   TInput extends InputSchema<GraphQLSilk> = undefined,
-  TValue = InferSilkO<TOutput>,
+  TValue = v1.InferOutput<TOutput>,
 > extends FieldOrOperation<undefined, TOutput, TInput, "subscription"> {
   resolve: (
     value: TValue,
     input: InferInputI<TInput, GraphQLSilkIO>
-  ) => Promise<InferSilkO<TOutput>>
+  ) => Promise<v1.InferOutput<TOutput>>
   subscribe: (
     input: InferInputI<TInput, GraphQLSilkIO>,
     options?: ResolvingOptions

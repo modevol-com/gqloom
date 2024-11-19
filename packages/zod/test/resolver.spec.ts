@@ -1,8 +1,8 @@
+import { collectNames, silk, weave } from "@gqloom/core"
+import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { z } from "zod"
 import { field, mutation, query, resolver } from "../src/index"
-import { collectNames, silk, weave } from "@gqloom/core"
-import { GraphQLObjectType, GraphQLString, GraphQLInt, graphql } from "graphql"
 
 describe("zod resolver", () => {
   const Giraffe = z.object({
@@ -195,8 +195,10 @@ describe("zod resolver", () => {
         },
       }),
       (input) => ({
-        name: input.name ?? "",
-        age: input.age ?? 0,
+        value: {
+          name: input.name ?? "",
+          age: input.age ?? 0,
+        },
       })
     )
 

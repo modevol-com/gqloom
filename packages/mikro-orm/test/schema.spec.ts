@@ -1,13 +1,13 @@
-import { describe, it, expect } from "vitest"
-import {
-  type GraphQLObjectType,
-  printType,
-  GraphQLNonNull,
-  type GraphQLOutputType,
-} from "graphql"
-import { mikroSilk } from "../src"
-import { EntitySchema, type Ref } from "@mikro-orm/core"
 import { getGraphQLType } from "@gqloom/core"
+import { EntitySchema, type Ref } from "@mikro-orm/core"
+import {
+  GraphQLNonNull,
+  type GraphQLObjectType,
+  type GraphQLOutputType,
+  printType,
+} from "graphql"
+import { describe, expect, it } from "vitest"
+import { mikroSilk } from "../src"
 
 const nullable = true
 

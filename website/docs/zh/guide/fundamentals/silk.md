@@ -73,22 +73,24 @@ type Cat {
 
 ```ts
 import * as v from "valibot"
-import { valibotSilk } from "@gqloom/valibot"
 
-const StringSilk = valibotSilk(v.string())
+const StringSilk = v.string()
 
-const BooleanSilk = valibotSilk(v.boolean())
+const BooleanSilk = v.boolean()
 
-const Cat = valibotSilk(
-  v.object({
-    __typename: v.literal("Cat"),
-    name: v.string(),
-    age: v.number(),
-  })
-)
+const Cat = v.object({
+  __typename: v.literal("Cat"),
+  name: v.string(),
+  age: v.number(),
+})
 ```
 
 在上面的代码中，我们使用 [Valibot](https://valibot.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Valibot 集成](../schema-integration/valibot)章节中了解如何使用 [Valibot](https://valibot.dev/) 创建更复杂的类型。
+
+:::info 你也许想知道
+`GQLoom` 核心库遵循了 [标准 Schema 规范](https://github.com/standard-schema/standard-schema)，得益于 `Valibot` 同样遵循此规范，我们不需要使用额外的包装函数就可以将 Valibot Schema 作为丝线使用。
+在未来，[Zod](https://github.com/colinhacks/zod/pull/3850)也将支持此规范。
+:::
 
 ### 使用 Zod 创建丝线：
 

@@ -1,4 +1,4 @@
-import { silk, type Middleware } from "@gqloom/core"
+import { type Middleware, silk } from "@gqloom/core"
 
 export const outputValidator: Middleware = async (next, { outputSilk }) => {
   const output = await next()

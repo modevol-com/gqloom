@@ -58,7 +58,8 @@
       "style": {
         "noNamespace": "error",
         "useAsConstAssertion": "error",
-        "useBlockStatements": "off"
+        "useBlockStatements": "off",
+        "useImportType": "warn"
       },
       "suspicious": {
         "noAsyncPromiseExecutor": "error",
@@ -187,7 +188,8 @@
             "noSetterReturn": "off",
             "noUndeclaredVariables": "off",
             "noUnreachable": "off",
-            "noUnreachableSuper": "off"
+            "noUnreachableSuper": "off",
+            "noUnusedImports": "warn"
           },
           "style": {
             "noArguments": "error",

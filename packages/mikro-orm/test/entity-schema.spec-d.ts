@@ -1,16 +1,16 @@
 import { silk } from "@gqloom/core"
+import { type Collection, MikroORM, type Reference } from "@mikro-orm/core"
+import { GraphQLID, GraphQLObjectType, GraphQLString } from "graphql"
+import { describe, expectTypeOf, it } from "vitest"
+import type { EntitySilk, InferEntity } from "../src"
 import {
+  type GraphQLSilkEntity,
   manyToMany,
-  weaveEntitySchemaBySilk,
   manyToOne,
   oneToMany,
-  type GraphQLSilkEntity,
   oneToOne,
+  weaveEntitySchemaBySilk,
 } from "../src/entity-schema"
-import { GraphQLID, GraphQLObjectType, GraphQLString } from "graphql"
-import { type Collection, MikroORM, type Reference } from "@mikro-orm/core"
-import { describe, expectTypeOf, it } from "vitest"
-import { type EntitySilk, type InferEntity } from "../src"
 
 const Book = silk<{ title: string }>(
   new GraphQLObjectType({

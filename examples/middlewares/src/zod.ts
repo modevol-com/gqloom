@@ -1,8 +1,8 @@
-import { weave, resolver, query } from "@gqloom/zod"
-import { z } from "zod"
 import { createServer } from "node:http"
+import { query, resolver, weave } from "@gqloom/zod"
 import { createYoga } from "graphql-yoga"
-import { outputValidator, ZodExceptionFilter } from "./middlewares"
+import { z } from "zod"
+import { ZodExceptionFilter, outputValidator } from "./middlewares"
 
 const HelloResolver = resolver({
   hello: query(z.string().min(10), {

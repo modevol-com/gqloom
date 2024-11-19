@@ -73,22 +73,24 @@ The good thing is that we have schema libraries like [Valibot](https://valibot.d
 
 ```ts
 import * as v from "valibot"
-import { valibotSilk } from "@gqloom/valibot"
 
-const StringSilk = valibotSilk(v.string())
+const StringSilk = v.string()
 
-const BooleanSilk = valibotSilk(v.boolean())
+const BooleanSilk = v.boolean()
 
-const Cat = valibotSilk(
-  v.object({
-    __typename: v.literal("Cat"),
-    name: v.string(),
-    age: v.number(),
-  })
-)
+const Cat = v.object({
+  __typename: v.literal("Cat"),
+  name: v.string(),
+  age: v.number(),
+})
 ```
 
-In the code above, we have created some simple Schema as silk using [Valibot](https://valibot.dev/), you can learn how to create more complex types using [Valibot integration](../schema-integration/valibot) section to learn how to create more complex types using [Valibot](https://valibot.dev/).
+In the code above, we use [Valibot](https://valibot.dev/) to create some simple schemas as silk. You can learn more about how to create more complex types with [Valibot](https://valibot.dev/) in the [Valibot Integration](../schema-integration/valibot) chapter.
+
+:::info You might wonder
+The `GQLoom` core library follows the [Standard Schema Specification](https://github.com/standard-schema/standard-schema). Thanks to `Valibot` also adhering to this specification, we can use Valibot schemas as silk without any additional wrapper functions.
+In the future, [Zod](https://github.com/colinhacks/zod/pull/3850) will also support this specification.
+:::
 
 ### Use Zod to create silk:
 

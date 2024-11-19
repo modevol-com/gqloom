@@ -1,8 +1,8 @@
-import { type DMMF } from "@prisma/generator-helper"
-import { describe, it, expect } from "vitest"
-import { printType, GraphQLNonNull, type GraphQLNamedType } from "graphql"
+import { type GraphQLSilk, getGraphQLType } from "@gqloom/core"
+import type { DMMF } from "@prisma/generator-helper"
+import { type GraphQLNamedType, GraphQLNonNull, printType } from "graphql"
+import { describe, expect, it } from "vitest"
 import { PrismaWeaver } from "../src"
-import { getGraphQLType, type GraphQLSilk } from "@gqloom/core"
 
 const UserModel: DMMF.Model = {
   name: "User",

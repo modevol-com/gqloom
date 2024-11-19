@@ -1,35 +1,35 @@
-import { type DMMF } from "@prisma/generator-helper"
-import { PrismaWeaver } from "."
 import {
-  type PrismaModelMeta,
-  type PrismaClient,
-  type PrismaModelSilk,
-  type PrismaDelegate,
-  type InferPrismaDelegate,
-  type InferDelegateCountArgs,
-  type InferDelegateFindFirstArgs,
-  type InferDelegateFindManyArgs,
-  type InferDelegateFindUniqueArgs,
-  type InferDelegateCreateArgs,
-  type InferDelegateCreateManyArgs,
-  type IBatchPayload,
-  type InferDelegateDeleteArgs,
-  type InferDelegateDeleteManyArgs,
-  type InferDelegateUpdateArgs,
-  type InferDelegateUpdateManyArgs,
-  type InferDelegateUpsertArgs,
-} from "./types"
-import {
-  type InferSilkO,
   type FieldOrOperation,
-  type GraphQLSilk,
   type GraphQLFieldOptions,
+  type GraphQLSilk,
   type Middleware,
-  silk,
-  loom,
   type ResolverOptionsWithExtensions,
+  loom,
+  silk,
+  type v1,
 } from "@gqloom/core"
+import type { DMMF } from "@prisma/generator-helper"
+import { PrismaWeaver } from "."
 import { PrismaActionArgsWeaver } from "./type-weaver"
+import type {
+  IBatchPayload,
+  InferDelegateCountArgs,
+  InferDelegateCreateArgs,
+  InferDelegateCreateManyArgs,
+  InferDelegateDeleteArgs,
+  InferDelegateDeleteManyArgs,
+  InferDelegateFindFirstArgs,
+  InferDelegateFindManyArgs,
+  InferDelegateFindUniqueArgs,
+  InferDelegateUpdateArgs,
+  InferDelegateUpdateManyArgs,
+  InferDelegateUpsertArgs,
+  InferPrismaDelegate,
+  PrismaClient,
+  PrismaDelegate,
+  PrismaModelMeta,
+  PrismaModelSilk,
+} from "./types"
 import { capitalize, gqlType as gt } from "./utils"
 
 export class PrismaModelBobbin<
@@ -90,7 +90,9 @@ export class PrismaModelBobbin<
   }
 
   protected idKey?: string
-  protected uniqueWhere(instance: InferSilkO<NonNullable<TModalSilk>>): any {
+  protected uniqueWhere(
+    instance: v1.InferOutput<NonNullable<TModalSilk>>
+  ): any {
     if (this.silk.model.primaryKey == null) {
       this.idKey ??= (() => {
         const idField = this.silk.model.fields.find((field) => field.isId)

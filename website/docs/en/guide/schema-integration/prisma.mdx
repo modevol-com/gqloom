@@ -72,7 +72,8 @@ npx prisma generate
 ## Using Silk
 After generating the silk, we can use it in `resolver`:
 ```ts
-import { resolver, query, field, weave } from '@gqloom/valibot'
+import { resolver, query, field, weave } from '@gqloom/core'
+import { ValibotWeaver } from '@gqloom/valibot'
 import * as p from '@gqloom/prisma/generated'
 import * as v from 'valibot'
 import { PrismaClient } from '@prisma/client'
@@ -100,7 +101,7 @@ const postResolver = resolver.of(p.Post, {
   }),
 })
 
-export const schema = weave(userResolver, postResolver)
+export const schema = weave(ValibotWeaver, userResolver, postResolver)
 ```
 
 ### Hiding Fields

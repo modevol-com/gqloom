@@ -1,28 +1,28 @@
 import {
   type Middleware,
-  getOperationOptions,
   applyMiddlewares,
   compose,
-  getSubscriptionOptions,
   getFieldOptions,
+  getOperationOptions,
+  getSubscriptionOptions,
 } from "../utils"
 import { FIELD_HIDDEN } from "../utils/symbols"
-import { createInputParser } from "./input"
+import { createInputParser, getStandardValue } from "./input"
 import type {
   FieldFactory,
-  ResolvingOptions,
-  ResolverFactory,
-  FieldOrOperation,
-  ResolverOptionsWithParent,
-  GraphQLSilkIO,
-  SubscriptionFactory,
-  Subscription,
-  QueryFactory,
-  MutationFactory,
   FieldFactoryWithUtils,
+  FieldOrOperation,
+  GraphQLSilkIO,
+  MutationFactory,
+  QueryFactory,
+  ResolverFactory,
+  ResolverOptionsWithParent,
+  ResolvingOptions,
+  Subscription,
+  SubscriptionFactory,
 } from "./types"
 
-export const silkQuery: QueryFactory<GraphQLSilkIO> = (
+export const query: QueryFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -36,7 +36,7 @@ export const silkQuery: QueryFactory<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput()),
+        async () => options.resolve(getStandardValue(await parseInput())),
         { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
@@ -44,7 +44,7 @@ export const silkQuery: QueryFactory<GraphQLSilkIO> = (
   }
 }
 
-export const silkMutation: MutationFactory<GraphQLSilkIO> = (
+export const mutation: MutationFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -58,7 +58,7 @@ export const silkMutation: MutationFactory<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(await parseInput()),
+        async () => options.resolve(getStandardValue(await parseInput())),
         { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
@@ -80,7 +80,8 @@ const baseSilkField: FieldFactory<GraphQLSilkIO> = (
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(parent, await parseInput()),
+        async () =>
+          options.resolve(parent, getStandardValue(await parseInput())),
         { parseInput, parent, outputSilk: output, type }
       )
     },
@@ -88,7 +89,7 @@ const baseSilkField: FieldFactory<GraphQLSilkIO> = (
   }
 }
 
-export const silkField: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
+export const field: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
   baseSilkField,
   {
     hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN,
@@ -97,7 +98,7 @@ export const silkField: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const silkSubscription: SubscriptionFactory<GraphQLSilkIO> = (
+export const subscription: SubscriptionFactory<GraphQLSilkIO> = (
   output,
   subscribeOrOptions
 ) => {
@@ -114,7 +115,7 @@ export const silkSubscription: SubscriptionFactory<GraphQLSilkIO> = (
           extraOptions?.middlewares,
           options.middlewares
         ),
-        async () => options.subscribe(await parseInput()),
+        async () => options.subscribe(getStandardValue(await parseInput())),
         { parseInput, parent: undefined, outputSilk: output, type }
       )
     },
@@ -185,7 +186,7 @@ function extraOperationOptions<
   }
 }
 
-export const silkResolver: ResolverFactory<GraphQLSilkIO> = Object.assign(
+export const resolver: ResolverFactory<GraphQLSilkIO> = Object.assign(
   baseResolver as ResolverFactory<GraphQLSilkIO>,
   {
     of: ((parent, operations, options) =>
@@ -197,9 +198,9 @@ export const silkResolver: ResolverFactory<GraphQLSilkIO> = Object.assign(
 )
 
 export const loom = {
-  query: silkQuery,
-  resolver: silkResolver,
-  field: silkField,
-  subscription: silkSubscription,
-  mutation: silkMutation,
+  query,
+  resolver,
+  field,
+  subscription,
+  mutation,
 }

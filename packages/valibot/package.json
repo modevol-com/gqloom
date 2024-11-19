@@ -36,11 +36,11 @@
   "peerDependencies": {
     "@gqloom/core": ">= 0.3.0",
     "graphql": ">= 16.8.0",
-    "valibot": ">= 0.37.0 && < 1.0.0"
+    "valibot": ">= 1.0.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "valibot": "^0.37.0"
+    "valibot": "1.0.0-beta.7"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

@@ -18,7 +18,8 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup --dts-resolve",
+    "check:type": "tsc --noEmit",
     "release": "commit-and-tag-version"
   },
   "files": ["dist"],
@@ -44,5 +45,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@standard-schema/spec": "1.0.0-beta.3"
   }
 }

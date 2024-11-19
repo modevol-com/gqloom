@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest"
-import * as g from "./generated"
-import { PrismaTypeWeaver, PrismaActionArgsWeaver } from "../src"
 import { printType } from "graphql"
+import { describe, expect, it } from "vitest"
+import { PrismaActionArgsWeaver, PrismaTypeWeaver } from "../src"
+import * as g from "./generated"
 
 describe("PrismaModelTypeWeaver", () => {
   const typeWeaver = new PrismaTypeWeaver(g.User.meta)

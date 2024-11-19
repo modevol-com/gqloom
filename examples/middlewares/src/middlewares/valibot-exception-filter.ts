@@ -1,6 +1,6 @@
-import { type Middleware } from "@gqloom/core"
-import { ValiError } from "valibot"
+import type { Middleware } from "@gqloom/core"
 import { GraphQLError } from "graphql"
+import { ValiError } from "valibot"
 
 export const ValibotExceptionFilter: Middleware = async (next) => {
   try {

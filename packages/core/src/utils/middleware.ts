@@ -1,10 +1,10 @@
-import {
-  type GenericFieldOrOperation,
-  type CallableInputParser,
-  type FieldOrOperation,
-  type InferFieldOutput,
-  type InferSilkO,
-  type FieldOrOperationType,
+import type { v1 } from "@standard-schema/spec"
+import type {
+  CallableInputParser,
+  FieldOrOperation,
+  FieldOrOperationType,
+  GenericFieldOrOperation,
+  InferFieldOutput,
 } from "../resolver"
 import type { MayPromise } from "./types"
 
@@ -12,13 +12,13 @@ export interface MiddlewarePayload<
   TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 > {
   /** The Output Silk of the field */
-  outputSilk: InferSilkO<InferFieldOutput<TField>>
+  outputSilk: v1.InferOutput<InferFieldOutput<TField>>
 
   /** The previous object, which for a field on the root Query type is often not used. */
   parent: TField extends FieldOrOperation<infer TParent, any, any, any>
     ? TParent extends undefined
       ? undefined
-      : InferSilkO<NonNullable<TParent>>
+      : v1.InferOutput<NonNullable<TParent>>
     : never
 
   /** A function to parse the input of the field */
@@ -33,20 +33,20 @@ export interface MiddlewarePayload<
 export type Middleware<
   TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 > = (
-  next: () => MayPromise<InferSilkO<InferFieldOutput<TField>>>,
+  next: () => MayPromise<v1.InferOutput<InferFieldOutput<TField>>>,
   payload: MiddlewarePayload<TField>
-) => MayPromise<InferSilkO<InferFieldOutput<TField>>>
+) => MayPromise<v1.InferOutput<InferFieldOutput<TField>>>
 
 export function applyMiddlewares<
   TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 >(
   middlewares: Middleware[],
-  resolveFunction: () => MayPromise<InferSilkO<InferFieldOutput<TField>>>,
+  resolveFunction: () => MayPromise<v1.InferOutput<InferFieldOutput<TField>>>,
   payload: MiddlewarePayload<TField>
-): Promise<InferSilkO<InferFieldOutput<TField>>> {
+): Promise<v1.InferOutput<InferFieldOutput<TField>>> {
   const next = (
     index: number
-  ): MayPromise<InferSilkO<InferFieldOutput<TField>>> => {
+  ): MayPromise<v1.InferOutput<InferFieldOutput<TField>>> => {
     if (index >= middlewares.length) {
       return resolveFunction()
     }

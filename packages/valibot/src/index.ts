@@ -1,49 +1,42 @@
-import * as v from "valibot"
 import {
-  type GraphQLSilkIO,
+  type GraphQLSilk,
   SYMBOLS,
-  createLoom,
   ensureInterfaceType,
   mapValue,
   weaverContext,
-  type GraphQLSilk,
-  isSilk,
-  collectNames,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  type GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
-  isNonNullType,
   type GraphQLOutputType,
-  GraphQLEnumType,
-  type GraphQLInterfaceType,
-  isInterfaceType,
-  isObjectType,
+  GraphQLString,
   GraphQLUnionType,
+  isInterfaceType,
+  isNonNullType,
+  isObjectType,
 } from "graphql"
-import {
-  type AsObjectTypeMetadata,
-  ValibotMetadataCollector,
-  asInputArgs,
-} from "./metadata"
-import { flatVariant, nullishTypes } from "./utils"
-import {
-  type SupportedSchema,
-  type GenericSchemaOrAsync,
-  type EnumLike,
-  type ValibotWeaverConfigOptions,
-  type ValibotWeaverConfig,
+import * as v from "valibot"
+import { type AsObjectTypeMetadata, ValibotMetadataCollector } from "./metadata"
+import type {
+  EnumLike,
+  GenericSchemaOrAsync,
+  SupportedSchema,
+  ValibotWeaverConfig,
+  ValibotWeaverConfigOptions,
 } from "./types"
-export * from "@gqloom/core"
+import { flatVariant, nullishTypes } from "./utils"
 
 export class ValibotWeaver {
+  static vendor = "valibot"
+
   /**
    * get GraphQL Silk from Valibot Schema
    * @param schema Valibot Schema
@@ -59,11 +52,10 @@ export class ValibotWeaver {
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: GenericSchemaOrAsync) {
             return weaverContext.useConfig(config, () =>
-              ValibotWeaver.getGraphQLType.call(this)
+              ValibotWeaver.getGraphQLTypeBySelf.call(this)
             )
           }
-        : ValibotWeaver.getGraphQLType,
-      [SYMBOLS.PARSE]: ValibotWeaver.parse,
+        : ValibotWeaver.getGraphQLTypeBySelf,
     })
   }
   static toNullableGraphQLType(
@@ -283,6 +275,7 @@ export class ValibotWeaver {
   ): ValibotWeaverConfig {
     return {
       ...config,
+      vendorWeaver: ValibotWeaver,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.valibot",
     }
   }
@@ -314,86 +307,13 @@ export class ValibotWeaver {
       : v.parse(this as v.GenericSchema, input)
   }
 
-  static getGraphQLType(this: GenericSchemaOrAsync): GraphQLOutputType {
+  static getGraphQLType(schema: GenericSchemaOrAsync): GraphQLOutputType {
+    return ValibotWeaver.toNullableGraphQLType(schema)
+  }
+
+  static getGraphQLTypeBySelf(this: GenericSchemaOrAsync): GraphQLOutputType {
     return ValibotWeaver.toNullableGraphQLType(this)
   }
 }
 
 export * from "./metadata"
-/**
- * get GraphQL Silk from Valibot Schema
- * @param schema Valibot Schema
- * @returns GraphQL Silk Like Valibot Schema
- */
-export function valibotSilk<TSchema extends GenericSchemaOrAsync>(
-  schema: TSchema
-): TSchema & GraphQLSilk<v.InferOutput<TSchema>, v.InferInput<TSchema>>
-
-/**
- * get GraphQL Silk from Valibot Schema
- * @param silk GraphQL Silk
- * @returns GraphQL Silk
- */
-export function valibotSilk<TSilk>(silk: TSilk): TSilk
-export function valibotSilk(schema: GenericSchemaOrAsync | GraphQLSilk) {
-  if (isSilk(schema)) return schema
-  if (isValibotSchemaRecord(schema)) {
-    const inputSchema = v.objectAsync(schema)
-    collectNames({ [`InputArgs${asInputArgs.increasingID++}`]: inputSchema })
-    return ValibotWeaver.unravel(inputSchema)
-  }
-  return ValibotWeaver.unravel(schema)
-}
-
-valibotSilk.isSilk = (schema: any) =>
-  isSilk(schema) || isValibotSchema(schema) || isValibotSchemaRecord(schema)
-
-valibotSilk.input = <TInput extends Record<string, GenericSchemaOrAsync>>(
-  input: TInput
-): InferInputSilk<TInput> => {
-  return valibotSilk(input as any)
-}
-
-export type InferInputSilk<
-  TInput extends Record<string, GenericSchemaOrAsync>,
-> = GraphQLSilk<InferInputO<TInput>, InferInputI<TInput>>
-
-export type InferInputI<TInput extends Record<string, GenericSchemaOrAsync>> = {
-  [K in keyof TInput]: v.InferInput<TInput[K]>
-}
-
-export type InferInputO<TInput extends Record<string, GenericSchemaOrAsync>> = {
-  [K in keyof TInput]: v.InferOutput<TInput[K]>
-}
-
-export type ValibotSchemaIO = [
-  GenericSchemaOrAsync,
-  "_types.input",
-  "_types.output",
-]
-
-export const { query, mutation, field, resolver, subscription } = createLoom<
-  ValibotSchemaIO | GraphQLSilkIO
->(valibotSilk, valibotSilk.isSilk)
-
-function isValibotSchemaRecord(
-  schema: any
-): schema is Record<string, GenericSchemaOrAsync> {
-  return (
-    typeof schema === "object" &&
-    schema !== null &&
-    Object.values(schema).every(isValibotSchema)
-  )
-}
-
-function isValibotSchema(schema: any): schema is GenericSchemaOrAsync {
-  if (typeof schema !== "object") return false
-  if (!("kind" in schema)) return false
-  if (!("async" in schema)) return false
-  if (!("type" in schema)) return false
-  return (
-    schema.kind === "schema" &&
-    typeof schema.async === "boolean" &&
-    typeof schema.type === "string"
-  )
-}

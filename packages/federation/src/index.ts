@@ -1,8 +1,8 @@
 import {
-  silk,
   type FieldOrOperation,
   type MayPromise,
   resolverPayloadStorage,
+  silk,
 } from "@gqloom/core"
 import { GraphQLID, type GraphQLResolveInfo } from "graphql"
 

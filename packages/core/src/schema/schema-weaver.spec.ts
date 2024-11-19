@@ -1,18 +1,18 @@
-import { describe, it, expect } from "vitest"
 import {
   GraphQLFloat,
+  GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  printSchema,
-  lexicographicSortSchema,
-  GraphQLInt,
   GraphQLUnionType,
+  lexicographicSortSchema,
+  printSchema,
 } from "graphql"
+import { describe, expect, it } from "vitest"
 import { getGraphQLType, silk } from "../resolver"
 import { loom } from "../resolver"
-import { SchemaWeaver, weave } from "./schema-weaver"
 import { ensureInterfaceType } from "./interface"
+import { SchemaWeaver, weave } from "./schema-weaver"
 import { provideWeaverContext } from "./weaver-context"
 
 const { resolver, query, mutation, field } = loom

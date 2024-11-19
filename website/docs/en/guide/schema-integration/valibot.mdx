@@ -12,32 +12,33 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## Defining simple scalars
 
-Valibot Schema can be used as a [silk](../fundamentals/silk) in GQLoom using `valibotSilk`:
+In GQLoom, you can directly use Valibot schemas as [silk](../fundamentals/silk):
 
 ```ts
 import * as v from "valibot"
-import { valibotSilk } from "@gqloom/valibot"
 
-const StringScalar = valibotSilk(v.string()) // GraphQLString
+const StringScalar = v.string() // GraphQLString
 
-const BooleanScalar = valibotSilk(v.boolean()) // GraphQLBoolean
+const BooleanScalar = v.boolean() // GraphQLBoolean
 
-const FloatScalar = valibotSilk(v.number()) // GraphQLFloat
+const FloatScalar = v.number() // GraphQLFloat
 
-const IntScalar = valibotSilk(v.pipe(v.nullable(v.number()), v.integer())) // GraphQLInt
+const IntScalar = v.pipe(v.nullable(v.number()), v.integer()) // GraphQLInt
 ```
 
-## Resolver
+## Weave
 
-In order to use Valibot Schema as a silk, we need to wrap `valibotSilk` around it, and a lot of wrapping can be a bit cumbersome in development, so `@gqloom/valibot` provides re-exported resolver and operation constructors to simplify the process.
-The `resolver`, `query`, `mutation`, and `field` imported from `@gqloom/valibot` will automatically wrap `valibotSilk` internally so that in most cases we can use the Valibot Schema directly.
+To ensure that `GQLoom` correctly weaves Valibot schemas into the GraphQL schema, we need to add the `ValibotWeaver` from `@gqloom/valibot` when using the `weave` function.
 
 ```ts
-import { resolver, query } from "@gqloom/valibot"
+import { resolver, query ,weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 
-export const HelloResolver = resolver({
+export const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World!"),
 })
+
+export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
 ## Defining objects
@@ -46,7 +47,7 @@ We can use Valibot to define objects and use them as [silk] (... /fundamentals/s
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/valibot"
+import { collectNames } from "@gqloom/core"
 
 export const Cat = v.object({
   name: v.string(),
@@ -95,7 +96,7 @@ In the code above, we are still using the `__typename` literal to define the nam
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/valibot"
+import { collectNames } from "@gqloom/core"
 
 export const Cat = v.object({
   name: v.string(),
@@ -110,7 +111,7 @@ In the above code, we are using the `collectNames` function to define names for 
 
 ```ts
 import * as v from "valibot"
-import { collectNames } from "@gqloom/valibot"
+import { collectNames } from "@gqloom/core"
 
 export const { Cat } = collectNames({
   Cat: v.object({
@@ -297,8 +298,9 @@ In the above code, we have created a union type using the `variant` function. In
 We can also use `union` to define union types:
 
 ```ts
+import { collectNames } from "@gqloom/core"
+import { asUnionType } from "@gqloom/valibot"
 import * as v from "valibot"
-import { asUnionType, valibotSilk, collectNames } from "@gqloom/valibot"
 
 const Cat = v.object({
   name: v.string(),
@@ -335,7 +337,7 @@ In general, we prefer to use `v.picklist` to define enumerated types:
 
 ```ts
 import * as v from "valibot"
-import { asEnumType, valibotSilk } from "@gqloom/valibot"
+import { asEnumType } from "@gqloom/valibot"
 
 export const Fruit = v.pipe(
   v.picklist(["apple", "banana", "orange"]),
@@ -407,7 +409,7 @@ export const valibotWeaverConfig = ValibotWeaver.config({
 Configurations are passed into the `weave` function when weaving the GraphQL Schema:
 
 ```ts
-import { weave } from "@gqloom/valibot"
+import { weave } from "@gqloom/core"
 
 export const schema = weave(valibotWeaverConfig, HelloResolver)
 ```

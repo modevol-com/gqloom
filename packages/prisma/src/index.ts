@@ -1,37 +1,44 @@
 import {
   type GraphQLSilk,
   SYMBOLS,
-  silk,
   notNullish,
+  silk,
   weaverContext,
 } from "@gqloom/core"
-import { type DMMF } from "@prisma/generator-helper"
+import type { DMMF } from "@prisma/generator-helper"
 import {
-  type GraphQLFieldConfig,
-  GraphQLObjectType,
-  GraphQLID,
-  GraphQLString,
   GraphQLBoolean,
-  GraphQLInt,
-  GraphQLFloat,
-  GraphQLNonNull,
-  type GraphQLOutputType,
   GraphQLEnumType,
+  type GraphQLFieldConfig,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  type GraphQLOutputType,
+  GraphQLString,
 } from "graphql"
 import type {
-  PrismaModelSilk,
-  PrismaModelMeta,
   PrismaEnumSilk,
+  PrismaModelMeta,
+  PrismaModelSilk,
   PrismaWeaverConfig,
   PrismaWeaverConfigOptions,
 } from "./types"
 
 export class PrismaWeaver {
+  static vendor = "gqloom.prisma"
+
   static unravel<TModal>(
     model: DMMF.Model,
     meta: PrismaModelMeta
   ): PrismaModelSilk<TModal> {
     return {
+      "~standard": {
+        version: 1,
+        vendor: PrismaWeaver.vendor,
+        validate: (value) => ({ value: value as TModal }),
+      },
       model,
       meta,
       name: model.name,
@@ -50,6 +57,11 @@ export class PrismaWeaver {
     enumType: DMMF.DatamodelEnum
   ): PrismaEnumSilk<TEnum> {
     return {
+      "~standard": {
+        version: 1,
+        vendor: PrismaWeaver.vendor,
+        validate: (value) => ({ value: value as TEnum }),
+      },
       enumType,
       [SYMBOLS.GET_GRAPHQL_TYPE]: () =>
         PrismaWeaver.getGraphQLEnumType(enumType),

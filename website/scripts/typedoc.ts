@@ -1,6 +1,6 @@
-import { Application, type TypeDocOptions } from "typedoc"
-import * as fs from "fs/promises"
 import * as path from "path"
+import * as fs from "fs/promises"
+import { Application, type TypeDocOptions } from "typedoc"
 
 const typeDocConfig = {
   plugin: ["typedoc-plugin-markdown"],

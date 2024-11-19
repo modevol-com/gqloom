@@ -1,7 +1,7 @@
-import { weave } from "@gqloom/core"
-import { printSchema, lexicographicSortSchema } from "graphql"
-import { HelloResolver } from "./resolvers"
 import * as fs from "fs"
+import { weave } from "@gqloom/core"
+import { lexicographicSortSchema, printSchema } from "graphql"
+import { HelloResolver } from "./resolvers"
 
 const schema = weave(HelloResolver)
 

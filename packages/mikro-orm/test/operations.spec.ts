@@ -1,18 +1,29 @@
 import {
+  type CallableInputParser,
   type GraphQLSilk,
+  baseResolver,
   getGraphQLType,
   silk,
-  baseResolver,
   weave,
-  type CallableInputParser,
 } from "@gqloom/core"
 import {
   EntitySchema,
   MikroORM,
+  RequestContext,
   type RequiredEntityData,
   defineConfig,
-  RequestContext,
 } from "@mikro-orm/better-sqlite"
+import {
+  GraphQLFloat,
+  GraphQLList,
+  type GraphQLNamedType,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  type GraphQLOutputType,
+  GraphQLString,
+  printSchema,
+  printType,
+} from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
@@ -20,17 +31,6 @@ import {
   MikroOperationBobbin,
   type UpdateInput,
 } from "../src/operations"
-import {
-  type GraphQLNamedType,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  printType,
-  GraphQLString,
-  GraphQLFloat,
-  printSchema,
-  type GraphQLOutputType,
-  GraphQLList,
-} from "graphql"
 
 interface IGiraffe {
   id: string

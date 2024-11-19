@@ -1,13 +1,13 @@
 import {
   GraphQLInterfaceType,
-  isInterfaceType,
-  isObjectType,
   type GraphQLInterfaceTypeConfig,
   type GraphQLOutputType,
+  isInterfaceType,
+  isObjectType,
 } from "graphql"
-import { weaverContext } from "./weaver-context"
 import { mapValue } from "../utils"
 import { getCacheType } from "./object"
+import { weaverContext } from "./weaver-context"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,

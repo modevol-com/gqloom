@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest"
-import { silk } from "./silk"
 import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLString,
   printSchema,
 } from "graphql"
-import { loom } from "./resolver"
+import { describe, expect, it } from "vitest"
 import { weave } from "../schema"
+import { loom } from "./resolver"
+import { silk } from "./silk"
 
 describe("silk", () => {
   describe("nonNull", () => {
