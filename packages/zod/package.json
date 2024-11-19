@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/zod",
-  "version": "0.2.5",
+  "version": "0.4.0",
   "description": "Create GraphQL schema and resolvers with TypeScript using Zod!",
   "type": "module",
   "main": "./dist/index.js",
@@ -33,7 +33,7 @@
   "license": "MIT",
   "peerDependencies": {
     "graphql": ">= 16.8.0",
-    "@gqloom/core": ">= 0.2.0",
+    "@gqloom/core": ">= 0.4.0",
     "zod": ">= 3.0.0"
   },
   "files": ["dist"],

@@ -1,6 +1,12 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
+All notable changes to this project will be documented in this file.
+
+## next (YYYY-MM-DD)
+
+## 0.2.0 (2024-11-20)
+
+- Refactor: follow standard-schema ([#7](https://github.com/modevol-com/gqloom/pull/7))
 
 ## [0.1.3](https://github.com/modevol-com/gqloom/compare/@gqloom/prisma@0.1.2...@gqloom/prisma@0.1.3) (2024-10-19)
 

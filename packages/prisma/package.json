@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/prisma",
-  "version": "0.1.3",
+  "version": "0.4.0",
   "description": "GQLoom integration with Prisma",
   "type": "module",
   "main": "./dist/index.js",
@@ -30,7 +30,6 @@
   "scripts": {
     "build": "tsup",
     "prepare": "pnpm build && pnpm generate",
-    "release": "commit-and-tag-version",
     "init": "exec prisma migrate dev --name init",
     "generate": "prisma generate"
   },
@@ -42,7 +41,7 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.2.0",
+    "@gqloom/core": ">= 0.4.0",
     "prisma": ">= 5.0.0",
     "graphql": ">= 16.8.0"
   },

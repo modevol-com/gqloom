@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Create GraphQL schema and resolvers with TypeScript.",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,8 +19,7 @@
   },
   "scripts": {
     "build": "tsup --dts-resolve",
-    "check:type": "tsc --noEmit",
-    "release": "commit-and-tag-version"
+    "check:type": "tsc --noEmit"
   },
   "files": ["dist"],
   "peerDependencies": {
