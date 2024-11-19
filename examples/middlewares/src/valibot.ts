@@ -1,5 +1,6 @@
 import { createServer } from "node:http"
-import { query, resolver, weave } from "@gqloom/valibot"
+import { query, resolver, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import { createYoga } from "graphql-yoga"
 import * as v from "valibot"
 import { ValibotExceptionFilter, outputValidator } from "./middlewares"
@@ -12,7 +13,11 @@ const HelloResolver = resolver({
   }),
 })
 
-export const schema = weave(HelloResolver, ValibotExceptionFilter)
+export const schema = weave(
+  ValibotWeaver,
+  HelloResolver,
+  ValibotExceptionFilter
+)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {

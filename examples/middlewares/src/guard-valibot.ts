@@ -1,4 +1,4 @@
-import { mutation, resolver } from "@gqloom/valibot"
+import { mutation, resolver } from "@gqloom/core"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 

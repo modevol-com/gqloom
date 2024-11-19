@@ -1,5 +1,6 @@
 import { createServer } from "node:http"
-import { query, resolver, subscription, weave } from "@gqloom/valibot"
+import { query, resolver, subscription, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import { createPubSub, createYoga } from "graphql-yoga"
 import * as v from "valibot"
 
@@ -33,7 +34,7 @@ const HelloResolver = resolver({
   }),
 })
 
-const schema = weave(CountdownResolver, HelloResolver)
+const schema = weave(ValibotWeaver, CountdownResolver, HelloResolver)
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
 
