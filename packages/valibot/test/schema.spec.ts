@@ -145,12 +145,12 @@ describe("", () => {
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
-      "type Query {
-        dog: Dog!
+      "type Dog {
+        name: String
       }
 
-      type Dog {
-        name: String
+      type Query {
+        dog: Dog!
       }"
     `)
   })
@@ -348,11 +348,7 @@ describe("", () => {
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
-      "type Query {
-        orange: Orange!
-      }
-
-      type Orange implements Fruit {
+      "type Orange implements Fruit {
         name: String!
         color: String!
         prize: Float!
@@ -362,6 +358,10 @@ describe("", () => {
         name: String!
         color: String!
         prize: Float!
+      }
+
+      type Query {
+        orange: Orange!
       }"
     `)
   })
@@ -482,15 +482,15 @@ describe("", () => {
         }),
       })
       expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
-        "type Query {
-          dog: Dog!
-        }
-
-        type Dog {
+        "type Dog {
           name: String!
           birthday: String!
           age: Float!
           greeting: String!
+        }
+
+        type Query {
+          dog: Dog!
         }"
       `)
     })
@@ -533,18 +533,18 @@ describe("", () => {
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type Query {
+        "type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }
+
+        type Query {
           dog: Dog
           cat: Cat!
           dogs: [Dog]!
           mustDog: Dog!
           mustDogs: [Dog!]!
-        }
-
-        type Dog {
-          name: String!
-          birthday: String!
-          age: Float!
         }
 
         type Cat {
@@ -582,12 +582,7 @@ describe("", () => {
       })
 
       expect(printResolver(r)).toMatchInlineSnapshot(`
-        "type Query {
-          orange: Orange!
-          apple: Apple!
-        }
-
-        type Orange {
+        "type Orange {
           name: String!
           color: String!
           prize: Prize!
@@ -596,6 +591,11 @@ describe("", () => {
         type Prize {
           name: String!
           value: Float!
+        }
+
+        type Query {
+          orange: Orange!
+          apple: Apple!
         }
 
         type Apple {
@@ -642,12 +642,7 @@ describe("", () => {
       })
 
       expect(printResolver(r)).toMatchInlineSnapshot(`
-        "type Query {
-          orange: Orange!
-          apple: Apple!
-        }
-
-        type Orange implements Fruit {
+        "type Orange implements Fruit {
           name: String!
           color: String!
           prize: Prize!
@@ -662,6 +657,11 @@ describe("", () => {
         type Prize {
           name: String!
           value: Float!
+        }
+
+        type Query {
+          orange: Orange!
+          apple: Apple!
         }
 
         type Apple implements Fruit {
@@ -717,17 +717,17 @@ describe("", () => {
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type Query {
+        "type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }
+
+        type Query {
           unwrap(name: String!, birthday: String!): Dog!
           dog(data: DogInput!): Dog!
           dogs(data: [DogInput!]!, required: [DogInput!]!, names: [String!]!): [Dog!]!
           mustDog(data: DataInput!): Dog!
-        }
-
-        type Dog {
-          name: String!
-          birthday: String!
-          age: Float!
         }
 
         input DogInput {

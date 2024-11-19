@@ -149,12 +149,12 @@ describe("ZodSilk", () => {
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
-      "type Query {
-        dog: Dog!
+      "type Dog {
+        name: String
       }
 
-      type Dog {
-        name: String
+      type Query {
+        dog: Dog!
       }"
     `)
   })
@@ -475,15 +475,15 @@ describe("ZodSilk", () => {
         }),
       })
       expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
-        "type Query {
-          dog: Dog!
-        }
-
-        type Dog {
+        "type Dog {
           name: String!
           birthday: String!
           age: Float!
           greeting: String!
+        }
+
+        type Query {
+          dog: Dog!
         }"
       `)
     })
@@ -515,17 +515,17 @@ describe("ZodSilk", () => {
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type Query {
+        "type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }
+
+        type Query {
           dog: Dog
           dogs: [Dog]!
           mustDog: Dog!
           mustDogs: [Dog!]!
-        }
-
-        type Dog {
-          name: String!
-          birthday: String!
-          age: Float!
         }"
       `)
     })
@@ -584,7 +584,14 @@ describe("ZodSilk", () => {
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type Query {
+        """"Does the dog love fish?"""
+        type Dog {
+          name: String!
+          birthday: String
+          age: Float!
+        }
+
+        type Query {
           unwrap(name: String!, birthday: String): Dog!
           dog(
             """Does the dog love fish?"""
@@ -592,13 +599,6 @@ describe("ZodSilk", () => {
           ): Dog!
           dogs(data: [DogInput!]!, required: [DogInput!]!, names: [String!]!): [Dog!]!
           mustDog(data: DataInput!): DogRequired!
-        }
-
-        """Does the dog love fish?"""
-        type Dog {
-          name: String!
-          birthday: String
-          age: Float!
         }
 
         """Does the dog love fish?"""

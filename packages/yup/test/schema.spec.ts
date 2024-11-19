@@ -118,12 +118,12 @@ describe("YupWeaver", () => {
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
-      "type Query {
-        dog: Dog
+      "type Dog {
+        name: String
       }
 
-      type Dog {
-        name: String
+      type Query {
+        dog: Dog
       }"
     `)
   })
@@ -432,15 +432,15 @@ describe("YupWeaver", () => {
       })
 
       expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
-        "type Query {
-          dog: Dog
-        }
-
-        type Dog {
+        "type Dog {
           name: String!
           birthday: String!
           age: Float
           greeting: String
+        }
+
+        type Query {
+          dog: Dog
         }"
       `)
     })
@@ -470,17 +470,17 @@ describe("YupWeaver", () => {
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type Query {
+        "type Dog {
+          name: String!
+          birthday: String!
+          age: Float
+        }
+
+        type Query {
           dog: Dog
           dogs: [Dog]
           mustDog: Dog!
           mustDogs: [Dog!]
-        }
-
-        type Dog {
-          name: String!
-          birthday: String!
-          age: Float
         }"
       `)
     })
@@ -522,18 +522,18 @@ describe("YupWeaver", () => {
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type Query {
-          unwrap(name: String!, birthday: String!): Dog
-          dog(data: DogInput): Dog
-          dogs(data: [DogInput], required: [DogInput!], names: [String!]!): [Dog!]
-          mustDog(data: DogInput!): Dog!
-        }
-
-        """Dog Type"""
+        """"Dog Type"""
         type Dog {
           name: String!
           birthday: String!
           age: Float
+        }
+
+        type Query {
+          unwrap(name: String!, birthday: String!): Dog
+          dog(data: DogInput): Dog
+          dogs(data: [DogInput], required: [DogInput!], names: [String!]!): [Dog!]
+          mustDog(data: DogInput!): Dog!
         }
 
         """Dog Type"""

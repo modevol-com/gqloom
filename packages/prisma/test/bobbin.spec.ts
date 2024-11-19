@@ -214,7 +214,13 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
+        "type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        type Query {
           countUser(where: UserWhereInput!): Int!
         }
 
@@ -265,14 +271,14 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          findFirstUser(where: UserWhereInput): User
-        }
-
-        type User {
+        "type User {
           id: ID!
           email: String!
           name: String
+        }
+
+        type Query {
+          findFirstUser(where: UserWhereInput): User
         }
 
         input UserWhereInput {
@@ -323,14 +329,14 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          findManyUser(where: UserWhereInput): [User!]!
-        }
-
-        type User {
+        "type User {
           id: ID!
           email: String!
           name: String
+        }
+
+        type Query {
+          findManyUser(where: UserWhereInput): [User!]!
         }
 
         input UserWhereInput {
@@ -381,14 +387,14 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          findUniqueUser(where: UserWhereInput!): User
-        }
-
-        type User {
+        "type User {
           id: ID!
           email: String!
           name: String
+        }
+
+        type Query {
+          findUniqueUser(where: UserWhereInput!): User
         }
 
         input UserWhereInput {
@@ -439,14 +445,14 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
-          createUser(data: UserCreateInput!): User
-        }
-
-        type User {
+        "type User {
           id: ID!
           email: String!
           name: String
+        }
+
+        type Mutation {
+          createUser(data: UserCreateInput!): User
         }
 
         input UserCreateInput {
@@ -494,7 +500,13 @@ describe("PrismaModelBobbin", () => {
       })
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
+        "type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        type Mutation {
           createManyUser(data: [UserCreateManyInput!]!): BatchPayload
         }
 
@@ -549,14 +561,14 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
-          deleteUser(where: UserDeleteInput!): User
-        }
-
-        type User {
+        "type User {
           id: ID!
           email: String!
           name: String
+        }
+
+        type Mutation {
+          deleteUser(where: UserDeleteInput!): User
         }
 
         input UserDeleteInput {
@@ -605,7 +617,13 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
+        "type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        type Mutation {
           deleteManyUser(where: UserDeleteManyInput!): BatchPayload
         }
 
@@ -666,14 +684,14 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
-          updateUser(data: UserUpdateInput!, where: UserWhereInput!): User!
-        }
-
-        type User {
+        "type User {
           id: ID!
           email: String!
           name: String
+        }
+
+        type Mutation {
+          updateUser(data: UserUpdateInput!, where: UserWhereInput!): User!
         }
 
         input UserUpdateInput {
@@ -733,7 +751,13 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
+        "type User {
+          id: ID!
+          email: String!
+          name: String
+        }
+
+        type Mutation {
           updateManyUser(data: UserUpdateManyInput!, where: UserWhereInput!): BatchPayload
         }
 
@@ -799,14 +823,14 @@ describe("PrismaModelBobbin", () => {
 
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
-          upsertUser(where: UserWhereUniqueInput!, create: UserUpsertInput!, update: UserUpsertInput!): User!
-        }
-
-        type User {
+        "type User {
           id: ID!
           email: String!
           name: String
+        }
+
+        type Mutation {
+          upsertUser(where: UserWhereUniqueInput!, create: UserUpsertInput!, update: UserUpsertInput!): User!
         }
 
         input UserWhereUniqueInput {
