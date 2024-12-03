@@ -298,8 +298,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       valibot:
-        specifier: 1.0.0-beta.7
-        version: 1.0.0-beta.7(typescript@5.4.3)
+        specifier: 1.0.0-beta.9
+        version: 1.0.0-beta.9(typescript@5.4.3)
 
   packages/yup:
     dependencies:
@@ -4328,6 +4328,14 @@ packages:
 
   valibot@1.0.0-beta.7:
     resolution: {integrity: sha512-8CsDu3tqyg7quEHMzCOYdQ/d9NlmVQKtd4AlFje6oJpvqo70EIZjSakKIeWltJyNAiUtdtLe0LAk4625gavoeQ==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  valibot@1.0.0-beta.9:
+    resolution: {integrity: sha512-yEX8gMAZ2R1yI2uwOO4NCtVnJQx36zn3vD0omzzj9FhcoblvPukENIiRZXKZwCnqSeV80bMm8wNiGhQ0S8fiww==}
     peerDependencies:
       typescript: '>=5'
     peerDependenciesMeta:
@@ -9068,6 +9076,10 @@ snapshots:
       sade: 1.8.1
 
   valibot@1.0.0-beta.7(typescript@5.4.3):
+    optionalDependencies:
+      typescript: 5.4.3
+
+  valibot@1.0.0-beta.9(typescript@5.4.3):
     optionalDependencies:
       typescript: 5.4.3
 
