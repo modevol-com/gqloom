@@ -499,4 +499,12 @@ async function parseZod(
       }
 }
 
-export * from "@gqloom/core"
+export {
+  collectName,
+  collectNames,
+  weave,
+  silk,
+  getGraphQLType,
+  parseSilk,
+  SchemaWeaver,
+} from "@gqloom/core"

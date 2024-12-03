@@ -46,7 +46,6 @@ import type {
   YupWeaverConfigOptions,
 } from "./types"
 import type { UnionSchema } from "./union"
-export * from "@gqloom/core"
 
 export * from "./types"
 export * from "./union"
@@ -385,3 +384,13 @@ function issuesFromValidationError(
 export const { query, mutation, field, resolver, subscription } = createLoom<
   YupSchemaIO | GraphQLSilkIO
 >(yupSilk, yupSilk.isSilk)
+
+export {
+  collectName,
+  collectNames,
+  weave,
+  silk,
+  getGraphQLType,
+  parseSilk,
+  SchemaWeaver,
+} from "@gqloom/core"
