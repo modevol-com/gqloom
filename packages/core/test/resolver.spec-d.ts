@@ -1,4 +1,4 @@
-import type { v1 } from "@standard-schema/spec"
+import type { StandardSchemaV1 } from "@standard-schema/spec"
 import {
   GraphQLFloat,
   GraphQLInt,
@@ -64,7 +64,7 @@ describe("resolver type", () => {
           async (next, { parent, parseInput }) => {
             it("should infer input type", () => {
               expectTypeOf(parseInput).returns.resolves.toEqualTypeOf<
-                v1.StandardResult<Partial<IGiraffe>>
+                StandardSchemaV1.Result<Partial<IGiraffe>>
               >()
             })
             it("should infer parent type", () => {
@@ -130,7 +130,9 @@ describe("resolver type", () => {
               const input = await parseInput()
               it("should infer input type", () => {
                 expectTypeOf(input).toEqualTypeOf<
-                  v1.StandardResult<{ myName: string | undefined }>
+                  StandardSchemaV1.Result<{
+                    myName: string | undefined
+                  }>
                 >()
               })
               return next()
@@ -159,11 +161,11 @@ describe("resolver type", () => {
             const input = await parseInput()
             it("should infer input type", () => {
               expectTypeOf(input).toEqualTypeOf<
-                | v1.StandardFailureResult
-                | v1.StandardSuccessResult<{
+                | StandardSchemaV1.FailureResult
+                | StandardSchemaV1.SuccessResult<{
                     myName: string | undefined
                   }>
-                | v1.StandardSuccessResult<undefined>
+                | StandardSchemaV1.Result<undefined>
               >()
             })
 

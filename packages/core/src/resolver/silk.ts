@@ -1,4 +1,4 @@
-import type { v1 } from "@standard-schema/spec"
+import type { StandardSchemaV1 } from "@standard-schema/spec"
 import {
   GraphQLList,
   GraphQLNonNull,
@@ -18,8 +18,8 @@ export function silk<TScalar extends GraphQLScalarType>(
   parse?: (
     value: InferScalarExternal<TScalar>
   ) =>
-    | v1.StandardResult<InferScalarExternal<TScalar>>
-    | Promise<v1.StandardResult<InferScalarInternal<TScalar>>>
+    | StandardSchemaV1.Result<InferScalarExternal<TScalar>>
+    | Promise<StandardSchemaV1.Result<InferScalarInternal<TScalar>>>
 ): GraphQLSilk<
   InferScalarInternal<TScalar> | undefined,
   InferScalarInternal<TScalar> | undefined
@@ -32,16 +32,20 @@ export function silk<TOutput, TInput = TOutput>(
   type: GraphQLOutputType | (() => GraphQLOutputType),
   validate?: (
     value: TInput
-  ) => v1.StandardResult<TOutput> | Promise<v1.StandardResult<TOutput>>
+  ) =>
+    | StandardSchemaV1.Result<TOutput>
+    | Promise<StandardSchemaV1.Result<TOutput>>
 ): GraphQLSilk<TOutput, TInput>
 
 export function silk<TOutput, TInput = TOutput>(
   type: GraphQLOutputType | (() => GraphQLOutputType),
   validate: (
     value: TInput
-  ) => v1.StandardResult<TOutput> | Promise<v1.StandardResult<TOutput>> = (
-    value
-  ) => ({ value: (value ?? undefined) as unknown as TOutput })
+  ) =>
+    | StandardSchemaV1.Result<TOutput>
+    | Promise<StandardSchemaV1.Result<TOutput>> = (value) => ({
+    value: (value ?? undefined) as unknown as TOutput,
+  })
 ): GraphQLSilk<TOutput, TInput> {
   return {
     [GET_GRAPHQL_TYPE]: typeof type === "function" ? type : () => type,
@@ -49,7 +53,7 @@ export function silk<TOutput, TInput = TOutput>(
       version: 1,
       vendor: "gqloom.silk",
       validate,
-    } as v1.StandardSchemaProps<TInput, TOutput>,
+    } as StandardSchemaV1.Props<TInput, TOutput>,
   }
 }
 
@@ -60,8 +64,8 @@ silk.list = listSilk
 silk.nullable = nullableSilk
 
 export type NonNullSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
-  NonNullable<v1.InferOutput<TSilk>>,
-  NonNullable<v1.InferInput<TSilk>>
+  NonNullable<StandardSchemaV1.InferOutput<TSilk>>,
+  NonNullable<StandardSchemaV1.InferInput<TSilk>>
 >
 
 /**
@@ -84,8 +88,8 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
 }
 
 export type ListSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
-  EnsureArray<v1.InferOutput<TSilk>>,
-  EnsureArray<v1.InferOutput<TSilk>>
+  EnsureArray<StandardSchemaV1.InferOutput<TSilk>>,
+  EnsureArray<StandardSchemaV1.InferOutput<TSilk>>
 >
 
 /**
@@ -113,8 +117,8 @@ export function listSilk<TSilk extends GraphQLSilk<any, any>>(
 }
 
 export type NullableSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
-  v1.InferOutput<TSilk> | null | undefined,
-  v1.InferInput<TSilk>
+  StandardSchemaV1.InferOutput<TSilk> | null | undefined,
+  StandardSchemaV1.InferInput<TSilk>
 >
 
 /**
@@ -164,8 +168,8 @@ export function getGraphQLType(silk: GraphQLSilk): GraphQLOutputType {
  */
 export function parseSilk<TSilk extends GraphQLSilk>(
   silk: TSilk,
-  input: v1.InferInput<TSilk>
-): MayPromise<v1.StandardResult<v1.InferOutput<TSilk>>> {
+  input: StandardSchemaV1.InferInput<TSilk>
+): MayPromise<StandardSchemaV1.Result<StandardSchemaV1.InferOutput<TSilk>>> {
   return silk["~standard"].validate(input)
 }
 

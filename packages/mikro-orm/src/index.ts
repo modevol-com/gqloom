@@ -1,11 +1,11 @@
 import {
   type GraphQLSilk,
   SYMBOLS,
+  type StandardSchemaV1,
   initWeaverContext,
   mapValue,
   provideWeaverContext,
   silk,
-  type v1,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -52,7 +52,7 @@ export class MikroWeaver {
         validate: (value: unknown) => ({
           value: value as InferEntity<TSchema>,
         }),
-      } satisfies v1.StandardSchemaProps<InferEntity<TSchema>, unknown>,
+      } satisfies StandardSchemaV1.Props<InferEntity<TSchema>, unknown>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLTypeBySelf,
       nullable() {
         return silk.nullable(this as unknown as GraphQLSilk)

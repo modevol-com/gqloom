@@ -6,6 +6,7 @@ import {
   type ListSilk,
   type MayPromise,
   type Middleware,
+  type StandardSchemaV1,
   applyMiddlewares,
   compose,
   createInputParser,
@@ -13,7 +14,6 @@ import {
   getStandardValue,
   mapValue,
   silk,
-  type v1,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -623,7 +623,7 @@ export class MikroOperationBobbin<
 }
 
 type NullableSilk<T extends GraphQLSilk> = GraphQLSilk<
-  v1.InferOutput<T> | null,
+  StandardSchemaV1.InferOutput<T> | null,
   undefined
 >
 

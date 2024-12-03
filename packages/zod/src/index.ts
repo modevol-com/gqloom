@@ -3,13 +3,13 @@ import {
   type GraphQLSilk,
   type GraphQLSilkIO,
   SYMBOLS,
+  type StandardSchemaV1,
   collectNames,
   createLoom,
   deepMerge,
   ensureInterfaceType,
   isSilk,
   mapValue,
-  type v1,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -89,7 +89,7 @@ export class ZodWeaver {
         version: 1,
         vendor: "gqloom.zod",
         validate: (value) => parseZod(schema, value),
-      } satisfies v1.StandardSchemaProps<z.input<TSchema>, z.output<TSchema>>,
+      } satisfies StandardSchemaV1.Props<z.input<TSchema>, z.output<TSchema>>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema) {
             return weaverContext.useConfig(config, () =>
@@ -485,7 +485,7 @@ function getGraphQLType(this: Schema) {
 async function parseZod(
   schema: Schema,
   data: any
-): Promise<v1.StandardResult<unknown>> {
+): Promise<StandardSchemaV1.Result<unknown>> {
   const result = await schema.safeParseAsync(data)
   return result.success
     ? { value: result.data }

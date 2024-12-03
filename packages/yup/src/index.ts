@@ -2,12 +2,12 @@ import {
   type GraphQLSilk,
   type GraphQLSilkIO,
   SYMBOLS,
+  type StandardSchemaV1,
   createLoom,
   deepMerge,
   ensureInterfaceType,
   isSilk,
   mapValue,
-  type v1,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -66,7 +66,7 @@ export class YupWeaver {
         version: 1,
         vendor: "gqloom.yup",
         validate: (value) => parseYup(schema, value),
-      } satisfies v1.StandardSchemaProps<
+      } satisfies StandardSchemaV1.Props<
         InferType<TSchema>,
         InferType<TSchema>
       >,
@@ -355,7 +355,7 @@ function getGraphQLType(this: Schema) {
 async function parseYup(
   schema: Schema,
   input: any
-): Promise<v1.StandardResult<any>> {
+): Promise<StandardSchemaV1.Result<any>> {
   try {
     const value = await schema.validate(input, {
       strict: true,
@@ -373,7 +373,9 @@ async function parseYup(
   }
 }
 
-function issuesFromValidationError(err: ValidationError): v1.StandardIssue[] {
+function issuesFromValidationError(
+  err: ValidationError
+): StandardSchemaV1.Issue[] {
   return [err, ...err.inner].map((e) => ({
     message: e.message,
     ...(e.path && { path: [e.path] }),

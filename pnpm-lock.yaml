@@ -199,8 +199,8 @@ importers:
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
     devDependencies:
       '@standard-schema/spec':
-        specifier: 1.0.0-beta.3
-        version: 1.0.0-beta.3
+        specifier: 1.0.0-beta.4
+        version: 1.0.0-beta.4
 
   packages/federation:
     devDependencies:
@@ -1334,8 +1334,8 @@ packages:
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
-  '@standard-schema/spec@1.0.0-beta.3':
-    resolution: {integrity: sha512-0ifF3BjA1E8SY9C+nUew8RefNOIq0cDlYALPty4rhUm8Rrl6tCM8hBT4bhGhx7I7iXD0uAgt50lgo8dD73ACMw==}
+  '@standard-schema/spec@1.0.0-beta.4':
+    resolution: {integrity: sha512-d3IxtzLo7P1oZ8s8YNvxzBUXRXojSut8pbPrTYtzsc5sn4+53jVqbk66pQerSZbZSJZQux6LkclB/+8IDordHg==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -5534,7 +5534,7 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@standard-schema/spec@1.0.0-beta.3': {}
+  '@standard-schema/spec@1.0.0-beta.4': {}
 
   '@swc/helpers@0.5.15':
     dependencies:

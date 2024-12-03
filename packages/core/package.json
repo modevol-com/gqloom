@@ -46,6 +46,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@standard-schema/spec": "1.0.0-beta.3"
+    "@standard-schema/spec": "1.0.0-beta.4"
   }
 }

@@ -1,4 +1,4 @@
-import type { v1 } from "@standard-schema/spec"
+import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type {
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
@@ -22,7 +22,7 @@ import type {
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
  */
 export interface GraphQLSilk<TOutput = any, TInput = any>
-  extends v1.StandardSchema<TInput, TOutput> {
+  extends StandardSchemaV1<TInput, TOutput> {
   /**
    * GraphQL type for schema
    */
@@ -105,19 +105,19 @@ export interface FieldOrOperation<
   output: TOutput
   resolve: TType extends "field"
     ? (
-        parent: v1.InferOutput<NonNullable<TParent>>,
+        parent: StandardSchemaV1.InferOutput<NonNullable<TParent>>,
         input: InferInputI<TInput, GraphQLSilkIO>,
         options?: ResolvingOptions
-      ) => Promise<v1.InferOutput<TOutput>>
+      ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
     : TType extends "subscription"
       ? (
           value: any,
           input: InferInputI<TInput, GraphQLSilkIO>
-        ) => Promise<v1.InferOutput<TOutput>>
+        ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
       : (
           input: InferInputI<TInput, GraphQLSilkIO>,
           options?: ResolvingOptions
-        ) => Promise<v1.InferOutput<TOutput>>
+        ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
 
   subscribe?: TType extends "subscription"
     ? (
@@ -286,12 +286,12 @@ export interface SubscriptionOptions<
 export interface Subscription<
   TOutput extends GraphQLSilk,
   TInput extends InputSchema<GraphQLSilk> = undefined,
-  TValue = v1.InferOutput<TOutput>,
+  TValue = StandardSchemaV1.InferOutput<TOutput>,
 > extends FieldOrOperation<undefined, TOutput, TInput, "subscription"> {
   resolve: (
     value: TValue,
     input: InferInputI<TInput, GraphQLSilkIO>
-  ) => Promise<v1.InferOutput<TOutput>>
+  ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
   subscribe: (
     input: InferInputI<TInput, GraphQLSilkIO>,
     options?: ResolvingOptions

@@ -1,4 +1,4 @@
-import type { v1 } from "@standard-schema/spec"
+import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { GraphQLError } from "graphql"
 import type { MayPromise, ObjectOrNever } from "../utils"
 import { isSilk } from "./silk"
@@ -65,12 +65,14 @@ export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
   /**
    * Parse the input and return the
    */
-  (): Promise<v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>>>
+  (): Promise<StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>>
 
   /**
    * Result of parsing. Set it to `undefined` then the parser will run again.
    */
-  result: v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>> | undefined
+  result:
+    | StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>
+    | undefined
 }
 
 export function createInputParser<
@@ -79,7 +81,9 @@ export function createInputParser<
   schema: TSchema,
   value: InferInputI<TSchema, GraphQLSilkIO>
 ): CallableInputParser<TSchema> {
-  let result: v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>> | undefined
+  let result:
+    | StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>
+    | undefined
 
   const parse = async () => {
     if (result !== undefined) return result
@@ -101,9 +105,9 @@ export function parseInputValue<
 >(
   inputSchema: TSchema,
   input: any
-): MayPromise<v1.StandardResult<InferInputO<TSchema, GraphQLSilkIO>>> {
+): MayPromise<StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>> {
   if (inputSchema === undefined) {
-    return { value: input } as v1.StandardResult<
+    return { value: input } as StandardSchemaV1.Result<
       InferInputO<TSchema, GraphQLSilkIO>
     >
   }
@@ -121,9 +125,9 @@ export function parseInputValue<
 async function parseInputEntries(
   inputSchema: Record<string, GraphQLSilk>,
   input: any = {}
-): Promise<v1.StandardResult<Record<string, any>>> {
+): Promise<StandardSchemaV1.Result<Record<string, any>>> {
   const result: Record<string, any> = {}
-  const issues: v1.StandardIssue[] = []
+  const issues: StandardSchemaV1.Issue[] = []
 
   await Promise.all(
     Object.entries(inputSchema).map(async ([key, value]) => {
@@ -139,15 +143,15 @@ async function parseInputEntries(
   return { value: result, ...(issues.length > 0 ? { issues } : null) }
 }
 
-export function getStandardValue<T>(result: v1.StandardResult<T>): T
+export function getStandardValue<T>(result: StandardSchemaV1.Result<T>): T
 export function getStandardValue<T>(
-  result?: v1.StandardResult<T>
+  result?: StandardSchemaV1.Result<T>
 ): T | undefined
 export function getStandardValue<T>(
-  result: v1.StandardResult<T> | null
+  result: StandardSchemaV1.Result<T> | null
 ): T | null
 export function getStandardValue<T>(
-  result?: v1.StandardResult<T> | null
+  result?: StandardSchemaV1.Result<T> | null
 ): T | null | undefined {
   if (result == null) return result
   const { issues } = result
