@@ -31,8 +31,7 @@ const IntScalar = v.pipe(v.nullable(v.number()), v.integer()) // GraphQLInt
 为了让 `GQLoom` 能正确地将 Valibot Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
 
 ```ts
-import { resolver, query ,weave } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
+import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 
 export const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World!"),

@@ -76,8 +76,7 @@ Then, we create an `src/index.ts` file and add the following code:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
+import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -274,8 +273,7 @@ Now, let's go back to the beginning with `CatResolver` and add a `query` operati
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
+import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const CatResolver = resolver({ // [!code hl]

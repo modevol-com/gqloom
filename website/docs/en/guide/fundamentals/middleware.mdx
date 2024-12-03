@@ -93,8 +93,7 @@ Let's try to use this middleware:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts
-import { weave, resolver, query } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
+import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"

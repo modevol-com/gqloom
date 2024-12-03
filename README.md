@@ -14,18 +14,17 @@ The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](http
 
 ## Features
 
-- 🚀 GraphQL: flexible and efficient, reducing redundant data transfers;
-- 🔒 Robust type safety: enjoy intelligent hints at development time to detect potential problems at compile time;
-- 🔋 Ready to go: middleware, contexts, subscriptions, federated graphs are ready to go;
-- 🔮 No extra magic: no decorators, no metadata and reflection, no code generation, you just need JavaScript/TypeScript;
-- 🧩 Familiar schema libraries: use the schema libraries you already know (Zod, Yup, Valibot) to build GraphQL Schema and validate inputs;
-- 🧑‍💻 Develop happily: highly readable and semantic APIs designed to keep your code tidy;
+* 🚀 GraphQL: flexible and efficient, reducing redundant data transfers;
+* 🔒 Robust type safety: enjoy intelligent hints at development time to detect potential problems at compile time;
+* 🔋 Ready to go: middleware, contexts, subscriptions, federated graphs are ready to go;
+* 🔮 No extra magic: no decorators, no metadata and reflection, no code generation, you just need JavaScript/TypeScript;
+* 🧩 Familiar schema libraries: use the schema libraries you already know (Zod, Yup, Valibot) to build GraphQL Schema and validate inputs;
+* 🧑‍💻 Develop happily: highly readable and semantic APIs designed to keep your code tidy;
 
 ## Hello World
 
 ```ts
-import { resolver, query, weave } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
+import { resolver, query, weave, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
@@ -43,22 +42,26 @@ See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn ho
 
 ## In this Repository
 
-- [GQLoom Core](./packages/core/README.md): GraphQL Loom Core Features;
+* [GQLoom Core](./packages/core/README.md): GraphQL Loom Core Features;
 
-- [GQLoom Federation](./packages/federation/README.md): Provides GQLoom support for Apollo Federation;
+* [GQLoom Federation](./packages/federation/README.md): Provides GQLoom support for Apollo Federation;
 
-- [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom integration with Mikro ORM;
+* [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom integration with Mikro ORM;
 
-- [GQLoom Prisma](./packages/prisma/README.md): GQLoom integration with Prisma;
+* [GQLoom Prisma](./packages/prisma/README.md): GQLoom integration with Prisma;
 
-- [GQLoom Valibot](./packages/valibot/README.md): GQLoom integration with Valibot;
+* [GQLoom Valibot](./packages/valibot/README.md): GQLoom integration with Valibot;
 
-- [GQLoom Yup](./packages/yup/README.md): GQLoom integration with Yup;
+* [GQLoom Yup](./packages/yup/README.md): GQLoom integration with Yup;
 
-- [GQLoom Zod](./packages/zod/README.md): GQLoom integration with Zod;
+* [GQLoom Zod](./packages/zod/README.md): GQLoom integration with Zod;
 
 [license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
+
 [license-url]: https://opensource.org/licenses/MIT
+
 [npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat-square
+
 [npm-url]: https://www.npmjs.com/package/@gqloom/core
+
 [downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat-square

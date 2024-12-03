@@ -31,8 +31,7 @@ const IntScalar = v.pipe(v.nullable(v.number()), v.integer()) // GraphQLInt
 To ensure that `GQLoom` correctly weaves Valibot schemas into the GraphQL schema, we need to add the `ValibotWeaver` from `@gqloom/valibot` when using the `weave` function.
 
 ```ts
-import { resolver, query ,weave } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
+import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 
 export const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World!"),

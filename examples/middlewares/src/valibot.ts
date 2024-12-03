@@ -1,6 +1,5 @@
 import { createServer } from "node:http"
-import { query, resolver, weave } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
+import { ValibotWeaver, query, resolver, weave } from "@gqloom/valibot"
 import { createYoga } from "graphql-yoga"
 import * as v from "valibot"
 import { ValibotExceptionFilter, outputValidator } from "./middlewares"
