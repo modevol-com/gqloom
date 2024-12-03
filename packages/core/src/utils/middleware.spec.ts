@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest"
 import { createInputParser, silk } from "../resolver"
 import {
   type Middleware,
-  type MiddlewarePayload,
+  type MiddlewareOptions,
   applyMiddlewares,
 } from "./middleware"
 
-function initPayload(): MiddlewarePayload {
+function initOptions(): MiddlewareOptions {
   return {
     outputSilk: silk(GraphQLString),
     parent: undefined,
@@ -24,7 +24,7 @@ describe("middleware", async () => {
     const result = await applyMiddlewares(
       [simpleMiddleware],
       () => answer,
-      initPayload()
+      initOptions()
     )
     expect(result).toBe(answer)
   })
@@ -55,7 +55,7 @@ describe("middleware", async () => {
       results.push("Resolve")
       return "resolved"
     }
-    await applyMiddlewares(middlewares, resolve, initPayload())
+    await applyMiddlewares(middlewares, resolve, initOptions())
     expect(results).toEqual([
       "A Start",
       "B Start",
@@ -83,7 +83,7 @@ describe("middleware", async () => {
       },
     ]
     const resolve = () => 0
-    const result = await applyMiddlewares(middlewares, resolve, initPayload())
+    const result = await applyMiddlewares(middlewares, resolve, initOptions())
     expect(result).toBe(6)
   })
 
@@ -104,7 +104,7 @@ describe("middleware", async () => {
       () => {
         return asyncLocalStorage.getStore()?.cat
       },
-      initPayload()
+      initOptions()
     )
 
     expect(result).toBe("meow")

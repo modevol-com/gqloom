@@ -252,13 +252,13 @@ describe("MikroOperationsBobbin", async () => {
   describe("FindOneQuery", async () => {
     const findOne = bobbin.FindOneQuery({
       middlewares: [
-        async (next, { parseInput }) => {
+        async (opts) => {
           assertType<
             CallableInputParser<
               GraphQLSilk<FindOneFilter<IGiraffe>, FindOneFilter<IGiraffe>>
             >
-          >(parseInput)
-          return next()
+          >(opts.parseInput)
+          return opts.next()
         },
       ],
     })
@@ -282,7 +282,7 @@ describe("MikroOperationsBobbin", async () => {
         {
           findOne: bobbin.FindOneQuery({
             middlewares: [
-              async (next, { parseInput }) => {
+              async (next) => {
                 assertType<
                   CallableInputParser<
                     GraphQLSilk<
@@ -290,7 +290,7 @@ describe("MikroOperationsBobbin", async () => {
                       FindOneFilter<IGiraffe>
                     >
                   >
-                >(parseInput)
+                >(next.parseInput)
                 return next()
               },
             ],

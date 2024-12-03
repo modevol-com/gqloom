@@ -8,7 +8,7 @@ import type {
 } from "../resolver"
 import type { MayPromise } from "./types"
 
-export interface MiddlewarePayload<
+export interface MiddlewareOptions<
   TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 > {
   /** The Output Silk of the field */
@@ -30,13 +30,20 @@ export interface MiddlewarePayload<
   type: FieldOrOperationType
 }
 
+export interface CallableMiddlewareOptions<
+  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
+> extends MiddlewareOptions<TField> {
+  /** The function to call next in the middleware chain. */
+  next: () => MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
+
+  /** The function to call next in the middleware chain. */
+  (): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
+}
+
 export type Middleware<
   TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
 > = (
-  next: () => MayPromise<
-    StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
-  >,
-  payload: MiddlewarePayload<TField>
+  options: CallableMiddlewareOptions<TField>
 ) => MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
 
 export function applyMiddlewares<
@@ -46,7 +53,7 @@ export function applyMiddlewares<
   resolveFunction: () => MayPromise<
     StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
   >,
-  payload: MiddlewarePayload<TField>
+  options: MiddlewareOptions<TField>
 ): Promise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>> {
   const next = (
     index: number
@@ -55,7 +62,11 @@ export function applyMiddlewares<
       return resolveFunction()
     }
     const middleware = middlewares[index]
-    return middleware(() => next(index + 1), payload)
+    const callableOptions = Object.assign(() => next(index + 1), {
+      ...options,
+      next: () => next(index + 1),
+    })
+    return middleware(callableOptions)
   }
   return next(0)
 }

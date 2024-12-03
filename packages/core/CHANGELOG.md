@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * Fix: add all objects in `resolver.of` to `context.types`
 * Chore: update `@standard-schema/spec` to 1.0.0-beta.4
+* Refactor: update `CallableMiddlewareOptions` for middleware
 
 ## 0.4.0 (2024-11-120)
 

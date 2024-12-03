@@ -177,7 +177,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a countQuery", () => {
       const q = UserBobbin.countQuery({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -238,7 +238,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a findFirstQuery", () => {
       const q = UserBobbin.findFirstQuery({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -296,7 +296,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a findManyQuery", () => {
       const q = UserBobbin.findManyQuery({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -354,7 +354,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a findUniqueQuery", () => {
       const q = UserBobbin.findUniqueQuery({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -412,7 +412,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a createMutation", () => {
       const m = UserBobbin.createMutation({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -470,7 +470,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a createManyMutation", () => {
       const m = UserBobbin.createManyMutation({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -529,7 +529,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a deleteMutation", () => {
       const m = UserBobbin.deleteMutation({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -586,7 +586,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a deleteManyMutation", async () => {
       const m = UserBobbin.deleteManyMutation({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -646,7 +646,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a deleteMutation", async () => {
       const m = UserBobbin.updateMutation({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -713,7 +713,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a deleteMutation", async () => {
       const m = UserBobbin.updateManyMutation({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<
@@ -784,7 +784,7 @@ describe("PrismaModelBobbin", () => {
     it("should be able to create a deleteMutation", async () => {
       const m = UserBobbin.upsertMutation({
         middlewares: [
-          async (next, { parseInput }) => {
+          async ({ next, parseInput }) => {
             const input = await parseInput()
             expectTypeOf(input).toEqualTypeOf<
               StandardSchemaV1.Result<

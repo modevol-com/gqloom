@@ -61,7 +61,7 @@ describe("resolver type", () => {
       createGiraffe: mutation(Giraffe, {
         input: GiraffeInput,
         middlewares: [
-          async (next, { parent, parseInput }) => {
+          async ({ parent, next, parseInput }) => {
             it("should infer input type", () => {
               expectTypeOf(parseInput).returns.resolves.toEqualTypeOf<
                 StandardSchemaV1.Result<Partial<IGiraffe>>
@@ -120,7 +120,7 @@ describe("resolver type", () => {
         greeting: field(silk<string>(new GraphQLNonNull(GraphQLString)), {
           input: { myName: silk(GraphQLString) },
           middlewares: [
-            async (next, { parent, parseInput }) => {
+            async ({ parent, next, parseInput }) => {
               it("should infer parent type", () => {
                 expectTypeOf(parent).toEqualTypeOf<IGiraffe>()
               })
@@ -153,7 +153,7 @@ describe("resolver type", () => {
       },
       {
         middlewares: [
-          async (next, { parent, parseInput }) => {
+          async ({ parent, next, parseInput }) => {
             it("should infer parent type", () => {
               expectTypeOf(parent).toEqualTypeOf<IGiraffe | undefined>()
             })
