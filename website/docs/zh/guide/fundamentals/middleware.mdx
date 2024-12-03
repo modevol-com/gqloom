@@ -7,16 +7,15 @@ import { Tab, Tabs, PackageManagerTabs } from 'rspress/theme';
 
 ## 定义中间件
 
-中间件是一个函数，它接收两个参数：`next` 和 `payload`。
-
-- `next` 是一个函数，它代表着下一个中间件。当调用 `next` 时，将执行下一个中间件。
-
-- `payload` 是一个对象，它包含了当前正在解析字段的信息，具体为以下字段：
+中间件是一个函数，它将在调用时被注入 `options` 对象作为参数，`options` 包含以下字段：
   - `outputSilk`: 输出丝线，包含了当前正在解析字段的输出类型；
   - `parent`: 当前字段的父节点，相当于 `useResolverPayload().root`；
   - `parseInput`: 用于获取当前字段输入的函数；
   - `type`: 当前字段的类型，其值为 `query`, `mutation`, `subscription` 或 `field`；
+  - `next`: 用于调用下一个中间件的函数；
 
+`options` 还可以直接作为 `next` 函数使用。
+ 
 另外，我们还可以通过 `useContext()` 和 `useResolverPayload()` 获取到当前解析函数的上下文以及更多信息。
 
 一个最基础的中间件函数如下：
@@ -83,7 +82,7 @@ export const ZodExceptionFilter: Middleware = async (next) => {
 ```ts
 import { silk, type Middleware } from "@gqloom/core"
 
-export const outputValidator: Middleware = async (next, { outputSilk }) => {
+export const outputValidator: Middleware = async ({ next, outputSilk }) => {
   const output = await next()
   return await silk.parse(outputSilk, output)
 }

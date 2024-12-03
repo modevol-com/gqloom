@@ -5,19 +5,18 @@ import { Tab, Tabs, PackageManagerTabs } from 'rspress/theme';
 Middleware is a function that intervenes in the processing flow of a parsed function. It provides a way to insert logic into the request and response flow to execute code before a response is sent or before a request is processed.
 `GQLoom`'s middleware follows the onion middleware pattern of [Koa](https://koajs.com/#application).
 
-## Defining middleware
+## Define Middleware
 
-A middleware is a function that takes two arguments: `next` and `payload`.
+Middleware is a function that will be injected with an `options` object as a parameter when called. The `options` object contains the following fields:
+  - `outputSilk`: output silk, which includes the output type of the field currently being parsed;
+  - `parent`: the parent node of the current field, equivalent to `useResolverPayload().root`;
+  - `parseInput`: a function used to obtain the input of the current field;
+  - `type`: the type of the current field, whose value can be `query`, `mutation`, `subscription`, or `field`;
+  - `next`: a function used to call the next middleware;
 
-- `next` is a function that represents the next middleware. When `next` is called, the next middleware will be executed.
+The `options` object can also be directly used as the `next` function.
 
-- `payload` is an object that contains information about the field currently being parsed, specifically the following fields:
-  - `outputSilk`: output silk containing the output type of the field currently being parsed;
-  - `parent`: the parent of the current field, equivalent to `useResolverPayload().root`;
-  - `parseInput`: the function used to get the input of the current field;
-  - `type`: the type of the current field, with a value of `query`, `mutation`, `subscription` or `field`;
-
-Additionally, we can get the context of the current parser function and more with `useContext()` and `useResolverPayload()`.
+Additionally, we can use `useContext()` and `useResolverPayload()` to get the context and more information of the current resolver function.
 
 A minimal middleware function is as follows:
 
