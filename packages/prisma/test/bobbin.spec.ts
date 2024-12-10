@@ -1,5 +1,5 @@
 import { type StandardSchemaV1, loom, weave } from "@gqloom/core"
-import { asInputArgs, zodSilk } from "@gqloom/zod"
+import { ZodWeaver, asInputArgs } from "@gqloom/zod"
 import { PrismaClient } from "@prisma/client"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
@@ -127,7 +127,7 @@ describe("PrismaModelBobbin", () => {
       `)
     })
 
-    it("should be able to resolve a relationField", { retry: 20 }, async () => {
+    it("should be able to resolve a relationField", async () => {
       const response = await yoga.fetch("http://localhost/graphql", {
         method: "POST",
         headers: {
@@ -155,6 +155,7 @@ describe("PrismaModelBobbin", () => {
 
       if (response.status !== 200) throw new Error("unexpected")
       const json = await response.json()
+      // if (!json?.data) return
       expect(json).toMatchObject({
         data: {
           users: [
@@ -204,17 +205,15 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         countUser: UserBobbin.countQuery({
-          input: zodSilk(
-            z
-              .object({
-                where: UserWhereInput,
-              })
-              .superRefine(asInputArgs())
-          ),
+          input: z
+            .object({
+              where: UserWhereInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -265,13 +264,15 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         findFirstUser: UserBobbin.findFirstQuery({
-          input: zodSilk.input({
-            where: UserWhereInput.optional(),
-          }),
+          input: z
+            .object({
+              where: UserWhereInput.optional(),
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -323,13 +324,15 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         findManyUser: UserBobbin.findManyQuery({
-          input: zodSilk.input({
-            where: UserWhereInput.optional(),
-          }),
+          input: z
+            .object({
+              where: UserWhereInput.optional(),
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -381,13 +384,15 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         findUniqueUser: UserBobbin.findUniqueQuery({
-          input: zodSilk.input({
-            where: UserWhereInput,
-          }),
+          input: z
+            .object({
+              where: UserWhereInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -439,13 +444,15 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         createUser: UserBobbin.createMutation({
-          input: zodSilk.input({
-            data: UserCreateInput,
-          }),
+          input: z
+            .object({
+              data: UserCreateInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -495,12 +502,14 @@ describe("PrismaModelBobbin", () => {
       })
       const r = resolver.of(g.User, {
         createManyUser: UserBobbin.createManyMutation({
-          input: zodSilk.input({
-            data: UserCreateManyInput.array(),
-          }),
+          input: z
+            .object({
+              data: UserCreateManyInput.array(),
+            })
+            .superRefine(asInputArgs()),
         }),
       })
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -555,13 +564,15 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         deleteUser: UserBobbin.deleteMutation({
-          input: zodSilk.input({
-            where: UserDeleteInput,
-          }),
+          input: z
+            .object({
+              where: UserDeleteInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -611,13 +622,15 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         deleteManyUser: UserBobbin.deleteManyMutation({
-          input: zodSilk.input({
-            where: UserDeleteManyInput,
-          }),
+          input: z
+            .object({
+              where: UserDeleteManyInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -677,14 +690,16 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         updateUser: UserBobbin.updateMutation({
-          input: zodSilk.input({
-            data: UserUpdateInput,
-            where: UserWhereInput,
-          }),
+          input: z
+            .object({
+              data: UserUpdateInput,
+              where: UserWhereInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -744,14 +759,16 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         updateManyUser: UserBobbin.updateManyMutation({
-          input: zodSilk.input({
-            data: UserUpdateManyInput,
-            where: UserWhereInput,
-          }),
+          input: z
+            .object({
+              data: UserUpdateManyInput,
+              where: UserWhereInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!
@@ -815,15 +832,17 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         upsertUser: UserBobbin.upsertMutation({
-          input: zodSilk.input({
-            where: UserWhereUniqueInput,
-            create: UserUpsertInput,
-            update: UserUpsertInput,
-          }),
+          input: z
+            .object({
+              where: UserWhereUniqueInput,
+              create: UserUpsertInput,
+              update: UserUpsertInput,
+            })
+            .superRefine(asInputArgs()),
         }),
       })
 
-      const schema = weave(r)
+      const schema = weave(ZodWeaver, r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type User {
           id: ID!

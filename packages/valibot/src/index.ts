@@ -23,7 +23,7 @@ import {
   isNonNullType,
   isObjectType,
 } from "graphql"
-import * as v from "valibot"
+import type * as v from "valibot"
 import { type AsObjectTypeMetadata, ValibotMetadataCollector } from "./metadata"
 import type {
   EnumLike,
@@ -296,15 +296,6 @@ export class ValibotWeaver {
         },
         () => ValibotWeaver.unravel(schema)
       )
-  }
-
-  static parse<TSchema extends GenericSchemaOrAsync>(
-    this: TSchema,
-    input: unknown
-  ): Promise<v.InferOutput<TSchema>> | v.InferOutput<TSchema> {
-    return this.async
-      ? v.parseAsync(this, input)
-      : v.parse(this as v.GenericSchema, input)
   }
 
   static getGraphQLType(schema: GenericSchemaOrAsync): GraphQLOutputType {
