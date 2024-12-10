@@ -1,4 +1,9 @@
 {
   "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@gqloom/*": ["../../packages/*/src/index.ts"]
+    }
+  },
   "include": ["src", "test"]
 }
