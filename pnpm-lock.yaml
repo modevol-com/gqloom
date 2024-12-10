@@ -232,8 +232,8 @@ importers:
         specifier: ^14.1.0
         version: 14.1.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       mercurius-integration-testing:
-        specifier: ^8.2.0
-        version: 8.2.0(@mercuriusjs/federation@3.0.0)(fastify@4.28.1)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(mercurius@14.1.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))
+        specifier: ^9.0.0
+        version: 9.0.0(@mercuriusjs/federation@3.0.0)(fastify@4.28.1)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(mercurius@14.1.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))
 
   packages/mikro-orm:
     dependencies:
@@ -2926,15 +2926,15 @@ packages:
   medium-zoom@1.1.0:
     resolution: {integrity: sha512-ewyDsp7k4InCUp3jRmwHBRFGyjBimKps/AJLjRSox+2q/2H4p/PNpQf+pwONWlJiOudkBXtbdmVbFjqyybfTmQ==}
 
-  mercurius-integration-testing@8.2.0:
-    resolution: {integrity: sha512-ew677oij/lTiLXECZsVIZfLxIFnur9Q+rKb20kP3OJmlxFqJH0IqawDW+CfHXBFqZPi19FSEGzzde2zr0ceiDw==}
+  mercurius-integration-testing@9.0.0:
+    resolution: {integrity: sha512-N2GRMPOZ2BjgnTUH3QKcv9INd3AXb7u7GYQQ8EeakBTqZ68PkWppM32RwNTRMKuxJblUBbTEOJ5diAwo0ETP9A==}
     engines: {node: '>=14'}
     peerDependencies:
       '@mercuriusjs/federation': ^1 || ^2
       '@mercuriusjs/gateway': ^1.2.0
-      fastify: ^4.0.0
+      fastify: ^4.0.0 || ^5.0.0
       graphql: '*'
-      mercurius: ^12 || ^13 || ^14
+      mercurius: ^12 || ^13 || ^14 || ^15
     peerDependenciesMeta:
       '@mercuriusjs/federation':
         optional: true
@@ -5781,7 +5781,7 @@ snapshots:
 
   agent-base@7.1.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -6876,7 +6876,7 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.4
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -6884,7 +6884,7 @@ snapshots:
   https-proxy-agent@7.0.5:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.4
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -7407,7 +7407,7 @@ snapshots:
 
   medium-zoom@1.1.0: {}
 
-  mercurius-integration-testing@8.2.0(@mercuriusjs/federation@3.0.0)(fastify@4.28.1)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(mercurius@14.1.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))):
+  mercurius-integration-testing@9.0.0(@mercuriusjs/federation@3.0.0)(fastify@4.28.1)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(mercurius@14.1.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))):
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       cookie: 0.5.0

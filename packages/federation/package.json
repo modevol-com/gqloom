@@ -22,8 +22,8 @@
   },
   "files": ["dist"],
   "peerDependencies": {
-    "@gqloom/core": ">= 0.4.0",
     "@apollo/subgraph": ">= 2.0.0",
+    "@gqloom/core": ">= 0.4.0",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
@@ -36,7 +36,7 @@
     "graphql-tag": "^2.12.6",
     "graphql-yoga": "^5.6.0",
     "mercurius": "^14.1.0",
-    "mercurius-integration-testing": "^8.2.0"
+    "mercurius-integration-testing": "^9.0.0"
   },
   "keywords": [
     "gqloom",
