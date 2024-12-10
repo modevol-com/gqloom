@@ -1,14 +1,9 @@
 import {
   type GQLoomExtensions,
   type GraphQLSilk,
-  type GraphQLSilkIO,
   SYMBOLS,
-  type StandardSchemaV1,
-  collectNames,
-  createLoom,
   deepMerge,
   ensureInterfaceType,
-  isSilk,
   mapValue,
   weaverContext,
 } from "@gqloom/core"
@@ -53,10 +48,9 @@ import {
   type ZodRawShape,
   type ZodSchema,
   ZodString,
-  ZodType,
   type ZodTypeAny,
   ZodUnion,
-  z,
+  type z,
 } from "zod"
 import { getConfig } from "./metadata"
 // import { metadataCollector } from "./metadata-collector"
@@ -72,9 +66,8 @@ import type {
 import { ZodIDKinds } from "./utils"
 import { resolveTypeByDiscriminatedUnion } from "./utils"
 
-export * from "./metadata"
-
 export class ZodWeaver {
+  static vendor = "zod"
   /**
    * get GraphQL Silk from Zod Schema
    * @param schema Zod Schema
@@ -85,18 +78,13 @@ export class ZodWeaver {
   ): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>> {
     const config = weaverContext.value?.getConfig<ZodWeaverConfig>("gqloom.zod")
     return Object.assign(schema, {
-      "~standard": {
-        version: 1,
-        vendor: "gqloom.zod",
-        validate: (value) => parseZod(schema, value),
-      } satisfies StandardSchemaV1.Props<z.input<TSchema>, z.output<TSchema>>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema) {
             return weaverContext.useConfig(config, () =>
-              getGraphQLType.call(this)
+              ZodWeaver.getGraphQLTypeBySelf.call(this)
             )
           }
-        : getGraphQLType,
+        : ZodWeaver.getGraphQLTypeBySelf,
     })
   }
 
@@ -410,101 +398,15 @@ export class ZodWeaver {
         () => ZodWeaver.unravel(schema)
       )
   }
-}
 
-/**
- * get GraphQL Silk from Zod Schema
- * @param schema Zod Schema
- * @returns GraphQL Silk Like Zod Schema
- */
-export function zodSilk<TSchema extends Schema>(
-  schema: TSchema
-): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>>
-
-/**
- * get GraphQL Silk from Zod Schema
- * @param silk GraphQL Silk
- * @returns GraphQL Silk
- */
-export function zodSilk<TSilk extends GraphQLSilk>(silk: TSilk): TSilk
-
-export function zodSilk(schema: ZodType | GraphQLSilk) {
-  if (isSilk(schema)) return schema
-  if (isZodSchemaRecord(schema)) {
-    const inputSchema = z.object(schema)
-    collectNames({ _: inputSchema })
-    return ZodWeaver.unravel(inputSchema)
+  static getGraphQLType(schema: Schema): GraphQLOutputType {
+    return ZodWeaver.toNullableGraphQLType(schema)
   }
-  return ZodWeaver.unravel(schema)
+
+  static getGraphQLTypeBySelf(this: Schema): GraphQLOutputType {
+    return ZodWeaver.toNullableGraphQLType(this)
+  }
 }
 
-zodSilk.isSilk = (schema: any) =>
-  isSilk(schema) || isZodSchema(schema) || isZodSchemaRecord(schema)
-
-zodSilk.input = <TInput extends Record<string, Schema>>(
-  input: TInput
-): InferInputSilk<TInput> => {
-  return zodSilk(input as any)
-}
-
-export type ZodSchemaIO = [Schema, "_input", "_output"]
-
-export type InferInputSilk<TInput extends Record<string, Schema>> = GraphQLSilk<
-  InferInputO<TInput>,
-  InferInputI<TInput>
->
-
-export type InferInputI<TInput extends Record<string, Schema>> = {
-  [K in keyof TInput]: z.input<TInput[K]>
-}
-
-export type InferInputO<TInput extends Record<string, Schema>> = {
-  [K in keyof TInput]: z.output<TInput[K]>
-}
-
-export const { query, mutation, field, resolver, subscription } = createLoom<
-  ZodSchemaIO | GraphQLSilkIO
->(zodSilk, zodSilk.isSilk)
-
-function isZodSchemaRecord(target: any): target is Record<string, Schema> {
-  return (
-    typeof target === "object" &&
-    target !== null &&
-    Object.values(target).every(isZodSchema)
-  )
-}
-
-function isZodSchema(target: any): target is Schema {
-  return target instanceof ZodType
-}
-
-function getGraphQLType(this: Schema) {
-  return ZodWeaver.toNullableGraphQLType(this)
-}
-
-async function parseZod(
-  schema: Schema,
-  data: any
-): Promise<StandardSchemaV1.Result<unknown>> {
-  const result = await schema.safeParseAsync(data)
-  return result.success
-    ? { value: result.data }
-    : {
-        issues: result.error.issues.map((issue) => ({
-          zodIssue: issue,
-          error: result.error,
-          message: issue.message,
-          path: issue.path,
-        })),
-      }
-}
-
-export {
-  collectName,
-  collectNames,
-  weave,
-  silk,
-  getGraphQLType,
-  parseSilk,
-  SchemaWeaver,
-} from "@gqloom/core"
+export * from "./metadata"
+export * from "@gqloom/core"
