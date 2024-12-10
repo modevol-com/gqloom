@@ -79,7 +79,7 @@ describe("Bobbin Resolver", () => {
     expect(userResolver.upsertUser.resolve).toBeTypeOf("function")
   })
 
-  it("should be able to weave schema", () => {
+  it("should be able to weave schema", async () => {
     const schema = weaveSchema()
 
     expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
@@ -93,9 +93,9 @@ describe("Bobbin Resolver", () => {
       }"
     `)
 
-    expect(printSchema(lexicographicSortSchema(schema))).toMatchFileSnapshot(
-      "./bobbin-resolver.spec.gql"
-    )
+    await expect(
+      printSchema(lexicographicSortSchema(schema))
+    ).toMatchFileSnapshot("./bobbin-resolver.spec.gql")
   })
 
   describe("mutations", () => {

@@ -288,7 +288,7 @@ describe("valibot resolver", () => {
   })
 
   it("should throw for invalid input", async () => {
-    expect(
+    await expect(
       simpleGiraffeResolver.createGiraffe.resolve({
         name: "2",
         birthday: new Date("2022-2-22"),

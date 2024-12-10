@@ -6,7 +6,7 @@ describe("EasyDataLoader", () => {
     id: number
     value: string
   }
-  let batchLoadFn: Mock<[keys: number[]], Promise<(Data | Error)[]>>
+  let batchLoadFn: Mock<(keys: number[]) => Promise<(Data | Error)[]>>
   let dataLoader: EasyDataLoader<number, Data>
 
   beforeEach(() => {

@@ -198,7 +198,7 @@ describe("Entity Manager", () => {
       return orm.em.removeAndFlush(g3)
     })
 
-    expect(
+    await expect(
       RequestContext.create(orm.em, async () => {
         return orm.em.findOne(GiraffeSchema, { id: g1.id })
       })

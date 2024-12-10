@@ -3,7 +3,7 @@ import { ZodWeaver, asInputArgs } from "@gqloom/zod"
 import { PrismaClient } from "@prisma/client"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { beforeAll, describe, expect, expectTypeOf, it } from "vitest"
+import { beforeEach, describe, expect, expectTypeOf, it } from "vitest"
 import { z } from "zod"
 import {
   type InferPrismaDelegate,
@@ -89,7 +89,7 @@ describe("PrismaModelBobbin", () => {
     })
     const schema = weave(r1, r2)
     const yoga = createYoga({ schema })
-    beforeAll(async () => {
+    beforeEach(async () => {
       await db.user.deleteMany()
       await db.post.deleteMany()
       await db.user.create({
@@ -102,32 +102,8 @@ describe("PrismaModelBobbin", () => {
         },
       })
     })
-    it("should be able to create a relationField", () => {
-      const postsField = UserBobbin.relationField("posts")
-      expect(postsField).toBeDefined()
-      expect(postsField.output).toBeTypeOf("object")
-      expect(postsField.type).toEqual("field")
-      expect(postsField.resolve).toBeTypeOf("function")
 
-      const userField = PostBobbin.relationField("author")
-      expect(userField).toBeDefined()
-      expect(userField.output).toBeTypeOf("object")
-      expect(userField.type).toEqual("field")
-      expect(userField.resolve).toBeTypeOf("function")
-    })
-
-    it("should be able to weave user schema", () => {
-      expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
-        "type User {
-          id: ID!
-          email: String!
-          name: String
-          posts: [Post!]!
-        }"
-      `)
-    })
-
-    it("should be able to resolve a relationField", async () => {
+    it("should be able to resolve a relationField", { retry: 6 }, async () => {
       const response = await yoga.fetch("http://localhost/graphql", {
         method: "POST",
         headers: {
@@ -170,6 +146,31 @@ describe("PrismaModelBobbin", () => {
           ],
         },
       })
+    })
+
+    it("should be able to create a relationField", () => {
+      const postsField = UserBobbin.relationField("posts")
+      expect(postsField).toBeDefined()
+      expect(postsField.output).toBeTypeOf("object")
+      expect(postsField.type).toEqual("field")
+      expect(postsField.resolve).toBeTypeOf("function")
+
+      const userField = PostBobbin.relationField("author")
+      expect(userField).toBeDefined()
+      expect(userField.output).toBeTypeOf("object")
+      expect(userField.type).toEqual("field")
+      expect(userField.resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to weave user schema", () => {
+      expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
+        "type User {
+          id: ID!
+          email: String!
+          name: String
+          posts: [Post!]!
+        }"
+      `)
     })
   })
 

@@ -3,7 +3,12 @@
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["**/dist/**/*", "website/doc_build/", "**/generated/**/*"]
+    "ignore": [
+      "**/dist/**/*",
+      "website/doc_build/",
+      "**/generated/**/*",
+      "coverage/"
+    ]
   },
   "formatter": {
     "enabled": true,

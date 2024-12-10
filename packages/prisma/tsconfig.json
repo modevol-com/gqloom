@@ -1,10 +1,4 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "@gqloom/core": ["../core/src/index.ts"],
-      "@gqloom/zod": ["../zod/src/index.ts"]
-    }
-  },
   "include": ["src", "test"]
 }

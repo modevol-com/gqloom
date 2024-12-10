@@ -6,7 +6,10 @@
     "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@gqloom/*": ["./packages/*/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "dist", "draft"]
 }
