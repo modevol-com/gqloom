@@ -3,10 +3,10 @@ import { createServer } from "node:http"
 import * as path from "path"
 import { PrismaModelBobbin } from "@gqloom/prisma"
 import { ValibotWeaver, query, resolver, weave } from "@gqloom/valibot"
-import { PrismaClient } from "@prisma/client"
 import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
 import * as v from "valibot"
+import { PrismaClient } from "./generated/client"
 import * as p from "./generated/gqloom"
 
 const db = new PrismaClient({ log: ["query"] })
