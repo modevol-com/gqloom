@@ -25,6 +25,7 @@ export default defineConfig({
   test: {
     coverage: {
       exclude: [
+        "coverage/",
         "**/dist/**",
         "**/examples/**/*",
         "**/*.spec-d.ts",
