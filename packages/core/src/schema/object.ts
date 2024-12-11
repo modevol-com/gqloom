@@ -44,7 +44,7 @@ export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkFieldOrOperation>()
   protected hiddenFields = new Set<string>()
 
-  static AUTO_ALIASING = "__gqloom_auto_aliasing"
+  static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
   protected resolverOptions?: ResolvingOptions
@@ -287,6 +287,8 @@ function defineArguments(
   }))
 }
 
+const OPERATION_NAMES = new Set(["Query", "Mutation", "Subscription"])
+
 export function getCacheType(
   gqlType: GraphQLOutputType,
   options: {
@@ -305,7 +307,9 @@ export function getCacheType(
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
     if (options.fieldName && options.parent) {
-      loomObject.addAlias(options.parent.name + toPascalCase(options.fieldName))
+      let parentName = options.parent.name
+      if (OPERATION_NAMES.has(parentName)) parentName = ""
+      loomObject.addAlias(parentName + toPascalCase(options.fieldName))
     }
     return loomObject
   } else if (isListType(gqlType)) {
