@@ -1,28 +1,28 @@
 import { describe, expect, it } from "vitest"
-import { toPascalCase } from "./string"
+import { pascalCase } from "./string"
 
 describe("toPascalCase", () => {
   it("should convert kebab-case to PascalCase", () => {
-    expect(toPascalCase("hello-world")).toBe("HelloWorld")
+    expect(pascalCase("hello-world")).toBe("HelloWorld")
+  })
+
+  it("should convert camelCase to PascalCase", () => {
+    expect(pascalCase("helloWorld")).toBe("HelloWorld")
   })
 
   it("should convert snake_case to PascalCase", () => {
-    expect(toPascalCase("hello_world")).toBe("HelloWorld")
+    expect(pascalCase("hello_world")).toBe("HelloWorld")
   })
 
   it("should convert space separated words to PascalCase", () => {
-    expect(toPascalCase("hello world")).toBe("HelloWorld")
-  })
-
-  it("should handle mixed case and special characters", () => {
-    expect(toPascalCase("hElLo-wOrLd!@#")).toBe("HelloWorld!@#")
+    expect(pascalCase("hello world")).toBe("HelloWorld")
   })
 
   it("should return empty string for empty input", () => {
-    expect(toPascalCase("")).toBe("")
+    expect(pascalCase("")).toBe("")
   })
 
   it("should capitalize the first letter of each word", () => {
-    expect(toPascalCase("multiple-words-here")).toBe("MultipleWordsHere")
+    expect(pascalCase("multiple-words-here")).toBe("MultipleWordsHere")
   })
 })

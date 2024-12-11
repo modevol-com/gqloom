@@ -27,9 +27,9 @@ import {
   deepMerge,
   mapValue,
   markErrorLocation,
+  pascalCase,
   resolverPayloadStorage,
   toObjMap,
-  toPascalCase,
 } from "../utils"
 import { inputToArgs } from "./input"
 import type { SilkFieldOrOperation } from "./types"
@@ -176,7 +176,9 @@ export class LoomObjectType extends GraphQLObjectType {
       return {
         ...extract(field),
         type: outputType,
-        args: inputToArgs(field.input),
+        args: inputToArgs(field.input, {
+          fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
+        }),
         ...this.provideForResolve(field),
         ...this.provideForSubscribe(field),
       }
@@ -287,7 +289,11 @@ function defineArguments(
   }))
 }
 
-const OPERATION_NAMES = new Set(["Query", "Mutation", "Subscription"])
+export const OPERATION_OBJECT_NAMES = new Set([
+  "Query",
+  "Mutation",
+  "Subscription",
+])
 
 export function getCacheType(
   gqlType: GraphQLOutputType,
@@ -307,9 +313,9 @@ export function getCacheType(
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
     if (options.fieldName && options.parent) {
-      let parentName = options.parent.name
-      if (OPERATION_NAMES.has(parentName)) parentName = ""
-      loomObject.addAlias(parentName + toPascalCase(options.fieldName))
+      loomObject.addAlias(
+        parentName(options.parent.name) + pascalCase(options.fieldName)
+      )
     }
     return loomObject
   } else if (isListType(gqlType)) {
@@ -330,4 +336,9 @@ export function getCacheType(
     return unionType
   }
   return gqlType
+}
+
+function parentName(name: string): string {
+  if (OPERATION_OBJECT_NAMES.has(name)) name = ""
+  return name
 }

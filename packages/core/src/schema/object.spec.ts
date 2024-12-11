@@ -136,8 +136,6 @@ describe("LoomObjectType", () => {
         }"
       `)
     })
-
-    it.todo("should auto assign alias for inputs")
   })
 })
 
