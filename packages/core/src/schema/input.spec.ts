@@ -1,4 +1,4 @@
-import { GraphQLInputObjectType } from "graphql"
+import { GraphQLInputObjectType, printSchema } from "graphql"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -13,8 +13,10 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { silk } from "../resolver"
+import { mutation, resolver, silk } from "../resolver"
 import { ensureInputObjectType, ensureInputType, inputToArgs } from "./input"
+import { LoomObjectType } from "./object"
+import { weave } from "./schema-weaver"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 describe("toInputObjectType", () => {
@@ -179,5 +181,55 @@ describe("inputToArgs", () => {
     expect(() => inputToArgs(IntSilk)).toThrow(
       "Cannot convert Int to input type"
     )
+  })
+
+  it("should auto assign alias for inputs", () => {
+    const Foo = new GraphQLObjectType({
+      name: LoomObjectType.AUTO_ALIASING,
+      fields: () => ({
+        baz: { type: Baz },
+      }),
+    })
+    const Bar = new GraphQLObjectType({
+      name: LoomObjectType.AUTO_ALIASING,
+      fields: {
+        hello: { type: GraphQLString },
+        foo: { type: Foo },
+      },
+    })
+    const Baz = new GraphQLObjectType({
+      name: "Baz",
+      fields: {
+        bar: { type: GraphQLString },
+      },
+    })
+
+    const r = resolver({
+      addBar: mutation(silk(GraphQLString), {
+        input: { value: silk(Bar) },
+        resolve: () => "hello",
+      }),
+    })
+
+    const schema = weave(r)
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Mutation {
+        addBar(value: AddBarValueInput): String
+      }
+
+      input AddBarValueInput {
+        hello: String
+        foo: AddBarValueFooInput
+      }
+
+      input AddBarValueFooInput {
+        baz: Baz
+      }
+
+      input Baz {
+        bar: String
+      }"
+    `)
   })
 })
