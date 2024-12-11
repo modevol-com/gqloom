@@ -29,9 +29,9 @@
   },
   "scripts": {
     "build": "tsup",
-    "prepare": "pnpm build && pnpm generate",
     "init": "exec prisma migrate dev --name init",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "postinstall": "pnpm build && pnpm generate"
   },
   "bin": {
     "prisma-gqloom": "./bin/generator.cjs"

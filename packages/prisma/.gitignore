@@ -6,3 +6,4 @@ node_modules
 /prisma/dev.db*
 /prisma/migrations
 /generated
+/test/client
