@@ -52,6 +52,30 @@ describe("LoomObjectType", () => {
       }"
     `)
   })
+
+  describe("alias", () => {
+    it("should auto assign name", () => {
+      const Bar = new GraphQLObjectType({
+        name: LoomObjectType.AUTO_ALIASING,
+        fields: {
+          hello: { type: GraphQLString },
+        },
+      })
+
+      const Foo = new LoomObjectType({
+        name: "Foo",
+        fields: {
+          bar: { type: Bar },
+        },
+      })
+
+      expect(printType(Foo)).toMatchInlineSnapshot(`
+      "type Foo {
+        bar: FooBar
+      }"
+    `)
+    })
+  })
 })
 
 describe("toFieldConfig", () => {
