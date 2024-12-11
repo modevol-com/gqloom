@@ -7,3 +7,4 @@ node_modules
 /prisma/migrations
 /generated
 /test/client
+/test/generated

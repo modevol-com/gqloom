@@ -1,9 +1,9 @@
 import { weave } from "@gqloom/core"
-import { PrismaClient } from "@prisma/client"
 import { lexicographicSortSchema, printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { PrismaModelBobbin } from "../src"
+import { PrismaClient } from "./client"
 import * as p from "./generated"
 
 describe("Bobbin Resolver", () => {

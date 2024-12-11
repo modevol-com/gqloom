@@ -7,6 +7,7 @@
       "**/dist/**/*",
       "website/doc_build/",
       "**/generated/**/*",
+      "packages/prisma/test/client/**/*",
       "coverage/"
     ]
   },

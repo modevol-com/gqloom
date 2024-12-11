@@ -1,6 +1,5 @@
 import { type StandardSchemaV1, loom, weave } from "@gqloom/core"
 import { ZodWeaver, asInputArgs } from "@gqloom/zod"
-import { PrismaClient } from "@prisma/client"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest"
@@ -10,6 +9,7 @@ import {
   PrismaModelBobbin,
   type PrismaModelSilk,
 } from "../src"
+import { PrismaClient } from "./client"
 import * as g from "./generated"
 
 const { resolver, query } = loom
