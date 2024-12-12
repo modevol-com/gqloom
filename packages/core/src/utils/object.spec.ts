@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { deepMerge } from "./object"
+import { deepMerge, toObjMap } from "./object"
 
 describe("deepMerge", () => {
   it("should return the first object when only one is provided", () => {
@@ -51,5 +51,28 @@ describe("deepMerge", () => {
     const obj3 = { a: 3, c: 4 }
     const expected = { a: 3, b: 2, c: 4 }
     expect(deepMerge<any>(obj1, obj2, obj3)).toEqual(expected)
+  })
+})
+
+describe("toObjMap", () => {
+  it("should return an empty object when input is null", () => {
+    expect(toObjMap(null)).toEqual(Object.create(null))
+  })
+
+  it("should return an empty object when input is undefined", () => {
+    expect(toObjMap(undefined)).toEqual(Object.create(null))
+  })
+
+  it("should return the input object if its prototype is null", () => {
+    const obj = Object.create(null)
+    obj["key"] = "value"
+    expect(toObjMap(obj)).toBe(obj)
+  })
+
+  it("should create a new object with the same key-value pairs when input has a prototype", () => {
+    const obj = { key: "value" }
+    const result = toObjMap(obj)
+    expect(result).not.toBe(obj)
+    expect(result).toEqual({ key: "value" })
   })
 })

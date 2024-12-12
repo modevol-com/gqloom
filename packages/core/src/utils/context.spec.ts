@@ -140,7 +140,7 @@ describe("memory", () => {
         times++
         return "🥭mango"
       })
-
+      expect(() => memory.set("🍌banana")).not.throw()
       resolverPayloadStorage.run(onlyMemoization(), () => {
         expect(times).toEqual(0)
         expect(memory.get()).toEqual("🥭mango")

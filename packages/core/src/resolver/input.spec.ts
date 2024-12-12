@@ -185,6 +185,33 @@ describe("CallableInputParser", () => {
   })
 })
 
+describe("getStandardValue", () => {
+  it("should return the value when result is successful", () => {
+    const result = { value: "valid value" }
+    expect(getStandardValue(result)).toBe("valid value")
+  })
+
+  it("should throw GraphQLError when result has issues", () => {
+    const result = { issues: [{ message: "Invalid args" }] }
+    expect(() => getStandardValue(result)).toThrowError(`Invalid args`)
+    const result2 = { issues: [{}] } as any
+    expect(() => getStandardValue(result2)).toThrowError(`Invalid input`)
+  })
+
+  it("should return undefined when result is undefined", () => {
+    expect(getStandardValue(undefined)).toBeUndefined()
+  })
+
+  it("should return null when result is null", () => {
+    expect(getStandardValue(null)).toBeNull()
+  })
+
+  it("should throw GraphQLError when result does not have value and no issues", () => {
+    const result = {} as any
+    expect(() => getStandardValue(result)).toThrowError(`Invalid input`)
+  })
+})
+
 interface IGiraffe {
   name: string
   birthday: Date
