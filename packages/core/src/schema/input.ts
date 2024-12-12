@@ -33,7 +33,7 @@ interface EnsureInputOptions {
 
 export function inputToArgs(
   input: InputSchema<GraphQLSilk>,
-  options?: EnsureInputOptions
+  options: EnsureInputOptions | undefined
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined
   if (isSilk(input)) {
@@ -68,7 +68,7 @@ export function inputToArgs(
 
 export function ensureInputType(
   silkOrType: GraphQLType | GraphQLSilk,
-  options?: EnsureInputOptions
+  options: EnsureInputOptions | undefined
 ): GraphQLInputType {
   const gqlType = (() => {
     if (isSilk(silkOrType)) {
@@ -80,10 +80,10 @@ export function ensureInputType(
   if (isUnionType(gqlType))
     throw new Error(`Cannot convert union type ${gqlType.name} to input type`)
   if (isNonNullType(gqlType)) {
-    return new GraphQLNonNull(ensureInputType(gqlType.ofType))
+    return new GraphQLNonNull(ensureInputType(gqlType.ofType, options))
   }
   if (isListType(gqlType)) {
-    return new GraphQLList(ensureInputType(gqlType.ofType))
+    return new GraphQLList(ensureInputType(gqlType.ofType, options))
   }
   if (isObjectType(gqlType) || isInterfaceType(gqlType))
     return ensureInputObjectType(gqlType, options)
@@ -92,7 +92,7 @@ export function ensureInputType(
 
 export function ensureInputObjectType(
   object: GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType,
-  options?: EnsureInputOptions
+  options: EnsureInputOptions | undefined
 ): GraphQLInputObjectType {
   if (isInputObjectType(object)) return object
 

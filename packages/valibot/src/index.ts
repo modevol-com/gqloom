@@ -5,6 +5,8 @@ import {
   mapValue,
   weaverContext,
 } from "@gqloom/core"
+import { LoomObjectType } from "@gqloom/core"
+import type { SchemaVendorWeaver } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -34,7 +36,7 @@ import type {
 } from "./types"
 import { flatVariant, nullishTypes } from "./utils"
 
-export class ValibotWeaver {
+export const ValibotWeaver = class {
   static vendor = "valibot"
 
   /**
@@ -165,12 +167,8 @@ export class ValibotWeaver {
             ...wrappers
           )
         }
-        const { name, ...objectConfig } =
+        const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
-        if (!name)
-          throw new Error(
-            `Object { ${Object.keys(schema.entries).join(", ")} } must have a name`
-          )
 
         return new GraphQLObjectType({
           name,
@@ -305,7 +303,7 @@ export class ValibotWeaver {
   static getGraphQLTypeBySelf(this: GenericSchemaOrAsync): GraphQLOutputType {
     return ValibotWeaver.toNullableGraphQLType(this)
   }
-}
+} satisfies SchemaVendorWeaver
 
 export * from "./metadata"
 export * from "@gqloom/core"

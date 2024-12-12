@@ -7,47 +7,36 @@ import {
   silk,
   weave,
 } from "@gqloom/core"
-import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
 import {
-  type InferInput,
-  type InferOutput,
-  boolean,
-  date,
-  integer,
-  literal,
-  minLength,
-  nullish,
-  number,
-  object,
-  optional,
-  partial,
-  pipe,
-  string,
-  union,
-  variant,
-} from "valibot"
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLString,
+  graphql,
+  printSchema,
+} from "graphql"
+import * as v from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { ValibotWeaver, asUnionType } from "../src"
 
 describe("valibot resolver", () => {
-  const Giraffe = object({
-    name: pipe(string(), minLength(3)),
-    birthday: date(),
-    heightInMeters: number(),
+  const Giraffe = v.object({
+    name: v.pipe(v.string(), v.minLength(3)),
+    birthday: v.date(),
+    heightInMeters: v.number(),
   })
 
-  const GiraffeInput = partial(Giraffe)
+  const GiraffeInput = v.partial(Giraffe)
 
-  const Cat = object({
-    name: string(),
-    age: pipe(number(), integer()),
-    loveFish: optional(boolean()),
+  const Cat = v.object({
+    name: v.string(),
+    age: v.pipe(v.number(), v.integer()),
+    loveFish: v.optional(v.boolean()),
   })
 
-  const Dog = object({
-    name: string(),
-    age: pipe(number(), integer()),
-    loveBone: optional(boolean()),
+  const Dog = v.object({
+    name: v.string(),
+    age: v.pipe(v.number(), v.integer()),
+    loveBone: v.optional(v.boolean()),
   })
 
   collectNames({ Cat, Dog }, { Giraffe, GiraffeInput })
@@ -55,7 +44,7 @@ describe("valibot resolver", () => {
   const createGiraffe = mutation(Giraffe, {
     input: GiraffeInput,
     resolve: (input) => {
-      assertType<InferInput<typeof GiraffeInput>>(input)
+      assertType<v.InferInput<typeof GiraffeInput>>(input)
       return {
         name: input.name ?? "Giraffe",
         birthday: input.birthday ?? new Date(),
@@ -69,13 +58,13 @@ describe("valibot resolver", () => {
   })
 
   const giraffeResolver = resolver.of(Giraffe, {
-    age: field(number(), async (giraffe) => {
-      assertType<InferOutput<typeof Giraffe>>(giraffe)
+    age: field(v.number(), async (giraffe) => {
+      assertType<v.InferOutput<typeof Giraffe>>(giraffe)
       return new Date().getFullYear() - giraffe.birthday.getFullYear()
     }),
 
     giraffe: query(Giraffe, {
-      input: { name: string() },
+      input: { name: v.string() },
       resolve: ({ name }) => ({
         name,
         birthday: new Date(),
@@ -83,8 +72,8 @@ describe("valibot resolver", () => {
       }),
     }),
 
-    greeting: field(string(), {
-      input: { myName: nullish(string()) },
+    greeting: field(v.string(), {
+      input: { myName: v.nullish(v.string()) },
       resolve: (giraffe, { myName }) =>
         `Hello, ${myName ?? "my friend"}! My Pname is ${giraffe.name}.`,
     }),
@@ -93,19 +82,19 @@ describe("valibot resolver", () => {
   it("should infer input type", () => {
     expectTypeOf(simpleGiraffeResolver.createGiraffe.resolve)
       .parameter(0)
-      .toEqualTypeOf<InferInput<typeof GiraffeInput>>()
+      .toEqualTypeOf<v.InferInput<typeof GiraffeInput>>()
   })
 
   it("should infer output type", () => {
     expectTypeOf(
       simpleGiraffeResolver.createGiraffe.resolve
-    ).returns.resolves.toEqualTypeOf<InferOutput<typeof Giraffe>>()
+    ).returns.resolves.toEqualTypeOf<v.InferOutput<typeof Giraffe>>()
   })
 
   it("should infer parent type", () => {
     expectTypeOf(giraffeResolver.age.resolve)
       .parameter(0)
-      .toEqualTypeOf<InferOutput<typeof Giraffe>>()
+      .toEqualTypeOf<v.InferOutput<typeof Giraffe>>()
   })
 
   it("should resolve mutation", async () => {
@@ -143,10 +132,10 @@ describe("valibot resolver", () => {
   })
 
   it("should resolve union", async () => {
-    const Animal = pipe(
-      union([Cat, Dog]),
+    const Animal = v.pipe(
+      v.union([Cat, Dog]),
       asUnionType({
-        resolveType: (value: InferOutput<typeof Cat | typeof Dog>) => {
+        resolveType: (value: v.InferOutput<typeof Cat | typeof Dog>) => {
           if ("loveFish" in value) return "Cat"
           if ("loveBone" in value) return "Dog"
         },
@@ -216,17 +205,17 @@ describe("valibot resolver", () => {
   })
 
   it("should resolve variant", async () => {
-    const ExplicitCat = object({
-      __typename: literal("Cat"),
+    const ExplicitCat = v.object({
+      __typename: v.literal("Cat"),
       ...Cat.entries,
     })
 
-    const ExplicitDog = object({
-      __typename: literal("Dog"),
+    const ExplicitDog = v.object({
+      __typename: v.literal("Dog"),
       ...Dog.entries,
     })
 
-    const Animal = variant("__typename", [ExplicitCat, ExplicitDog])
+    const Animal = v.variant("__typename", [ExplicitCat, ExplicitDog])
     collectNames({ Cat: ExplicitCat, Dog: ExplicitDog, Animal })
 
     const animalResolver = resolver({
@@ -328,12 +317,12 @@ describe("valibot resolver", () => {
 
     const horseResolver = resolver.of(Horse, {
       createHorse,
-      hello: field(string(), (horse) => {
+      hello: field(v.string(), (horse) => {
         assertType<IHorse>(horse)
         return `Neh! Neh! --${horse.name}`
       }),
       horse: query(Horse, {
-        input: { name: string() },
+        input: { name: v.string() },
         resolve: ({ name }) => ({
           name,
           age: 1,
@@ -384,6 +373,73 @@ describe("valibot resolver", () => {
       expect(
         await horseResolver.hello.resolve({ name: "Horse", age: 1 }, undefined)
       ).toEqual("Neh! Neh! --Horse")
+    })
+  })
+
+  describe("auto naming", () => {
+    it("should aut assign name for objects", async () => {
+      const Cat = v.object({
+        name: v.string(),
+        age: v.number(),
+      })
+
+      const animalResolver = resolver({
+        cat: query(Cat, () => ({
+          name: "Kitty",
+          age: 1,
+        })),
+      })
+
+      const schema = weave(animalResolver, ValibotWeaver)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          cat: Cat!
+        }
+
+        type Cat {
+          name: String!
+          age: Float!
+        }"
+      `)
+    })
+
+    it("should aut assign name for inputs", async () => {
+      const Cat = v.object({
+        name: v.string(),
+        age: v.number(),
+      })
+      const animalResolver = resolver({
+        cat: query(Cat, () => ({
+          name: "Kitty",
+          age: 1,
+        })),
+        addCat: mutation(Cat, {
+          input: v.object({ data: Cat }),
+          resolve: ({ data }) => data,
+        }),
+      })
+
+      const schema = weave(animalResolver, ValibotWeaver)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          cat: Cat!
+        }
+
+        type Cat {
+          name: String!
+          age: Float!
+        }
+
+        type Mutation {
+          addCat(data: AddCatDataInput!): Cat!
+        }
+
+        input AddCatDataInput {
+          name: String!
+          age: Float!
+        }"
+      `)
     })
   })
 })
