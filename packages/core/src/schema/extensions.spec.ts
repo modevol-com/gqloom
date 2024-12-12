@@ -9,7 +9,7 @@ import { mockAst } from "../../../federation/src/mock-ast"
 import { loom, silk } from "../resolver"
 import type { GQLoomExtensions } from "./extensions"
 import { ensureInterfaceType } from "./interface"
-import { SchemaWeaver } from "./schema-weaver"
+import { GraphQLSchemaLoom } from "./schema-loom"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -89,7 +89,7 @@ describe("directive", () => {
     }),
   })
 
-  const schema = mockAst(new SchemaWeaver().add(r).weaveGraphQLSchema())
+  const schema = mockAst(new GraphQLSchemaLoom().add(r).weaveGraphQLSchema())
 
   it("should work with object", () => {
     expect(schema.getType("Grape")?.astNode).toBeDefined()

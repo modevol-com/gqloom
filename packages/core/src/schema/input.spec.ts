@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest"
 import { mutation, resolver, silk } from "../resolver"
 import { ensureInputObjectType, ensureInputType, inputToArgs } from "./input"
 import { LoomObjectType } from "./object"
-import { weave } from "./schema-weaver"
+import { weave } from "./schema-loom"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
 const nil = undefined

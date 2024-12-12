@@ -3,10 +3,10 @@ import {
   SYMBOLS,
   ensureInterfaceType,
   mapValue,
+  weave,
   weaverContext,
 } from "@gqloom/core"
 import { LoomObjectType } from "@gqloom/core"
-import type { SchemaVendorWeaver } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -36,9 +36,17 @@ import type {
 } from "./types"
 import { flatVariant, nullishTypes } from "./utils"
 
-export const ValibotWeaver = class {
+export class ValibotWeaver {
   static vendor = "valibot"
 
+  /**
+   * Weave a GraphQL Schema from resolvers with valibot schema
+   * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
+   * @returns GraphQL Schema
+   */
+  static weave(...inputs: Parameters<typeof weave>) {
+    return weave(ValibotWeaver, ...inputs)
+  }
   /**
    * get GraphQL Silk from Valibot Schema
    * @param schema Valibot Schema
@@ -303,7 +311,7 @@ export const ValibotWeaver = class {
   static getGraphQLTypeBySelf(this: GenericSchemaOrAsync): GraphQLOutputType {
     return ValibotWeaver.toNullableGraphQLType(this)
   }
-} satisfies SchemaVendorWeaver
+}
 
 export * from "./metadata"
 export * from "@gqloom/core"

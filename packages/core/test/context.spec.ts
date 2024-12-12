@@ -9,9 +9,9 @@ import {
 } from "graphql"
 import { beforeAll, describe, expect, it } from "vitest"
 import {
+  GraphQLSchemaLoom,
   type Middleware,
   type ResolverPayload,
-  SchemaWeaver,
   createMemoization,
   loom,
   silk,
@@ -76,7 +76,7 @@ describe("context integration", () => {
     }),
   })
 
-  const schema = new SchemaWeaver()
+  const schema = new GraphQLSchemaLoom()
     .use(globalMiddleware)
     .add(simpleResolver)
     .add(nodeResolver)
@@ -213,7 +213,7 @@ describe("memory integration", () => {
     { middlewares: [middleware] }
   )
 
-  const schema = new SchemaWeaver()
+  const schema = new GraphQLSchemaLoom()
     .use(middleware)
     .add(nodeResolver)
     .weaveGraphQLSchema()

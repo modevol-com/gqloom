@@ -1,6 +1,6 @@
 export * from "./object"
-export * from "./schema-vendor-weaver"
 export * from "./schema-weaver"
+export * from "./schema-loom"
 export * from "./weaver-context"
 export * from "./input"
 export * from "./interface"

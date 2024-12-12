@@ -1,6 +1,6 @@
 import { GraphQLString, execute, parse } from "graphql"
 import { beforeAll, describe, expect, it } from "vitest"
-import { type Middleware, SchemaWeaver, loom, silk } from "../src"
+import { GraphQLSchemaLoom, type Middleware, loom, silk } from "../src"
 
 const { query, resolver } = loom
 
@@ -34,7 +34,7 @@ describe("middleware integration", () => {
     { middlewares: [resolverMiddleware] }
   )
 
-  const schema = new SchemaWeaver()
+  const schema = new GraphQLSchemaLoom()
     .use(globalMiddleware)
     .add(simpleResolver)
     .weaveGraphQLSchema()

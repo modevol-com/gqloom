@@ -16,7 +16,7 @@ import {
   subscription,
 } from "../resolver"
 import { LoomObjectType } from "./object"
-import { weave } from "./schema-weaver"
+import { weave } from "./schema-loom"
 
 describe("printType", () => {
   it("should print type correctly", () => {

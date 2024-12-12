@@ -1,12 +1,13 @@
 import {
   type GQLoomExtensions,
-  SchemaWeaver,
+  GraphQLSchemaLoom,
   type SilkResolver,
   field,
   query,
   resolver,
   weave,
 } from "@gqloom/core"
+import type { SchemaWeaver } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -22,7 +23,7 @@ import {
   printType,
 } from "graphql"
 import * as v from "valibot"
-import { describe, expect, it } from "vitest"
+import { describe, expect, expectTypeOf, it } from "vitest"
 import {
   ValibotWeaver,
   asEnumType,
@@ -45,7 +46,10 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 const getGraphQLType = ValibotWeaver.getGraphQLType
 
-describe("", () => {
+describe("ValibotWeaver", () => {
+  it("should satisfy SchemaVendorWeaver", () => {
+    expectTypeOf(ValibotWeaver).toMatchTypeOf<SchemaWeaver>()
+  })
   it("should handle scalar", () => {
     let schema: PipedSchema
     schema = v.nullable(v.string())
@@ -171,7 +175,7 @@ describe("", () => {
         }
       },
     })
-    const schema1 = weave(r1, config, ValibotWeaver)
+    const schema1 = ValibotWeaver.weave(r1, config)
 
     const vSilk = ValibotWeaver.useConfig(config)
     const r2 = resolver({ dog: query(vSilk(Dog), () => ({})) })
@@ -894,7 +898,7 @@ function print(
 }
 
 function printResolver(...resolvers: SilkResolver[]): string {
-  const weaver = new SchemaWeaver()
+  const weaver = new GraphQLSchemaLoom()
   weaver.addVendor(ValibotWeaver)
   for (const r of resolvers) weaver.add(r)
 

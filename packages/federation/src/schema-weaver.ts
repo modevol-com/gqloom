@@ -6,9 +6,9 @@ import {
   entitiesResolver,
 } from "@apollo/subgraph/dist/types"
 import {
+  GraphQLSchemaLoom,
   type GraphQLSilk,
   type Middleware,
-  SchemaWeaver,
   type SilkResolver,
   type WeaverConfig,
   query,
@@ -28,13 +28,12 @@ import {
 } from "graphql"
 import { mockAst } from "./mock-ast"
 
-export class FederatedSchemaWeaver extends SchemaWeaver {
+export class FederatedSchemaLoom extends GraphQLSchemaLoom {
   public override weaveGraphQLSchema(): GraphQLSchema {
     const schema = super.weaveGraphQLSchema()
     const types = schema.getTypeMap()
     const entityTypes = Object.values(types).filter(
-      (type) =>
-        isObjectType(type) && FederatedSchemaWeaver.hasResolvableKey(type)
+      (type) => isObjectType(type) && FederatedSchemaLoom.hasResolvableKey(type)
     )
 
     const unionEntityType = new GraphQLUnionType({
@@ -105,9 +104,9 @@ export class FederatedSchemaWeaver extends SchemaWeaver {
     ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
   ): GraphQLSchema {
     const { context, configs, middlewares, resolvers, silks, weavers } =
-      SchemaWeaver.optionsFrom(...inputs)
+      GraphQLSchemaLoom.optionsFrom(...inputs)
 
-    const weaver = new FederatedSchemaWeaver({}, context)
+    const weaver = new FederatedSchemaLoom({}, context)
 
     weavers.forEach((it) => weaver.addVendor(it))
     configs.forEach((it) => weaver.setConfig(it))
@@ -119,4 +118,4 @@ export class FederatedSchemaWeaver extends SchemaWeaver {
   }
 }
 
-export const weave = SchemaWeaver.weave
+export const weave = FederatedSchemaLoom.weave

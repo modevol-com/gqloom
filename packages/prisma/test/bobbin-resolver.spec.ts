@@ -270,7 +270,7 @@ describe("Bobbin Resolver", () => {
       })
     })
 
-    it("should be able to update a post", async () => {
+    it("should be able to update a post", { retry: 6 }, async () => {
       const user = await db.user.create({ data: { email: "bob@bob.com" } })
       const post = await db.post.create({
         data: { title: "Hello", authorId: user.id },

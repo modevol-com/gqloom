@@ -1,9 +1,9 @@
 import { GraphQLString, parse, subscribe } from "graphql"
 import { assert, describe, expect, it } from "vitest"
 import {
+  GraphQLSchemaLoom,
   type Middleware,
   type ResolverPayload,
-  SchemaWeaver,
   loom,
   silk,
   useResolverPayload,
@@ -24,7 +24,9 @@ describe("subscription integration", () => {
       foo: subscription(silk(GraphQLString), fooGenerator),
     })
 
-    const schema = new SchemaWeaver().add(simpleResolver).weaveGraphQLSchema()
+    const schema = new GraphQLSchemaLoom()
+      .add(simpleResolver)
+      .weaveGraphQLSchema()
 
     const subscriber = await subscribe({ schema, document })
 
@@ -47,7 +49,9 @@ describe("subscription integration", () => {
       }),
     })
 
-    const schema = new SchemaWeaver().add(simpleResolver).weaveGraphQLSchema()
+    const schema = new GraphQLSchemaLoom()
+      .add(simpleResolver)
+      .weaveGraphQLSchema()
 
     const subscriber = await subscribe({ schema, document })
 
@@ -72,7 +76,9 @@ describe("subscription integration", () => {
       }),
     })
 
-    const schema = new SchemaWeaver().add(simpleResolver).weaveGraphQLSchema()
+    const schema = new GraphQLSchemaLoom()
+      .add(simpleResolver)
+      .weaveGraphQLSchema()
 
     const subscriber = await subscribe({ schema, document })
 
@@ -122,7 +128,7 @@ describe("subscription integration", () => {
       { middlewares: [resolverMiddleware] }
     )
 
-    const schema = new SchemaWeaver()
+    const schema = new GraphQLSchemaLoom()
       .use(globalMiddleware)
       .add(simpleResolver)
       .weaveGraphQLSchema()
@@ -176,7 +182,9 @@ describe("subscription integration", () => {
       { middlewares: [middleware] }
     )
 
-    const schema = new SchemaWeaver().add(simpleResolver).weaveGraphQLSchema()
+    const schema = new GraphQLSchemaLoom()
+      .add(simpleResolver)
+      .weaveGraphQLSchema()
 
     const contextValue = {}
     const subscriber = await subscribe({
