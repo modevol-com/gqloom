@@ -7,6 +7,7 @@ import {
   mapValue,
   weaverContext,
 } from "@gqloom/core"
+import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -176,14 +177,8 @@ export class ZodWeaver {
     }
 
     if (schema instanceof ZodObject) {
-      const { name, ...objectConfig } = ZodWeaver.getObjectConfig(
-        schema,
-        config
-      )
-      if (!name)
-        throw new Error(
-          `Object { ${Object.keys(schema.shape).join(", ")} } must have a name`
-        )
+      const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
+        ZodWeaver.getObjectConfig(schema, config)
 
       const strictSchema = schema.strict()
 

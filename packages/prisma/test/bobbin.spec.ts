@@ -1,5 +1,5 @@
 import { type StandardSchemaV1, loom, weave } from "@gqloom/core"
-import { ZodWeaver, asInputArgs } from "@gqloom/zod"
+import { ZodWeaver } from "@gqloom/zod"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest"
@@ -206,11 +206,9 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         countUser: UserBobbin.countQuery({
-          input: z
-            .object({
-              where: UserWhereInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            where: UserWhereInput,
+          }),
         }),
       })
 
@@ -265,11 +263,9 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         findFirstUser: UserBobbin.findFirstQuery({
-          input: z
-            .object({
-              where: UserWhereInput.optional(),
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            where: UserWhereInput.optional(),
+          }),
         }),
       })
 
@@ -325,11 +321,9 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         findManyUser: UserBobbin.findManyQuery({
-          input: z
-            .object({
-              where: UserWhereInput.optional(),
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            where: UserWhereInput.optional(),
+          }),
         }),
       })
 
@@ -385,11 +379,9 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         findUniqueUser: UserBobbin.findUniqueQuery({
-          input: z
-            .object({
-              where: UserWhereInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            where: UserWhereInput,
+          }),
         }),
       })
 
@@ -445,11 +437,9 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         createUser: UserBobbin.createMutation({
-          input: z
-            .object({
-              data: UserCreateInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            data: UserCreateInput,
+          }),
         }),
       })
 
@@ -503,11 +493,9 @@ describe("PrismaModelBobbin", () => {
       })
       const r = resolver.of(g.User, {
         createManyUser: UserBobbin.createManyMutation({
-          input: z
-            .object({
-              data: UserCreateManyInput.array(),
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            data: UserCreateManyInput.array(),
+          }),
         }),
       })
       const schema = weave(ZodWeaver, r)
@@ -565,11 +553,9 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         deleteUser: UserBobbin.deleteMutation({
-          input: z
-            .object({
-              where: UserDeleteInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            where: UserDeleteInput,
+          }),
         }),
       })
 
@@ -623,11 +609,9 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         deleteManyUser: UserBobbin.deleteManyMutation({
-          input: z
-            .object({
-              where: UserDeleteManyInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            where: UserDeleteManyInput,
+          }),
         }),
       })
 
@@ -691,12 +675,10 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         updateUser: UserBobbin.updateMutation({
-          input: z
-            .object({
-              data: UserUpdateInput,
-              where: UserWhereInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            data: UserUpdateInput,
+            where: UserWhereInput,
+          }),
         }),
       })
 
@@ -760,12 +742,10 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         updateManyUser: UserBobbin.updateManyMutation({
-          input: z
-            .object({
-              data: UserUpdateManyInput,
-              where: UserWhereInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            data: UserUpdateManyInput,
+            where: UserWhereInput,
+          }),
         }),
       })
 
@@ -833,13 +813,11 @@ describe("PrismaModelBobbin", () => {
 
       const r = resolver.of(g.User, {
         upsertUser: UserBobbin.upsertMutation({
-          input: z
-            .object({
-              where: UserWhereUniqueInput,
-              create: UserUpsertInput,
-              update: UserUpsertInput,
-            })
-            .superRefine(asInputArgs()),
+          input: z.object({
+            where: UserWhereUniqueInput,
+            create: UserUpsertInput,
+            update: UserUpsertInput,
+          }),
         }),
       })
 

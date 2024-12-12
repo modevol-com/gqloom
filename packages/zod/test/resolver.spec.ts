@@ -1,5 +1,11 @@
 import { collectNames, silk, weave } from "@gqloom/core"
-import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
+import {
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLString,
+  graphql,
+  printSchema,
+} from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { z } from "zod"
 import { ZodWeaver, field, mutation, query, resolver } from "../src/index"
@@ -268,6 +274,73 @@ describe("zod resolver", () => {
       expect(
         await horseResolver.hello.resolve({ name: "Horse", age: 1 }, undefined)
       ).toEqual("Neh! Neh! --Horse")
+    })
+  })
+
+  describe("auto naming", () => {
+    it("should automatically assign names to objects", async () => {
+      const Cat = z.object({
+        name: z.string(),
+        age: z.number(),
+      })
+
+      const animalResolver = resolver({
+        cat: query(Cat, () => ({
+          name: "Kitty",
+          age: 1,
+        })),
+      })
+
+      const schema = weave(animalResolver, ZodWeaver)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          cat: Cat!
+        }
+
+        type Cat {
+          name: String!
+          age: Float!
+        }"
+      `)
+    })
+
+    it("should automatically assign names to inputs", async () => {
+      const Cat = z.object({
+        name: z.string(),
+        age: z.number(),
+      })
+      const animalResolver = resolver({
+        cat: query(Cat, () => ({
+          name: "Kitty",
+          age: 1,
+        })),
+        addCat: mutation(Cat, {
+          input: z.object({ data: Cat }),
+          resolve: ({ data }) => data,
+        }),
+      })
+
+      const schema = weave(animalResolver, ZodWeaver)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          cat: Cat!
+        }
+
+        type Cat {
+          name: String!
+          age: Float!
+        }
+
+        type Mutation {
+          addCat(data: AddCatDataInput!): Cat!
+        }
+
+        input AddCatDataInput {
+          name: String!
+          age: Float!
+        }"
+      `)
     })
   })
 })

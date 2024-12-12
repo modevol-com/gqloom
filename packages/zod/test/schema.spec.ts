@@ -25,7 +25,6 @@ import {
   ZodWeaver,
   asEnumType,
   asField,
-  asInputArgs,
   asObjectType,
   asUnionType,
   field,
@@ -218,7 +217,7 @@ describe("ZodSilk", () => {
         age: z.number(),
         loveFish: z.boolean().optional(),
       })
-      .superRefine(asInputArgs("Cat"))
+      .superRefine(asObjectType("Cat"))
 
     const Cat = z.object({
       __typename: z.literal("Cat").nullish(),

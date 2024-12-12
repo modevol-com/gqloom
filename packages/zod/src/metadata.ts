@@ -41,20 +41,6 @@ export function asObjectType(
 }
 
 /**
- * Register as GraphQL input args.
- *
- * @returns zod superRefine refinement.
- */
-export function asInputArgs(
-  name?: string
-): (arg: object, ctx: RefinementCtx) => void {
-  name ??= `InputArgs${asInputArgs.increasingID++}`
-  return asObjectType({ name })
-}
-
-asInputArgs.increasingID = 1
-
-/**
  * Register as a GraphQL field.
  *
  * @param config - The GraphQL field config.

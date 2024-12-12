@@ -377,7 +377,7 @@ describe("valibot resolver", () => {
   })
 
   describe("auto naming", () => {
-    it("should aut assign name for objects", async () => {
+    it("should automatically assign names to objects", async () => {
       const Cat = v.object({
         name: v.string(),
         age: v.number(),
@@ -403,7 +403,7 @@ describe("valibot resolver", () => {
       `)
     })
 
-    it("should aut assign name for inputs", async () => {
+    it("should automatically assign names to inputs", async () => {
       const Cat = v.object({
         name: v.string(),
         age: v.number(),
