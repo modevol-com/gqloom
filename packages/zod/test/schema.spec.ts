@@ -1,9 +1,9 @@
 import {
   type GQLoomExtensions,
-  SchemaWeaver,
+  GraphQLSchemaLoom,
+  type SchemaWeaver,
   type SilkResolver,
   collectNames,
-  weave,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -19,13 +19,12 @@ import {
   printSchema,
   printType,
 } from "graphql"
-import { describe, expect, it } from "vitest"
+import { describe, expect, expectTypeOf, it } from "vitest"
 import { type Schema, z } from "zod"
 import {
   ZodWeaver,
   asEnumType,
   asField,
-  asInputArgs,
   asObjectType,
   asUnionType,
   field,
@@ -47,7 +46,11 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 const getGraphQLType = ZodWeaver.getGraphQLType
 
-describe("ZodSilk", () => {
+describe("ZodWeaver", () => {
+  it("should satisfy SchemaVendorWeaver", () => {
+    expectTypeOf(ZodWeaver).toMatchTypeOf<SchemaWeaver>()
+  })
+
   it("should handle scalar", () => {
     expect(getGraphQLType(z.string().nullable())).toEqual(GraphQLString)
 
@@ -153,11 +156,11 @@ describe("ZodSilk", () => {
     })
 
     const r1 = resolver({ dog: query(Dog, () => ({})) })
-    const schema1 = weave(ZodWeaver, r1, config)
+    const schema1 = ZodWeaver.weave(r1, config)
 
     const zSilk = ZodWeaver.useConfig(config)
     const r2 = resolver({ dog: query(zSilk(Dog), () => ({})) })
-    const schema2 = weave(ZodWeaver, r2)
+    const schema2 = ZodWeaver.weave(r2)
 
     expect(printSchema(schema2)).toEqual(printSchema(schema1))
 
@@ -218,7 +221,7 @@ describe("ZodSilk", () => {
         age: z.number(),
         loveFish: z.boolean().optional(),
       })
-      .superRefine(asInputArgs("Cat"))
+      .superRefine(asObjectType("Cat"))
 
     const Cat = z.object({
       __typename: z.literal("Cat").nullish(),
@@ -720,7 +723,7 @@ function printZodSilk(schema: Schema): string {
 }
 
 function printResolver(...resolvers: SilkResolver[]): string {
-  const weaver = new SchemaWeaver()
+  const weaver = new GraphQLSchemaLoom()
   weaver.addVendor(ZodWeaver)
   for (const r of resolvers) weaver.add(r)
   const schema = weaver.weaveGraphQLSchema()

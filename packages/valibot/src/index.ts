@@ -3,8 +3,10 @@ import {
   SYMBOLS,
   ensureInterfaceType,
   mapValue,
+  weave,
   weaverContext,
 } from "@gqloom/core"
+import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -37,6 +39,14 @@ import { flatVariant, nullishTypes } from "./utils"
 export class ValibotWeaver {
   static vendor = "valibot"
 
+  /**
+   * Weave a GraphQL Schema from resolvers with valibot schema
+   * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
+   * @returns GraphQL Schema
+   */
+  static weave(...inputs: Parameters<typeof weave>) {
+    return weave(ValibotWeaver, ...inputs)
+  }
   /**
    * get GraphQL Silk from Valibot Schema
    * @param schema Valibot Schema
@@ -165,12 +175,8 @@ export class ValibotWeaver {
             ...wrappers
           )
         }
-        const { name, ...objectConfig } =
+        const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
-        if (!name)
-          throw new Error(
-            `Object { ${Object.keys(schema.entries).join(", ")} } must have a name`
-          )
 
         return new GraphQLObjectType({
           name,

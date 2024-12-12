@@ -10,7 +10,7 @@ import {
   printSchema,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { FederatedSchemaWeaver, resolveReference } from "../src"
+import { FederatedSchemaLoom, resolveReference } from "../src"
 
 describe("FederatedSchemaWeaver", () => {
   interface IUser {
@@ -44,9 +44,9 @@ describe("FederatedSchemaWeaver", () => {
     }
   )
 
-  const schema = FederatedSchemaWeaver.weave(
+  const schema = FederatedSchemaLoom.weave(
     r1,
-    FederatedSchemaWeaver.config({
+    FederatedSchemaLoom.config({
       extensions: {
         directives: {
           link: [

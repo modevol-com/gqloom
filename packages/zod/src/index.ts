@@ -5,8 +5,10 @@ import {
   deepMerge,
   ensureInterfaceType,
   mapValue,
+  weave,
   weaverContext,
 } from "@gqloom/core"
+import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -86,6 +88,15 @@ export class ZodWeaver {
           }
         : ZodWeaver.getGraphQLTypeBySelf,
     })
+  }
+
+  /**
+   * Weave a GraphQL Schema from resolvers with zod schema
+   * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
+   * @returns GraphQL Schema
+   */
+  static weave(...inputs: Parameters<typeof weave>) {
+    return weave(ZodWeaver, ...inputs)
   }
 
   static toNullableGraphQLType(schema: Schema): GraphQLOutputType {
@@ -176,14 +187,8 @@ export class ZodWeaver {
     }
 
     if (schema instanceof ZodObject) {
-      const { name, ...objectConfig } = ZodWeaver.getObjectConfig(
-        schema,
-        config
-      )
-      if (!name)
-        throw new Error(
-          `Object { ${Object.keys(schema.shape).join(", ")} } must have a name`
-        )
+      const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
+        ZodWeaver.getObjectConfig(schema, config)
 
       const strictSchema = schema.strict()
 

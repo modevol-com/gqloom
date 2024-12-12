@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## next (YYYY-MM-DD)
 
 * update zod version to 3.24.0 and remove unnecessary functions
+* Feature: auto assign names to objects and inputs
 
 ## 0.5.0 (2024-12-03)
 

@@ -27,6 +27,7 @@ import {
   deepMerge,
   mapValue,
   markErrorLocation,
+  pascalCase,
   resolverPayloadStorage,
   toObjMap,
 } from "../utils"
@@ -38,9 +39,12 @@ import {
   provideWeaverContext,
   weaverContext,
 } from "./weaver-context"
+
 export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, SilkFieldOrOperation>()
   protected hiddenFields = new Set<string>()
+
+  static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
   protected resolverOptions?: ResolvingOptions
@@ -70,9 +74,34 @@ export class LoomObjectType extends GraphQLObjectType {
     })()
 
     super(config)
-
     this.resolverOptions = options.resolverOptions
     this.weaverContext = options.weaverContext ?? initWeaverContext()
+
+    if (this.name !== LoomObjectType.AUTO_ALIASING) {
+      this.hasExplicitName = true
+    }
+  }
+
+  protected hasExplicitName?: boolean
+  protected _aliases: string[] = []
+  public get aliases(): string[] {
+    return this._aliases
+  }
+
+  addAlias(name: string) {
+    if (this.hasExplicitName) return
+    this._aliases.push(name)
+    this.renameByAliases()
+  }
+
+  protected renameByAliases() {
+    let name: string | undefined
+    for (const alias of this.aliases) {
+      if (name === undefined || alias.length < name.length) {
+        name = alias
+      }
+    }
+    if (name) this.name = name
   }
 
   hideField(name: string) {
@@ -95,8 +124,9 @@ export class LoomObjectType extends GraphQLObjectType {
   override getFields(): GraphQLFieldMap<any, any> {
     const fieldsBySuper = super.getFields()
 
-    Object.values(fieldsBySuper).forEach(
-      (field) => (field.type = this.getCacheType(field.type))
+    Object.entries(fieldsBySuper).forEach(
+      ([fieldName, field]) =>
+        (field.type = this.getCacheType(field.type, fieldName))
     )
 
     const extraFields = provideWeaverContext(
@@ -127,20 +157,28 @@ export class LoomObjectType extends GraphQLObjectType {
     const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
     for (const [name, field] of map.entries()) {
-      record[name] = this.toFieldConfig(field)
+      record[name] = this.toFieldConfig(field, name)
     }
 
     return record
   }
 
-  toFieldConfig(field: SilkFieldOrOperation): GraphQLFieldConfig<any, any> {
+  toFieldConfig(
+    field: SilkFieldOrOperation,
+    fieldName?: string
+  ): GraphQLFieldConfig<any, any> {
     try {
-      const outputType = this.getCacheType(getGraphQLType(field.output))
+      const outputType = this.getCacheType(
+        getGraphQLType(field.output),
+        fieldName
+      )
 
       return {
         ...extract(field),
         type: outputType,
-        args: inputToArgs(field.input),
+        args: inputToArgs(field.input, {
+          fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
+        }),
         ...this.provideForResolve(field),
         ...this.provideForSubscribe(field),
       }
@@ -189,8 +227,11 @@ export class LoomObjectType extends GraphQLObjectType {
     }
   }
 
-  protected getCacheType(gqlType: GraphQLOutputType): GraphQLOutputType {
-    return getCacheType(gqlType, this.options)
+  protected getCacheType(
+    gqlType: GraphQLOutputType,
+    fieldName?: string
+  ): GraphQLOutputType {
+    return getCacheType(gqlType, { ...this.options, fieldName, parent: this })
   }
 
   get options() {
@@ -248,11 +289,19 @@ function defineArguments(
   }))
 }
 
+export const OPERATION_OBJECT_NAMES = new Set([
+  "Query",
+  "Mutation",
+  "Subscription",
+])
+
 export function getCacheType(
   gqlType: GraphQLOutputType,
   options: {
     weaverContext?: WeaverContext
     resolverOptions?: ResolvingOptions
+    fieldName?: string
+    parent?: LoomObjectType
   } = {}
 ): GraphQLOutputType {
   const context = options.weaverContext ?? weaverContext
@@ -263,6 +312,11 @@ export function getCacheType(
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
+    if (options.fieldName && options.parent) {
+      loomObject.addAlias(
+        parentName(options.parent.name) + pascalCase(options.fieldName)
+      )
+    }
     return loomObject
   } else if (isListType(gqlType)) {
     return new GraphQLList(getCacheType(gqlType.ofType, options))
@@ -282,4 +336,9 @@ export function getCacheType(
     return unionType
   }
   return gqlType
+}
+
+function parentName(name: string): string {
+  if (OPERATION_OBJECT_NAMES.has(name)) name = ""
+  return name
 }

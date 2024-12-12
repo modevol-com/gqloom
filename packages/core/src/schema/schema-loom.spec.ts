@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest"
 import { getGraphQLType, silk } from "../resolver"
 import { loom } from "../resolver"
 import { ensureInterfaceType } from "./interface"
-import { SchemaWeaver, weave } from "./schema-weaver"
+import { GraphQLSchemaLoom, weave } from "./schema-loom"
 import { provideWeaverContext } from "./weaver-context"
 
 const { resolver, query, mutation, field } = loom
@@ -109,7 +109,7 @@ describe("SchemaWeaver", () => {
       }),
     })
 
-    const schema = new SchemaWeaver()
+    const schema = new GraphQLSchemaLoom()
       .add(simpleResolver)
       .add(simpleFieldResolver)
       .weaveGraphQLSchema()
@@ -160,7 +160,7 @@ describe("SchemaWeaver", () => {
       })
     )
 
-    const schema = SchemaWeaver.weave(Giraffe)
+    const schema = GraphQLSchemaLoom.weave(Giraffe)
     expect(printSchema(lexicographicSortSchema(schema))).toMatchInlineSnapshot(`
       "type Giraffe {
         name: String!
@@ -208,7 +208,7 @@ describe("SchemaWeaver", () => {
     })
 
     expect(() => {
-      new SchemaWeaver().add(dogResolver).weaveGraphQLSchema()
+      new GraphQLSchemaLoom().add(dogResolver).weaveGraphQLSchema()
     }).toThrowErrorMatchingInlineSnapshot(
       `[Error: Schema must contain uniquely named types but contains multiple types named "Dog".]`
     )
@@ -236,7 +236,7 @@ describe("SchemaWeaver", () => {
     })
 
     expect(
-      printSchema(new SchemaWeaver().add(dogResolver).weaveGraphQLSchema())
+      printSchema(new GraphQLSchemaLoom().add(dogResolver).weaveGraphQLSchema())
     ).toMatchInlineSnapshot(`
       "type Query {
         dog1(dog: Dog): String
@@ -277,7 +277,7 @@ describe("SchemaWeaver", () => {
       }),
     })
 
-    const schema = new SchemaWeaver().add(r1).add(r2).weaveGraphQLSchema()
+    const schema = new GraphQLSchemaLoom().add(r1).add(r2).weaveGraphQLSchema()
     expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type Dog {
         name: String!
@@ -315,7 +315,7 @@ describe("SchemaWeaver", () => {
     )
     const r2 = resolver.of(Dog, {}, { extensions: { k2: true } })
 
-    const schema = SchemaWeaver.weave(r1, r2)
+    const schema = GraphQLSchemaLoom.weave(r1, r2)
 
     const DogType = schema.getType("Dog")
     if (DogType == null) throw new Error("DogType is null")
@@ -452,7 +452,7 @@ describe("SchemaWeaver", () => {
   })
 
   it("should avoid duplicate object in interface", () => {
-    const weaver = new SchemaWeaver()
+    const weaver = new GraphQLSchemaLoom()
 
     const MasterType = new GraphQLObjectType({
       name: "Master",

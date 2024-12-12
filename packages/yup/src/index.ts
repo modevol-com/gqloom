@@ -10,6 +10,7 @@ import {
   mapValue,
   weaverContext,
 } from "@gqloom/core"
+import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -131,8 +132,9 @@ export class YupWeaver {
         const name =
           objectConfig.name ??
           description.label ??
-          weaverContext.names.get(schema)
-        if (!name) throw new Error("object type must have a name")
+          weaverContext.names.get(schema) ??
+          LoomObjectType.AUTO_ALIASING
+
         const existing = weaverContext.getNamedType(name)
         if (existing) return existing
         const objectSchema = schema as ObjectSchema<

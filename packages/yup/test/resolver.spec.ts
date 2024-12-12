@@ -1,5 +1,11 @@
 import { collectNames, silk, weave } from "@gqloom/core"
-import { GraphQLInt, GraphQLObjectType, GraphQLString, graphql } from "graphql"
+import {
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLString,
+  graphql,
+  printSchema,
+} from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { type InferType, boolean, date, number, object, string } from "yup"
 import { field, mutation, query, resolver, union } from "../src"
@@ -266,6 +272,68 @@ describe("yup resolver", () => {
       expect(
         await horseResolver.hello.resolve({ name: "Horse", age: 1 }, undefined)
       ).toEqual("Neh! Neh! --Horse")
+    })
+  })
+
+  describe("auto naming", () => {
+    it("should automatically assign names to objects", async () => {
+      const Cat = object({
+        name: string(),
+        age: number(),
+      })
+
+      const animalResolver = resolver({
+        cat: query(Cat, () => ({
+          name: "Kitty",
+          age: 1,
+        })),
+      })
+
+      const schema = weave(animalResolver)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          cat: Cat
+        }
+
+        type Cat {
+          name: String
+          age: Float
+        }"
+      `)
+    })
+
+    it("should automatically assign names to inputs", async () => {
+      const Cat = object({
+        name: string(),
+        age: number(),
+      })
+      const animalResolver = resolver({
+        cat: query(Cat, () => ({
+          name: "Kitty",
+          age: 1,
+        })),
+        addCat: mutation(Cat, {
+          input: object({ data: Cat }),
+          resolve: ({ data }) => data,
+        }),
+      })
+
+      const schema = weave(animalResolver)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          cat: Cat
+        }
+
+        type Cat {
+          name: String
+          age: Float
+        }
+
+        type Mutation {
+          addCat(name: String, age: Float): Cat
+        }"
+      `)
     })
   })
 })

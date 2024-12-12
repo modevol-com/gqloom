@@ -1,21 +1,6 @@
 import * as v from "valibot"
 import { describe, expect, it } from "vitest"
-import { ValibotMetadataCollector, asInputArgs, asObjectType } from "../src"
-
-describe("asInputArgs", () => {
-  it("should return asInputArgs", () => {
-    const result = asInputArgs()
-    expect(result).toMatchObject({
-      type: "gqloom.asObjectType",
-    })
-  })
-
-  it("should avoid duplication of name", () => {
-    const a1 = asInputArgs()
-    const a2 = asInputArgs()
-    expect(a1.config.name).not.toEqual(a2.config.name)
-  })
-})
+import { ValibotMetadataCollector, asObjectType } from "../src"
 
 describe("asObjectType", () => {
   it("should return asObjectType", () => {
