@@ -22,35 +22,36 @@ In traditional GraphQL development, developers need to write the Schema manually
 In recent years, runtime type checking has become increasingly popular in the TypeScript community, with libraries such as [Zod](https://zod.dev/) and [Valibot](https://valibot.dev/) allowing developers to write type declarations in JavaScript, providing robust type safety at development time and type safety at runtime.
 More importantly, due to the runtime type checking nature of these libraries, the complete type information is already contained in their Schema. `GQLoom` takes advantage of this by using the Schema written in `Zod` and `Valibot` as the source of facts, thus avoiding the tedious task of writing `GraphQL` Schema manually, and providing more robust type safety. This eliminates the need to manually write `GraphQL` Schema and provides more robust type safety.
 
-In addition, many ORMs in the TypeScript ecosystem require table structures to be declared at development time, e.g., [Prisma](https://www.prisma.io/), [Drizzle](https://orm.drizzle.team/), [MikroORM](https://mikro-orm.io/).
+In addition, many ORMs in the TypeScript ecosystem require table structures to be declared at development time, e.g. [Prisma](https://www.prisma.io/), [Drizzle](https://orm.drizzle.team/), [MikroORM](https://mikro-orm.io/).
 The goal of `GQLoom` is to further reduce the burden on developers by directly using the table structures of these ORMs as Schema.
 
 The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), [Pothos](https://pothos-graphql.dev/).
+
 ## Hello World
 
 <Tabs>
 <Tab label="valibot">
 ```ts
-import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
+import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "world"),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver)
+export const schema = ValibotWeaver.weave(helloResolver)
 ```
 </Tab>
 <Tab  label="zod">
 ```ts
-import { resolver, query, weave } from "@gqloom/zod"
+import { resolver, query, ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => "world"),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = ZodWeaver.weave(helloResolver)
 ```
 </Tab>
 </Tabs>

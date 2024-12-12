@@ -76,16 +76,16 @@ npx tsc --init
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
+import { ValibotWeaver, query, resolver, weave } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver)
+export const schema = weave(ValibotWeaver, helloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -93,21 +93,21 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `CatResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
+在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `helloResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
 
   </Tab>
   <Tab label="zod">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/zod"
+import { ZodWeaver, query, resolver, weave } from "@gqloom/zod"
 import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = ZodWeaver.weave(helloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -115,7 +115,7 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `CatResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
+在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `helloResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
 
   </Tab>
   <Tab label="graphql.js">
@@ -127,14 +127,14 @@ import { createYoga } from "graphql-yoga"
 
 const { resolver, query } = loom
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "Hello, World"
   ),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = weave(helloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -142,7 +142,7 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `CatResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
+在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `helloResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
 
   </Tab>
 </Tabs>
@@ -268,7 +268,7 @@ const catMap = new Map<string, ICat>([
 
 `query` 操作是 GraphQL Schema 的入口，它允许客户端查询数据。
 
-现在，让我们回到最开始的 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例：
+现在，让我们回到最开始的 `catResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例：
 
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
@@ -276,44 +276,44 @@ const catMap = new Map<string, ICat>([
 import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const CatResolver = resolver({ // [!code hl]
+const catResolver = resolver({ // [!code hl]
   cats: query(v.array(Cat), () => Array.from(catMap.values())), // [!code hl]
 }) // [!code hl]
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver, CatResolver) // [!code hl]
+export const schema = weave(ValibotWeaver, helloResolver, catResolver) // [!code hl]
 ```
-在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
+在上面的代码中，我们使用 `resolver` 函数来定义 `catResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
 `query` 函数接受两个参数：
   - 第一个参数是 `cats` 的输出类型，你可以直接将 `valibot` schema 传入，在这里我们传入的是 `v.array(Cat)`;
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
 
-另外，我们还将 `CatResolver` 和 `HelloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
+另外，我们还将 `catResolver` 和 `helloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
   </Tab>
   <Tab label="zod">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/zod"
+import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(z.array(Cat), () => Array.from(catMap.values())), // [!code hl]
 })
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver, CatResolver)
+export const schema = weave(ZodWeaver, helloResolver, catResolver)
 ```
-在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
+在上面的代码中，我们使用 `resolver` 函数来定义 `catResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
 `query` 函数接受两个参数：
   - 第一个参数是 `cats` 的输出类型，你可以直接将 `zod` schema 传入，在这里我们传入的是 `z.array(Cat)`;
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
 
-另外，我们还将 `CatResolver` 和 `HelloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
+另外，我们还将 `catResolver` 和 `helloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
   </Tab>
   <Tab label="graphql.js">
 ```ts title="src/index.ts"
@@ -321,25 +321,25 @@ import { weave, silk, loom } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 const { resolver, query } = loom
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),, // [!code hl]
 })
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "hello, World"
   ),
 })
 
-export const schema = weave(HelloResolver, CatResolver)
+export const schema = weave(helloResolver, catResolver)
 ```
-在上面的代码中，我们使用 `resolver` 函数来定义 `CatResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
+在上面的代码中，我们使用 `resolver` 函数来定义 `catResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例。
 `query` 函数接受两个参数：
   - 第一个参数是 `cats` 的输出类型，接受一个 `silk` 对象，在这里我们传入的是 `silk.list(Cat)`（`silk.list` 函数接受一个 `silk` 对象作为参数，并返回一个表示该对象数组的 `silk` 对象）;
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
 
-另外，我们还将 `CatResolver` 和 `HelloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
+另外，我们还将 `catResolver` 和 `helloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
   </Tab>
 </Tabs>
 
@@ -375,7 +375,7 @@ query cats {
 import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), { // [!code hl]
@@ -388,7 +388,7 @@ const CatResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 ```
-在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
+在上面的代码中，我们为 `catResolver` 其添加一个名为 `cat` 的 `query` 操作。
 
 与 `cats` 类似，构建 `cat` 使用的 `query` 函数的第一个参数为 `Cat` 的 `nullish` 类型，表示 `cat` 操作的返回值可以为 `null` 或 `Cat` 类型。
 
@@ -402,7 +402,7 @@ const CatResolver = resolver({
 import { resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(z.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(Cat.nullish(), { // [!code hl]
@@ -415,7 +415,7 @@ const CatResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 ```
-在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
+在上面的代码中，我们为 `catResolver` 其添加一个名为 `cat` 的 `query` 操作。
 
 与 `cats` 类似，构建 `cat` 使用的 `query` 函数的第一个参数为 `Cat` 的 `nullish` 类型，表示 `cat` 操作的返回值可以为 `null` 或 `Cat` 类型。
 
@@ -430,7 +430,7 @@ import { silk, loom } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 const { resolver, query } = loom
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   cat: query(silk.nullable(Cat), { // [!code hl]
@@ -446,7 +446,7 @@ const CatResolver = resolver({
   ),
 })
 ```
-在上面的代码中，我们为 `CatResolver` 其添加一个名为 `cat` 的 `query` 操作。
+在上面的代码中，我们为 `catResolver` 其添加一个名为 `cat` 的 `query` 操作。
 
 与 `cats` 类似，构建 `cat` 使用的 `query` 函数的第一个参数为 `Cat` 的 `nullish` 类型，表示 `cat` 操作的返回值可以为 `null` 或 `Cat` 类型。
 
@@ -484,7 +484,7 @@ query cat {
 
 `mutation` 操作用于修改数据，例如创建、更新或删除数据。
 
-现在，让我们为 `CatResolver` 添加一个名为 `createCat` 的 `mutation` 操作，该操作接受一个 `name` 参数，并返回一个 `Cat` 实例。
+现在，让我们为 `catResolver` 添加一个名为 `createCat` 的 `mutation` 操作，该操作接受一个 `name` 参数，并返回一个 `Cat` 实例。
 
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
@@ -492,7 +492,7 @@ query cat {
 import { resolver, query, mutation } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), {
@@ -518,7 +518,7 @@ const CatResolver = resolver({
 })
 ```
 
-在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
+在上面的代码中，我们为 `catResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
 
 `mutation` 函数的输入与 `query` 函数一致。
 
@@ -531,7 +531,7 @@ const CatResolver = resolver({
 import { resolver, query, mutation } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(z.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(Cat.nullish(), {
@@ -556,7 +556,7 @@ const CatResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 ```
-在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
+在上面的代码中，我们为 `catResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
 
 `mutation` 函数的输入与 `query` 函数一致。
 
@@ -569,7 +569,7 @@ const CatResolver = resolver({
 import { loom, silk, weave } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   cat: query(silk.nullable(Cat), {
@@ -597,7 +597,7 @@ const CatResolver = resolver({
   ),
 })
 ```
-在上面的代码中，我们为 `CatResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
+在上面的代码中，我们为 `catResolver` 添加了一个名为 `createCat` 的 `mutation` 操作。
 
 `mutation` 函数的输入与 `query` 函数一致。
 
@@ -670,7 +670,7 @@ query cats {
 import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver.of(Cat, { // [!code hl]
+const catResolver = resolver.of(Cat, { // [!code hl]
   age: field(v.pipe(v.number(), v.integer()), (cat) => { // [!code hl]
     const birthDate = new Date(cat.birthDate) // [!code hl]
     return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
@@ -688,11 +688,11 @@ const CatResolver = resolver.of(Cat, { // [!code hl]
   // ...
 })
 ```
-在上面的代码中，我们为 `CatResolver` 添加了一个名为 `age` 的 `field`。
+在上面的代码中，我们为 `catResolver` 添加了一个名为 `age` 的 `field`。
 
 注意，我们使用 `resolver.of` 函数替代了 `resolver`。
-`resolver.of` 函数的第一个参数为一个对象 Schema，在此处为 `Cat`，它将作为 `CatResolver` 的 `source` 类型；
-在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `CatResolver`。
+`resolver.of` 函数的第一个参数为一个对象 Schema，在此处为 `Cat`，它将作为 `catResolver` 的 `source` 类型；
+在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `catResolver`。
 
 在名为 `age` 的 `field` 中，我们使用 `v.pipe(v.number(), v.integer())` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。注意，`GQLoom` 默认不会对解析函数的输出执行 `parse` 步骤，这是因为在解析函数内部产生的结果通常可控且符合 TypeScript 推导的类型。
 
@@ -704,7 +704,7 @@ const CatResolver = resolver.of(Cat, { // [!code hl]
 import { resolver, query, mutation, field } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver.of(Cat, { // [!code hl]
+const catResolver = resolver.of(Cat, { // [!code hl]
   age: field(z.number().int(), (cat) => { // [!code hl]
     const birthDate = new Date(cat.birthDate) // [!code hl]
     return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
@@ -722,11 +722,11 @@ const CatResolver = resolver.of(Cat, { // [!code hl]
   // ...
 })
 ```
-在上面的代码中，我们为 `CatResolver` 添加了一个名为 `age` 的 `field`。
+在上面的代码中，我们为 `catResolver` 添加了一个名为 `age` 的 `field`。
 
 注意，我们使用 `resolver.of` 函数替代了 `resolver`。
-`resolver.of` 函数的第一个参数为一个对象 Schema，在此处为 `Cat`，它将作为 `CatResolver` 的 `source` 类型；
-在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `CatResolver`。
+`resolver.of` 函数的第一个参数为一个对象 Schema，在此处为 `Cat`，它将作为 `catResolver` 的 `source` 类型；
+在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `catResolver`。
 
 在名为 `age` 的 `field` 中，我们使用 `z.number().int()` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。注意，`GQLoom` 默认不会对解析函数的输出执行 `parse` 步骤，这是因为在解析函数内部产生的结果通常可控且符合 TypeScript 推导的类型。
 
@@ -744,7 +744,7 @@ import {
 const { resolver, query, mutation, field } = loom
 
 
-const CatResolver = resolver.of(Cat, { // [!code hl]
+const catResolver = resolver.of(Cat, { // [!code hl]
   age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), (cat) => { // [!code hl]
     const birthDate = new Date(cat.birthDate) // [!code hl]
     return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
@@ -762,11 +762,11 @@ const CatResolver = resolver.of(Cat, { // [!code hl]
   // ...
 })
 ```
-在上面的代码中，我们为 `CatResolver` 添加了一个名为 `age` 的 `field`。
+在上面的代码中，我们为 `catResolver` 添加了一个名为 `age` 的 `field`。
 
 注意，我们使用 `resolver.of` 函数替代了 `resolver`。
-`resolver.of` 函数的第一个参数为一个对象 Schema，在此处为 `Cat`，它将作为 `CatResolver` 的 `source` 类型；
-在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `CatResolver`。
+`resolver.of` 函数的第一个参数为一个对象 Schema，在此处为 `Cat`，它将作为 `catResolver` 的 `source` 类型；
+在第二个参数中，我们仍旧传入 `query`、`mutation` 和 `field` 来定义 `catResolver`。
 
 在名为 `age` 的 `field` 中，我们使用 `silk<number>(new GraphQLNonNull(GraphQLInt)` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。
 
@@ -810,7 +810,7 @@ query cat {
 import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver.of(Cat, {
+const catResolver = resolver.of(Cat, {
   age: field(v.pipe(v.number(), v.integer()), { // [!code hl]
     input: { // [!code hl]
       year: v.nullish(v.pipe(v.number(), v.integer()), () => // [!code hl]
@@ -843,7 +843,7 @@ const CatResolver = resolver.of(Cat, {
 import { resolver, query, mutation, field } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver.of(Cat, {
+const catResolver = resolver.of(Cat, {
   age: field(z.number().int(), { // [!code hl]
     input: { // [!code hl]
       year: z // [!code hl]
@@ -884,7 +884,7 @@ import {
 } from "graphql"
 const { resolver, query, mutation, field } = loom
 
-const CatResolver = resolver.of(Cat, {
+const catResolver = resolver.of(Cat, {
   age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), { // [!code hl]
     input: { // [!code hl]
       year: silk<number | undefined>(GraphQLInt), // [!code hl]
@@ -938,13 +938,13 @@ query cat {
 ```
 ## 总结
 
-非常好，我们编写了一个简单的 GraphQL APP，它包含一个 `CatResolver`。
+非常好，我们编写了一个简单的 GraphQL APP，它包含一个 `catResolver`。
 在刚刚的例子中，我们学习了：
 
 - 在 `resolver` 中定义 `query`、`mutation` 的方法；
 - 使用 `valibot`、`zod` 或 `graphql.js` 来定义对象和字段；
 - 在 `query`、`mutation`、`field` 中定义解析函数和输入参数；
-- 使用 `weave` 函数将 `CatResolver` 和 `HelloResolver` 编织为 GraphQL Schema，并使用 `graphql-yoga` 启动我们的 GraphQL APP。
+- 使用 `weave` 函数将 `catResolver` 和 `helloResolver` 编织为 GraphQL Schema，并使用 `graphql-yoga` 启动我们的 GraphQL APP。
 
 ## 下一步
 

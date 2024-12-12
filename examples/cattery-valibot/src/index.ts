@@ -22,7 +22,7 @@ const catMap = new Map<string, ICat>([
   ["Tom", { name: "Tom", birthDate: "2023-03-03" }],
 ])
 
-const CatResolver = resolver.of(Cat, {
+const catResolver = resolver.of(Cat, {
   age: field(v.pipe(v.number(), v.integer()), {
     input: {
       year: v.nullish(v.pipe(v.number(), v.integer()), () =>
@@ -57,11 +57,11 @@ const CatResolver = resolver.of(Cat, {
   }),
 })
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver, CatResolver)
+export const schema = weave(ValibotWeaver, helloResolver, catResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {

@@ -76,16 +76,16 @@ Then, we create an `src/index.ts` file and add the following code:
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
 ```ts title="src/index.ts"
-import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
+import { ValibotWeaver, query, resolver, weave } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver)
+export const schema = weave(ValibotWeaver, helloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -93,21 +93,21 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-In the code above: we define our GraphQL Resolver using `resolver` and `query`, we weave `CatResolver` into a GraphQL Schema with the `weave` function, and we start our GraphQL service with `graphql-yoga`.
+In the code above: we define our GraphQL Resolver using `resolver` and `query`, we weave `helloResolver` into a GraphQL Schema with the `weave` function, and we start our GraphQL service with `graphql-yoga`.
 
   </Tab>
   <Tab label="zod">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/zod"
+import { ZodWeaver, query, resolver, weave } from "@gqloom/zod"
 import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = ZodWeaver.weave(helloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -115,7 +115,7 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-In the code above: we define our GraphQL Resolver using `resolver` and `query`, we weave `CatResolver` into a GraphQL Schema with the `weave` function, and we start our GraphQL service with `graphql-yoga`.
+In the code above: we define our GraphQL Resolver using `resolver` and `query`, we weave `helloResolver` into a GraphQL Schema with the `weave` function, and we start our GraphQL service with `graphql-yoga`.
 
   </Tab>
   <Tab label="graphql.js">
@@ -127,14 +127,14 @@ import { createYoga } from "graphql-yoga"
 
 const { resolver, query } = loom
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "Hello, World"
   ),
 })
 
-export const schema = weave(HelloResolver)
+export const schema = weave(helloResolver)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -142,7 +142,7 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-In the code above: we define our GraphQL Resolver using `resolver` and `query`, we weave `CatResolver` into a GraphQL Schema with the `weave` function, and we start our GraphQL service with `graphql-yoga`.
+In the code above: we define our GraphQL Resolver using `resolver` and `query`, we weave `helloResolver` into a GraphQL Schema with the `weave` function, and we start our GraphQL service with `graphql-yoga`.
 
   </Tab>
 </Tabs>
@@ -268,7 +268,7 @@ In practice, you may need to use a more robust data persistence storage solution
 
 The `query` operation is the entry point to the GraphQL Schema that allows clients to query data.
 
-Now, let's go back to the beginning with `CatResolver` and add a `query` operation to it called `cats` which returns all `Cat` instances:
+Now, let's go back to the beginning with `catResolver` and add a `query` operation to it called `cats` which returns all `Cat` instances:
 
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
@@ -276,44 +276,44 @@ Now, let's go back to the beginning with `CatResolver` and add a `query` operati
 import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const CatResolver = resolver({ // [!code hl]
+const catResolver = resolver({ // [!code hl]
   cats: query(v.array(Cat), () => Array.from(catMap.values())), // [!code hl]
 }) // [!code hl]
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver, CatResolver) // [!code hl]
+export const schema = weave(ValibotWeaver, helloResolver, catResolver) // [!code hl]
 ```
-In the code above, we use the `resolver` function to define `CatResolver` and add a `query` operation named `cats` that returns all `Cat` instances.
+In the code above, we use the `resolver` function to define `catResolver` and add a `query` operation named `cats` that returns all `Cat` instances.
 The `query` function takes two arguments:
   - The first argument is the output type of `cats`, which you can pass directly into the `valibot` schema, in this case `v.array(Cat)`; the second argument is a parser function, which returns all instances of `Cat`.
   - The second argument is a parser function where we define the specific resolving logic for `cats`, where we use the `Array.from` function to convert `catMap` to an array and use it as the return value for `cats`.
 
-In addition, we also weave together `CatResolver` and `HelloResolver` using the `weave` function to create the final GraphQL Schema.
+In addition, we also weave together `catResolver` and `helloResolver` using the `weave` function to create the final GraphQL Schema.
   </Tab>
   <Tab label="zod">
 ```ts title="src/index.ts"
-import { weave, resolver, query } from "@gqloom/zod"
+import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(z.array(Cat), () => Array.from(catMap.values())), // [!code hl]
 })
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 
-export const schema = weave(HelloResolver, CatResolver)
+export const schema = weave(ZodWeaver, helloResolver, catResolver)
 ```
-In the code above, we use the `resolver` function to define `CatResolver` and add a `query` operation named `cats` that returns all `Cat` instances.
+In the code above, we use the `resolver` function to define `catResolver` and add a `query` operation named `cats` that returns all `Cat` instances.
 The `query` function takes two arguments:
   - The first argument is the output type of `cats`, which you can pass directly into the `zod` schema, in this case `z.array(Cat)`; the second argument is a parsing function, which returns all instances of `Cat`.
   - The second argument is a parser function where we define the specific resolving logic for `cats`, where we use the `Array.from` function to convert `catMap` to an array and use it as the return value for `cats`.
 
-In addition, we also weave together `CatResolver` and `HelloResolver` using the `weave` function to create the final GraphQL Schema.
+In addition, we also weave together `catResolver` and `helloResolver` using the `weave` function to create the final GraphQL Schema.
   </Tab>
   <Tab label="graphql.js">
 ```ts title="src/index.ts"
@@ -321,25 +321,25 @@ import { weave, silk, loom } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 const { resolver, query } = loom
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),, // [!code hl]
 })
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "hello, World"
   ),
 })
 
-export const schema = weave(HelloResolver, CatResolver)
+export const schema = weave(helloResolver, catResolver)
 ```
-In the code above, we use the `resolver` function to define `CatResolver` and add a `query` operation named `cats` that returns all `Cat` instances.
+In the code above, we use the `resolver` function to define `catResolver` and add a `query` operation named `cats` that returns all `Cat` instances.
 The `query` function takes two arguments:
   - The first argument is the output type of `cats`, which accepts a `silk` object, where we pass in `silk.list(Cat)` (the `silk.list` function accepts a `silk` object as an argument and returns a `silk` object representing an array of that object); and the second argument is a parsing function.
   - The second argument is a parser function where we define the specific resolving logic for `cats`, where we use the `Array.from` function to convert `catMap` to an array and use it as the return value for `cats`.
 
-In addition, we also weave together `CatResolver` and `HelloResolver` using the `weave` function to create the final GraphQL Schema.
+In addition, we also weave together `catResolver` and `helloResolver` using the `weave` function to create the final GraphQL Schema.
   </Tab>
 </Tabs>
 
@@ -375,7 +375,7 @@ Next, we define a `query` operation called `cat` that takes a `name` argument an
 import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), { // [!code hl]
@@ -388,7 +388,7 @@ const CatResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 ```
-In the code above, we add a `query` operation called `cat` to `CatResolver`.
+In the code above, we add a `query` operation called `cat` to `catResolver`.
 
 Similar to `cats`, the `query` function used to build `cat` takes as its first argument the `nullish` type of `Cat`, which means that the return value of the `cat` operation can be of type `null` or `Cat`.
 
@@ -402,7 +402,7 @@ In the resolve function, we get the value of the `name` parameter from the first
 import { resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(z.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(Cat.nullish(), { // [!code hl]
@@ -415,7 +415,7 @@ const CatResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 ```
-In the code above, we add a `query` operation called `cat` to `CatResolver`.
+In the code above, we add a `query` operation called `cat` to `catResolver`.
 
 Similar to `cats`, the `query` function used to build `cat` takes as its first argument the `nullish` type of `Cat`, which means that the return value of the `cat` operation can be of type `null` or `Cat`.
 
@@ -430,7 +430,7 @@ import { silk, loom } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 const { resolver, query } = loom
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   cat: query(silk.nullable(Cat), { // [!code hl]
@@ -446,7 +446,7 @@ const CatResolver = resolver({
   ),
 })
 ```
-In the code above, we add a `query` operation called `cat` to `CatResolver`.
+In the code above, we add a `query` operation called `cat` to `catResolver`.
 
 Similar to `cats`, the `query` function used to build `cat` takes as its first argument the `nullish` type of `Cat`, which means that the return value of the `cat` operation can be of type `null` or `Cat`.
 
@@ -484,7 +484,7 @@ You should see the following output:
 
 The `mutation` operation is used to modify data, such as creating, updating, or deleting data.
 
-Now, let's add a `mutation` operation named `createCat` to `CatResolver` that takes a `name` parameter and returns a `Cat` instance.
+Now, let's add a `mutation` operation named `createCat` to `catResolver` that takes a `name` parameter and returns a `Cat` instance.
 
 <Tabs groupId='schema-builder'>
   <Tab label="valibot">
@@ -492,7 +492,7 @@ Now, let's add a `mutation` operation named `createCat` to `CatResolver` that ta
 import { resolver, query, mutation } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(v.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), {
@@ -518,7 +518,7 @@ const CatResolver = resolver({
 })
 ```
 
-In the code above, we have added a `mutation` operation named `createCat` to `CatResolver`.
+In the code above, we have added a `mutation` operation named `createCat` to `catResolver`.
 
 The input to the `mutation` function is the same as the `query` function.
 
@@ -531,7 +531,7 @@ In the parser function, we can easily get the values of the `name` and `birthDat
 import { resolver, query, mutation } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(z.array(Cat), () => Array.from(catMap.values())),
 
   cat: query(Cat.nullish(), {
@@ -556,7 +556,7 @@ const CatResolver = resolver({
   hello: query(z.string(), () => "Hello, World"),
 })
 ```
-In the code above, we have added a `mutation` operation named `createCat` to `CatResolver`.
+In the code above, we have added a `mutation` operation named `createCat` to `catResolver`.
 
 The input to the `mutation` function is the same as the `query` function.
 
@@ -569,7 +569,7 @@ In the parser function, we can easily get the values of the `name` and `birthDat
 import { loom, silk, weave } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql"
 
-const CatResolver = resolver({
+const catResolver = resolver({
   cats: query(silk.list(Cat), () => Array.from(catMap.values())),
 
   cat: query(silk.nullable(Cat), {
@@ -597,7 +597,7 @@ const CatResolver = resolver({
   ),
 })
 ```
-In the code above, we have added a `mutation` operation named `createCat` to `CatResolver`.
+In the code above, we have added a `mutation` operation named `createCat` to `catResolver`.
 
 The input to the `mutation` function is the same as the `query` function.
 
@@ -670,7 +670,7 @@ The `age` field is not stored in the `Cat` instance, but is calculated on each q
 import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver.of(Cat, { // [!code hl]
+const catResolver = resolver.of(Cat, { // [!code hl]
   age: field(v.pipe(v.number(), v.integer()), (cat) => { // [!code hl]
     const birthDate = new Date(cat.birthDate) // [!code hl]
     return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
@@ -688,11 +688,11 @@ const CatResolver = resolver.of(Cat, { // [!code hl]
   // ...
 })
 ```
-In the code above, we have added a `field` named `age` to `CatResolver`.
+In the code above, we have added a `field` named `age` to `catResolver`.
 
 Notice that we used the `resolver.of` function instead of `resolver`.
-The first argument to the `resolver.of` function is an object Schema, in this case `Cat`, which will be used as the `source` type for `CatResolver`;
-In the second argument, we still pass in `query`, `mutation`, and `field` to define `CatResolver`.
+The first argument to the `resolver.of` function is an object Schema, in this case `Cat`, which will be used as the `source` type for `catResolver`;
+In the second argument, we still pass in `query`, `mutation`, and `field` to define `catResolver`.
 
 In the `field` named `age`, we use `v.pipe(v.number(), v.integer())` to define the type of `age`, and `GQLoom` will weave the `age` field into a GraphQL `Int` type. Note that `GQLoom` does not execute a `parse` step on the output of a parser function by default, because the results produced inside a parser function are usually controllable and follow the TypeScript-derived type.
 
@@ -704,7 +704,7 @@ In the resolve function, we easily get the value of the `cat` instance from the 
 import { resolver, query, mutation, field } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver.of(Cat, { // [!code hl]
+const catResolver = resolver.of(Cat, { // [!code hl]
   age: field(z.number().int(), (cat) => { // [!code hl]
     const birthDate = new Date(cat.birthDate) // [!code hl]
     return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
@@ -722,11 +722,11 @@ const CatResolver = resolver.of(Cat, { // [!code hl]
   // ...
 })
 ```
-In the code above, we have added a `field` named `age` to `CatResolver`.
+In the code above, we have added a `field` named `age` to `catResolver`.
 
 Notice that we used the `resolver.of` function instead of `resolver`.
-The first argument to the `resolver.of` function is an object Schema, in this case `Cat`, which will be used as the `source` type for `CatResolver`;
-In the second argument, we still pass in `query`, `mutation`, and `field` to define `CatResolver`.
+The first argument to the `resolver.of` function is an object Schema, in this case `Cat`, which will be used as the `source` type for `catResolver`;
+In the second argument, we still pass in `query`, `mutation`, and `field` to define `catResolver`.
 
 In the `field` named `age`, we use `z.number().int()` to define the type of `age`, and `GQLoom` will weave the `age` field into a GraphQL `Int` type. Note that `GQLoom` does not execute a `parse` step on the output of a parser function by default, because the results produced inside a parser function are usually controllable and follow the TypeScript-derived type.
 
@@ -744,7 +744,7 @@ import {
 const { resolver, query, mutation, field } = loom
 
 
-const CatResolver = resolver.of(Cat, { // [!code hl]
+const catResolver = resolver.of(Cat, { // [!code hl]
   age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), (cat) => { // [!code hl]
     const birthDate = new Date(cat.birthDate) // [!code hl]
     return new Date().getFullYear() - birthDate.getFullYear() // [!code hl]
@@ -762,11 +762,11 @@ const CatResolver = resolver.of(Cat, { // [!code hl]
   // ...
 })
 ```
-In the code above, we have added a `field` named `age` to `CatResolver`.
+In the code above, we have added a `field` named `age` to `catResolver`.
 
 Notice that we used the `resolver.of` function instead of `resolver`.
-The first argument to the `resolver.of` function is an object Schema, in this case `Cat`, which will be used as the `source` type for `CatResolver`;
-In the second argument, we still pass in `query`, `mutation`, and `field` to define `CatResolver`.
+The first argument to the `resolver.of` function is an object Schema, in this case `Cat`, which will be used as the `source` type for `catResolver`;
+In the second argument, we still pass in `query`, `mutation`, and `field` to define `catResolver`.
 
 In the `field` named `age`, we use `silk<number>(new GraphQLNonNull(GraphQLInt)` to define the type of `age`, and `GQLoom` will weave the `age` field into a GraphQL `Int` type.
 
@@ -810,7 +810,7 @@ We can add an `input` object to a `field`, which will be used as the input param
 import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
 
-const CatResolver = resolver.of(Cat, {
+const catResolver = resolver.of(Cat, {
   age: field(v.pipe(v.number(), v.integer()), { // [!code hl]
     input: { // [!code hl]
       year: v.nullish(v.pipe(v.number(), v.integer()), () => // [!code hl]
@@ -843,7 +843,7 @@ In the `field` parse function, we can easily get the value of `year` from the se
 import { resolver, query, mutation, field } from "@gqloom/zod"
 import { z } from "zod"
 
-const CatResolver = resolver.of(Cat, {
+const catResolver = resolver.of(Cat, {
   age: field(z.number().int(), { // [!code hl]
     input: { // [!code hl]
       year: z // [!code hl]
@@ -884,7 +884,7 @@ import {
 } from "graphql"
 const { resolver, query, mutation, field } = loom
 
-const CatResolver = resolver.of(Cat, {
+const catResolver = resolver.of(Cat, {
   age: field(silk<number>(new GraphQLNonNull(GraphQLInt)), { // [!code hl]
     input: { // [!code hl]
       year: silk<number | undefined>(GraphQLInt), // [!code hl]
@@ -938,13 +938,13 @@ You should see the following output:
 ```
 ## Summary
 
-Very well, we have written a simple GraphQL APP that contains a `CatResolver`.
+Very well, we have written a simple GraphQL APP that contains a `catResolver`.
 In the example we just learned:
 
 - Define methods for `query`, `mutation` in `resolver`;
 - Defining objects and fields using `valibot`, `zod` or `graphql.js`;
 - Defining parsing functions and input parameters in `query`, `mutation`, `field`;
-- Weave `CatResolver` and `HelloResolver` into a GraphQL Schema using the `weave` function and launch our GraphQL APP using `graphql-yoga`.
+- Weave `catResolver` and `helloResolver` into a GraphQL Schema using the `weave` function and launch our GraphQL APP using `graphql-yoga`.
 
 
 ## Next step
