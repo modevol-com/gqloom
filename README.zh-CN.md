@@ -27,11 +27,11 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "world"),
 })
 
-export const schema = ValibotWeaver.weave(HelloResolver)
+export const schema = ValibotWeaver.weave(helloResolver)
 ```
 
 ## 仓库导航
