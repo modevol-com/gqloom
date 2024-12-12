@@ -35,11 +35,11 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => "world"),
 })
 
-export const schema = ValibotWeaver.weave(HelloResolver)
+export const schema = ValibotWeaver.weave(helloResolver)
 ```
 </Tab>
 <Tab  label="zod">
@@ -47,11 +47,11 @@ export const schema = ValibotWeaver.weave(HelloResolver)
 import { resolver, query, ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => "world"),
 })
 
-export const schema = ZodWeaver.weave(HelloResolver)
+export const schema = ZodWeaver.weave(helloResolver)
 ```
 </Tab>
 </Tabs>
