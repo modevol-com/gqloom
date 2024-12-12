@@ -23,7 +23,7 @@
   "files": ["dist"],
   "peerDependencies": {
     "@apollo/subgraph": ">= 2.0.0",
-    "@gqloom/core": ">= 0.4.0",
+    "@gqloom/core": ">= 0.6.0",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
