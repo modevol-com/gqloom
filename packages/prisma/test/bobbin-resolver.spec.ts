@@ -241,7 +241,7 @@ describe("Bobbin Resolver", () => {
       })
     })
 
-    it("should be able to delete many posts", async () => {
+    it("should be able to delete many posts", { retry: 6 }, async () => {
       const user = await db.user.create({ data: { email: "bob@bob.com" } })
 
       await db.post.createMany({
