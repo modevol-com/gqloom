@@ -106,7 +106,7 @@ export function listSilk<TSilk extends GraphQLSilk<any, any>>(
         originType instanceof GraphQLNonNull &&
         originType.ofType instanceof GraphQLList
       ) {
-        originType = originType.ofType
+        originType = originType.ofType.ofType
       }
       if (originType instanceof GraphQLList) {
         originType = originType.ofType

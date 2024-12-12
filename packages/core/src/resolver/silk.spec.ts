@@ -43,6 +43,12 @@ describe("silk", () => {
       const gType = silk.getType(silk.list(stringSilk))
       expect(gType).toBeInstanceOf(GraphQLNonNull)
       expect((gType as GraphQLNonNull<any>).ofType).toBeInstanceOf(GraphQLList)
+      const stringSilk2 = silk<string[], string[]>(
+        new GraphQLNonNull(new GraphQLList(GraphQLString))
+      )
+      const gType2 = silk.getType(silk.list(stringSilk2))
+      expect(gType2).toBeInstanceOf(GraphQLNonNull)
+      expect((gType2 as GraphQLNonNull<any>).ofType).toBeInstanceOf(GraphQLList)
     })
 
     it("should keep nullable ofType", () => {

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+* Fix: `silk.list` to correctly handle non-nullable list types
+
+## 0.6.0 (2024-12-13)
+
 * Feature: auto assign names to objects and inputs
 * Refactor: rename `SchemaWeaver` to `GraphQLSchemaLoom`
 
