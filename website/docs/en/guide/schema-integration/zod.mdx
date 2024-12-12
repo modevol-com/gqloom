@@ -14,33 +14,33 @@ Zod is designed to be as developer-friendly as possible. The goal is to eliminat
 
 ## Defining simple scalars
 
-Zod Schema can be used as a [silk](../fundamentals/silk) in GQLoom using `zodSilk`:
+In GQLoom, you can directly use Zod Schema as a [silk](../fundamentals/silk).
 
 ```ts
 import { z } from "zod"
-import { zodSilk } from "@gqloom/zod"
 
-const StringScalar = zodSilk(z.string()) // GraphQLString
+const StringScalar = z.string() // GraphQLString
 
-const BooleanScalar = zodSilk(z.boolean()) // GraphQLBoolean
+const BooleanScalar = z.boolean() // GraphQLBoolean
 
-const FloatScalar = zodSilk(z.number()) // GraphQLFloat
+const FloatScalar = z.number() // GraphQLFloat
 
-const IntScalar = zodSilk(z.number().int()) // GraphQLInt
+const IntScalar = z.number().int() // GraphQLInt
 ```
 
-## Resolver
+## Weave
 
-In order to use Zod Schema as a silk, we need to wrap `zodSilk` around it, and a lot of wrapping can be a bit cumbersome in development, so `@gqloom/zod` provides re-exported resolver and operation constructors to simplify the process.
-The `resolver`, `query`, `mutation`, and `field` imported from `@gqloom/zod` will automatically wrap `zodSilk` internally so that in most cases we can use the Zod Schema directly.
+To ensure that `GQLoom` correctly weaves the Zod Schema into the GraphQL Schema, we need to add the `ZodWeaver` from `@gqloom/zod` when using the `weave` function.
 
 ```ts
+import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
-import { resolver, query } from "@gqloom/zod"
 
-export const HelloResolver = resolver({
+export const helloResolver = resolver({
   hello: query(z.string(), () => "Hello, World!"),
 })
+
+export const schema = weave(ZodWeaver, helloResolver)
 ```
 
 ## Defining Objects

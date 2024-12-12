@@ -12,7 +12,7 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## 定义简单标量
 
-在 GQLoom 中，可以直接Valibot Schema 作为[丝线](../fundamentals/silk)使用：
+在 GQLoom 中，可以直接 Valibot Schema 作为[丝线](../fundamentals/silk)使用：
 
 ```ts
 import * as v from "valibot"
@@ -32,6 +32,7 @@ const IntScalar = v.pipe(v.nullable(v.number()), v.integer()) // GraphQLInt
 
 ```ts
 import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World!"),

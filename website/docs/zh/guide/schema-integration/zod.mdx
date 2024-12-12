@@ -14,33 +14,33 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 ## 定义简单标量
 
-在 GQLoom 中，可以使用 `zodSilk` 将 Zod Schema 作为[丝线](../fundamentals/silk)使用：
+在 GQLoom 中，可以直接使用 Zod Schema 作为[丝线](../fundamentals/silk)使用：
 
 ```ts
 import { z } from "zod"
-import { zodSilk } from "@gqloom/zod"
 
-const StringScalar = zodSilk(z.string()) // GraphQLString
+const StringScalar = z.string() // GraphQLString
 
-const BooleanScalar = zodSilk(z.boolean()) // GraphQLBoolean
+const BooleanScalar = z.boolean() // GraphQLBoolean
 
-const FloatScalar = zodSilk(z.number()) // GraphQLFloat
+const FloatScalar = z.number() // GraphQLFloat
 
-const IntScalar = zodSilk(z.number().int()) // GraphQLInt
+const IntScalar = z.number().int() // GraphQLInt
 ```
 
-## 解析器 | Resolver
+## 编织 | Weave
 
-为了将 Zod Schema 作为丝线使用，我们需要为其包裹 `zodSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/zod` 提供了重新导出的解析器和操作构造函数来简化这个过程。
-从 `@gqloom/zod` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `zodSilk`，这样在大部分情况下，我们可以直接使用 Zod Schema。
+为了让 `GQLoom` 能正确地将 Zod Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/zod` 的 `ZodWeaver`。
 
 ```ts
+import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
-import { resolver, query } from "@gqloom/zod"
 
-export const HelloResolver = resolver({
+export const helloResolver = resolver({
   hello: query(z.string(), () => "Hello, World!"),
 })
+
+export const schema = weave(ZodWeaver, helloResolver)
 ```
 
 ## 定义对象
