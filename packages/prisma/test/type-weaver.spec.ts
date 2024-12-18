@@ -22,7 +22,7 @@ describe("PrismaModelTypeWeaver", () => {
           name: StringNullableFilter
           posts: PostListRelationFilter
           publishedPosts: PostListRelationFilter
-          profile: ProfileNullableRelationFilter
+          profile: ProfileNullableScalarRelationFilter
         }"
       `)
     })

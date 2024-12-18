@@ -652,13 +652,13 @@ input PostWhereInput {
   AND: [PostWhereInput!]
   NOT: [PostWhereInput!]
   OR: [PostWhereInput!]
-  author: UserRelationFilter
+  author: UserScalarRelationFilter
   authorId: IntFilter
   categories: CategoryListRelationFilter
   content: StringNullableFilter
   id: IntFilter
   published: BoolFilter
-  publisher: UserNullableRelationFilter
+  publisher: UserNullableScalarRelationFilter
   publisherId: IntNullableFilter
   title: StringFilter
 }
@@ -667,13 +667,13 @@ input PostWhereUniqueInput {
   AND: [PostWhereInput!]
   NOT: [PostWhereInput!]
   OR: [PostWhereInput!]
-  author: UserRelationFilter
+  author: UserScalarRelationFilter
   authorId: IntFilter
   categories: CategoryListRelationFilter
   content: StringNullableFilter
   id: Int
   published: BoolFilter
-  publisher: UserNullableRelationFilter
+  publisher: UserNullableScalarRelationFilter
   publisherId: IntNullableFilter
   title: StringFilter
 }
@@ -711,7 +711,7 @@ input ProfileCreateWithoutUserInput {
   introduction: String!
 }
 
-input ProfileNullableRelationFilter {
+input ProfileNullableScalarRelationFilter {
   is: ProfileWhereInput
   isNot: ProfileWhereInput
 }
@@ -769,7 +769,7 @@ input ProfileWhereInput {
   OR: [ProfileWhereInput!]
   id: IntFilter
   introduction: StringFilter
-  user: UserRelationFilter
+  user: UserScalarRelationFilter
   userId: IntFilter
 }
 
@@ -779,7 +779,7 @@ input ProfileWhereUniqueInput {
   OR: [ProfileWhereInput!]
   id: Int
   introduction: StringFilter
-  user: UserRelationFilter
+  user: UserScalarRelationFilter
   userId: Int
 }
 
@@ -925,7 +925,7 @@ input UserCreateWithoutPublishedPostsInput {
   profile: ProfileCreateNestedOneWithoutUserInput
 }
 
-input UserNullableRelationFilter {
+input UserNullableScalarRelationFilter {
   is: UserWhereInput
   isNot: UserWhereInput
 }
@@ -939,15 +939,15 @@ input UserOrderByWithRelationInput {
   publishedPosts: PostOrderByRelationAggregateInput
 }
 
-input UserRelationFilter {
-  is: UserWhereInput
-  isNot: UserWhereInput
-}
-
 enum UserScalarFieldEnum {
   email
   id
   name
+}
+
+input UserScalarRelationFilter {
+  is: UserWhereInput
+  isNot: UserWhereInput
 }
 
 input UserUpdateInput {
@@ -1051,7 +1051,7 @@ input UserWhereInput {
   id: IntFilter
   name: StringNullableFilter
   posts: PostListRelationFilter
-  profile: ProfileNullableRelationFilter
+  profile: ProfileNullableScalarRelationFilter
   publishedPosts: PostListRelationFilter
 }
 
@@ -1063,6 +1063,6 @@ input UserWhereUniqueInput {
   id: Int
   name: StringNullableFilter
   posts: PostListRelationFilter
-  profile: ProfileNullableRelationFilter
+  profile: ProfileNullableScalarRelationFilter
   publishedPosts: PostListRelationFilter
 }
