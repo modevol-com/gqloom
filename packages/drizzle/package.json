@@ -1,0 +1,57 @@
+{
+  "name": "@gqloom/drizzle",
+  "version": "0.6.0",
+  "description": "GQLoom integration with Drizzle ORM",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "files": ["dist"],
+  "keywords": [
+    "gqloom",
+    "graphql",
+    "schema",
+    "typescript",
+    "drizzle",
+    "drizzle-orm"
+  ],
+  "author": "xcfox",
+  "license": "MIT",
+  "peerDependencies": {
+    "@gqloom/core": ">= 0.6.0",
+    "drizzle-orm": ">= 0.38.0",
+    "graphql": ">= 16.8.0"
+  },
+  "devDependencies": {
+    "@gqloom/core": "workspace:*",
+    "@libsql/client": "^0.14.0",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.1",
+    "drizzle-orm": "^0.38.2",
+    "graphql": "^16.8.1",
+    "tsx": "^4.7.2"
+  },
+  "homepage": "https://gqloom.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/modevol-com/gqloom.git",
+    "directory": "packages/drizzle"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

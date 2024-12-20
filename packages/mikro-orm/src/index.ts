@@ -108,7 +108,7 @@ export class MikroWeaver {
     return new GraphQLNonNull(
       weaverContext.memoNamedType(
         new GraphQLObjectType({
-          name: name ?? entity.meta.className,
+          name,
           fields: mapValue(properties, (value, key) => {
             if (pick != null && !pick.includes(key)) return mapValue.SKIP
             const originField = originFields?.[key]
