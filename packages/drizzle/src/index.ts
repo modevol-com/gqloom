@@ -125,6 +125,17 @@ export class DrizzleWeaver {
   }
 }
 
+/**
+ * get GraphQL Silk from drizzle table
+ * @param table drizzle table
+ * @returns GraphQL Silk Like drizzle table
+ */
+export function drizzleSilk<TTable extends Table>(
+  table: TTable
+): TableSilk<TTable> {
+  return DrizzleWeaver.unravel(table)
+}
+
 export type TableSilk<TTable extends Table> = TTable &
   GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>> & {
     $nullable: () => GraphQLSilk<
