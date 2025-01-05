@@ -120,7 +120,7 @@ export class DrizzleWeaver {
     return { type }
   }
 
-  static getColumnType(column: Column): GraphQLOutputType | undefined {
+  static getColumnType(column: Column): GraphQLOutputType {
     const config =
       weaverContext.getConfig<DrizzleWeaverConfig>("gqloom.drizzle")
 
@@ -150,18 +150,13 @@ export class DrizzleWeaver {
         return new GraphQLList(new GraphQLNonNull(GraphQLInt))
       }
       case "array": {
-        if (column.columnType === "PgVector") {
-          return new GraphQLList(new GraphQLNonNull(GraphQLFloat))
+        if ("baseColumn" in column) {
+          const innerType = DrizzleWeaver.getColumnType(
+            (column as Column as PgArray<any, any>).baseColumn
+          )
+          return new GraphQLList(new GraphQLNonNull(innerType))
         }
-        if (column.columnType === "PgGeometry") {
-          return new GraphQLList(new GraphQLNonNull(GraphQLFloat))
-        }
-        const innerType = DrizzleWeaver.getColumnType(
-          (column as Column as PgArray<any, any>).baseColumn
-        )
-        return innerType != null
-          ? new GraphQLList(new GraphQLNonNull(innerType))
-          : undefined
+        throw new Error(`Type: ${column.columnType} is not implemented!`)
       }
       default: {
         throw new Error(`Type: ${column.columnType} is not implemented!`)
