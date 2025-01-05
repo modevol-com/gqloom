@@ -218,7 +218,7 @@ importers:
         version: 0.30.1
       drizzle-orm:
         specifier: ^0.38.3
-        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@5.20.0(prisma@6.1.0))(@types/react@18.3.6)(better-sqlite3@10.0.0)(knex@3.1.0(better-sqlite3@10.0.0))(prisma@6.1.0)(react@18.3.1)
+        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/react@18.3.6)(better-sqlite3@10.0.0)(knex@3.1.0(better-sqlite3@10.0.0))(prisma@6.1.0)(react@18.3.1)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -278,14 +278,14 @@ importers:
   packages/prisma:
     dependencies:
       '@prisma/generator-helper':
-        specifier: ^5.20.0
-        version: 5.20.0
+        specifier: ^6.1.0
+        version: 6.1.0
       graphql:
         specifier: '>= 16.8.0'
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
       ts-morph:
-        specifier: ^23.0.0
-        version: 23.0.0
+        specifier: ^25.0.0
+        version: 25.0.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -300,8 +300,8 @@ importers:
         specifier: ^6.2.8
         version: 6.2.8
       '@prisma/client':
-        specifier: 5.20.0
-        version: 5.20.0(prisma@6.1.0)
+        specifier: ^6.1.0
+        version: 6.1.0(prisma@6.1.0)
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
@@ -1235,6 +1235,15 @@ packages:
       prisma:
         optional: true
 
+  '@prisma/client@6.1.0':
+    resolution: {integrity: sha512-AbQYc5+EJKm1Ydfq3KxwcGiy7wIbm4/QbjCKWWoNROtvy7d6a3gmAGkKjK0iUCzh+rHV8xDhD5Cge8ke/kiy5Q==}
+    engines: {node: '>=18.18'}
+    peerDependencies:
+      prisma: '*'
+    peerDependenciesMeta:
+      prisma:
+        optional: true
+
   '@prisma/debug@5.20.0':
     resolution: {integrity: sha512-oCx79MJ4HSujokA8S1g0xgZUGybD4SyIOydoHMngFYiwEwYDQ5tBQkK5XoEHuwOYDKUOKRn/J0MEymckc4IgsQ==}
 
@@ -1259,8 +1268,8 @@ packages:
   '@prisma/fetch-engine@6.1.0':
     resolution: {integrity: sha512-asdFi7TvPlEZ8CzSZ/+Du5wZ27q6OJbRSXh+S8ISZguu+S9KtS/gP7NeXceZyb1Jv1SM1S5YfiCv+STDsG6rrg==}
 
-  '@prisma/generator-helper@5.20.0':
-    resolution: {integrity: sha512-37Aibw0wVRQgQVtCdNAIN71YFnSQfvetok7vd95KKkYkQRbEx94gsvPDpyN9Mw7p3IwA3nFgPfLc3jBRztUkKw==}
+  '@prisma/generator-helper@6.1.0':
+    resolution: {integrity: sha512-drHaTKRmRsz6esHk2dpn7aPoxfttoqkYWSaI7zXsL5YQz73jww1YgJpGbPgOUiblriJAtdT4o7mibMqnf8TOsA==}
 
   '@prisma/get-platform@5.20.0':
     resolution: {integrity: sha512-8/+CehTZZNzJlvuryRgc77hZCWrUDYd/PmlZ7p2yNXtmf2Una4BWnTbak3us6WVdqoz5wmptk6IhsXdG2v5fmA==}
@@ -1572,8 +1581,8 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
-  '@ts-morph/common@0.24.0':
-    resolution: {integrity: sha512-c1xMmNHWpNselmpIqursHeOHHBTIsJLbB+NuovbTTRCNiTLEr/U9dbJ8qy0jd/O2x5pc3seWuOUN5R2IoOTp8A==}
+  '@ts-morph/common@0.26.0':
+    resolution: {integrity: sha512-/RmKAtctStXqM5nECMQ46duT74Hoig/DBzhWXGHcodlDNrgRbsbwwHqSKFNbca6z9Xt/CUWMeXOsC9QEN1+rqw==}
 
   '@types/acorn@4.0.6':
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
@@ -2045,8 +2054,8 @@ packages:
     resolution: {integrity: sha512-nPdaFdQ0h/GEigbPClz11D0v/ZJEwxmeVZGeMo3Z5StPtUTkA9o1lD6QwoirYiSDzbcwn2XcjwmCp68W1IS4TA==}
     engines: {node: '>=18'}
 
-  code-block-writer@13.0.2:
-    resolution: {integrity: sha512-XfXzAGiStXSmCIwrkdfvc7FS5Dtj8yelCtyOf2p2skCAfvLd6zu0rGzuS9NSCO3bq1JKpFZ7tbKdKlcd5occQA==}
+  code-block-writer@13.0.3:
+    resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -3108,7 +3117,6 @@ packages:
 
   libsql@0.4.7:
     resolution: {integrity: sha512-T9eIRCs6b0J1SHKYIvD8+KCJMcWZ900iZyxdnSCdqxN12Z1ijzT+jY5nrk72Jw4B0HGzms2NgpryArlJqvc3Lw==}
-    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   light-my-request@5.13.0:
@@ -3497,11 +3505,6 @@ packages:
 
   mkdirp-classic@0.5.3:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
-
-  mkdirp@3.0.1:
-    resolution: {integrity: sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg==}
-    engines: {node: '>=10'}
-    hasBin: true
 
   mqemitter@5.0.0:
     resolution: {integrity: sha512-rqNRQhGgl0W/NV+Zrx0rpAUTZcSlAtivCVUmXBUPcFYt+AeDEpoJgy5eKlFWJP6xnatONL59WIFdV0W6niOMhw==}
@@ -4490,8 +4493,8 @@ packages:
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
-  ts-morph@23.0.0:
-    resolution: {integrity: sha512-FcvFx7a9E8TUe6T3ShihXJLiJOiqyafzFKUO4aqIHDUCIvADdGNShcbc2W5PMr3LerXRv7mafvFZ9lRENxJmug==}
+  ts-morph@25.0.0:
+    resolution: {integrity: sha512-ERPTUVO5qF8cEGJgAejGOsCVlbk8d0SDyiJsucKQT5XgqoZslv0Qml+gnui6Yy6o+uQqw5SestyW2HvlVtT/Sg==}
 
   tslib@2.6.2:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
@@ -5639,7 +5642,7 @@ snapshots:
     optionalDependencies:
       prisma: 5.20.0
 
-  '@prisma/client@5.20.0(prisma@6.1.0)':
+  '@prisma/client@6.1.0(prisma@6.1.0)':
     optionalDependencies:
       prisma: 6.1.0
 
@@ -5677,9 +5680,9 @@ snapshots:
       '@prisma/engines-version': 6.1.0-21.11f085a2012c0f4778414c8db2651556ee0ef959
       '@prisma/get-platform': 6.1.0
 
-  '@prisma/generator-helper@5.20.0':
+  '@prisma/generator-helper@6.1.0':
     dependencies:
-      '@prisma/debug': 5.20.0
+      '@prisma/debug': 6.1.0
 
   '@prisma/get-platform@5.20.0':
     dependencies:
@@ -6017,11 +6020,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@ts-morph/common@0.24.0':
+  '@ts-morph/common@0.26.0':
     dependencies:
       fast-glob: 3.3.2
-      minimatch: 9.0.4
-      mkdirp: 3.0.1
+      minimatch: 9.0.5
       path-browserify: 1.0.1
 
   '@types/acorn@4.0.6':
@@ -6555,7 +6557,7 @@ snapshots:
       slice-ansi: 5.0.0
       string-width: 7.2.0
 
-  code-block-writer@13.0.2: {}
+  code-block-writer@13.0.3: {}
 
   color-convert@2.0.1:
     dependencies:
@@ -6739,10 +6741,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.3(@libsql/client@0.14.0)(@prisma/client@5.20.0(prisma@6.1.0))(@types/react@18.3.6)(better-sqlite3@10.0.0)(knex@3.1.0(better-sqlite3@10.0.0))(prisma@6.1.0)(react@18.3.1):
+  drizzle-orm@0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/react@18.3.6)(better-sqlite3@10.0.0)(knex@3.1.0(better-sqlite3@10.0.0))(prisma@6.1.0)(react@18.3.1):
     optionalDependencies:
       '@libsql/client': 0.14.0
-      '@prisma/client': 5.20.0(prisma@6.1.0)
+      '@prisma/client': 6.1.0(prisma@6.1.0)
       '@types/react': 18.3.6
       better-sqlite3: 10.0.0
       knex: 3.1.0(better-sqlite3@10.0.0)
@@ -8372,8 +8374,6 @@ snapshots:
 
   mkdirp-classic@0.5.3: {}
 
-  mkdirp@3.0.1: {}
-
   mqemitter@5.0.0:
     dependencies:
       fastparallel: 2.4.1
@@ -9376,10 +9376,10 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-morph@23.0.0:
+  ts-morph@25.0.0:
     dependencies:
-      '@ts-morph/common': 0.24.0
-      code-block-writer: 13.0.2
+      '@ts-morph/common': 0.26.0
+      code-block-writer: 13.0.3
 
   tslib@2.6.2: {}
 
