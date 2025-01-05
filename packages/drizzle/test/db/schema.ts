@@ -6,7 +6,7 @@ export const usersTable = drizzleSilk(
   table("users_table", {
     id: t.int().primaryKey({ autoIncrement: true }),
     name: t.text().notNull(),
-    age: t.int().notNull(),
+    age: t.int(),
     email: t.text().notNull().unique(),
   })
 )

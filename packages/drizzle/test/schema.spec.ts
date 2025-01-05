@@ -13,10 +13,10 @@ describe("drizzleSilk", () => {
     const gqlType = getGraphQLType(usersTable)
     expect(printType(unwrap(gqlType))).toMatchInlineSnapshot(`
       "type UsersTable {
-        id: Int
-        name: String
+        id: Int!
+        name: String!
         age: Int
-        email: String
+        email: String!
       }"
     `)
   })

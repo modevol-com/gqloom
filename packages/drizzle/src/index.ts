@@ -5,6 +5,7 @@ import {
   mapValue,
   pascalCase,
   silk,
+  weaverContext,
 } from "@gqloom/core"
 import {
   type Column,
@@ -25,7 +26,9 @@ import {
   GraphQLObjectType,
   type GraphQLOutputType,
   GraphQLString,
+  isNonNullType,
 } from "graphql"
+import type { DrizzleWeaverConfig } from "./types"
 
 export class DrizzleWeaver {
   static vendor = "gqloom.drizzle"
@@ -85,26 +88,43 @@ export class DrizzleWeaver {
 
   static getGraphQLType(table: Table): GraphQLNonNull<GraphQLObjectType> {
     const name = pascalCase(getTableName(table))
+
+    const existing = weaverContext.getNamedType(name)
+    if (existing != null)
+      return new GraphQLNonNull(existing as GraphQLObjectType)
+
     const columns = getTableColumns(table)
     return new GraphQLNonNull(
-      new GraphQLObjectType({
-        name,
-        fields: mapValue(columns, (value) => {
-          const type = DrizzleWeaver.getColumnType(value)
-          if (type == null) return mapValue.SKIP
-          return { type }
-        }),
-      })
+      weaverContext.memoNamedType(
+        new GraphQLObjectType({
+          name,
+          fields: mapValue(columns, (value) => {
+            const config = DrizzleWeaver.getFieldConfig(value)
+            if (config == null) return mapValue.SKIP
+            return config
+          }),
+        })
+      )
     )
   }
 
-  static getColumnConfig(column: Column): GraphQLFieldConfig<any, any> | null {
-    const type = DrizzleWeaver.getColumnType(column)
+  static getFieldConfig(column: Column): GraphQLFieldConfig<any, any> | null {
+    let type = DrizzleWeaver.getColumnType(column)
     if (type == null) return null
+
+    if (column.notNull && !isNonNullType(type)) {
+      type = new GraphQLNonNull(type)
+    }
     return { type }
   }
 
   static getColumnType(column: Column): GraphQLOutputType | undefined {
+    const config =
+      weaverContext.getConfig<DrizzleWeaverConfig>("gqloom.drizzle")
+
+    const presetType = config?.presetGraphQLType?.(column)
+    if (presetType) return presetType
+
     switch (column.dataType) {
       case "number": {
         return is(column, PgInteger) ||
