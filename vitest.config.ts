@@ -31,7 +31,7 @@ export default defineConfig({
         "**/examples/**/*",
         "**/*.spec-d.ts",
         "**/*.spec.ts",
-        "**/vitest.config.ts",
+        "**/*.config.ts",
         "**/draft/**",
         "website/**",
         "vitest.workspace.ts",
