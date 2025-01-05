@@ -6,6 +6,7 @@ import { PrismaWeaver } from "../src"
 
 const UserModel: DMMF.Model = {
   name: "User",
+  schema: null,
   dbName: null,
   fields: [
     {
