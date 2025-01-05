@@ -16,12 +16,14 @@ import {
   is,
 } from "drizzle-orm"
 import { MySqlInt, MySqlSerial } from "drizzle-orm/mysql-core"
-import { PgInteger, PgSerial } from "drizzle-orm/pg-core"
+import { type PgArray, PgInteger, PgSerial } from "drizzle-orm/pg-core"
 import { SQLiteInteger } from "drizzle-orm/sqlite-core"
 import {
+  GraphQLBoolean,
   type GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLInt,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   type GraphQLOutputType,
@@ -126,6 +128,9 @@ export class DrizzleWeaver {
     if (presetType) return presetType
 
     switch (column.dataType) {
+      case "boolean": {
+        return GraphQLBoolean
+      }
       case "number": {
         return is(column, PgInteger) ||
           is(column, PgSerial) ||
@@ -135,8 +140,28 @@ export class DrizzleWeaver {
           ? GraphQLInt
           : GraphQLFloat
       }
+      case "json":
+      case "date":
+      case "bigint":
       case "string": {
         return GraphQLString
+      }
+      case "buffer": {
+        return new GraphQLList(new GraphQLNonNull(GraphQLInt))
+      }
+      case "array": {
+        if (column.columnType === "PgVector") {
+          return new GraphQLList(new GraphQLNonNull(GraphQLFloat))
+        }
+        if (column.columnType === "PgGeometry") {
+          return new GraphQLList(new GraphQLNonNull(GraphQLFloat))
+        }
+        const innerType = DrizzleWeaver.getColumnType(
+          (column as Column as PgArray<any, any>).baseColumn
+        )
+        return innerType != null
+          ? new GraphQLList(new GraphQLNonNull(innerType))
+          : undefined
       }
       default: {
         throw new Error(`Type: ${column.columnType} is not implemented!`)
