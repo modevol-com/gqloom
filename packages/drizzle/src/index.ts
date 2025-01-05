@@ -30,7 +30,7 @@ import {
   GraphQLString,
   isNonNullType,
 } from "graphql"
-import type { DrizzleWeaverConfig } from "./types"
+import type { DrizzleWeaverConfig, DrizzleWeaverConfigOptions } from "./types"
 
 export class DrizzleWeaver {
   static vendor = "gqloom.drizzle"
@@ -101,18 +101,15 @@ export class DrizzleWeaver {
         new GraphQLObjectType({
           name,
           fields: mapValue(columns, (value) => {
-            const config = DrizzleWeaver.getFieldConfig(value)
-            if (config == null) return mapValue.SKIP
-            return config
+            return DrizzleWeaver.getFieldConfig(value)
           }),
         })
       )
     )
   }
 
-  static getFieldConfig(column: Column): GraphQLFieldConfig<any, any> | null {
+  static getFieldConfig(column: Column): GraphQLFieldConfig<any, any> {
     let type = DrizzleWeaver.getColumnType(column)
-    if (type == null) return null
 
     if (column.notNull && !isNonNullType(type)) {
       type = new GraphQLNonNull(type)
@@ -161,6 +158,13 @@ export class DrizzleWeaver {
       default: {
         throw new Error(`Type: ${column.columnType} is not implemented!`)
       }
+    }
+  }
+
+  static config(config: DrizzleWeaverConfigOptions): DrizzleWeaverConfig {
+    return {
+      ...config,
+      [SYMBOLS.WEAVER_CONFIG]: "gqloom.drizzle",
     }
   }
 }

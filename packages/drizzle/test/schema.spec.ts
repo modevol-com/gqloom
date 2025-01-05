@@ -1,4 +1,4 @@
-import { getGraphQLType } from "@gqloom/core"
+import { getGraphQLType, query, resolver, weave } from "@gqloom/core"
 import { pgTable } from "drizzle-orm/pg-core"
 import * as pg from "drizzle-orm/pg-core"
 import { sqliteTable } from "drizzle-orm/sqlite-core"
@@ -7,10 +7,12 @@ import {
   GraphQLNonNull,
   type GraphQLObjectType,
   type GraphQLOutputType,
+  GraphQLScalarType,
+  printSchema,
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { drizzleSilk } from "../src"
+import { DrizzleWeaver, drizzleSilk } from "../src"
 
 describe("drizzleSilk", () => {
   it("should handle pg table and column types", () => {
@@ -84,6 +86,45 @@ describe("drizzleSilk", () => {
         blob: [Int!]
         boolean: Boolean
       }"
+    `)
+  })
+
+  it("should handle preset types", () => {
+    const GraphQLDate = new GraphQLScalarType<Date, string>({ name: "Date" })
+
+    const config = DrizzleWeaver.config({
+      presetGraphQLType: (column) => {
+        if (column.dataType === "date") {
+          return GraphQLDate
+        }
+      },
+    })
+
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        date: pg.timestamp(),
+      })
+    )
+
+    const r1 = resolver({
+      foo: query(Foo, () => ({ date: new Date() })),
+      foo2: query(Foo.$nullable(), () => null),
+      foos: query(Foo.$list(), () => []),
+    })
+
+    const schema = weave(DrizzleWeaver, config, r1)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        foo: Foo!
+        foo2: Foo
+        foos: [Foo!]!
+      }
+
+      type Foo {
+        date: Date
+      }
+
+      scalar Date"
     `)
   })
 
