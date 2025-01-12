@@ -89,7 +89,7 @@ export class DrizzleWeaver {
   }
 
   static getGraphQLType(table: Table): GraphQLNonNull<GraphQLObjectType> {
-    const name = pascalCase(getTableName(table))
+    const name = `${pascalCase(getTableName(table))}Item`
 
     const existing = weaverContext.getNamedType(name)
     if (existing != null)
@@ -191,3 +191,5 @@ export type TableSilk<TTable extends Table> = TTable &
       InferSelectModel<TTable>[]
     >
   }
+
+export * from "./input-weaver"

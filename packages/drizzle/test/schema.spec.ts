@@ -42,7 +42,7 @@ describe("drizzleSilk", () => {
 
     const gqlType = getGraphQLType(Foo)
     expect(printType(unwrap(gqlType))).toMatchInlineSnapshot(`
-      "type Foo {
+      "type FooItem {
         serial: Int!
         integer: Int
         boolean: Boolean
@@ -79,7 +79,7 @@ describe("drizzleSilk", () => {
 
     const gqlType = getGraphQLType(Foo)
     expect(printType(unwrap(gqlType))).toMatchInlineSnapshot(`
-      "type Foo {
+      "type FooItem {
         integer: Int!
         real: Float
         text: String
@@ -115,12 +115,12 @@ describe("drizzleSilk", () => {
     const schema = weave(DrizzleWeaver, config, r1)
     expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type Query {
-        foo: Foo!
-        foo2: Foo
-        foos: [Foo!]!
+        foo: FooItem!
+        foo2: FooItem
+        foos: [FooItem!]!
       }
 
-      type Foo {
+      type FooItem {
         date: Date
       }
 
