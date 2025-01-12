@@ -44,4 +44,14 @@ describe("DrizzleInputFactory", () => {
       }"
     `)
   })
+
+  it("should generate OrderBy type for a table", () => {
+    expect(printType(inputFactory.orderBy())).toMatchInlineSnapshot(`
+      "type UsersOrderBy {
+        id: OrderDirection
+        name: OrderDirection
+        email: OrderDirection
+      }"
+    `)
+  })
 })

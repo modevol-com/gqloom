@@ -7,6 +7,7 @@ import {
 } from "drizzle-orm"
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   type GraphQLFieldConfig,
   GraphQLList,
   GraphQLNonNull,
@@ -88,10 +89,6 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
-  public orderBy() {
-    return
-  }
-
   protected static columnFilters(column: Column) {
     const name = `${pascalCase(column.columnType)}Filters`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
@@ -129,6 +126,39 @@ export class DrizzleInputFactory<TTable extends Table> {
         fields: {
           ...baseFields,
           OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+        },
+      })
+    )
+  }
+
+  public orderBy() {
+    const name = `${pascalCase(getTableName(this.table))}OrderBy`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    const columns = getTableColumns(this.table)
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: mapValue(columns, () => {
+          const type = DrizzleInputFactory.orderDirection()
+          return { type }
+        }),
+      })
+    )
+  }
+
+  protected static orderDirection() {
+    const name = "OrderDirection"
+    const existing = weaverContext.getNamedType(name) as GraphQLEnumType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLEnumType({
+        name,
+        values: {
+          asc: { value: "asc" },
+          desc: { value: "desc" },
         },
       })
     )
