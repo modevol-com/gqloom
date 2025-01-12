@@ -16,7 +16,7 @@ import {
 } from "graphql"
 import { DrizzleWeaver } from "./index"
 
-export class DrizzleInputWeaver<TTable extends Table> {
+export class DrizzleInputFactory<TTable extends Table> {
   constructor(public readonly table: TTable) {}
 
   public insertInput() {
@@ -70,7 +70,7 @@ export class DrizzleInputWeaver<TTable extends Table> {
       string,
       GraphQLFieldConfig<any, any, any>
     > = mapValue(columns, (column) => ({
-      type: DrizzleInputWeaver.columnFilters(column),
+      type: DrizzleInputFactory.columnFilters(column),
     }))
 
     const filtersOr = new GraphQLObjectType({

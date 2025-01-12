@@ -1,9 +1,9 @@
 import * as pg from "drizzle-orm/pg-core"
 import { printType } from "graphql"
 import { describe, expect, it } from "vitest"
-import { DrizzleInputWeaver } from "../src"
+import { DrizzleInputFactory } from "../src"
 
-describe("DrizzleInputWeaver", () => {
+describe("DrizzleInputFactory", () => {
   const userTable = pg.pgTable("users", {
     id: pg.serial("id").primaryKey(),
     name: pg
@@ -13,7 +13,7 @@ describe("DrizzleInputWeaver", () => {
     email: pg.text("email").notNull(),
   })
 
-  const inputWeaver = new DrizzleInputWeaver(userTable)
+  const inputWeaver = new DrizzleInputFactory(userTable)
   it("should generate InsertInput type for a table", () => {
     expect(printType(inputWeaver.insertInput())).toMatchInlineSnapshot(`
       "type UsersInsertInput {

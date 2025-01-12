@@ -192,4 +192,4 @@ export type TableSilk<TTable extends Table> = TTable &
     >
   }
 
-export * from "./input-weaver"
+export * from "./input-factory"
