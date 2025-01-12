@@ -13,9 +13,9 @@ describe("DrizzleInputFactory", () => {
     email: pg.text("email").notNull(),
   })
 
-  const inputWeaver = new DrizzleInputFactory(userTable)
+  const inputFactory = new DrizzleInputFactory(userTable)
   it("should generate InsertInput type for a table", () => {
-    expect(printType(inputWeaver.insertInput())).toMatchInlineSnapshot(`
+    expect(printType(inputFactory.insertInput())).toMatchInlineSnapshot(`
       "type UsersInsertInput {
         id: Int
         name: String
@@ -25,7 +25,7 @@ describe("DrizzleInputFactory", () => {
   })
 
   it("should generate UpdateInput type for a table", () => {
-    expect(printType(inputWeaver.updateInput())).toMatchInlineSnapshot(`
+    expect(printType(inputFactory.updateInput())).toMatchInlineSnapshot(`
       "type UsersUpdateInput {
         id: Int
         name: String
@@ -35,7 +35,7 @@ describe("DrizzleInputFactory", () => {
   })
 
   it("should generate Filters type for a table", () => {
-    expect(printType(inputWeaver.filters())).toMatchInlineSnapshot(`
+    expect(printType(inputFactory.filters())).toMatchInlineSnapshot(`
       "type UsersFilters {
         id: PgSerialFilters
         name: PgTextFilters
