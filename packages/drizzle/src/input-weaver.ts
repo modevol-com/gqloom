@@ -32,7 +32,20 @@ export class DrizzleInputWeaver<TTable extends Table> {
   }
 
   public updateInput() {
-    return
+    const name = `${pascalCase(getTableName(this.table))}UpdateInput`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    const columns = getTableColumns(this.table)
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: mapValue(columns, (column) => {
+          const type = DrizzleWeaver.getColumnType(column)
+          return { type }
+        }),
+      })
+    )
   }
 
   public filters() {

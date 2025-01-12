@@ -13,13 +13,23 @@ describe("DrizzleInputWeaver", () => {
     email: pg.text("email").notNull(),
   })
 
-  it("should generate input types for a table", () => {
-    const inputWeaver = new DrizzleInputWeaver(userTable)
+  const inputWeaver = new DrizzleInputWeaver(userTable)
+  it("should generate InsertInput type for a table", () => {
     expect(printType(inputWeaver.insertInput())).toMatchInlineSnapshot(`
       "type UsersInsertInput {
         id: Int
         name: String
         email: String!
+      }"
+    `)
+  })
+
+  it("should generate UpdateInput type for a table", () => {
+    expect(printType(inputWeaver.updateInput())).toMatchInlineSnapshot(`
+      "type UsersUpdateInput {
+        id: Int
+        name: String
+        email: String
       }"
     `)
   })
