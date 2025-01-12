@@ -14,4 +14,8 @@ export class DrizzleInputWeaver<TTable extends Table> {
   public filters() {
     return
   }
+
+  public orderBy() {
+    return
+  }
 }
