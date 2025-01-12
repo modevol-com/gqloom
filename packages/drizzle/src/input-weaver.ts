@@ -65,15 +65,34 @@ export class DrizzleInputWeaver<TTable extends Table> {
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
 
-    // TODO
-    return
+    const columns = getTableColumns(this.table)
+    const filterFields: Record<
+      string,
+      GraphQLFieldConfig<any, any, any>
+    > = mapValue(columns, (column) => ({
+      type: DrizzleInputWeaver.columnFilters(column),
+    }))
+
+    const filtersOr = new GraphQLObjectType({
+      name: `${pascalCase(getTableName(this.table))}FiltersOr`,
+      fields: { ...filterFields },
+    })
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: {
+          ...filterFields,
+          OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+        },
+      })
+    )
   }
 
   public orderBy() {
     return
   }
 
-  protected columnFilters(column: Column) {
+  protected static columnFilters(column: Column) {
     const name = `${pascalCase(column.columnType)}Filters`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing

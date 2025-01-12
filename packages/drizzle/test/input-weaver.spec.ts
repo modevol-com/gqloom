@@ -33,4 +33,15 @@ describe("DrizzleInputWeaver", () => {
       }"
     `)
   })
+
+  it("should generate Filters type for a table", () => {
+    expect(printType(inputWeaver.filters())).toMatchInlineSnapshot(`
+      "type UsersFilters {
+        id: PgSerialFilters
+        name: PgTextFilters
+        email: PgTextFilters
+        OR: [UsersFiltersOr!]
+      }"
+    `)
+  })
 })
