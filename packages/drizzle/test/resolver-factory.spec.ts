@@ -93,6 +93,10 @@ describe("DrizzleResolverFactory", () => {
         where: { age: { lt: 12 } },
       })
       expect(answer).toMatchObject([{ age: 10 }, { age: 11 }])
+      answer = await query.resolve({
+        where: { age: { gte: 12, lt: 13 } },
+      })
+      expect(answer).toMatchObject([{ age: 12 }])
 
       answer = await query.resolve({
         where: { age: { inArray: [10, 11] } },
@@ -126,6 +130,13 @@ describe("DrizzleResolverFactory", () => {
           where: { age: { eq: 10 }, OR: [{ age: { eq: 11 } }] },
         })
       ).rejects.toThrow("Cannot specify both fields and 'OR' in table filters!")
+      await expect(() =>
+        query.resolve({
+          where: { age: { eq: 10, OR: [{ eq: 11 }] } },
+        })
+      ).rejects.toThrow(
+        "WHERE age: Cannot specify both fields and 'OR' in column operators!"
+      )
 
       answer = await query.resolve({
         where: { age: { isNull: true } },
