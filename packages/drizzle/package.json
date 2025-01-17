@@ -44,7 +44,8 @@
     "drizzle-kit": "^0.30.1",
     "drizzle-orm": "^0.38.3",
     "graphql": "^16.8.1",
-    "tsx": "^4.7.2"
+    "tsx": "^4.7.2",
+    "valibot": "1.0.0-beta.12"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

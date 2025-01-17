@@ -1,4 +1,6 @@
+import { eq } from "drizzle-orm"
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql"
+import * as v from "valibot"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { DrizzleResolverFactory } from "../src"
 import * as schema from "./db/schema"
@@ -142,6 +144,23 @@ describe("DrizzleResolverFactory", () => {
         where: { age: { isNull: true } },
       })
       expect(answer).toHaveLength(0)
+    })
+
+    it("should be created with custom input", async () => {
+      const query = factory.selectArrayQuery({
+        input: v.pipe(
+          v.object({
+            age: v.nullish(v.number()),
+          }),
+          v.transform(({ age }) => ({
+            where: age != null ? eq(user.age, age) : undefined,
+          }))
+        ),
+      })
+
+      expect(query).toBeDefined()
+      const answer = await query.resolve({ age: 10 })
+      expect(answer).toMatchObject([{ age: 10 }])
     })
   })
 })
