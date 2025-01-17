@@ -7,6 +7,6 @@ export const user = drizzleSilk(
     id: t.int().primaryKey({ autoIncrement: true }),
     name: t.text().notNull(),
     age: t.int(),
-    email: t.text().notNull().unique(),
+    email: t.text(),
   })
 )

@@ -205,7 +205,7 @@ export class DrizzleResolverFactory<
   protected extractFiltersColumn<TColumn extends Column>(
     column: TColumn,
     columnName: string,
-    operators: ColumnFilters<TColumn["dataType"]>
+    operators: ColumnFilters<TColumn["_"]["data"]>
   ): SQL | undefined {
     if (!operators.OR?.length) delete operators.OR
 
@@ -257,7 +257,7 @@ export class DrizzleResolverFactory<
       } else if (operatorName in nullOperators) {
         const operator =
           nullOperators[operatorName as keyof typeof nullOperators]
-        variants.push(operator(column))
+        if (operatorValue === true) variants.push(operator(column))
       }
     }
 

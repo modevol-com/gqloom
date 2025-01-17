@@ -194,7 +194,7 @@ export interface SelectArrayArgs<TTable extends Table> {
 
 export type FiltersCore<TTable extends Table> = Partial<{
   [Column in keyof TTable["_"]["columns"]]: ColumnFilters<
-    TTable["_"]["columns"][Column]["dataType"]
+    TTable["_"]["columns"][Column]["_"]["data"]
   >
 }>
 
