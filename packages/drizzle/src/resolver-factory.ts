@@ -3,6 +3,7 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
+  type StandardSchemaV1,
   loom,
   silk,
 } from "@gqloom/core"
@@ -83,7 +84,13 @@ export class DrizzleResolverFactory<
   } = {}): SelectArrayQuery<TDatabase, TTable, TInputI> {
     const output = DrizzleWeaver.unravel(this.table)
     const queryBase = this.queryBase
-    input ??= silk(() => this.inputFactory.selectArrayArgs())
+    input ??= silk<
+      InferSelectArrayOptions<TDatabase, TTable>,
+      SelectArrayArgs<TTable>
+    >(
+      () => this.inputFactory.selectArrayArgs(),
+      (input) => this.selectArrayArgsToOptions(input)
+    ) as GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
 
     return loom.query(output.$list(), {
       input,
@@ -96,12 +103,16 @@ export class DrizzleResolverFactory<
 
   protected selectArrayArgsToOptions(
     input: SelectArrayArgs<TTable>
-  ): InferSelectArrayOptions<TDatabase, TTable> {
+  ): StandardSchemaV1.SuccessResult<
+    InferSelectArrayOptions<TDatabase, TTable>
+  > {
     return {
-      where: this.extractFilters(input.where),
-      orderBy: this.extractOrderBy(input.orderBy),
-      limit: input.limit,
-      offset: input.offset,
+      value: {
+        where: this.extractFilters(input.where),
+        orderBy: this.extractOrderBy(input.orderBy),
+        limit: input.limit,
+        offset: input.offset,
+      },
     }
   }
 
