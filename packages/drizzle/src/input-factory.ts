@@ -1,6 +1,7 @@
 import { mapValue, pascalCase, weaverContext } from "@gqloom/core"
 import {
   type Column,
+  type InferSelectModel,
   type Table,
   getTableColumns,
   getTableName,
@@ -9,6 +10,7 @@ import {
   GraphQLBoolean,
   GraphQLEnumType,
   type GraphQLFieldConfig,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -19,6 +21,24 @@ import { DrizzleWeaver } from "./index"
 
 export class DrizzleInputFactory<TTable extends Table> {
   constructor(public readonly table: TTable) {}
+
+  public selectArrayArgs() {
+    const name = `${pascalCase(getTableName(this.table))}SelectArrayArgs`
+    const existing = weaverContext.getNamedType(name)
+    if (existing) return existing as GraphQLObjectType
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<SelectArrayArgs<TTable>>({
+        name,
+        fields: {
+          offset: { type: GraphQLInt },
+          limit: { type: GraphQLInt },
+          orderBy: { type: this.orderBy() },
+          where: { type: this.filters() },
+        },
+      })
+    )
+  }
 
   public insertInput() {
     const name = `${pascalCase(getTableName(this.table))}InsertInput`
@@ -163,4 +183,42 @@ export class DrizzleInputFactory<TTable extends Table> {
       })
     )
   }
+}
+
+export interface SelectArrayArgs<TTable extends Table> {
+  offset?: number
+  limit?: number
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  where?: Filters<TTable>
+}
+
+export type FiltersCore<TTable extends Table> = Partial<{
+  [Column in keyof TTable["_"]["columns"]]: ColumnFilters<
+    TTable["_"]["columns"][Column]["dataType"]
+  >
+}>
+
+export type Filters<TTable extends Table> = FiltersCore<TTable> & {
+  OR?: FiltersCore<TTable>[]
+}
+
+export interface ColumnFiltersCore<TType = any> {
+  eq?: TType
+  ne?: TType
+  lt?: TType
+  lte?: TType
+  gt?: TType
+  gte?: TType
+  like?: TType extends string ? string : never
+  notLike?: TType extends string ? string : never
+  ilike?: TType extends string ? string : never
+  notIlike?: TType extends string ? string : never
+  inArray?: TType[]
+  notInArray?: TType[]
+  isNull?: boolean
+  isNotNull?: boolean
+}
+
+export interface ColumnFilters<TType = any> extends ColumnFiltersCore<TType> {
+  OR?: ColumnFiltersCore<TType>[]
 }

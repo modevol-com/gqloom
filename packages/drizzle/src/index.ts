@@ -193,3 +193,4 @@ export type TableSilk<TTable extends Table> = TTable &
   }
 
 export * from "./input-factory"
+export * from "./resolver-factory"
