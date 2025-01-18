@@ -35,11 +35,11 @@ import {
   notLike,
   or,
 } from "drizzle-orm"
-import { MySqlDatabase } from "drizzle-orm/mysql-core"
+import { MySqlDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
-import { PgDatabase } from "drizzle-orm/pg-core"
+import { PgDatabase, type PgTable } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
-import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
+import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
 import { GraphQLError } from "graphql"
 import { DrizzleWeaver } from "."
@@ -48,6 +48,7 @@ import {
   DrizzleInputFactory,
   type FiltersCore,
   type InsertArrayArgs,
+  type MutationResult,
   type SelectArrayArgs,
   type SelectSingleArgs,
 } from "./input-factory"
@@ -58,34 +59,31 @@ export abstract class DrizzleResolverFactory<
 > {
   static create<
     TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
-    TTable extends Table,
+    TTable extends SQLiteTable,
   >(
     db: TDatabase,
     table: TTable
   ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
-  static create<TDatabase extends PgDatabase<any>, TTable extends Table>(
+  static create<TDatabase extends PgDatabase<any>, TTable extends PgTable>(
     db: TDatabase,
     table: TTable
   ): DrizzlePostgresResolverFactory<TDatabase, TTable>
   static create<
     TDatabase extends MySqlDatabase<any, any, any, any>,
-    TTable extends Table,
+    TTable extends MySqlTable,
   >(
     db: TDatabase,
     table: TTable
   ): DrizzleMySQLResolverFactory<TDatabase, TTable>
 
-  static create(
-    db: BaseDatabase,
-    table: Table
-  ): DrizzleResolverFactory<BaseDatabase, Table> {
+  static create(db: BaseDatabase, table: Table) {
     if (db instanceof PgDatabase) {
-      return new DrizzlePostgresResolverFactory(db, table)
+      return new DrizzlePostgresResolverFactory(db, table as PgTable)
     }
     if (db instanceof MySqlDatabase) {
-      return new DrizzleMySQLResolverFactory(db, table)
+      return new DrizzleMySQLResolverFactory(db, table as MySqlTable)
     }
-    return new DrizzleSQLiteResolverFactory(db, table)
+    return new DrizzleSQLiteResolverFactory(db, table as SQLiteTable)
   }
 
   public readonly inputFactory: DrizzleInputFactory<TTable>
@@ -304,49 +302,96 @@ export abstract class DrizzleResolverFactory<
 
 export class DrizzleMySQLResolverFactory<
   TDatabase extends MySqlDatabase<any, any, any, any>,
-  TTable extends Table,
+  TTable extends MySqlTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
-  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
-    _options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
-      middlewares?: Middleware<
-        InsertArrayMutationReturningSuccess<TTable, TInputI>
-      >[]
-    }
-  ): InsertArrayMutationReturningSuccess<TTable, TInputI> {
-    return 0 as any
+  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    middlewares?: Middleware<
+      InsertArrayMutationReturningSuccess<TTable, TInputI>
+    >[]
+  } = {}): InsertArrayMutationReturningSuccess<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.insertArrayArgs())
+
+    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
+      ...options,
+      input,
+      resolve: async (input) => {
+        await this.db.insert(this.table).values(input.values)
+        return { isSuccess: true }
+      },
+    })
+  }
+
+  protected static get mutationResult() {
+    return silk<MutationResult, MutationResult>(() =>
+      DrizzleInputFactory.mutationResult()
+    )
   }
 }
 
 export class DrizzlePostgresResolverFactory<
   TDatabase extends PgDatabase<any, any, any>,
-  TTable extends Table,
+  TTable extends PgTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
-  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
-    _options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
-      middlewares?: Middleware<
-        InsertArrayMutationReturningItems<TTable, TInputI>
-      >[]
-    }
-  ): InsertArrayMutationReturningItems<TTable, TInputI> {
-    return 0 as any
+  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    middlewares?: Middleware<
+      InsertArrayMutationReturningItems<TTable, TInputI>
+    >[]
+  } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
+    const output = DrizzleWeaver.unravel(this.table)
+    input ??= silk(() => this.inputFactory.insertArrayArgs())
+
+    return loom.mutation(output.$list(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const result = await this.db
+          .insert(this.table)
+          .values(args.values)
+          .returning()
+          .onConflictDoNothing()
+
+        return result
+      },
+    })
   }
 }
 
 export class DrizzleSQLiteResolverFactory<
   TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
-  TTable extends Table,
+  TTable extends SQLiteTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
-  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
-    _options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
-      middlewares?: Middleware<
-        InsertArrayMutationReturningItems<TTable, TInputI>
-      >[]
-    }
-  ): InsertArrayMutationReturningItems<TTable, TInputI> {
-    return 0 as any
+  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    middlewares?: Middleware<
+      InsertArrayMutationReturningItems<TTable, TInputI>
+    >[]
+  } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
+    const output = DrizzleWeaver.unravel(this.table)
+    input ??= silk(() => this.inputFactory.insertArrayArgs())
+
+    return loom.mutation(output.$list(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const result = await this.db
+          .insert(this.table)
+          .values(args.values)
+          .returning()
+          .onConflictDoNothing()
+        return result
+      },
+    })
   }
 }
 
@@ -407,14 +452,10 @@ export interface InsertArrayMutationReturningSuccess<
   TInputI = InsertArrayArgs<TTable>,
 > extends FieldOrOperation<
     undefined,
-    GraphQLSilk<MutationSuccess, MutationSuccess>,
+    GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<InsertArrayArgs<TTable>, TInputI>,
     "mutation"
   > {}
-
-export interface MutationSuccess {
-  isSuccess: boolean
-}
 
 type QueryBase<
   TDatabase extends BaseDatabase,

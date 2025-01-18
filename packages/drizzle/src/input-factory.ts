@@ -58,6 +58,25 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
+  public insertArrayArgs() {
+    const name = `${pascalCase(getTableName(this.table))}InsertArrayArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<InsertArrayArgs<TTable>>({
+        name,
+        fields: {
+          values: {
+            type: new GraphQLNonNull(
+              new GraphQLList(new GraphQLNonNull(this.insertInput()))
+            ),
+          },
+        },
+      })
+    )
+  }
+
   public insertInput() {
     const name = `${pascalCase(getTableName(this.table))}InsertInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
@@ -201,6 +220,21 @@ export class DrizzleInputFactory<TTable extends Table> {
       })
     )
   }
+
+  public static mutationResult() {
+    const name = "MutationResult"
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: {
+          isSuccess: { type: new GraphQLNonNull(GraphQLBoolean) },
+        },
+      })
+    )
+  }
 }
 
 export interface SelectArrayArgs<TTable extends Table> {
@@ -249,4 +283,8 @@ export interface ColumnFiltersCore<TType = any> {
 
 export interface ColumnFilters<TType = any> extends ColumnFiltersCore<TType> {
   OR?: ColumnFiltersCore<TType>[]
+}
+
+export interface MutationResult {
+  isSuccess: boolean
 }

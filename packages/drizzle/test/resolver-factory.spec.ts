@@ -5,6 +5,7 @@ import * as v from "valibot"
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from "vitest"
 import {
   DrizzleResolverFactory,
+  type DrizzleSQLiteResolverFactory,
   type InferSelectArrayOptions,
   type InferSelectSingleOptions,
 } from "../src"
@@ -13,7 +14,7 @@ import { user } from "./db/schema"
 
 describe("DrizzleResolverFactory", () => {
   let db: LibSQLDatabase<typeof schema>
-  let userFactory: DrizzleResolverFactory<typeof db, typeof schema.user>
+  let userFactory: DrizzleSQLiteResolverFactory<typeof db, typeof schema.user>
 
   beforeAll(async () => {
     const pathToDB = new URL("./db/local.db", import.meta.url)
