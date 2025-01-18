@@ -130,6 +130,7 @@ export class DrizzleResolverFactory<
         },
       })
     ) as GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+
     return loom.query(output.$nullable(), {
       input,
       ...options,
