@@ -222,7 +222,7 @@ export class DrizzleInputFactory<TTable extends Table> {
   }
 
   public static mutationResult() {
-    const name = "MutationResult"
+    const name = "MutationSuccessResult"
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
 

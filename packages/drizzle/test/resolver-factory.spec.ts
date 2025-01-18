@@ -9,22 +9,24 @@ import {
   type InferSelectArrayOptions,
   type InferSelectSingleOptions,
 } from "../src"
-import * as schema from "./schema/sqlite"
-import { user } from "./schema/sqlite"
+import * as sqliteSchemas from "./schema/sqlite"
 
 describe("DrizzleResolverFactory", () => {
-  let db: LibSQLDatabase<typeof schema>
-  let userFactory: DrizzleSQLiteResolverFactory<typeof db, typeof schema.user>
+  let db: LibSQLDatabase<typeof sqliteSchemas>
+  let userFactory: DrizzleSQLiteResolverFactory<
+    typeof db,
+    typeof sqliteSchemas.user
+  >
 
   beforeAll(async () => {
     const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
     db = drizzle({
-      schema,
+      schema: sqliteSchemas,
       connection: { url: `file:${pathToDB.pathname}` },
     })
-    userFactory = DrizzleResolverFactory.create(db, schema.user)
+    userFactory = DrizzleResolverFactory.create(db, sqliteSchemas.user)
 
-    await db.insert(user).values([
+    await db.insert(sqliteSchemas.user).values([
       {
         name: "John",
         age: 10,
@@ -46,11 +48,11 @@ describe("DrizzleResolverFactory", () => {
         name: "Jill",
         age: 14,
       },
-    ] satisfies (typeof user.$inferInsert)[])
+    ] satisfies (typeof sqliteSchemas.user.$inferInsert)[])
   })
 
   afterAll(async () => {
-    await db.delete(user)
+    await db.delete(sqliteSchemas.user)
   })
 
   it("should create a resolver factory", () => {
@@ -168,7 +170,7 @@ describe("DrizzleResolverFactory", () => {
             age: v.nullish(v.number()),
           }),
           v.transform(({ age }) => ({
-            where: age != null ? eq(user.age, age) : undefined,
+            where: age != null ? eq(sqliteSchemas.user.age, age) : undefined,
           }))
         ),
       })
@@ -181,7 +183,7 @@ describe("DrizzleResolverFactory", () => {
     it("should be created with middlewares", async () => {
       type SelectArrayOptions = InferSelectArrayOptions<
         typeof db,
-        typeof schema.user
+        typeof sqliteSchemas.user
       >
 
       let count = 0
@@ -197,7 +199,7 @@ describe("DrizzleResolverFactory", () => {
             count++
             const answer = await next()
             expectTypeOf(answer).toEqualTypeOf<
-              (typeof schema.user.$inferSelect)[]
+              (typeof sqliteSchemas.user.$inferSelect)[]
             >()
             return answer
           },
@@ -240,7 +242,7 @@ describe("DrizzleResolverFactory", () => {
             age: v.nullish(v.number()),
           }),
           v.transform(({ age }) => ({
-            where: age != null ? eq(user.age, age) : undefined,
+            where: age != null ? eq(sqliteSchemas.user.age, age) : undefined,
           }))
         ),
       })
@@ -252,7 +254,7 @@ describe("DrizzleResolverFactory", () => {
     it("should be created with middlewares", async () => {
       type SelectSingleOptions = InferSelectSingleOptions<
         typeof db,
-        typeof schema.user
+        typeof sqliteSchemas.user
       >
       let count = 0
       const query = userFactory.selectSingleQuery({
@@ -266,7 +268,7 @@ describe("DrizzleResolverFactory", () => {
             count++
             const answer = await next()
             expectTypeOf(answer).toEqualTypeOf<
-              typeof schema.user.$inferSelect | undefined | null
+              typeof sqliteSchemas.user.$inferSelect | undefined | null
             >()
             return answer
           },
