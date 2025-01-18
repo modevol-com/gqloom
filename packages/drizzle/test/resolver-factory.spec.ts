@@ -9,15 +9,15 @@ import {
   type InferSelectArrayOptions,
   type InferSelectSingleOptions,
 } from "../src"
-import * as schema from "./db/schema"
-import { user } from "./db/schema"
+import * as schema from "./schema/sqlite"
+import { user } from "./schema/sqlite"
 
 describe("DrizzleResolverFactory", () => {
   let db: LibSQLDatabase<typeof schema>
   let userFactory: DrizzleSQLiteResolverFactory<typeof db, typeof schema.user>
 
   beforeAll(async () => {
-    const pathToDB = new URL("./db/local.db", import.meta.url)
+    const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
     db = drizzle({
       schema,
       connection: { url: `file:${pathToDB.pathname}` },
