@@ -24,8 +24,8 @@ export class DrizzleInputFactory<TTable extends Table> {
 
   public selectArrayArgs() {
     const name = `${pascalCase(getTableName(this.table))}SelectArrayArgs`
-    const existing = weaverContext.getNamedType(name)
-    if (existing) return existing as GraphQLObjectType
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing) return existing
 
     return weaverContext.memoNamedType(
       new GraphQLObjectType<SelectArrayArgs<TTable>>({
@@ -33,6 +33,23 @@ export class DrizzleInputFactory<TTable extends Table> {
         fields: {
           offset: { type: GraphQLInt },
           limit: { type: GraphQLInt },
+          orderBy: { type: this.orderBy() },
+          where: { type: this.filters() },
+        },
+      })
+    )
+  }
+
+  public selectSingleArgs() {
+    const name = `${pascalCase(getTableName(this.table))}SelectSingleArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<SelectSingleArgs<TTable>>({
+        name,
+        fields: {
+          offset: { type: GraphQLInt },
           orderBy: { type: this.orderBy() },
           where: { type: this.filters() },
         },
@@ -188,6 +205,12 @@ export class DrizzleInputFactory<TTable extends Table> {
 export interface SelectArrayArgs<TTable extends Table> {
   offset?: number
   limit?: number
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  where?: Filters<TTable>
+}
+
+export interface SelectSingleArgs<TTable extends Table> {
+  offset?: number
   orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
   where?: Filters<TTable>
 }

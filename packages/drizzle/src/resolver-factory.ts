@@ -49,6 +49,7 @@ import {
   DrizzleInputFactory,
   type FiltersCore,
   type SelectArrayArgs,
+  type SelectSingleArgs,
 } from "./input-factory"
 
 export class DrizzleResolverFactory<
@@ -89,16 +90,16 @@ export class DrizzleResolverFactory<
       SelectArrayArgs<TTable>
     >(
       () => this.inputFactory.selectArrayArgs(),
-      (input) => this.selectArrayArgsToOptions(input)
+      (args) => this.selectArrayArgsToOptions(args)
     ) as GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
 
     return loom.query(output.$list(), {
       input,
       ...options,
-      resolve: (input) => {
-        return queryBase.findMany(input) as any
+      resolve: (opts) => {
+        return queryBase.findMany(opts) as any
       },
-    }) as SelectArrayQuery<TDatabase, TTable, TInputI>
+    })
   }
 
   protected selectArrayArgsToOptions(
@@ -116,8 +117,43 @@ export class DrizzleResolverFactory<
     }
   }
 
-  public selectSingleQuery() {
-    return
+  public selectSingleQuery<TInputI = SelectSingleArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+    middlewares?: Middleware<SelectSingleQuery<TDatabase, TTable, TInputI>>[]
+  } = {}): SelectSingleQuery<TDatabase, TTable, TInputI> {
+    const output = DrizzleWeaver.unravel(this.table)
+    const queryBase = this.queryBase
+    input ??= silk<
+      InferSelectSingleOptions<TDatabase, TTable>,
+      SelectSingleArgs<TTable>
+    >(
+      () => this.inputFactory.selectSingleArgs(),
+      (args) => this.selectSingleArgsToOptions(args)
+    ) as GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+    return loom.query(output.$nullable(), {
+      input,
+      ...options,
+      resolve: (opts) => {
+        return queryBase.findFirst(opts) as any
+      },
+    })
+  }
+
+  protected selectSingleArgsToOptions(
+    input: SelectSingleArgs<TTable>
+  ): StandardSchemaV1.SuccessResult<
+    InferSelectSingleOptions<TDatabase, TTable>
+  > {
+    return {
+      value: {
+        where: this.extractFilters(input.where),
+        orderBy: this.extractOrderBy(input.orderBy),
+        offset: input.offset,
+      },
+    }
   }
 
   public insertArrayMutation() {
@@ -164,7 +200,6 @@ export class DrizzleResolverFactory<
     if (!filters.OR?.length) delete filters.OR
 
     const entries = Object.entries(filters as FiltersCore<TTable>)
-    if (!entries.length) return
 
     if (filters.OR) {
       if (entries.length > 1) {
@@ -180,26 +215,18 @@ export class DrizzleResolverFactory<
         if (extracted) variants.push(extracted)
       }
 
-      return variants.length
-        ? variants.length > 1
-          ? or(...variants)
-          : variants[0]
-        : undefined
+      return or(...variants)
     }
 
     const variants: SQL[] = []
     for (const [columnName, operators] of entries) {
-      if (operators === null) continue
+      if (operators == null) continue
 
       const column = getTableColumns(this.table)[columnName]!
       variants.push(this.extractFiltersColumn(column, columnName, operators)!)
     }
 
-    return variants.length
-      ? variants.length > 1
-        ? and(...variants)
-        : variants[0]
-      : undefined
+    return and(...variants)
   }
 
   protected extractFiltersColumn<TColumn extends Column>(
@@ -226,11 +253,7 @@ export class DrizzleResolverFactory<
         if (extracted) variants.push(extracted)
       }
 
-      return variants.length
-        ? variants.length > 1
-          ? or(...variants)
-          : variants[0]
-        : undefined
+      return or(...variants)
     }
 
     const variants: SQL[] = []
@@ -261,11 +284,7 @@ export class DrizzleResolverFactory<
       }
     }
 
-    return variants.length
-      ? variants.length > 1
-        ? and(...variants)
-        : variants[0]
-      : undefined
+    return and(...variants)
   }
 }
 
@@ -280,10 +299,29 @@ export interface SelectArrayQuery<
     "query"
   > {}
 
-type InferSelectArrayOptions<
+export type InferSelectArrayOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
 > = Parameters<QueryBase<TDatabase, TTable>["findMany"]>[0]
+
+export interface SelectSingleQuery<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TInputI = SelectSingleArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<
+      InferSelectModel<TTable> | null | undefined,
+      InferSelectModel<TTable> | null | undefined
+    >,
+    GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>,
+    "query"
+  > {}
+
+export type InferSelectSingleOptions<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+> = Parameters<QueryBase<TDatabase, TTable>["findFirst"]>[0]
 
 type QueryBase<
   TDatabase extends BaseDatabase,
