@@ -19,7 +19,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "push": "drizzle-kit push"
+    "push": "drizzle-kit push",
+    "postinstall": "pnpm push"
   },
   "files": ["dist"],
   "keywords": [
