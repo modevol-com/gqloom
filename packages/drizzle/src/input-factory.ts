@@ -1,6 +1,7 @@
 import { mapValue, pascalCase, weaverContext } from "@gqloom/core"
 import {
   type Column,
+  type InferInsertModel,
   type InferSelectModel,
   type Table,
   getTableColumns,
@@ -213,6 +214,10 @@ export interface SelectSingleArgs<TTable extends Table> {
   offset?: number
   orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
   where?: Filters<TTable>
+}
+
+export interface InsertArrayArgs<TTable extends Table> {
+  values: InferInsertModel<TTable>[]
 }
 
 export type FiltersCore<TTable extends Table> = Partial<{

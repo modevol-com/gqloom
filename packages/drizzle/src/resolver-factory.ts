@@ -35,9 +35,9 @@ import {
   notLike,
   or,
 } from "drizzle-orm"
-import type { MySqlDatabase } from "drizzle-orm/mysql-core"
+import { MySqlDatabase } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
-import type { PgDatabase } from "drizzle-orm/pg-core"
+import { PgDatabase } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
@@ -47,14 +47,47 @@ import {
   type ColumnFilters,
   DrizzleInputFactory,
   type FiltersCore,
+  type InsertArrayArgs,
   type SelectArrayArgs,
   type SelectSingleArgs,
 } from "./input-factory"
 
-export class DrizzleResolverFactory<
+export abstract class DrizzleResolverFactory<
   TDatabase extends BaseDatabase,
   TTable extends Table,
 > {
+  static create<
+    TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
+    TTable extends Table,
+  >(
+    db: TDatabase,
+    table: TTable
+  ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
+  static create<TDatabase extends PgDatabase<any>, TTable extends Table>(
+    db: TDatabase,
+    table: TTable
+  ): DrizzlePostgresResolverFactory<TDatabase, TTable>
+  static create<
+    TDatabase extends MySqlDatabase<any, any, any, any>,
+    TTable extends Table,
+  >(
+    db: TDatabase,
+    table: TTable
+  ): DrizzleMySQLResolverFactory<TDatabase, TTable>
+
+  static create(
+    db: BaseDatabase,
+    table: Table
+  ): DrizzleResolverFactory<BaseDatabase, Table> {
+    if (db instanceof PgDatabase) {
+      return new DrizzlePostgresResolverFactory(db, table)
+    }
+    if (db instanceof MySqlDatabase) {
+      return new DrizzleMySQLResolverFactory(db, table)
+    }
+    return new DrizzleSQLiteResolverFactory(db, table)
+  }
+
   public readonly inputFactory: DrizzleInputFactory<TTable>
   public readonly tableName: string
   public readonly queryBase: QueryBase<TDatabase, TTable>
@@ -138,22 +171,6 @@ export class DrizzleResolverFactory<
         return queryBase.findFirst(opts) as any
       },
     })
-  }
-
-  public insertArrayMutation() {
-    return
-  }
-
-  public insertSingleMutation() {
-    return
-  }
-
-  public updateMutation() {
-    return
-  }
-
-  public deleteMutation() {
-    return
   }
 
   protected extractOrderBy(
@@ -270,6 +287,67 @@ export class DrizzleResolverFactory<
 
     return and(...variants)
   }
+
+  abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
+    options?: GraphQLFieldOptions & {
+      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+      middlewares?: Middleware<InsertArrayMutation<TTable, TInputI>>[]
+    }
+  ): InsertArrayMutation<TTable, TInputI>
+
+  // abstract insertSingleMutation(): void
+
+  // abstract updateMutation(): void
+
+  // abstract deleteMutation(): void
+}
+
+export class DrizzleMySQLResolverFactory<
+  TDatabase extends MySqlDatabase<any, any, any, any>,
+  TTable extends Table,
+> extends DrizzleResolverFactory<TDatabase, TTable> {
+  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
+    _options?: GraphQLFieldOptions & {
+      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+      middlewares?: Middleware<
+        InsertArrayMutationReturningSuccess<TTable, TInputI>
+      >[]
+    }
+  ): InsertArrayMutationReturningSuccess<TTable, TInputI> {
+    return 0 as any
+  }
+}
+
+export class DrizzlePostgresResolverFactory<
+  TDatabase extends PgDatabase<any, any, any>,
+  TTable extends Table,
+> extends DrizzleResolverFactory<TDatabase, TTable> {
+  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
+    _options?: GraphQLFieldOptions & {
+      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+      middlewares?: Middleware<
+        InsertArrayMutationReturningItems<TTable, TInputI>
+      >[]
+    }
+  ): InsertArrayMutationReturningItems<TTable, TInputI> {
+    return 0 as any
+  }
+}
+
+export class DrizzleSQLiteResolverFactory<
+  TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
+  TTable extends Table,
+> extends DrizzleResolverFactory<TDatabase, TTable> {
+  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
+    _options?: GraphQLFieldOptions & {
+      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+      middlewares?: Middleware<
+        InsertArrayMutationReturningItems<TTable, TInputI>
+      >[]
+    }
+  ): InsertArrayMutationReturningItems<TTable, TInputI> {
+    return 0 as any
+  }
 }
 
 export interface SelectArrayQuery<
@@ -306,6 +384,37 @@ export type InferSelectSingleOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
 > = Parameters<QueryBase<TDatabase, TTable>["findFirst"]>[0]
+
+export type InsertArrayMutation<
+  TTable extends Table,
+  TInputI = InsertArrayArgs<TTable>,
+> =
+  | InsertArrayMutationReturningItems<TTable, TInputI>
+  | InsertArrayMutationReturningSuccess<TTable, TInputI>
+
+export interface InsertArrayMutationReturningItems<
+  TTable extends Table,
+  TInputI = InsertArrayArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
+    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export interface InsertArrayMutationReturningSuccess<
+  TTable extends Table,
+  TInputI = InsertArrayArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<MutationSuccess, MutationSuccess>,
+    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export interface MutationSuccess {
+  isSuccess: boolean
+}
 
 type QueryBase<
   TDatabase extends BaseDatabase,

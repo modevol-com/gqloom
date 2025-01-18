@@ -21,7 +21,7 @@ describe("DrizzleResolverFactory", () => {
       schema,
       connection: { url: `file:${pathToDB.pathname}` },
     })
-    userFactory = new DrizzleResolverFactory(db, schema.user)
+    userFactory = DrizzleResolverFactory.create(db, schema.user)
 
     await db.insert(user).values([
       {
@@ -60,7 +60,7 @@ describe("DrizzleResolverFactory", () => {
     const unknownTable = sqlite.sqliteTable("unknown", {
       id: sqlite.integer("id").primaryKey(),
     })
-    expect(() => new DrizzleResolverFactory(db, unknownTable)).toThrow(
+    expect(() => DrizzleResolverFactory.create(db, unknownTable)).toThrow(
       "GQLoom-Drizzle Error: Table unknown not found in drizzle instance. Did you forget to pass schema to drizzle constructor?"
     )
   })
