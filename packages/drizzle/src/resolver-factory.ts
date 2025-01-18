@@ -3,7 +3,6 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
-  type StandardSchemaV1,
   loom,
   silk,
 } from "@gqloom/core"
@@ -90,7 +89,14 @@ export class DrizzleResolverFactory<
       SelectArrayArgs<TTable>
     >(
       () => this.inputFactory.selectArrayArgs(),
-      (args) => this.selectArrayArgsToOptions(args)
+      (args) => ({
+        value: {
+          where: this.extractFilters(args.where),
+          orderBy: this.extractOrderBy(args.orderBy),
+          limit: args.limit,
+          offset: args.offset,
+        },
+      })
     ) as GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
 
     return loom.query(output.$list(), {
@@ -100,21 +106,6 @@ export class DrizzleResolverFactory<
         return queryBase.findMany(opts) as any
       },
     })
-  }
-
-  protected selectArrayArgsToOptions(
-    input: SelectArrayArgs<TTable>
-  ): StandardSchemaV1.SuccessResult<
-    InferSelectArrayOptions<TDatabase, TTable>
-  > {
-    return {
-      value: {
-        where: this.extractFilters(input.where),
-        orderBy: this.extractOrderBy(input.orderBy),
-        limit: input.limit,
-        offset: input.offset,
-      },
-    }
   }
 
   public selectSingleQuery<TInputI = SelectSingleArgs<TTable>>({
@@ -131,7 +122,13 @@ export class DrizzleResolverFactory<
       SelectSingleArgs<TTable>
     >(
       () => this.inputFactory.selectSingleArgs(),
-      (args) => this.selectSingleArgsToOptions(args)
+      (args) => ({
+        value: {
+          where: this.extractFilters(args.where),
+          orderBy: this.extractOrderBy(args.orderBy),
+          offset: args.offset,
+        },
+      })
     ) as GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
     return loom.query(output.$nullable(), {
       input,
@@ -140,20 +137,6 @@ export class DrizzleResolverFactory<
         return queryBase.findFirst(opts) as any
       },
     })
-  }
-
-  protected selectSingleArgsToOptions(
-    input: SelectSingleArgs<TTable>
-  ): StandardSchemaV1.SuccessResult<
-    InferSelectSingleOptions<TDatabase, TTable>
-  > {
-    return {
-      value: {
-        where: this.extractFilters(input.where),
-        orderBy: this.extractOrderBy(input.orderBy),
-        offset: input.offset,
-      },
-    }
   }
 
   public insertArrayMutation() {
