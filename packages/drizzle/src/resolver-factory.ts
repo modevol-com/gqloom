@@ -42,7 +42,7 @@ import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
 import { GraphQLError } from "graphql"
-import { DrizzleWeaver } from "."
+import { DrizzleWeaver, type TableSilk } from "."
 import {
   type ColumnFilters,
   DrizzleInputFactory,
@@ -106,6 +106,12 @@ export abstract class DrizzleResolverFactory<
     this.queryBase = queryBase
   }
 
+  private _output?: TableSilk<TTable>
+  protected get output() {
+    this._output ??= DrizzleWeaver.unravel(this.table)
+    return this._output
+  }
+
   public selectArrayQuery<TInputI = SelectArrayArgs<TTable>>({
     input,
     ...options
@@ -113,7 +119,6 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectArrayQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectArrayQuery<TDatabase, TTable, TInputI> {
-    const output = DrizzleWeaver.unravel(this.table)
     const queryBase = this.queryBase
     input ??= silk<
       InferSelectArrayOptions<TDatabase, TTable>,
@@ -130,7 +135,7 @@ export abstract class DrizzleResolverFactory<
       })
     ) as GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
 
-    return loom.query(output.$list(), {
+    return loom.query(this.output.$list(), {
       input,
       ...options,
       resolve: (opts) => {
@@ -146,7 +151,6 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectSingleQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectSingleQuery<TDatabase, TTable, TInputI> {
-    const output = DrizzleWeaver.unravel(this.table)
     const queryBase = this.queryBase
     input ??= silk<
       InferSelectSingleOptions<TDatabase, TTable>,
@@ -162,7 +166,7 @@ export abstract class DrizzleResolverFactory<
       })
     ) as GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
 
-    return loom.query(output.$nullable(), {
+    return loom.query(this.output.$nullable(), {
       input,
       ...options,
       resolve: (opts) => {
@@ -345,10 +349,9 @@ export class DrizzlePostgresResolverFactory<
       InsertArrayMutationReturningItems<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
-    const output = DrizzleWeaver.unravel(this.table)
     input ??= silk(() => this.inputFactory.insertArrayArgs())
 
-    return loom.mutation(output.$list(), {
+    return loom.mutation(this.output.$list(), {
       ...options,
       input,
       resolve: async (args) => {
@@ -377,10 +380,9 @@ export class DrizzleSQLiteResolverFactory<
       InsertArrayMutationReturningItems<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
-    const output = DrizzleWeaver.unravel(this.table)
     input ??= silk(() => this.inputFactory.insertArrayArgs())
 
-    return loom.mutation(output.$list(), {
+    return loom.mutation(this.output.$list(), {
       ...options,
       input,
       resolve: async (args) => {
