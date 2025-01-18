@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mysql:
     image: mysql:9.1
-    container_name: mysql_ci
+    container_name: gqloom_mysql
     restart: unless-stopped
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
@@ -14,7 +14,7 @@ services:
 
   postgres:
     image: postgres:17.2
-    container_name: postgres_ci
+    container_name: gqloom_postgres
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust

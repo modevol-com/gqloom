@@ -19,8 +19,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "push": "drizzle-kit push",
-    "postinstall": "pnpm push"
+    "push": "drizzle-kit push --config=drizzle-mysql.config.ts && drizzle-kit push --config=drizzle-postgres.config.ts && drizzle-kit push --config=drizzle-sqlite.config.ts",
+    "postinstall": "pnpm run push"
   },
   "files": ["dist"],
   "keywords": [
@@ -41,10 +41,13 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@libsql/client": "^0.14.0",
+    "@types/pg": "^8.11.10",
     "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.1",
     "drizzle-orm": "^0.38.3",
     "graphql": "^16.8.1",
+    "mysql2": "^3.12.0",
+    "pg": "^8.13.1",
     "tsx": "^4.7.2",
     "valibot": "1.0.0-beta.12"
   },
