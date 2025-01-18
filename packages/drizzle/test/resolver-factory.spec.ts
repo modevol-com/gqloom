@@ -1,15 +1,33 @@
-import { eq } from "drizzle-orm"
-import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql"
+import { eq, inArray, sql } from "drizzle-orm"
+import {
+  type LibSQLDatabase,
+  drizzle as sqliteDrizzle,
+} from "drizzle-orm/libsql"
+import {
+  type MySql2Database,
+  drizzle as mysqlDrizzle,
+} from "drizzle-orm/mysql2"
+import {
+  type NodePgDatabase,
+  drizzle as pgDrizzle,
+} from "drizzle-orm/node-postgres"
 import * as sqlite from "drizzle-orm/sqlite-core"
 import * as v from "valibot"
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from "vitest"
+import { config } from "../env.config"
 import {
+  type DrizzleMySQLResolverFactory,
+  type DrizzlePostgresResolverFactory,
   DrizzleResolverFactory,
   type DrizzleSQLiteResolverFactory,
   type InferSelectArrayOptions,
   type InferSelectSingleOptions,
 } from "../src"
+import * as mysqlSchemas from "./schema/mysql"
+import * as pgSchemas from "./schema/postgres"
 import * as sqliteSchemas from "./schema/sqlite"
+
+const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
 
 describe("DrizzleResolverFactory", () => {
   let db: LibSQLDatabase<typeof sqliteSchemas>
@@ -19,8 +37,7 @@ describe("DrizzleResolverFactory", () => {
   >
 
   beforeAll(async () => {
-    const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
-    db = drizzle({
+    db = sqliteDrizzle({
       schema: sqliteSchemas,
       connection: { url: `file:${pathToDB.pathname}` },
     })
@@ -277,6 +294,133 @@ describe("DrizzleResolverFactory", () => {
 
       await query.resolve({})
       expect(count).toBe(1)
+    })
+  })
+})
+
+describe("DrizzleMySQLResolverFactory", () => {
+  let db: MySql2Database<{
+    drizzle_user: typeof mysqlSchemas.user
+  }>
+  let userFactory: DrizzleMySQLResolverFactory<
+    typeof db,
+    typeof mysqlSchemas.user
+  >
+
+  beforeAll(async () => {
+    db = mysqlDrizzle(config.mysqlUrl, {
+      schema: {
+        drizzle_user: mysqlSchemas.user,
+      },
+      mode: "default",
+    })
+    userFactory = DrizzleResolverFactory.create(db, mysqlSchemas.user)
+    await db.execute(sql`select 1`)
+  })
+
+  describe("insertArrayMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertArrayMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const mutation = userFactory.insertArrayMutation()
+      expect(
+        await mutation.resolve({
+          values: [
+            { name: "John", age: 10 },
+            { name: "Jane", age: 11 },
+          ],
+        })
+      ).toMatchObject({ isSuccess: true })
+    })
+  })
+})
+
+describe("DrizzlePostgresResolverFactory", () => {
+  let db: NodePgDatabase<{
+    drizzle_user: typeof pgSchemas.user
+  }>
+  let userFactory: DrizzlePostgresResolverFactory<
+    typeof db,
+    typeof pgSchemas.user
+  >
+
+  beforeAll(async () => {
+    db = pgDrizzle(config.postgresUrl, {
+      schema: {
+        drizzle_user: pgSchemas.user,
+      },
+    })
+    userFactory = DrizzleResolverFactory.create(db, pgSchemas.user)
+    await db.execute(sql`select 1`)
+  })
+
+  describe("insertArrayMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertArrayMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const mutation = userFactory.insertArrayMutation()
+      const answer = await mutation.resolve({
+        values: [
+          { name: "John", age: 10 },
+          { name: "Jane", age: 11 },
+        ],
+      })
+      expect(answer).toMatchObject([
+        { name: "John", age: 10 },
+        { name: "Jane", age: 11 },
+      ])
+    })
+  })
+})
+
+describe("DrizzleSQLiteResolverFactory", () => {
+  let db: LibSQLDatabase<typeof sqliteSchemas>
+  let userFactory: DrizzleSQLiteResolverFactory<
+    typeof db,
+    typeof sqliteSchemas.user
+  >
+
+  beforeAll(() => {
+    db = sqliteDrizzle({
+      schema: sqliteSchemas,
+      connection: { url: `file:${pathToDB.pathname}` },
+    })
+    userFactory = DrizzleResolverFactory.create(db, sqliteSchemas.user)
+  })
+
+  describe("insertArrayMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertArrayMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const mutation = userFactory.insertArrayMutation()
+
+      const answer = await mutation.resolve({
+        values: [
+          { name: "John", age: 5 },
+          { name: "Jane", age: 6 },
+        ],
+      })
+
+      expect(answer).toMatchObject([
+        { name: "John", age: 5 },
+        { name: "Jane", age: 6 },
+      ])
+
+      await db.delete(sqliteSchemas.user).where(
+        inArray(
+          sqliteSchemas.user.id,
+          answer.map((u) => u.id)
+        )
+      )
     })
   })
 })

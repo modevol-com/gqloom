@@ -1,11 +1,11 @@
-import "dotenv/config"
 import { defineConfig } from "drizzle-kit"
+import { config } from "./env.config"
 
 export default defineConfig({
   dialect: "mysql",
   schema: "./test/schema/mysql.ts",
   dbCredentials: {
-    url: process.env.MYSQL_URL ?? "mysql://root@localhost:3306/mysql",
+    url: config.mysqlUrl,
   },
   tablesFilter: ["drizzle_*"],
 })

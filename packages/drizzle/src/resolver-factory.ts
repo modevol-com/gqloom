@@ -64,10 +64,15 @@ export abstract class DrizzleResolverFactory<
     db: TDatabase,
     table: TTable
   ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
-  static create<TDatabase extends PgDatabase<any>, TTable extends PgTable>(
+
+  static create<
+    TDatabase extends PgDatabase<any, any, any>,
+    TTable extends PgTable,
+  >(
     db: TDatabase,
     table: TTable
   ): DrizzlePostgresResolverFactory<TDatabase, TTable>
+
   static create<
     TDatabase extends MySqlDatabase<any, any, any, any>,
     TTable extends MySqlTable,
@@ -98,6 +103,7 @@ export abstract class DrizzleResolverFactory<
     const queryBase = this.db.query[
       this.tableName as keyof typeof this.db.query
     ] as RelationalQueryBuilder<any, any>
+
     if (!queryBase) {
       throw new Error(
         `GQLoom-Drizzle Error: Table ${this.tableName} not found in drizzle instance. Did you forget to pass schema to drizzle constructor?`
