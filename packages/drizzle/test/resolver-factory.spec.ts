@@ -378,6 +378,28 @@ describe("DrizzleMySQLResolverFactory", () => {
         .where(eq(mysqlSchemas.user.name, "Bob"))
     })
   })
+
+  describe("deleteMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.deleteMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      await db.insert(mysqlSchemas.user).values({ name: "Alice", age: 18 })
+      try {
+        const mutation = userFactory.deleteMutation()
+        const answer = await mutation.resolve({
+          where: { name: { eq: "Alice" } },
+        })
+        expect(answer).toMatchObject({ isSuccess: true })
+      } finally {
+        await db
+          .delete(mysqlSchemas.user)
+          .where(eq(mysqlSchemas.user.name, "Alice"))
+      }
+    })
+  })
 })
 
 describe("DrizzlePostgresResolverFactory", () => {
@@ -455,6 +477,26 @@ describe("DrizzlePostgresResolverFactory", () => {
         expect(answer).toMatchObject([{ name: "Bob", age: 19 }])
       } finally {
         await db.delete(pgSchemas.user).where(eq(pgSchemas.user.name, "Bob"))
+      }
+    })
+  })
+
+  describe("deleteMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.deleteMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      await db.insert(pgSchemas.user).values({ name: "Alice", age: 18 })
+      try {
+        const mutation = userFactory.deleteMutation()
+        const answer = await mutation.resolve({
+          where: { name: { eq: "Alice" } },
+        })
+        expect(answer).toMatchObject([{ name: "Alice", age: 18 }])
+      } finally {
+        await db.delete(pgSchemas.user).where(eq(pgSchemas.user.name, "Alice"))
       }
     })
   })
@@ -540,6 +582,29 @@ describe("DrizzleSQLiteResolverFactory", () => {
         await db
           .delete(sqliteSchemas.user)
           .where(eq(sqliteSchemas.user.name, "Bob"))
+      }
+    })
+  })
+
+  describe("deleteMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.deleteMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      await db.insert(sqliteSchemas.user).values({ name: "Alice", age: 18 })
+      try {
+        const mutation = userFactory.deleteMutation()
+        const answer = await mutation.resolve({
+          where: { name: { eq: "Alice" } },
+        })
+
+        expect(answer).toMatchObject([{ name: "Alice", age: 18 }])
+      } finally {
+        await db
+          .delete(sqliteSchemas.user)
+          .where(eq(sqliteSchemas.user.name, "Alice"))
       }
     })
   })

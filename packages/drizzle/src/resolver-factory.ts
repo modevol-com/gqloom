@@ -45,6 +45,7 @@ import { GraphQLError } from "graphql"
 import { DrizzleWeaver, type TableSilk } from "."
 import {
   type ColumnFilters,
+  type DeleteArgs,
   DrizzleInputFactory,
   type FiltersCore,
   type InsertArrayArgs,
@@ -319,7 +320,12 @@ export abstract class DrizzleResolverFactory<
     }
   ): UpdateMutation<TTable, TInputI>
 
-  // abstract deleteMutation(): void
+  public abstract deleteMutation<TInputI = DeleteArgs<TTable>>(
+    options?: GraphQLFieldOptions & {
+      input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+      middlewares?: Middleware<DeleteMutation<TTable, TInputI>>[]
+    }
+  ): DeleteMutation<TTable, TInputI>
 }
 
 export class DrizzleMySQLResolverFactory<
@@ -394,6 +400,29 @@ export class DrizzleMySQLResolverFactory<
 
         await query
 
+        return { isSuccess: true }
+      },
+    })
+  }
+
+  public deleteMutation<TInputI = DeleteArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    middlewares?: Middleware<DeleteMutationReturningSuccess<TTable, TInputI>>[]
+  } = {}): DeleteMutationReturningSuccess<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.deleteArgs())
+
+    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
+      ...options,
+      input,
+      resolve: async (args) => {
+        let query = this.db.delete(this.table)
+        if (args.where) {
+          query = query.where(this.extractFilters(args.where)) as any
+        }
+        await query
         return { isSuccess: true }
       },
     })
@@ -477,6 +506,28 @@ export class DrizzlePostgresResolverFactory<
       },
     })
   }
+
+  public deleteMutation<TInputI = DeleteArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    middlewares?: Middleware<DeleteMutationReturningItems<TTable, TInputI>>[]
+  } = {}): DeleteMutationReturningItems<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.deleteArgs())
+
+    return loom.mutation(this.output.$list(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const query = this.db.delete(this.table)
+        if (args.where) {
+          query.where(this.extractFilters(args.where))
+        }
+        return await query.returning()
+      },
+    })
+  }
 }
 
 export class DrizzleSQLiteResolverFactory<
@@ -547,6 +598,28 @@ export class DrizzleSQLiteResolverFactory<
       input,
       resolve: async (args) => {
         const query = this.db.update(this.table).set(args.set)
+        if (args.where) {
+          query.where(this.extractFilters(args.where))
+        }
+        return await query.returning()
+      },
+    })
+  }
+
+  public deleteMutation<TInputI = DeleteArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    middlewares?: Middleware<DeleteMutationReturningItems<TTable, TInputI>>[]
+  } = {}): DeleteMutationReturningItems<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.deleteArgs())
+
+    return loom.mutation(this.output.$list(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const query = this.db.delete(this.table)
         if (args.where) {
           query.where(this.extractFilters(args.where))
         }
@@ -669,6 +742,30 @@ export interface UpdateMutationReturningSuccess<
     undefined,
     GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<UpdateArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export type DeleteMutation<TTable extends Table, TInputI = DeleteArgs<TTable>> =
+  | DeleteMutationReturningItems<TTable, TInputI>
+  | DeleteMutationReturningSuccess<TTable, TInputI>
+
+export interface DeleteMutationReturningItems<
+  TTable extends Table,
+  TInputI = DeleteArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
+    GraphQLSilk<DeleteArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export interface DeleteMutationReturningSuccess<
+  TTable extends Table,
+  TInputI = DeleteArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<MutationResult, MutationResult>,
+    GraphQLSilk<DeleteArgs<TTable>, TInputI>,
     "mutation"
   > {}
 
