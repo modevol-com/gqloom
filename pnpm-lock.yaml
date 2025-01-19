@@ -221,7 +221,7 @@ importers:
         version: 0.30.1
       drizzle-orm:
         specifier: ^0.38.3
-        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@18.3.6)(better-sqlite3@10.0.0)(knex@3.1.0(better-sqlite3@10.0.0)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@18.3.1)
+        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@18.3.6)(better-sqlite3@11.7.2)(knex@3.1.0(better-sqlite3@11.7.2)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@18.3.1)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -281,11 +281,11 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@mikro-orm/better-sqlite':
-        specifier: ^6.2.8
-        version: 6.2.8(@mikro-orm/core@6.2.8)
+        specifier: ^6.4.3
+        version: 6.4.3(@mikro-orm/core@6.4.3)(libsql@0.4.7)
       '@mikro-orm/core':
-        specifier: ^6.2.8
-        version: 6.2.8
+        specifier: ^6.4.3
+        version: 6.4.3
 
   packages/prisma:
     dependencies:
@@ -1197,8 +1197,18 @@ packages:
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
+  '@mikro-orm/better-sqlite@6.4.3':
+    resolution: {integrity: sha512-T54U4xRzVU7iY+rQaDtz7NvIYWyL/LVPARjr3Znttp3qZXTAKC41fmSTpKyFH5npkabr3hulc+Lx64FI86NrIg==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+
   '@mikro-orm/core@6.2.8':
     resolution: {integrity: sha512-zXw9THLF3zq/zUmL+nKZqM3kSVuOrSC2rs7ZSlnoselcqkXfYeblYC9E1Fg7ktpNa/4zzovYAWHrifFzpz2FHg==}
+    engines: {node: '>= 18.12.0'}
+
+  '@mikro-orm/core@6.4.3':
+    resolution: {integrity: sha512-UTaqKs1bomYtGmEEZ8sNBOmW2OqT5NcMh+pBV2iJ6WLM5MuiIEuNhDMuvvPE5gNEwUzc1HyRhUV87bRDhDIGRg==}
     engines: {node: '>= 18.12.0'}
 
   '@mikro-orm/knex@6.2.8':
@@ -1206,6 +1216,22 @@ packages:
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
+
+  '@mikro-orm/knex@6.4.3':
+    resolution: {integrity: sha512-gVkRD/cIn6qxk/P9nR+IufZxJwuCCdv0AtcGvShxXXvaoIrQPJYDV7HRxBOHCEyNygr6M3Fqpph1oPoT6aezTQ==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+      better-sqlite3: '*'
+      libsql: '*'
+      mariadb: '*'
+    peerDependenciesMeta:
+      better-sqlite3:
+        optional: true
+      libsql:
+        optional: true
+      mariadb:
+        optional: true
 
   '@module-federation/runtime-tools@0.5.1':
     resolution: {integrity: sha512-nfBedkoZ3/SWyO0hnmaxuz0R0iGPSikHZOAZ0N/dVSQaIzlffUo35B5nlC2wgWIc0JdMZfkwkjZRrnuuDIJbzg==}
@@ -1941,6 +1967,9 @@ packages:
   better-sqlite3@10.0.0:
     resolution: {integrity: sha512-rOz0JY8bt9oMgrFssP7GnvA5R3yln73y/NizzWqy3WlFth8Ux8+g4r/N9fjX97nn4X1YX6MTER2doNpTu5pqiA==}
 
+  better-sqlite3@11.7.2:
+    resolution: {integrity: sha512-10a57cHVDmfNQS4jrZ9AH2t+2ekzYh5Rhbcnb4ytpmYweoLdogDmyTt5D+hLiY9b44Mx9foowb/4iXBTO2yP3Q==}
+
   big.js@5.2.2:
     resolution: {integrity: sha512-vyL2OymJxmarO8gxMr0mhChsO9QGwhynfuu4+MHTAW6czfq9humCB7rKpUjDd9YUiDPU4mzpyupFSvOClAwbmQ==}
 
@@ -2171,6 +2200,9 @@ packages:
 
   dataloader@2.2.2:
     resolution: {integrity: sha512-8YnDaaf7N3k/q5HnTJVuzSyLETjoZjVmHc4AeKAzOvKHEFQKcn64OKBfzHYtE9zGjctNM7V9I0MfnUVLpi7M5g==}
+
+  dataloader@2.2.3:
+    resolution: {integrity: sha512-y2krtASINtPFS1rSDjacrFgn1dcUuoREVabwlOGOe4SdxenREqwjwjElAdwvbGM7kgZz9a3KVicWR7vcz8rnzA==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -3487,6 +3519,10 @@ packages:
 
   mikro-orm@6.2.8:
     resolution: {integrity: sha512-UMPa7QtzP5Cb98NDHtL7Q4rBCoUB6BQ3wa+vXPlZO79TVfQTd9fAdJuIdB+49qZJRPcEMowg2POYs1axtJoAPQ==}
+    engines: {node: '>= 18.12.0'}
+
+  mikro-orm@6.4.3:
+    resolution: {integrity: sha512-xDNzmLiL4EUTMOu9CbZ2d0sNIaUdH4RzDv4oqw27+u0/FPfvZTIagd+luxx1lWWqe/vg/iNtvqr5OcNQIYYrtQ==}
     engines: {node: '>= 18.12.0'}
 
   mime-db@1.52.0:
@@ -5709,6 +5745,24 @@ snapshots:
       - supports-color
       - tedious
 
+  '@mikro-orm/better-sqlite@6.4.3(@mikro-orm/core@6.4.3)(libsql@0.4.7)':
+    dependencies:
+      '@mikro-orm/core': 6.4.3
+      '@mikro-orm/knex': 6.4.3(@mikro-orm/core@6.4.3)(better-sqlite3@11.7.2)(libsql@0.4.7)
+      better-sqlite3: 11.7.2
+      fs-extra: 11.2.0
+      sqlstring-sqlite: 0.1.1
+    transitivePeerDependencies:
+      - libsql
+      - mariadb
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
   '@mikro-orm/core@6.2.8':
     dependencies:
       dataloader: 2.2.2
@@ -5719,14 +5773,42 @@ snapshots:
       mikro-orm: 6.2.8
       reflect-metadata: 0.2.2
 
+  '@mikro-orm/core@6.4.3':
+    dependencies:
+      dataloader: 2.2.3
+      dotenv: 16.4.7
+      esprima: 4.0.1
+      fs-extra: 11.2.0
+      globby: 11.1.0
+      mikro-orm: 6.4.3
+      reflect-metadata: 0.2.2
+
   '@mikro-orm/knex@6.2.8(@mikro-orm/core@6.2.8)(better-sqlite3@10.0.0)':
     dependencies:
       '@mikro-orm/core': 6.2.8
       fs-extra: 11.2.0
-      knex: 3.1.0(better-sqlite3@10.0.0)(mysql2@3.12.0)(pg@8.13.1)
+      knex: 3.1.0(better-sqlite3@10.0.0)
       sqlstring: 2.3.3
     transitivePeerDependencies:
       - better-sqlite3
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
+  '@mikro-orm/knex@6.4.3(@mikro-orm/core@6.4.3)(better-sqlite3@11.7.2)(libsql@0.4.7)':
+    dependencies:
+      '@mikro-orm/core': 6.4.3
+      fs-extra: 11.2.0
+      knex: 3.1.0(better-sqlite3@11.7.2)
+      sqlstring: 2.3.3
+    optionalDependencies:
+      better-sqlite3: 11.7.2
+      libsql: 0.4.7
+    transitivePeerDependencies:
       - mysql
       - mysql2
       - pg
@@ -6550,6 +6632,11 @@ snapshots:
       bindings: 1.5.0
       prebuild-install: 7.1.2
 
+  better-sqlite3@11.7.2:
+    dependencies:
+      bindings: 1.5.0
+      prebuild-install: 7.1.2
+
   big.js@5.2.2: {}
 
   binary-extensions@2.3.0: {}
@@ -6775,6 +6862,8 @@ snapshots:
 
   dataloader@2.2.2: {}
 
+  dataloader@2.2.3: {}
+
   debug@2.6.9:
     dependencies:
       ms: 2.0.0
@@ -6881,14 +6970,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@18.3.6)(better-sqlite3@10.0.0)(knex@3.1.0(better-sqlite3@10.0.0)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@18.3.1):
+  drizzle-orm@0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@18.3.6)(better-sqlite3@11.7.2)(knex@3.1.0(better-sqlite3@11.7.2)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@18.3.1):
     optionalDependencies:
       '@libsql/client': 0.14.0
       '@prisma/client': 6.1.0(prisma@6.1.0)
       '@types/pg': 8.11.10
       '@types/react': 18.3.6
-      better-sqlite3: 10.0.0
-      knex: 3.1.0(better-sqlite3@10.0.0)(mysql2@3.12.0)(pg@8.13.1)
+      better-sqlite3: 11.7.2
+      knex: 3.1.0(better-sqlite3@11.7.2)(mysql2@3.12.0)(pg@8.13.1)
       mysql2: 3.12.0
       pg: 8.13.1
       prisma: 6.1.0
@@ -7827,7 +7916,7 @@ snapshots:
 
   kleur@4.1.5: {}
 
-  knex@3.1.0(better-sqlite3@10.0.0)(mysql2@3.12.0)(pg@8.13.1):
+  knex@3.1.0(better-sqlite3@10.0.0):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -7845,10 +7934,53 @@ snapshots:
       tildify: 2.0.0
     optionalDependencies:
       better-sqlite3: 10.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  knex@3.1.0(better-sqlite3@11.7.2):
+    dependencies:
+      colorette: 2.0.19
+      commander: 10.0.1
+      debug: 4.3.4
+      escalade: 3.1.2
+      esm: 3.2.25
+      get-package-type: 0.1.0
+      getopts: 2.3.0
+      interpret: 2.2.0
+      lodash: 4.17.21
+      pg-connection-string: 2.6.2
+      rechoir: 0.8.0
+      resolve-from: 5.0.0
+      tarn: 3.0.2
+      tildify: 2.0.0
+    optionalDependencies:
+      better-sqlite3: 11.7.2
+    transitivePeerDependencies:
+      - supports-color
+
+  knex@3.1.0(better-sqlite3@11.7.2)(mysql2@3.12.0)(pg@8.13.1):
+    dependencies:
+      colorette: 2.0.19
+      commander: 10.0.1
+      debug: 4.3.4
+      escalade: 3.1.2
+      esm: 3.2.25
+      get-package-type: 0.1.0
+      getopts: 2.3.0
+      interpret: 2.2.0
+      lodash: 4.17.21
+      pg-connection-string: 2.6.2
+      rechoir: 0.8.0
+      resolve-from: 5.0.0
+      tarn: 3.0.2
+      tildify: 2.0.0
+    optionalDependencies:
+      better-sqlite3: 11.7.2
       mysql2: 3.12.0
       pg: 8.13.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   leac@0.6.0: {}
 
@@ -8491,6 +8623,8 @@ snapshots:
       picomatch: 2.3.1
 
   mikro-orm@6.2.8: {}
+
+  mikro-orm@6.4.3: {}
 
   mime-db@1.52.0: {}
 
