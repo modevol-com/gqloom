@@ -334,6 +334,10 @@ describe("DrizzleMySQLResolverFactory", () => {
           ],
         })
       ).toMatchObject({ isSuccess: true })
+
+      await db
+        .delete(mysqlSchemas.user)
+        .where(inArray(mysqlSchemas.user.age, [5, 6]))
     })
   })
 
@@ -345,11 +349,33 @@ describe("DrizzleMySQLResolverFactory", () => {
 
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertSingleMutation()
+      const answer = await mutation.resolve({
+        value: { name: "John", age: 7 },
+      })
+      expect(answer).toMatchObject({ isSuccess: true })
+
+      await db.delete(mysqlSchemas.user).where(eq(mysqlSchemas.user.age, 7))
+    })
+  })
+
+  describe("updateMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.updateMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      await db.insert(mysqlSchemas.user).values({ name: "Bob", age: 18 })
+      const mutation = userFactory.updateMutation()
       expect(
         await mutation.resolve({
-          value: { name: "John", age: 7 },
+          where: { name: { eq: "Bob" } },
+          set: { age: 19 },
         })
       ).toMatchObject({ isSuccess: true })
+      await db
+        .delete(mysqlSchemas.user)
+        .where(eq(mysqlSchemas.user.name, "Bob"))
     })
   })
 })
@@ -391,6 +417,8 @@ describe("DrizzlePostgresResolverFactory", () => {
         { name: "John", age: 5 },
         { name: "Jane", age: 6 },
       ])
+
+      await db.delete(pgSchemas.user).where(inArray(pgSchemas.user.age, [5, 6]))
     })
   })
 
@@ -402,11 +430,32 @@ describe("DrizzlePostgresResolverFactory", () => {
 
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertSingleMutation()
-      expect(
-        await mutation.resolve({
-          value: { name: "John", age: 7 },
+      const answer = await mutation.resolve({ value: { name: "John", age: 7 } })
+
+      expect(answer).toMatchObject({ name: "John", age: 7 })
+
+      await db.delete(pgSchemas.user).where(eq(pgSchemas.user.id, answer!.id))
+    })
+  })
+
+  describe("updateMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.updateMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      await db.insert(pgSchemas.user).values({ name: "Bob", age: 18 })
+      try {
+        const mutation = userFactory.updateMutation()
+        const answer = await mutation.resolve({
+          where: { name: { eq: "Bob" } },
+          set: { age: 19 },
         })
-      ).toMatchObject({ name: "John", age: 7 })
+        expect(answer).toMatchObject([{ name: "Bob", age: 19 }])
+      } finally {
+        await db.delete(pgSchemas.user).where(eq(pgSchemas.user.name, "Bob"))
+      }
     })
   })
 })
@@ -447,12 +496,9 @@ describe("DrizzleSQLiteResolverFactory", () => {
         { name: "Jane", age: 6 },
       ])
 
-      await db.delete(sqliteSchemas.user).where(
-        inArray(
-          sqliteSchemas.user.id,
-          answer.map((u) => u.id)
-        )
-      )
+      await db
+        .delete(sqliteSchemas.user)
+        .where(inArray(sqliteSchemas.user.age, [5, 6]))
     })
   })
 
@@ -472,6 +518,29 @@ describe("DrizzleSQLiteResolverFactory", () => {
       await db
         .delete(sqliteSchemas.user)
         .where(eq(sqliteSchemas.user.id, answer!.id))
+    })
+  })
+
+  describe("updateMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.updateMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      await db.insert(sqliteSchemas.user).values({ name: "Bob", age: 18 })
+      try {
+        const mutation = userFactory.updateMutation()
+        const answer = await mutation.resolve({
+          where: { name: { eq: "Bob" } },
+          set: { age: 19 },
+        })
+        expect(answer).toMatchObject([{ name: "Bob", age: 19 }])
+      } finally {
+        await db
+          .delete(sqliteSchemas.user)
+          .where(eq(sqliteSchemas.user.name, "Bob"))
+      }
     })
   })
 })

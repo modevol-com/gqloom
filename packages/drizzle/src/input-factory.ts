@@ -92,6 +92,22 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
+  public updateArgs() {
+    const name = `${pascalCase(getTableName(this.table))}UpdateArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<UpdateArgs<TTable>>({
+        name,
+        fields: {
+          where: { type: this.filters() },
+          set: { type: new GraphQLNonNull(this.updateInput()) },
+        },
+      })
+    )
+  }
+
   public insertInput() {
     const name = `${pascalCase(getTableName(this.table))}InsertInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
@@ -271,6 +287,11 @@ export interface InsertArrayArgs<TTable extends Table> {
 
 export interface InsertSingleArgs<TTable extends Table> {
   value: InferInsertModel<TTable>
+}
+
+export interface UpdateArgs<TTable extends Table> {
+  where?: Filters<TTable>
+  set: Partial<InferInsertModel<TTable>>
 }
 
 export type FiltersCore<TTable extends Table> = Partial<{

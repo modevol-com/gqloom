@@ -52,6 +52,7 @@ import {
   type MutationResult,
   type SelectArrayArgs,
   type SelectSingleArgs,
+  type UpdateArgs,
 } from "./input-factory"
 
 export abstract class DrizzleResolverFactory<
@@ -311,7 +312,12 @@ export abstract class DrizzleResolverFactory<
     }
   ): InsertSingleMutation<TTable, TInputI>
 
-  // abstract updateMutation(): void
+  public abstract updateMutation<TInputI = UpdateArgs<TTable>>(
+    options?: GraphQLFieldOptions & {
+      input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+      middlewares?: Middleware<UpdateMutation<TTable, TInputI>>[]
+    }
+  ): UpdateMutation<TTable, TInputI>
 
   // abstract deleteMutation(): void
 }
@@ -361,8 +367,33 @@ export class DrizzleMySQLResolverFactory<
     return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
       ...options,
       input,
-      resolve: async (input) => {
-        await this.db.insert(this.table).values(input.value)
+      resolve: async (args) => {
+        await this.db.insert(this.table).values(args.value)
+        return { isSuccess: true }
+      },
+    })
+  }
+
+  public updateMutation<TInputI = UpdateArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    middlewares?: Middleware<UpdateMutationReturningSuccess<TTable, TInputI>>[]
+  } = {}): UpdateMutationReturningSuccess<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.updateArgs())
+
+    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
+      ...options,
+      input,
+      resolve: async (args) => {
+        let query = this.db.update(this.table).set(args.set)
+        if (args.where) {
+          query = query.where(this.extractFilters(args.where)) as any
+        }
+
+        await query
+
         return { isSuccess: true }
       },
     })
@@ -424,6 +455,28 @@ export class DrizzlePostgresResolverFactory<
       },
     })
   }
+
+  public updateMutation<TInputI = UpdateArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    middlewares?: Middleware<UpdateMutationReturningItems<TTable, TInputI>>[]
+  } = {}): UpdateMutationReturningItems<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.updateArgs())
+
+    return loom.mutation(this.output.$list(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const query = this.db.update(this.table).set(args.set)
+        if (args.where) {
+          query.where(this.extractFilters(args.where))
+        }
+        return await query.returning()
+      },
+    })
+  }
 }
 
 export class DrizzleSQLiteResolverFactory<
@@ -476,6 +529,28 @@ export class DrizzleSQLiteResolverFactory<
           .onConflictDoNothing()
 
         return result[0] as any
+      },
+    })
+  }
+
+  public updateMutation<TInputI = UpdateArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    middlewares?: Middleware<UpdateMutationReturningItems<TTable, TInputI>>[]
+  } = {}): UpdateMutationReturningItems<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.updateArgs())
+
+    return loom.mutation(this.output.$list(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const query = this.db.update(this.table).set(args.set)
+        if (args.where) {
+          query.where(this.extractFilters(args.where))
+        }
+        return await query.returning()
       },
     })
   }
@@ -570,6 +645,30 @@ export interface InsertSingleMutationReturningSuccess<
     undefined,
     GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<InsertSingleArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export type UpdateMutation<TTable extends Table, TInputI = UpdateArgs<TTable>> =
+  | UpdateMutationReturningItems<TTable, TInputI>
+  | UpdateMutationReturningSuccess<TTable, TInputI>
+
+export interface UpdateMutationReturningItems<
+  TTable extends Table,
+  TInputI = UpdateArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
+    GraphQLSilk<UpdateArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export interface UpdateMutationReturningSuccess<
+  TTable extends Table,
+  TInputI = UpdateArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<MutationResult, MutationResult>,
+    GraphQLSilk<UpdateArgs<TTable>, TInputI>,
     "mutation"
   > {}
 
