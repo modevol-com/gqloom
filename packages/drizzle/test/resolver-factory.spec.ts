@@ -329,9 +329,25 @@ describe("DrizzleMySQLResolverFactory", () => {
       expect(
         await mutation.resolve({
           values: [
-            { name: "John", age: 10 },
-            { name: "Jane", age: 11 },
+            { name: "John", age: 5 },
+            { name: "Jane", age: 6 },
           ],
+        })
+      ).toMatchObject({ isSuccess: true })
+    })
+  })
+
+  describe("insertSingleMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertSingleMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const mutation = userFactory.insertSingleMutation()
+      expect(
+        await mutation.resolve({
+          value: { name: "John", age: 7 },
         })
       ).toMatchObject({ isSuccess: true })
     })
@@ -367,14 +383,30 @@ describe("DrizzlePostgresResolverFactory", () => {
       const mutation = userFactory.insertArrayMutation()
       const answer = await mutation.resolve({
         values: [
-          { name: "John", age: 10 },
-          { name: "Jane", age: 11 },
+          { name: "John", age: 5 },
+          { name: "Jane", age: 6 },
         ],
       })
       expect(answer).toMatchObject([
-        { name: "John", age: 10 },
-        { name: "Jane", age: 11 },
+        { name: "John", age: 5 },
+        { name: "Jane", age: 6 },
       ])
+    })
+  })
+
+  describe("insertSingleMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertSingleMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const mutation = userFactory.insertSingleMutation()
+      expect(
+        await mutation.resolve({
+          value: { name: "John", age: 7 },
+        })
+      ).toMatchObject({ name: "John", age: 7 })
     })
   })
 })
@@ -421,6 +453,25 @@ describe("DrizzleSQLiteResolverFactory", () => {
           answer.map((u) => u.id)
         )
       )
+    })
+  })
+
+  describe("insertSingleMutation", () => {
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertSingleMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const mutation = userFactory.insertSingleMutation()
+      const answer = await mutation.resolve({
+        value: { name: "John", age: 7 },
+      })
+      expect(answer).toMatchObject({ name: "John", age: 7 })
+
+      await db
+        .delete(sqliteSchemas.user)
+        .where(eq(sqliteSchemas.user.id, answer!.id))
     })
   })
 })

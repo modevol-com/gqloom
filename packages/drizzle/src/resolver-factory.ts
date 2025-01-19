@@ -48,6 +48,7 @@ import {
   DrizzleInputFactory,
   type FiltersCore,
   type InsertArrayArgs,
+  type InsertSingleArgs,
   type MutationResult,
   type SelectArrayArgs,
   type SelectSingleArgs,
@@ -296,14 +297,19 @@ export abstract class DrizzleResolverFactory<
     return and(...variants)
   }
 
-  abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
+  public abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
     options?: GraphQLFieldOptions & {
       input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
       middlewares?: Middleware<InsertArrayMutation<TTable, TInputI>>[]
     }
   ): InsertArrayMutation<TTable, TInputI>
 
-  // abstract insertSingleMutation(): void
+  public abstract insertSingleMutation<TInputI = InsertSingleArgs<TTable>>(
+    options?: GraphQLFieldOptions & {
+      input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+      middlewares?: Middleware<InsertSingleMutation<TTable, TInputI>>[]
+    }
+  ): InsertSingleMutation<TTable, TInputI>
 
   // abstract updateMutation(): void
 
@@ -314,6 +320,12 @@ export class DrizzleMySQLResolverFactory<
   TDatabase extends MySqlDatabase<any, any, any, any>,
   TTable extends MySqlTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
+  protected static get mutationResult() {
+    return silk<MutationResult, MutationResult>(() =>
+      DrizzleInputFactory.mutationResult()
+    )
+  }
+
   public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>({
     input,
     ...options
@@ -335,10 +347,25 @@ export class DrizzleMySQLResolverFactory<
     })
   }
 
-  protected static get mutationResult() {
-    return silk<MutationResult, MutationResult>(() =>
-      DrizzleInputFactory.mutationResult()
-    )
+  public insertSingleMutation<TInputI = InsertSingleArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    middlewares?: Middleware<
+      InsertSingleMutationReturningSuccess<TTable, TInputI>
+    >[]
+  } = {}): InsertSingleMutationReturningSuccess<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.insertSingleArgs())
+
+    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
+      ...options,
+      input,
+      resolve: async (input) => {
+        await this.db.insert(this.table).values(input.value)
+        return { isSuccess: true }
+      },
+    })
   }
 }
 
@@ -371,6 +398,32 @@ export class DrizzlePostgresResolverFactory<
       },
     })
   }
+
+  public insertSingleMutation<TInputI = InsertSingleArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    middlewares?: Middleware<
+      InsertSingleMutationReturningItem<TTable, TInputI>
+    >[]
+  } = {}): InsertSingleMutationReturningItem<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.insertSingleArgs())
+
+    return loom.mutation(this.output.$nullable(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const result = await this.db
+          .insert(this.table)
+          .values(args.value)
+          .returning()
+          .onConflictDoNothing()
+
+        return result[0] as any
+      },
+    })
+  }
 }
 
 export class DrizzleSQLiteResolverFactory<
@@ -398,6 +451,31 @@ export class DrizzleSQLiteResolverFactory<
           .returning()
           .onConflictDoNothing()
         return result
+      },
+    })
+  }
+
+  public insertSingleMutation<TInputI = InsertSingleArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    middlewares?: Middleware<
+      InsertSingleMutationReturningItem<TTable, TInputI>
+    >[]
+  } = {}): InsertSingleMutationReturningItem<TTable, TInputI> {
+    input ??= silk(() => this.inputFactory.insertSingleArgs())
+    return loom.mutation(this.output.$nullable(), {
+      ...options,
+      input,
+      resolve: async (args) => {
+        const result = await this.db
+          .insert(this.table)
+          .values(args.value)
+          .returning()
+          .onConflictDoNothing()
+
+        return result[0] as any
       },
     })
   }
@@ -462,6 +540,36 @@ export interface InsertArrayMutationReturningSuccess<
     undefined,
     GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<InsertArrayArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export type InsertSingleMutation<
+  TTable extends Table,
+  TInputI = InsertSingleArgs<TTable>,
+> =
+  | InsertSingleMutationReturningItem<TTable, TInputI>
+  | InsertSingleMutationReturningSuccess<TTable, TInputI>
+
+export interface InsertSingleMutationReturningItem<
+  TTable extends Table,
+  TInputI = InsertSingleArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<
+      InferSelectModel<TTable> | null | undefined,
+      InferSelectModel<TTable> | null | undefined
+    >,
+    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>,
+    "mutation"
+  > {}
+
+export interface InsertSingleMutationReturningSuccess<
+  TTable extends Table,
+  TInputI = InsertSingleArgs<TTable>,
+> extends FieldOrOperation<
+    undefined,
+    GraphQLSilk<MutationResult, MutationResult>,
+    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>,
     "mutation"
   > {}
 
