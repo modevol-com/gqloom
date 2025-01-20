@@ -83,5 +83,3 @@ export class EasyDataLoader<TKey, TData> {
     return new Promise((resolve) => setTimeout(resolve))
   }
 }
-
-export class ModelLoader<TKey, TData> extends EasyDataLoader<TKey, TData> {}
