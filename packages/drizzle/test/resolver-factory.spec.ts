@@ -299,22 +299,18 @@ describe("DrizzleResolverFactory", () => {
 })
 
 describe("DrizzleMySQLResolverFactory", () => {
-  let db: MySql2Database<{
-    drizzle_user: typeof mysqlSchemas.user
-  }>
+  const schema = {
+    drizzle_user: mysqlSchemas.user,
+  }
+  let db: MySql2Database<typeof schema>
   let userFactory: DrizzleMySQLResolverFactory<
     typeof db,
     typeof mysqlSchemas.user
   >
 
   beforeAll(async () => {
-    db = mysqlDrizzle(config.mysqlUrl, {
-      schema: {
-        drizzle_user: mysqlSchemas.user,
-      },
-      mode: "default",
-    })
-    userFactory = DrizzleResolverFactory.create(db, mysqlSchemas.user)
+    db = mysqlDrizzle(config.mysqlUrl, { schema, mode: "default" })
+    userFactory = DrizzleResolverFactory.create(db, "drizzle_user")
     await db.execute(sql`select 1`)
   })
 
@@ -403,21 +399,18 @@ describe("DrizzleMySQLResolverFactory", () => {
 })
 
 describe("DrizzlePostgresResolverFactory", () => {
-  let db: NodePgDatabase<{
-    drizzle_user: typeof pgSchemas.user
-  }>
+  const schema = {
+    drizzle_user: pgSchemas.user,
+  }
+  let db: NodePgDatabase<typeof schema>
   let userFactory: DrizzlePostgresResolverFactory<
     typeof db,
     typeof pgSchemas.user
   >
 
   beforeAll(async () => {
-    db = pgDrizzle(config.postgresUrl, {
-      schema: {
-        drizzle_user: pgSchemas.user,
-      },
-    })
-    userFactory = DrizzleResolverFactory.create(db, pgSchemas.user)
+    db = pgDrizzle(config.postgresUrl, { schema })
+    userFactory = DrizzleResolverFactory.create(db, "drizzle_user")
     await db.execute(sql`select 1`)
   })
 
@@ -514,7 +507,7 @@ describe("DrizzleSQLiteResolverFactory", () => {
       schema: sqliteSchemas,
       connection: { url: `file:${pathToDB.pathname}` },
     })
-    userFactory = DrizzleResolverFactory.create(db, sqliteSchemas.user)
+    userFactory = DrizzleResolverFactory.create(db, "user")
   })
 
   describe("insertArrayMutation", () => {

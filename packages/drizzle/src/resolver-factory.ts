@@ -8,12 +8,9 @@ import {
 } from "@gqloom/core"
 import {
   type Column,
-  type ExtractTablesWithRelations,
   type InferSelectModel,
   type SQL,
   type Table,
-  type TableRelationalConfig,
-  type TablesRelationalConfig,
   and,
   asc,
   desc,
@@ -36,11 +33,8 @@ import {
   or,
 } from "drizzle-orm"
 import { MySqlDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
-import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
 import { PgDatabase, type PgTable } from "drizzle-orm/pg-core"
-import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
-import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
 import { GraphQLError } from "graphql"
 import { DrizzleWeaver, type TableSilk } from "."
 import {
@@ -62,12 +56,32 @@ export abstract class DrizzleResolverFactory<
 > {
   static create<
     TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
+    TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
+  >(
+    db: TDatabase,
+    tableName: TTableName
+  ): DrizzleSQLiteResolverFactory<
+    TDatabase,
+    NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+  >
+  static create<
+    TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
     TTable extends SQLiteTable,
   >(
     db: TDatabase,
     table: TTable
   ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
 
+  static create<
+    TDatabase extends PgDatabase<any, any, any>,
+    TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
+  >(
+    db: TDatabase,
+    tableName: TTableName
+  ): DrizzlePostgresResolverFactory<
+    TDatabase,
+    NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+  >
   static create<
     TDatabase extends PgDatabase<any, any, any>,
     TTable extends PgTable,
@@ -78,13 +92,27 @@ export abstract class DrizzleResolverFactory<
 
   static create<
     TDatabase extends MySqlDatabase<any, any, any, any>,
+    TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
+  >(
+    db: TDatabase,
+    tableName: TTableName
+  ): DrizzleMySQLResolverFactory<
+    TDatabase,
+    NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+  >
+  static create<
+    TDatabase extends MySqlDatabase<any, any, any, any>,
     TTable extends MySqlTable,
   >(
     db: TDatabase,
     table: TTable
   ): DrizzleMySQLResolverFactory<TDatabase, TTable>
 
-  static create(db: BaseDatabase, table: Table) {
+  static create(db: BaseDatabase, tableOrName: Table | string) {
+    const table =
+      typeof tableOrName === "string"
+        ? (db._.fullSchema[tableOrName] as Table)
+        : tableOrName
     if (db instanceof PgDatabase) {
       return new DrizzlePostgresResolverFactory(db, table as PgTable)
     }
@@ -94,31 +122,31 @@ export abstract class DrizzleResolverFactory<
     return new DrizzleSQLiteResolverFactory(db, table as SQLiteTable)
   }
 
-  public readonly inputFactory: DrizzleInputFactory<TTable>
-  public readonly tableName: string
-  public readonly queryBase: QueryBase<TDatabase, TTable>
+  public readonly inputFactory: DrizzleInputFactory<typeof this.table>
+  public readonly tableName: InferTableName<TTable>
+  public readonly queryBuilder: QueryBuilder<TDatabase, InferTableName<TTable>>
   constructor(
     public readonly db: TDatabase,
     public readonly table: TTable
   ) {
     this.inputFactory = new DrizzleInputFactory(table)
     this.tableName = getTableName(table)
-    const queryBase = this.db.query[
+    const queryBuilder = this.db.query[
       this.tableName as keyof typeof this.db.query
-    ] as RelationalQueryBuilder<any, any>
+    ] as QueryBuilder<TDatabase, InferTableName<TTable>>
 
-    if (!queryBase) {
+    if (!queryBuilder) {
       throw new Error(
         `GQLoom-Drizzle Error: Table ${this.tableName} not found in drizzle instance. Did you forget to pass schema to drizzle constructor?`
       )
     }
-    this.queryBase = queryBase
+    this.queryBuilder = queryBuilder
   }
 
   private _output?: TableSilk<TTable>
   protected get output() {
     this._output ??= DrizzleWeaver.unravel(this.table)
-    return this._output
+    return this._output as TableSilk<TTable>
   }
 
   public selectArrayQuery<TInputI = SelectArrayArgs<TTable>>({
@@ -128,7 +156,7 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectArrayQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectArrayQuery<TDatabase, TTable, TInputI> {
-    const queryBase = this.queryBase
+    const queryBase = this.queryBuilder
     input ??= silk<
       InferSelectArrayOptions<TDatabase, TTable>,
       SelectArrayArgs<TTable>
@@ -160,7 +188,7 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectSingleQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectSingleQuery<TDatabase, TTable, TInputI> {
-    const queryBase = this.queryBase
+    const queryBase = this.queryBuilder
     input ??= silk<
       InferSelectSingleOptions<TDatabase, TTable>,
       SelectSingleArgs<TTable>
@@ -643,7 +671,7 @@ export interface SelectArrayQuery<
 export type InferSelectArrayOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-> = Parameters<QueryBase<TDatabase, TTable>["findMany"]>[0]
+> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findMany"]>[0]
 
 export interface SelectSingleQuery<
   TDatabase extends BaseDatabase,
@@ -662,7 +690,7 @@ export interface SelectSingleQuery<
 export type InferSelectSingleOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-> = Parameters<QueryBase<TDatabase, TTable>["findFirst"]>[0]
+> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findFirst"]>[0]
 
 export type InsertArrayMutation<
   TTable extends Table,
@@ -769,29 +797,16 @@ export interface DeleteMutationReturningSuccess<
     "mutation"
   > {}
 
-type QueryBase<
+type QueryBuilder<
   TDatabase extends BaseDatabase,
-  TTable extends Table,
-> = RelationalQueryBuilder<
-  TDatabase["_"]["schema"],
-  ExtractTableWithRelations<TTable>
->
-
-type ExtractTableWithRelations<TTable extends Table> = ValueOf<
-  ExtractTablesWithRelations<Record<string, TTable>>
->
+  TTableName extends keyof TDatabase["_"]["schema"],
+> = TDatabase["query"] extends { [key in TTableName]: any }
+  ? TDatabase["query"][TTableName]
+  : never
 
 type BaseDatabase =
   | BaseSQLiteDatabase<any, any, any, any>
   | PgDatabase<any, any, any>
   | MySqlDatabase<any, any, any, any>
 
-type RelationalQueryBuilder<
-  TSchema extends TablesRelationalConfig,
-  TFields extends TableRelationalConfig,
-> =
-  | MySqlRelationalQueryBuilder<any, TSchema, TFields>
-  | PgRelationalQueryBuilder<TSchema, TFields>
-  | SQLiteRelationalQueryBuilder<any, any, TSchema, TFields>
-
-type ValueOf<T> = T[keyof T]
+type InferTableName<TTable extends Table> = TTable["_"]["name"]
