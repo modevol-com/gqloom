@@ -387,6 +387,8 @@ export abstract class DrizzleResolverFactory<
     )
     const isList = relation instanceof Many
     const fieldsLength = normalizedRelation.fields.length
+
+    // TODO: use Dataloader
     return loom.field(isList ? output.$list() : output.$nullable(), {
       ...options,
       resolve: (parent) => {
