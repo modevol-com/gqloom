@@ -9,6 +9,8 @@ import {
 import {
   type Column,
   type InferSelectModel,
+  Many,
+  type Relation,
   type SQL,
   type Table,
   and,
@@ -27,16 +29,21 @@ import {
   lt,
   lte,
   ne,
+  normalizeRelation,
   notIlike,
   notInArray,
   notLike,
   or,
 } from "drizzle-orm"
 import { MySqlDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
+import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
 import { PgDatabase, type PgTable } from "drizzle-orm/pg-core"
+import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
+import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
 import { GraphQLError } from "graphql"
 import { DrizzleWeaver, type TableSilk } from "."
+import { inArrayMultiple } from "./helper"
 import {
   type ColumnFilters,
   type DeleteArgs,
@@ -325,6 +332,80 @@ export abstract class DrizzleResolverFactory<
     }
 
     return and(...variants)
+  }
+
+  public relationField<
+    TRelationName extends keyof InferTableRelationalConfig<
+      typeof this.queryBuilder
+    >["relations"],
+  >(
+    relationName: TRelationName,
+    options?: GraphQLFieldOptions & {
+      middlewares?: Middleware<
+        InferTableRelationalConfig<
+          QueryBuilder<TDatabase, InferTableName<TTable>>
+        >["relations"][TRelationName] extends Many<any>
+          ? RelationManyField<
+              TTable,
+              InferRelationTable<TDatabase, TTable, TRelationName>
+            >
+          : RelationOneField<
+              TTable,
+              InferRelationTable<TDatabase, TTable, TRelationName>
+            >
+      >[]
+    }
+  ): InferTableRelationalConfig<
+    QueryBuilder<TDatabase, InferTableName<TTable>>
+  >["relations"][TRelationName] extends Many<any>
+    ? RelationManyField<
+        TTable,
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      >
+    : RelationOneField<
+        TTable,
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      > {
+    const relation = this.db._.schema?.[this.tableName]?.relations?.[
+      relationName
+    ] as Relation
+    if (!relation) {
+      throw new Error(
+        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(relationName)} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
+      )
+    }
+    const output = DrizzleWeaver.unravel(relation.referencedTable)
+    const tableName = getTableName(relation.referencedTable)
+    const queryBuilder = this.db.query[
+      tableName as keyof typeof this.db.query
+    ] as AnyQueryBuilder
+
+    const normalizedRelation = normalizeRelation(
+      this.db._.schema,
+      this.db._.tableNamesMap,
+      relation
+    )
+    const isList = relation instanceof Many
+    const fieldsLength = normalizedRelation.fields.length
+    return loom.field(isList ? output.$list() : output.$nullable(), {
+      ...options,
+      resolve: (parent) => {
+        const where = (() => {
+          if (fieldsLength === 1) {
+            return inArray(normalizedRelation.references[0], [
+              parent[normalizedRelation.fields[0].name],
+            ])
+          }
+          return inArrayMultiple(normalizedRelation.references, [
+            normalizedRelation.fields.map((field) => parent[field.name]),
+          ])
+        })()
+
+        return isList
+          ? queryBuilder.findMany({ where })
+          : queryBuilder.findFirst({ where })
+      },
+    }) as any
   }
 
   public abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
@@ -692,6 +773,50 @@ export type InferSelectSingleOptions<
   TTable extends Table,
 > = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findFirst"]>[0]
 
+export interface RelationField<
+  TDatabase extends BaseDatabase,
+  TParentTable extends Table,
+  TTable extends Table,
+  TRelationType extends "one" | "many",
+  TInputI = SelectArrayArgs<TTable>,
+> extends FieldOrOperation<
+    GraphQLSilk<InferSelectModel<TParentTable>, InferSelectModel<TParentTable>>,
+    TRelationType extends "many"
+      ? GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>
+      : GraphQLSilk<
+          InferSelectModel<TTable> | null | undefined,
+          InferSelectModel<TTable> | null | undefined
+        >,
+    GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>,
+    "field"
+  > {}
+
+export interface RelationManyField<
+  TTable extends Table,
+  TRelationTable extends Table,
+> extends FieldOrOperation<
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<
+      InferSelectModel<TRelationTable>[],
+      InferSelectModel<TRelationTable>[]
+    >,
+    undefined,
+    "field"
+  > {}
+
+export interface RelationOneField<
+  TTable extends Table,
+  TRelationTable extends Table,
+> extends FieldOrOperation<
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<
+      InferSelectModel<TRelationTable> | null | undefined,
+      InferSelectModel<TRelationTable> | null | undefined
+    >,
+    undefined,
+    "field"
+  > {}
+
 export type InsertArrayMutation<
   TTable extends Table,
   TInputI = InsertArrayArgs<TTable>,
@@ -804,9 +929,45 @@ type QueryBuilder<
   ? TDatabase["query"][TTableName]
   : never
 
+type AnyQueryBuilder =
+  | MySqlRelationalQueryBuilder<any, any, any>
+  | PgRelationalQueryBuilder<any, any>
+  | SQLiteRelationalQueryBuilder<any, any, any, any>
+
+type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
+  TQueryBuilder extends MySqlRelationalQueryBuilder<
+    any,
+    any,
+    infer TTableRelationalConfig
+  >
+    ? TTableRelationalConfig
+    : TQueryBuilder extends PgRelationalQueryBuilder<
+          any,
+          infer TTableRelationalConfig
+        >
+      ? TTableRelationalConfig
+      : TQueryBuilder extends SQLiteRelationalQueryBuilder<
+            any,
+            any,
+            any,
+            infer TTableRelationalConfig
+          >
+        ? TTableRelationalConfig
+        : never
+
 type BaseDatabase =
   | BaseSQLiteDatabase<any, any, any, any>
   | PgDatabase<any, any, any>
   | MySqlDatabase<any, any, any, any>
 
 type InferTableName<TTable extends Table> = TTable["_"]["name"]
+
+type InferRelationTable<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, InferTableName<TTable>>
+  >["relations"],
+> = TDatabase["_"]["fullSchema"][InferTableRelationalConfig<
+  QueryBuilder<TDatabase, InferTableName<TTable>>
+>["relations"][TRelationName]["referencedTableName"]]

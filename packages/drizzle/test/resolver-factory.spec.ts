@@ -296,6 +296,94 @@ describe("DrizzleResolverFactory", () => {
       expect(count).toBe(1)
     })
   })
+
+  describe("relationField", () => {
+    it("should be created without error", async () => {
+      const postsField = userFactory.relationField("posts")
+      expect(postsField).toBeDefined()
+
+      const postFactory = DrizzleResolverFactory.create(db, "post")
+      const authorField = postFactory.relationField("author")
+      expect(authorField).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const studentCourseFactory = DrizzleResolverFactory.create(
+        db,
+        "studentToCourse"
+      )
+      const gradeField = studentCourseFactory.relationField("grade")
+      const John = await db.query.user.findFirst({
+        where: eq(sqliteSchemas.user.name, "John"),
+      })
+      if (!John) throw new Error("John not found")
+      const Joe = await db.query.user.findFirst({
+        where: eq(sqliteSchemas.user.name, "Joe"),
+      })
+      if (!Joe) throw new Error("Joe not found")
+
+      const [math, english] = await db
+        .insert(sqliteSchemas.course)
+        .values([{ name: "Math" }, { name: "English" }])
+        .returning()
+
+      const studentCourses = await db
+        .insert(sqliteSchemas.studentToCourse)
+        .values([
+          { studentId: John.id, courseId: math.id },
+          { studentId: John.id, courseId: english.id },
+          { studentId: Joe.id, courseId: math.id },
+          { studentId: Joe.id, courseId: english.id },
+        ])
+        .returning()
+
+      await db.insert(sqliteSchemas.studentCourseGrade).values(
+        studentCourses.map((it) => ({
+          ...it,
+          grade: Math.floor(Math.random() * 51) + 50,
+        }))
+      )
+
+      let answer
+      answer = await Promise.all(
+        studentCourses.map((sc) => {
+          return gradeField.resolve(sc, undefined)
+        })
+      )
+      expect(new Set(answer)).toMatchObject(
+        new Set([
+          { studentId: John.id, courseId: math.id, grade: expect.any(Number) },
+          {
+            studentId: John.id,
+            courseId: english.id,
+            grade: expect.any(Number),
+          },
+          { studentId: Joe.id, courseId: math.id, grade: expect.any(Number) },
+          {
+            studentId: Joe.id,
+            courseId: english.id,
+            grade: expect.any(Number),
+          },
+        ])
+      )
+
+      await db.insert(sqliteSchemas.post).values([
+        { authorId: John.id, title: "Hello" },
+        { authorId: John.id, title: "World" },
+      ])
+      const postsField = userFactory.relationField("posts")
+      answer = await postsField.resolve(John, undefined)
+      expect(answer).toMatchObject([
+        { authorId: John.id, title: "Hello" },
+        { authorId: John.id, title: "World" },
+      ])
+
+      await db.delete(sqliteSchemas.studentCourseGrade)
+      await db.delete(sqliteSchemas.studentToCourse)
+      await db.delete(sqliteSchemas.course)
+      await db.delete(sqliteSchemas.post)
+    })
+  })
 })
 
 describe("DrizzleMySQLResolverFactory", () => {
