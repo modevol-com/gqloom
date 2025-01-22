@@ -229,7 +229,7 @@ describe("DrizzleResolverFactory", () => {
   })
 
   describe("selectSingleQuery", () => {
-    it("should be created without error", async () => {
+    it("should be created without error", () => {
       const query = userFactory.selectSingleQuery()
       expect(query).toBeDefined()
     })
@@ -305,7 +305,7 @@ describe("DrizzleResolverFactory", () => {
       await db.delete(sqliteSchemas.post)
     })
 
-    it("should be created without error", async () => {
+    it("should be created without error", () => {
       const postsField = userFactory.relationField("posts")
       expect(postsField).toBeDefined()
 
@@ -384,6 +384,21 @@ describe("DrizzleResolverFactory", () => {
         { authorId: John.id, title: "Hello" },
         { authorId: John.id, title: "World" },
       ])
+    })
+  })
+
+  describe("resolver", () => {
+    it("should be created without error", () => {
+      const userResolver = userFactory.resolver()
+      expect(userResolver).toBeDefined()
+      expect(userResolver.user).toBeDefined()
+      expect(userResolver.userSingle).toBeDefined()
+      expect(userResolver.insertIntoUser).toBeDefined()
+      expect(userResolver.insertIntoUserSingle).toBeDefined()
+      expect(userResolver.updateUser).toBeDefined()
+      expect(userResolver.deleteFromUser).toBeDefined()
+      expect(userResolver.courses).toBeDefined()
+      expect(userResolver.posts).toBeDefined()
     })
   })
 })

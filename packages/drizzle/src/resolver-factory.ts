@@ -4,8 +4,10 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
+  capitalize,
   createMemoization,
   loom,
+  mapValue,
   silk,
 } from "@gqloom/core"
 import {
@@ -338,7 +340,7 @@ export abstract class DrizzleResolverFactory<
 
   public relationField<
     TRelationName extends keyof InferTableRelationalConfig<
-      typeof this.queryBuilder
+      QueryBuilder<TDatabase, InferTableName<TTable>>
     >["relations"],
   >(
     relationName: TRelationName,
@@ -446,6 +448,33 @@ export abstract class DrizzleResolverFactory<
         return loader.load(parent)
       },
     }) as any
+  }
+
+  public resolver<TTableName extends string = TTable["_"]["name"]>(options?: {
+    name?: TTableName
+    middlewares?: Middleware[]
+  }): DrizzleResolver<TDatabase, TTable, TTableName> {
+    const name = options?.name ?? this.tableName
+
+    const fields: Record<
+      string,
+      FieldOrOperation<any, any, any, any>
+    > = mapValue(
+      this.db._.schema?.[this.tableName]?.relations ?? {},
+      (_, key) => this.relationField(key)
+    )
+    return loom.resolver(
+      {
+        ...fields,
+        [name]: this.selectArrayQuery(),
+        [`${name}Single`]: this.selectSingleQuery(),
+        [`insertInto${capitalize(name)}`]: this.insertArrayMutation(),
+        [`insertInto${capitalize(name)}Single`]: this.insertArrayMutation(),
+        [`update${capitalize(name)}`]: this.updateMutation(),
+        [`deleteFrom${capitalize(name)}`]: this.deleteMutation(),
+      },
+      options
+    ) as any
   }
 
   public abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
@@ -576,6 +605,19 @@ export class DrizzleMySQLResolverFactory<
       },
     })
   }
+
+  public resolver<TTableName extends string = TTable["_"]["name"]>(
+    options: {
+      name?: TTableName
+      middlewares?: Middleware[]
+    } = {}
+  ): DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName> {
+    return super.resolver(options) as DrizzleResolverReturningSuccess<
+      TDatabase,
+      TTable,
+      TTableName
+    >
+  }
 }
 
 export class DrizzlePostgresResolverFactory<
@@ -677,6 +719,19 @@ export class DrizzlePostgresResolverFactory<
       },
     })
   }
+
+  public resolver<TTableName extends string = TTable["_"]["name"]>(
+    options: {
+      name?: TTableName
+      middlewares?: Middleware[]
+    } = {}
+  ): DrizzleResolverReturningItems<TDatabase, TTable, TTableName> {
+    return super.resolver(options) as DrizzleResolverReturningItems<
+      TDatabase,
+      TTable,
+      TTableName
+    >
+  }
 }
 
 export class DrizzleSQLiteResolverFactory<
@@ -776,6 +831,82 @@ export class DrizzleSQLiteResolverFactory<
       },
     })
   }
+
+  public resolver<TTableName extends string = TTable["_"]["name"]>(
+    options: {
+      name?: TTableName
+      middlewares?: Middleware[]
+    } = {}
+  ): DrizzleResolverReturningItems<TDatabase, TTable, TTableName> {
+    return super.resolver(options) as DrizzleResolverReturningItems<
+      TDatabase,
+      TTable,
+      TTableName
+    >
+  }
+}
+
+export type DrizzleResolver<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TTableName extends string = TTable["_"]["name"],
+> =
+  | DrizzleResolverReturningItems<TDatabase, TTable, TTableName>
+  | DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName>
+
+export type DrizzleResolverReturningItems<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TTableName extends string = TTable["_"]["name"],
+> = {
+  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
+} & {
+  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
+} & {
+  [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningItems<TTable>
+} & {
+  [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningItem<TTable>
+} & {
+  [key in `update${Capitalize<TTableName>}`]: UpdateMutationReturningItems<TTable>
+} & {
+  [key in `deleteFrom${Capitalize<TTableName>}`]: DeleteMutationReturningItems<TTable>
+} & DrizzleResolverRelations<TDatabase, TTable>
+
+export type DrizzleResolverReturningSuccess<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TTableName extends string = TTable["_"]["name"],
+> = {
+  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
+} & {
+  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
+} & {
+  [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningSuccess<TTable>
+} & {
+  [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningSuccess<TTable>
+} & {
+  [key in `update${Capitalize<TTableName>}`]: UpdateMutationReturningSuccess<TTable>
+} & {
+  [key in `deleteFrom${Capitalize<TTableName>}`]: DeleteMutationReturningSuccess<TTable>
+} & DrizzleResolverRelations<TDatabase, TTable>
+
+export type DrizzleResolverRelations<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+> = {
+  [TRelationName in keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, InferTableName<TTable>>
+  >["relations"]]: InferTableRelationalConfig<
+    QueryBuilder<TDatabase, InferTableName<TTable>>
+  >["relations"][TRelationName] extends Many<any>
+    ? RelationManyField<
+        TTable,
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      >
+    : RelationOneField<
+        TTable,
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      >
 }
 
 export interface SelectArrayQuery<
@@ -812,24 +943,6 @@ export type InferSelectSingleOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
 > = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findFirst"]>[0]
-
-export interface RelationField<
-  TDatabase extends BaseDatabase,
-  TParentTable extends Table,
-  TTable extends Table,
-  TRelationType extends "one" | "many",
-  TInputI = SelectArrayArgs<TTable>,
-> extends FieldOrOperation<
-    GraphQLSilk<InferSelectModel<TParentTable>, InferSelectModel<TParentTable>>,
-    TRelationType extends "many"
-      ? GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>
-      : GraphQLSilk<
-          InferSelectModel<TTable> | null | undefined,
-          InferSelectModel<TTable> | null | undefined
-        >,
-    GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>,
-    "field"
-  > {}
 
 export interface RelationManyField<
   TTable extends Table,
