@@ -21,7 +21,7 @@ export const post = drizzleSilk(
     id: t.int().primaryKey({ autoIncrement: true }),
     title: t.text().notNull(),
     content: t.text(),
-    authorId: t.int().references(() => user.id),
+    authorId: t.int().references(() => user.id, { onDelete: "cascade" }),
   })
 )
 

@@ -29,7 +29,7 @@ import * as sqliteSchemas from "./schema/sqlite"
 
 const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
 
-describe("DrizzleResolverFactory", () => {
+describe.concurrent("DrizzleResolverFactory", () => {
   let db: LibSQLDatabase<typeof sqliteSchemas>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
@@ -41,6 +41,7 @@ describe("DrizzleResolverFactory", () => {
       schema: sqliteSchemas,
       connection: { url: `file:${pathToDB.pathname}` },
     })
+
     userFactory = DrizzleResolverFactory.create(db, sqliteSchemas.user)
 
     await db.insert(sqliteSchemas.user).values([
@@ -85,7 +86,7 @@ describe("DrizzleResolverFactory", () => {
     )
   })
 
-  describe("selectArrayQuery", () => {
+  describe.concurrent("selectArrayQuery", () => {
     it("should be created without error", async () => {
       const query = userFactory.selectArrayQuery()
       expect(query).toBeDefined()
@@ -228,7 +229,7 @@ describe("DrizzleResolverFactory", () => {
     })
   })
 
-  describe("selectSingleQuery", () => {
+  describe.concurrent("selectSingleQuery", () => {
     it("should be created without error", () => {
       const query = userFactory.selectSingleQuery()
       expect(query).toBeDefined()
@@ -403,7 +404,7 @@ describe("DrizzleResolverFactory", () => {
   })
 })
 
-describe("DrizzleMySQLResolverFactory", () => {
+describe.concurrent("DrizzleMySQLResolverFactory", () => {
   const schema = {
     drizzle_user: mysqlSchemas.user,
   }
@@ -503,7 +504,7 @@ describe("DrizzleMySQLResolverFactory", () => {
   })
 })
 
-describe("DrizzlePostgresResolverFactory", () => {
+describe.concurrent("DrizzlePostgresResolverFactory", () => {
   const schema = {
     drizzle_user: pgSchemas.user,
   }
@@ -550,7 +551,9 @@ describe("DrizzlePostgresResolverFactory", () => {
 
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertSingleMutation()
-      const answer = await mutation.resolve({ value: { name: "John", age: 7 } })
+      const answer = await mutation.resolve({
+        value: { name: "John", age: 7 },
+      })
 
       expect(answer).toMatchObject({ name: "John", age: 7 })
 
@@ -600,18 +603,19 @@ describe("DrizzlePostgresResolverFactory", () => {
   })
 })
 
-describe("DrizzleSQLiteResolverFactory", () => {
+describe.concurrent("DrizzleSQLiteResolverFactory", () => {
   let db: LibSQLDatabase<typeof sqliteSchemas>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
     typeof sqliteSchemas.user
   >
 
-  beforeAll(() => {
+  beforeAll(async () => {
     db = sqliteDrizzle({
       schema: sqliteSchemas,
       connection: { url: `file:${pathToDB.pathname}` },
     })
+
     userFactory = DrizzleResolverFactory.create(db, "user")
   })
 

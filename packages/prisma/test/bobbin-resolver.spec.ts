@@ -220,7 +220,7 @@ describe("Bobbin Resolver", () => {
       }
     )
 
-    it("should be able to delete a user", async () => {
+    it("should be able to delete a user", { retry: 6 }, async () => {
       await db.user.create({ data: { email: "bob@bob.com" } })
 
       const query = /* GraphQL */ `

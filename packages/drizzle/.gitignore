@@ -1,2 +1,2 @@
-test/**/*.db
+test/**/*.db*
 .env

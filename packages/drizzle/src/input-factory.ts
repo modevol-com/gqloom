@@ -34,7 +34,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         fields: {
           offset: { type: GraphQLInt },
           limit: { type: GraphQLInt },
-          orderBy: { type: this.orderBy() },
+          orderBy: {
+            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+          },
           where: { type: this.filters() },
         },
       })
@@ -51,7 +53,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: {
           offset: { type: GraphQLInt },
-          orderBy: { type: this.orderBy() },
+          orderBy: {
+            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+          },
           where: { type: this.filters() },
         },
       })

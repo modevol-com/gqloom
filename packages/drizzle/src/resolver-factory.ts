@@ -463,13 +463,14 @@ export abstract class DrizzleResolverFactory<
       this.db._.schema?.[this.tableName]?.relations ?? {},
       (_, key) => this.relationField(key)
     )
-    return loom.resolver(
+    return loom.resolver.of(
+      this.output,
       {
         ...fields,
         [name]: this.selectArrayQuery(),
         [`${name}Single`]: this.selectSingleQuery(),
         [`insertInto${capitalize(name)}`]: this.insertArrayMutation(),
-        [`insertInto${capitalize(name)}Single`]: this.insertArrayMutation(),
+        [`insertInto${capitalize(name)}Single`]: this.insertSingleMutation(),
         [`update${capitalize(name)}`]: this.updateMutation(),
         [`deleteFrom${capitalize(name)}`]: this.deleteMutation(),
       },

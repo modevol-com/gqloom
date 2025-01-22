@@ -20,7 +20,7 @@ export const post = drizzleSilk(
     id: t.serial().primaryKey(),
     title: t.text().notNull(),
     content: t.text(),
-    authorId: t.integer().references(() => user.id),
+    authorId: t.integer().references(() => user.id, { onDelete: "cascade" }),
   })
 )
 
