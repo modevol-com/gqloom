@@ -16,7 +16,7 @@ export const usersRelations = relations(user, ({ many }) => ({
 }))
 
 export const post = drizzleSilk(
-  t.mysqlTable("post", {
+  t.mysqlTable("drizzle_post", {
     id: t.int().primaryKey().autoincrement(),
     title: t.text().notNull(),
     content: t.text(),

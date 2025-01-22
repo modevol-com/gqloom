@@ -16,7 +16,7 @@ export const usersRelations = relations(user, ({ many }) => ({
 }))
 
 export const post = drizzleSilk(
-  t.pgTable("post", {
+  t.pgTable("drizzle_post", {
     id: t.serial().primaryKey(),
     title: t.text().notNull(),
     content: t.text(),
