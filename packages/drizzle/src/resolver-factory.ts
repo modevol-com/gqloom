@@ -1,8 +1,10 @@
 import {
+  EasyDataLoader,
   type FieldOrOperation,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
+  createMemoization,
   loom,
   silk,
 } from "@gqloom/core"
@@ -388,24 +390,60 @@ export abstract class DrizzleResolverFactory<
     const isList = relation instanceof Many
     const fieldsLength = normalizedRelation.fields.length
 
-    // TODO: use Dataloader
+    const getKeyByField = (parent: any) => {
+      if (fieldsLength === 1) {
+        return parent[normalizedRelation.fields[0].name]
+      }
+      return normalizedRelation.fields
+        .map((field) => parent[field.name])
+        .join("-")
+    }
+
+    const getKeyByReference = (item: any) => {
+      if (fieldsLength === 1) {
+        return item[normalizedRelation.references[0].name]
+      }
+      return normalizedRelation.references
+        .map((reference) => item[reference.name])
+        .join("-")
+    }
+
+    const useLoader = createMemoization(() => {
+      return new EasyDataLoader(async (parents: any[]) => {
+        const where = (() => {
+          if (fieldsLength === 1) {
+            const values = parents.map(
+              (parent) => parent[normalizedRelation.fields[0].name]
+            )
+            return inArray(normalizedRelation.references[0], values)
+          }
+          const values = parents.map((parent) =>
+            normalizedRelation.fields.map((field) => parent[field.name])
+          )
+          return inArrayMultiple(normalizedRelation.references, values)
+        })()
+
+        const list = await queryBuilder.findMany({ where })
+
+        const groups = new Map<string, any>()
+        for (const item of list) {
+          const key = getKeyByReference(item)
+          isList
+            ? groups.set(key, [...(groups.get(key) ?? []), item])
+            : groups.set(key, item)
+        }
+        return parents.map((parent) => {
+          const key = getKeyByField(parent)
+          return groups.get(key) ?? (isList ? [] : null)
+        })
+      })
+    })
+
     return loom.field(isList ? output.$list() : output.$nullable(), {
       ...options,
       resolve: (parent) => {
-        const where = (() => {
-          if (fieldsLength === 1) {
-            return inArray(normalizedRelation.references[0], [
-              parent[normalizedRelation.fields[0].name],
-            ])
-          }
-          return inArrayMultiple(normalizedRelation.references, [
-            normalizedRelation.fields.map((field) => parent[field.name]),
-          ])
-        })()
-
-        return isList
-          ? queryBuilder.findMany({ where })
-          : queryBuilder.findFirst({ where })
+        const loader = useLoader()
+        return loader.load(parent)
       },
     }) as any
   }

@@ -298,6 +298,13 @@ describe("DrizzleResolverFactory", () => {
   })
 
   describe("relationField", () => {
+    afterAll(async () => {
+      await db.delete(sqliteSchemas.studentCourseGrade)
+      await db.delete(sqliteSchemas.studentToCourse)
+      await db.delete(sqliteSchemas.course)
+      await db.delete(sqliteSchemas.post)
+    })
+
     it("should be created without error", async () => {
       const postsField = userFactory.relationField("posts")
       expect(postsField).toBeDefined()
@@ -377,11 +384,6 @@ describe("DrizzleResolverFactory", () => {
         { authorId: John.id, title: "Hello" },
         { authorId: John.id, title: "World" },
       ])
-
-      await db.delete(sqliteSchemas.studentCourseGrade)
-      await db.delete(sqliteSchemas.studentToCourse)
-      await db.delete(sqliteSchemas.course)
-      await db.delete(sqliteSchemas.post)
     })
   })
 })
