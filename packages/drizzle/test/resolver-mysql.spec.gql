@@ -1,0 +1,176 @@
+input DrizzlePostFilters {
+  OR: [DrizzlePostFiltersOr!]
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+  title: MySqlTextFilters
+}
+
+input DrizzlePostFiltersOr {
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+  title: MySqlTextFilters
+}
+
+input DrizzlePostInsertInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String!
+}
+
+type DrizzlePostItem {
+  author: DrizzleUserItem
+  authorId: Int
+  content: String
+  id: Int!
+  title: String!
+}
+
+input DrizzlePostOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+  title: OrderDirection
+}
+
+input DrizzlePostUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String
+}
+
+input DrizzleUserFilters {
+  OR: [DrizzleUserFiltersOr!]
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+  name: MySqlTextFilters
+}
+
+input DrizzleUserFiltersOr {
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+  name: MySqlTextFilters
+}
+
+input DrizzleUserInsertInput {
+  age: Int
+  email: String
+  id: Int
+  name: String!
+}
+
+type DrizzleUserItem {
+  age: Int
+  email: String
+  id: Int!
+  name: String!
+  posts: [DrizzlePostItem!]!
+}
+
+input DrizzleUserOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+  name: OrderDirection
+}
+
+input DrizzleUserUpdateInput {
+  age: Int
+  email: String
+  id: Int
+  name: String
+}
+
+type Mutation {
+  deleteFromPost(where: DrizzlePostFilters): MutationSuccessResult
+  deleteFromUser(where: DrizzleUserFilters): MutationSuccessResult
+  insertIntoPost(values: [DrizzlePostInsertInput!]!): MutationSuccessResult
+  insertIntoPostSingle(value: DrizzlePostInsertInput!): MutationSuccessResult
+  insertIntoUser(values: [DrizzleUserInsertInput!]!): MutationSuccessResult
+  insertIntoUserSingle(value: DrizzleUserInsertInput!): MutationSuccessResult
+  updatePost(set: DrizzlePostUpdateInput!, where: DrizzlePostFilters): MutationSuccessResult
+  updateUser(set: DrizzleUserUpdateInput!, where: DrizzleUserFilters): MutationSuccessResult
+}
+
+type MutationSuccessResult {
+  isSuccess: Boolean!
+}
+
+input MySqlIntFilters {
+  OR: [MySqlIntFiltersOr!]
+  eq: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  isNotNull: Boolean
+  isNull: Boolean
+  lt: Int
+  lte: Int
+  ne: Int
+  notInArray: [Int!]
+}
+
+input MySqlIntFiltersOr {
+  eq: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  isNotNull: Boolean
+  isNull: Boolean
+  lt: Int
+  lte: Int
+  ne: Int
+  notInArray: [Int!]
+}
+
+input MySqlTextFilters {
+  OR: [MySqlTextFiltersOr!]
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  inArray: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notInArray: [String!]
+  notLike: String
+}
+
+input MySqlTextFiltersOr {
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  inArray: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notInArray: [String!]
+  notLike: String
+}
+
+enum OrderDirection {
+  asc
+  desc
+}
+
+type Query {
+  post(limit: Int, offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): [DrizzlePostItem!]!
+  postSingle(offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): DrizzlePostItem
+  user(limit: Int, offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): [DrizzleUserItem!]!
+  userSingle(offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): DrizzleUserItem
+}

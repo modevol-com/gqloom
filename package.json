@@ -12,7 +12,8 @@
     "check": "biome check --write . && pnpm run check:type",
     "check:type": "tsc --noEmit",
     "build": "pnpm -F '@gqloom/*' run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "compose-up": "docker compose up -d"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json}": ["biome check --no-errors-on-unmatched --write"],

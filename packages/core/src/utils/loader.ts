@@ -3,6 +3,15 @@ export type BatchLoadFn<TKey, TData> = (
 ) => Promise<(TData | Error)[]>
 
 export class EasyDataLoader<TKey, TData> {
+  protected queue: TKey[]
+  protected cache: Map<TKey, Promise<TData>>
+  protected resolvers: Map<
+    TKey,
+    [
+      resolve: (value: TData | PromiseLike<TData>) => void,
+      reject: (reason?: any) => void,
+    ]
+  >
   constructor(protected readonly batchLoadFn: BatchLoadFn<TKey, TData>) {
     this.queue = []
     this.cache = new Map()
@@ -33,16 +42,6 @@ export class EasyDataLoader<TKey, TData> {
     this.cache.delete(key)
     this.resolvers.delete(key)
   }
-
-  protected queue: TKey[]
-  protected cache: Map<TKey, Promise<TData>>
-  protected resolvers: Map<
-    TKey,
-    [
-      resolve: (value: TData | PromiseLike<TData>) => void,
-      reject: (reason?: any) => void,
-    ]
-  >
 
   protected async executeBatchLoad(): Promise<void> {
     if (this.queue.length === 0) return

@@ -50,7 +50,7 @@
     "@gqloom/zod": "workspace:*",
     "@mikro-orm/better-sqlite": "^6.2.8",
     "@mikro-orm/core": "^6.2.8",
-    "@prisma/client": "5.20.0",
+    "@prisma/client": "^6.1.0",
     "graphql-yoga": "^5.6.0",
     "prisma": "^6.1.0",
     "zod": "^3.24.0"
@@ -65,7 +65,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@prisma/generator-helper": "^5.20.0",
-    "ts-morph": "^23.0.0"
+    "@prisma/generator-helper": "^6.1.0",
+    "ts-morph": "^25.0.0"
   }
 }

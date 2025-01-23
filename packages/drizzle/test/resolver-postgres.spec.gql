@@ -1,0 +1,199 @@
+input DrizzlePostFilters {
+  OR: [DrizzlePostFiltersOr!]
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+  title: PgTextFilters
+}
+
+input DrizzlePostFiltersOr {
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+  title: PgTextFilters
+}
+
+input DrizzlePostInsertInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String!
+}
+
+type DrizzlePostItem {
+  author: DrizzleUserItem
+  authorId: Int
+  content: String
+  id: Int!
+  title: String!
+}
+
+input DrizzlePostOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+  title: OrderDirection
+}
+
+input DrizzlePostUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String
+}
+
+input DrizzleUserFilters {
+  OR: [DrizzleUserFiltersOr!]
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+  name: PgTextFilters
+}
+
+input DrizzleUserFiltersOr {
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+  name: PgTextFilters
+}
+
+input DrizzleUserInsertInput {
+  age: Int
+  email: String
+  id: Int
+  name: String!
+}
+
+type DrizzleUserItem {
+  age: Int
+  email: String
+  id: Int!
+  name: String!
+  posts: [DrizzlePostItem!]!
+}
+
+input DrizzleUserOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+  name: OrderDirection
+}
+
+input DrizzleUserUpdateInput {
+  age: Int
+  email: String
+  id: Int
+  name: String
+}
+
+type Mutation {
+  deleteFromPost(where: DrizzlePostFilters): [DrizzlePostItem!]!
+  deleteFromUser(where: DrizzleUserFilters): [DrizzleUserItem!]!
+  insertIntoPost(values: [DrizzlePostInsertInput!]!): [DrizzlePostItem!]!
+  insertIntoPostSingle(value: DrizzlePostInsertInput!): DrizzlePostItem
+  insertIntoUser(values: [DrizzleUserInsertInput!]!): [DrizzleUserItem!]!
+  insertIntoUserSingle(value: DrizzleUserInsertInput!): DrizzleUserItem
+  updatePost(set: DrizzlePostUpdateInput!, where: DrizzlePostFilters): [DrizzlePostItem!]!
+  updateUser(set: DrizzleUserUpdateInput!, where: DrizzleUserFilters): [DrizzleUserItem!]!
+}
+
+enum OrderDirection {
+  asc
+  desc
+}
+
+input PgIntegerFilters {
+  OR: [PgIntegerFiltersOr!]
+  eq: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  isNotNull: Boolean
+  isNull: Boolean
+  lt: Int
+  lte: Int
+  ne: Int
+  notInArray: [Int!]
+}
+
+input PgIntegerFiltersOr {
+  eq: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  isNotNull: Boolean
+  isNull: Boolean
+  lt: Int
+  lte: Int
+  ne: Int
+  notInArray: [Int!]
+}
+
+input PgSerialFilters {
+  OR: [PgSerialFiltersOr!]
+  eq: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  isNotNull: Boolean
+  isNull: Boolean
+  lt: Int
+  lte: Int
+  ne: Int
+  notInArray: [Int!]
+}
+
+input PgSerialFiltersOr {
+  eq: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  isNotNull: Boolean
+  isNull: Boolean
+  lt: Int
+  lte: Int
+  ne: Int
+  notInArray: [Int!]
+}
+
+input PgTextFilters {
+  OR: [PgTextFiltersOr!]
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  inArray: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notInArray: [String!]
+  notLike: String
+}
+
+input PgTextFiltersOr {
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  inArray: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notInArray: [String!]
+  notLike: String
+}
+
+type Query {
+  post(limit: Int, offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): [DrizzlePostItem!]!
+  postSingle(offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): DrizzlePostItem
+  user(limit: Int, offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): [DrizzleUserItem!]!
+  userSingle(offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): DrizzleUserItem
+}

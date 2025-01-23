@@ -33,31 +33,31 @@ import type {
 import { capitalize, gqlType as gt } from "./utils"
 
 export class PrismaModelBobbin<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > {
   protected modelData: PrismaModelMeta
-  protected delegate: InferPrismaDelegate<TClient, TModalSilk["name"]>
+  protected delegate: InferPrismaDelegate<TClient, TModelSilk["name"]>
   protected typeWeaver: PrismaActionArgsWeaver
 
   constructor(
-    protected readonly silk: TModalSilk,
+    protected readonly silk: TModelSilk,
     protected readonly client: TClient
   ) {
     this.modelData = silk.meta
     this.delegate = PrismaModelBobbin.getDelegate(
       silk.model.name,
       client
-    ) as InferPrismaDelegate<TClient, TModalSilk["name"]>
+    ) as InferPrismaDelegate<TClient, TModelSilk["name"]>
     this.typeWeaver = new PrismaActionArgsWeaver(silk)
   }
 
-  public relationField<TKey extends keyof NonNullable<TModalSilk["relations"]>>(
+  public relationField<TKey extends keyof NonNullable<TModelSilk["relations"]>>(
     key: TKey,
     options: {
-      middlewares?: Middleware<BobbinRelationField<TModalSilk, TKey>>[]
+      middlewares?: Middleware<BobbinRelationField<TModelSilk, TKey>>[]
     } & GraphQLFieldOptions = {}
-  ): BobbinRelationField<TModalSilk, TKey> {
+  ): BobbinRelationField<TModelSilk, TKey> {
     const field = this.silk.model.fields.find((field) => field.name === key)
     if (field == null)
       throw new Error(
@@ -91,7 +91,7 @@ export class PrismaModelBobbin<
 
   protected idKey?: string
   protected uniqueWhere(
-    instance: StandardSchemaV1.InferOutput<NonNullable<TModalSilk>>
+    instance: StandardSchemaV1.InferOutput<NonNullable<TModelSilk>>
   ): any {
     if (this.silk.model.primaryKey == null) {
       this.idKey ??= (() => {
@@ -115,7 +115,7 @@ export class PrismaModelBobbin<
 
   public resolver(
     options?: ResolverOptionsWithExtensions
-  ): BobbinResolver<TModalSilk, TClient> {
+  ): BobbinResolver<TModelSilk, TClient> {
     const name = capitalize(this.silk.name)
     return loom.resolver.of(
       this.silk,
@@ -138,25 +138,25 @@ export class PrismaModelBobbin<
         ),
       },
       options
-    ) as BobbinResolver<TModalSilk, TClient>
+    ) as BobbinResolver<TModelSilk, TClient>
   }
 
   public countQuery<
     TInputI = InferDelegateCountArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
     ...options
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
-      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
-    middlewares?: Middleware<BobbinCountQuery<TModalSilk, TClient, TInputI>>[]
-  } = {}): BobbinCountQuery<TModalSilk, TClient, TInputI> {
+    middlewares?: Middleware<BobbinCountQuery<TModelSilk, TClient, TInputI>>[]
+  } = {}): BobbinCountQuery<TModelSilk, TClient, TInputI> {
     input ??= silk(() => this.typeWeaver.countArgs()) as GraphQLSilk<
-      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
 
@@ -172,7 +172,7 @@ export class PrismaModelBobbin<
 
   public findFirstQuery<
     TInputI = InferDelegateFindFirstArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
@@ -180,14 +180,14 @@ export class PrismaModelBobbin<
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
       InferDelegateFindFirstArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinFindFirstQuery<TModalSilk, TClient, TInputI>
+      BobbinFindFirstQuery<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinFindFirstQuery<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinFindFirstQuery<TModelSilk, TClient, TInputI> {
     input ??= silk(() => this.typeWeaver.findFirstArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
@@ -196,12 +196,12 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.findFirst(input),
-    }) as BobbinFindFirstQuery<TModalSilk, TClient, TInputI>
+    }) as BobbinFindFirstQuery<TModelSilk, TClient, TInputI>
   }
 
   public findManyQuery<
     TInputI = InferDelegateFindManyArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
@@ -209,14 +209,14 @@ export class PrismaModelBobbin<
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
       InferDelegateFindManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinFindManyQuery<TModalSilk, TClient, TInputI>
+      BobbinFindManyQuery<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinFindManyQuery<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinFindManyQuery<TModelSilk, TClient, TInputI> {
     input ??= silk(() => this.typeWeaver.findManyArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
@@ -225,12 +225,12 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.findMany(input),
-    }) as BobbinFindManyQuery<TModalSilk, TClient, TInputI>
+    }) as BobbinFindManyQuery<TModelSilk, TClient, TInputI>
   }
 
   public findUniqueQuery<
     TInputI = InferDelegateFindUniqueArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
@@ -238,14 +238,14 @@ export class PrismaModelBobbin<
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
       InferDelegateFindUniqueArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinFindUniqueQuery<TModalSilk, TClient, TInputI>
+      BobbinFindUniqueQuery<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinFindUniqueQuery<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinFindUniqueQuery<TModelSilk, TClient, TInputI> {
     input ??= silk(() => this.typeWeaver.findUniqueArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
@@ -254,25 +254,25 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.findUnique(input),
-    }) as BobbinFindUniqueQuery<TModalSilk, TClient, TInputI>
+    }) as BobbinFindUniqueQuery<TModelSilk, TClient, TInputI>
   }
 
   public createMutation<
     TInputI = InferDelegateCreateArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
     ...options
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
-      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinCreateMutation<TModalSilk, TClient, TInputI>
+      BobbinCreateMutation<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinCreateMutation<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinCreateMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.createArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
@@ -281,12 +281,12 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.create(input),
-    }) as BobbinCreateMutation<TModalSilk, TClient, TInputI>
+    }) as BobbinCreateMutation<TModelSilk, TClient, TInputI>
   }
 
   public createManyMutation<
     TInputI = InferDelegateCreateManyArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
@@ -294,14 +294,14 @@ export class PrismaModelBobbin<
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
       InferDelegateCreateManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinCreateManyMutation<TModalSilk, TClient, TInputI>
+      BobbinCreateManyMutation<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinCreateManyMutation<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinCreateManyMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.createManyArgs()))
 
     const output = PrismaModelBobbin.batchPayloadSilk()
@@ -310,25 +310,25 @@ export class PrismaModelBobbin<
       ...options,
       input,
       resolve: (input) => this.delegate.createMany(input),
-    }) as BobbinCreateManyMutation<TModalSilk, TClient, TInputI>
+    }) as BobbinCreateManyMutation<TModelSilk, TClient, TInputI>
   }
 
   public deleteMutation<
     TInputI = InferDelegateDeleteArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
     ...options
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
-      InferDelegateDeleteArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateDeleteArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinDeleteMutation<TModalSilk, TClient, TInputI>
+      BobbinDeleteMutation<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinDeleteMutation<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinDeleteMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.deleteArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
@@ -345,12 +345,12 @@ export class PrismaModelBobbin<
           return null
         }
       },
-    }) as BobbinDeleteMutation<TModalSilk, TClient, TInputI>
+    }) as BobbinDeleteMutation<TModelSilk, TClient, TInputI>
   }
 
   public deleteManyMutation<
     TInputI = InferDelegateDeleteManyArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
@@ -358,14 +358,14 @@ export class PrismaModelBobbin<
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
       InferDelegateDeleteManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinDeleteManyMutation<TModalSilk, TClient, TInputI>
+      BobbinDeleteManyMutation<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinDeleteManyMutation<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinDeleteManyMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.deleteManyArgs()))
     const output = PrismaModelBobbin.batchPayloadSilk()
     return loom.mutation(output, {
@@ -379,32 +379,32 @@ export class PrismaModelBobbin<
 
   public updateMutation<
     TInputI = InferDelegateUpdateArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
     ...options
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
-      InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinUpdateMutation<TModalSilk, TClient, TInputI>
+      BobbinUpdateMutation<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinUpdateMutation<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinUpdateMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.updateArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return loom.mutation(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.update(input),
-    }) as BobbinUpdateMutation<TModalSilk, TClient, TInputI>
+    }) as BobbinUpdateMutation<TModelSilk, TClient, TInputI>
   }
 
   public updateManyMutation<
     TInputI = InferDelegateUpdateManyArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
@@ -412,14 +412,14 @@ export class PrismaModelBobbin<
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
       InferDelegateUpdateManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinUpdateManyMutation<TModalSilk, TClient, TInputI>
+      BobbinUpdateManyMutation<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinUpdateManyMutation<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinUpdateManyMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.updateManyArgs()))
     const output = PrismaModelBobbin.batchPayloadSilk()
 
@@ -432,27 +432,27 @@ export class PrismaModelBobbin<
 
   public upsertMutation<
     TInputI = InferDelegateUpsertArgs<
-      InferPrismaDelegate<TClient, TModalSilk["name"]>
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
     >,
   >({
     input,
     ...options
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<
-      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
     middlewares?: Middleware<
-      BobbinUpsertMutation<TModalSilk, TClient, TInputI>
+      BobbinUpsertMutation<TModelSilk, TClient, TInputI>
     >[]
-  } = {}): BobbinUpsertMutation<TModalSilk, TClient, TInputI> {
+  } = {}): BobbinUpsertMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.upsertArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return loom.mutation(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.upsert(input),
-    }) as BobbinUpsertMutation<TModalSilk, TClient, TInputI>
+    }) as BobbinUpsertMutation<TModelSilk, TClient, TInputI>
   }
 
   protected static getDelegate(
@@ -482,43 +482,43 @@ export class PrismaModelBobbin<
 }
 
 export interface BobbinRelationField<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
-  TKey extends keyof NonNullable<TModalSilk["relations"]>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TKey extends keyof NonNullable<TModelSilk["relations"]>,
 > extends FieldOrOperation<
-    TModalSilk,
-    GraphQLSilk<NonNullable<TModalSilk["relations"]>[TKey]>,
+    TModelSilk,
+    GraphQLSilk<NonNullable<TModelSilk["relations"]>[TKey]>,
     undefined,
     "field"
   > {}
 
 export interface BobbinCountQuery<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateCountArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
     GraphQLSilk<number>,
     GraphQLSilk<
-      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateCountArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >,
     "query"
   > {}
 
 export interface BobbinFindFirstQuery<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateFindFirstArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
-    ReturnType<TModalSilk["nullable"]>,
+    ReturnType<TModelSilk["nullable"]>,
     GraphQLSilk<
       InferDelegateFindFirstArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >,
@@ -526,17 +526,17 @@ export interface BobbinFindFirstQuery<
   > {}
 
 export interface BobbinFindManyQuery<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateFindManyArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
-    ReturnType<TModalSilk["list"]>,
+    ReturnType<TModelSilk["list"]>,
     GraphQLSilk<
       InferDelegateFindManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >,
@@ -544,17 +544,17 @@ export interface BobbinFindManyQuery<
   > {}
 
 export interface BobbinFindUniqueQuery<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateFindUniqueArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
-    ReturnType<TModalSilk["nullable"]>,
+    ReturnType<TModelSilk["nullable"]>,
     GraphQLSilk<
       InferDelegateFindUniqueArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >,
@@ -562,66 +562,66 @@ export interface BobbinFindUniqueQuery<
   > {}
 
 export interface BobbinCreateMutation<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateCreateArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
-    TModalSilk,
+    TModelSilk,
     GraphQLSilk<
-      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >,
     "mutation"
   > {}
 
 export interface BobbinCreateManyMutation<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateCreateManyArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
       InferDelegateCreateManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >,
     "mutation"
   > {}
 export interface BobbinDeleteMutation<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateDeleteArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
-    ReturnType<TModalSilk["nullable"]>,
+    ReturnType<TModelSilk["nullable"]>,
     GraphQLSilk<
-      InferDelegateDeleteArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateDeleteArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >,
     "mutation"
   > {}
 
 export interface BobbinDeleteManyMutation<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateDeleteManyArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
       InferDelegateDeleteManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >,
@@ -629,33 +629,33 @@ export interface BobbinDeleteManyMutation<
   > {}
 
 export interface BobbinUpdateMutation<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateUpdateArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
-    TModalSilk,
+    TModelSilk,
     GraphQLSilk<
-      InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >,
     "mutation"
   > {}
 
 export interface BobbinUpdateManyMutation<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateUpdateManyArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
       InferDelegateUpdateManyArgs<
-        InferPrismaDelegate<TClient, TModalSilk["name"]>
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
       >,
       TInputI
     >,
@@ -663,82 +663,82 @@ export interface BobbinUpdateManyMutation<
   > {}
 
 export interface BobbinUpsertMutation<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
   TInputI = InferDelegateUpsertArgs<
-    InferPrismaDelegate<TClient, TModalSilk["name"]>
+    InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
 > extends FieldOrOperation<
     undefined,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
-      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModalSilk["name"]>>,
+      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >,
     "mutation"
   > {}
 
 export type BobbinResolver<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > = {
-  [TKey in keyof NonNullable<TModalSilk["relations"]>]-?: BobbinRelationField<
-    TModalSilk,
+  [TKey in keyof NonNullable<TModelSilk["relations"]>]-?: BobbinRelationField<
+    TModelSilk,
     TKey
   >
 } & {
-  [key in `count${Capitalize<TModalSilk["name"]>}`]: BobbinCountQuery<
-    TModalSilk,
+  [key in `count${Capitalize<TModelSilk["name"]>}`]: BobbinCountQuery<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `findFirst${Capitalize<TModalSilk["name"]>}`]: BobbinFindFirstQuery<
-    TModalSilk,
+  [key in `findFirst${Capitalize<TModelSilk["name"]>}`]: BobbinFindFirstQuery<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `findMany${Capitalize<TModalSilk["name"]>}`]: BobbinFindManyQuery<
-    TModalSilk,
+  [key in `findMany${Capitalize<TModelSilk["name"]>}`]: BobbinFindManyQuery<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `findUnique${Capitalize<TModalSilk["name"]>}`]: BobbinFindUniqueQuery<
-    TModalSilk,
+  [key in `findUnique${Capitalize<TModelSilk["name"]>}`]: BobbinFindUniqueQuery<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `create${Capitalize<TModalSilk["name"]>}`]: BobbinCreateMutation<
-    TModalSilk,
+  [key in `create${Capitalize<TModelSilk["name"]>}`]: BobbinCreateMutation<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `createMany${Capitalize<TModalSilk["name"]>}`]: BobbinCreateManyMutation<
-    TModalSilk,
+  [key in `createMany${Capitalize<TModelSilk["name"]>}`]: BobbinCreateManyMutation<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `delete${Capitalize<TModalSilk["name"]>}`]: BobbinDeleteMutation<
-    TModalSilk,
+  [key in `delete${Capitalize<TModelSilk["name"]>}`]: BobbinDeleteMutation<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `deleteMany${Capitalize<TModalSilk["name"]>}`]: BobbinDeleteManyMutation<
-    TModalSilk,
+  [key in `deleteMany${Capitalize<TModelSilk["name"]>}`]: BobbinDeleteManyMutation<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `update${Capitalize<TModalSilk["name"]>}`]: BobbinUpdateMutation<
-    TModalSilk,
+  [key in `update${Capitalize<TModelSilk["name"]>}`]: BobbinUpdateMutation<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `updateMany${Capitalize<TModalSilk["name"]>}`]: BobbinUpdateManyMutation<
-    TModalSilk,
+  [key in `updateMany${Capitalize<TModelSilk["name"]>}`]: BobbinUpdateManyMutation<
+    TModelSilk,
     TClient
   >
 } & {
-  [key in `upsert${Capitalize<TModalSilk["name"]>}`]: BobbinUpsertMutation<
-    TModalSilk,
+  [key in `upsert${Capitalize<TModelSilk["name"]>}`]: BobbinUpsertMutation<
+    TModelSilk,
     TClient
   >
 }

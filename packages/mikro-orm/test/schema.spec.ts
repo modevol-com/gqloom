@@ -11,7 +11,7 @@ import { mikroSilk } from "../src"
 
 const nullable = true
 
-describe("MikroSilk", () => {
+describe("mikroSilk", () => {
   interface IBook {
     ISBN: string
     sales: number

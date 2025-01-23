@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { pascalCase } from "./string"
+import { capitalize, pascalCase } from "./string"
 
 describe("toPascalCase", () => {
   it("should convert kebab-case to PascalCase", () => {
@@ -24,5 +24,11 @@ describe("toPascalCase", () => {
 
   it("should capitalize the first letter of each word", () => {
     expect(pascalCase("multiple-words-here")).toBe("MultipleWordsHere")
+  })
+})
+
+describe("capitalize", () => {
+  it("should capitalize the first letter of a string", () => {
+    expect(capitalize("hello")).toBe("Hello")
   })
 })
