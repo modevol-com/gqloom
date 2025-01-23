@@ -463,6 +463,7 @@ export abstract class DrizzleResolverFactory<
       this.db._.schema?.[this.tableName]?.relations ?? {},
       (_, key) => this.relationField(key)
     )
+
     return loom.resolver.of(
       this.output,
       {
