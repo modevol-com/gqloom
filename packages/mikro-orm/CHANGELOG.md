@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
-* Refactor: rename `MikroOperationBobbin` to `MikroResolverFactory`
+* Refactor: rename `MikroOperationBobbin` to `MikroResolverFactory` and split input type generation into `MikroInputFactory`
 
 ## 0.5.0 (2024-12-03)
 

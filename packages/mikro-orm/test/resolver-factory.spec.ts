@@ -28,6 +28,7 @@ import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
   type FindOneFilter,
+  MikroInputFactory,
   MikroResolverFactory,
   type UpdateInput,
 } from "../src/resolver-factory"
@@ -61,10 +62,11 @@ describe("MikroOperationsBobbin", async () => {
   await orm.getSchemaGenerator().updateSchema()
 
   const bobbin = new MikroResolverFactory(Giraffe, () => orm.em)
+  const inputFactory = new MikroInputFactory(Giraffe)
   describe("CreateMutation", () => {
-    const create = bobbin.CreateMutation()
+    const create = bobbin.createMutation()
     it("should infer Input type", () => {
-      bobbin.CreateMutation({
+      bobbin.createMutation({
         input: silk<Omit<IGiraffe, "height" | "id">>(
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
         ),
@@ -79,7 +81,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create Create Default Input", () => {
-      const inputWarperSilk = bobbin.CreateInput()
+      const inputWarperSilk = inputFactory.createInput()
       expect(printSilk(inputWarperSilk)).toMatchInlineSnapshot(`
         "type GiraffeCreateInputWrapper {
           data: GiraffeCreateInput!
@@ -152,7 +154,7 @@ describe("MikroOperationsBobbin", async () => {
   })
 
   describe("UpdateMutation", async () => {
-    const update = bobbin.UpdateMutation()
+    const update = bobbin.updateMutation()
     const giraffe = await RequestContext.create(orm.em, async () => {
       const g = orm.em.create(Giraffe, {
         name: "Foo",
@@ -164,7 +166,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should infer input type", () => {
-      bobbin.UpdateMutation({
+      bobbin.updateMutation({
         input: silk<Omit<IGiraffe, "height">>(
           new GraphQLObjectType({ name: "UpdateGiraffeInput", fields: {} })
         ),
@@ -180,7 +182,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create Update Default Input", () => {
-      const inputWarperSilk = bobbin.UpdateInput()
+      const inputWarperSilk = inputFactory.updateInput()
       expect(printSilk(inputWarperSilk)).toMatchInlineSnapshot(`
         "type GiraffeUpdateInputWrapper {
           data: GiraffeUpdateInput!
@@ -250,7 +252,7 @@ describe("MikroOperationsBobbin", async () => {
   })
 
   describe("FindOneQuery", async () => {
-    const findOne = bobbin.FindOneQuery({
+    const findOne = bobbin.findOneQuery({
       middlewares: [
         async (opts) => {
           assertType<
@@ -272,7 +274,7 @@ describe("MikroOperationsBobbin", async () => {
       return g
     })
     it("should infer input type", () => {
-      bobbin.FindOneQuery({
+      bobbin.findOneQuery({
         input: silk<Omit<IGiraffe, "height">>(
           new GraphQLObjectType({ name: "FindOneGiraffeInput", fields: {} })
         ),
@@ -280,7 +282,7 @@ describe("MikroOperationsBobbin", async () => {
 
       baseResolver(
         {
-          findOne: bobbin.FindOneQuery({
+          findOne: bobbin.findOneQuery({
             middlewares: [
               async (next) => {
                 assertType<
@@ -309,7 +311,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create FindOneOptions", () => {
-      const silk = bobbin.FindOneFilter()
+      const silk = inputFactory.findOneFilter()
       expect(printSilk(silk)).toMatchInlineSnapshot(`
         "type GiraffeFindOneFilter {
           id: ID!
@@ -334,7 +336,7 @@ describe("MikroOperationsBobbin", async () => {
   })
 
   describe("DeleteOneMutation", async () => {
-    const deleteOne = bobbin.DeleteOneMutation()
+    const deleteOne = bobbin.deleteOneMutation()
     const giraffe = await RequestContext.create(orm.em, async () => {
       const g = orm.em.create(Giraffe, {
         name: "Foo",
@@ -376,10 +378,10 @@ describe("MikroOperationsBobbin", async () => {
   })
 
   describe("FindManyQuery", () => {
-    const findMany = bobbin.FindManyQuery()
+    const findMany = bobbin.findManyQuery()
     it("should create operators type", () => {
       const stringType =
-        MikroResolverFactory.ComparisonOperatorsType(GraphQLString)
+        MikroInputFactory.comparisonOperatorsType(GraphQLString)
       expect(printType(stringType)).toMatchInlineSnapshot(`
         "type StringMikroComparisonOperators {
           """Equals. Matches values that are equal to a specified value."""
@@ -433,8 +435,7 @@ describe("MikroOperationsBobbin", async () => {
         }"
       `)
 
-      const floatType =
-        MikroResolverFactory.ComparisonOperatorsType(GraphQLFloat)
+      const floatType = MikroInputFactory.comparisonOperatorsType(GraphQLFloat)
       expect(printType(floatType)).toMatchInlineSnapshot(`
         "type FloatMikroComparisonOperators {
           """Equals. Matches values that are equal to a specified value."""
@@ -478,7 +479,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create FindManyOptionsWhereType", () => {
-      const whereType = bobbin.FindManyOptionsWhereType()
+      const whereType = inputFactory.findManyOptionsWhereType()
       expect(printType(whereType)).toMatchInlineSnapshot(`
         "type GiraffeFindManyOptionsWhere {
           id: IDMikroComparisonOperators
@@ -490,7 +491,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create QueryOrderType", () => {
-      const queryOrderType = MikroResolverFactory.QueryOrderType()
+      const queryOrderType = MikroInputFactory.queryOrderType()
       expect(printType(queryOrderType)).toMatchInlineSnapshot(`
         "enum MikroQueryOrder {
           ASC
@@ -504,7 +505,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create FindManyOptionsOrderBy", () => {
-      const orderBy = bobbin.FindManyOptionsOrderByType()
+      const orderBy = inputFactory.findManyOptionsOrderByType()
       expect(printType(orderBy)).toMatchInlineSnapshot(`
         "type GiraffeFindManyOptionsOrderBy {
           id: MikroQueryOrder
@@ -516,7 +517,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create FindManyOptions", () => {
-      const options = bobbin.FindManyOptions()
+      const options = inputFactory.findManyOptions()
       expect(printSilk(options)).toMatchInlineSnapshot(`
         "type GiraffeFindManyOptions {
           where: GiraffeFindManyOptionsWhere
@@ -699,7 +700,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should convert to mikro condition", () => {
-      const FindManyOptions = bobbin.FindManyOptions()
+      const FindManyOptions = inputFactory.findManyOptions()
 
       expect(
         silk.parse(FindManyOptions, {

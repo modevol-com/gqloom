@@ -27,14 +27,13 @@ import {
 } from "@mikro-orm/core"
 import {
   GraphQLEnumType,
-  type GraphQLFieldConfig,
-  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
 } from "graphql"
+import { type GraphQLFieldConfig, GraphQLInt } from "graphql"
 import { MikroWeaver } from "."
 import type { InferEntity } from "./types"
 
@@ -47,8 +46,9 @@ export class MikroResolverFactory<
 > {
   readonly options: MikroResolverFactoryOptions
   protected flushMiddleware: Middleware
+  protected inputFactory: MikroInputFactory<TSchema>
   constructor(
-    public readonly entity: TSchema,
+    protected readonly entity: TSchema,
     optionsOrGetEntityManager:
       | MikroResolverFactoryOptions
       | MikroResolverFactoryOptions["getEntityManager"]
@@ -61,6 +61,7 @@ export class MikroResolverFactory<
 
     entity.init()
 
+    this.inputFactory = new MikroInputFactory(entity)
     this.flushMiddleware = async (next) => {
       const result = await next()
       const em = await this.getEm()
@@ -73,35 +74,13 @@ export class MikroResolverFactory<
     return this.options.getEntityManager()
   }
 
-  CreateInput(): GraphQLSilk<
-    RequiredEntityData<InferEntity<TSchema>>,
-    { data: RequiredEntityData<InferEntity<TSchema>> }
-  > {
-    const name = `${this.entity.meta.name}CreateInput`
-
-    const gqlType =
-      weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        MikroWeaver.getGraphQLType(this.entity, {
-          partial: this.entity.meta.primaryKeys,
-          name: `${this.entity.meta.name}CreateInput`,
-        })
-      )
-
-    return silk(
-      new GraphQLObjectType({
-        name: name + "Wrapper",
-        fields: { data: { type: gqlType } },
-      }),
-      (value) => ({ value: value.data })
-    )
-  }
-
   /**
    * Create a `create` mutation for the given entity.
    */
-  CreateMutation<TInputI = { data: RequiredEntityData<InferEntity<TSchema>> }>({
-    input = this.CreateInput() as unknown as GraphQLSilk<
+  public createMutation<
+    TInputI = { data: RequiredEntityData<InferEntity<TSchema>> },
+  >({
+    input = this.inputFactory.createInput() as unknown as GraphQLSilk<
       RequiredEntityData<InferEntity<TSchema>>,
       TInputI
     >,
@@ -150,35 +129,11 @@ export class MikroResolverFactory<
     }
   }
 
-  UpdateInput(): GraphQLSilk<
-    UpdateInput<InferEntity<TSchema>>,
-    { data: UpdateInput<InferEntity<TSchema>> }
-  > {
-    const name = `${this.entity.meta.name}UpdateInput`
-    const gqlType =
-      weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        MikroWeaver.getGraphQLType(this.entity, {
-          partial: true,
-          required: this.entity.meta.primaryKeys,
-          name,
-        })
-      )
-
-    return silk(
-      new GraphQLObjectType({
-        name: name + "Wrapper",
-        fields: { data: { type: gqlType } },
-      }),
-      (value) => ({ value: value.data })
-    )
-  }
-
   /**
    * Create a `update` mutation for the given entity.
    */
-  UpdateMutation<TInputI = { data: UpdateInput<InferEntity<TSchema>> }>({
-    input = this.UpdateInput() as unknown as GraphQLSilk<
+  public updateMutation<TInputI = { data: UpdateInput<InferEntity<TSchema>> }>({
+    input = this.inputFactory.updateInput() as unknown as GraphQLSilk<
       UpdateInput<InferEntity<TSchema>>,
       TInputI
     >,
@@ -230,29 +185,11 @@ export class MikroResolverFactory<
     }
   }
 
-  FindOneFilter(): GraphQLSilk<
-    FindOneFilter<InferEntity<TSchema>>,
-    FindOneFilter<InferEntity<TSchema>>
-  > {
-    const name = `${this.entity.meta.name}FindOneFilter`
-
-    const gqlType =
-      weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        MikroWeaver.getGraphQLType(this.entity, {
-          pick: this.entity.meta.primaryKeys,
-          name,
-        })
-      )
-
-    return silk(gqlType, (value) => ({ value }))
-  }
-
   /**
    * Create a `findOne` query for the given entity.
    */
-  FindOneQuery<TInputI = FindOneFilter<InferEntity<TSchema>>>({
-    input = this.FindOneFilter() as unknown as GraphQLSilk<
+  public findOneQuery<TInputI = FindOneFilter<InferEntity<TSchema>>>({
+    input = this.inputFactory.findOneFilter() as unknown as GraphQLSilk<
       FindOneFilter<InferEntity<TSchema>>,
       TInputI
     >,
@@ -302,8 +239,8 @@ export class MikroResolverFactory<
   /**
    * Create a `deleteOne` mutation for the given entity.
    */
-  DeleteOneMutation<TInputI = FindOneFilter<InferEntity<TSchema>>>({
-    input = this.FindOneFilter() as unknown as GraphQLSilk<
+  public deleteOneMutation<TInputI = FindOneFilter<InferEntity<TSchema>>>({
+    input = this.inputFactory.findOneFilter() as unknown as GraphQLSilk<
       FindOneFilter<InferEntity<TSchema>>,
       TInputI
     >,
@@ -354,109 +291,11 @@ export class MikroResolverFactory<
     }
   }
 
-  FindManyOptions(): GraphQLSilk<any, any> {
-    const name = `${this.entity.meta.name}FindManyOptions`
-
-    const whereType = this.FindManyOptionsWhereType()
-
-    const optionsType =
-      weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        new GraphQLObjectType({
-          name: name,
-          fields: () => ({
-            where: { type: whereType },
-            orderBy: {
-              type: this.FindManyOptionsOrderByType(),
-            },
-            skip: {
-              type: GraphQLInt,
-            },
-            limit: {
-              type: GraphQLInt,
-            },
-          }),
-        })
-      )
-
-    const properties = this.entity.meta.properties
-    const comparisonKeys = new Set<string>()
-
-    Object.entries(properties).map(([key, property]) => {
-      const type = MikroWeaver.getFieldType(property)
-      if (type == null) return mapValue.SKIP
-      if (type instanceof GraphQLScalarType) comparisonKeys.add(key)
-    })
-
-    return silk(optionsType, (value: any) => {
-      if ("where" in value && typeof value.where === "object") {
-        Object.entries(value.where)
-          .filter(([key]) => comparisonKeys.has(key))
-          .forEach(([key, property]) => {
-            const conditions: Record<string, any> = {}
-            if (typeof property !== "object" || property == null) return
-            Object.entries(property).forEach(
-              ([key, value]) => (conditions[`$${key}`] = value)
-            )
-            ;(value as any).where[key] = conditions
-          })
-      }
-      return value
-    })
-  }
-
-  FindManyOptionsOrderByType(): GraphQLObjectType {
-    const name = `${this.entity.meta.name}FindManyOptionsOrderBy`
-    return (
-      weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        new GraphQLObjectType({
-          name,
-          fields: () =>
-            mapValue(this.entity.meta.properties, (property) => {
-              const type = MikroWeaver.getFieldType(property)
-              if (type == null) return mapValue.SKIP
-              return {
-                type: MikroResolverFactory.QueryOrderType(),
-                description: property.comment,
-              } as GraphQLFieldConfig<any, any>
-            }),
-        })
-      )
-    )
-  }
-
-  FindManyOptionsWhereType(): GraphQLObjectType {
-    const name = `${this.entity.meta.name}FindManyOptionsWhere`
-
-    return (
-      weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        new GraphQLObjectType({
-          name,
-          fields: () =>
-            mapValue(this.entity.meta.properties, (property) => {
-              const type = MikroWeaver.getFieldType(property)
-              if (type == null) return mapValue.SKIP
-              return {
-                type:
-                  type instanceof GraphQLScalarType
-                    ? MikroResolverFactory.ComparisonOperatorsType(type)
-                    : type,
-                description: property.comment,
-              } as GraphQLFieldConfig<any, any>
-            }),
-        })
-      )
-    )
-  }
-
-  static COMPARISON_KEYS = "comparisonKeys"
   /**
    * Create a `findMany` query for the given entity.
    */
-  FindManyQuery<TInputI = FindManyOptions<InferEntity<TSchema>>>({
-    input = this.FindManyOptions(),
+  public findManyQuery<TInputI = FindManyOptions<InferEntity<TSchema>>>({
+    input = this.inputFactory.findManyOptions(),
     ...options
   }: {
     input?: GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>
@@ -507,8 +346,177 @@ export class MikroResolverFactory<
       ? middlewares
       : compose(middlewares, [this.flushMiddleware])
   }
+}
 
-  static QueryOrderType(): GraphQLEnumType {
+export class MikroInputFactory<
+  TSchema extends EntitySchema<any, any> & GraphQLSilk,
+> {
+  constructor(protected readonly entity: TSchema) {}
+
+  createInput(): GraphQLSilk<
+    RequiredEntityData<InferEntity<TSchema>>,
+    { data: RequiredEntityData<InferEntity<TSchema>> }
+  > {
+    const name = `${this.entity.meta.name}CreateInput`
+
+    const gqlType =
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        MikroWeaver.getGraphQLType(this.entity, {
+          partial: this.entity.meta.primaryKeys,
+          name: `${this.entity.meta.name}CreateInput`,
+        })
+      )
+
+    return silk(
+      new GraphQLObjectType({
+        name: name + "Wrapper",
+        fields: { data: { type: gqlType } },
+      }),
+      (value) => ({ value: value.data })
+    )
+  }
+
+  updateInput(): GraphQLSilk<
+    UpdateInput<InferEntity<TSchema>>,
+    { data: UpdateInput<InferEntity<TSchema>> }
+  > {
+    const name = `${this.entity.meta.name}UpdateInput`
+    const gqlType =
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        MikroWeaver.getGraphQLType(this.entity, {
+          partial: true,
+          required: this.entity.meta.primaryKeys,
+          name,
+        })
+      )
+
+    return silk(
+      new GraphQLObjectType({
+        name: name + "Wrapper",
+        fields: { data: { type: gqlType } },
+      }),
+      (value) => ({ value: value.data })
+    )
+  }
+
+  findOneFilter(): GraphQLSilk<
+    FindOneFilter<InferEntity<TSchema>>,
+    FindOneFilter<InferEntity<TSchema>>
+  > {
+    const name = `${this.entity.meta.name}FindOneFilter`
+
+    const gqlType =
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        MikroWeaver.getGraphQLType(this.entity, {
+          pick: this.entity.meta.primaryKeys,
+          name,
+        })
+      )
+
+    return silk(gqlType, (value) => ({ value }))
+  }
+
+  findManyOptions(): GraphQLSilk<any, any> {
+    const name = `${this.entity.meta.name}FindManyOptions`
+
+    const whereType = this.findManyOptionsWhereType()
+
+    const optionsType =
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        new GraphQLObjectType({
+          name: name,
+          fields: () => ({
+            where: { type: whereType },
+            orderBy: {
+              type: this.findManyOptionsOrderByType(),
+            },
+            skip: {
+              type: GraphQLInt,
+            },
+            limit: {
+              type: GraphQLInt,
+            },
+          }),
+        })
+      )
+
+    const properties = this.entity.meta.properties
+    const comparisonKeys = new Set<string>()
+
+    Object.entries(properties).map(([key, property]) => {
+      const type = MikroWeaver.getFieldType(property)
+      if (type == null) return mapValue.SKIP
+      if (type instanceof GraphQLScalarType) comparisonKeys.add(key)
+    })
+
+    return silk(optionsType, (value: any) => {
+      if ("where" in value && typeof value.where === "object") {
+        Object.entries(value.where)
+          .filter(([key]) => comparisonKeys.has(key))
+          .forEach(([key, property]) => {
+            const conditions: Record<string, any> = {}
+            if (typeof property !== "object" || property == null) return
+            Object.entries(property).forEach(
+              ([key, value]) => (conditions[`$${key}`] = value)
+            )
+            ;(value as any).where[key] = conditions
+          })
+      }
+      return value
+    })
+  }
+
+  findManyOptionsOrderByType(): GraphQLObjectType {
+    const name = `${this.entity.meta.name}FindManyOptionsOrderBy`
+    return (
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        new GraphQLObjectType({
+          name,
+          fields: () =>
+            mapValue(this.entity.meta.properties, (property) => {
+              const type = MikroWeaver.getFieldType(property)
+              if (type == null) return mapValue.SKIP
+              return {
+                type: MikroInputFactory.queryOrderType(),
+                description: property.comment,
+              } as GraphQLFieldConfig<any, any>
+            }),
+        })
+      )
+    )
+  }
+
+  findManyOptionsWhereType(): GraphQLObjectType {
+    const name = `${this.entity.meta.name}FindManyOptionsWhere`
+
+    return (
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        new GraphQLObjectType({
+          name,
+          fields: () =>
+            mapValue(this.entity.meta.properties, (property) => {
+              const type = MikroWeaver.getFieldType(property)
+              if (type == null) return mapValue.SKIP
+              return {
+                type:
+                  type instanceof GraphQLScalarType
+                    ? MikroInputFactory.comparisonOperatorsType(type)
+                    : type,
+                description: property.comment,
+              } as GraphQLFieldConfig<any, any>
+            }),
+        })
+      )
+    )
+  }
+
+  static queryOrderType(): GraphQLEnumType {
     const name = `MikroQueryOrder`
 
     return (
@@ -529,7 +537,7 @@ export class MikroResolverFactory<
     )
   }
 
-  static ComparisonOperatorsType<TScalarType extends GraphQLScalarType>(
+  static comparisonOperatorsType<TScalarType extends GraphQLScalarType>(
     type: TScalarType
   ): GraphQLObjectType {
     // https://mikro-orm.io/docs/query-conditions#comparison
