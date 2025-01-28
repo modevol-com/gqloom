@@ -171,6 +171,6 @@ export class PrismaWeaver {
   }
 }
 
-export * from "./bobbin"
+export * from "./resolver-factory"
 export * from "./types"
 export * from "./type-weaver"

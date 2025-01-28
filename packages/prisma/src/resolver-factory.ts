@@ -32,7 +32,7 @@ import type {
 } from "./types"
 import { capitalize, gqlType as gt } from "./utils"
 
-export class PrismaModelBobbin<
+export class PrismaResolverFactory<
   TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > {
@@ -45,7 +45,7 @@ export class PrismaModelBobbin<
     protected readonly client: TClient
   ) {
     this.modelData = silk.meta
-    this.delegate = PrismaModelBobbin.getDelegate(
+    this.delegate = PrismaResolverFactory.getDelegate(
       silk.model.name,
       client
     ) as InferPrismaDelegate<TClient, TModelSilk["name"]>
@@ -304,7 +304,7 @@ export class PrismaModelBobbin<
   } = {}): BobbinCreateManyMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.createManyArgs()))
 
-    const output = PrismaModelBobbin.batchPayloadSilk()
+    const output = PrismaResolverFactory.batchPayloadSilk()
 
     return loom.mutation(output, {
       ...options,
@@ -367,7 +367,7 @@ export class PrismaModelBobbin<
     >[]
   } = {}): BobbinDeleteManyMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.deleteManyArgs()))
-    const output = PrismaModelBobbin.batchPayloadSilk()
+    const output = PrismaResolverFactory.batchPayloadSilk()
     return loom.mutation(output, {
       ...options,
       input,
@@ -421,7 +421,7 @@ export class PrismaModelBobbin<
     >[]
   } = {}): BobbinUpdateManyMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.updateManyArgs()))
-    const output = PrismaModelBobbin.batchPayloadSilk()
+    const output = PrismaResolverFactory.batchPayloadSilk()
 
     return loom.mutation(output, {
       ...options,

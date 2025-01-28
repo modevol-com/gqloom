@@ -2,13 +2,13 @@ import { weave } from "@gqloom/core"
 import { lexicographicSortSchema, printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
-import { PrismaModelBobbin } from "../src"
+import { PrismaResolverFactory } from "../src"
 import { PrismaClient } from "./client"
 import * as p from "./generated"
 
 describe("Bobbin Resolver", () => {
   const db = new PrismaClient()
-  const userBobbin = new PrismaModelBobbin(p.User, db)
+  const userBobbin = new PrismaResolverFactory(p.User, db)
   const userResolver = userBobbin.resolver()
 
   it("should be able to create Bobbin", () => {
@@ -95,7 +95,7 @@ describe("Bobbin Resolver", () => {
 
     await expect(
       printSchema(lexicographicSortSchema(schema))
-    ).toMatchFileSnapshot("./bobbin-resolver.spec.gql")
+    ).toMatchFileSnapshot("./resolver.spec.gql")
   })
 
   describe("mutations", () => {
@@ -520,11 +520,11 @@ describe("Bobbin Resolver", () => {
 
 function weaveSchema() {
   const db = new PrismaClient()
-  const userResolver = new PrismaModelBobbin(p.User, db).resolver()
-  const postResolver = new PrismaModelBobbin(p.Post, db).resolver()
-  const profileResolver = new PrismaModelBobbin(p.Profile, db).resolver()
-  const catResolver = new PrismaModelBobbin(p.Cat, db).resolver()
-  const dogResolver = new PrismaModelBobbin(p.Dog, db).resolver()
+  const userResolver = new PrismaResolverFactory(p.User, db).resolver()
+  const postResolver = new PrismaResolverFactory(p.Post, db).resolver()
+  const profileResolver = new PrismaResolverFactory(p.Profile, db).resolver()
+  const catResolver = new PrismaResolverFactory(p.Cat, db).resolver()
+  const dogResolver = new PrismaResolverFactory(p.Dog, db).resolver()
   const schema = weave(
     userResolver,
     postResolver,

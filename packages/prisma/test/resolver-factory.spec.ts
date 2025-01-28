@@ -6,8 +6,8 @@ import { beforeEach, describe, expect, expectTypeOf, it } from "vitest"
 import { z } from "zod"
 import {
   type InferPrismaDelegate,
-  PrismaModelBobbin,
   type PrismaModelSilk,
+  PrismaResolverFactory,
 } from "../src"
 import { PrismaClient } from "./client"
 import * as g from "./generated"
@@ -17,7 +17,7 @@ const { resolver, query } = loom
 class TestablePrismaModelBobbin<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
-> extends PrismaModelBobbin<TModalSilk, TClient> {
+> extends PrismaResolverFactory<TModalSilk, TClient> {
   public uniqueWhere(
     instance: StandardSchemaV1.InferOutput<NonNullable<TModalSilk>>
   ): any {
@@ -74,8 +74,8 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("relationField", () => {
-    const UserBobbin = new PrismaModelBobbin(g.User, db)
-    const PostBobbin = new PrismaModelBobbin(g.Post, db)
+    const UserBobbin = new PrismaResolverFactory(g.User, db)
+    const PostBobbin = new PrismaResolverFactory(g.Post, db)
     const r1 = resolver.of(g.User, {
       users: query(g.User.list(), () => db.user.findMany()),
 
