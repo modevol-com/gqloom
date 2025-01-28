@@ -14,7 +14,7 @@ import * as g from "./generated"
 
 const { resolver, query } = loom
 
-class TestablePrismaModelBobbin<
+class TestablePrismaModelResolverFactory<
   TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > extends PrismaResolverFactory<TModalSilk, TClient> {
@@ -31,16 +31,16 @@ class TestablePrismaModelBobbin<
   }
 }
 
-describe("PrismaModelBobbin", () => {
+describe("PrismaModelPrismaResolverFactory", () => {
   const db = new PrismaClient()
 
   it("should be able to create a bobbin", () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
     expect(UserBobbin).toBeDefined()
   })
 
   it("should be able to create a uniqueWhere condition", () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
     const userCondition = UserBobbin.uniqueWhere({
       id: 4,
       name: "",
@@ -48,7 +48,7 @@ describe("PrismaModelBobbin", () => {
     })
     expect(userCondition).toEqual({ id: 4 })
 
-    const CatBobbin = new TestablePrismaModelBobbin(g.Cat, db)
+    const CatBobbin = new TestablePrismaModelResolverFactory(g.Cat, db)
     const catCondition = CatBobbin.uniqueWhere({
       firstName: "foo",
       lastName: "bar",
@@ -57,7 +57,7 @@ describe("PrismaModelBobbin", () => {
       firstName_lastName: { firstName: "foo", lastName: "bar" },
     })
 
-    const DogBobbin = new TestablePrismaModelBobbin(g.Dog, db)
+    const DogBobbin = new TestablePrismaModelResolverFactory(g.Dog, db)
     const dogCondition = DogBobbin.uniqueWhere({
       firstName: "foo",
       lastName: "bar",
@@ -175,7 +175,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("countQuery", () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
     it("should be able to create a countQuery", () => {
       const q = UserBobbin.countQuery({
         middlewares: [
@@ -232,7 +232,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("findFirstQuery", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
     it("should be able to create a findFirstQuery", () => {
       const q = UserBobbin.findFirstQuery({
         middlewares: [
@@ -289,7 +289,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("findManyQuery", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a findManyQuery", () => {
       const q = UserBobbin.findManyQuery({
@@ -347,7 +347,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("findUniqueQuery", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a findUniqueQuery", () => {
       const q = UserBobbin.findUniqueQuery({
@@ -405,7 +405,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("createMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a createMutation", () => {
       const m = UserBobbin.createMutation({
@@ -463,7 +463,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("createManyMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a createManyMutation", () => {
       const m = UserBobbin.createManyMutation({
@@ -522,7 +522,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("deleteMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a deleteMutation", () => {
       const m = UserBobbin.deleteMutation({
@@ -579,7 +579,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("deleteManyMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a deleteManyMutation", async () => {
       const m = UserBobbin.deleteManyMutation({
@@ -639,7 +639,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("updateMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a deleteMutation", async () => {
       const m = UserBobbin.updateMutation({
@@ -706,7 +706,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("updateManyMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a deleteMutation", async () => {
       const m = UserBobbin.updateManyMutation({
@@ -777,7 +777,7 @@ describe("PrismaModelBobbin", () => {
   })
 
   describe("upsertMutation", async () => {
-    const UserBobbin = new TestablePrismaModelBobbin(g.User, db)
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
 
     it("should be able to create a deleteMutation", async () => {
       const m = UserBobbin.upsertMutation({

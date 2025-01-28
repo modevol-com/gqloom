@@ -11,7 +11,7 @@ describe("Bobbin Resolver", () => {
   const userBobbin = new PrismaResolverFactory(p.User, db)
   const userResolver = userBobbin.resolver()
 
-  it("should be able to create Bobbin", () => {
+  it("should be able to create ResolverFactory", () => {
     expect(userResolver).toBeDefined()
   })
 

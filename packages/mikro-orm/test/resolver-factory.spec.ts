@@ -57,7 +57,7 @@ const ORMConfig = defineConfig({
   // debug: true,
 })
 
-describe("MikroOperationsBobbin", async () => {
+describe("MikroResolverFactory", async () => {
   const orm = await MikroORM.init(ORMConfig)
   await orm.getSchemaGenerator().updateSchema()
 
