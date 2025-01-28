@@ -85,26 +85,35 @@ generatorHandler({
       JSON.stringify({ models, enums, schema }, null, 2)
     )
     if (config.commonjsFile) {
-      await genJSFile(options.dmmf, {
-        outputFile: path.resolve(outputDir, config.commonjsFile),
+      const outputFile = path.resolve(outputDir, config.commonjsFile)
+      const text = genJSFile(options.dmmf, {
+        outputFile,
         esm: false,
         ...config,
       })
+
+      fs.writeFileSync(outputFile, text)
     }
     if (config.moduleFile) {
-      await genJSFile(options.dmmf, {
-        outputFile: path.resolve(outputDir, config.moduleFile),
+      const outputFile = path.resolve(outputDir, config.moduleFile)
+      const text = genJSFile(options.dmmf, {
+        outputFile,
         esm: true,
         ...config,
       })
+
+      fs.writeFileSync(outputFile, text)
     }
 
     for (const file of config.typesFiles) {
-      await genTsDeclaration(options.dmmf, {
-        outputFile: path.resolve(outputDir, file),
+      const outputFile = path.resolve(outputDir, file)
+      const text = genTsDeclaration(options.dmmf, {
+        outputFile,
         prismaLocation,
         ...config,
       })
+
+      fs.writeFileSync(outputFile, text)
     }
   },
 })

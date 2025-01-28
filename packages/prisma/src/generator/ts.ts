@@ -2,10 +2,10 @@ import type { DMMF } from "@prisma/generator-helper"
 import { Project, VariableDeclarationKind } from "ts-morph"
 import type { GQLoomGeneratorConfig } from "."
 
-export async function genTsDeclaration(
+export function genTsDeclaration(
   dmmf: DMMF.Document,
   config: { outputFile: string; prismaLocation: string } & GQLoomGeneratorConfig
-) {
+): string {
   const project = new Project()
 
   const sourceFile = project.createSourceFile(config.outputFile, "", {
@@ -82,7 +82,7 @@ export async function genTsDeclaration(
     ],
   })
 
-  await sourceFile.save()
+  return sourceFile.getFullText()
 }
 
 function lowerCase(string: string) {

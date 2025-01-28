@@ -1,11 +1,10 @@
 import type { DMMF } from "@prisma/generator-helper"
-import * as fs from "fs/promises"
 import type { GQLoomGeneratorConfig } from "."
 
-export async function genJSFile(
+export function genJSFile(
   dmmf: DMMF.Document,
   config: { outputFile: string; esm?: boolean } & GQLoomGeneratorConfig
-) {
+): string {
   const lines: string[] = []
 
   if (config.esm) {
@@ -51,5 +50,5 @@ export async function genJSFile(
   }
   lines.push("}")
 
-  await fs.writeFile(config.outputFile, lines.join("\n"))
+  return lines.join("\n")
 }
