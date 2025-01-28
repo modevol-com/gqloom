@@ -28,9 +28,9 @@ import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
   type FindOneFilter,
-  MikroOperationBobbin,
+  MikroResolverFactory,
   type UpdateInput,
-} from "../src/operations"
+} from "../src/resolver-factory"
 
 interface IGiraffe {
   id: string
@@ -60,7 +60,7 @@ describe("MikroOperationsBobbin", async () => {
   const orm = await MikroORM.init(ORMConfig)
   await orm.getSchemaGenerator().updateSchema()
 
-  const bobbin = new MikroOperationBobbin(Giraffe, () => orm.em)
+  const bobbin = new MikroResolverFactory(Giraffe, () => orm.em)
   describe("CreateMutation", () => {
     const create = bobbin.CreateMutation()
     it("should infer Input type", () => {
@@ -379,7 +379,7 @@ describe("MikroOperationsBobbin", async () => {
     const findMany = bobbin.FindManyQuery()
     it("should create operators type", () => {
       const stringType =
-        MikroOperationBobbin.ComparisonOperatorsType(GraphQLString)
+        MikroResolverFactory.ComparisonOperatorsType(GraphQLString)
       expect(printType(stringType)).toMatchInlineSnapshot(`
         "type StringMikroComparisonOperators {
           """Equals. Matches values that are equal to a specified value."""
@@ -434,7 +434,7 @@ describe("MikroOperationsBobbin", async () => {
       `)
 
       const floatType =
-        MikroOperationBobbin.ComparisonOperatorsType(GraphQLFloat)
+        MikroResolverFactory.ComparisonOperatorsType(GraphQLFloat)
       expect(printType(floatType)).toMatchInlineSnapshot(`
         "type FloatMikroComparisonOperators {
           """Equals. Matches values that are equal to a specified value."""
@@ -490,7 +490,7 @@ describe("MikroOperationsBobbin", async () => {
     })
 
     it("should create QueryOrderType", () => {
-      const queryOrderType = MikroOperationBobbin.QueryOrderType()
+      const queryOrderType = MikroResolverFactory.QueryOrderType()
       expect(printType(queryOrderType)).toMatchInlineSnapshot(`
         "enum MikroQueryOrder {
           ASC

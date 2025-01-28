@@ -38,19 +38,20 @@ import {
 import { MikroWeaver } from "."
 import type { InferEntity } from "./types"
 
-interface MikroOperationBobbinOptions {
+interface MikroResolverFactoryOptions {
   getEntityManager: () => MayPromise<EntityManager>
 }
 
-export class MikroOperationBobbin<
+export class MikroResolverFactory<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
-  readonly options: MikroOperationBobbinOptions
+  readonly options: MikroResolverFactoryOptions
+  protected flushMiddleware: Middleware
   constructor(
     public readonly entity: TSchema,
     optionsOrGetEntityManager:
-      | MikroOperationBobbinOptions
-      | MikroOperationBobbinOptions["getEntityManager"]
+      | MikroResolverFactoryOptions
+      | MikroResolverFactoryOptions["getEntityManager"]
   ) {
     if (typeof optionsOrGetEntityManager === "function") {
       this.options = { getEntityManager: optionsOrGetEntityManager }
@@ -68,9 +69,7 @@ export class MikroOperationBobbin<
     }
   }
 
-  flushMiddleware: Middleware
-
-  getEm() {
+  protected getEm() {
     return this.options.getEntityManager()
   }
 
@@ -418,7 +417,7 @@ export class MikroOperationBobbin<
               const type = MikroWeaver.getFieldType(property)
               if (type == null) return mapValue.SKIP
               return {
-                type: MikroOperationBobbin.QueryOrderType(),
+                type: MikroResolverFactory.QueryOrderType(),
                 description: property.comment,
               } as GraphQLFieldConfig<any, any>
             }),
@@ -442,7 +441,7 @@ export class MikroOperationBobbin<
               return {
                 type:
                   type instanceof GraphQLScalarType
-                    ? MikroOperationBobbin.ComparisonOperatorsType(type)
+                    ? MikroResolverFactory.ComparisonOperatorsType(type)
                     : type,
                 description: property.comment,
               } as GraphQLFieldConfig<any, any>

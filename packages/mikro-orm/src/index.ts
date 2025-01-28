@@ -273,5 +273,5 @@ export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
 export type EntitySilk<TEntity> = EntitySchemaSilk<EntitySchema<TEntity>>
 
 export * from "./entity-schema"
-export * from "./operations"
+export * from "./resolver-factory"
 export * from "./types"
