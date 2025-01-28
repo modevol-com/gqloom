@@ -37,6 +37,7 @@ export default defineConfig({
         "vitest.workspace.ts",
         "**/generated/*.ts",
         "**/bin/*",
+        "packages/prisma/src/generator/index.ts",
       ],
     },
   },
