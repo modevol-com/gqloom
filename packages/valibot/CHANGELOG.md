@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## next (YYYY-MM-DD)
 
 * Feature: auto assign names to objects and inputs
+* Fix: get config in nested field
 
 ## 0.5.0 (2024-12-03)
 
