@@ -80,7 +80,16 @@ export class ValibotWeaver {
     schema: GenericSchemaOrAsync,
     ...wrappers: GenericSchemaOrAsync[]
   ): GraphQLOutputType {
-    const existing = weaverContext.getGraphQLType(schema)
+    let schemaInner = schema
+    let existing = weaverContext.getGraphQLType(schema)
+    while (
+      existing == null &&
+      "pipe" in schemaInner &&
+      Array.isArray(schemaInner.pipe)
+    ) {
+      schemaInner = schemaInner.pipe[0]
+      existing = weaverContext.getGraphQLType(schemaInner)
+    }
     if (existing) return existing
     const gqlType = ValibotWeaver.toGraphQLTypePurely(schema, ...wrappers)
     return weaverContext.memoGraphQLType(schema, gqlType)
