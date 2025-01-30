@@ -70,7 +70,7 @@ describe("ValibotMetadataCollector", () => {
     const object = v.object({
       t1: DiscussType,
       t2: v.pipe(v.nonNullish(DiscussType), v.description("t2 description")),
-      t3: v.pipe(DiscussType, v.description("t description")),
+      t3: v.pipe(DiscussType, v.description("t3 description")),
     })
     collectNames({ DiscussType, object })
     const r = resolver.of(object, {})
@@ -82,7 +82,7 @@ describe("ValibotMetadataCollector", () => {
         """t2 description"""
         t2: DiscussType!
 
-        """t description"""
+        """t3 description"""
         t3: DiscussType!
       }
 
