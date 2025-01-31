@@ -8,6 +8,7 @@ import {
 } from "../utils"
 import { FIELD_HIDDEN } from "../utils/symbols"
 import { createInputParser, getStandardValue } from "./input"
+import { FieldChainFactory } from "./resolver-chain-factory"
 import type {
   FieldFactory,
   FieldFactoryWithUtils,
@@ -91,9 +92,8 @@ const baseSilkField: FieldFactory<GraphQLSilkIO> = (
 
 export const field: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
   baseSilkField,
-  {
-    hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN,
-  }
+  { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
+  FieldChainFactory.methods()
 )
 
 export const defaultSubscriptionResolve = (source: any) => source

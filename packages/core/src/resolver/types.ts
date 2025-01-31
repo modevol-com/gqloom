@@ -17,6 +17,7 @@ import type {
   InputSchema,
   InputSchemaToSilk,
 } from "./input"
+import type { FieldChainFactory } from "./resolver-chain-factory"
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
@@ -252,7 +253,8 @@ export interface FieldFactory<TSchemaIO extends AbstractSchemaIO> {
 }
 
 export interface FieldFactoryWithUtils<TSchemaIO extends AbstractSchemaIO>
-  extends FieldFactory<TSchemaIO> {
+  extends FieldFactory<TSchemaIO>,
+    ReturnType<typeof FieldChainFactory.methods> {
   /** Set fields to be hidden in GraphQL Schema */
   hidden: typeof FIELD_HIDDEN
 }

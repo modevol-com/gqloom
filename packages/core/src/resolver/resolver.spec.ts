@@ -62,11 +62,18 @@ describe("resolver", () => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
 
-      greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
-        input: { myName: silk(GraphQLString) },
-        resolve: (giraffe, { myName }) =>
-          `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
-      }),
+      // greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
+      //   input: { myName: silk(GraphQLString) },
+      //   resolve: (giraffe, { myName }) =>
+      //     `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
+      // }),
+
+      greeting: field
+        .output(silk<string>(new GraphQLNonNull(GraphQLString)))
+        .input({ myName: silk(GraphQLString) })
+        .resolve((giraffe, { myName }) => {
+          return `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`
+        }),
 
       nominalAge: field(silk<number>(GraphQLInt), {
         middlewares: [async (next) => (await next()) + 1],

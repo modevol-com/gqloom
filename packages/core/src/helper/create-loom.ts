@@ -19,6 +19,7 @@ import {
   subscription,
 } from "../resolver"
 import type { InputSchema } from "../resolver/input"
+import { FieldChainFactory } from "../resolver/resolver-chain-factory"
 import { getOperationOptions, getSubscriptionOptions } from "../utils"
 import { FIELD_HIDDEN } from "../utils/symbols"
 
@@ -65,9 +66,11 @@ export function createFieldFactory<TSchemaIO extends AbstractSchemaIO>(
       input: toSilkInput(options.input, toSilk, isSchema),
     }) as FieldOrOperation<any, any, any, "field">
   }
-  return Object.assign(baseFieldFunc, {
-    hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN,
-  })
+  return Object.assign(
+    baseFieldFunc,
+    { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
+    FieldChainFactory.methods()
+  )
 }
 
 export function createQueryFactory<TSchemaIO extends AbstractSchemaIO>(
