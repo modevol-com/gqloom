@@ -76,6 +76,7 @@ export class FieldChainFactory<
       output: FieldChainFactory.prototype.output,
       input: FieldChainFactory.prototype.input,
       resolve: FieldChainFactory.prototype.resolve,
+      clone: FieldChainFactory.prototype.clone,
     } as any as FieldChainFactory<any, never, undefined>
   }
 

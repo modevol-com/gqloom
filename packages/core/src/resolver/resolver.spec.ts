@@ -69,6 +69,7 @@ describe("resolver", () => {
       // }),
 
       greeting: field
+        .description("a normal greeting")
         .output(silk<string>(new GraphQLNonNull(GraphQLString)))
         .input({ myName: silk(GraphQLString) })
         .resolve((giraffe, { myName }) => {
