@@ -12,6 +12,7 @@ import {
   FieldChainFactory,
   MutationChainFactory,
   QueryChainFactory,
+  SubscriptionChainFactory,
 } from "./resolver-chain-factory"
 import type {
   FieldFactory,
@@ -27,9 +28,10 @@ import type {
   ResolvingOptions,
   Subscription,
   SubscriptionFactory,
+  SubscriptionFactoryWithChain,
 } from "./types"
 
-const baseSilkQuery: QueryFactory<GraphQLSilkIO> = (
+export const createQuery: QueryFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -52,11 +54,11 @@ const baseSilkQuery: QueryFactory<GraphQLSilkIO> = (
 }
 
 export const query: QueryFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  baseSilkQuery,
+  createQuery,
   QueryChainFactory.methods()
 )
 
-const baseSilkMutation: MutationFactory<GraphQLSilkIO> = (
+export const createMutation: MutationFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -79,11 +81,11 @@ const baseSilkMutation: MutationFactory<GraphQLSilkIO> = (
 }
 
 export const mutation: MutationFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  baseSilkMutation,
+  createMutation,
   MutationChainFactory.methods()
 )
 
-const baseSilkField: FieldFactory<GraphQLSilkIO> = (
+export const createField: FieldFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -107,14 +109,14 @@ const baseSilkField: FieldFactory<GraphQLSilkIO> = (
 }
 
 export const field: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
-  baseSilkField,
+  createField,
   { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
   FieldChainFactory.methods()
 )
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const subscription: SubscriptionFactory<GraphQLSilkIO> = (
+export const createSubscription: SubscriptionFactory<GraphQLSilkIO> = (
   output,
   subscribeOrOptions
 ) => {
@@ -139,6 +141,9 @@ export const subscription: SubscriptionFactory<GraphQLSilkIO> = (
     type,
   }
 }
+
+export const subscription: SubscriptionFactoryWithChain<GraphQLSilkIO> =
+  Object.assign(createSubscription, SubscriptionChainFactory.methods())
 
 export const ResolverOptionsMap = new WeakMap<
   object,

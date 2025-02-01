@@ -21,7 +21,7 @@ describe("subscription integration", () => {
   it("should accepts sync subscribe function", async () => {
     const simpleResolver = resolver({
       hello,
-      foo: subscription(silk(GraphQLString), fooGenerator),
+      foo: subscription.output(silk(GraphQLString)).subscribe(fooGenerator),
     })
 
     const schema = new GraphQLSchemaLoom()
@@ -43,7 +43,7 @@ describe("subscription integration", () => {
   it("should accepts async subscribe function", async () => {
     const simpleResolver = resolver({
       hello,
-      foo: subscription(silk(GraphQLString), async () => {
+      foo: subscription.output(silk(GraphQLString)).subscribe(async () => {
         await new Promise((resolve) => setTimeout(resolve, 6))
         return fooGenerator()
       }),
@@ -80,6 +80,33 @@ describe("subscription integration", () => {
       .add(simpleResolver)
       .weaveGraphQLSchema()
 
+    const subscriber = await subscribe({ schema, document })
+
+    assert(isAsyncIterable(subscriber))
+
+    expect(await subscriber.next()).toMatchObject({
+      done: false,
+      value: {
+        data: { foo: "FooValue Resolved" },
+      },
+    })
+  })
+
+  it("should accepts resolve function using chain factory", async () => {
+    const simpleResolver = resolver({
+      hello,
+      foo: subscription
+        .output(silk(GraphQLString))
+        .input({ suffix: silk(GraphQLString) })
+        .subscribe(fooGenerator)
+        .resolve((value, input) => value + (input.suffix ?? "")),
+    })
+
+    const schema = new GraphQLSchemaLoom()
+      .add(simpleResolver)
+      .weaveGraphQLSchema()
+
+    const document = parse(`subscription { foo(suffix: " Resolved") }`)
     const subscriber = await subscribe({ schema, document })
 
     assert(isAsyncIterable(subscriber))

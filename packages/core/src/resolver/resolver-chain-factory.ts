@@ -1,11 +1,18 @@
 import type { MayPromise } from "../utils"
 import type { InferInputO, InputSchema, InputSchemaToSilk } from "./input"
+import {
+  createField,
+  createMutation,
+  createQuery,
+  createSubscription,
+} from "./resolver"
 import type {
   AbstractSchemaIO,
   FieldOrOperation,
   GraphQLFieldOptions,
   InferSchemaO,
   SchemaToSilk,
+  Subscription,
 } from "./types"
 
 export interface IChainFactory<
@@ -109,11 +116,10 @@ export class FieldChainFactory<
     InputSchemaToSilk<TSchemaIO, TInput>,
     "field"
   > {
-    return {
+    return createField(this.options?.output, {
       ...this.options,
-      type: "field",
       resolve,
-    } as any
+    }) as any
   }
 }
 
@@ -158,11 +164,10 @@ export class QueryChainFactory<
       input: InferInputO<TInput, TSchemaIO>
     ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
   ) {
-    return {
+    return createQuery(this.options?.output, {
       ...this.options,
-      type: "query",
       resolve,
-    } as any
+    }) as any
   }
 }
 
@@ -207,10 +212,97 @@ export class MutationChainFactory<
       input: InferInputO<TInput, TSchemaIO>
     ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
   ) {
-    return {
+    return createMutation(this.options?.output, {
       ...this.options,
-      type: "mutation",
       resolve,
-    } as any
+    }) as any
   }
+}
+
+export class SubscriptionChainFactory<
+    TSchemaIO extends AbstractSchemaIO,
+    TOutput extends TSchemaIO[0] = never,
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  >
+  extends BaseChainFactory
+  implements IChainFactory<TSchemaIO, TOutput, TInput>
+{
+  static methods() {
+    return {
+      ...BaseChainFactory.methods(),
+      output: SubscriptionChainFactory.prototype.output,
+      input: SubscriptionChainFactory.prototype.input,
+      subscribe: SubscriptionChainFactory.prototype.subscribe,
+      clone: SubscriptionChainFactory.prototype.clone,
+    } as any as SubscriptionChainFactory<any, never, undefined>
+  }
+
+  protected clone(
+    options?: Partial<FieldOrOperation<any, any, any, any>>
+  ): this {
+    return new SubscriptionChainFactory({ ...this.options, ...options }) as this
+  }
+
+  public output<TOutputNew extends TSchemaIO[0]>(
+    output: TOutputNew
+  ): SubscriptionChainFactory<TSchemaIO, TOutputNew, TInput> {
+    return new SubscriptionChainFactory({ ...this.options, output })
+  }
+
+  public input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+    input: TInputNew
+  ): SubscriptionChainFactory<TSchemaIO, TOutput, TInputNew> {
+    return new SubscriptionChainFactory({ ...this.options, input })
+  }
+
+  public subscribe<TValue = InferSchemaO<TOutput, TSchemaIO>>(
+    subscribe: (
+      input: InferInputO<TInput, TSchemaIO>
+    ) => MayPromise<AsyncIterator<TValue>>
+  ): ResolvableSubscription<TSchemaIO, TOutput, TInput, TValue> {
+    const options = this.options
+    const subscription = createSubscription(options?.output, {
+      ...options,
+      subscribe,
+    })
+
+    const subscriptionResolve = subscription.resolve
+
+    const resolve = (...args: any[]) => {
+      if (args.length === 1 && typeof args[0] === "function") {
+        return createSubscription(options?.output, {
+          ...options,
+          resolve: args[0],
+          subscribe,
+        })
+      }
+      return subscriptionResolve(...(args as [any, any]))
+    }
+
+    return Object.assign(subscription, { resolve }) as any
+  }
+}
+
+export interface ResolvableSubscription<
+  TSchemaIO extends AbstractSchemaIO,
+  TOutput extends TSchemaIO[0],
+  TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  TValue = InferSchemaO<TOutput, TSchemaIO>,
+> extends Subscription<
+    SchemaToSilk<TSchemaIO, TOutput>,
+    InputSchemaToSilk<TSchemaIO, TInput>,
+    TValue
+  > {
+  resolve(
+    resolve: (
+      value: TValue,
+      input: InferInputO<TInput, TSchemaIO>
+    ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
+  ): Subscription<
+    SchemaToSilk<TSchemaIO, TOutput>,
+    InputSchemaToSilk<TSchemaIO, TInput>,
+    TValue
+  >
+
+  resolve(value: TValue, input: any): MayPromise<any>
 }

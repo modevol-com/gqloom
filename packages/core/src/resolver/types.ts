@@ -21,6 +21,7 @@ import type {
   FieldChainFactory,
   MutationChainFactory,
   QueryChainFactory,
+  SubscriptionChainFactory,
 } from "./resolver-chain-factory"
 
 /*
@@ -334,6 +335,11 @@ export interface SubscriptionFactory<TSchemaIO extends AbstractSchemaIO> {
     TValue
   >
 }
+
+export interface SubscriptionFactoryWithChain<
+  TSchemaIO extends AbstractSchemaIO,
+> extends SubscriptionFactory<TSchemaIO>,
+    SubscriptionChainFactory<TSchemaIO, never, undefined> {}
 
 export interface ResolverFactory<TSchemaIO extends AbstractSchemaIO> {
   of<

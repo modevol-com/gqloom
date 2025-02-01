@@ -99,6 +99,32 @@ describe("resolver", () => {
       expect(await queryGiraffe2.resolve(undefined)).toEqual(Skyler)
     })
 
+    it("should work using chian", async () => {
+      const q = query
+        .input(GiraffeInput)
+        .output(Giraffe)
+        .description("a simple query")
+        .resolve(() => Skyler)
+
+      expect(q).toBeDefined()
+      expect(q).toMatchObject({
+        description: "a simple query",
+        type: "query",
+      })
+
+      const m = mutation
+        .input(GiraffeInput)
+        .output(Giraffe)
+        .description("a simple mutation")
+        .resolve(() => Skyler)
+
+      expect(m).toBeDefined()
+      expect(m).toMatchObject({
+        description: "a simple mutation",
+        type: "mutation",
+      })
+    })
+
     it("should accept input", async () => {
       const createGiraffe = mutation(Giraffe, {
         input: GiraffeInput,
@@ -141,6 +167,28 @@ describe("resolver", () => {
       expect(await giraffeResolver.age.resolve(Skyler, undefined)).toEqual(
         new Date().getFullYear() - Skyler.birthday.getFullYear()
       )
+    })
+
+    it("should work using chian", async () => {
+      const f = field
+        .output(silk(GraphQLInt))
+        .input({
+          int: silk(GraphQLInt),
+        })
+        .deprecationReason("not depredate yet")
+        .description("a normal field")
+        .extensions({
+          foo: "bar",
+        })
+        .resolve((_, { int }) => int)
+
+      expect(f).toBeDefined()
+      expect(f).toMatchObject({
+        deprecationReason: "not depredate yet",
+        description: "a normal field",
+        extensions: { foo: "bar" },
+        type: "field",
+      })
     })
 
     it("should accept input", async () => {
