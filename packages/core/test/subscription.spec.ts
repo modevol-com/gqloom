@@ -18,6 +18,20 @@ describe("subscription integration", () => {
   const hello = query(silk(GraphQLString), () => "Hello")
   const document = parse("subscription { foo }")
 
+  it("should work using chian", () => {
+    const s = subscription
+      .input(silk(GraphQLString))
+      .output(silk(GraphQLString))
+      .description("a simple subscription")
+      .subscribe(fooGenerator)
+
+    expect(s).toBeDefined()
+    expect(s).toMatchObject({
+      description: "a simple subscription",
+      type: "subscription",
+    })
+  })
+
   it("should accepts sync subscribe function", async () => {
     const simpleResolver = resolver({
       hello,
