@@ -8,14 +8,20 @@ import {
 } from "../utils"
 import { FIELD_HIDDEN } from "../utils/symbols"
 import { createInputParser, getStandardValue } from "./input"
-import { FieldChainFactory } from "./resolver-chain-factory"
+import {
+  FieldChainFactory,
+  MutationChainFactory,
+  QueryChainFactory,
+} from "./resolver-chain-factory"
 import type {
   FieldFactory,
   FieldFactoryWithUtils,
   FieldOrOperation,
   GraphQLSilkIO,
   MutationFactory,
+  MutationFactoryWithChain,
   QueryFactory,
+  QueryFactoryWithChain,
   ResolverFactory,
   ResolverOptionsWithParent,
   ResolvingOptions,
@@ -23,7 +29,7 @@ import type {
   SubscriptionFactory,
 } from "./types"
 
-export const query: QueryFactory<GraphQLSilkIO> = (
+const baseSilkQuery: QueryFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -45,7 +51,12 @@ export const query: QueryFactory<GraphQLSilkIO> = (
   }
 }
 
-export const mutation: MutationFactory<GraphQLSilkIO> = (
+export const query: QueryFactoryWithChain<GraphQLSilkIO> = Object.assign(
+  baseSilkQuery,
+  QueryChainFactory.methods()
+)
+
+const baseSilkMutation: MutationFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -66,6 +77,11 @@ export const mutation: MutationFactory<GraphQLSilkIO> = (
     type,
   }
 }
+
+export const mutation: MutationFactoryWithChain<GraphQLSilkIO> = Object.assign(
+  baseSilkMutation,
+  MutationChainFactory.methods()
+)
 
 const baseSilkField: FieldFactory<GraphQLSilkIO> = (
   output,

@@ -92,6 +92,11 @@ describe("resolver", () => {
     it("should work", async () => {
       const queryGiraffe = query(Giraffe, () => Skyler)
       expect(await queryGiraffe.resolve(undefined)).toEqual(Skyler)
+      const queryGiraffe2 = query
+        .output(Giraffe)
+        .description("a simple query")
+        .resolve(() => Skyler)
+      expect(await queryGiraffe2.resolve(undefined)).toEqual(Skyler)
     })
 
     it("should accept input", async () => {

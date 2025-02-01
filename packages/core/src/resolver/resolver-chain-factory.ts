@@ -109,6 +109,108 @@ export class FieldChainFactory<
     InputSchemaToSilk<TSchemaIO, TInput>,
     "field"
   > {
-    return { ...this.options, type: "field", resolve } as any
+    return {
+      ...this.options,
+      type: "field",
+      resolve,
+    } as any
+  }
+}
+
+export class QueryChainFactory<
+    TSchemaIO extends AbstractSchemaIO,
+    TOutput extends TSchemaIO[0] = never,
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  >
+  extends BaseChainFactory
+  implements IChainFactory<TSchemaIO, TOutput, TInput>
+{
+  static methods() {
+    return {
+      ...BaseChainFactory.methods(),
+      output: QueryChainFactory.prototype.output,
+      input: QueryChainFactory.prototype.input,
+      resolve: QueryChainFactory.prototype.resolve,
+      clone: QueryChainFactory.prototype.clone,
+    } as any as QueryChainFactory<any, never, undefined>
+  }
+
+  protected clone(
+    options?: Partial<FieldOrOperation<any, any, any, any>>
+  ): this {
+    return new QueryChainFactory({ ...this.options, ...options }) as this
+  }
+
+  public output<TOutputNew extends TSchemaIO[0]>(
+    output: TOutputNew
+  ): QueryChainFactory<TSchemaIO, TOutputNew, TInput> {
+    return new QueryChainFactory({ ...this.options, output })
+  }
+
+  public input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+    input: TInputNew
+  ): QueryChainFactory<TSchemaIO, TOutput, TInputNew> {
+    return new QueryChainFactory({ ...this.options, input })
+  }
+
+  public resolve(
+    resolve: (
+      input: InferInputO<TInput, TSchemaIO>
+    ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
+  ) {
+    return {
+      ...this.options,
+      type: "query",
+      resolve,
+    } as any
+  }
+}
+
+export class MutationChainFactory<
+    TSchemaIO extends AbstractSchemaIO,
+    TOutput extends TSchemaIO[0] = never,
+    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  >
+  extends BaseChainFactory
+  implements IChainFactory<TSchemaIO, TOutput, TInput>
+{
+  static methods() {
+    return {
+      ...BaseChainFactory.methods(),
+      output: MutationChainFactory.prototype.output,
+      input: MutationChainFactory.prototype.input,
+      resolve: MutationChainFactory.prototype.resolve,
+      clone: MutationChainFactory.prototype.clone,
+    } as any as MutationChainFactory<any, never, undefined>
+  }
+
+  protected clone(
+    options?: Partial<FieldOrOperation<any, any, any, any>>
+  ): this {
+    return new MutationChainFactory({ ...this.options, ...options }) as this
+  }
+
+  public output<TOutputNew extends TSchemaIO[0]>(
+    output: TOutputNew
+  ): MutationChainFactory<TSchemaIO, TOutputNew, TInput> {
+    return new MutationChainFactory({ ...this.options, output })
+  }
+
+  public input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+    input: TInputNew
+  ): MutationChainFactory<TSchemaIO, TOutput, TInputNew> {
+    return new MutationChainFactory({ ...this.options, input })
+  }
+
+  public resolve(
+    resolve: (
+      input: InferInputO<TInput, TSchemaIO>
+    ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
+  ) {
+    return {
+      ...this.options,
+      type: "mutation",
+      resolve,
+    } as any
   }
 }
