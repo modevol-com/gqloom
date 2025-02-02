@@ -206,7 +206,7 @@ First, we need to create the wire bobbin from the Entity Schema.
 
 ```ts
 import { EntitySchema } from "@mikro-orm/core"
-import { MikroOperationBobbin, mikroSilk } from "@gqloom/mikro-orm"
+import { MikroResolverFactory, mikroSilk } from "@gqloom/mikro-orm"
 
 interface IGiraffe {
   id: string
@@ -227,17 +227,18 @@ const Giraffe = mikroSilk(
   })
 )
 
-const giraffeBobbin = new MikroOperationBobbin(Giraffe, () => orm.em)
+const giraffeResolverFactory = new MikroResolverFactory(Giraffe, () => orm.em)
 ```
 
-In the code above, we first define a `Giraffe` entity and then create a bobbin using `MikroOperationBobbin`. From the bobbin, we can generate GraphQL operations directly.
+In the code above, we first define a `Giraffe` entity and then create a bobbin using `MikroResolverFactory`. From the bobbin, we can generate GraphQL operations directly.
+
 ```ts
 const GiraffeResolver = resolver.of(Giraffe, {
-  giraffe: giraffeBobbin.FindOneQuery(),
-  giraffes: giraffeBobbin.FindManyQuery(),
-  createGiraffe: giraffeBobbin.CreateMutation(),
-  updateGiraffe: giraffeBobbin.UpdateMutation(),
-  deleteGiraffe: giraffeBobbin.DeleteOneMutation(),
+  giraffe: giraffeResolverFactory.FindOneQuery(),
+  giraffes: giraffeResolverFactory.FindManyQuery(),
+  createGiraffe: giraffeResolverFactory.CreateMutation(),
+  updateGiraffe: giraffeResolverFactory.UpdateMutation(),
+  deleteGiraffe: giraffeResolverFactory.DeleteOneMutation(),
 })
 
 const schema = weave(GiraffeResolver)
@@ -246,6 +247,7 @@ const schema = weave(GiraffeResolver)
 With the above simple code, we can generate GraphQL operations from `Giraffe` entities and weave them into a GraphQL Schema using the `weave` function.
 The resulting complete GraphQL Schema looks like this:
 
+:::details GraphQL Schema
 ```graphql
 type Query {
   giraffe(id: ID!): Giraffe!
@@ -498,3 +500,4 @@ input StringMikroComparisonOperators {
   re: String
 }
 ```
+:::

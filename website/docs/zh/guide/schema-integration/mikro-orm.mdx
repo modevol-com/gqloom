@@ -206,7 +206,7 @@ GQLoom 提供了直接从 MikroORM 的 Entity Schema 生成 GraphQL 操作的功
 
 ```ts
 import { EntitySchema } from "@mikro-orm/core"
-import { MikroOperationBobbin, mikroSilk } from "@gqloom/mikro-orm"
+import { MikroResolverFactory, mikroSilk } from "@gqloom/mikro-orm"
 
 interface IGiraffe {
   id: string
@@ -227,18 +227,18 @@ const Giraffe = mikroSilk(
   })
 )
 
-const giraffeBobbin = new MikroOperationBobbin(Giraffe, () => orm.em)
+const giraffeResolverFactory = new MikroResolverFactory(Giraffe, () => orm.em)
 ```
 
-在上面的代码中，我们首先定义了一个 `Giraffe` 实体，然后使用 `MikroOperationBobbin` 创建了一个线筒。从线筒中，我们可以直接生成 GraphQL 操作。
+在上面的代码中，我们首先定义了一个 `Giraffe` 实体，然后使用 `MikroResolverFactory` 创建了一个线筒。从线筒中，我们可以直接生成 GraphQL 操作。
 
 ```ts
 const GiraffeResolver = resolver.of(Giraffe, {
-  giraffe: giraffeBobbin.FindOneQuery(),
-  giraffes: giraffeBobbin.FindManyQuery(),
-  createGiraffe: giraffeBobbin.CreateMutation(),
-  updateGiraffe: giraffeBobbin.UpdateMutation(),
-  deleteGiraffe: giraffeBobbin.DeleteOneMutation(),
+  giraffe: giraffeResolverFactory.FindOneQuery(),
+  giraffes: giraffeResolverFactory.FindManyQuery(),
+  createGiraffe: giraffeResolverFactory.CreateMutation(),
+  updateGiraffe: giraffeResolverFactory.UpdateMutation(),
+  deleteGiraffe: giraffeResolverFactory.DeleteOneMutation(),
 })
 
 const schema = weave(GiraffeResolver)
@@ -247,6 +247,7 @@ const schema = weave(GiraffeResolver)
 只需要以上简单的代码，我们就可以从 `Giraffe` 实体生成 GraphQL 操作，并使用 `weave` 函数将它们编织到 GraphQL Schema 中。
 得到的完整的 GraphQL Schema 如下：
 
+:::details GraphQL Schema
 ```graphql
 type Query {
   giraffe(id: ID!): Giraffe!
@@ -499,3 +500,4 @@ input StringMikroComparisonOperators {
   re: String
 }
 ```
+:::
