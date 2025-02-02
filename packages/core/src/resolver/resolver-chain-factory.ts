@@ -1,4 +1,4 @@
-import type { MayPromise } from "../utils"
+import type { MayPromise, Middleware } from "../utils"
 import type { InferInputO, InputSchema, InputSchemaToSilk } from "./input"
 import {
   createField,
@@ -47,11 +47,15 @@ abstract class BaseChainFactory {
   }
 
   constructor(
-    protected readonly options?: Partial<FieldOrOperation<any, any, any, any>>
+    protected readonly options?: Partial<
+      FieldOrOperation<any, any, any, any> & { middlewares: Middleware[] }
+    >
   ) {}
 
   protected abstract clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
+    options?: Partial<
+      FieldOrOperation<any, any, any, any> & { middlewares: Middleware[] }
+    >
   ): this
 
   public description(description: GraphQLFieldOptions["description"]): this {
@@ -66,6 +70,12 @@ abstract class BaseChainFactory {
 
   public extensions(extensions: GraphQLFieldOptions["extensions"]): this {
     return this.clone({ extensions })
+  }
+
+  public use(...middlewares: Middleware[]): this {
+    return this.clone({
+      middlewares: [...(this.options?.middlewares ?? []), ...middlewares],
+    })
   }
 }
 
@@ -91,6 +101,19 @@ export class FieldChainFactory<
     options?: Partial<FieldOrOperation<any, any, any, any>>
   ): this {
     return new FieldChainFactory({ ...this.options, ...options }) as this
+  }
+
+  public use(
+    ...middlewares: Middleware<
+      FieldOrOperation<
+        any,
+        SchemaToSilk<TSchemaIO, TOutput>,
+        InputSchemaToSilk<TSchemaIO, TInput>,
+        "field"
+      >
+    >[]
+  ): this {
+    return super.use(...middlewares)
   }
 
   public output<TOutputNew extends TSchemaIO[0]>(
@@ -147,6 +170,19 @@ export class QueryChainFactory<
     return new QueryChainFactory({ ...this.options, ...options }) as this
   }
 
+  public use(
+    ...middlewares: Middleware<
+      FieldOrOperation<
+        any,
+        SchemaToSilk<TSchemaIO, TOutput>,
+        InputSchemaToSilk<TSchemaIO, TInput>,
+        "query"
+      >
+    >[]
+  ): this {
+    return super.use(...middlewares)
+  }
+
   public output<TOutputNew extends TSchemaIO[0]>(
     output: TOutputNew
   ): QueryChainFactory<TSchemaIO, TOutputNew, TInput> {
@@ -195,6 +231,19 @@ export class MutationChainFactory<
     return new MutationChainFactory({ ...this.options, ...options }) as this
   }
 
+  public use(
+    ...middlewares: Middleware<
+      FieldOrOperation<
+        any,
+        SchemaToSilk<TSchemaIO, TOutput>,
+        InputSchemaToSilk<TSchemaIO, TInput>,
+        "mutation"
+      >
+    >[]
+  ): this {
+    return super.use(...middlewares)
+  }
+
   public output<TOutputNew extends TSchemaIO[0]>(
     output: TOutputNew
   ): MutationChainFactory<TSchemaIO, TOutputNew, TInput> {
@@ -241,6 +290,19 @@ export class SubscriptionChainFactory<
     options?: Partial<FieldOrOperation<any, any, any, any>>
   ): this {
     return new SubscriptionChainFactory({ ...this.options, ...options }) as this
+  }
+
+  public use(
+    ...middlewares: Middleware<
+      FieldOrOperation<
+        any,
+        SchemaToSilk<TSchemaIO, TOutput>,
+        InputSchemaToSilk<TSchemaIO, TInput>,
+        "subscription"
+      >
+    >[]
+  ): this {
+    return super.use(...middlewares)
   }
 
   public output<TOutputNew extends TSchemaIO[0]>(
