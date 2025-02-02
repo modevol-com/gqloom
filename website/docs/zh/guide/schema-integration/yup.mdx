@@ -29,7 +29,7 @@ declare module "yup" {
 
 ```ts
 import { number, string, boolean } from "yup"
-import { yupSilk } from "../src"
+import { yupSilk } from "@gqloom/yup"
 
 const StringScalar = yupSilk(string())
 
@@ -47,7 +47,7 @@ const IntScalar = yupSilk(number().integer())
 
 ```ts
 import { string } from "yup"
-import { resolver, query } from "../src"
+import { resolver, query } from "@gqloom/yup"
 
 export const HelloResolver = resolver({
   hello: query(string(), () => "Hello, World!"),
@@ -88,7 +88,7 @@ export const Cat = object({
 
 ```ts
 import { string, boolean, object, number } from "yup"
-import { collectNames } from "../src"
+import { collectNames } from "@gqloom/yup"
 
 export const Cat = object({
   name: string().required(),
@@ -103,7 +103,7 @@ collectNames({ Cat })
 
 ```ts
 import { string, boolean, object, number } from "yup"
-import { collectNames } from "../src"
+import { collectNames } from "@gqloom/yup"
 
 export const { Cat } = collectNames({
   Cat: object({

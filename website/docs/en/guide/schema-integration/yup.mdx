@@ -29,7 +29,7 @@ Yup Schema can be used as a [silk](../fundamentals/silk) in GQLoom using `yupSil
 
 ```ts
 import { number, string, boolean } from "yup"
-import { yupSilk } from "../src"
+import { yupSilk } from "@gqloom/yup"
 
 const StringScalar = yupSilk(string())
 
@@ -47,7 +47,7 @@ The `resolver`, `query`, `mutation`, and `field` imported from `@gqloom/yup` wil
 
 ```ts
 import { string } from "yup"
-import { resolver, query } from "../src"
+import { resolver, query } from "@gqloom/yup"
 
 export const HelloResolver = resolver({
   hello: query(string(), () => "Hello, World!"),
@@ -88,7 +88,7 @@ In the above code, we have defined the name for the object using `label` so that
 
 ```ts
 import { string, boolean, object, number } from "yup"
-import { collectNames } from "../src"
+import { collectNames } from "@gqloom/yup"
 
 export const Cat = object({
   name: string().required(),
@@ -103,7 +103,7 @@ In the above code, we are using the `collectNames` function to define names for 
 
 ```ts
 import { string, boolean, object, number } from "yup"
-import { collectNames } from "../src"
+import { collectNames } from "@gqloom/yup"
 
 export const { Cat } = collectNames({
   Cat: object({
