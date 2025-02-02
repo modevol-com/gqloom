@@ -17,6 +17,12 @@ import type {
   InputSchema,
   InputSchemaToSilk,
 } from "./input"
+import type {
+  FieldChainFactory,
+  MutationChainFactory,
+  QueryChainFactory,
+  SubscriptionChainFactory,
+} from "./resolver-chain-factory"
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
@@ -184,6 +190,10 @@ export interface QueryFactory<TSchemaIO extends AbstractSchemaIO> {
   >
 }
 
+export interface QueryFactoryWithChain<TSchemaIO extends AbstractSchemaIO>
+  extends QueryFactory<TSchemaIO>,
+    QueryChainFactory<TSchemaIO, never, undefined> {}
+
 /**
  * Function to create a GraphQL mutation.
  */
@@ -203,6 +213,13 @@ export interface MutationFactory<TSchemaIO extends AbstractSchemaIO> {
     "mutation"
   >
 }
+
+/**
+ * Function to create a GraphQL mutation.
+ */
+export interface MutationFactoryWithChain<TSchemaIO extends AbstractSchemaIO>
+  extends MutationFactory<TSchemaIO>,
+    MutationChainFactory<TSchemaIO, never, undefined> {}
 
 /**
  * Options for External Filed of existing GraphQL Object.
@@ -252,7 +269,8 @@ export interface FieldFactory<TSchemaIO extends AbstractSchemaIO> {
 }
 
 export interface FieldFactoryWithUtils<TSchemaIO extends AbstractSchemaIO>
-  extends FieldFactory<TSchemaIO> {
+  extends FieldFactory<TSchemaIO>,
+    FieldChainFactory<TSchemaIO, never, undefined> {
   /** Set fields to be hidden in GraphQL Schema */
   hidden: typeof FIELD_HIDDEN
 }
@@ -317,6 +335,11 @@ export interface SubscriptionFactory<TSchemaIO extends AbstractSchemaIO> {
     TValue
   >
 }
+
+export interface SubscriptionFactoryWithChain<
+  TSchemaIO extends AbstractSchemaIO,
+> extends SubscriptionFactory<TSchemaIO>,
+    SubscriptionChainFactory<TSchemaIO, never, undefined> {}
 
 export interface ResolverFactory<TSchemaIO extends AbstractSchemaIO> {
   of<

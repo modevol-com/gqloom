@@ -62,11 +62,19 @@ describe("resolver", () => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
 
-      greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
-        input: { myName: silk(GraphQLString) },
-        resolve: (giraffe, { myName }) =>
-          `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
-      }),
+      // greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
+      //   input: { myName: silk(GraphQLString) },
+      //   resolve: (giraffe, { myName }) =>
+      //     `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
+      // }),
+
+      greeting: field
+        .description("a normal greeting")
+        .output(silk<string>(new GraphQLNonNull(GraphQLString)))
+        .input({ myName: silk(GraphQLString) })
+        .resolve((giraffe, { myName }) => {
+          return `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`
+        }),
 
       nominalAge: field(silk<number>(GraphQLInt), {
         middlewares: [async (next) => (await next()) + 1],
@@ -84,6 +92,37 @@ describe("resolver", () => {
     it("should work", async () => {
       const queryGiraffe = query(Giraffe, () => Skyler)
       expect(await queryGiraffe.resolve(undefined)).toEqual(Skyler)
+      const queryGiraffe2 = query
+        .output(Giraffe)
+        .description("a simple query")
+        .resolve(() => Skyler)
+      expect(await queryGiraffe2.resolve(undefined)).toEqual(Skyler)
+    })
+
+    it("should work using chian", async () => {
+      const q = query
+        .input(GiraffeInput)
+        .output(Giraffe)
+        .description("a simple query")
+        .resolve(() => Skyler)
+
+      expect(q).toBeDefined()
+      expect(q).toMatchObject({
+        description: "a simple query",
+        type: "query",
+      })
+
+      const m = mutation
+        .input(GiraffeInput)
+        .output(Giraffe)
+        .description("a simple mutation")
+        .resolve(() => Skyler)
+
+      expect(m).toBeDefined()
+      expect(m).toMatchObject({
+        description: "a simple mutation",
+        type: "mutation",
+      })
     })
 
     it("should accept input", async () => {
@@ -128,6 +167,28 @@ describe("resolver", () => {
       expect(await giraffeResolver.age.resolve(Skyler, undefined)).toEqual(
         new Date().getFullYear() - Skyler.birthday.getFullYear()
       )
+    })
+
+    it("should work using chian", async () => {
+      const f = field
+        .output(silk(GraphQLInt))
+        .input({
+          int: silk(GraphQLInt),
+        })
+        .deprecationReason("not depredate yet")
+        .description("a normal field")
+        .extensions({
+          foo: "bar",
+        })
+        .resolve((_, { int }) => int)
+
+      expect(f).toBeDefined()
+      expect(f).toMatchObject({
+        deprecationReason: "not depredate yet",
+        description: "a normal field",
+        extensions: { foo: "bar" },
+        type: "field",
+      })
     })
 
     it("should accept input", async () => {

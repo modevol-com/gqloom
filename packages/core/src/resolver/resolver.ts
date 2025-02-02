@@ -8,21 +8,30 @@ import {
 } from "../utils"
 import { FIELD_HIDDEN } from "../utils/symbols"
 import { createInputParser, getStandardValue } from "./input"
+import {
+  FieldChainFactory,
+  MutationChainFactory,
+  QueryChainFactory,
+  SubscriptionChainFactory,
+} from "./resolver-chain-factory"
 import type {
   FieldFactory,
   FieldFactoryWithUtils,
   FieldOrOperation,
   GraphQLSilkIO,
   MutationFactory,
+  MutationFactoryWithChain,
   QueryFactory,
+  QueryFactoryWithChain,
   ResolverFactory,
   ResolverOptionsWithParent,
   ResolvingOptions,
   Subscription,
   SubscriptionFactory,
+  SubscriptionFactoryWithChain,
 } from "./types"
 
-export const query: QueryFactory<GraphQLSilkIO> = (
+export const createQuery: QueryFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -44,7 +53,12 @@ export const query: QueryFactory<GraphQLSilkIO> = (
   }
 }
 
-export const mutation: MutationFactory<GraphQLSilkIO> = (
+export const query: QueryFactoryWithChain<GraphQLSilkIO> = Object.assign(
+  createQuery,
+  QueryChainFactory.methods()
+)
+
+export const createMutation: MutationFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -66,7 +80,12 @@ export const mutation: MutationFactory<GraphQLSilkIO> = (
   }
 }
 
-const baseSilkField: FieldFactory<GraphQLSilkIO> = (
+export const mutation: MutationFactoryWithChain<GraphQLSilkIO> = Object.assign(
+  createMutation,
+  MutationChainFactory.methods()
+)
+
+export const createField: FieldFactory<GraphQLSilkIO> = (
   output,
   resolveOrOptions
 ) => {
@@ -90,15 +109,14 @@ const baseSilkField: FieldFactory<GraphQLSilkIO> = (
 }
 
 export const field: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
-  baseSilkField,
-  {
-    hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN,
-  }
+  createField,
+  { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
+  FieldChainFactory.methods()
 )
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const subscription: SubscriptionFactory<GraphQLSilkIO> = (
+export const createSubscription: SubscriptionFactory<GraphQLSilkIO> = (
   output,
   subscribeOrOptions
 ) => {
@@ -123,6 +141,9 @@ export const subscription: SubscriptionFactory<GraphQLSilkIO> = (
     type,
   }
 }
+
+export const subscription: SubscriptionFactoryWithChain<GraphQLSilkIO> =
+  Object.assign(createSubscription, SubscriptionChainFactory.methods())
 
 export const ResolverOptionsMap = new WeakMap<
   object,
