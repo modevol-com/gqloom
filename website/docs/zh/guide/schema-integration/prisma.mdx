@@ -173,7 +173,13 @@ const postResolver = resolver.of(p.Post, {
 
 ### 查询
 
-线筒预置了常用的查询，你可以直接使用它们：
+线筒预置了常用的查询：
+  - countQuery
+  - findFirstQuery
+  - findManyQuery
+  - findUniqueQuery
+
+你可以直接使用它们：
 
 ```ts
 const userResolver = resolver.of(p.User, {
@@ -191,16 +197,19 @@ const userResolver = resolver.of(p.User, {
 
 在上面的代码中，我们使用 `userBobbin.findUniqueQuery()` 来定义 `user` 查询。线筒将自动创建输入类型和解析函数。
 
-#### 预置查询
-
-线筒预置了以下查询：
-  - countQuery
-  - findFirstQuery
-  - findManyQuery
-  - findUniqueQuery
-
 ### 变更
-线筒预置了常用的变更，你可以直接使用它们：
+
+线筒预置了常用的变更：
+  - createMutation
+  - createManyMutation
+  - deleteMutation
+  - deleteManyMutation
+  - updateMutation
+  - updateManyMutation
+  - upsertMutation
+
+
+你可以直接使用它们：
 
 ```ts
 const postResolver = resolver.of(p.Post, {
@@ -214,40 +223,27 @@ const postResolver = resolver.of(p.Post, {
 
 在上面的代码中，我们使用 `postBobbin.createMutation()` 来定义 `createPost` 变更。线筒将自动创建输入类型和解析函数。
 
-#### 预置变更
-
-线筒预置了以下变更：
-  - createMutation
-  - createManyMutation
-  - deleteMutation
-  - deleteManyMutation
-  - updateMutation
-  - updateManyMutation
-  - upsertMutation
-
 ### 自定义输入
 
 线筒预置的查询和变更支持自定义输入，你可以通过 `input` 选项来定义输入类型：
 
 ```ts
+import * as v from 'valibot'
+
 const userResolver = resolver.of(p.User, {
   user: userBobbin.findUniqueQuery({
-    input: valibotSilk(  // [!code hl]
-      v.pipe( // [!code hl]
-        v.object({ id: v.number() }), // [!code hl]
-        asInputArgs(), // [!code hl]
-        v.transform(({ id }) => ({ where: { id } })) // [!code hl]
-      ) // [!code hl]
+    input: v.pipe( // [!code hl]
+      v.object({ id: v.number() }), // [!code hl]
+      v.transform(({ id }) => ({ where: { id } })) // [!code hl]
     ), // [!code hl]
   }),
 
-  posts: userBobbin.relationField('posts'),
+  posts: userBobbin.relationField("posts"),
 })
+
 ```
 
-在上面的代码中，我们使用 `valibotSilk` 来定义输入类型，
-`v.object({ id: v.number() })` 定义了输入对象的类型，
-`asInputArgs()` 将这个对象标注为 GraphQL 的输入参数，
+在上面的代码中，我们使用 `valibot` 来定义输入类型， `v.object({ id: v.number() })` 定义了输入对象的类型，
 `v.transform(({ id }) => ({ where: { id } }))` 将输入参数转换为 Prisma 的查询参数。
 
 ### 添加中间件
@@ -259,7 +255,7 @@ const postResolver = resolver.of(p.Post, {
   createPost: postBobbin.createMutation({
     middlewares: [ // [!code hl]
       async (next) => { // [!code hl]
-        const user = await useLoggedUser() // [!code hl]
+        const user = await useAuthedUser() // [!code hl]
         if (user == null) throw new GraphQLError('Please login first') // [!code hl]
         return next() // [!code hl]
       }, // [!code hl]
@@ -274,7 +270,7 @@ const postResolver = resolver.of(p.Post, {
 
 在上面的代码中，我们使用 `middlewares` 选项来定义中间件，
 `async (next) => { ... }` 定义了一个中间件，
-`useLoggedUser()` 是一个自定义的函数，用于获取当前登录的用户，
+`useAuthedUser()` 是一个自定义的函数，用于获取当前登录的用户，
 如果用户未登录，则抛出一个错误，否则调用 `next()` 继续执行。
 
 ### 创建 Resolver

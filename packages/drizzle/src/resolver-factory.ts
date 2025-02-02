@@ -133,12 +133,15 @@ export abstract class DrizzleResolverFactory<
     return new DrizzleSQLiteResolverFactory(db, table as SQLiteTable)
   }
 
-  public readonly inputFactory: DrizzleInputFactory<typeof this.table>
-  public readonly tableName: InferTableName<TTable>
-  public readonly queryBuilder: QueryBuilder<TDatabase, InferTableName<TTable>>
+  protected readonly inputFactory: DrizzleInputFactory<typeof this.table>
+  protected readonly tableName: InferTableName<TTable>
+  protected readonly queryBuilder: QueryBuilder<
+    TDatabase,
+    InferTableName<TTable>
+  >
   constructor(
-    public readonly db: TDatabase,
-    public readonly table: TTable
+    protected readonly db: TDatabase,
+    protected readonly table: TTable
   ) {
     this.inputFactory = new DrizzleInputFactory(table)
     this.tableName = getTableName(table)
@@ -847,6 +850,8 @@ export class DrizzleSQLiteResolverFactory<
     >
   }
 }
+
+export const drizzleResolverFactory = DrizzleResolverFactory.create
 
 export type DrizzleResolver<
   TDatabase extends BaseDatabase,
