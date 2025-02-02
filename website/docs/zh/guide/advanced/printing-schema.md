@@ -1,6 +1,6 @@
 # 打印 Schema
 
-GraphQL 强大的一点是，GraphQL Schema 可以用来描述服务端所有的 API。
+GraphQL Schema 文件是定义 GraphQL API 数据结构和操作的核心文件，它使用 GraphQL Schema Definition Language (SDL) 描述了数据类型、字段、查询（queries）、变更（mutations）和订阅（subscriptions）等信息，既作为服务器端处理请求的基础，也为客户端提供了接口文档，帮助开发者了解可用的数据和操作。
 
 ## 从 Schema 生成文件
 

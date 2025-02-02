@@ -1,6 +1,6 @@
 # Printing Schema
 
-One of the powerful points of GraphQL is that GraphQL Schema can be used to describe all the APIs on the server side.
+The GraphQL Schema file is the core document that defines the data structure and operations of the GraphQL API. It uses the GraphQL Schema Definition Language (SDL) to describe information such as data types, fields, queries, mutations, and subscriptions. It serves as the basis for server-side request processing and also provides an interface document for the client, helping developers understand the available data and operations.
 
 ## Generating files from Schema
 
