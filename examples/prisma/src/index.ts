@@ -7,7 +7,7 @@ import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
 import * as v from "valibot"
 import { PrismaClient } from "./generated/client"
-import * as p from "./generated/gqloom"
+import { Post, User } from "./generated/gqloom"
 
 const db = new PrismaClient({ log: ["query"] })
 
@@ -15,8 +15,8 @@ const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World"),
 })
 
-const userResolver = new PrismaResolverFactory(p.User, db).resolver()
-const postResolver = new PrismaResolverFactory(p.Post, db).resolver()
+const userResolver = new PrismaResolverFactory(User, db).resolver()
+const postResolver = new PrismaResolverFactory(Post, db).resolver()
 
 const schema = weave(helloResolver, userResolver, postResolver, ValibotWeaver)
 fs.writeFileSync(path.join(__dirname, "../schema.graphql"), printSchema(schema))
