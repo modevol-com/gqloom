@@ -33,7 +33,8 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 <Tabs>
 <Tab label="valibot">
 ```ts
-import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
+import { resolver, query, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
@@ -42,13 +43,14 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}!`),
 })
 
-export const schema = ValibotWeaver.weave(helloResolver)
+export const schema = weave(ValibotWeaver, helloResolver)
 ```
 </Tab>
 <Tab  label="zod">
 ```ts
-import { resolver, query, ZodWeaver } from "@gqloom/zod"
-import { z } from "zod"
+import { resolver, query, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import { zod } from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())
@@ -56,7 +58,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 
-export const schema = ZodWeaver.weave(helloResolver)
+export const schema = weave(ZodWeaver, helloResolver)
 ```
 </Tab>
 </Tabs>

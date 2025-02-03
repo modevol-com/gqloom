@@ -8,7 +8,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-GQLoom is a **Code - First** GraphQL Schema weaver used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into a GraphQL Schema.
+GQLoom is a **Code - First** GraphQL Schema Loom used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into a GraphQL Schema.
 
 Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://valibot.dev/), and [Yup](https://github.com/jquense/yup) have been widely used in backend application development. Meanwhile, when using ORM libraries like [Prisma](https://www.prisma.io/), [MikroORM](https://mikro - orm.io/), and [Drizzle](https://orm.drizzle.team/), we also pre - define database table structures or entity models that contain runtime types.
 The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
@@ -19,16 +19,17 @@ In addition, the **resolver factory** of GQLoom can generate CRUD interfaces for
 ## Hello World
 
 ```ts
-import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
+import { resolver, query, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
   hello: query(v.string())
-  .input({ name: v.nullish(v.string(), "World") })
-  .resolve(({ name }) => `Hello, ${name}!`),
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello, ${name}!`),
 })
 
-export const schema = ValibotWeaver.weave(helloResolver)
+export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
 ## Highlights you should not miss

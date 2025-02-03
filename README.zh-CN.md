@@ -19,7 +19,8 @@ GQLoom 的职责就是将这些运行时类型编织为 GraphQL Schema。
 ## 你好 世界
 
 ```ts
-import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
+import { resolver, query, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
@@ -28,7 +29,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}!`),
 })
 
-export const schema = ValibotWeaver.weave(helloResolver)
+export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
 ## 亮点咫尺可及

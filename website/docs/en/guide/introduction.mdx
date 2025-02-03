@@ -16,7 +16,7 @@ GraphQL brings the following advantages:
 
 ## What is GQLoom
 
-GQLoom is a **Code - First** GraphQL Schema weaver, used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into a GraphQL Schema.
+GQLoom is a **Code - First** GraphQL Schema Loom, used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into a GraphQL Schema.
 
 Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://valibot.dev/), and [Yup](https://github.com/jquense/yup) have been widely used in backend application development. At the same time, when using ORM libraries such as [Prisma](https://www.prisma.io/), [MikroORM](https://mikro - orm.io/), and [Drizzle](https://orm.drizzle.team/), we also pre - define the database table structures or entity models that contain runtime types.
 The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
@@ -33,30 +33,32 @@ The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](h
 <Tabs>
 <Tab label="valibot">
 ```ts
-import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
+import { resolver, query, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
   hello: query(v.string())
-   .input({ name: v.nullish(v.string(), "World") })
-   .resolve(({ name }) => `Hello, ${name}!`),
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello, ${name}!`),
 })
 
-export const schema = ValibotWeaver.weave(helloResolver)
+export const schema = weave(ValibotWeaver, helloResolver)
 ```
 </Tab>
 <Tab  label="zod">
 ```ts
-import { resolver, query, ZodWeaver } from "@gqloom/zod"
-import { z } from "zod"
+import { resolver, query, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import { zod } from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())
-   .input({ name: z.string().nullish() })
-   .resolve(({ name }) => `Hello, ${name?? "World"}!`),
+    .input({ name: z.string().nullish() })
+    .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 
-export const schema = ZodWeaver.weave(helloResolver)
+export const schema = weave(ZodWeaver, helloResolver)
 ```
 </Tab>
 </Tabs>
