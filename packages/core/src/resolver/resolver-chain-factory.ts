@@ -326,7 +326,7 @@ export class SubscriptionChainFactory<
     const subscription = createSubscription(options?.output, {
       ...options,
       subscribe,
-    })
+    }) as Subscription<any, any, any>
 
     const subscriptionResolve = subscription.resolve
 

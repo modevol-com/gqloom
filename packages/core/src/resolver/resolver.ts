@@ -1,4 +1,5 @@
 import {
+  type MayPromise,
   type Middleware,
   applyMiddlewares,
   compose,
@@ -17,24 +18,34 @@ import {
 import type {
   FieldFactory,
   FieldFactoryWithUtils,
+  FieldOptions,
   FieldOrOperation,
+  GraphQLSilk,
   GraphQLSilkIO,
   MutationFactory,
   MutationFactoryWithChain,
   QueryFactory,
   QueryFactoryWithChain,
+  QueryMutationOptions,
   ResolverFactory,
   ResolverOptionsWithParent,
   ResolvingOptions,
   Subscription,
   SubscriptionFactory,
   SubscriptionFactoryWithChain,
+  SubscriptionOptions,
 } from "./types"
 
-export const createQuery: QueryFactory<GraphQLSilkIO> = (
-  output,
-  resolveOrOptions
+export const createQuery = (
+  output: GraphQLSilk<any, any>,
+  resolveOrOptions?:
+    | (() => MayPromise<unknown>)
+    | QueryMutationOptions<GraphQLSilkIO, any, any>
 ) => {
+  if (resolveOrOptions == null) {
+    return new QueryChainFactory({ output })
+  }
+
   const options = getOperationOptions(resolveOrOptions)
   const type = "query"
   return {
@@ -50,18 +61,24 @@ export const createQuery: QueryFactory<GraphQLSilkIO> = (
       )
     },
     type,
-  }
+  } as FieldOrOperation<any, any, any, "query">
 }
 
 export const query: QueryFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  createQuery,
+  createQuery as QueryFactory<GraphQLSilkIO>,
   QueryChainFactory.methods()
 )
 
-export const createMutation: MutationFactory<GraphQLSilkIO> = (
-  output,
-  resolveOrOptions
+export const createMutation = (
+  output: GraphQLSilk<any, any>,
+  resolveOrOptions?:
+    | (() => MayPromise<unknown>)
+    | QueryMutationOptions<GraphQLSilkIO, any, any>
 ) => {
+  if (resolveOrOptions == null) {
+    return new MutationChainFactory({ output })
+  }
+
   const options = getOperationOptions(resolveOrOptions)
   const type = "mutation"
   return {
@@ -77,18 +94,23 @@ export const createMutation: MutationFactory<GraphQLSilkIO> = (
       )
     },
     type,
-  }
+  } as FieldOrOperation<any, any, any, "mutation">
 }
 
 export const mutation: MutationFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  createMutation,
+  createMutation as MutationFactory<GraphQLSilkIO>,
   MutationChainFactory.methods()
 )
 
-export const createField: FieldFactory<GraphQLSilkIO> = (
-  output,
-  resolveOrOptions
+export const createField = (
+  output: GraphQLSilk<any, any>,
+  resolveOrOptions?:
+    | ((parent: unknown) => unknown)
+    | FieldOptions<GraphQLSilkIO, any, any, any>
 ) => {
+  if (resolveOrOptions == null) {
+    return new FieldChainFactory({ output })
+  }
   const options = getOperationOptions<"field">(resolveOrOptions)
   const type = "field"
   return {
@@ -105,21 +127,27 @@ export const createField: FieldFactory<GraphQLSilkIO> = (
       )
     },
     type,
-  }
+  } as FieldOrOperation<any, any, any, "field">
 }
 
 export const field: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
-  createField,
+  createField as FieldFactory<GraphQLSilkIO>,
   { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
   FieldChainFactory.methods()
 )
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const createSubscription: SubscriptionFactory<GraphQLSilkIO> = (
-  output,
-  subscribeOrOptions
+export const createSubscription = (
+  output: GraphQLSilk<any, any>,
+  subscribeOrOptions?:
+    | (() => MayPromise<AsyncIterator<unknown>>)
+    | SubscriptionOptions<GraphQLSilkIO, any, any, any>
 ) => {
+  if (subscribeOrOptions == null) {
+    return new SubscriptionChainFactory({ output })
+  }
+
   const options = getSubscriptionOptions(subscribeOrOptions)
   const type = "subscription"
   return {
@@ -139,11 +167,14 @@ export const createSubscription: SubscriptionFactory<GraphQLSilkIO> = (
     },
     resolve: options.resolve ?? defaultSubscriptionResolve,
     type,
-  }
+  } as Subscription<any, any, any>
 }
 
 export const subscription: SubscriptionFactoryWithChain<GraphQLSilkIO> =
-  Object.assign(createSubscription, SubscriptionChainFactory.methods())
+  Object.assign(
+    createSubscription as SubscriptionFactory<GraphQLSilkIO>,
+    SubscriptionChainFactory.methods()
+  )
 
 export const ResolverOptionsMap = new WeakMap<
   object,

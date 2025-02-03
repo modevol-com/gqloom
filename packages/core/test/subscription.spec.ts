@@ -30,6 +30,17 @@ describe("subscription integration", () => {
       description: "a simple subscription",
       type: "subscription",
     })
+
+    const s2 = subscription(silk(GraphQLString))
+      .input(silk(GraphQLString))
+      .description("a simple subscription")
+      .subscribe(fooGenerator)
+
+    expect(s2).toBeDefined()
+    expect(s2).toMatchObject({
+      description: "a simple subscription",
+      type: "subscription",
+    })
   })
 
   it("should accepts sync subscribe function", async () => {

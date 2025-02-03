@@ -188,6 +188,10 @@ export interface QueryFactory<TSchemaIO extends AbstractSchemaIO> {
     InputSchemaToSilk<TSchemaIO, TInput>,
     "query"
   >
+
+  <TOutput extends TSchemaIO[0]>(
+    output: TOutput
+  ): QueryChainFactory<TSchemaIO, TOutput, undefined>
 }
 
 export interface QueryFactoryWithChain<TSchemaIO extends AbstractSchemaIO>
@@ -212,6 +216,10 @@ export interface MutationFactory<TSchemaIO extends AbstractSchemaIO> {
     InputSchemaToSilk<TSchemaIO, TInput>,
     "mutation"
   >
+
+  <TOutput extends TSchemaIO[0]>(
+    output: TOutput
+  ): MutationChainFactory<TSchemaIO, TOutput, undefined>
 }
 
 /**
@@ -266,6 +274,10 @@ export interface FieldFactory<TSchemaIO extends AbstractSchemaIO> {
     InputSchemaToSilk<TSchemaIO, TInput>,
     "field"
   >
+
+  <TOutput extends TSchemaIO[0]>(
+    output: TOutput
+  ): FieldChainFactory<TSchemaIO, TOutput, undefined>
 }
 
 export interface FieldFactoryWithUtils<TSchemaIO extends AbstractSchemaIO>
@@ -334,6 +346,10 @@ export interface SubscriptionFactory<TSchemaIO extends AbstractSchemaIO> {
     InputSchemaToSilk<TSchemaIO, TInput>,
     TValue
   >
+
+  <TOutput extends TSchemaIO[0]>(
+    output: TOutput
+  ): SubscriptionChainFactory<TSchemaIO, TOutput, undefined>
 }
 
 export interface SubscriptionFactoryWithChain<

@@ -68,9 +68,8 @@ describe("resolver", () => {
       //     `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
       // }),
 
-      greeting: field
+      greeting: field(silk<string>(new GraphQLNonNull(GraphQLString)))
         .description("a normal greeting")
-        .output(silk<string>(new GraphQLNonNull(GraphQLString)))
         .input({ myName: silk(GraphQLString) })
         .resolve((giraffe, { myName }) => {
           return `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`
@@ -120,6 +119,28 @@ describe("resolver", () => {
 
       expect(m).toBeDefined()
       expect(m).toMatchObject({
+        description: "a simple mutation",
+        type: "mutation",
+      })
+
+      const q2 = query(Giraffe)
+        .input(GiraffeInput)
+        .description("a simple query")
+        .resolve(() => Skyler)
+
+      expect(q2).toBeDefined()
+      expect(q2).toMatchObject({
+        description: "a simple query",
+        type: "query",
+      })
+
+      const m2 = mutation(Giraffe)
+        .input(GiraffeInput)
+        .description("a simple mutation")
+        .resolve(() => Skyler)
+
+      expect(m2).toBeDefined()
+      expect(m2).toMatchObject({
         description: "a simple mutation",
         type: "mutation",
       })
@@ -184,6 +205,23 @@ describe("resolver", () => {
 
       expect(f).toBeDefined()
       expect(f).toMatchObject({
+        deprecationReason: "not depredate yet",
+        description: "a normal field",
+        extensions: { foo: "bar" },
+        type: "field",
+      })
+
+      const f2 = field(silk(GraphQLInt))
+        .input({ int: silk(GraphQLInt) })
+        .deprecationReason("not depredate yet")
+        .description("a normal field")
+        .extensions({
+          foo: "bar",
+        })
+        .resolve((_, { int }) => int)
+
+      expect(f2).toBeDefined()
+      expect(f2).toMatchObject({
         deprecationReason: "not depredate yet",
         description: "a normal field",
         extensions: { foo: "bar" },
