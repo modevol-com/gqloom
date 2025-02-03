@@ -8,11 +8,11 @@ GraphQL 是一种用于 API 的查询语言，由 Facebook 开发并开源。它
 
 GraphQL 带来了以下优点：
 
-- 类型安全：GraphQL 使用强类型系统，可以确保从服务端到客户端数据的一致性和安全性。
-- 灵活聚合：GraphQL 可以自动聚合多个查询，既减少客户端的请求次数，也保证服务端 API 的简洁性。
-- 高效查询：客户端可以指定所需的数据结构，从而减少不必要的数据传输，提高 API 的性能和可维护性。
-- 易于扩展：GraphQL 可以通过添加新的字段和类型来扩展 API，而不需要修改现有的代码。
-- 高效协作：GraphQL 使用 Schema 作为文档，在团队开发中可以减少沟通成本，提高开发效率。
+- **类型安全**：GraphQL 使用强类型系统，可以确保从服务端到客户端数据的一致性和安全性。
+- **灵活聚合**：GraphQL 可以自动聚合多个查询，既减少客户端的请求次数，也保证服务端 API 的简洁性。
+- **高效查询**：客户端可以指定所需的数据结构，从而减少不必要的数据传输，提高 API 的性能和可维护性。
+- **易于扩展**：GraphQL 可以通过添加新的字段和类型来扩展 API，而不需要修改现有的代码。
+- **高效协作**：GraphQL 使用 Schema 作为文档，在团队开发中可以减少沟通成本，提高开发效率。
 
 ## 什么是 GQLoom
 
@@ -21,7 +21,7 @@ GQLoom 是一个 **代码优先（Code-First）** 的 GraphQL Schema 纺织器�
 [Zod](https://zod.dev/)、[Valibot](https://valibot.dev/)、[Yup](https://github.com/jquense/yup) 等运行时验证库已经在后端应用开发中得到广泛的使用；同时在使用 [Prisma](https://www.prisma.io/) 、[MikroORM](https://mikro-orm.io/)、[Drizzle](https://orm.drizzle.team/) 等 ORM 库时，我们也会预先定义包含运行时类型的数据库表结构或实体模型。
 GQLoom 的职责就是将这些运行时类型编织为 GraphQL Schema。
 
-当使用 GQLoom 开发后端服务时，你只需要使用你熟悉的 Schema 库编写类型，现代的 Schema 库将为你推导 TypeScript 类型，而 GQLoom 将为你编织 GraphQL 类型。
+当使用 GQLoom 开发后端应用时，你只需要使用你熟悉的 Schema 库编写类型，现代的 Schema 库将为你推导 TypeScript 类型，而 GQLoom 将为你编织 GraphQL 类型。
 
 GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)、[Pothos](https://pothos-graphql.dev/) 启发。
 
