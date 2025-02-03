@@ -8,18 +8,13 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-GQLoom is a GraphQL weaver for TypeScript/JavaScript that weaves GraphQL Schema and Resolvers using Valibot, Zod, or Yup, and supports sophisticated type inference to provide the best development experience.
+GQLoom is a **Code - First** GraphQL Schema weaver used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into a GraphQL Schema.
 
-The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), [Pothos](https://pothos-graphql.dev/).
+Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://valibot.dev/), and [Yup](https://github.com/jquense/yup) have been widely used in backend application development. Meanwhile, when using ORM libraries like [Prisma](https://www.prisma.io/), [MikroORM](https://mikro - orm.io/), and [Drizzle](https://orm.drizzle.team/), we also pre - define database table structures or entity models that contain runtime types.
+The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
 
-## Features
-
-* 🚀 GraphQL: flexible and efficient, reducing redundant data transfers;
-* 🔒 Robust type safety: enjoy intelligent hints at development time to detect potential problems at compile time;
-* 🔋 Ready to go: middleware, contexts, subscriptions, federated graphs are ready to go;
-* 🔮 No extra magic: no decorators, no metadata and reflection, no code generation, you just need JavaScript/TypeScript;
-* 🧩 Familiar schema libraries: use the schema libraries you already know (Zod, Yup, Valibot) to build GraphQL Schema and validate inputs;
-* 🧑‍💻 Develop happily: highly readable and semantic APIs designed to keep your code tidy;
+When developing backend applications with GQLoom, you only need to write types using the Schema libraries you're familiar with. Modern Schema libraries will infer TypeScript types for you, and GQLoom will weave GraphQL types for you.
+In addition, the **resolver factory** of GQLoom can generate CRUD interfaces for `Prisma`, `MikroORM`, and `Drizzle`, and supports custom input and adding middleware.
 
 ## Hello World
 
@@ -28,40 +23,51 @@ import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
-  hello: query(v.string(), () => "world"),
+  hello: query(v.string())
+  .input({ name: v.nullish(v.string(), "World") })
+  .resolve(({ name }) => `Hello, ${name}!`),
 })
 
 export const schema = ValibotWeaver.weave(helloResolver)
 ```
 
-Read [Introduction](https://gqloom.dev/guide/introduction.html) to learn more about GQLoom.
+## Highlights you should not miss
+
+- 🧑‍💻 **Development Experience**: Fewer boilerplate codes, semantic API design, and extensive ecosystem integration make development enjoyable.
+- 🔒 **Type Safety**: Automatically infer types from the Schema, enjoy intelligent code completion during development, and detect potential problems during compilation.
+- 🎯 **Interface Factory**: Ordinary CRUD interfaces are too simple yet too cumbersome. Let the resolver factory create them quickly.
+- 🔋 **Fully Prepared**: Middleware, context, subscriptions, and federated graphs are ready.
+- 🔮 **No Magic**: Without decorators, metadata, reflection, or code generation, it can run anywhere with just JavaScript/TypeScript.
+- 🧩 **Rich Integration**: Use your most familiar validation libraries and ORMs to build your next GraphQL application.
 
 ## Getting Started
 
 See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn how to use GQLoom.
 
-## In this Repository
+## Repository Navigation
 
-* [GQLoom Core](./packages/core/README.md): GraphQL Loom Core Features;
+- [GQLoom Core](./packages/core/README.md): Core functions of the GraphQL loom;
 
-* [GQLoom Federation](./packages/federation/README.md): Provides GQLoom support for Apollo Federation;
+- [GQLoom Drizzle](./packages/drizzle/README.md): Integration of GQLoom and Drizzle, capable of weaving database tables defined by Drizzle into a GraphQL Schema, and supports quickly creating CRUD interfaces from Drizzle using the resolver factory;
 
-* [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom integration with Mikro ORM;
+- [GQLoom Federation](./packages/federation/README.md): Provides GQLoom's support for Apollo Federation;
 
-* [GQLoom Prisma](./packages/prisma/README.md): GQLoom integration with Prisma;
+- [GQLoom Mikro ORM](./packages/mikro - orm/README.md): Integration of GQLoom and Mikro ORM, capable of weaving Mikro Entity into a GraphQL Schema, and supports quickly creating CRUD interfaces from Mikro ORM using the resolver factory;
 
-* [GQLoom Valibot](./packages/valibot/README.md): GQLoom integration with Valibot;
+- [GQLoom Prisma](./packages/prisma/README.md): Integration of GQLoom and Prisma, capable of weaving Prisma model into a GraphQL Schema, and supports quickly creating CRUD interfaces from Prisma using the resolver factory;
 
-* [GQLoom Yup](./packages/yup/README.md): GQLoom integration with Yup;
+- [GQLoom Valibot](./packages/valibot/README.md): Integration of GQLoom and Valibot, capable of weaving Valibot Schema into a GraphQL Schema;
 
-* [GQLoom Zod](./packages/zod/README.md): GQLoom integration with Zod;
+- [GQLoom Yup](./packages/yup/README.md): Integration of GQLoom and Yup, capable of weaving Yup Schema into a GraphQL Schema;
 
-[license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
+- [GQLoom Zod](./packages/zod/README.md): Integration of GQLoom and Zod, capable of weaving Zod Schema into a GraphQL Schema;
+
+[license-image]: https://img.shields.io/badge/License - MIT - brightgreen.svg?style=flat - square
 
 [license-url]: https://opensource.org/licenses/MIT
 
-[npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat-square
+[npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat - square
 
 [npm-url]: https://www.npmjs.com/package/@gqloom/core
 
-[downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat-square
+[downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat - square
