@@ -53,7 +53,7 @@ See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn ho
 
 - [GQLoom Federation](./packages/federation/README.md): Provides GQLoom's support for Apollo Federation;
 
-- [GQLoom Mikro ORM](./packages/mikro - orm/README.md): Integration of GQLoom and Mikro ORM, capable of weaving Mikro Entity into a GraphQL Schema, and supports quickly creating CRUD interfaces from Mikro ORM using the resolver factory;
+- [GQLoom Mikro ORM](./packages/mikro-orm/README.md): Integration of GQLoom and Mikro ORM, capable of weaving Mikro Entity into a GraphQL Schema, and supports quickly creating CRUD interfaces from Mikro ORM using the resolver factory;
 
 - [GQLoom Prisma](./packages/prisma/README.md): Integration of GQLoom and Prisma, capable of weaving Prisma model into a GraphQL Schema, and supports quickly creating CRUD interfaces from Prisma using the resolver factory;
 
