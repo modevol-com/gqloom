@@ -45,7 +45,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn how to use GQLoom.
 
-## Repository Navigation
+## In this Repository
 
 - [GQLoom Core](./packages/core/README.md): Core functions of the GraphQL loom;
 
