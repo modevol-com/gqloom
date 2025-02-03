@@ -58,7 +58,10 @@ const catResolver = resolver.of(Cat, {
 })
 
 const helloResolver = resolver({
-  hello: query(v.string(), () => "Hello, World"),
+  hello: query
+    .input(v.object({ name: v.nullish(v.string(), "World") }))
+    .output(v.string())
+    .resolve(({ name }) => `Hello, ${name}!`),
 })
 
 export const schema = weave(ValibotWeaver, helloResolver, catResolver)

@@ -53,7 +53,10 @@ const catResolver = resolver.of(Cat, {
 })
 
 const helloResolver = resolver({
-  hello: query(z.string(), () => "Hello, World"),
+  hello: query
+    .input(z.object({ name: z.string().nullish() }))
+    .output(z.string())
+    .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 
 export const schema = weave(ZodWeaver, helloResolver, catResolver)

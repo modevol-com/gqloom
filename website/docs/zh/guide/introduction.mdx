@@ -8,23 +8,20 @@ GraphQL 是一种用于 API 的查询语言，由 Facebook 开发并开源。它
 
 GraphQL 带来了以下优点：
 
-- 论其**类型安保**之功，类乎坚盾镇关，万邪莫侵。强类型体系为基，恰似榫卯相契，从服务端启碇，至客户端泊岸，数据行舟，规绳谨守，一致性稳若苍松之根，安全性固比南山之石，舛讹尽消，谧然无忧。
-- 言及**聚合灵动**之妙，宛如灵鹊架桥，天堑通途。能汇多重查问，化零为整，恰似百川归海。客户端索求，频次锐减，仿若风驰电掣掠原隰；服务端 API ，简约恒持，犹似冰壶玉鉴映清辉，二者共济，繁简协律随心。
-- 谈及**查询高效**之益，仿若利箭破风，径取鹄的。客户端巧运神机，甄选精准数据架构，冗赘摒除殆尽，恰似披沙拣金，API 性能因之振翮，可维护性如影随形，传输之道，畅达无阻。
-- 复论**扩展简易**之利，宛如新枝抽芽，生机盎然。添字段若点翠增华，加类型似补天缀锦，API 乾坤随心拓展，旧码安卧，纹丝未动，毋庸大动干戈，进阶之途，豁然开朗。
-- 终述**沟通畅顺**之美，仿若名匠筑厦，擘画有序。持 Schema 为蓝图，当大型团队齐驱之时，知识传递若榫卯契合，沟通阻碍如烟云散尽，开发进程，一日千里，群策群力，共铸华章。
+- 类型安全：GraphQL 使用强类型系统，可以确保从服务端到客户端数据的一致性和安全性。
+- 灵活聚合：GraphQL 可以自动聚合多个查询，既减少客户端的请求次数，也保证服务端 API 的简洁性。
+- 高效查询：客户端可以指定所需的数据结构，从而减少不必要的数据传输，提高 API 的性能和可维护性。
+- 易于扩展：GraphQL 可以通过添加新的字段和类型来扩展 API，而不需要修改现有的代码。
+- 高效协作：GraphQL 使用 Schema 作为文档，在团队开发中可以减少沟通成本，提高开发效率。
 
 ## 什么是 GQLoom
 
-GraphQL 使得 API 的开发变得简单，但编写和维护 GraphQL Schema ，并使其与 TypeScript 类型和服务逻辑保持一致并不是一件简单的工作。
+GQLoom 是一个 **代码优先（Code-First）** 的 GraphQL Schema 纺织器，用于将 TypeScript/JavaScript 生态中的**运行时类型**编织成 GraphQL Schema。
 
-在传统的 GraphQL 开发中，开发者需要手动编写 Schema，这会导致代码冗余，并且难以维护。如果使用 TypeScript，还需要生成或手动编辑类型声明。这意味开发者需要同时编写维护 `GraphQL` schema、解析器逻辑实现、 `TypeScript` 类型声明三套代码，这无疑增加了开发者的负担。
+[Zod](https://zod.dev/)、[Valibot](https://valibot.dev/)、[Yup](https://github.com/jquense/yup) 等运行时验证库已经在后端应用开发中得到广泛的使用；同时在使用 [Prisma](https://www.prisma.io/) 、[MikroORM](https://mikro-orm.io/)、[Drizzle](https://orm.drizzle.team/) 等 ORM 库时，我们也会预先定义包含运行时类型的数据库表结构或实体模型。
+GQLoom 的职责就是将这些运行时类型编织为 GraphQL Schema。
 
-近年来，TypeScript 社区中开始逐渐普及运行时的类型检查，如 [Zod](https://zod.dev/) 和 [Valibot](https://valibot.dev/) 等，这些库允许开发者使用 JavaScript 来编写类型声明，在开发时为开发者提供健全的类型安全，并在运行时进行类型检查。
-更关键的一点时，由于这些库运行时类型检查的特性，实际上其 Schema 里已经包含了完整的类型信息，`GQLoom` 正是利用这一点，将使用 `Zod`、`Valibot` 编写的 Schema 直接作为事实来源，从而避免了手动编写 `GraphQL` Schema 的繁琐工作，同时提供更健壮的类型安全。
-
-此外，在 TypeScript 生态中的诸多 ORM 也需要在开发时声明表结构，比如：[Prisma](https://www.prisma.io/)、[Drizzle](https://orm.drizzle.team/)、[MikroORM](https://mikro-orm.io/)。
-`GQLoom` 的目标是直接将这些 ORM 的表结构作为 Schema，从而进一步降低开发者的负担。
+当使用 GQLoom 开发后端服务时，你只需要使用你熟悉的 Schema 库编写类型，现代的 Schema 库将为你推导 TypeScript 类型，而 GQLoom 将为你编织 GraphQL 类型。
 
 GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)、[Pothos](https://pothos-graphql.dev/) 启发。
 
@@ -37,7 +34,10 @@ import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
-  hello: query(v.string(), () => "world"),
+  hello: query
+    .input(v.object({ name: v.nullish(v.string(), "World") }))
+    .output(v.string())
+    .resolve(({ name }) => `Hello, ${name}!`),
 })
 
 export const schema = ValibotWeaver.weave(helloResolver)
@@ -49,7 +49,10 @@ import { resolver, query, ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 
 const helloResolver = resolver({
-  hello: query(z.string(), () => "world"),
+  hello: query
+    .input(z.object({ name: z.string().nullish() }))
+    .output(z.string())
+    .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 
 export const schema = ZodWeaver.weave(helloResolver)
