@@ -35,7 +35,7 @@ const catResolver = resolver.of(Cat, {
     },
   }),
 
-  cats: query(v.array(Cat), () => Array.from(catMap.values())),
+  cats: query(v.array(Cat)).resolve(() => Array.from(catMap.values())),
 
   cat: query(v.nullish(Cat), {
     input: {

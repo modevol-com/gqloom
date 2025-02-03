@@ -198,11 +198,11 @@ const Book = weaveEntitySchema.withRelations(
 
 在上面的代码中，我们使用 `weaveEntitySchema.withRelations` 为 `Book` 实体定义了一个关于`author` 的多对一关系，该关系指向 `Author` 实体，并且该关系是可选的，你可以在 `manyToOne` 的第二个参数中定义更多关于该关系的配置。
 
-## 从 MikroORM 的 Entity Schema 生成 GraphQL 操作
+## 解析器工厂
 
 GQLoom 提供了直接从 MikroORM 的 Entity Schema 生成 GraphQL 操作的功能，这将极大简化开发过程。
 
-首先，我们需要从 Entity Schema 创建线筒。
+首先，我们需要从 Entity Schema 创建解析器工厂。
 
 ```ts
 import { EntitySchema } from "@mikro-orm/core"
@@ -230,7 +230,7 @@ const Giraffe = mikroSilk(
 const giraffeResolverFactory = new MikroResolverFactory(Giraffe, () => orm.em)
 ```
 
-在上面的代码中，我们首先定义了一个 `Giraffe` 实体，然后使用 `MikroResolverFactory` 创建了一个线筒。从线筒中，我们可以直接生成 GraphQL 操作。
+在上面的代码中，我们首先定义了一个 `Giraffe` 实体，然后使用 `MikroResolverFactory` 创建了一个解析器工厂。从解析器工厂中，我们可以直接生成 GraphQL 操作。
 
 ```ts
 const GiraffeResolver = resolver.of(Giraffe, {
