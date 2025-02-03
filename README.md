@@ -63,12 +63,8 @@ See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn ho
 
 - [GQLoom Zod](./packages/zod/README.md): Integration of GQLoom and Zod, capable of weaving Zod Schema into a GraphQL Schema;
 
-[license-image]: https://img.shields.io/badge/License - MIT - brightgreen.svg?style=flat - square
-
+[license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT
-
-[npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat - square
-
+[npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat-square
 [npm-url]: https://www.npmjs.com/package/@gqloom/core
-
-[downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat - square
+[downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat-square

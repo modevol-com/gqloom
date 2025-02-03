@@ -64,11 +64,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 - [GQLoom Zod](./packages/zod/README.md): GQLoom 与 Zod 的集成，能够将 Zod Schema 编织为 GraphQL Schema；
 
 [license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
-
 [license-url]: https://opensource.org/licenses/MIT
-
 [npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat-square
-
 [npm-url]: https://www.npmjs.com/package/@gqloom/core
-
 [downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat-square
