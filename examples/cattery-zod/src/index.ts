@@ -39,17 +39,13 @@ const catResolver = resolver.of(Cat, {
     resolve: ({ name }) => catMap.get(name),
   }),
 
-  createCat: mutation(Cat, {
-    input: {
-      name: z.string(),
-      birthDate: z.string(),
-    },
-    resolve: ({ name, birthDate }) => {
+  createCat: mutation(Cat)
+    .input({ name: z.string(), birthDate: z.string() })
+    .resolve(({ name, birthDate }) => {
       const cat = { name, birthDate }
       catMap.set(name, cat)
       return cat
-    },
-  }),
+    }),
 })
 
 const helloResolver = resolver({
