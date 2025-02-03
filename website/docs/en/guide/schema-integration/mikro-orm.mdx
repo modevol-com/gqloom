@@ -198,11 +198,11 @@ const Book = weaveEntitySchema.withRelations(
 
 In the code above, we used `weaveEntitySchema.withRelations` to define a many-to-one relationship on `author` for the `Book` entity, which points to the `Author` entity, and the relationship is optional, and you can define more information about the configuration of the `author` relationship in the second parameter of `manyToOne`. configuration of the relationship.
 
-## Generating GraphQL Operations from MikroORM's Entity Schema
+## Resolver Factory
 
 GQLoom provides the ability to generate GraphQL operations directly from MikroORM's Entity Schema, which greatly simplifies the development process.
 
-First, we need to create the wire bobbin from the Entity Schema.
+First, we need to create the Resolver Factory from the Entity Schema.
 
 ```ts
 import { EntitySchema } from "@mikro-orm/core"
@@ -230,7 +230,7 @@ const Giraffe = mikroSilk(
 const giraffeResolverFactory = new MikroResolverFactory(Giraffe, () => orm.em)
 ```
 
-In the code above, we first define a `Giraffe` entity and then create a bobbin using `MikroResolverFactory`. From the bobbin, we can generate GraphQL operations directly.
+In the code above, we first define a `Giraffe` entity and then create a resolver factory using `MikroResolverFactory`. From the factory, we can generate GraphQL operations directly.
 
 ```ts
 const GiraffeResolver = resolver.of(Giraffe, {

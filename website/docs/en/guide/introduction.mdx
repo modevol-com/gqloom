@@ -4,30 +4,31 @@ import { Tab, Tabs } from "rspress/theme"
 
 ## What is GraphQL
 
-GraphQL is a query language for APIs, developed and open-sourced by Facebook. It allows clients to specify the required data structures, thus reducing unnecessary data transfers and improving the performance and maintainability of APIs.
+GraphQL is a query language for APIs, developed and open - sourced by Facebook. It allows clients to specify the required data structure, reducing unnecessary data transfer and improving the performance and maintainability of the API.
 
-GraphQL brings the following benefits:
-- **Flexibility**: Clients can specify the required data structures, thus reducing unnecessary data transfers and improving API performance and maintainability.
-- **Strong Typing**: GraphQL uses a strong typing system that ensures data consistency and security.
-- **Automatic Aggregation**: GraphQL can automatically aggregate multiple queries, which not only reduces the number of client requests, but also ensures the simplicity of the server-side API.
-- **Efficient Communication**: GraphQL uses a single Schema, which reduces communication costs and improves development efficiency in team development.
+GraphQL brings the following advantages:
+
+- **Type Safety**: GraphQL uses a strong type system to ensure the consistency and security of data from the server to the client.
+- **Flexible Aggregation**: GraphQL can automatically aggregate multiple queries, reducing the number of client requests and ensuring the simplicity of the server - side API.
+- **Efficient Querying**: The client can specify the required data structure, reducing unnecessary data transfer and improving the performance and maintainability of the API.
 - **Easy to Extend**: GraphQL can extend the API by adding new fields and types without modifying existing code.
+- **Efficient Collaboration**: GraphQL uses Schema as documentation, which can reduce communication costs and improve development efficiency in team development.
 
 ## What is GQLoom
 
-GraphQL makes API development easy, but writing and maintaining GraphQL Schema and aligning it with TypeScript types and service logic is not a simple task.
+GQLoom is a **Code - First** GraphQL Schema weaver, used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into a GraphQL Schema.
 
-In traditional GraphQL development, developers need to write the Schema manually, which leads to code redundancy and is difficult to maintain. With TypeScript, you also need to generate or manually edit type declarations. This means that the developer needs to write and maintain three sets of code at the same time: the `GraphQL` schema, the resolver logic implementation, and the `TypeScript` type declarations, which increases the burden on the developer.
+Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://valibot.dev/), and [Yup](https://github.com/jquense/yup) have been widely used in backend application development. At the same time, when using ORM libraries such as [Prisma](https://www.prisma.io/), [MikroORM](https://mikro - orm.io/), and [Drizzle](https://orm.drizzle.team/), we also pre - define the database table structures or entity models that contain runtime types.
+The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
 
-In recent years, runtime type checking has become increasingly popular in the TypeScript community, with libraries such as [Zod](https://zod.dev/) and [Valibot](https://valibot.dev/) allowing developers to write type declarations in JavaScript, providing robust type safety at development time and type safety at runtime.
-More importantly, due to the runtime type checking nature of these libraries, the complete type information is already contained in their Schema. `GQLoom` takes advantage of this by using the Schema written in `Zod` and `Valibot` as the source of facts, thus avoiding the tedious task of writing `GraphQL` Schema manually, and providing more robust type safety. This eliminates the need to manually write `GraphQL` Schema and provides more robust type safety.
+When developing backend applications with GQLoom, you only need to write types using the Schema libraries you are familiar with. Modern Schema libraries will infer TypeScript types for you, and GQLoom will weave GraphQL types for you.
+In addition, the **resolver factory** of GQLoom can also generate CRUD interfaces for [Prisma](./schema-integration/prisma.mdx#resolver-factory), [MikroORM](./schema-integration/mikro-orm.mdx#resolver-factory), and [Drizzle](./schema-integration/drizzle.mdx#resolver-factory), and supports custom input and adding middleware.
 
-In addition, many ORMs in the TypeScript ecosystem require table structures to be declared at development time, e.g. [Prisma](https://www.prisma.io/), [Drizzle](https://orm.drizzle.team/), [MikroORM](https://mikro-orm.io/).
-The goal of `GQLoom` is to further reduce the burden on developers by directly using the table structures of these ORMs as Schema.
+:::info Some Information
+The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](https://typegraphql.com/), and some technical implementations refer to [Pothos](https://pothos - graphql.dev/).
+:::
 
-The design of GQLoom is inspired by [tRPC](https://trpc.io/), [TypeGraphQL](https://typegraphql.com/), [Pothos](https://pothos-graphql.dev/).
-
-## Hello World
+### Hello, World
 
 <Tabs>
 <Tab label="valibot">
@@ -36,7 +37,9 @@ import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
-  hello: query(v.string(), () => "world"),
+  hello: query(v.string())
+   .input({ name: v.nullish(v.string(), "World") })
+   .resolve(({ name }) => `Hello, ${name}!`),
 })
 
 export const schema = ValibotWeaver.weave(helloResolver)
@@ -48,10 +51,21 @@ import { resolver, query, ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 
 const helloResolver = resolver({
-  hello: query(z.string(), () => "world"),
+  hello: query(z.string())
+   .input({ name: z.string().nullish() })
+   .resolve(({ name }) => `Hello, ${name?? "World"}!`),
 })
 
 export const schema = ZodWeaver.weave(helloResolver)
 ```
 </Tab>
 </Tabs>
+
+### Highlights you should not miss
+
+- 🧑‍💻 **Development Experience**: Fewer boilerplate codes, semantic API design, and extensive ecosystem integration make development enjoyable.
+- 🔒 **Type Safety**: Automatically infer types from the Schema, enjoy intelligent code completion during development, and detect potential problems during compilation.
+- 🎯 **Interface Factory**: Ordinary CRUD interfaces are too simple yet too cumbersome. Let the resolver factory generate them quickly.
+- 🔋 **Fully Prepared**: Middleware, context, subscriptions, and federated graphs are ready.
+- 🔮 **No Magic**: No decorators, no metadata and reflection, no code generation. It can run anywhere with just JavaScript/TypeScript.
+- 🧩 **Rich Integration**: Use your favorite validation libraries and ORMs to build your next GraphQL application.
