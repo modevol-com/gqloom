@@ -53,9 +53,8 @@ const catResolver = resolver.of(Cat, {
 })
 
 const helloResolver = resolver({
-  hello: query
-    .input(z.object({ name: z.string().nullish() }))
-    .output(z.string())
+  hello: query(z.string())
+    .input({ name: z.string().nullish() })
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 

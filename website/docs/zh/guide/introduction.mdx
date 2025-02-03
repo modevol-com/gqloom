@@ -34,9 +34,8 @@ import { resolver, query, ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 const helloResolver = resolver({
-  hello: query
-    .input(v.object({ name: v.nullish(v.string(), "World") }))
-    .output(v.string())
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
     .resolve(({ name }) => `Hello, ${name}!`),
 })
 
@@ -49,9 +48,8 @@ import { resolver, query, ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 
 const helloResolver = resolver({
-  hello: query
-    .input(z.object({ name: z.string().nullish() }))
-    .output(z.string())
+  hello: query(z.string())
+    .input({ name: z.string().nullish() })
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 
