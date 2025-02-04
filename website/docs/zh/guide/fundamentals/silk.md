@@ -66,10 +66,19 @@ type Cat {
 
 ## 使用模式库创建丝线
 
-好在，我们有像 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/) 这样的模式库，它们创建的 Schema 将携带 TypeScript 类型，并在运行时仍然保持类型。
+好在，我们有像 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/) 这样的模式库，它们创建的 Schema 将携带 TypeScript 类型，并在运行时仍然携带类型。
 `GQLoom` 可以直接使用这些 Schema 作为丝线，而不需要重复定义。
 
-### 使用 Valibot 创建丝线：
+`GQLoom` 目前已经集成来自以下库的 Schema：
+
+- [Valibot](../schema-integration/valibot.mdx)
+- [Zod](../schema-integration/zod.mdx)
+- [Yup](../schema-integration/yup.mdx)
+- [Mikro ORM](../schema-integration/mikro-orm.mdx)
+- [Prisma](../schema-integration/prisma.mdx)
+- [Drizzle](../schema-integration/drizzle.mdx)
+
+### 使用 Valibot 创建丝线
 
 ```ts
 import * as v from "valibot"
@@ -87,7 +96,7 @@ const Cat = v.object({
 
 在上面的代码中，我们使用 [Valibot](https://valibot.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Valibot 集成](../schema-integration/valibot)章节中了解如何使用 [Valibot](https://valibot.dev/) 创建更复杂的类型。
 
-### 使用 Zod 创建丝线：
+### 使用 Zod 创建丝线
 
 ```ts
 import { z } from "zod"
