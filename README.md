@@ -14,7 +14,7 @@ Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://
 The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
 
 When developing backend applications with GQLoom, you only need to write types using the Schema libraries you're familiar with. Modern Schema libraries will infer TypeScript types for you, and GQLoom will weave GraphQL types for you.
-In addition, the **resolver factory** of GQLoom can generate CRUD interfaces for `Prisma`, `MikroORM`, and `Drizzle`, and supports custom input and adding middleware.
+In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `Prisma`, `MikroORM`, and `Drizzle`, and supports custom input and adding middleware.
 
 ## Hello World
 
