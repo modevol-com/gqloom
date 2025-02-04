@@ -87,28 +87,24 @@ const Cat = v.object({
 
 在上面的代码中，我们使用 [Valibot](https://valibot.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Valibot 集成](../schema-integration/valibot)章节中了解如何使用 [Valibot](https://valibot.dev/) 创建更复杂的类型。
 
-:::info 你也许想知道
-`GQLoom` 核心库遵循了 [标准 Schema 规范](https://github.com/standard-schema/standard-schema)，得益于 `Valibot` 同样遵循此规范，我们不需要使用额外的包装函数就可以将 Valibot Schema 作为丝线使用。
-在未来，[Zod](https://github.com/colinhacks/zod/pull/3850)也将支持此规范。
-:::
-
 ### 使用 Zod 创建丝线：
 
 ```ts
 import { z } from "zod"
-import { zodSilk } from "@gqloom/zod"
 
-const StringSilk = zodSilk(z.string())
+const StringSilk = z.string()
 
-const BooleanSilk = zodSilk(z.boolean())
+const BooleanSilk = z.boolean()
 
-const Cat = zodSilk(
-  z.object({
-    __typename: z.literal("Cat"),
-    name: z.string(),
-    age: z.number(),
-  })
-)
+const Cat = z.object({
+  __typename: z.literal("Cat"),
+  name: z.string(),
+  age: z.number(),
+})
 ```
 
 在上面的代码中，我们使用 [Zod](https://zod.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Zod 集成](../schema-integration/zod)章节中了解如何使用 [Zod](https://zod.dev/) 创建更复杂的类型。
+
+:::info 小道消息
+`GQLoom` 核心库遵循了 [标准 Schema 规范](https://github.com/standard-schema/standard-schema)，得益于 `Valibot`、`Zod` 同样遵循此规范，我们不需要使用额外的包装函数就可以将来自 Valibot、Zod 的 Schema 作为丝线使用。
+:::
