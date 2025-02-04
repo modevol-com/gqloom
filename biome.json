@@ -59,7 +59,8 @@
         "useArrayLiterals": "off",
         "useIsNan": "error",
         "useValidForDirection": "error",
-        "useYield": "error"
+        "useYield": "error",
+        "useExhaustiveDependencies": "warn"
       },
       "style": {
         "noNamespace": "error",

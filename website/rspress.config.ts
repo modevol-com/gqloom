@@ -44,7 +44,7 @@ export default defineConfig({
       },
       {
         label: "简体中文",
-        description: "GraphQL 织布机",
+        description: "GraphQL 纺织机",
         lang: "zh",
         prevPageText: "上一篇",
         nextPageText: "下一篇",
