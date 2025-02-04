@@ -18,4 +18,7 @@ In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `
 
 This package provides GQLoom integration with [Drizzle](https://orm.drizzle.team/):
 
+- Weave database tables defined by Drizzle into a GraphQL Schema;
+- Support quickly creating CRUD interfaces from Drizzle using the resolver factory;
+
 Read more at [GQLoom Document](https://gqloom.dev/guide/schema-integration/drizzle).
