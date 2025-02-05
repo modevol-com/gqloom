@@ -6,6 +6,7 @@
     "ignore": [
       "**/dist/**/*",
       "website/doc_build/",
+      "docs/doc_build/",
       "**/generated/**/*",
       "packages/prisma/test/client/**/*",
       "coverage/"
