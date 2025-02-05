@@ -30,7 +30,7 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 
 ### 你好，世界
 
-```ts tab="valibot"
+```ts twoslash tab="valibot"
 import { resolver, query, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -44,10 +44,10 @@ const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-```ts tab="zod"
+```ts twoslash tab="zod"
 import { resolver, query, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
-import { zod } from "zod"
+import { z } from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())

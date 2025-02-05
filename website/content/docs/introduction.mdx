@@ -30,7 +30,7 @@ The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](h
 
 ### Hello, World
 
-```ts tab="valibot"
+```ts twoslash tab="valibot"
 import { resolver, query, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -44,10 +44,10 @@ const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-```ts tab="zod"
+```ts twoslash tab="zod"
 import { resolver, query, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
-import { zod } from "zod"
+import { z } from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())
