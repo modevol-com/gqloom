@@ -12,12 +12,6 @@ export const baseOptions: BaseLayoutProps = {
     // can be JSX too!
     title: "GQLoom",
   },
-  links: [
-    {
-      text: "Documentation",
-      url: "/docs",
-      active: "nested-url",
-    },
-  ],
+  githubUrl: "https://github.com/modevol-com/gqloom",
   i18n: true,
 }

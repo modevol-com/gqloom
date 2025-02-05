@@ -15,6 +15,9 @@ const cn: Partial<Translations> = {
   nextPage: "下一页",
   previousPage: "上一页",
   editOnGithub: "在 GitHub 上编辑此页面",
+  toc: "目录",
+  tocNoHeadings: "没有标题",
+  lastUpdate: "最后更新于",
 }
 
 const translations: Record<string, Partial<Translations>> = { cn }
