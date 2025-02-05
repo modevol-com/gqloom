@@ -1,8 +1,18 @@
 import "../global.css"
 import { I18nProvider, type Translations } from "fumadocs-ui/i18n"
 import { RootProvider } from "fumadocs-ui/provider"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import type { ReactNode } from "react"
+
+export const metadata: Metadata = {
+  title: "GQloom",
+  description:
+    "GQLoom is a Code First GraphQL Schema Loom, used to weave runtime types in the TypeScript/JavaScript ecosystem into a GraphQL Schema.",
+  icons: {
+    icon: { url: "/gqloom.svg", type: "image/svg+xml" },
+  },
+}
 
 const inter = Inter({
   subsets: ["latin"],
