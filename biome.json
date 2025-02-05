@@ -5,7 +5,7 @@
     "ignoreUnknown": false,
     "ignore": [
       "**/dist/**/*",
-      "website/doc_build/",
+      "website/.next/",
       "docs/doc_build/",
       "**/generated/**/*",
       "packages/prisma/test/client/**/*",
