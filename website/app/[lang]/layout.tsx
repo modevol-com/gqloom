@@ -9,8 +9,12 @@ const inter = Inter({
 })
 
 const cn: Partial<Translations> = {
-  search: "Translated Content",
-  // other translations
+  search: "搜索",
+  searchNoResult: "没有结果",
+  chooseLanguage: "选择语言",
+  nextPage: "下一页",
+  previousPage: "上一页",
+  editOnGithub: "在 GitHub 上编辑此页面",
 }
 
 const translations: Record<string, Partial<Translations>> = { cn }
