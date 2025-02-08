@@ -1,10 +1,11 @@
-import { Tab, Tabs } from 'rspress/theme';
-
-# 编织 | Weave 
+---
+title: 编织（Weave ）
+icon: Volleyball
+---
 
 在 GQLoom 中，`weave` 函数用于将多个解析器（Resolver）或丝线（Silk）编织到一张 GraphQL Schema 中。
 
-`weave` 函数可以接收[解析器](../fundamentals/resolver)、[丝线](../fundamentals/silk)、编织器配置、全局[中间件](../fundamentals/middleware)
+`weave` 函数可以接收[解析器](./resolver.mdx)、[丝线](./silk.mdx)、编织器配置、全局[中间件](./middleware.mdx)
 
 ## 编织解析器
 最常见的用法是将多个解析器编织到一起，例如：
@@ -12,16 +13,37 @@ import { Tab, Tabs } from 'rspress/theme';
 ```ts
 import { weave } from '@gqloom/core';
 
-export const schema = weave(HelloResolver, CatResolver);
+export const schema = weave(helloResolver, catResolver);
 ```
 ## 编织单独丝线
 
 有时候，我们需要将一个单独的[丝线](../fundamentals/silk)编织到 GraphQL Schema 中，例如：
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
-import { resolver, query, field, valibotSilk, weave } from '@gqloom/core'
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+import { resolver, query, mutation, field } from '@gqloom/core'
+
+const helloResolver = resolver({
+  hello: query(v.string(), () => "Hello, World"),
+})
+
+const Cat = v.object({
+  __typename: v.nullish(v.literal("Cat")),
+  name: v.string(),
+  birthDate: v.string(),
+})
+
+const catResolver = resolver({
+  createCat: mutation(Cat, {
+    input: {
+      data: Cat,
+    },
+    resolve: ({ data }) => data,
+  }),
+})
+// ---cut---
+import { weave } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
 
@@ -31,12 +53,34 @@ const Dog = v.object({
   age: v.number(),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver, CatResolver, Dog);
+export const schema = weave(ValibotWeaver, helloResolver, catResolver, Dog);
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
-import { resolver, query, field, zodSilk, weave } from '@gqloom/zod'
+</Tab>
+<Tab value="zod">
+```ts twoslash
+import { resolver, query, mutation, field } from '@gqloom/core'
+
+const helloResolver = resolver({
+  hello: query(z.string(), () => "Hello, World"),
+})
+
+const Cat = z.object({
+  __typename: z.literal("Cat").nullish(),
+  name: z.string(),
+  birthDate: z.string(),
+})
+
+const catResolver = resolver({
+  createCat: mutation(Cat, {
+    input: {
+      data: Cat,
+    },
+    resolve: ({ data }) => data,
+  })
+})
+// ---cut---
+import { weave } from '@gqloom/core'
+import { ZodWeaver } from '@gqloom/zod'
 import { z } from "zod"
 
 const Dog = z.object({
@@ -45,9 +89,9 @@ const Dog = z.object({
   age: z.number(),
 })
 
-export const schema = weave(HelloResolver, CatResolver, zodSilk(Dog));
+export const schema = weave(ZodWeaver, helloResolver, catResolver, Dog);
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 ## 编织器配置
@@ -61,9 +105,9 @@ export const schema = weave(HelloResolver, CatResolver, zodSilk(Dog));
 
 让我们来看一个例子：
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
 import { resolver, mutation, weave } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
@@ -74,7 +118,7 @@ const Cat = v.object({
   birthDate: v.string(),
 })
 
-const CatResolver = resolver({
+const catResolver = resolver({
   createCat: mutation(Cat, {
     input: {
       data: Cat,
@@ -83,12 +127,13 @@ const CatResolver = resolver({
   }),
 })
 
-export const schema = weave(ValibotWeaver, CatResolver);
+export const schema = weave(ValibotWeaver, catResolver);
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab value="zod">
+```ts twoslash
 import { resolver, mutation, weave } from '@gqloom/zod'
+import { ZodWeaver } from '@gqloom/zod'
 import { z } from "zod"
 
 const Cat = z.object({
@@ -97,7 +142,7 @@ const Cat = z.object({
   birthDate: z.string(),
 })
 
-const CatResolver = resolver({
+const catResolver = resolver({
   createCat: mutation(Cat, {
     input: {
       data: Cat,
@@ -106,22 +151,22 @@ const CatResolver = resolver({
   })
 })
 
-export const schema = weave(CatResolver);
+export const schema = weave(ZodWeaver, catResolver);
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
-在上面的代码中，我们定义了一个 `Cat` 对象，并将其用于 `type` 和 `input`。但是当我们尝试将 `CatResolver` 编织到 GraphQL Schema 中时，会抛出一个错误，提示 `Cat` 名称重复：
+在上面的代码中，我们定义了一个 `Cat` 对象，并将其用于 `type` 和 `input`。但是当我们尝试将 `catResolver` 编织到 GraphQL Schema 中时，会抛出一个错误，提示 `Cat` 名称重复：
 ```bash
 Error: Schema must contain uniquely named types but contains multiple types named "Cat".
 ```
 
 要解决这个问题，我们需要为 `input` 类型指定一个不同的名称。我们可以使用 `SchemaWeaver.config` 配置中的 `getInputObjectName` 选项来实现这一点：
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
-import { resolver, mutation, weave, SchemaWeaver } from '@gqloom/core'
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
 
@@ -131,7 +176,7 @@ const Cat = v.object({
   birthDate: v.string(),
 })
 
-const CatResolver = resolver({
+const catResolver = resolver({
   createCat: mutation(Cat, {
     input: {
       data: Cat,
@@ -141,15 +186,15 @@ const CatResolver = resolver({
 })
 
 export const schema = weave(
-  CatResolver,
+  catResolver,
   ValibotWeaver,
-  SchemaWeaver.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
+  GraphQLSchemaLoom.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
-import { resolver, mutation, weave, SchemaWeaver } from '@gqloom/zod'
+</Tab>
+<Tab value="zod">
+```ts twoslash
+import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/zod'
 import { z } from "zod"
 
 const Cat = z.object({
@@ -158,7 +203,7 @@ const Cat = z.object({
   birthDate: z.string(),
 })
 
-const CatResolver = resolver({
+const catResolver = resolver({
   createCat: mutation(Cat, {
     input: {
       data: Cat,
@@ -168,16 +213,16 @@ const CatResolver = resolver({
 })
 
 export const schema = weave(
-  CatResolver,
-  SchemaWeaver.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
+  catResolver,
+  GraphQLSchemaLoom.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 如此一来，`Cat` 对象将被转换为 `CatInput` 类型，从而避免了命名冲突。
 
-以上的 `CatResolver` 将编织得到如下 GraphQL Schema：
+以上的 `catResolver` 将编织得到如下 GraphQL Schema：
 ```graphql
 type Mutation {
   createCat(data: CatInput!): Cat!
@@ -200,6 +245,6 @@ input CatInput {
 import { weave } from '@gqloom/core';
 import { logger } from './middlewares';
 
-export const schema = weave(HelloResolver, CatResolver, logger)
+export const schema = weave(helloResolver, catResolver, logger)
 ```
 在[中间件章节](../fundamentals/middleware)中查看更多关于中间件的用法。

@@ -98,7 +98,7 @@ export class FederatedSchemaLoom extends GraphQLSchemaLoom {
   /**
    * Weave a GraphQL Schema from resolvers
    * @param inputs Resolvers, Global Middlewares or WeaverConfigs
-   * @returns GraphQ LSchema
+   * @returns GraphQL Schema
    */
   static override weave(
     ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
