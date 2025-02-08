@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Yup
+---
+title: Yup
+---
 
 [Yup](https://github.com/jquense/yup) is a schema builder for runtime value parsing and validation. 
 Define a schema, transform a value to match, assert the shape of an existing value, or both. 
@@ -10,11 +10,22 @@ Yup schema are extremely expressive and allow modeling complex, interdependent v
 
 ## Installation
 
-<PackageManagerTabs command="install @gqloom/core yup @gqloom/yup" />
+```sh tab="npm"
+npm i @gqloom/core yup @gqloom/yup
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core yup @gqloom/yup
+```
+```sh tab="yarn"
+yarn add @gqloom/core yup @gqloom/yup
+```
+```sh tab="bun"
+bun add @gqloom/core yup @gqloom/yup
+```
 
 Also, we need to declare metadata from GQLoom for Yup in the project:
 
-```ts yup.d.ts
+```ts title="yup.d.ts"
 import 'yup'
 import { type GQLoomMetadata } from "@gqloom/yup"
 
@@ -25,9 +36,9 @@ declare module "yup" {
 
 ## Defining simple scalars
 
-Yup Schema can be used as a [silk](../fundamentals/silk) in GQLoom using `yupSilk`:
+Yup Schema can be used as a [silk](../silk) in GQLoom using `yupSilk`:
 
-```ts
+```ts twoslash
 import { number, string, boolean } from "yup"
 import { yupSilk } from "@gqloom/yup"
 
@@ -40,24 +51,10 @@ const FloadtScalar = yupSilk(number())
 const IntScalar = yupSilk(number().integer())
 ```
 
-## Resolver
-
-In order to use Yup Schema as a Silk, we need to wrap `yupSilk` around it, and a lot of wrapping can be a bit cumbersome in development, so `@gqloom/yup` provides re-exported resolver and operation constructors to simplify the process.
-The `resolver`, `query`, `mutation`, and `field` imported from `@gqloom/yup` will automatically wrap `yupSilk` internally so that in most cases we can use Yup Schema directly.
-
-```ts
-import { string } from "yup"
-import { resolver, query } from "@gqloom/yup"
-
-export const HelloResolver = resolver({
-  hello: query(string(), () => "Hello, World!"),
-})
-
-```
 ## Defining objects
 
 We can use Yup to define objects and use them as [silk](../fundamentals/silk) to use:
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -73,7 +70,7 @@ export const Cat = object({
 
 #### Using `label()`
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -86,7 +83,7 @@ In the above code, we have defined the name for the object using `label` so that
 
 #### Using `collectNames`
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 import { collectNames } from "@gqloom/yup"
 
@@ -101,7 +98,7 @@ collectNames({ Cat })
 
 In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 import { collectNames } from "@gqloom/yup"
 
@@ -117,7 +114,7 @@ In the code above, we use the `collectNames` function to define the names for th
 
 #### Using `asObjectType` metadata
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -132,7 +129,7 @@ Here, we have defined the name `asObjectType` metadata and set it to `{ name: â€
 ### Add more metadata
 
 We can use the `meta` function in Yup Schema to add more metadata, such as `description`, `deprecationReason`, `extensions` and so on.
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -144,7 +141,7 @@ export const Cat = object({
 
 In the above code, we have added `description` metadata to the `Cat` object so that in the generated GraphQL Schema, the object will have the description `A cute cat`:
 
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -155,7 +152,14 @@ type Cat {
 
 We can also use the `asField` attribute in the metadata to add metadata to the field, such as `description`, `type`, and so on:
 
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string, boolean, object, number } from "yup"
 import { GraphQLInt } from "graphql"
 
@@ -170,7 +174,7 @@ export const Cat = object({
 
 In the above code, we added `type` and `description` metadata to the `age` field and ended up with the following GraphQL Schema:
 
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -184,8 +188,14 @@ type Cat {
 #### Declaring Interfaces
 
 We can also use the asObjectType function to declare interfaces, for example:
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
 
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string, object, number } from "yup"
 
 const Fruit = object({
@@ -211,19 +221,25 @@ In the code above, we declared the `Orange` object as an implementation of the `
 #### Omitting fields
 
 We can also omit fields by setting the type to null using the asField attribute, for example:
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
   name: string().required(),
   age: number()
     .integer()
-    .meta({ asField: { description: "How old is the cat" } }),
-  loveFish: boolean(),
+    .meta({ asField: { type: null } }),
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
 ```
 The following GraphQL Schema will be generated:
-```graphql
+```graphql title="GraphQL Schema"
 type Dog {
   name: String
 }
@@ -255,7 +271,14 @@ In the above code, we used the `union` function to define the `Cat` and `Dog` ob
 
 We can use `string().oneof()` to define enumerated types, for example:
 
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string } from "yup"
 
 const Fruit = string()
@@ -276,7 +299,14 @@ const Fruit = string()
 #### Using `enum`
 
 We can also use `enum` to define enumeration types, for example:
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { mixed } from "yup"
 
 enum FruitEnum {
@@ -306,7 +336,7 @@ const Fruit = mixed()
 To accommodate more Yup types, we can extend GQLoom to add more type mappings to it.
 
 First we use `YupWeaver.config` to define the type mapping configuration. Here we import `GraphQLDateTime` from [graphql-scalars](https://the-guild.dev/graphql/scalars), and when we encounter a `date` type, we map it to the matching GraphQL scalar.
-```ts
+```ts twoslash
 import { GraphQLDateTime } from "graphql-scalars"
 import { YupWeaver } from "@gqloom/yup"
 
@@ -321,10 +351,25 @@ export const yupWeaverConfig = YupWeaver.config({
 ```
 Configurations are passed into the weave function when weaving the GraphQL Schema:
 
-```ts
+```ts twoslash
+import { GraphQLDateTime } from "graphql-scalars"
+import { resolver } from "@gqloom/core"
+import { YupWeaver } from "@gqloom/yup"
+
+export const yupWeaverConfig = YupWeaver.config({
+  presetGraphQLType: (description) => {
+    switch (description.type) {
+      case "date":
+        return GraphQLDateTime
+    }
+  },
+})
+
+export const helloResolver = resolver({})
+// ---cut---
 import { weave } from "@gqloom/yup"
 
-export const schema = weave(yupWeaverConfig, HelloResolver)
+export const schema = weave(yupWeaverConfig, helloResolver)
 ```
 
 ## Default Type Mappings

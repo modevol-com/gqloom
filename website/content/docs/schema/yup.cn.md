@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Yup
+---
+title: Yup
+---
 
 [Yup](https://github.com/jquense/yup) 是一个用于运行时值解析和验证的模式构建器。
 您可以定义模式、转换值以匹配、断言现有值的形状，或两者兼而有之。
@@ -10,11 +10,22 @@ Yup 模式具有极强的表现力，可对复杂、相互依赖的验证或值�
 
 ## 安装
 
-<PackageManagerTabs command="install @gqloom/core yup @gqloom/yup" />
+```sh tab="npm"
+npm i @gqloom/core yup @gqloom/yup
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core yup @gqloom/yup
+```
+```sh tab="yarn"
+yarn add @gqloom/core yup @gqloom/yup
+```
+```sh tab="bun"
+bun add @gqloom/core yup @gqloom/yup
+```
 
 另外，我们还需要在项目中为 Yup 声明来自 GQLoom 的元数据：
 
-```ts yup.d.ts
+```ts title="yup.d.ts"
 import 'yup'
 import { type GQLoomMetadata } from "@gqloom/yup"
 
@@ -25,9 +36,9 @@ declare module "yup" {
 
 ## 定义简单标量
 
-在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../fundamentals/silk)使用：
+在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../silk)使用：
 
-```ts
+```ts twoslash
 import { number, string, boolean } from "yup"
 import { yupSilk } from "@gqloom/yup"
 
@@ -40,24 +51,10 @@ const FloadtScalar = yupSilk(number())
 const IntScalar = yupSilk(number().integer())
 ```
 
-## 解析器 | Resolver
-
-为了将 Yup Schema 作为丝线使用，我们需要为其包裹 `yupSilk`，在开发中大量的包裹可能会显得有些繁琐，因此 `@gqloom/yup` 提供了重新导出的解析器和操作构造函数来简化这个过程。
-从 `@gqloom/yup` 引入的 `resolver`、`query`、`mutation`、`field` 将在内部自动包裹 `yupSilk`，这样在大部分情况下，我们可以直接使用 Yup Schema。
-
-```ts
-import { string } from "yup"
-import { resolver, query } from "@gqloom/yup"
-
-export const HelloResolver = resolver({
-  hello: query(string(), () => "Hello, World!"),
-})
-
-```
 ## 定义对象
 
 我们可以使用 Yup 定义对象，并将其作为[丝线](../fundamentals/silk)使用：
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -73,7 +70,7 @@ export const Cat = object({
 
 #### 使用 `label()`
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -86,7 +83,7 @@ export const Cat = object({
 
 #### 使用 `collectNames`
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 import { collectNames } from "@gqloom/yup"
 
@@ -101,7 +98,7 @@ collectNames({ Cat })
 
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 import { collectNames } from "@gqloom/yup"
 
@@ -117,7 +114,7 @@ export const { Cat } = collectNames({
 
 #### 使用 `asObjectType` 元数据
 
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -132,7 +129,7 @@ export const Cat = object({
 ### 添加更多元数据
 
 我们可以在 Yup Schema 中使用 `meta` 函数来添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
-```ts
+```ts twoslash
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
@@ -144,7 +141,7 @@ export const Cat = object({
 
 在上面的代码中，我们为 `Cat` 对象添加了 `description` 元数据，这样在生成的 GraphQL Schema 中，该对象将具有描述 `A cute cat`：
 
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -155,7 +152,14 @@ type Cat {
 
 我们还可以使用元数据中的 `asField` 属性为字段添加元数据，例如 `description`、`type` 等：
 
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string, boolean, object, number } from "yup"
 import { GraphQLInt } from "graphql"
 
@@ -170,7 +174,7 @@ export const Cat = object({
 
 在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -184,8 +188,14 @@ type Cat {
 #### 声明接口
 
 我们还可以使用 asObjectType 函数来声明接口，例如：
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
 
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string, object, number } from "yup"
 
 const Fruit = object({
@@ -211,19 +221,25 @@ const Orange = object({
 #### 省略字段
 
 我们还可以使用 asField 属性将 type 设置为 null 来省略字段，例如：
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string, boolean, object, number } from "yup"
 
 export const Cat = object({
   name: string().required(),
   age: number()
     .integer()
-    .meta({ asField: { description: "How old is the cat" } }),
-  loveFish: boolean(),
+    .meta({ asField: { type: null } }),
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
 ```
 将得到如下 GraphQL Schema：
-```graphql
+```graphql title="GraphQL Schema"
 type Dog {
   name: String
 }
@@ -255,7 +271,14 @@ const Animal = union([Cat, Dog]).label("Animal")
 
 我们可以使用 `string().oneof()` 来定义枚举类型，例如：
 
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { string } from "yup"
 
 const Fruit = string()
@@ -276,7 +299,14 @@ const Fruit = string()
 #### 使用 `enum`
 
 我们还可以使用 `enum` 来定义枚举类型，例如：
-```ts
+```ts twoslash
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+// ---cut---
 import { mixed } from "yup"
 
 enum FruitEnum {
@@ -306,7 +336,7 @@ const Fruit = mixed()
 为了适应更多的 Yup 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
 
 首先我们使用 `YupWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`，当遇到 `date` 类型时，我们将其映射到对应的 GraphQL 标量。
-```ts
+```ts twoslash
 import { GraphQLDateTime } from "graphql-scalars"
 import { YupWeaver } from "@gqloom/yup"
 
@@ -321,10 +351,25 @@ export const yupWeaverConfig = YupWeaver.config({
 ```
 
 在编织 GraphQL Schema 时传入配置到 weave 函数中：
-```ts
+```ts twoslash
+import { GraphQLDateTime } from "graphql-scalars"
+import { resolver } from "@gqloom/core"
+import { YupWeaver } from "@gqloom/yup"
+
+export const yupWeaverConfig = YupWeaver.config({
+  presetGraphQLType: (description) => {
+    switch (description.type) {
+      case "date":
+        return GraphQLDateTime
+    }
+  },
+})
+
+export const helloResolver = resolver({})
+// ---cut---
 import { weave } from "@gqloom/yup"
 
-export const schema = weave(yupWeaverConfig, HelloResolver)
+export const schema = weave(yupWeaverConfig, helloResolver)
 ```
 
 ## 默认类型映射
