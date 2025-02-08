@@ -5,7 +5,7 @@ icon: Volleyball
 
 `GQLoom` 的全称是 GraphQL Loom，即 GraphQL 纺织机。
 
-丝线是纺织机的基本原料，它同时反应 GraphQL 类型和 TypeScript 类型。
+丝线（Silk）是纺织机的基本原料，它同时反应 GraphQL 类型和 TypeScript 类型。
 在开发时，我们使用现有的模式库的 Schema 作为丝线，最终 `GQLoom` 会将丝线编织进 GraphQL Schema。
 
 ## 简单的标量丝线
@@ -20,7 +20,7 @@ const StringSilk = silk(GraphQLString)
 const IntSilk = silk(GraphQLInt)
 
 const NonNullStringSilk = silk(new GraphQLNonNull(GraphQLString))
-const NonNullStringSilk_1 = silk.nonNull(StringSilk)
+const NonNullStringSilk1 = silk.nonNull(StringSilk)
 ```
 
 ## 对象丝线
@@ -83,7 +83,7 @@ type Cat {
 
 ### 使用 Valibot 创建丝线
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 const StringSilk = v.string()
@@ -101,7 +101,7 @@ const Cat = v.object({
 
 ### 使用 Zod 创建丝线
 
-```ts
+```ts twoslash
 import { z } from "zod"
 
 const StringSilk = z.string()
@@ -117,6 +117,6 @@ const Cat = z.object({
 
 在上面的代码中，我们使用 [Zod](https://zod.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Zod 集成](../schema-integration/zod)章节中了解如何使用 [Zod](https://zod.dev/) 创建更复杂的类型。
 
-:::info 小道消息
+<Callout>
 `GQLoom` 核心库遵循了 [标准 Schema 规范](https://github.com/standard-schema/standard-schema)，得益于 `Valibot`、`Zod` 同样遵循此规范，我们不需要使用额外的包装函数就可以将来自 Valibot、Zod 的 Schema 作为丝线使用。
-:::
+</Callout>

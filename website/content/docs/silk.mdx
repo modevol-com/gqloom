@@ -20,7 +20,7 @@ const StringSilk = silk(GraphQLString)
 const IntSilk = silk(GraphQLInt)
 
 const NonNullStringSilk = silk(new GraphQLNonNull(GraphQLString))
-const NonNullStringSilk_1 = silk.nonNull(StringSilk)
+const NonNullStringSilk1 = silk.nonNull(StringSilk)
 ```
 
 ## Object silk
@@ -83,7 +83,7 @@ The good thing is that we have schema libraries like [Valibot](https://valibot.d
 
 ### Use Valibot to create silk
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 const StringSilk = v.string()
@@ -101,7 +101,7 @@ In the code above, we use [Valibot](https://valibot.dev/) to create some simple 
 
 ### Use Zod to create silk
 
-```ts
+```ts twoslash
 import { z } from "zod"
 
 const StringSilk = z.string()
@@ -117,6 +117,6 @@ const Cat = z.object({
 
 In the code above, we have created some simple Schema as silk using [Zod](https://zod.dev/), you can learn how to create more complex types using [Zod integration](../schema-integration/zod) section to learn how to create more complex types using [Zod](https://zod.dev/).
 
-:::info You might wonder
+<Callout>
 The core library of `GQLoom` follows the [Standard Schema specification](https://github.com/standard-schema/standard-schema). Thanks to `Valibot` and `Zod` also following this specification, we don't need to use additional wrapper functions to use the Schema from Valibot and Zod as Silk.
-:::
+</Callout>
