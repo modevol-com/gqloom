@@ -1,4 +1,7 @@
-# Silk
+---
+title: Silk
+icon: Volleyball
+---
 
 The full name of `GQLoom` is GraphQL Loom.
 
@@ -9,9 +12,9 @@ At development time, we use the Schema of an existing schema library as the thre
 
 We can create a simple scalar silk using the `silk` function:
 
-```ts
+```ts twoslash
 import { silk } from "@gqloom/core"
-import { GraphQLString, GraphQLInt } from "graphql"
+import { GraphQLString, GraphQLInt, GraphQLNonNull } from "graphql"
 
 const StringSilk = silk(GraphQLString)
 const IntSilk = silk(GraphQLInt)
@@ -24,7 +27,7 @@ const NonNullStringSilk_1 = silk.nonNull(StringSilk)
 
 We can construct GraphQL objects directly using [graphql.js](https://graphql.org/graphql-js/constructing-types/):
 
-```ts
+```ts twoslash
 import { silk } from "@gqloom/core"
 import {
   GraphQLObjectType,

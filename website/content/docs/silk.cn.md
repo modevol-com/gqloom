@@ -1,4 +1,7 @@
-# 丝线 | Silk
+---
+title: 丝线（Silk）
+icon: Volleyball
+---
 
 `GQLoom` 的全称是 GraphQL Loom，即 GraphQL 纺织机。
 
@@ -9,9 +12,9 @@
 
 我们可以使用 `silk` 函数创建一个简单的标量丝线：
 
-```ts
+```ts twoslash
 import { silk } from "@gqloom/core"
-import { GraphQLString, GraphQLInt } from "graphql"
+import { GraphQLString, GraphQLInt, GraphQLNonNull } from "graphql"
 
 const StringSilk = silk(GraphQLString)
 const IntSilk = silk(GraphQLInt)
@@ -24,7 +27,7 @@ const NonNullStringSilk_1 = silk.nonNull(StringSilk)
 
 我们可以直接使用 [graphql.js](https://graphql.org/graphql-js/constructing-types/) 构造 GraphQL 对象：
 
-```ts
+```ts twoslash
 import { silk } from "@gqloom/core"
 import {
   GraphQLObjectType,
