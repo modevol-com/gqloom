@@ -190,8 +190,6 @@ export class ZodWeaver {
       const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
         ZodWeaver.getObjectConfig(schema, config)
 
-      const strictSchema = schema.strict()
-
       return new GraphQLObjectType({
         name,
         fields: mapValue(schema.shape as ZodRawShape, (field, key) => {
@@ -203,8 +201,6 @@ export class ZodWeaver {
             ...fieldConfig,
           }
         }),
-        isTypeOf: (input) =>
-          strictSchema.safeParseAsync(input).then((it) => it.success),
         ...objectConfig,
       })
     }

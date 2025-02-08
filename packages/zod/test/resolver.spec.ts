@@ -8,7 +8,14 @@ import {
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { z } from "zod"
-import { ZodWeaver, field, mutation, query, resolver } from "../src/index"
+import {
+  ZodWeaver,
+  asUnionType,
+  field,
+  mutation,
+  query,
+  resolver,
+} from "../src/index"
 
 describe("zod resolver", () => {
   const Giraffe = z.object({
@@ -122,7 +129,15 @@ describe("zod resolver", () => {
       age: z.number().int(),
       loveBone: z.boolean().optional(),
     })
-    const Animal = z.union([Cat, Dog])
+    const Animal = z.union([Cat, Dog]).superRefine(
+      asUnionType({
+        name: "Animal",
+        resolveType: (it) => {
+          if (it.loveFish) return "Cat"
+          return "Dog"
+        },
+      })
+    )
 
     collectNames({ Cat, Dog, Animal })
 
