@@ -1,3 +1,10 @@
 {
-  "pages": ["introduction", "silk", "resolver", "weave", "context"]
+  "pages": [
+    "introduction",
+    "silk",
+    "resolver",
+    "weave",
+    "context",
+    "dataloader"
+  ]
 }

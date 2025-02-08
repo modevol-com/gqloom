@@ -1,6 +1,7 @@
-import { Tab, Tabs, PackageManagerTabs } from 'rspress/theme';
-
-# Dataloader
+---
+title: 批量加载（Dataloader）
+icon: HardDriveDownload
+---
 
 由于 GraphQL 的灵活性，当我们加载某个对象的关联对象时，我们通常需要执行多个查询。
 这就造成了著名的 N+1 查询问题。为了解决这个问题，我们可以使用 [DataLoader](https://github.com/graphql/dataloader)。
@@ -11,9 +12,9 @@ import { Tab, Tabs, PackageManagerTabs } from 'rspress/theme';
 
 考虑我们有如下简单对象 `User` 和 `Book`：
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab label="valibot">
+```ts twoslash
 import * as v from "valibot"
 
 const User = v.object({
@@ -33,9 +34,9 @@ const Book = v.object({
 
 interface IBook extends v.InferOutput<typeof Book> {}
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab label="zod">
+```ts twoslash
 import { z } from "zod"
 
 const User = z.object({
@@ -55,13 +56,24 @@ const Book = z.object({
 
 interface IBook extends z.infer<typeof Book> {}
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 在 `Book` 对象上，我们有一个 `authorID` 字段，它引用了 `User` 对象的 `id` 字段。
 
 另外，我们还需要准备一些简单的数据：
-```ts
+
+```ts twoslash
+interface IUser {
+  id: number
+  name: string
+}
+interface IBook {
+  id: number
+  title: string
+  authorID: number
+}
+// ---cut---
 const users: IUser[] = [
   { id: 1, name: "Alice" },
   { id: 2, name: "Bob" },
@@ -87,31 +99,79 @@ const books: IBook[] = [
 
 让我们为 `Book` 对象编写一个简单的解析器：
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab label="valibot">
+```ts twoslash
+import * as v from "valibot"
+
+const User = v.object({
+  __typename: v.nullish(v.literal("User")),
+  id: v.number(),
+  name: v.string(),
+})
+
+interface IUser extends v.InferOutput<typeof User> {}
+
+const Book = v.object({
+  __typename: v.nullish(v.literal("Book")),
+  id: v.number(),
+  title: v.string(),
+  authorID: v.number(),
+})
+
+interface IBook extends v.InferOutput<typeof Book> {}
+
+const users: IUser[] = []
+
+const books: IBook[] = []
+// ---cut---
 import { resolver, query, field } from "@gqloom/core"
 
 const BookResolver = resolver.of(Book, {
-  books: query(v.array(Book), () => books),
-  author: field(v.nullish(User), (book) =>
+  books: query(v.array(Book)).resolve(() => books),
+  
+  author: field(v.nullish(User)).resolve((book) =>
     users.find((u) => u.id === book.authorID)
   ),
 })
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab label="zod">
+```ts twoslash
+import { z } from "zod"
+
+const User = z.object({
+  __typename: z.literal("User").nullish(),
+  id: z.number(),
+  name: z.string(),
+})
+
+interface IUser extends z.infer<typeof User> {}
+
+const Book = z.object({
+  __typename: z.literal("Book").nullish(),
+  id: z.number(),
+  title: z.string(),
+  authorID: z.number(),
+})
+
+interface IBook extends z.infer<typeof Book> {}
+
+const users: IUser[] = []
+
+const books: IBook[] = []
+// ---cut---
 import { resolver, query, field } from "@gqloom/zod"
 
 const BookResolver = resolver.of(Book, {
-  books: query(Book.array(), () => books),
-  author: field(User.nullish(), (book) =>
+  books: query(Book.array()).resolve(() => books),
+  
+  author: field(User.nullish()).resolve((book) =>
     users.find((u) => u.id === book.authorID)
   ),
 })
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 在上面的代码中，我们为 `Book` 对象定义了一个额外字段 `author`，它将返回与 `authorID` 字段匹配的 `User` 对象。我们还定义了一个名为 `books` 的查询，它将返回所有 `Book` 对象。
@@ -134,73 +194,133 @@ query books {
 ### 使用 DataLoader
 接下来，我们将使用 DataLoader 来优化我们的查询。
 
-#### 安装
-首先我们需要安装 `dataloader` 包：
-<PackageManagerTabs command="install dataloader" />
+我们可以使用来自 `@gqloom/core` 包的提供基本功能的 `EasyDataLoader` 类，也可以使用更流行的 [DataLoader](https://github.com/graphql/dataloader)
 
 #### 定义批量查询
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
-import { resolver, query, field, createMemoization } from "@gqloom/core"
-import DataLoader from "dataloader" // [!code hl]
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab label="valibot">
+```ts twoslash
+import * as v from "valibot"
 
-const useUserLoader = createMemoization( // [!code hl]
-  () => // [!code hl]
-    new DataLoader<number, IUser | undefined>(async (authorIDs) => { // [!code hl]
-      const authorIDSet = new Set(authorIDs) // [!code hl]
-      const authorMap = new Map<number, IUser>() // [!code hl]
-      for (const user of users) { // [!code hl]
-        if (authorIDSet.has(user.id)) { // [!code hl]
-          authorMap.set(user.id, user) // [!code hl]
-        } // [!code hl]
-      } // [!code hl]
-      return authorIDs.map((authorID) => authorMap.get(authorID)) // [!code hl]
-    }) // [!code hl]
-) // [!code hl]
+const User = v.object({
+  __typename: v.nullish(v.literal("User")),
+  id: v.number(),
+  name: v.string(),
+})
+
+interface IUser extends v.InferOutput<typeof User> {}
+
+const Book = v.object({
+  __typename: v.nullish(v.literal("Book")),
+  id: v.number(),
+  title: v.string(),
+  authorID: v.number(),
+})
+
+interface IBook extends v.InferOutput<typeof Book> {}
+
+const users: IUser[] = []
+
+const books: IBook[] = []
+// ---cut---
+import {
+  EasyDataLoader,
+  createMemoization,
+  field,
+  query,
+  resolver,
+} from "@gqloom/core"
+
+const useUserLoader = createMemoization(
+  () =>
+    new EasyDataLoader(async (authorIDs: number[]) => {
+      const authorIDSet = new Set(authorIDs)
+      const authorMap = new Map<number, IUser>()
+      for (const user of users) {
+        if (authorIDSet.has(user.id)) {
+          authorMap.set(user.id, user)
+        }
+      }
+      return authorIDs.map((authorID) => authorMap.get(authorID))
+    })
+)
 
 const BookResolver = resolver.of(Book, {
-  books: query(v.array(Book), () => books),
-  author: field(v.nullish(User), (book) => useUserLoader().load(book.authorID)), // [!code hl]
-})
-```
-  </Tab>
-  <Tab label="zod">
-```ts
-import { resolver, query, field, createMemoization } from "@gqloom/zod"
-import DataLoader from "dataloader" // [!code hl]
+  books: query(v.array(Book)).resolve(() => books),
 
-const useUserLoader = createMemoization( // [!code hl]
-  () => // [!code hl]
-    new DataLoader<number, IUser | undefined>(async (authorIDs) => { // [!code hl]
-      const authorIDSet = new Set(authorIDs) // [!code hl]
-      const authorMap = new Map<number, IUser>() // [!code hl]
-      for (const user of users) { // [!code hl]
-        if (authorIDSet.has(user.id)) { // [!code hl]
-          authorMap.set(user.id, user) // [!code hl]
-        } // [!code hl]
-      } // [!code hl]
-      return authorIDs.map((authorID) => authorMap.get(authorID)) // [!code hl]
-    }) // [!code hl]
-) // [!code hl]
-
-export const BookResolver = resolver.of(Book, {
-  books: query(Book.array(), () => books),
-  author: field(User.nullish(), (book) => (book) => useUserLoader().load(book.authorID)), // [!code hl]
+  author: field(v.nullish(User)).resolve((book) =>
+    useUserLoader().load(book.authorID)
+  ),
 })
+
 ```
-  </Tab>
+</Tab>
+<Tab label="zod">
+```ts twoslash
+import { z } from "zod"
+
+const User = z.object({
+  __typename: z.literal("User").nullish(),
+  id: z.number(),
+  name: z.string(),
+})
+
+interface IUser extends z.infer<typeof User> {}
+
+const Book = z.object({
+  __typename: z.literal("Book").nullish(),
+  id: z.number(),
+  title: z.string(),
+  authorID: z.number(),
+})
+
+interface IBook extends z.infer<typeof Book> {}
+
+const users: IUser[] = []
+
+const books: IBook[] = []
+// ---cut---
+import {
+  EasyDataLoader,
+  createMemoization,
+  field,
+  query,
+  resolver,
+} from "@gqloom/core"
+
+const useUserLoader = createMemoization(
+  () =>
+    new EasyDataLoader(async (authorIDs: number[]) => {
+      const authorIDSet = new Set(authorIDs)
+      const authorMap = new Map<number, IUser>()
+      for (const user of users) {
+        if (authorIDSet.has(user.id)) {
+          authorMap.set(user.id, user)
+        }
+      }
+      return authorIDs.map((authorID) => authorMap.get(authorID))
+    })
+)
+
+const BookResolver = resolver.of(Book, {
+  books: query(Book.array()).resolve(() => books),
+
+  author: field(User.nullish()).resolve((book) =>
+    useUserLoader().load(book.authorID)
+  ),
+})
+
+```
+</Tab>
 </Tabs>
 
 在上面的代码中，我们使用 `createMemoization` 创建了一个 `useUserLoader` 函数，该函数返回一个 `DataLoader` 实例。
 记忆化函数确保在同一个请求内总是使用相同的 `DataLoader` 实例。
 
-在 `createMemoization` 中，我们直接构建了 `DataLoader` 实例，并传递了一个查询函数，让我们深入了解这个查询函数是如何工作的：
+在 `createMemoization` 中，我们直接构建了 `EasyDataLoader` 实例，并传递了一个查询函数，让我们深入了解这个查询函数是如何工作的：
 
-1. 我们在构造 `DataLoader` 时传递了两个泛型参数：`number` 和 `IUser | undefined`：
-  - 第一个泛型参数表示 `DataLoader` 的键类型，即 `Book` 对象的 `authorID` 属性类型。
-  - 第二个泛型参数表示 `DataLoader` 的值类型，即 `User` 对象或 `undefined`。
+1. 我们在构造 `EasyDataLoader` 时传递了一个参数为 `number[]` 的批量查询函数。
 
 2. 在查询函数中，我们接收一个 `authorIDs` 数组，该数组包含要加载的 `User` 对象的 `id`。当我们对 `Book` 对象调用 `author` 字段时，`DataLoader` 会自动合并同一个请求内的所有 `authorID`，并传递给查询函数。
 
@@ -212,9 +332,9 @@ export const BookResolver = resolver.of(Book, {
 
 6. 最后，我们根据 `authorIDs` 数组的顺序，从 `authorMap` 中获取对应的 `User` 对象，并返回一个包含这些 `User` 对象的数组。
 
-:::warning
-必须保证查询函数的返回数组顺序与 `IDs` 数组顺序一致。`DataLoader` 依赖于此顺序来正确地合并结果。更多信息，请参阅 [DataLoader 文档](https://github.com/graphql/dataloader#batch-function)。
-:::
+<Callout>
+必须保证查询函数的返回数组顺序与 `IDs` 数组顺序一致。`DataLoader` 依赖于此顺序来正确地合并结果。
+</Callout>
 
 如此一来，我们就可以在 `BookResolver` 中使用 `useUserLoader` 函数来加载 `Book` 对象的 `author` 字段了。
 为所有 6 个 `Book` 实例调用 `author` 字段时，`DataLoader` 会自动合并这些请求，并只对 `users` 数组进行一次遍历，从而提高了性能。

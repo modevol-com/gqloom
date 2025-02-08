@@ -3,7 +3,7 @@ title: 上下文（Context）
 icon: Shuffle
 ---
 
-在 Node.js 世界中，上下文（Context）允许我们在同一个请求中共享数据和状态。在 GraphQL 中，上下文允许在同一个请求的多个[解析函数](../fundamentals/resolver)和[中间件](../fundamentals/middleware)之间共享数据。
+在 Node.js 世界中，上下文（Context）允许我们在同一个请求中共享数据和状态。在 GraphQL 中，上下文允许在同一个请求的多个[解析函数](./resolver)和[中间件](./middleware)之间共享数据。
 
 一个常见的用例是将当前访问者的身份信息存储在上下文中，以便在解析函数和中间件中访问。
 
@@ -12,8 +12,8 @@ icon: Shuffle
 在 `GQLoom` 中，我们通过 `useContext()` 函数访问上下文。
 
 GQLoom 的 `useContext` 函数的设计参考了 [React](https://zh-hans.react.dev/) 的 `useContext` 函数。
-你可以在[解析器](../fundamentals/resolver)内的任何地方调用 `useContext` 函数以访问当前请求的上下文，而不需要显式地传递 `context` 函数。
-在幕后，`useContext` 使用 node.js 的 [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) 来隐式传递上下文。
+你可以在[解析器](./resolver)内的任何地方调用 `useContext` 函数以访问当前请求的上下文，而不需要显式地传递 `context` 函数。
+在幕后，`useContext` 使用 Node.js 的 [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) 来隐式传递上下文。
 
 接下来，让我们尝试在各个地方访问上下文。
 我们将使用 [graphql-yoga](https://the-guild.dev/graphql/yoga-server) 作为适配器。
@@ -100,7 +100,7 @@ const authGuard: Middleware = (next) => {
 在上面的代码中，我们创建了一个名为 `useUser` 的自定义钩子，它使用 `useContext` 函数从上下文中获取当前请求的 `Authorization` 头部。
 然后，我们创建了一个名为 `authGuard` 的中间件，它使用 `useUser` 钩子来获取用户，并在用户未登录时抛出错误。
 
-要了解更多关于中间件的信息，请参阅 [中间件文档](../fundamentals/middleware)。
+要了解更多关于中间件的信息，请参阅 [中间件文档](./middleware)。
 
 ### 在验证输入时访问上下文
 
@@ -269,6 +269,6 @@ const useUser = createMemoization(async () => {
 
 在 GraphQL 生态中，每个适配器都提供了不同的上下文对象，你可以在适配器章节中了解如何使用：
 
-- [Yoga](../advanced/adapters/yoga)
-- [Apollo](../advanced/adapters/apollo)
-- [Mercurius](../advanced/adapters/mercurius)
+- [Yoga](./advanced/adapters/yoga)
+- [Apollo](./advanced/adapters/apollo)
+- [Mercurius](./advanced/adapters/mercurius)

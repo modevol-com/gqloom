@@ -3,17 +3,17 @@ title: Context
 icon: Shuffle
 ---
 
-In the Node.js world, Context allows us to share data and state within the same request. In GraphQL, contexts allow data to be shared between multiple [resolver functions](../fundamentals/resolver) and [middleware](../fundamentals/middleware) for the same request.
+In the Node.js world, Context allows us to share data and state within the same request. In GraphQL, contexts allow data to be shared between multiple [resolver functions](./resolver) and [middleware](./middleware) for the same request.
 
 A common use case is to store the identity of the current visitor in the context to be accessed in the resolver function and middleware.
 
-## Accessing a Context
+## Accessing Contexts
 
 In `GQLoom`, we access the context through the `useContext()` function.
 
 GQLoom's `useContext` function is designed to reference [React](https://zh-hans.react.dev/)'s `useContext` function.
-You can call the `useContext` function from anywhere within the [resolver](../fundamentals/resolver) to access the context of the current request without explicitly passing the `context` function.
-Behind the scenes, `useContext` uses node.js' [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to pass the context implicitly.
+You can call the `useContext` function from anywhere within the [resolver](./resolver) to access the context of the current request without explicitly passing the `context` function.
+Behind the scenes, `useContext` uses Node.js' [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to pass the context implicitly.
 
 Next, let's try to access the context in various places.
 We will use [graphql-yoga](https://the-guild.dev/graphql/yoga-server) as an adapter.
@@ -100,7 +100,7 @@ const authGuard: Middleware = (next) => {
 In the code above, we created a custom hook called `useUser` that uses the `useContext` function to get the `Authorization` header of the current request from the context.
 We then created a middleware called `authGuard` which uses the `useUser` hook to fetch the user and throw an error if the user is not logged in.
 
-To learn more about middleware, see [middleware documentation](../fundamentals/middleware).
+To learn more about middleware, see [middleware documentation](./middleware).
 
 ### Accessing contexts while validating inputs
 
@@ -269,6 +269,6 @@ In addition to the `useContext` function, GQLoom provides the `useResolverPayloa
 
 In the GraphQL ecosystem, each adapter provides a different context object, and you can learn how to use it in the Adapters chapter:
 
-- [Yoga](../advanced/adapters/yoga)
-- [Apollo](../advanced/adapters/apollo)
-- [Mercurius](../advanced/adapters/mercurius)
+- [Yoga](./advanced/adapters/yoga)
+- [Apollo](./advanced/adapters/apollo)
+- [Mercurius](./advanced/adapters/mercurius)
