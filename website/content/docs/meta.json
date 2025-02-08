@@ -6,6 +6,9 @@
     "weave",
     "context",
     "dataloader",
-    "middleware"
+    "middleware",
+    "...",
+    "---Schema Integration---",
+    "...schema"
   ]
 }

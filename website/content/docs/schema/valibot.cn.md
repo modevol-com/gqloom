@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Valibot
+---
+title: Valibot
+---
 
 [Valibot](https://valibot.dev/) 是一个通用的数据验证库，考虑了捆绑包大小、类型安全和开发体验。
 
@@ -8,13 +8,24 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## 安装
 
-<PackageManagerTabs command="install @gqloom/core valibot @gqloom/valibot" />
+```sh tab="npm"
+npm i @gqloom/core valibot @gqloom/valibot
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core valibot @gqloom/valibot
+```
+```sh tab="yarn"
+yarn add @gqloom/core valibot @gqloom/valibot
+```
+```sh tab="bun"
+bun add @gqloom/core valibot @gqloom/valibot
+```
 
 ## 定义简单标量
 
 在 GQLoom 中，可以直接 Valibot Schema 作为[丝线](../fundamentals/silk)使用：
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 const StringScalar = v.string() // GraphQLString
@@ -23,15 +34,16 @@ const BooleanScalar = v.boolean() // GraphQLBoolean
 
 const FloatScalar = v.number() // GraphQLFloat
 
-const IntScalar = v.pipe(v.nullable(v.number()), v.integer()) // GraphQLInt
+const IntScalar = v.pipe(v.number(), v.integer()) // GraphQLInt
 ```
 
 ## 编织 | Weave
 
 为了让 `GQLoom` 能正确地将 Valibot Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
 
-```ts
-import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
+```ts twoslash
+import { weave, resolver, query } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 
 export const helloResolver = resolver({
@@ -43,19 +55,17 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 ## 定义对象
 
-我们可以使用 Valibot 定义对象，并将其作为[丝线](../fundamentals/silk)使用：
+我们可以使用 Valibot 定义对象，并将其作为[丝线](../silk)使用：
 
-```ts
+```ts twoslash
 import * as v from "valibot"
-import { collectNames } from "@gqloom/core"
 
 export const Cat = v.object({
+  __typename: v.nullish(v.literal("Cat")),
   name: v.string(),
   age: v.pipe(v.number(), v.integer()),
   loveFish: v.nullish(v.boolean()),
 })
-
-collectNames({ Cat })
 ```
 
 ## 名称和更多元数据
@@ -66,7 +76,7 @@ collectNames({ Cat })
 
 #### 使用 `__typename` 字面量
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 export const Cat = v.object({
@@ -79,7 +89,7 @@ export const Cat = v.object({
 
 在上面的代码中，我们使用 `__typename` 字面量来为对象定义名称。我们还将 `__typename` 字面量设置为 `nullish`，这意味着 `__typename` 字段是可选的，如果存在，则必须为 "Cat"。
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 export const Cat = v.object({
@@ -94,9 +104,9 @@ export const Cat = v.object({
 
 #### 使用 `collectNames`
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { collectNames } from "@gqloom/core"
+import * as v from "valibot"
 
 export const Cat = v.object({
   name: v.string(),
@@ -109,9 +119,9 @@ collectNames({ Cat }) // 为 Cat 收集名称，在编织后将呈现在 GraphQL
 
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { collectNames } from "@gqloom/core"
+import * as v from "valibot"
 
 export const { Cat } = collectNames({
   Cat: v.object({
@@ -126,9 +136,9 @@ export const { Cat } = collectNames({
 
 #### 使用 `asObjectType`
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { asObjectType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const Cat = v.pipe(
   v.object({
@@ -146,9 +156,9 @@ export const Cat = v.pipe(
 
 通过 `asObjectType` 函数，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { asObjectType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const Cat = v.pipe(
   v.object({
@@ -176,10 +186,10 @@ type Cat {
 
 我们还可以使用 `asField` 函数为字段添加元数据，例如 `description`、`type` 等。
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { asObjectType, asField } from "@gqloom/valibot"
 import { GraphQLInt } from "graphql"
+import * as v from "valibot"
 
 export const Cat = v.pipe(
   v.object({
@@ -212,10 +222,10 @@ type Cat {
 
 #### 声明接口
 
-我们还可以使用 `asObjectType` 函数来声明接口，例如：
-```ts
+我们可以使用 `asObjectType` 函数来声明接口，例如：
+```ts twoslash
+import { asObjectType } from "@gqloom/valibot"
 import * as v from "valibot"
-import { asObjectType } from "../src"
 
 const Fruit = v.object({
   __typename: v.nullish(v.literal("Fruit")),
@@ -240,9 +250,9 @@ const Orange = v.pipe(
 
 我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { asField } from "@gqloom/valibot"
+import * as v from "valibot"
 
 const Dog = v.object({
   __typename: v.nullish(v.literal("Dog")),
@@ -267,9 +277,9 @@ type Dog {
 
 我们推荐使用 `variant` 来定义联合类型：
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { asUnionType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 const Cat = v.object({
   __typename: v.literal("Cat"),
@@ -297,7 +307,7 @@ const Animal = v.pipe(
 
 我们还可以使用 `union` 来定义联合类型：
 
-```ts
+```ts twoslash
 import { collectNames } from "@gqloom/core"
 import { asUnionType } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -335,9 +345,9 @@ collectNames({ Cat, Dog, Animal })
 
 通常，我们更推荐使用 `v.picklist` 来定义枚举类型：
 
-```ts
-import * as v from "valibot"
+```ts twoslash
 import { asEnumType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const Fruit = v.pipe(
   v.picklist(["apple", "banana", "orange"]),
@@ -358,7 +368,10 @@ export type IFruit = v.InferOutput<typeof Fruit>
 
 我们也可以使用 `v.enum_` 来定义枚举类型：
 
-```ts
+```ts twoslash
+import { asEnumType } from "@gqloom/valibot"
+import * as v from "valibot"
+
 export enum Fruit {
   apple = "apple",
   banana = "banana",
@@ -384,7 +397,7 @@ export const FruitE = v.pipe(
 
 首先我们使用 `ValibotWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
 
-```ts
+```ts twoslash
 import {
   GraphQLDateTime,
   GraphQLJSON,
@@ -408,10 +421,32 @@ export const valibotWeaverConfig = ValibotWeaver.config({
 
 在编织 GraphQL Schema 时传入配置到 `weave` 函数中：
 
-```ts
+```ts twoslash
+import {
+  GraphQLDateTime,
+  GraphQLJSON,
+  GraphQLJSONObject,
+} from "graphql-scalars"
+import { resolver } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+
+export const valibotWeaverConfig = ValibotWeaver.config({
+  presetGraphQLType: (schema) => {
+    switch (schema.type) {
+      case "date":
+        return GraphQLDateTime
+      case "any":
+        return GraphQLJSON
+      case "record":
+        return GraphQLJSONObject
+    }
+  },
+})
+const helloResolver = resolver({})
+// ---cut---
 import { weave } from "@gqloom/core"
 
-export const schema = weave(valibotWeaverConfig, HelloResolver)
+export const schema = weave(valibotWeaverConfig, helloResolver)
 ```
 
 ## 默认类型映射

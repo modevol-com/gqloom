@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Valibot
+---
+title: Valibot
+---
 
 [Valibot](https://valibot.dev/) is the open source schema library for TypeScript with bundle size, type safety and developer experience in mind.
 
@@ -8,13 +8,24 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## Installation
 
-<PackageManagerTabs command="install @gqloom/core valibot @gqloom/valibot" />
+```sh tab="npm"
+npm i @gqloom/core valibot @gqloom/valibot
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core valibot @gqloom/valibot
+```
+```sh tab="yarn"
+yarn add @gqloom/core valibot @gqloom/valibot
+```
+```sh tab="bun"
+bun add @gqloom/core valibot @gqloom/valibot
+```
 
 ## Defining simple scalars
 
-In GQLoom, you can directly use Valibot schemas as [silk](../fundamentals/silk):
+In GQLoom, you can directly use Valibot schemas as [silk](../silk):
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 const StringScalar = v.string() // GraphQLString
@@ -23,15 +34,17 @@ const BooleanScalar = v.boolean() // GraphQLBoolean
 
 const FloatScalar = v.number() // GraphQLFloat
 
-const IntScalar = v.pipe(v.nullable(v.number()), v.integer()) // GraphQLInt
+const IntScalar = v.pipe(v.number(), v.integer()) // GraphQLInt
 ```
 
 ## Weave
 
 To ensure that `GQLoom` correctly weaves Valibot schemas into the GraphQL schema, we need to add the `ValibotWeaver` from `@gqloom/valibot` when using the `weave` function.
 
-```ts
-import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
+```ts twoslash
+import { weave, resolver, query } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const helloResolver = resolver({
   hello: query(v.string(), () => "Hello, World!"),
@@ -44,17 +57,15 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 We can use Valibot to define objects and use them as [silk] (... /fundamentals/silk) to use:
 
-```ts
+```ts twoslash
 import * as v from "valibot"
-import { collectNames } from "@gqloom/core"
 
 export const Cat = v.object({
+  __typename: v.nullish(v.literal("Cat")),
   name: v.string(),
   age: v.pipe(v.number(), v.integer()),
   loveFish: v.nullish(v.boolean()),
 })
-
-collectNames({ Cat })
 ```
 
 ## Names and more metadata
@@ -65,7 +76,7 @@ In `GQLoom` we have multiple ways to define names for objects.
 
 #### Using `__typename` literal
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 export const Cat = v.object({
@@ -78,7 +89,7 @@ export const Cat = v.object({
 
 In the code above, we used the `__typename` literal to define the name for the object. We also set the `__typename` literal to `nullish`, which means that the `__typename` field is optional, and if it exists, it must be “Cat”.
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 
 export const Cat = v.object({
@@ -93,7 +104,7 @@ In the code above, we are still using the `__typename` literal to define the nam
 
 #### Using `collectNames`
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { collectNames } from "@gqloom/core"
 
@@ -108,7 +119,7 @@ collectNames({ Cat }) // Collect names for Cat, which will be presented in the G
 
 In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { collectNames } from "@gqloom/core"
 
@@ -125,7 +136,7 @@ In the code above, we use the `collectNames` function to define the names for th
 
 #### Using `asObjectType`
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { asObjectType } from "@gqloom/valibot"
 
@@ -145,7 +156,7 @@ In the code above, we used the `asObjectType` function to create a metadata and 
 
 With the `asObjectType` function, we can add more data to the object, such as `description`, `deprecationReason`, `extensions` and so on.
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { asObjectType } from "@gqloom/valibot"
 
@@ -175,7 +186,7 @@ type Cat {
 
 We can also use the `asField` function to add metadata to a field, such as `description`, `type`, and so on.
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { asObjectType, asField } from "@gqloom/valibot"
 import { GraphQLInt } from "graphql"
@@ -211,10 +222,10 @@ type Cat {
 
 #### Declaring Interfaces
 
-We can also use the `asObjectType` function to define interfaces, for example:
-```ts
+We can use the `asObjectType` function to define interfaces, for example:
+```ts twoslash
 import * as v from "valibot"
-import { asObjectType } from "../src"
+import { asObjectType } from "@gqloom/valibot"
 
 const Fruit = v.object({
   __typename: v.nullish(v.literal("Fruit")),
@@ -239,7 +250,7 @@ In the above code, we have created an interface `Fruit` using the `asObjectType`
 
 We can also omit fields by setting `type` to `null` using the `asField` function, for example:
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { asField } from "@gqloom/valibot"
 
@@ -266,7 +277,7 @@ When using `Valibot`, we can define union types using `variant` or `union`.
 
 We recommend using `variant` to define union types:
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { asUnionType } from "@gqloom/valibot"
 
@@ -296,7 +307,7 @@ In the above code, we have created a union type using the `variant` function. In
 
 We can also use `union` to define union types:
 
-```ts
+```ts twoslash
 import { collectNames } from "@gqloom/core"
 import { asUnionType } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -334,7 +345,7 @@ We can define enumeration types using `v.picklist` or `v.enum_`.
 
 In general, we prefer to use `v.picklist` to define enumerated types:
 
-```ts
+```ts twoslash
 import * as v from "valibot"
 import { asEnumType } from "@gqloom/valibot"
 
@@ -357,7 +368,10 @@ export type IFruit = v.InferOutput<typeof Fruit>
 
 We can also use `v.enum_` to define enumeration types:
 
-```ts
+```ts twoslash
+import { asEnumType } from "@gqloom/valibot"
+import * as v from "valibot"
+
 export enum Fruit {
   apple = "apple",
   banana = "banana",
@@ -383,7 +397,7 @@ To accommodate more Valibot types, we can extend GQLoom to add more type mapping
 
 First we use `ValibotWeaver.config` to define the type mapping configuration. Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars] and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
 
-```ts
+```ts twoslash
 import {
   GraphQLDateTime,
   GraphQLJSON,
@@ -407,10 +421,32 @@ export const valibotWeaverConfig = ValibotWeaver.config({
 
 Configurations are passed into the `weave` function when weaving the GraphQL Schema:
 
-```ts
+```ts twoslash
+import {
+  GraphQLDateTime,
+  GraphQLJSON,
+  GraphQLJSONObject,
+} from "graphql-scalars"
+import { resolver } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+
+export const valibotWeaverConfig = ValibotWeaver.config({
+  presetGraphQLType: (schema) => {
+    switch (schema.type) {
+      case "date":
+        return GraphQLDateTime
+      case "any":
+        return GraphQLJSON
+      case "record":
+        return GraphQLJSONObject
+    }
+  },
+})
+const helloResolver = resolver({})
+// ---cut---
 import { weave } from "@gqloom/core"
 
-export const schema = weave(valibotWeaverConfig, HelloResolver)
+export const schema = weave(valibotWeaverConfig, helloResolver)
 ```
 
 ## Default Type Mappings
