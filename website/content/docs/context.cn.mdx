@@ -1,6 +1,7 @@
-import { Tab, Tabs } from 'rspress/theme';
-
-# 上下文 | Context
+---
+title: 上下文（Context）
+icon: Shuffle
+---
 
 在 Node.js 世界中，上下文（Context）允许我们在同一个请求中共享数据和状态。在 GraphQL 中，上下文允许在同一个请求的多个[解析函数](../fundamentals/resolver)和[中间件](../fundamentals/middleware)之间共享数据。
 
@@ -19,16 +20,16 @@ GQLoom 的 `useContext` 函数的设计参考了 [React](https://zh-hans.react.d
 
 ### 在解析函数中访问上下文
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab label="valibot">
+```ts twoslash
 import { query, resolver, useContext, weave } from "@gqloom/core"
-import { ValibotWeaver } } from "@gqloom/valibot"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => {
     const user = // [!code hl]
       useContext<YogaInitialContext>().request.headers.get("Authorization") // [!code hl]
@@ -36,20 +37,21 @@ const HelloResolver = resolver({
   }),
 })
 
-const yoga = createYoga({ schema: weave(HelloResolver) })
+const yoga = createYoga({ schema: weave(ValibotWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
-import { query, resolver, useContext, weave } from "@gqloom/zod"
+</Tab>
+<Tab label="zod">
+```ts twoslash
+import { query, resolver, useContext, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => {
     const user = // [!code hl]
       useContext<YogaInitialContext>().request.headers.get("Authorization") // [!code hl]
@@ -57,12 +59,12 @@ const HelloResolver = resolver({
   }),
 })
 
-const yoga = createYoga({ schema: weave(ValibotWeaver, HelloResolver) })
+const yoga = createYoga({ schema: weave(ZodWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 在上面的代码中，我们使用 `useContext` 函数从上下文中获取当前请求的 `Authorization` 头部，并将其与 `Hello` 字符串连接起来。
@@ -79,7 +81,7 @@ curl -X POST http://localhost:4000/graphql -H "content-type: application/json" -
 
 ### 在中间件中访问上下文
 
-```ts
+```ts twoslash
 import { useContext, Middleware } from "@gqloom/core"
 import { type YogaInitialContext } from "graphql-yoga"
 
@@ -102,12 +104,18 @@ const authGuard: Middleware = (next) => {
 
 ### 在验证输入时访问上下文
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab label="valibot">
 我们可以在 `valibot` 中自定义验证或转换，并在其中直接访问上下文。
-```ts
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
 import { query, resolver, useContext, weave } from "@gqloom/core"
-import { ValibotWeaver } } from "@gqloom/valibot"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
@@ -119,7 +127,7 @@ async function useUser() {
   return user
 }
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), {
     input: {
       name: v.pipeAsync( 
@@ -127,15 +135,15 @@ const HelloResolver = resolver({
         v.transformAsync(async (value) => { // [!code hl]
           if (value != null) return value // [!code hl]
           const user = await useUser() // [!code hl]
-          return user // [!code hl]
+          return user.name // [!code hl]
         }) // [!code hl]
       ),
     },
-    resolve: () => `Hello, ${name}`,
+    resolve: ({ name }) => `Hello, ${name}`,
   }),
 })
 
-const yoga = createYoga({ schema: weave(ValibotWeaver, HelloResolver) })
+const yoga = createYoga({ schema: weave(ValibotWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
@@ -143,11 +151,18 @@ createServer(yoga).listen(4000, () => {
 
 在上面的代码中，我们在 `v.transformAsync` 中使用 `useUser()` 来获取上下文中的用户信息，并将其作为 `name` 的值返回。
 
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab label="zod">
 我们可以在 `zod` 中自定义验证或转换，并在其中直接访问上下文：
-```ts
-import { query, resolver, useContext, weave } from "@gqloom/zod"
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
+import { query, resolver, useContext, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
@@ -159,7 +174,7 @@ async function useUser() {
   return user
 }
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), {
     input: {
       name: z
@@ -168,27 +183,36 @@ const HelloResolver = resolver({
         .transform(async (value) => { // [!code hl]
           if (value != null) return value // [!code hl]
           const user = await useUser() // [!code hl]
-          return user // [!code hl]
+          return user.name // [!code hl]
         }), // [!code hl]
     },
     resolve: ({ name }) => `Hello, ${name}`,
   }),
 })
 
-const yoga = createYoga({ schema: weave(HelloResolver) })
+const yoga = createYoga({ schema: weave(ZodWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
 在上面的代码中，我们在 `z.transform` 中使用 `useUser()` 来获取上下文中的用户信息，并将其作为 `name` 的值返回。
-  </Tab>
+</Tab>
 </Tabs>
 
 ## 记忆化
 
 考虑我们通过以下自定义函数来访问用户：
 
-```ts
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
+import { useContext } from "@gqloom/core"
+import { type YogaInitialContext } from "graphql-yoga"
+
 async function useUser() {
   const authorization =
     useContext<YogaInitialContext>().request.headers.get("Authorization")
@@ -206,7 +230,15 @@ async function useUser() {
 
 让我们将 `useUser()` 函数记忆化：
 
-```ts
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+import { useContext } from "@gqloom/core"
+import { type YogaInitialContext } from "graphql-yoga"
+// ---cut---
 import { createMemoization } from "@gqloom/core"
 
 const useUser = createMemoization(async () => {

@@ -1,6 +1,7 @@
-import { Tab, Tabs } from 'rspress/theme';
-
-# Context
+---
+title: Context
+icon: Shuffle
+---
 
 In the Node.js world, Context allows us to share data and state within the same request. In GraphQL, contexts allow data to be shared between multiple [resolver functions](../fundamentals/resolver) and [middleware](../fundamentals/middleware) for the same request.
 
@@ -19,16 +20,16 @@ We will use [graphql-yoga](https://the-guild.dev/graphql/yoga-server) as an adap
 
 ### Accessing contexts in resolve functions
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab label="valibot">
+```ts twoslash
 import { query, resolver, useContext, weave } from "@gqloom/core"
-import { ValibotWeaver } } from "@gqloom/valibot"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), () => {
     const user = // [!code hl]
       useContext<YogaInitialContext>().request.headers.get("Authorization") // [!code hl]
@@ -36,20 +37,21 @@ const HelloResolver = resolver({
   }),
 })
 
-const yoga = createYoga({ schema: weave(HelloResolver) })
+const yoga = createYoga({ schema: weave(ValibotWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
-import { query, resolver, useContext, weave } from "@gqloom/zod"
+</Tab>
+<Tab label="zod">
+```ts twoslash
+import { query, resolver, useContext, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), () => {
     const user = // [!code hl]
       useContext<YogaInitialContext>().request.headers.get("Authorization") // [!code hl]
@@ -57,12 +59,12 @@ const HelloResolver = resolver({
   }),
 })
 
-const yoga = createYoga({ schema: weave(HelloResolver) })
+const yoga = createYoga({ schema: weave(ZodWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 In the code above, we use the `useContext` function to get the `Authorization` header of the current request from the context and concatenate it with the `Hello` string.
@@ -79,7 +81,7 @@ You should get the following response:
 
 ### Accessing contexts in middleware
 
-```ts
+```ts twoslash
 import { useContext, Middleware } from "@gqloom/core"
 import { type YogaInitialContext } from "graphql-yoga"
 
@@ -102,12 +104,18 @@ To learn more about middleware, see [middleware documentation](../fundamentals/m
 
 ### Accessing contexts while validating inputs
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab label="valibot">
 We can customize the validation or transformation in `valibot` and access the context directly within it.
-```ts
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
 import { query, resolver, useContext, weave } from "@gqloom/core"
-import { ValibotWeaver } } from "@gqloom/valibot"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
@@ -119,7 +127,7 @@ async function useUser() {
   return user
 }
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.string(), {
     input: {
       name: v.pipeAsync( 
@@ -127,15 +135,15 @@ const HelloResolver = resolver({
         v.transformAsync(async (value) => { // [!code hl]
           if (value != null) return value // [!code hl]
           const user = await useUser() // [!code hl]
-          return user // [!code hl]
+          return user.name // [!code hl]
         }) // [!code hl]
       ),
     },
-    resolve: () => `Hello, ${name}`,
+    resolve: ({ name }) => `Hello, ${name}`,
   }),
 })
 
-const yoga = createYoga({ schema: weave(HelloResolver) })
+const yoga = createYoga({ schema: weave(ValibotWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
@@ -143,11 +151,18 @@ createServer(yoga).listen(4000, () => {
 
 In the code above, we use `useUser()` in `v.transformAsync` to get the user information in the context and return it as the value of `name`.
 
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab label="zod">
 We can customize the validation or transformation in `zod` and access the context directly within it:
-```ts
-import { query, resolver, useContext, weave } from "@gqloom/zod"
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
+import { query, resolver, useContext, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
@@ -159,7 +174,7 @@ async function useUser() {
   return user
 }
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(z.string(), {
     input: {
       name: z
@@ -168,27 +183,36 @@ const HelloResolver = resolver({
         .transform(async (value) => { // [!code hl]
           if (value != null) return value // [!code hl]
           const user = await useUser() // [!code hl]
-          return user // [!code hl]
+          return user.name // [!code hl]
         }), // [!code hl]
     },
     resolve: ({ name }) => `Hello, ${name}`,
   }),
 })
 
-const yoga = createYoga({ schema: weave(HelloResolver) })
+const yoga = createYoga({ schema: weave(ZodWeaver, helloResolver) })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
 In the code above, we use `useUser()` in `z.transform` to get the user information in the context and return it as the value of `name`.
-  </Tab>
+</Tab>
 </Tabs>
 
 ## Memorization
 
 Consider that we access the user through the following custom function:
 
-```ts
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
+import { useContext } from "@gqloom/core"
+import { type YogaInitialContext } from "graphql-yoga"
+
 async function useUser() {
   const authorization =
     useContext<YogaInitialContext>().request.headers.get("Authorization")
@@ -206,7 +230,15 @@ That is, the memoized function will only be executed once in the same request, n
 
 Let's memoize the `useUser()` function:
 
-```ts
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+import { useContext } from "@gqloom/core"
+import { type YogaInitialContext } from "graphql-yoga"
+// ---cut---
 import { createMemoization } from "@gqloom/core"
 
 const useUser = createMemoization(async () => {

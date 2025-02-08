@@ -435,6 +435,9 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      graphql-yoga:
+        specifier: ^5.6.0
+        version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       postcss:
         specifier: ^8.5.1
         version: 8.5.1
