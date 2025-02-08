@@ -5,6 +5,7 @@
     "resolver",
     "weave",
     "context",
-    "dataloader"
+    "dataloader",
+    "middleware"
   ]
 }

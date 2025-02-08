@@ -1,6 +1,7 @@
-import { Tab, Tabs, PackageManagerTabs } from 'rspress/theme';
-
-# 中间件 | Middleware
+---
+title: 中间件（Middleware）
+icon: Fence
+---
 
 中间件是一种函数，它介入了解析函数的处理流程。它提供了一种在请求和响应流程中插入逻辑的方式，以便在发送响应之前或在请求处理之前执行代码。
 `GQLoom` 的中间件遵循了 [Koa](https://koajs.com/#application) 的洋葱式中间件模式。
@@ -20,7 +21,7 @@ import { Tab, Tabs, PackageManagerTabs } from 'rspress/theme';
 
 一个最基础的中间件函数如下：
 
-```ts
+```ts twoslash
 import { Middleware } from '@gqloom/core';
 
 const middleware: Middleware = async (next) => {
@@ -34,14 +35,14 @@ const middleware: Middleware = async (next) => {
 
 在使用 [Valibot](../schema-integration/valibot) 或 [Zod](../schema-integration/zod) 等库进行输入验证时，我们可以在中间件中捕获验证错误，并返回自定义的错误信息。
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
 import { type Middleware } from "@gqloom/core"
 import { ValiError } from "valibot"
 import { GraphQLError } from "graphql"
 
-export const ValibotExceptionFilter: Middleware = async (next) => {
+export const valibotExceptionFilter: Middleware = async (next) => {
   try {
     return await next()
   } catch (error) {
@@ -53,14 +54,14 @@ export const ValibotExceptionFilter: Middleware = async (next) => {
   }
 }
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab value="zod">
+```ts twoslash
 import { type Middleware } from "@gqloom/core"
 import { ZodError } from "zod"
 import { GraphQLError } from "graphql"
 
-export const ZodExceptionFilter: Middleware = async (next) => {
+export const zodExceptionFilter: Middleware = async (next) => {
   try {
     return await next()
   } catch (error) {
@@ -73,13 +74,13 @@ export const ZodExceptionFilter: Middleware = async (next) => {
   }
 }
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 ### 验证输出
 在 `GQLoom`中，默认不会对解析函数的输出执行验证。但我们可以通过中间件来验证解析函数的输出。
 
-```ts
+```ts twoslash
 import { silk, type Middleware } from "@gqloom/core"
 
 export const outputValidator: Middleware = async ({ next, outputSilk }) => {
@@ -90,24 +91,29 @@ export const outputValidator: Middleware = async ({ next, outputSilk }) => {
 
 让我们尝试使用这个中间件：
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export const outputValidator: Middleware = (next) => next()
+export const valibotExceptionFilter: Middleware = (next) => next()
+// @filename: main.ts
+// ---cut---
 import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
-import { outputValidator, ValibotExceptionFilter } from "./middlewares"
+import { outputValidator, valibotExceptionFilter } from "./middlewares"
 
-const HelloResolver = resolver({
-  hello: query(v.pipe(v.string(), v.minLength(10)), {
-    input: { name: v.string() },
-    resolve: ({ name }) => `Hello, ${name}`,
-    middlewares: [outputValidator], // [!code hl]
-  }),
+const helloResolver = resolver({
+  hello: query(v.pipe(v.string(), v.minLength(10)))
+    .input({ name: v.string() })
+    .use(outputValidator) // [!code hl]
+    .resolve(({ name }) => `Hello, ${name}`),
 })
 
-export const schema = weave(ValibotWeaver, HelloResolver, ValibotExceptionFilter) // [!code hl]
+export const schema = weave(ValibotWeaver, helloResolver, valibotExceptionFilter) // [!code hl]
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -117,24 +123,29 @@ createServer(yoga).listen(4000, () => {
 ```
 在上面的代码中，我们对 `hello` 查询的输出添加了 `v.minLength(10)` 的要求，并在解析函数中添加了 `outputValidator` 中间件。
 我们还在 `weave` 中添加了一个全局中间件 `ValibotExceptionFilter`。
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab value="zod">
+```ts twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export const outputValidator: Middleware = (next) => next()
+export const zodExceptionFilter: Middleware = (next) => next()
+// @filename: main.ts
+// ---cut---
 import { weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
-import { outputValidator, ZodExceptionFilter } from "./middlewares"
+import { outputValidator, zodExceptionFilter } from "./middlewares"
 
-const HelloResolver = resolver({
-  hello: query(z.string().min(10), {
-    input: { name: z.string() },
-    resolve: ({ name }) => `Hello, ${name}`,
-    middlewares: [outputValidator], // [!code hl]
-  }),
+const helloResolver = resolver({
+  hello: query(z.string().min(10))
+    .input({ name: z.string() })
+    .use(outputValidator) // [!code hl]
+    .resolve(({ name }) => `Hello, ${name}`),
 })
 
-export const schema = weave(HelloResolver, ZodExceptionFilter) // [!code hl]
+export const schema = weave(helloResolver, zodExceptionFilter) // [!code hl]
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
@@ -145,7 +156,7 @@ createServer(yoga).listen(4000, () => {
 
 在上面的代码中，我们对 `hello` 查询的输出添加了 `z.string().min(10)` 的要求，并在解析函数中添加了 `outputValidator` 中间件。
 我们还在 `weave` 中添加了一个全局中间件 `ValibotExceptionFilter`。
-  </Tab>
+</Tab>
 </Tabs>
 
 当我们进行以下查询时：
@@ -155,8 +166,8 @@ createServer(yoga).listen(4000, () => {
 }
 ```
 将会得到类似如下的结果：
-<Tabs groupId="schema-builder">
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
 ```json
 {
   "errors": [
@@ -189,8 +200,8 @@ createServer(yoga).listen(4000, () => {
   "data": null
 }
 ```
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```json
 {
   "errors": [
@@ -223,7 +234,7 @@ createServer(yoga).listen(4000, () => {
   "data": null
 }
 ```
-  </Tab>
+</Tab>
 </Tabs>
 如果我们调整输入，使返回的字符串长度符合要求：
 ```graphql
@@ -246,9 +257,18 @@ createServer(yoga).listen(4000, () => {
 考虑我们的用户有 `"admin"` 和 `"editor"` 两种角色，我们希望管理员和编辑员分别可以访问自己的操作。
 首先，我们实现一个 `authGuard` 中间件，用于校验用户的角色：
 
-```ts
+```ts twoslash
+// @filename: context.ts
+import { createMemoization } from "@gqloom/core"
+export const useUser = createMemoization(()=> ({ 
+  name:"", 
+  id: 0, 
+  roles: [] as ("admin" | "editor")[]
+}))
+// @filename: main.ts
+// ---cut---
 import { type Middleware } from "@gqloom/core"
-import { useUser } from "../context"
+import { useUser } from "./context"
 import { GraphQLError } from "graphql"
 
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -264,14 +284,21 @@ export function authGuard(role: "admin" | "editor"): Middleware {
 中间件函数会检查用户是否已经认证，并且是否具有指定的角色，如果不符合要求，则抛出一个 `GraphQLError` 异常。
 
 我们可以为不同的解析器应用不同的中间件：
-<Tabs groupId="schema-builder">
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export function authGuard(role: "admin" | "editor"): Middleware {
+  return (next) => next()
+}
+// @filename: main.ts
+// ---cut---
 import { resolver, mutation } from "@gqloom/core"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 
-const AdminResolver = resolver(
+const adminResolver = resolver(
   {
     deleteArticle: mutation(v.boolean(), () => true),
   },
@@ -280,7 +307,7 @@ const AdminResolver = resolver(
   }
 )
 
-const EditorResolver = resolver(
+const editorResolver = resolver(
   {
     createArticle: mutation(v.boolean(), () => true),
 
@@ -289,14 +316,21 @@ const EditorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab value="zod">
+```ts twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export function authGuard(role: "admin" | "editor"): Middleware {
+  return (next) => next()
+}
+// @filename: main.ts
+// ---cut---
 import { resolver, mutation } from "@gqloom/zod"
 import { z } from "zod"
 import { authGuard } from "./middlewares"
 
-const AdminResolver = resolver(
+const adminResolver = resolver(
   {
     deleteArticle: mutation(z.boolean(), () => true),
   },
@@ -305,7 +339,7 @@ const AdminResolver = resolver(
   }
 )
 
-const EditorResolver = resolver(
+const editorResolver = resolver(
   {
     createArticle: mutation(z.boolean(), () => true),
 
@@ -314,15 +348,15 @@ const EditorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
-在上面的代码中，我们为 `AdminResolver` 和 `EditorResolver` 分别应用了 `authGuard` 中间件，并指定了不同的角色。这样，只有具有相应角色的用户才能访问对应解析器内的操作。
+在上面的代码中，我们为 `adminResolver` 和 `editorResolver` 分别应用了 `authGuard` 中间件，并指定了不同的角色。这样，只有具有相应角色的用户才能访问对应解析器内的操作。
 
 ### 日志
 
 我们也可以通过中间件来实现日志记录功能。例如，我们可以创建一个 `logger` 中间件，用于记录每个字段解析函数的执行时间：
-```ts
+```ts twoslash
 import { type Middleware, useResolverPayload } from "@gqloom/core"
 
 export const logger: Middleware = async (next) => {
@@ -344,51 +378,66 @@ GQLoom 能够在各种范围内应用中间件，包括解析函数、解析器�
 ### 解析函数中间件
 
 我们可以在解析函数中直接使用中间件，只需要在操作构造函数的第二个参数中传入 `middlewares` 字段，例如：
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export const outputValidator: Middleware = (next) => next()
+// @filename: main.ts
+// ---cut---
 import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 import { outputValidator } from "./middlewares"
 
-const HelloResolver = resolver({
-  hello: query(v.pipe(v.string(), v.minLength(10)), {
-    input: { name: v.string() },
-    resolve: ({ name }) => `Hello, ${name}`,
-    middlewares: [outputValidator], // [!code hl]
-  }),
+const helloResolver = resolver({
+  hello: query(v.pipe(v.string(), v.minLength(10)))
+    .input({ name: v.string() })
+    .use(outputValidator) // [!code hl]
+    .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab value="zod">
+```ts  twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export const outputValidator: Middleware = (next) => next()
+// @filename: main.ts
+// ---cut---
 import { resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 import { outputValidator } from "./middlewares"
 
-const HelloResolver = resolver({
-  hello: query(z.string().min(10), {
-    input: { name: z.string() },
-    resolve: ({ name }) => `Hello, ${name}`,
-    middlewares: [outputValidator], // [!code hl]
-  }),
+const helloResolver = resolver({
+  hello: query(z.string().min(10))
+    .input({ name: z.string() })
+    .use(outputValidator) // [!code hl]
+    .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 ### 解析器局部中间件
 
 我们也可以在解析器级别应用中间件，这样中间件将对解析器内的所有操作生效。
 只需要在解析器构造函数的最后一个参数中传入 `middlewares` 字段，例如：
-<Tabs groupId="schema-builder">
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export function authGuard(role: "admin" | "editor"): Middleware {
+  return (next) => next()
+}
+// @filename: main.ts
+// ---cut---
 import { resolver, mutation } from "@gqloom/core"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 
-const AdminResolver = resolver(
+const adminResolver = resolver(
   {
     deleteArticle: mutation(v.boolean(), () => true),
   },
@@ -397,7 +446,7 @@ const AdminResolver = resolver(
   }
 )
 
-const EditorResolver = resolver(
+const editorResolver = resolver(
   {
     createArticle: mutation(v.boolean(), () => true),
 
@@ -406,14 +455,21 @@ const EditorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab value="zod">
+```ts twoslash
+// @filename: middlewares.ts
+import { type Middleware } from "@gqloom/core"
+export function authGuard(role: "admin" | "editor"): Middleware {
+  return (next) => next()
+}
+// @filename: main.ts
+// ---cut---
 import { resolver, mutation } from "@gqloom/zod"
 import { z } from "zod"
 import { authGuard } from "./middlewares"
 
-const AdminResolver = resolver(
+const adminResolver = resolver(
   {
     deleteArticle: mutation(z.boolean(), () => true),
   },
@@ -422,7 +478,7 @@ const AdminResolver = resolver(
   }
 )
 
-const EditorResolver = resolver(
+const editorResolver = resolver(
   {
     createArticle: mutation(z.boolean(), () => true),
 
@@ -431,7 +487,7 @@ const EditorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 ### 全局中间件
@@ -439,7 +495,7 @@ const EditorResolver = resolver(
 
 ```ts
 import { weave } from "@gqloom/core"
-import { ExceptionFilter } from "./middlewares"
+import { exceptionFilter } from "./middlewares"
 
-export const schema = weave(HelloResolver, ExceptionFilter) // [!code hl]
+export const schema = weave(helloResolver, exceptionFilter) // [!code hl]
 ```

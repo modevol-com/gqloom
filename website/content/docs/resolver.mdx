@@ -76,17 +76,6 @@ const helloResolver = resolver({
 ```
 
 In the code above, we use `z.string()` to define the return type of the `hello` operation, and the `zodSilk` function lets us use the Schema definition of `zod` as a `silk`.
-
-We can also use the `resolver` and `query` functions exported from `@gqloom/zod` directly to make the code more clean:
-
-```ts twoslash
-import { resolver, query } from '@gqloom/zod'
-import { z } from "zod"
-
-const helloResolver = resolver({
-  hello: query(z.string(), () => "Hello, World"),
-})
-```
 </Tab>
 </Tabs>
 

@@ -76,17 +76,6 @@ const helloResolver = resolver({
 ```
 
 在上面的代码中，我们使用 `z.string()` 来定义 `hello` 操作的返回类型，`zodSilk` 函数让我们把 `zod` 的 Schema 定义作为`丝线`使用。
-
-我们还可以直接使用从 `@gqloom/zod` 导出的 `resolver` 和 `query` 函数，以使得代码更加简洁：
-
-```ts twoslash
-import { resolver, query } from '@gqloom/zod'
-import { z } from "zod"
-
-const helloResolver = resolver({
-  hello: query(z.string(), () => "Hello, World"),
-})
-```
 </Tab>
 </Tabs>
 
