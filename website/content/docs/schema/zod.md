@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Zod
+---
+title: Zod
+---
 
 [Zod](https://zod.dev/) is a TypeScript-first schema declaration and validation library. I'm using the term "schema" to broadly refer to any data type, from a simple string to a complex nested object.
 
@@ -10,13 +10,24 @@ Zod is designed to be as developer-friendly as possible. The goal is to eliminat
 
 ## Installation
 
-<PackageManagerTabs command="install @gqloom/core zod @gqloom/zod" />
+```sh tab="npm"
+npm i @gqloom/core zod @gqloom/zod
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core zod @gqloom/zod
+```
+```sh tab="yarn"
+yarn add @gqloom/core zod @gqloom/zod
+```
+```sh tab="bun"
+bun add @gqloom/core zod @gqloom/zod
+```
 
 ## Defining simple scalars
 
 In GQLoom, you can directly use Zod Schema as [silk](../fundamentals/silk).
 
-```ts
+```ts twoslash
 import { z } from "zod"
 
 const StringScalar = z.string() // GraphQLString
@@ -32,7 +43,7 @@ const IntScalar = z.number().int() // GraphQLInt
 
 To ensure that `GQLoom` correctly weaves the Zod Schema into the GraphQL Schema, we need to add the `ZodWeaver` from `@gqloom/zod` when using the `weave` function.
 
-```ts
+```ts twoslash
 import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
@@ -46,7 +57,7 @@ export const schema = weave(ZodWeaver, helloResolver)
 ## Defining Objects
 
 We can define objects using Zod and use them as [silk](../fundamentals/silk) to use:
-```ts
+```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -66,7 +77,7 @@ collectNames({ Cat })
 In `GQLoom` we have multiple ways to define names for objects.
 
 #### Using `__typename` literal
-```ts
+```ts twoslash
 import { z } from "zod"
 
 export const Cat = z.object({
@@ -78,7 +89,7 @@ export const Cat = z.object({
 ```
 In the code above, we used the `__typename` literal to define the name for the object. We also set the `__typename` literal to `nullish`, which means that the `__typename` field is optional, and if it exists, it must be “Cat”.
 
-```ts
+```ts twoslash
 import { z } from "zod"
 
 export const Cat = z.object({
@@ -92,7 +103,7 @@ In the code above we are still using the `__typename` literal to define the name
 
 #### Using `collectNames`
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -107,7 +118,7 @@ collectNames({ Cat })
 
 In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -122,7 +133,7 @@ export const { Cat } = collectNames({
 In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
 
 #### Using `asObjectType`
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
 
@@ -141,7 +152,7 @@ In the code above, we used the `asObjectType` function to create a metadata and 
 
 With the `asObjectType` function, we can add more data to the object, such as `description`, `deprecationReason`, `extensions` and so on.
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
 
@@ -170,9 +181,9 @@ type Cat {
 ```
 
 We can also use the asField function to add metadata to a field, such as description, type, and so on.
-```ts
+```ts twoslash
 import { z } from "zod"
-import { asFieldType, asObjectType } from "@gqloom/zod"
+import { asField, asObjectType } from "@gqloom/zod"
 import { GraphQLInt } from "graphql"
 
 export const Cat = z
@@ -181,7 +192,7 @@ export const Cat = z
     age: z
       .number()
       .superRefine(
-        asFieldType({ type: GraphQLInt, description: "How old is the cat" })
+        asField({ type: GraphQLInt, description: "How old is the cat" })
       ),
     loveFish: z.boolean().nullish(),
   })
@@ -209,7 +220,7 @@ type Cat {
 #### Declaring Interfaces
 
 We can also use the `asObjectType` function to declare interfaces, for example:
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
 
@@ -235,7 +246,7 @@ In the above code, we created an interface `Fruit` using the `asObjectType` func
 #### Omitting Fields
 
 We can also omit fields by setting `type` to `null` using the `asField` function, for example:
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asField } from "@gqloom/zod"
 
@@ -260,7 +271,7 @@ type Dog {
 #### Using z.discriminatedUnion
 
 We recommend using `z.discriminatedUnion` to define union types, for example:
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asUnionType } from "@gqloom/zod"
 
@@ -289,7 +300,7 @@ In the above code, we have created a union type using the `z.discriminatedUnion`
 
 We can also use `z.union` to define union types:
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asUnionType, collectNames } from "@gqloom/zod"
 
@@ -324,7 +335,7 @@ We can define enum types using `z.enum` or `z.nativeEnum`.
 #### Using z.enum
 
 In general, we prefer to use `z.enum` to define enumeration types, for example:
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
 
@@ -345,7 +356,7 @@ export type IFruit = z.infer<typeof Fruit>
 #### Using z.nativeEnum
 
 We can also use `z.nativeEnum` to define enumeration types, for example:
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
 
@@ -375,7 +386,7 @@ To accommodate more Zod types, we can extend GQLoom to add more type mappings to
 
 First we use `ZodWeaver.config` to define the type mapping configuration. Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars](https://the-guild.dev/graphql/scalars) and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
 
-```ts
+```ts twoslash
 import {
   GraphQLDateTime,
   GraphQLJSON,
@@ -397,10 +408,31 @@ export const zodWeaverConfig = ZodWeaver.config({
 
 Configurations are passed into the `weave` function when weaving the GraphQL Schema:
 
-```ts
+```ts twoslash
+import {
+  GraphQLDateTime,
+  GraphQLJSON,
+  GraphQLJSONObject,
+} from "graphql-scalars"
+import { z } from "zod"
+import { resolver } from '@gqloom/core'
+import { ZodWeaver } from "@gqloom/zod"
+
+export const zodWeaverConfig = ZodWeaver.config({
+  presetGraphQLType: (schema) => {
+    if (schema instanceof z.ZodDate) return GraphQLDateTime
+
+    if (schema instanceof z.ZodAny) return GraphQLJSON
+
+    if (schema instanceof z.ZodRecord) return GraphQLJSONObject
+  },
+})
+
+export const helloResolver = resolver({})
+// ---cut---
 import { weave } from "@gqloom/zod"
 
-export const schema = weave(zodWeaverConfig, HelloResolver)
+export const schema = weave(zodWeaverConfig, helloResolver)
 ```
 
 ## Default Type Mappings

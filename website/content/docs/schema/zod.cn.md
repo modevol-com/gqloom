@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Zod
+---
+title: Zod
+---
 
 [Zod](https://zod.dev/) 是 TypeScript 优先的 Schema 声明和验证库。这里的 “Schema” 一词泛指任何数据类型，从简单的字符串到复杂的嵌套对象。
 
@@ -10,13 +10,24 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 ## 安装
 
-<PackageManagerTabs command="install @gqloom/core zod @gqloom/zod" />
+```sh tab="npm"
+npm i @gqloom/core zod @gqloom/zod
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core zod @gqloom/zod
+```
+```sh tab="yarn"
+yarn add @gqloom/core zod @gqloom/zod
+```
+```sh tab="bun"
+bun add @gqloom/core zod @gqloom/zod
+```
 
 ## 定义简单标量
 
 在 GQLoom 中，可以直接使用 Zod Schema 作为[丝线](../fundamentals/silk)使用：
 
-```ts
+```ts twoslash
 import { z } from "zod"
 
 const StringScalar = z.string() // GraphQLString
@@ -32,7 +43,7 @@ const IntScalar = z.number().int() // GraphQLInt
 
 为了让 `GQLoom` 能正确地将 Zod Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/zod` 的 `ZodWeaver`。
 
-```ts
+```ts twoslash
 import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
 
@@ -46,7 +57,7 @@ export const schema = weave(ZodWeaver, helloResolver)
 ## 定义对象
 
 我们可以使用 Zod 定义对象，并将其作为[丝线](../fundamentals/silk)使用：
-```ts
+```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -78,7 +89,7 @@ export const Cat = z.object({
 ```
 在上面的代码中，我们使用 `__typename` 字面量来为对象定义名称。我们还将 `__typename` 字面量设置为 `nullish`，这意味着 `__typename` 字段是可选的，如果存在，则必须为 "Cat"。
 
-```ts
+```ts twoslash
 import { z } from "zod"
 
 export const Cat = z.object({
@@ -92,7 +103,7 @@ export const Cat = z.object({
 
 #### 使用 `collectNames`
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -107,7 +118,7 @@ collectNames({ Cat })
 
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -122,7 +133,7 @@ export const { Cat } = collectNames({
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
 
 #### 使用 `asObjectType`
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
 
@@ -141,7 +152,7 @@ export const Cat = z
 
 通过 `asObjectType` 函数，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
 
@@ -170,9 +181,9 @@ type Cat {
 ```
 
 我们还可以使用 asField 函数为字段添加元数据，例如 description、type 等。
-```ts
+```ts twoslash
 import { z } from "zod"
-import { asFieldType, asObjectType } from "@gqloom/zod"
+import { asField, asObjectType } from "@gqloom/zod"
 import { GraphQLInt } from "graphql"
 
 export const Cat = z
@@ -181,7 +192,7 @@ export const Cat = z
     age: z
       .number()
       .superRefine(
-        asFieldType({ type: GraphQLInt, description: "How old is the cat" })
+        asField({ type: GraphQLInt, description: "How old is the cat" })
       ),
     loveFish: z.boolean().nullish(),
   })
@@ -209,9 +220,9 @@ type Cat {
 #### 声明接口
 
 我们还可以使用 `asObjectType` 函数来声明接口，例如：
-```ts
-import { z } from "zod"
+```ts twoslash
 import { asObjectType } from "@gqloom/zod"
+import { z } from "zod"
 
 const Fruit = z
   .object({
@@ -235,7 +246,7 @@ const Orange = z
 #### 省略字段
 
 我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asField } from "@gqloom/zod"
 
@@ -260,7 +271,7 @@ type Dog {
 #### 使用 z.discriminatedUnion
 
 我们推荐使用 `z.discriminatedUnion` 来定义联合类型，例如：
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asUnionType } from "@gqloom/zod"
 
@@ -289,7 +300,7 @@ const Animal = z
 
 我们还可以使用 `z.union` 来定义联合类型：
 
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asUnionType, collectNames } from "@gqloom/zod"
 
@@ -324,7 +335,7 @@ collectNames({ Cat, Dog, Animal })
 #### 使用 z.enum
 
 通常，我们更推荐使用 `z.enum` 来定义枚举类型，例如：
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
 
@@ -345,7 +356,7 @@ export type IFruit = z.infer<typeof Fruit>
 #### 使用 z.nativeEnum
 
 我们还可以使用 `z.nativeEnum` 来定义枚举类型，例如：
-```ts
+```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
 
@@ -375,7 +386,7 @@ export type IFruit = z.infer<typeof Fruit>
 
 首先我们使用 `ZodWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
 
-```ts
+```ts twoslash
 import {
   GraphQLDateTime,
   GraphQLJSON,
@@ -397,10 +408,31 @@ export const zodWeaverConfig = ZodWeaver.config({
 
 在编织 GraphQL Schema 时传入配置到 `weave` 函数中：
 
-```ts
+```ts twoslash
+import {
+  GraphQLDateTime,
+  GraphQLJSON,
+  GraphQLJSONObject,
+} from "graphql-scalars"
+import { z } from "zod"
+import { resolver } from '@gqloom/core'
+import { ZodWeaver } from "@gqloom/zod"
+
+export const zodWeaverConfig = ZodWeaver.config({
+  presetGraphQLType: (schema) => {
+    if (schema instanceof z.ZodDate) return GraphQLDateTime
+
+    if (schema instanceof z.ZodAny) return GraphQLJSON
+
+    if (schema instanceof z.ZodRecord) return GraphQLJSONObject
+  },
+})
+
+export const helloResolver = resolver({})
+// ---cut---
 import { weave } from "@gqloom/zod"
 
-export const schema = weave(zodWeaverConfig, HelloResolver)
+export const schema = weave(zodWeaverConfig, helloResolver)
 ```
 
 ## 默认类型映射

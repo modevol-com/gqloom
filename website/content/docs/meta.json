@@ -7,7 +7,6 @@
     "context",
     "dataloader",
     "middleware",
-    "...",
     "---Schema Integration---",
     "...schema"
   ]
