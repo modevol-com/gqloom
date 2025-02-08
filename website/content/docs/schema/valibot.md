@@ -175,7 +175,7 @@ export const Cat = v.pipe(
 
 In the above code, we have added a `description` metadata to the `Cat` object which will be presented in the GraphQL Schema:
 
-```gql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -209,7 +209,7 @@ export const Cat = v.pipe(
 
 In the above code, we added `type` and `description` metadata to the `age` field and ended up with the following GraphQL Schema:
 
-```gql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -263,7 +263,7 @@ const Dog = v.object({
 
 The following GraphQL Schema will be obtained:
 
-```gql
+```graphql title="GraphQL Schema"
 type Dog {
   name: String
 }

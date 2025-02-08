@@ -176,7 +176,7 @@ const BookResolver = resolver.of(Book, {
 
 在上面的代码中，我们为 `Book` 对象定义了一个额外字段 `author`，它将返回与 `authorID` 字段匹配的 `User` 对象。我们还定义了一个名为 `books` 的查询，它将返回所有 `Book` 对象。
 在这里，我们直接使用 `users` 数组来查找用户。对于下面的查询：
-```graphql
+```graphql title="GraphQL Schema"
 query books {
   books {
     id

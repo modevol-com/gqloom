@@ -223,7 +223,7 @@ export const schema = weave(
 如此一来，`Cat` 对象将被转换为 `CatInput` 类型，从而避免了命名冲突。
 
 以上的 `catResolver` 将编织得到如下 GraphQL Schema：
-```graphql
+```graphql title="GraphQL Schema"
 type Mutation {
   createCat(data: CatInput!): Cat!
 }

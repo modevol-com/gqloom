@@ -171,7 +171,7 @@ export const Cat = z
 ```
 
 In the above code, we have added a `description` metadata to the `Cat` object which will be presented in the GraphQL Schema:
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -206,7 +206,7 @@ export const Cat = z
 
 In the above code, we added `type` and `description` metadata to the `age` field and ended up with the following GraphQL Schema:
 
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -260,7 +260,7 @@ const Dog = z.object({
 })
 ```
 The following GraphQL Schema will be generated:
-```graphql
+```graphql title="GraphQL Schema"
 type Dog {
   name: String
 }

@@ -160,7 +160,7 @@ We also added a global middleware `ValibotExceptionFilter` to `weave`.
 </Tabs>
 
 When we make the following query:
-```graphql
+```graphql title="GraphQL Query"
 {
   hello(name: "W")
 }
@@ -237,7 +237,7 @@ A result similar to the following will be given:
 </Tab>
 </Tabs>
 If we adjust the input so that the returned string is the required length:
-```graphql
+```graphql title="GraphQL Query"
 {
   hello(name: "World")
 }

@@ -171,7 +171,7 @@ export const Cat = z
 ```
 
 在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元数据，该元数据将在 GraphQL Schema 中呈现：
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -206,7 +206,7 @@ export const Cat = z
 
 在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
-```graphql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -260,7 +260,7 @@ const Dog = z.object({
 })
 ```
 将得到如下 GraphQL Schema：
-```graphql
+```graphql title="GraphQL Schema"
 type Dog {
   name: String
 }

@@ -175,7 +175,7 @@ export const Cat = v.pipe(
 
 在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元数据，该元数据将在 GraphQL Schema 中呈现：
 
-```gql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -209,7 +209,7 @@ export const Cat = v.pipe(
 
 在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
-```gql
+```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
   name: String!
@@ -263,7 +263,7 @@ const Dog = v.object({
 
 将得到如下 GraphQL Schema：
 
-```gql
+```graphql title="GraphQL Schema"
 type Dog {
   name: String
 }
