@@ -76,7 +76,7 @@ const catResolver = resolver({
       data: Cat,
     },
     resolve: ({ data }) => data,
-  })
+  }),
 })
 // ---cut---
 import { weave } from '@gqloom/core'
@@ -148,7 +148,7 @@ const catResolver = resolver({
       data: Cat,
     },
     resolve: ({ data }) => data,
-  })
+  }),
 })
 
 export const schema = weave(ZodWeaver, catResolver);

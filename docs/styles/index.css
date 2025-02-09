@@ -1,12 +1,12 @@
 :root {
   /* 修改主题色 */
-  --rp-c-brand: #f83c86;
-  --rp-c-brand-dark: #e91f64;
-  --rp-c-brand-darker: #a70d3b;
-  --rp-c-brand-light: #fe68a7;
-  --rp-c-brand-lighter: #fecce3;
+  --rp-c-brand: hsl(336, 93%, 60%);
+  --rp-c-brand-dark: hsl(340, 82%, 52%);
+  --rp-c-brand-darker: hsl(342, 86%, 35%);
+  --rp-c-brand-light: hsl(335, 99%, 70%);
+  --rp-c-brand-lighter: hsl(332, 96%, 90%);
 
-  --rp-c-brand-tint: #d24ea224;
+  --rp-c-brand-tint: hsla(322, 59%, 56%, 0.141);
 
   --rp-home-hero-name-background: -webkit-linear-gradient(
     120deg,

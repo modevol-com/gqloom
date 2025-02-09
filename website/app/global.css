@@ -4,3 +4,13 @@
 @import "fumadocs-twoslash/twoslash.css";
 
 @source '../node_modules/fumadocs-ui/dist/**/*.js';
+
+:root {
+  --color-fd-primary: hsl(336, 95%, 43%);
+  --color-fd-ring: hsl(336, 84%, 81%);
+}
+
+.dark {
+  --color-fd-primary: hsl(336, 96%, 49%);
+  --color-fd-ring: hsl(336, 84%, 81%);
+}
