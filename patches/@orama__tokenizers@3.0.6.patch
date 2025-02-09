@@ -1,0 +1,25 @@
+diff --git a/package.json b/package.json
+index c561149692bb884474d1ce7d3f4d116f28d555f3..420d88e6ab384cec9e11aec1dfd8324cc9ad5284 100644
+--- a/package.json
++++ b/package.json
+@@ -6,14 +6,14 @@
+   "sideEffects": false,
+   "exports": {
+     "./japanese": {
+-      "types": "./build/tokenizer-japanese/tokenizer.d.ts",
+-      "import": "./build/tokenizer-japanese/tokenizer.mjs",
+-      "require": "./build/tokenizer-japanese/tokenizer.js"
++      "types": "./build/tokenizer-japanese/tokenizer.ts",
++      "import": "./build/tokenizer-japanese/tokenizer.js",
++      "require": "./build/tokenizer-japanese/tokenizer.cjs"
+     },
+     "./mandarin": {
+-      "types": "./build/tokenizer-mandarin/tokenizer.d.ts",
+-      "import": "./build/tokenizer-mandarin/tokenizer.mjs",
+-      "require": "./build/tokenizer-mandarin/tokenizer.js"
++      "types": "./build/tokenizer-mandarin/tokenizer.ts",
++      "import": "./build/tokenizer-mandarin/tokenizer.js",
++      "require": "./build/tokenizer-mandarin/tokenizer.cjs"
+     }
+   },
+   "dependencies": {
