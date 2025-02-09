@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@orama/tokenizers@3.0.6':
-    hash: ctgigvspjjkgptomz3db7z4gmu
+    hash: 6eg5oek3uxnkb2nb6huzdwkk5i
     path: patches/@orama__tokenizers@3.0.6.patch
   graphql@16.8.1:
     hash: 2p6wc42resg5at2p4utt5idamq
@@ -376,19 +376,19 @@ importers:
         version: 3.0.6
       '@orama/tokenizers':
         specifier: ^3.0.6
-        version: 3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu)
+        version: 3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i)
       fumadocs-core:
         specifier: 15.0.2
-        version: 15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       fumadocs-mdx:
         specifier: 11.4.1
-        version: 11.4.1(acorn@8.12.1)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))
+        version: 11.4.1(acorn@8.12.1)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))
       fumadocs-twoslash:
         specifier: ^3.0.0
-        version: 3.0.0(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-ui@15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(shiki@2.3.1)(typescript@5.7.3)
+        version: 3.0.0(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-ui@15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(shiki@2.3.1)(typescript@5.7.3)
       fumadocs-ui:
         specifier: 15.0.2
-        version: 15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3)
+        version: 15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3)
       lucide-react:
         specifier: ^0.475.0
         version: 0.475.0(react@19.0.0)
@@ -3727,7 +3727,6 @@ packages:
 
   libsql@0.4.7:
     resolution: {integrity: sha512-T9eIRCs6b0J1SHKYIvD8+KCJMcWZ900iZyxdnSCdqxN12Z1ijzT+jY5nrk72Jw4B0HGzms2NgpryArlJqvc3Lw==}
-    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   light-my-request@5.13.0:
@@ -6446,7 +6445,7 @@ snapshots:
 
   '@orama/orama@3.0.6': {}
 
-  '@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu)':
+  '@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i)':
     dependencies:
       '@orama/orama': 3.0.6
 
@@ -8118,7 +8117,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       '@formatjs/intl-localematcher': 0.5.10
       '@orama/orama': 2.1.1
@@ -8136,7 +8135,7 @@ snapshots:
       shiki: 2.3.1
       unist-util-visit: 5.0.0
     optionalDependencies:
-      '@orama/tokenizers': 3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu)
+      '@orama/tokenizers': 3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i)
       next: 15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
@@ -8144,7 +8143,7 @@ snapshots:
       - '@types/react'
       - supports-color
 
-  fumadocs-mdx@11.4.1(acorn@8.12.1)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)):
+  fumadocs-mdx@11.4.1(acorn@8.12.1)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)):
     dependencies:
       '@mdx-js/mdx': 3.1.0(acorn@8.12.1)
       chokidar: 4.0.3
@@ -8152,7 +8151,7 @@ snapshots:
       esbuild: 0.24.2
       estree-util-value-to-estree: 3.3.2
       fast-glob: 3.3.3
-      fumadocs-core: 15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      fumadocs-core: 15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       gray-matter: 4.0.3
       micromatch: 4.0.8
       next: 15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -8162,11 +8161,11 @@ snapshots:
       - acorn
       - supports-color
 
-  fumadocs-twoslash@3.0.0(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-ui@15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(shiki@2.3.1)(typescript@5.7.3):
+  fumadocs-twoslash@3.0.0(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-ui@15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(shiki@2.3.1)(typescript@5.7.3):
     dependencies:
       '@radix-ui/react-popover': 1.1.5(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@shikijs/twoslash': 2.3.1(typescript@5.7.3)
-      fumadocs-ui: 15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3)
+      fumadocs-ui: 15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3)
       mdast-util-from-markdown: 2.0.2
       mdast-util-gfm: 3.0.0
       mdast-util-to-hast: 13.2.0
@@ -8180,7 +8179,7 @@ snapshots:
       - supports-color
       - typescript
 
-  fumadocs-ui@15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3):
+  fumadocs-ui@15.0.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(fumadocs-core@15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(tailwindcss@4.0.3):
     dependencies:
       '@radix-ui/react-accordion': 1.2.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@radix-ui/react-collapsible': 1.1.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -8192,7 +8191,7 @@ snapshots:
       '@radix-ui/react-slot': 1.1.1(@types/react@19.0.8)(react@19.0.0)
       '@radix-ui/react-tabs': 1.1.2(@types/react-dom@19.0.3(@types/react@19.0.8))(@types/react@19.0.8)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       class-variance-authority: 0.7.1
-      fumadocs-core: 15.0.2(@orama/tokenizers@3.0.6(patch_hash=ctgigvspjjkgptomz3db7z4gmu))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      fumadocs-core: 15.0.2(@orama/tokenizers@3.0.6(patch_hash=6eg5oek3uxnkb2nb6huzdwkk5i))(@types/react@19.0.8)(next@15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       lodash.merge: 4.6.2
       lucide-react: 0.474.0(react@19.0.0)
       next: 15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
