@@ -23,15 +23,13 @@ bun add graphql @gqloom/core @apollo/subgraph @gqloom/federation
 
 ## GraphQL 指令
 
-Apollo Federation [Directives](https://www.apollographql.com/docs/federation/federated-schemas/federated-directives/) 用于描述如何将多个 GraphQL API 组合成一个联合图。
+Apollo Federation 指令（[Directives](https://www.apollographql.com/docs/federation/federated-schemas/federated-directives/) ）用于描述如何将多个 GraphQL API 组合成一个联合图。
 
 在 GQLoom 中，我们可以在对象和字段的 `extensions` 属性中的 `directives` 字段来声明 GraphQL 指令：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts
+```ts twoslash tab="valibot"
 import * as v from "valibot"
-import { asObjectType } from "../src"
+import { asObjectType } from "@gqloom/valibot"
 
 export const User = v.pipe(
   v.object({
@@ -48,11 +46,10 @@ export const User = v.pipe(
 
 export interface IUser extends v.InferOutput<typeof User> {}
 ```
-</Tab>
-<Tab label="zod">
-```ts
+
+```ts twoslash tab="zod"
 import { z } from "zod"
-import { asObjectType } from "../src"
+import { asObjectType } from "@gqloom/zod"
 
 export const User = z
   .object({
@@ -70,9 +67,8 @@ export const User = z
 
 export interface IUser extends z.infer<typeof User> {}
 ```
-</Tab>
-<Tab label="graphql.js">
-```ts
+
+```ts twoslash tab="graphql.js"
 import { silk } from "@gqloom/core"
 import { GraphQLObjectType, GraphQLString, GraphQLNonNull } from "graphql"
 
@@ -94,12 +90,10 @@ export const User = silk<IUser>(
   })
 )
 ```
-</Tab>
-</Tabs>
 
 以上示例中，我们声明了一个 `@key` 指令，该指令将 `User` 对象的 `id` 字段标记为可解析字段，我们将得到如下的 Schema：
 
-```graphql
+```graphql title="GraphQL Schema"
 type User
   @key(fields: "id", resolvable: true)
 {
@@ -142,12 +136,36 @@ type User
 
 `@gqloom/apollo` 提供了 `resolveReference` 函数来帮助您解析引用。
 
-```ts
-import { loom } from "@gqloom/core"
-import { resolveReference } from "@gqloom/federation"
-const { resolver, query } = loom
+```ts twoslash
+import { silk } from "@gqloom/core"
+import { GraphQLObjectType, GraphQLString, GraphQLNonNull } from "graphql"
 
-export const UserResolver = resolver.of(
+export interface IUser {
+  id: string
+  name: string
+}
+
+export const User = silk<IUser>(
+  new GraphQLObjectType({
+    name: "User",
+    fields: {
+      id: { type: new GraphQLNonNull(GraphQLString) },
+      name: { type: new GraphQLNonNull(GraphQLString) },
+    },
+    extensions: {
+      directives: { key: { fields: "id", resolvable: true } },
+    },
+  })
+)
+
+function getUserByID(id: string): IUser {
+  return { id, name: "Jane Smith" }
+}
+// ---cut---
+import { resolver, query } from "@gqloom/core"
+import { resolveReference } from "@gqloom/federation"
+
+export const userResolver = resolver.of(
   User,
   {
     user: query(User, () => ({ id: "1", name: "John" })),
@@ -166,10 +184,49 @@ export const UserResolver = resolver.of(
 
 另外值得注意的是，我们需要使用从 `@apollo/subgraph` 引入的 `printSubgraphSchema` 函数将 Schema 转换为文本格式以保留指令（Directives）。
 
-```ts
-import { FederatedSchemaWeaver } from "@gqloom/federation"
+```ts twoslash
+import { silk } from "@gqloom/core"
+import { GraphQLObjectType, GraphQLString, GraphQLNonNull } from "graphql"
+
+export interface IUser {
+  id: string
+  name: string
+}
+
+export const User = silk<IUser>(
+  new GraphQLObjectType({
+    name: "User",
+    fields: {
+      id: { type: new GraphQLNonNull(GraphQLString) },
+      name: { type: new GraphQLNonNull(GraphQLString) },
+    },
+    extensions: {
+      directives: { key: { fields: "id", resolvable: true } },
+    },
+  })
+)
+
+function getUserByID(id: string): IUser {
+  return { id, name: "Jane Smith" }
+}
+import { resolver, query } from "@gqloom/core"
+import { resolveReference } from "@gqloom/federation"
+
+export const userResolver = resolver.of(
+  User,
+  {
+    user: query(User, () => ({ id: "1", name: "John" })),
+  },
+  {
+    extensions: {
+      ...resolveReference<IUser, "id">((user) => getUserByID(user.id)),
+    },
+  }
+)
+// ---cut---
+import { FederatedSchemaLoom } from "@gqloom/federation"
 import { printSubgraphSchema } from "@apollo/subgraph"
 
-const schema = FederatedSchemaWeaver.weave(UserResolver)
+const schema = FederatedSchemaLoom.weave(userResolver)
 const schemaText = printSubgraphSchema(schema)
 ```

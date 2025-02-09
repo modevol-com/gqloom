@@ -244,7 +244,7 @@ const giraffeResolverFactory = new MikroResolverFactory(Giraffe, () => orm.em)
 In the code above, we first define a `Giraffe` entity and then create a resolver factory using `MikroResolverFactory`. From the factory, we can generate GraphQL operations directly.
 
 ```ts
-const GiraffeResolver = resolver.of(Giraffe, {
+const giraffeResolver = resolver.of(Giraffe, {
   giraffe: giraffeResolverFactory.FindOneQuery(),
   giraffes: giraffeResolverFactory.FindManyQuery(),
   createGiraffe: giraffeResolverFactory.CreateMutation(),
@@ -252,7 +252,7 @@ const GiraffeResolver = resolver.of(Giraffe, {
   deleteGiraffe: giraffeResolverFactory.DeleteOneMutation(),
 })
 
-const schema = weave(GiraffeResolver)
+const schema = weave(giraffeResolver)
 ```
 
 With the above simple code, we can generate GraphQL operations from `Giraffe` entities and weave them into a GraphQL Schema using the `weave` function.

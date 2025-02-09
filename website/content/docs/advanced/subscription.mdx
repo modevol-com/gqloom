@@ -1,5 +1,5 @@
 ---
-title: 订阅（Subscription）
+title: Subscription
 ---
 
 In GraphQL, Subscription allows the server to push data to the client.
@@ -16,7 +16,7 @@ import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const CountdownResolver = resolver({
+const countdownResolver = resolver({
   countdown: subscription(v.number(), {
     input: { seconds: v.pipe(v.number(), v.integer()) },
     subscribe: async function* (data) {
@@ -28,7 +28,7 @@ const CountdownResolver = resolver({
   }),
 })
 
-const schema = weave(CountdownResolver)
+const schema = weave(countdownResolver)
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
 
@@ -44,7 +44,7 @@ import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
-const CountdownResolver = resolver({
+const countdownResolver = resolver({
   countdown: subscription(z.number(), {
     input: { seconds: z.number().int() },
     subscribe: async function* (data) {
@@ -56,7 +56,7 @@ const CountdownResolver = resolver({
   }),
 })
 
-const schema = weave(CountdownResolver)
+const schema = weave(countdownResolver)
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
 

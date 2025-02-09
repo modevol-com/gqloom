@@ -244,7 +244,7 @@ const giraffeResolverFactory = new MikroResolverFactory(Giraffe, () => orm.em)
 在上面的代码中，我们首先定义了一个 `Giraffe` 实体，然后使用 `MikroResolverFactory` 创建了一个解析器工厂。从解析器工厂中，我们可以直接生成 GraphQL 操作。
 
 ```ts
-const GiraffeResolver = resolver.of(Giraffe, {
+const giraffeResolver = resolver.of(Giraffe, {
   giraffe: giraffeResolverFactory.FindOneQuery(),
   giraffes: giraffeResolverFactory.FindManyQuery(),
   createGiraffe: giraffeResolverFactory.CreateMutation(),
@@ -252,7 +252,7 @@ const GiraffeResolver = resolver.of(Giraffe, {
   deleteGiraffe: giraffeResolverFactory.DeleteOneMutation(),
 })
 
-const schema = weave(GiraffeResolver)
+const schema = weave(giraffeResolver)
 ```
 
 只需要以上简单的代码，我们就可以从 `Giraffe` 实体生成 GraphQL 操作，并使用 `weave` 函数将它们编织到 GraphQL Schema 中。
