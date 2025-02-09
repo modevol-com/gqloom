@@ -1,4 +1,14 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared"
+import { memo } from "react"
+
+const Title = memo(() => {
+  return (
+    <>
+      <img className="w-6" src="/gqloom.svg" alt="GQLoom-Logo" />
+      <span className="text-yellow-600 dark:text-amber-200">GQLoom</span>
+    </>
+  )
+})
 
 /**
  * Shared layout configurations
@@ -10,7 +20,7 @@ import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared"
 export const baseOptions: BaseLayoutProps = {
   nav: {
     // can be JSX too!
-    title: "GQLoom",
+    title: <Title />,
   },
   githubUrl: "https://github.com/modevol-com/gqloom",
   i18n: true,

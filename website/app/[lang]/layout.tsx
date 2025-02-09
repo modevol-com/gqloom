@@ -6,7 +6,7 @@ import { Inter } from "next/font/google"
 import type { ReactNode } from "react"
 
 export const metadata: Metadata = {
-  title: "GQloom",
+  title: "GQLoom",
   description:
     "GQLoom is a Code First GraphQL Schema Loom, used to weave runtime types in the TypeScript/JavaScript ecosystem into a GraphQL Schema.",
   icons: {
