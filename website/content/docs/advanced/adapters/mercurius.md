@@ -1,21 +1,32 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Mercurius
+---
+title: Mercurius
+---
 
 [Mercurius](https://mercurius.dev/) is a GraphQL adapter for [Fastify](https://www.fastify.io/)
 
 ## Installation
 
-<PackageManagerTabs command="install fastify mercurius graphql @gqloom/core" />
+```sh tab="npm"
+npm i fastify mercurius graphql @gqloom/core
+```
+```sh tab="pnpm"
+pnpm add fastify mercurius graphql @gqloom/core
+```
+```sh tab="yarn"
+yarn add fastify mercurius graphql @gqloom/core
+```
+```sh tab="bun"
+bun add fastify mercurius graphql @gqloom/core
+```
 
 ## Usage 
 ```ts
 import { weave } from "@gqloom/core"
 import Fastify from "fastify"
 import mercurius from "mercurius"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 
 const app = Fastify()
 app.register(mercurius, { schema })
@@ -28,7 +39,7 @@ app.listen({ port: 4000 }, () => {
 
 When using GQLoom together with `Mercurius`, you can use `MercuriusContext` to label the type of context:
 
-```ts
+```ts twoslash
 import { useContext } from "@gqloom/core"
 import { type MercuriusContext } from "mercurius"
 
