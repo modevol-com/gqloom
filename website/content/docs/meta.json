@@ -8,6 +8,8 @@
     "dataloader",
     "middleware",
     "---Schema Integration---",
-    "...schema"
+    "...schema",
+    "---Advanced Usages---",
+    "...advanced"
   ]
 }

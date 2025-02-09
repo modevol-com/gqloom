@@ -8,6 +8,8 @@
     "dataloader",
     "middleware",
     "---Schema 集成---",
-    "...schema"
+    "...schema",
+    "---进阶功能---",
+    "...advanced"
   ]
 }

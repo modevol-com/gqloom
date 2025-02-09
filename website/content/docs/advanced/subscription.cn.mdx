@@ -1,6 +1,6 @@
-import { Tab, Tabs } from 'rspress/theme';
-
-# 订阅 | Subscription
+---
+title: 订阅（Subscription）
+---
 
 在 GraphQL 中，订阅（Subscription）允许服务端推送数据到客户端。
 
@@ -8,10 +8,11 @@ import { Tab, Tabs } from 'rspress/theme';
 
 在 `GQLoom` 中，我们使用 `subscription` 函数来定义一个订阅:
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
-import { ValibotWeaver, weave, resolver, subscription } from "@gqloom/valibot"
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -36,10 +37,11 @@ server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
-import { weave, resolver, subscription } from "@gqloom/zod"
+</Tab>
+<Tab value="zod">
+```ts twoslash
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -56,7 +58,7 @@ const CountdownResolver = resolver({
   }),
 })
 
-const schema = weave(ValibotWeaver, CountdownResolver)
+const schema = weave(ZodWeaver, CountdownResolver)
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
 
@@ -64,7 +66,7 @@ server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 在上面的代码中，我们定义了一个 `countdown` 订阅，它接受一个 `seconds` 参数。
@@ -73,9 +75,9 @@ server.listen(4000, () => {
 ## 使用发布/订阅
 
 我们还可以使用 [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started) 提供的发布/订阅（publish/subscribe）功能来更轻松地推送消息：
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-```ts
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
 import { resolver, query, subscription } from "@gqloom/core"
 import { createPubSub } from "graphql-yoga"
 import * as v from "valibot"
@@ -98,9 +100,9 @@ const HelloResolver = resolver({
   }),
 })
 ```
-  </Tab>
-  <Tab label="zod">
-```ts
+</Tab>
+<Tab value="zod">
+```ts twoslash
 import { resolver, query, subscription } from "@gqloom/zod"
 import { createPubSub } from "graphql-yoga"
 import { z } from "zod"
@@ -123,7 +125,7 @@ const HelloResolver = resolver({
   }),
 })
 ```
-  </Tab>
+</Tab>
 </Tabs>
 
 在上面的代码中，我们定义了一个 `hello` 查询和一个 `listenGreeting` 订阅。
