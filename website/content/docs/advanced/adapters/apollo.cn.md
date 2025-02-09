@@ -1,22 +1,47 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Apollo
+---
+title: Apollo
+---
 
 [Apollo Server](https://www.apollographql.com/docs/apollo-server/) 是一款开源、符合规范的 GraphQL 服务器，与包括 [Apollo Client](https://www.apollographql.com/docs/react) 在内的任何 GraphQL 客户端兼容。
 它是构建生产就绪、自文档化 GraphQL API 的最佳方式，可使用来自任何来源的数据。
 
 ## 安装
 
-<PackageManagerTabs command="install graphql @apollo/server @gqloom/core" />
+```sh tab="npm"
+npm i graphql @apollo/server @gqloom/core
+```
+```sh tab="pnpm"
+pnpm add graphql @apollo/server @gqloom/core
+```
+```sh tab="yarn"
+yarn add graphql @apollo/server @gqloom/core
+```
+```sh tab="bun"
+bun add graphql @apollo/server @gqloom/core
+```
 
 ## 使用
-```ts
+```ts twoslash
+// @filename: resolvers.ts
+import { resolver, query, silk, weave } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+export const helloResolver = resolver({
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "Hello, World"
+  ),
+})
+// @filename: index.ts
+// ---cut---
 import { weave } from "@gqloom/core"
 import { ApolloServer } from "@apollo/server"
 import { startStandaloneServer } from "@apollo/server/standalone"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 const server = new ApolloServer({ schema })
 
 startStandaloneServer(server, {

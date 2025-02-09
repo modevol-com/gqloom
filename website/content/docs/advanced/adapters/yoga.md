@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Yoga
+---
+title: Yoga
+---
 
 GraphQL Yoga is a batteries-included cross-platform [GraphQL over HTTP spec-compliant](https://github.com/enisdenjo/graphql-http/tree/master/implementations/graphql-yoga) GraphQL server 
 powered by [Envelop](https://envelop.dev) and [GraphQL Tools](https://graphql-tools.com) that runs anywhere; 
@@ -8,17 +8,42 @@ focused on easy setup, performance and great developer experience.
 
 ## Installation
 
-<PackageManagerTabs command="install graphql graphql-yoga @gqloom/core" />
+```sh tab="npm"
+npm i graphql graphql-yoga @gqloom/core
+```
+```sh tab="pnpm"
+pnpm add graphql graphql-yoga @gqloom/core
+```
+```sh tab="yarn"
+yarn add graphql graphql-yoga @gqloom/core
+```
+```sh tab="bun"
+bun add graphql graphql-yoga @gqloom/core
+```
 
 ## Usage
 
-```ts
+```ts twoslash
+// @filename: resolvers.ts
+import { resolver, query, silk, weave } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+export const helloResolver = resolver({
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "Hello, World"
+  ),
+})
+// @filename: index.ts
+// ---cut---
 import { weave } from "@gqloom/core"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 
 const yoga = createYoga({ schema })
 
@@ -31,7 +56,7 @@ createServer(yoga).listen(4000, () => {
 
 When using GQLoom together with `Yoga`, you can use `YogaInitialContext` to label the type of context:
 
-```ts
+```ts twoslash
 import { useContext } from "@gqloom/core"
 import { type YogaInitialContext } from "graphql-yoga"
 

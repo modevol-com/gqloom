@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Yoga
+---
+title: Yoga
+---
 
 [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server) 是一款包含电池的跨平台 [GraphQL over HTTP 规范兼容](<(https://github.com/enisdenjo/graphql-http/tree/master/implementations/graphql-yoga)>)的 GraphQL 服务器，
 由 [Envelop](https://envelop.dev/) 和 [GraphQL Tools](https://graphql-tools.com/) 提供支持，可在任何地方运行；
@@ -8,17 +8,42 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## 安装
 
-<PackageManagerTabs command="install graphql graphql-yoga @gqloom/core" />
+```sh tab="npm"
+npm i graphql graphql-yoga @gqloom/core
+```
+```sh tab="pnpm"
+pnpm add graphql graphql-yoga @gqloom/core
+```
+```sh tab="yarn"
+yarn add graphql graphql-yoga @gqloom/core
+```
+```sh tab="bun"
+bun add graphql graphql-yoga @gqloom/core
+```
 
 ## 使用
 
-```ts
+```ts twoslash
+// @filename: resolvers.ts
+import { resolver, query, silk, weave } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+export const helloResolver = resolver({
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "Hello, World"
+  ),
+})
+// @filename: index.ts
+// ---cut---
 import { weave } from "@gqloom/core"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 
 const yoga = createYoga({ schema })
 
@@ -31,7 +56,7 @@ createServer(yoga).listen(4000, () => {
 
 在与 `Yoga` 同时使用 GQLoom 时，你可以使用 `YogaInitialContext` 来标注上下的类型：
 
-```ts
+```ts twoslash
 import { useContext } from "@gqloom/core"
 import { type YogaInitialContext } from "graphql-yoga"
 

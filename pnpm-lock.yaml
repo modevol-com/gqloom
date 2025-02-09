@@ -390,6 +390,9 @@ importers:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
     devDependencies:
+      '@apollo/server':
+        specifier: ^4.10.4
+        version: 4.10.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@apollo/subgraph':
         specifier: ^2.8.2
         version: 2.8.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))

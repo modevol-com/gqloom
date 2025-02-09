@@ -1,22 +1,47 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Apollo
+---
+title: Apollo
+---
 
 [Apollo Server](https://www.apollographql.com/docs/apollo-server/) is an open-source, spec-compliant GraphQL server that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react).
 It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
 
 ## Installation
 
-<PackageManagerTabs command="install graphql @apollo/server @gqloom/core" />
+```sh tab="npm"
+npm i graphql @apollo/server @gqloom/core
+```
+```sh tab="pnpm"
+pnpm add graphql @apollo/server @gqloom/core
+```
+```sh tab="yarn"
+yarn add graphql @apollo/server @gqloom/core
+```
+```sh tab="bun"
+bun add graphql @apollo/server @gqloom/core
+```
 
 ## Usage
-```ts
+```ts twoslash
+// @filename: resolvers.ts
+import { resolver, query, silk, weave } from "@gqloom/core"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+export const helloResolver = resolver({
+  hello: query(
+    silk<string>(new GraphQLNonNull(GraphQLString)),
+    () => "Hello, World"
+  ),
+})
+// @filename: index.ts
+// ---cut---
 import { weave } from "@gqloom/core"
 import { ApolloServer } from "@apollo/server"
 import { startStandaloneServer } from "@apollo/server/standalone"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 const server = new ApolloServer({ schema })
 
 startStandaloneServer(server, {

@@ -1,4 +1,6 @@
-# Adapters
+---
+title: Adapters
+---
 
 There are a number of GraphQL HTTP adapters in the Node.js ecosystem.
 
