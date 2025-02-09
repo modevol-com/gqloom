@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Prisma
+---
+title: Prisma
+---
 
 [Prisma ORM](https://www.prisma.io/orm) offers developers a brand - new experience when working with databases, thanks to its intuitive data models, automatic migrations, type safety, and auto - completion features.
 
@@ -11,9 +11,22 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## Installation
 
-<PackageManagerTabs command="install -D prisma" />
-
-<PackageManagerTabs command="install @gqloom/core @gqloom/prisma" />
+```sh tab="npm"
+npm i -D prisma
+npm i @gqloom/core @gqloom/prisma
+```
+```sh tab="pnpm"
+pnpm add -D prisma
+pnpm add @gqloom/core @gqloom/prisma
+```
+```sh tab="yarn"
+yarn add -D prisma
+yarn add @gqloom/core @gqloom/prisma
+```
+```sh tab="bun"
+bun add -D prisma
+bun add @gqloom/core @gqloom/prisma
+```
 
 You can find more information about installation in the [Prisma documentation](https://www.prisma.io/docs/getting-started/quickstart).
 
@@ -55,14 +68,14 @@ model Post {
 ### Generator Parameters
 The `generator` accepts the following parameters:
 
-| Parameter        | Description                                                                   | Default Value                             |
-| ---------------- | ----------------------------------------------------------------------------- | ----------------------------------------- |
-| `gqloomPath`     | The path to the GQLoom package.                                               | `@gqloom/prisma`                          |
-| `clientOutput`   | The path to the Prisma client.                                                | `node_modules/@prisma/client`             |
-| `output`         | The folder path where the generated files will be located.                    | `node_modules/@gqloom/prisma/generated`   |
-| `commonjsFile`   | The file name of the CommonJS file. Use an empty string `""` to skip generation of the CommonJS file. | `index.cjs`                         |
-| `moduleFile`     | The file name of the ES module file. Use an empty string `""` to skip generation of the ES module file. | `index.js`                          |
-| `typesFiles`     | The file name(s) of the TypeScript declaration file(s). Use `[]` to skip generation of the TypeScript declaration file(s). | `["index.d.ts"]`                        |
+| Parameter      | Description                                                                                                                | Default Value                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `gqloomPath`   | The path to the GQLoom package.                                                                                            | `@gqloom/prisma`                        |
+| `clientOutput` | The path to the Prisma client.                                                                                             | `node_modules/@prisma/client`           |
+| `output`       | The folder path where the generated files will be located.                                                                 | `node_modules/@gqloom/prisma/generated` |
+| `commonjsFile` | The file name of the CommonJS file. Use an empty string `""` to skip generation of the CommonJS file.                      | `index.cjs`                             |
+| `moduleFile`   | The file name of the ES module file. Use an empty string `""` to skip generation of the ES module file.                    | `index.js`                              |
+| `typesFiles`   | The file name(s) of the TypeScript declaration file(s). Use `[]` to skip generation of the TypeScript declaration file(s). | `["index.d.ts"]`                        |
 
 ### Generate Silk
 ```sh
@@ -283,7 +296,7 @@ To adapt to more Prisma types, we can extend GQLoom to add more type mappings.
 
 First, we use `PrismaWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` from [graphql - scalars](https://the - guild.dev/graphql/scalars). When encountering the `DateTime` type, we map it to the corresponding GraphQL scalar.
 
-```ts
+```ts twoslash
 import { GraphQLDateTime } from 'graphql-scalars'
 import { PrismaWeaver } from '@gqloom/prisma'
 

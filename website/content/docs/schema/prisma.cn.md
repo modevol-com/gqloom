@@ -1,6 +1,6 @@
-import { PackageManagerTabs } from 'rspress/theme';
-
-# Prisma
+---
+title: Prisma
+---
 
 [Prisma ORM](https://www.prisma.io/orm)凭借其直观的数据模型、自动迁移、类型安全和自动完成功能，使开发人员在使用数据库时获得了全新的体验。
 
@@ -11,9 +11,22 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 ## 安装
 
-<PackageManagerTabs command="install -D prisma" />
-
-<PackageManagerTabs command="install @gqloom/core @gqloom/prisma" />
+```sh tab="npm"
+npm i -D prisma
+npm i @gqloom/core @gqloom/prisma
+```
+```sh tab="pnpm"
+pnpm add -D prisma
+pnpm add @gqloom/core @gqloom/prisma
+```
+```sh tab="yarn"
+yarn add -D prisma
+yarn add @gqloom/core @gqloom/prisma
+```
+```sh tab="bun"
+bun add -D prisma
+bun add @gqloom/core @gqloom/prisma
+```
 
 在 [Prisma 文档](https://www.prisma.io/docs/getting-started/quickstart)中，你可以找到更多关于安装的信息。
 
@@ -21,7 +34,7 @@ import { PackageManagerTabs } from 'rspress/theme';
 
 在 `prisma/schema.prisma` 文件中定义你的 Prisma Schema：
 
-```prisma
+```prisma title="schema.prisma"
 generator client {
   provider = "prisma-client-js"
 }
@@ -283,7 +296,7 @@ const userResolver = userResolverFactory.resolver()
 
 首先我们使用 `PrismaWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`，当遇到 `DateTime` 类型时，我们将其映射到对应的 GraphQL 标量。
 
-```ts
+```ts twoslash
 import { GraphQLDateTime } from 'graphql-scalars'
 import { PrismaWeaver } from '@gqloom/prisma'
 
