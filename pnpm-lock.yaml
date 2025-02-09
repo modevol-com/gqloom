@@ -432,6 +432,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.3
         version: 19.0.3(@types/react@19.0.8)
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@19.0.8)(better-sqlite3@11.7.2)(knex@3.1.0(better-sqlite3@11.7.2)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@19.0.0)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
