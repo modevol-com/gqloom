@@ -7,12 +7,12 @@ const config = {
   reactStrictMode: true,
   redirects: async () => [
     {
-      source:"/guide/schema-integration/:slug",
+      source: "/guide/schema-integration/:slug",
       destination: "/en/docs/schema/:slug",
       permanent: true,
     },
     {
-      source:"/zh/guide/schema-integration/:slug",
+      source: "/zh/guide/schema-integration/:slug",
       destination: "/cn/docs/schema/:slug",
       permanent: true,
     },
@@ -26,7 +26,7 @@ const config = {
       destination: "/cn/docs/:slug",
       permanent: true,
     },
- ],
+  ],
 }
 
 export default withMDX(config)
