@@ -21,7 +21,7 @@ We will use [graphql-yoga](https://the-guild.dev/graphql/yoga-server) as an adap
 ### Accessing contexts in resolve functions
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab label="valibot">
+<Tab value="valibot">
 ```ts twoslash
 import { query, resolver, useContext, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
@@ -43,7 +43,7 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 </Tab>
-<Tab label="zod">
+<Tab value="zod">
 ```ts twoslash
 import { query, resolver, useContext, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
@@ -105,7 +105,7 @@ To learn more about middleware, see [middleware documentation](./middleware).
 ### Accessing contexts while validating inputs
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab label="valibot">
+<Tab value="valibot">
 We can customize the validation or transformation in `valibot` and access the context directly within it.
 ```ts twoslash
 const UserService = {
@@ -152,7 +152,7 @@ createServer(yoga).listen(4000, () => {
 In the code above, we use `useUser()` in `v.transformAsync` to get the user information in the context and return it as the value of `name`.
 
 </Tab>
-<Tab label="zod">
+<Tab value="zod">
 We can customize the validation or transformation in `zod` and access the context directly within it:
 ```ts twoslash
 const UserService = {

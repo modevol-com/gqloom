@@ -1,6 +1,7 @@
-import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
-
-# 快速开始
+---
+title: 快速上手
+icon: PencilRuler
+---
 
 在本教程中，我们将引导你完成创建一个简单的 GraphQL 后端应用程序。
 
@@ -10,11 +11,11 @@ import { PackageManagerTabs, Tab, Tabs } from 'rspress/theme';
 
 - [Node.js](https://nodejs.org/en/)：服务器端 JavaScript 运行时；
 - [TypeScript](https://www.typescriptlang.org/)：JavaScript 的超集，增加了静态类型和面向对象编程的功能；
-- [GraphQL.js](https://github.com/graphql/graphql-js)：JavaScript 的 GraphQL 参考实现；
+- [GraphQL.js](https://github.com/graphql/graphql.js)：JavaScript 的 GraphQL 参考实现；
 - [graphql-yoga](https://the-guild.dev/graphql/yoga-server)：构建 HTTP GraphQL 服务器的最简单方法；
 - `GQLoom`：更简单、更高效地定义 GraphQL Schema 和解析器。
 
-你可以选择你熟悉的 Schema Builder，比如 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/)，甚至直接使用 [GraphQL.js](https://graphql.org/graphql-js/)。
+你可以选择你熟悉的 Schema Builder，比如 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/)，甚至直接使用 [GraphQL.js](https://graphql.org/graphql.js/)。
 
 ## 前提条件
 在开始之前，请确保你已经安装了以下软件：
@@ -36,23 +37,131 @@ npm init -y
 
 ## 安装依赖
 接下来，我们需要安装一些必要的依赖项。
-<PackageManagerTabs command="install -D typescript @types/node tsx" />
+
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn", "bun"]}>
+<Tab>
+```sh
+npm i -D typescript @types/node tsx
+```
+</Tab>
+<Tab>
+```sh
+pnpm add -D typescript @types/node tsx
+```
+</Tab>
+<Tab>
+```sh
+yarn add -D typescript @types/node tsx
+```
+</Tab>
+<Tab>
+```sh
+bun add -D typescript @types/node tsx
+```
+</Tab>
+</Tabs>
+
 在这一步，我们安装了 TypeScript、Node.js 的类型定义以及 [tsx](https://tsx.is/)。[tsx](https://tsx.is/) 是一个用于在 Node.js 中运行 TypeScript 的工具。
 
-<PackageManagerTabs command="install graphql graphql-yoga" />
-我们还安装了 [graphql](https://github.com/graphql/graphql-js) 和 [graphql-yoga](https://the-guild.dev/graphql/yoga-server)，来帮助我们运行 GraphQL 服务。
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn", "bun"]}>
+<Tab>
+```sh
+npm i graphql graphql-yoga
+```
+</Tab>
+<Tab>
+```sh
+pnpm add graphql graphql-yoga
+```
+</Tab>
+<Tab>
+```sh
+yarn add graphql graphql-yoga
+```
+</Tab>
+<Tab>
+```sh
+bun add graphql graphql-yoga
+```
+</Tab>
+</Tabs>
+
+我们还安装了 [graphql](https://github.com/graphql/graphql.js) 和 [graphql-yoga](https://the-guild.dev/graphql/yoga-server)，来帮助我们运行 GraphQL 服务。
 
 ### 选择一个 Schema Builder
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
-    <PackageManagerTabs command="install @gqloom/core valibot @gqloom/valibot" />
-  </Tab>
-  <Tab  label="zod">
-    <PackageManagerTabs command="install @gqloom/core zod @gqloom/zod" />
-  </Tab>
-  <Tab  label="graphql.js">
-    <PackageManagerTabs command="install @gqloom/core" />
-  </Tab>
+<Tabs groupId='schema-builder' items={["valibot", "zod", "graphql.js"]}>
+<Tab value="valibot">
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn", "bun"]}>
+<Tab>
+```sh
+npm i @gqloom/core valibot @gqloom/valibot
+```
+</Tab>
+<Tab>
+```sh
+pnpm add @gqloom/core valibot @gqloom/valibot
+```
+</Tab>
+<Tab>
+```sh
+yarn add @gqloom/core valibot @gqloom/valibot
+```
+</Tab>
+<Tab>
+```sh
+bun add @gqloom/core valibot @gqloom/valibot
+```
+</Tab>
+</Tabs>
+</Tab>
+<Tab value="zod">
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn", "bun"]}>
+<Tab>
+```sh
+npm i @gqloom/core zod @gqloom/zod
+```
+</Tab>
+<Tab>
+```sh
+pnpm add @gqloom/core zod @gqloom/zod
+```
+</Tab>
+<Tab>
+```sh
+yarn add @gqloom/core zod @gqloom/zod
+```
+</Tab>
+<Tab>
+```sh
+bun add @gqloom/core zod @gqloom/zod
+```
+</Tab>
+</Tabs>
+</Tab>
+<Tab value="graphql.js">
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn", "bun"]}>
+<Tab>
+```sh
+npm i @gqloom/core
+```
+</Tab>
+<Tab>
+```sh
+pnpm add @gqloom/core
+```
+</Tab>
+<Tab>
+```sh
+yarn add @gqloom/core
+```
+</Tab>
+<Tab>
+```sh
+bun add @gqloom/core
+```
+</Tab>
+</Tabs>
+</Tab>
 </Tabs>
 
 现在，使用下面命令创建一个新的 [TypeScript 配置文件](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html)：
@@ -73,8 +182,8 @@ npx tsc --init
 ```
 
 然后，我们创建一个 `src/index.ts` 文件，并添加以下代码：
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={["valibot", "zod", "graphql.js"]}>
+<Tab value="valibot">
 ```ts title="src/index.ts"
 import { ValibotWeaver, query, resolver, weave } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -95,8 +204,8 @@ createServer(yoga).listen(4000, () => {
 
 在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `helloResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
 
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```ts title="src/index.ts"
 import { ZodWeaver, query, resolver, weave } from "@gqloom/zod"
 import { z } from "zod"
@@ -117,9 +226,9 @@ createServer(yoga).listen(4000, () => {
 
 在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `helloResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
 
-  </Tab>
-  <Tab label="graphql.js">
-```ts title="src/index.ts"
+</Tab>
+<Tab value="graphql.js">
+```ts
 import { loom, silk, weave } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 import { createServer } from "node:http"
@@ -144,12 +253,33 @@ createServer(yoga).listen(4000, () => {
 
 在上面的代码中：我们使用 `resolver` 和 `query` 来定义我们的 GraphQL Resolver，通过 `weave` 函数我们将 `helloResolver` 编织成 GraphQL Schema ，并使用 `graphql-yoga` 来启动我们的 GraphQL 服务。
 
-  </Tab>
+</Tab>
 </Tabs>
 
 现在，你可以运行以下命令来启动你的应用程序：
 
-<PackageManagerTabs command="run dev" />
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn", "bun"]}>
+<Tab>
+```sh
+npm run dev
+```
+</Tab>
+<Tab>
+```sh
+pnpm run dev
+```
+</Tab>
+<Tab>
+```sh
+yarn run dev
+```
+</Tab>
+<Tab>
+```sh
+bun run dev
+```
+</Tab>
+</Tabs>
 
 你应该会看到类似以下的输出：
 ```sh
@@ -178,8 +308,8 @@ query {
 
 ### 定义 Cat 类型
 接下来，我们定义一个 `Cat` 类型，它有一个 `name` 字段和一个 `birthDate` 字段。
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={["valibot", "zod", "graphql.js"]}>
+<Tab value="valibot">
 ```ts title="src/index.ts"
 import * as v from "valibot"
 
@@ -196,8 +326,8 @@ interface ICat extends v.InferOutput<typeof Cat> {}
 还有一个 `name` 字段和一个 `birthDate` 字段，它们的类型都为字符串。
 
 最后，我们使用 `v.InferOutput` 轻易地获取了 `Cat` 的输出类型，并将其命名为 `ICat`。
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```ts title="src/index.ts"
 import { z } from "zod"
 
@@ -214,8 +344,8 @@ interface ICat extends z.infer<typeof Cat> {}
 还有一个 `name` 字段和一个 `birthDate` 字段，它们的类型都为字符串。
 
 最后，我们使用 `z.infer` 轻易地获取了 `Cat` 的输出类型，并将其命名为 `ICat`。
-  </Tab>
-  <Tab label="graphql.js">
+</Tab>
+<Tab value="graphql.js">
 ```ts title="src/index.ts"
 import { silk } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
@@ -238,7 +368,7 @@ const Cat = silk<ICat>(
 在上面的代码中，我们使用 `silk` 来定义 `Cat` 类型：
 `silk` 接受 `ICat` 作为泛型参数，`ICat` 是一个接口，它定义了 `Cat` 类型应该具有的字段；
 然后我们使用 `GraphQLObjectType` 来定义 `Cat` 类型，它有两个字段：`name` 和 `birthDate`，它们的类型都为 `GraphQLString`。
-  </Tab>
+</Tab>
 </Tabs>
 
 `GQLoom` 将把我们刚刚定义的 `Cat` 类型编织成 GraphQL Schema：
@@ -270,8 +400,8 @@ const catMap = new Map<string, ICat>([
 
 现在，让我们回到最开始的 `catResolver`，并为其添加一个名为 `cats` 的 `query` 操作，该操作返回所有 `Cat` 实例：
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={["valibot", "zod", "graphql.js"]}>
+<Tab value="valibot">
 ```ts title="src/index.ts"
 import { ValibotWeaver, weave, resolver, query } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -292,8 +422,8 @@ export const schema = weave(ValibotWeaver, helloResolver, catResolver) // [!code
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
 
 另外，我们还将 `catResolver` 和 `helloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```ts title="src/index.ts"
 import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import { z } from "zod"
@@ -314,8 +444,8 @@ export const schema = weave(ZodWeaver, helloResolver, catResolver)
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
 
 另外，我们还将 `catResolver` 和 `helloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
-  </Tab>
-  <Tab label="graphql.js">
+</Tab>
+<Tab value="graphql.js">
 ```ts title="src/index.ts"
 import { weave, silk, loom } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
@@ -340,7 +470,7 @@ export const schema = weave(helloResolver, catResolver)
   - 第二个参数是一个解析函数，在解析函数中我们定义 `cats` 的具体解析逻辑，在这里我们使用 `Array.from` 函数将 `catMap` 转换为一个数组，并将其作为 `cats` 的返回值。
 
 另外，我们还将 `catResolver` 和 `helloResolver` 使用 `weave` 函数编织在一起，以创建最终的 GraphQL Schema。
-  </Tab>
+</Tab>
 </Tabs>
 
 让我们在演练场尝试访问 `cats` 操作：
@@ -369,8 +499,8 @@ query cats {
 ### 定义输入
 
 接下来，我们定义一个名为 `cat` 的 `query` 操作，该操作接受一个 `name` 参数，并返回与该 `name` 对应的 `Cat` 实例：
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={["valibot", "zod", "graphql.js"]}>
+<Tab value="valibot">
 ```ts title="src/index.ts"
 import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
@@ -396,8 +526,8 @@ const catResolver = resolver({
 `input` 参数是一个对象，其中包含一个名为 `name` 的属性，该属性的类型为 `string`。当 `cat` 操作被访问时，`GQLoom` 会在内部调用 `valibot` 的 `parse` 函数以确保 `name` 参数的值符合 `string` 类型。
 
 在解析函数中，我们从 `resolve` 函数的第一个参数中获取 `name` 参数的值，TypeScript 会把 `name` 参数的类型推断为 `string`，然后我们使用 `catMap.get` 方法获取与 `name` 对应的 `Cat` 实例，并将其作为 `cat` 操作的返回值。
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```ts title="src/index.ts"
 import { resolver, query } from "@gqloom/zod"
 import { z } from "zod"
@@ -424,7 +554,7 @@ const catResolver = resolver({
 
 在解析函数中，我们从 `resolve` 函数的第一个参数中获取 `name` 参数的值，TypeScript 会把 `name` 参数的类型推断为 `string`，然后我们使用 `catMap.get` 方法获取与 `name` 对应的 `Cat` 实例，并将其作为 `cat` 操作的返回值。
  </Tab>
-  <Tab label="graphql.js">
+<Tab value="graphql.js">
 ```ts title="src/index.ts"
 import { silk, loom } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
@@ -454,7 +584,7 @@ const catResolver = resolver({
 `input` 参数是一个对象，其中包含一个名为 `name` 的属性，该属性的类型为 `string`。
 
 在解析函数中，我们从 `resolve` 函数的第一个参数中获取 `name` 参数的值，TypeScript 会把 `name` 参数的类型推断为 `string`，然后我们使用 `catMap.get` 方法获取与 `name` 对应的 `Cat` 实例，并将其作为 `cat` 操作的返回值。
-  </Tab>
+</Tab>
 </Tabs>
 
 让我们在演练场尝试访问 `cat` 操作：
@@ -486,8 +616,8 @@ query cat {
 
 现在，让我们为 `catResolver` 添加一个名为 `createCat` 的 `mutation` 操作，该操作接受一个 `name` 参数，并返回一个 `Cat` 实例。
 
-<Tabs groupId='schema-builder'>
-  <Tab label="valibot">
+<Tabs groupId='schema-builder' items={["valibot", "zod", "graphql.js"]}>
+<Tab value="valibot">
 ```ts title="src/index.ts"
 import { resolver, query, mutation } from "@gqloom/core"
 import * as v from "valibot"
@@ -525,8 +655,8 @@ const catResolver = resolver({
 在这里，`createCat` 操作的返回类型为 `Cat`，同时接受两个参数 `name` 和 `birthDate` 作为输入，它们的类型均为 `string`。
 
 在解析函数中，我们可以轻松从第一个参数中获取 `name` 和 `birthDate` 参数的值，TypeScript 将会为我们推导其类型，然后我们创建一个新的 `Cat` 实例，并将其添加到 `catMap` 中，最后返回该 `Cat` 实例。
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```ts title="src/index.ts"
 import { resolver, query, mutation } from "@gqloom/zod"
 import { z } from "zod"
@@ -563,8 +693,8 @@ const catResolver = resolver({
 在这里，`createCat` 操作的返回类型为 `Cat`，同时接受两个参数 `name` 和 `birthDate` 作为输入，它们的类型均为 `string`。
 
 在解析函数中，我们可以轻松从第一个参数中获取 `name` 和 `birthDate` 参数的值，TypeScript 将会为我们推导其类型，然后我们创建一个新的 `Cat` 实例，并将其添加到 `catMap` 中，最后返回该 `Cat` 实例。
-  </Tab>
-  <Tab label="graphql.js">
+</Tab>
+<Tab value="graphql.js">
 ```ts title="src/index.ts"
 import { loom, silk, weave } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql"
@@ -604,7 +734,7 @@ const catResolver = resolver({
 在这里，`createCat` 操作的返回类型为 `Cat`，同时接受两个参数 `name` 和 `birthDate` 作为输入，它们的类型均为 `string`。
 
 在解析函数中，我们可以轻松从第一个参数中获取 `name` 和 `birthDate` 参数的值，TypeScript 将会为我们推导其类型，然后我们创建一个新的 `Cat` 实例，并将其添加到 `catMap` 中，最后返回该 `Cat` 实例。
-  </Tab>
+</Tab>
 </Tabs>
 
 让我们在演练场尝试创建新的 `Cat` 实例：
@@ -665,7 +795,7 @@ query cats {
 `age` 字段并不保存在 `Cat` 实例中，而是在每次查询时计算。
 
 <Tabs>
-  <Tab label="valibot">
+<Tab value="valibot">
 ```ts title="src/index.ts"
 import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
@@ -698,8 +828,8 @@ const catResolver = resolver.of(Cat, { // [!code hl]
 
 在解析函数中，我们轻松地从第一个参数中获取 `cat` 实例的值，TypeScript 将会为我们推导其类型，然后我们将 `cat` 实例的 `birthDate` 字段转换为 `Date` 实例，并计算当前年份与 `birthDate` 的年份之差，最后返回该差值即为猫咪的年龄。
 
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```ts title="src/index.ts"
 import { resolver, query, mutation, field } from "@gqloom/zod"
 import { z } from "zod"
@@ -731,8 +861,8 @@ const catResolver = resolver.of(Cat, { // [!code hl]
 在名为 `age` 的 `field` 中，我们使用 `z.number().int()` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。注意，`GQLoom` 默认不会对解析函数的输出执行 `parse` 步骤，这是因为在解析函数内部产生的结果通常可控且符合 TypeScript 推导的类型。
 
 在解析函数中，我们轻松地从第一个参数中获取 `cat` 实例的值，TypeScript 将会为我们推导其类型，然后我们将 `cat` 实例的 `birthDate` 字段转换为 `Date` 实例，并计算当前年份与 `birthDate` 的年份之差，最后返回该差值即为猫咪的年龄。
-  </Tab>
-  <Tab label="graphql.js">
+</Tab>
+<Tab value="graphql.js">
 ```ts 
 import { loom, silk, weave } from "@gqloom/core"
 import {
@@ -771,7 +901,7 @@ const catResolver = resolver.of(Cat, { // [!code hl]
 在名为 `age` 的 `field` 中，我们使用 `silk<number>(new GraphQLNonNull(GraphQLInt)` 来定义 `age` 的类型，`GQLoom` 将把 `age` 字段编织为 GraphQL `Int` 类型。
 
 在解析函数中，我们轻松地从第一个参数中获取 `cat` 实例的值，TypeScript 将会为我们推导其类型，然后我们将 `cat` 实例的 `birthDate` 字段转换为 `Date` 实例，并计算当前年份与 `birthDate` 的年份之差，最后返回该差值即为猫咪的年龄。
-  </Tab>
+</Tab>
 </Tabs>
 
 
@@ -805,7 +935,7 @@ query cat {
 我们可以在 `field` 中添加一个 `input` 对象，它将作为该 `field` 的输入参数。
 
 <Tabs>
-  <Tab label="valibot">
+<Tab value="valibot">
 ```ts title="src/index.ts"
 import { resolver, query, mutation, field } from "@gqloom/core"
 import * as v from "valibot"
@@ -837,8 +967,8 @@ const catResolver = resolver.of(Cat, {
 ```
 在上面的代码中，我们为 `age` 字段添加了一个 `input` 对象，它包含一个名为 `year` 的字段，该字段为 `Int` 类型，若未提供 `year` 输入，则使用当前年份作为默认值。
 在 `field` 解析函数中，我们可以从第二个参数中轻易地获取 `year` 的值。
-  </Tab>
-  <Tab label="zod">
+</Tab>
+<Tab value="zod">
 ```ts title="src/index.ts"
 import { resolver, query, mutation, field } from "@gqloom/zod"
 import { z } from "zod"
@@ -872,8 +1002,8 @@ const catResolver = resolver.of(Cat, {
 ```
 在上面的代码中，我们为 `age` 字段添加了一个 `input` 对象，它包含一个名为 `year` 的字段，该字段为 `Int` 类型，若未提供 `year` 输入，则使用当前年份作为默认值。
 在 `field` 解析函数中，我们可以从第二个参数中轻易地获取 `year` 的值。
-  </Tab>
-  <Tab label="graphql.js">
+</Tab>
+<Tab value="graphql.js">
 ```ts 
 import { loom, silk, weave } from "@gqloom/core"
 import {
@@ -909,7 +1039,7 @@ const catResolver = resolver.of(Cat, {
 ```
 在上面的代码中，我们为 `age` 字段添加了一个 `input` 对象，它包含一个名为 `year` 的字段，该字段为 `number` 类型，并且可以为 `undefined`。
 在 `field` 解析函数中，我们可以从第二个参数中轻易地获取 `year` 的值，如果 `year` 为 `undefined`，则使用当前年份作为默认值。
-  </Tab>
+</Tab>
 </Tabs>
 
 让我们在演练场尝试访问 `cat` 操作：

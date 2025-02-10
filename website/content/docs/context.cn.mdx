@@ -21,7 +21,7 @@ GQLoom 的 `useContext` 函数的设计参考了 [React](https://zh-hans.react.d
 ### 在解析函数中访问上下文
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab label="valibot">
+<Tab value="valibot">
 ```ts twoslash
 import { query, resolver, useContext, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
@@ -43,7 +43,7 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 </Tab>
-<Tab label="zod">
+<Tab value="zod">
 ```ts twoslash
 import { query, resolver, useContext, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
@@ -105,7 +105,7 @@ const authGuard: Middleware = (next) => {
 ### 在验证输入时访问上下文
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab label="valibot">
+<Tab value="valibot">
 我们可以在 `valibot` 中自定义验证或转换，并在其中直接访问上下文。
 ```ts twoslash
 const UserService = {
@@ -152,7 +152,7 @@ createServer(yoga).listen(4000, () => {
 在上面的代码中，我们在 `v.transformAsync` 中使用 `useUser()` 来获取上下文中的用户信息，并将其作为 `name` 的值返回。
 
 </Tab>
-<Tab label="zod">
+<Tab value="zod">
 我们可以在 `zod` 中自定义验证或转换，并在其中直接访问上下文：
 ```ts twoslash
 const UserService = {

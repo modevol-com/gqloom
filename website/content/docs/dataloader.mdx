@@ -13,7 +13,7 @@ The `DataLoader` is able to reduce the number of queries to the database by merg
 Consider that we have the following simple objects `User` and `Book`:
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab label="valibot">
+<Tab value="valibot">
 ```ts twoslash
 import * as v from "valibot"
 
@@ -35,7 +35,7 @@ const Book = v.object({
 interface IBook extends v.InferOutput<typeof Book> {}
 ```
 </Tab>
-<Tab label="zod">
+<Tab value="zod">
 ```ts twoslash
 import { z } from "zod"
 
@@ -100,7 +100,7 @@ const books: IBook[] = [
 Let's write a simple resolver for the `Book` object:
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab label="valibot">
+<Tab value="valibot">
 ```ts twoslash
 import * as v from "valibot"
 
@@ -136,7 +136,7 @@ const BookResolver = resolver.of(Book, {
 })
 ```
 </Tab>
-<Tab label="zod">
+<Tab value="zod">
 ```ts twoslash
 import { z } from "zod"
 
@@ -199,7 +199,7 @@ We can use the `EasyDataLoader` class from the `@gqloom/core` package for basic 
 #### Defining Batch Queries
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab label="valibot">
+<Tab value="valibot">
 ```ts twoslash
 import * as v from "valibot"
 
@@ -256,7 +256,7 @@ const BookResolver = resolver.of(Book, {
 
 ```
 </Tab>
-<Tab label="zod">
+<Tab value="zod">
 ```ts twoslash
 import { z } from "zod"
 

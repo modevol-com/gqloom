@@ -1,6 +1,7 @@
 {
   "pages": [
     "index",
+    "getting-started",
     "silk",
     "resolver",
     "weave",
