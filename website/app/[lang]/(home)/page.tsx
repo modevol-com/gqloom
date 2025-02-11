@@ -1,5 +1,11 @@
+import { homeSource } from "@/lib/source"
 import DynamicLink from "fumadocs-core/dynamic-link"
+import { Popup, PopupContent, PopupTrigger } from "fumadocs-twoslash/ui"
+import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock"
+import { Tab, Tabs } from "fumadocs-ui/components/tabs"
+import defaultMdxComponents from "fumadocs-ui/mdx"
 import { ArrowRight } from "lucide-react"
+import type { MDXProps } from "mdx/types"
 import Link from "next/link"
 import { memo } from "react"
 
@@ -15,6 +21,8 @@ export default async function HomePage(props: {
     <main className="flex flex-col items-center">
       <Hero lang={lang} />
       <GraphQLIntro lang={lang} />
+      <SchemaLibrary lang={lang} />
+      <div className="h-72" />
     </main>
   )
 }
@@ -27,7 +35,7 @@ const heroEn = {
 
 const heroCn = {
   description: "将运行时类型编织成 GraphQL Schema",
-  star: "在 GitHub 上点亮繁星",
+  star: "在 GitHub 点亮繁星",
   start: "快速上手",
 }
 
@@ -130,36 +138,33 @@ const highlightsCN = [
 
 const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
   const highlights = lang === "cn" ? highlightsCN : highlightsEN
+
+  const GraphQLLink = (
+    <Link
+      href="https://graphql.org/"
+      target="_blank"
+      className="underline text-5xl text-pink-600 dark:text-rose-400 opacity-90 transition-opacity hover:opacity-100"
+    >
+      GraphQL
+    </Link>
+  )
+
   return (
     <section className="flex flex-col items-center max-w-5xl gap-16 xl:gap-28 mt-16 md:mt-20">
       {lang === "cn" ? (
         <h2 className="text-4xl font-bold tracking-wider">
-          <Link
-            href="https://graphql.org/"
-            target="_blank"
-            className="underline text-5xl text-pink-600 dark:text-rose-400 opacity-90 transition-opacity hover:opacity-100"
-          >
-            GraphQL
-          </Link>{" "}
-          的磅礴之力
+          {GraphQLLink} 的磅礴之力
         </h2>
       ) : (
         <h2 className="text-4xl font-bold tracking-wider">
-          Full Power of{" "}
-          <Link
-            href="https://graphql.org/"
-            target="_blank"
-            className="underline text-5xl text-pink-600 dark:text-rose-400 opacity-90 transition-opacity hover:opacity-100"
-          >
-            GraphQL
-          </Link>
+          Full Power of {GraphQLLink}
         </h2>
       )}
-      <ul className="flex flex-wrap justify-center gap-12 px-8 xl:gap-24">
+      <ul className="flex flex-wrap justify-center gap-12 px-8 xl:gap-x-24">
         {highlights.map(({ emoji, heading, text }) => (
           <li
             key={emoji}
-            className="flex flex-col items-center space-y-3 text-center max-w-3xs lg:items-start lg:text-left"
+            className="flex flex-col space-y-3 max-w-3xs items-start text-left"
           >
             <div className="flex flex-row text-nowrap text-xl gap-3 border-b-3 border-orange-300/50">
               <span>{emoji}</span>
@@ -174,3 +179,68 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
     </section>
   )
 })
+
+const SchemaLibraryCN = [
+  "集成多样 Schema",
+  "精巧类型推绎",
+  "易读的 API 设计",
+  "卓越开发体验",
+]
+
+const SchemaLibraryEN = [
+  "Integration of Variant Schemas",
+  "Sophisticated Type Inference",
+  "Readable API Design",
+  "Excellent Development Experience",
+]
+
+const SchemaLibrariesMDX: React.FC<MDXProps> = homeSource.getPage([
+  "schema-libraries",
+])!.data.body
+
+const SchemaGraphQlMDX: React.FC<MDXProps> = homeSource.getPage([
+  "schema-graphql",
+])!.data.body
+
+const SchemaLibrary = memo<LangProps>(function SchemaLibrary({ lang }) {
+  const title =
+    lang === "cn"
+      ? "最为熟知的 Schema Library"
+      : "The most familiar Schema Library"
+  const intros = lang === "cn" ? SchemaLibraryCN : SchemaLibraryEN
+  return (
+    <section className="mt-16 md:mt-20 flex flex-col items-center">
+      <h2 className="text-3xl font-bold tracking-wider">{title}</h2>
+      <div className="flex flex-col lg:flex-row gap-x-12 mt-8 items-center">
+        <SchemaLibrariesMDX components={mdxComponents} />
+        <div className="flex flex-col gap-4">
+          <SchemaGraphQlMDX components={mdxComponents} />
+          <ul className="leading-12 list-disc list-inside">
+            {intros.map((intro, index) => (
+              <li
+                key={index}
+                className="text-slate-800/70 dark:text-slate-200/70"
+              >
+                {intro}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
+})
+
+const mdxComponents = {
+  ...defaultMdxComponents,
+  pre: ({ children, ...props }: React.ComponentProps<"pre">) => (
+    <CodeBlock {...props}>
+      <Pre className="max-w-xl">{children}</Pre>
+    </CodeBlock>
+  ),
+  Tab,
+  Tabs,
+  Popup,
+  PopupContent,
+  PopupTrigger,
+}

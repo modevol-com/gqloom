@@ -1,4 +1,4 @@
-import { docs, meta } from "@/.source"
+import { docs, home, meta } from "@/.source"
 import { loader } from "fumadocs-core/source"
 import { createMDXSource } from "fumadocs-mdx"
 import { icons } from "lucide-react"
@@ -15,4 +15,9 @@ export const source = loader({
   source: createMDXSource(docs, meta),
   i18n,
   icon,
+})
+
+export const homeSource = loader({
+  baseUrl: "/",
+  source: createMDXSource(home, home),
 })
