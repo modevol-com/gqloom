@@ -20,7 +20,7 @@ export default async function HomePage(props: {
 }
 
 const heroEn = {
-  description: "Weaving runtime types into a GraphQL Schema",
+  description: "Weaving runtime types into GraphQL Schema",
   star: "Star on GitHub",
   start: "Getting Started",
 }
