@@ -33,7 +33,7 @@ export const ORMLibrary = memo<
     PrismaMDX: React.ReactNode
     MikroOrmMDX: React.ReactNode
   }
->(function ORMLibrary({ lang, DrizzleMDX, PrismaMDX, MikroOrmMDX }) {
+>(function ORMLibrary({ lang, DrizzleMDX, PrismaMDX, MikroOrmMDX, className }) {
   const intro = lang === "cn" ? ormIntroCN : ormIntroEN
 
   const [tab, SetTab] = useState<SupportedORM>("Drizzle")
@@ -88,9 +88,9 @@ export const ORMLibrary = memo<
     )
   }, [lang, tab, OrmArray])
   return (
-    <section className="mt-16 px-6 md:mt-20 flex flex-col items-center">
+    <section className={clsx("px-6 flex flex-col items-center", className)}>
       <h2 className="text-3xl font-bold tracking-wider">{intro.title}</h2>
-      <div className="flex flex-col mt-8 lg:flex-row gap-8">
+      <div className="flex flex-col mt-12 lg:flex-row gap-8">
         <div className="max-w-lg mt-4">
           <p className="text-xl text-slate-900 dark:text-slate-100">
             {description}

@@ -13,6 +13,7 @@ import { mdxComponents } from "./utils"
 
 export interface LangProps {
   lang: string
+  className?: string
 }
 
 export default async function HomePage(props: {
@@ -22,15 +23,16 @@ export default async function HomePage(props: {
   return (
     <main className="flex flex-col items-center">
       <Hero lang={lang} />
-      <SchemaLibrary lang={lang} />
+      <SchemaLibrary className="mt-24 lg:mt-32" lang={lang} />
       <ORMLibrary
+        className="mt-24 lg:mt-32"
         lang={lang}
         DrizzleMDX={<mdx.Drizzle components={mdxComponents} />}
         PrismaMDX={<mdx.Prisma components={mdxComponents} />}
         MikroOrmMDX={<mdx.MikroORM components={mdxComponents} />}
       />
-      <GraphQLIntro lang={lang} />
-      <div className="h-72" />
+      <GraphQLIntro className="mt-24 lg:mt-32" lang={lang} />
+      <div className="mt-24" />
     </main>
   )
 }
@@ -56,7 +58,7 @@ const heroCn = {
 const Hero = memo<LangProps>(function Hero({ lang }) {
   const hero = lang === "cn" ? heroCn : heroEn
   return (
-    <section className="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full pt-0 pb-12 sm:pt-10 md:pt-16 md:pb-16">
+    <section className="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full pt-0 pb-12 sm:pt-10 md:pt-16">
       <div className="flex flex-col gap-6 max-w-md text-center items-center">
         <h1 className="text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 sm:text-5xl font-bold bg-clip-text">
           GraphQL Loom
@@ -150,7 +152,10 @@ const highlightsCN: IHighlight[] = [
   },
 ]
 
-const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
+const GraphQLIntro = memo<LangProps>(function GraphQLIntro({
+  lang,
+  className,
+}) {
   const highlights = lang === "cn" ? highlightsCN : highlightsEN
 
   const GraphQLLink = (
@@ -164,7 +169,9 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
   )
 
   return (
-    <section className="flex flex-col px-6 items-center max-w-5xl gap-16 mt-16 md:mt-20">
+    <section
+      className={clsx("flex flex-col px-6 items-center max-w-5xl", className)}
+    >
       {lang === "cn" ? (
         <h2 className="text-3xl font-bold tracking-wider">
           {GraphQLLink} 的磅礴之力
@@ -174,7 +181,7 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
           Full Power of {GraphQLLink}
         </h2>
       )}
-      <ul className="flex flex-wrap justify-center gap-12 px-8 xl:gap-x-16">
+      <ul className="flex flex-wrap justify-center gap-12 mt-16 px-8 xl:gap-x-16">
         {highlights.map((item, index) => (
           <Highlight key={index} {...item} className="space-y-3 max-w-3xs" />
         ))}
@@ -247,16 +254,19 @@ const SchemaGraphQlMDX: React.FC<MDXProps> = homeSource.getPage([
   "schema-graphql",
 ])!.data.body
 
-const SchemaLibrary = memo<LangProps>(function SchemaLibrary({ lang }) {
+const SchemaLibrary = memo<LangProps>(function SchemaLibrary({
+  lang,
+  className,
+}) {
   const title =
     lang === "cn"
       ? "最为熟知的 Schema Library"
       : "The most familiar Schema Library"
   const intros = lang === "cn" ? SchemaLibraryCN : SchemaLibraryEN
   return (
-    <section className="mt-16 px-6 md:mt-20 flex flex-col items-center">
+    <section className={clsx("px-6 flex flex-col items-center", className)}>
       <h2 className="text-3xl font-bold tracking-wider">{title}</h2>
-      <div className="flex flex-col lg:flex-row gap-x-8 mt-16">
+      <div className="flex flex-col lg:flex-row gap-x-8 mt-12">
         <div className="flex flex-col items-center max-w-[90vw]">
           <div className="w-full h-[33em]">
             <SchemaLibrariesMDX components={mdxComponents} />
