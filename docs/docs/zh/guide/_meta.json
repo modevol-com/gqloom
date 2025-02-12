@@ -1,7 +1,0 @@
-[
-  "introduction",
-  "getting-started",
-  { "type": "dir", "name": "fundamentals", "label": "基本使用" },
-  { "type": "dir", "name": "schema-integration", "label": "Schema 集成" },
-  { "type": "dir", "name": "advanced", "label": "进阶功能" }
-]
