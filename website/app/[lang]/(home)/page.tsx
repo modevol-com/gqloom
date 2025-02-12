@@ -1,4 +1,5 @@
 import { homeSource } from "@/lib/source"
+import clsx from "clsx"
 import DynamicLink from "fumadocs-core/dynamic-link"
 import { Popup, PopupContent, PopupTrigger } from "fumadocs-twoslash/ui"
 import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock"
@@ -20,8 +21,8 @@ export default async function HomePage(props: {
   return (
     <main className="flex flex-col items-center">
       <Hero lang={lang} />
-      <GraphQLIntro lang={lang} />
       <SchemaLibrary lang={lang} />
+      <GraphQLIntro lang={lang} />
       <div className="h-72" />
     </main>
   )
@@ -70,7 +71,7 @@ const Hero = memo<LangProps>(function Hero({ lang }) {
   )
 })
 
-const highlightsEN = [
+const highlightsEN: IHighlight[] = [
   {
     emoji: "🔐",
     heading: "Type Safety",
@@ -103,7 +104,7 @@ const highlightsEN = [
   },
 ]
 
-const highlightsCN = [
+const highlightsCN: IHighlight[] = [
   {
     emoji: "🔐",
     heading: "类型安全",
@@ -150,7 +151,7 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
   )
 
   return (
-    <section className="flex flex-col items-center max-w-5xl gap-16 xl:gap-28 mt-16 md:mt-20">
+    <section className="flex flex-col px-6 items-center max-w-5xl gap-16 mt-16 md:mt-20">
       {lang === "cn" ? (
         <h2 className="text-4xl font-bold tracking-wider">
           {GraphQLLink} 的磅礴之力
@@ -160,38 +161,69 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
           Full Power of {GraphQLLink}
         </h2>
       )}
-      <ul className="flex flex-wrap justify-center gap-12 px-8 xl:gap-x-24">
-        {highlights.map(({ emoji, heading, text }) => (
-          <li
-            key={emoji}
-            className="flex flex-col space-y-3 max-w-3xs items-start text-left"
-          >
-            <div className="flex flex-row text-nowrap text-xl gap-3 border-b-3 border-orange-300/50">
-              <span>{emoji}</span>
-              <h3 className="font-medium text-slate-900 dark:text-slate-200">
-                {heading}
-              </h3>
-            </div>
-            <p className="opacity-70">{text}</p>
-          </li>
+      <ul className="flex flex-wrap justify-center gap-12 px-8 xl:gap-x-16">
+        {highlights.map((item, index) => (
+          <Highlight key={index} {...item} className="space-y-3 max-w-3xs" />
         ))}
       </ul>
     </section>
   )
 })
 
-const SchemaLibraryCN = [
-  "集成多样 Schema",
-  "精巧类型推绎",
-  "易读的 API 设计",
-  "卓越开发体验",
+const SchemaLibraryCN: IHighlight[] = [
+  {
+    emoji: "🧩",
+    heading: "丰富集成",
+    text: "使用你最熟悉的验证库和 ORM 来建构你的下一个 GraphQL 应用；",
+  },
+  {
+    emoji: "🔒",
+    heading: "类型安全",
+    text: "从 Schema 自动推导类型，在开发时享受智能提示，在编译时发现潜在问题；",
+  },
+  {
+    emoji: "🔋",
+    heading: "整装待发",
+    text: "中间件、上下文、订阅、联邦图已经准备就绪；",
+  },
+  {
+    emoji: "🔮",
+    heading: "抛却魔法",
+    text: "没有装饰器、没有元数据和反射、没有代码生成，只需要 JavaScript/TypeScript 就可以在任何地方运行；",
+  },
+  {
+    emoji: "🧑‍💻",
+    heading: "开发体验",
+    text: "更少的样板代码、语义化的 API 设计、广泛的生态集成使开发愉快；",
+  },
 ]
 
-const SchemaLibraryEN = [
-  "Integration of Variant Schemas",
-  "Sophisticated Type Inference",
-  "Readable API Design",
-  "Excellent Development Experience",
+const SchemaLibraryEN: IHighlight[] = [
+  {
+    emoji: "🧩",
+    heading: "Rich Integration",
+    text: "Use your most familiar validation libraries and ORMs to build your next GraphQL application.",
+  },
+  {
+    emoji: "🔒",
+    heading: "Type Safety",
+    text: "Automatically infer types from the Schema, enjoy intelligent code completion during development, and detect potential problems during compilation.",
+  },
+  {
+    emoji: "🔋",
+    heading: "Fully Prepared",
+    text: "Middleware, context, subscriptions, and federated graphs are ready.",
+  },
+  {
+    emoji: "🔮",
+    heading: "No Magic",
+    text: "Without decorators, metadata, reflection, or code generation, it can run anywhere with just JavaScript/TypeScript.",
+  },
+  {
+    emoji: "🧑‍💻",
+    heading: "Development Experience",
+    text: "Fewer boilerplate codes, semantic API design, and extensive ecosystem integration make development enjoyable.",
+  },
 ]
 
 const SchemaLibrariesMDX: React.FC<MDXProps> = homeSource.getPage([
@@ -209,25 +241,43 @@ const SchemaLibrary = memo<LangProps>(function SchemaLibrary({ lang }) {
       : "The most familiar Schema Library"
   const intros = lang === "cn" ? SchemaLibraryCN : SchemaLibraryEN
   return (
-    <section className="mt-16 md:mt-20 flex flex-col items-center">
+    <section className="mt-16 px-6 md:mt-20 flex flex-col items-center">
       <h2 className="text-3xl font-bold tracking-wider">{title}</h2>
-      <div className="flex flex-col lg:flex-row gap-x-12 mt-8 items-center">
-        <SchemaLibrariesMDX components={mdxComponents} />
-        <div className="flex flex-col gap-4">
-          <SchemaGraphQlMDX components={mdxComponents} />
-          <ul className="leading-12 list-disc list-inside">
-            {intros.map((intro, index) => (
-              <li
-                key={index}
-                className="text-slate-800/70 dark:text-slate-200/70"
-              >
-                {intro}
-              </li>
-            ))}
-          </ul>
+      <div className="flex flex-col md:flex-row gap-x-8 mt-16">
+        <div className="flex flex-col items-center max-w-[90vw]">
+          <div className="w-full h-[33em]">
+            <SchemaLibrariesMDX components={mdxComponents} />
+          </div>
+          <div className="w-full">
+            <SchemaGraphQlMDX components={mdxComponents} />
+          </div>
         </div>
+        <ul className="flex flex-col justify-center gap-12 px-8 xl:gap-x-24">
+          {intros.map((intro, index) => (
+            <Highlight key={index} {...intro} className="max-w-md" />
+          ))}
+        </ul>
       </div>
     </section>
+  )
+})
+
+const Highlight = memo<IHighlight & { className?: string }>(function Highlight({
+  emoji,
+  heading,
+  text,
+  className,
+}) {
+  return (
+    <li className={clsx("flex flex-col items-start text-left", className)}>
+      <div className="flex flex-row text-nowrap text-xl gap-3 border-b-3 border-orange-300/50">
+        <span>{emoji}</span>
+        <h3 className="font-medium text-slate-900 dark:text-slate-200">
+          {heading}
+        </h3>
+      </div>
+      <p className="opacity-70">{text}</p>
+    </li>
   )
 })
 
@@ -235,7 +285,7 @@ const mdxComponents = {
   ...defaultMdxComponents,
   pre: ({ children, ...props }: React.ComponentProps<"pre">) => (
     <CodeBlock {...props}>
-      <Pre className="max-w-xl">{children}</Pre>
+      <Pre className="max-w-xl w-full overflow-auto">{children}</Pre>
     </CodeBlock>
   ),
   Tab,
@@ -243,4 +293,10 @@ const mdxComponents = {
   Popup,
   PopupContent,
   PopupTrigger,
+}
+
+interface IHighlight {
+  emoji: string
+  heading: string
+  text: string
 }

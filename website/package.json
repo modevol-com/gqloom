@@ -11,6 +11,7 @@
   "dependencies": {
     "@orama/orama": "^3.0.6",
     "@orama/tokenizers": "^3.0.6",
+    "clsx": "^2.1.1",
     "fumadocs-core": "15.0.2",
     "fumadocs-mdx": "11.4.1",
     "fumadocs-twoslash": "^3.0.0",
