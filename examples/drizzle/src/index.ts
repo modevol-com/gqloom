@@ -2,20 +2,20 @@ import * as fs from "node:fs"
 import { createServer } from "node:http"
 import * as path from "node:path"
 import { weave } from "@gqloom/core"
-import { PrismaResolverFactory } from "@gqloom/prisma"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { drizzle } from "drizzle-orm/node-postgres"
 import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { PrismaClient } from "./generated/client"
-import { Post, User } from "./generated/gqloom"
+import * as tables from "./schema"
 
-const db = new PrismaClient()
+const db = drizzle(process.env.DATABASE_URL, { schema: tables })
 
-const userResolver = new PrismaResolverFactory(User, db).resolver()
-const postResolver = new PrismaResolverFactory(Post, db).resolver()
+const userResolver = drizzleResolverFactory(db, "users").resolver()
+const postResolver = drizzleResolverFactory(db, "posts").resolver()
 
 const schema = weave(userResolver, postResolver)
 
-fs.writeFileSync(path.join(__dirname, "schema.graphql"), printSchema(schema))
+fs.writeFileSync(path.join(__dirname, "../schema.graphql"), printSchema(schema))
 
 const yoga = createYoga({ schema })
 const server = createServer(yoga)

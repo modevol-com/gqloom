@@ -1,8 +1,8 @@
 
 ```ts title="src/index.ts" tab="index.ts"
 import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
 import { PrismaResolverFactory } from "@gqloom/prisma"
-import { weave } from "@gqloom/valibot"
 import { createYoga } from "graphql-yoga"
 import { PrismaClient } from "./generated/client"
 import { Post, User } from "./generated/gqloom"
