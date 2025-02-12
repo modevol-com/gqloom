@@ -258,7 +258,6 @@ const schema = weave(giraffeResolver)
 With the above simple code, we can generate GraphQL operations from `Giraffe` entities and weave them into a GraphQL Schema using the `weave` function.
 The resulting complete GraphQL Schema looks like this:
 
-:::details GraphQL Schema
 ```graphql
 type Query {
   giraffe(id: ID!): Giraffe!

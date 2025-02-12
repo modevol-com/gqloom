@@ -258,7 +258,6 @@ const schema = weave(giraffeResolver)
 只需要以上简单的代码，我们就可以从 `Giraffe` 实体生成 GraphQL 操作，并使用 `weave` 函数将它们编织到 GraphQL Schema 中。
 得到的完整的 GraphQL Schema 如下：
 
-:::details GraphQL Schema
 ```graphql
 type Query {
   giraffe(id: ID!): Giraffe!

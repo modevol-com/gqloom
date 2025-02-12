@@ -38,7 +38,7 @@ export default async function HomePage(props: {
 const mdx: Record<SupportedORM, React.FC<MDXProps>> = {
   Drizzle: homeSource.getPage(["drizzle"])!.data.body,
   Prisma: homeSource.getPage(["prisma"])!.data.body,
-  MikroORM: homeSource.getPage(["prisma"])!.data.body,
+  MikroORM: homeSource.getPage(["mikro-orm"])!.data.body,
 }
 
 const heroEn = {

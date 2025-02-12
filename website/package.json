@@ -33,6 +33,8 @@
     "@gqloom/valibot": "workspace:*",
     "@gqloom/yup": "workspace:*",
     "@gqloom/zod": "workspace:*",
+    "@mikro-orm/core": "^6.4.6",
+    "@mikro-orm/postgresql": "^6.4.6",
     "@tailwindcss/postcss": "^4.0.3",
     "@types/mdx": "^2.0.13",
     "@types/node": "22.13.0",

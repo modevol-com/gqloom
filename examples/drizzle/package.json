@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts --env-file .env",
+    "dev": "tsx watch --env-file .env src/index.ts",
     "push": "drizzle-kit push"
   },
   "keywords": [],
