@@ -6,7 +6,7 @@ title: Prisma
 
 `@gqloom/prisma` provides the integration of GQLoom and Prisma:
 
-- Generate [silk](../fundamentals/silk.md) from Prisma Schema.
+- Generate [silk](../silk) from Prisma Schema.
 - Use the resolver factory to quickly create CRUD operations from Prisma.
 
 ## Installation

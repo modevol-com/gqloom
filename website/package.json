@@ -40,7 +40,7 @@
     "@types/node": "22.13.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "drizzle-orm": "^0.38.3",
+    "drizzle-orm": "^0.39.3",
     "fastify": "^4.28.1",
     "graphql": "^16.8.1",
     "graphql-scalars": "^1.24.1",

@@ -25,7 +25,7 @@ bun add @gqloom/core zod @gqloom/zod
 
 ## Defining simple scalars
 
-In GQLoom, you can directly use Zod Schema as [silk](../fundamentals/silk).
+In GQLoom, you can directly use Zod Schema as [silk](../silk).
 
 ```ts twoslash
 import { z } from "zod"
@@ -56,7 +56,7 @@ export const schema = weave(ZodWeaver, helloResolver)
 
 ## Defining Objects
 
-We can define objects using Zod and use them as [silk](../fundamentals/silk) to use:
+We can define objects using Zod and use them as [silk](../silk) to use:
 ```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"

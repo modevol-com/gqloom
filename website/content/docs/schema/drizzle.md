@@ -6,7 +6,7 @@ title: Drizzle
 
 `@gqloom/drizzle` provides the integration of GQLoom and Drizzle:
 
-- Use Drizzle Schema as [Silk](../fundamentals/silk.md);
+- Use Drizzle Schema as [Silk](../silk);
 - Use the resolver factory to quickly create CRUD operations from Drizzle.
 
 ## Installation
@@ -30,7 +30,7 @@ bun add @gqloom/core @gqloom/drizzle
 
 ## Using Silk
 
-We can easily use Drizzle Schemas as [Silk](../fundamentals/silk.md) by simply wrapping them with `drizzleSilk`.
+We can easily use Drizzle Schemas as [Silk](../silk) by simply wrapping them with `drizzleSilk`.
 
 ```ts twoslash title="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"

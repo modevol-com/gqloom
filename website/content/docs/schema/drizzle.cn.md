@@ -6,7 +6,7 @@ title: Drizzle
 
 `@gqloom/drizzle` 提供了 GQLoom 与 Drizzle 的集成：
 
-- 使用 Drizzle Schema 作为[丝线](../fundamentals/silk.md)使用；
+- 使用 Drizzle Schema 作为[丝线](../silk)使用；
 - 使用解析器工厂从 Drizzle 快速生成 CRUD 操作。
 
 ## 安装
@@ -30,7 +30,7 @@ bun add @gqloom/core @gqloom/drizzle
 
 ## 使用丝线
 
-只需要使用 `drizzleSilk` 包裹 Drizzle Schema，我们就可以轻松地将它们作为[丝线](../fundamentals/silk.md)使用。
+只需要使用 `drizzleSilk` 包裹 Drizzle Schema，我们就可以轻松地将它们作为[丝线](../silk)使用。
 
 ```ts twoslash title="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"

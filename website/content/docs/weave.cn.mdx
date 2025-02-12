@@ -17,7 +17,7 @@ export const schema = weave(helloResolver, catResolver);
 ```
 ## 编织单独丝线
 
-有时候，我们需要将一个单独的[丝线](../fundamentals/silk)编织到 GraphQL Schema 中，例如：
+有时候，我们需要将一个单独的[丝线](../silk)编织到 GraphQL Schema 中，例如：
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
 <Tab value="valibot">
@@ -247,4 +247,4 @@ import { logger } from './middlewares';
 
 export const schema = weave(helloResolver, catResolver, logger)
 ```
-在[中间件章节](../fundamentals/middleware)中查看更多关于中间件的用法。
+在[中间件章节](../middleware)中查看更多关于中间件的用法。

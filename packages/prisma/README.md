@@ -21,4 +21,4 @@ This package provides GQLoom integration with [Prisma](https://www.prisma.io/):
 - Weave Prisma model into a GraphQL Schema;
 - Support quickly creating CRUD interfaces from Prisma using the resolver factory;
 
-Read more at [GQLoom Document](https://gqloom.dev/guide/schema-integration/prisma).
+Read more at [GQLoom Document](https://gqloom.devschema/prisma).

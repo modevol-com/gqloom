@@ -17,7 +17,7 @@ export const schema = weave(helloResolver, catResolver);
 ```
 ## Weaving a single silk
 
-Sometimes we need to weave a single [silk](../fundamentals/silk) woven into a GraphQL Schema, for example:
+Sometimes we need to weave a single [silk](../silk) woven into a GraphQL Schema, for example:
 
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
 <Tab value="valibot">
@@ -247,4 +247,4 @@ import { logger } from './middlewares';
 
 export const schema = weave(helloResolver, catResolver, logger)
 ```
-See more about middleware usage in [middleware section](../fundamentals/middleware).
+See more about middleware usage in [middleware section](../middleware).

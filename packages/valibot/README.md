@@ -30,4 +30,4 @@ const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-Read more at [GQLoom Document](https://gqloom.dev/guide/schema-integration/valibot).
+Read more at [GQLoom Document](https://gqloom.devschema/valibot).

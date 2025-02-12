@@ -55,7 +55,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 ## Defining objects
 
-We can use Valibot to define objects and use them as [silk] (... /fundamentals/silk) to use:
+We can use Valibot to define objects and use them as [silk] (... /silk) to use:
 
 ```ts twoslash
 import * as v from "valibot"

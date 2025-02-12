@@ -1,4 +1,3 @@
-
 ```ts twoslash title="src/index.ts" tab="index.ts"
 // @filename: schema.ts
 import { relations } from "drizzle-orm"

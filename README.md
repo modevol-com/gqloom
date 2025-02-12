@@ -43,7 +43,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 ## Getting Started
 
-See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn how to use GQLoom.
+See [Getting Started](https://gqloom.devgetting-started.html) to learn how to use GQLoom.
 
 ## In this Repository
 

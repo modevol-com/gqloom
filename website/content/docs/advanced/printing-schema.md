@@ -41,7 +41,7 @@ The above code generates a `schema.graphql` file that contains all the contents 
 
 GraphQL Schema can be used for many purposes, common uses include:
 
-- Merging Schema from multiple microservices into a [supergraph](https://www.apollographql.com/docs/federation/building-supergraphs/subgraphs-overview) for unified cross-service querying on the client side. This architecture is called [federation](./federation.mdx).
+- Merging Schema from multiple microservices into a [supergraph](https://www.apollographql.com/docs/federation/building-supergraphs/subgraphs-overview) for unified cross-service querying on the client side. This architecture is called [federation](./federation).
 
 - Developed and type-checked on the client side using [code generation](https://the-guild.dev/graphql/codegen).
 

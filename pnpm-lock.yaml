@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  pg: ^8.13.2
+
 patchedDependencies:
   '@orama/tokenizers@3.0.6':
     hash: 6eg5oek3uxnkb2nb6huzdwkk5i
@@ -130,9 +133,6 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
-      drizzle-orm:
-        specifier: ^0.38.3
-        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@19.0.8)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@19.0.0)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -140,8 +140,8 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       pg:
-        specifier: ^8.13.1
-        version: 8.13.1
+        specifier: ^8.13.2
+        version: 8.13.2
     devDependencies:
       '@types/node':
         specifier: ^22.13.1
@@ -152,6 +152,9 @@ importers:
       drizzle-kit:
         specifier: ^0.30.1
         version: 0.30.1
+      drizzle-orm:
+        specifier: ^0.39.3
+        version: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
       tsx:
         specifier: ^4.7.2
         version: 4.7.2
@@ -291,8 +294,8 @@ importers:
         specifier: ^0.30.1
         version: 0.30.1
       drizzle-orm:
-        specifier: ^0.38.3
-        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@19.0.8)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@19.0.0)
+        specifier: ^0.39.3
+        version: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -303,8 +306,8 @@ importers:
         specifier: ^3.12.0
         version: 3.12.0
       pg:
-        specifier: ^8.13.1
-        version: 8.13.1
+        specifier: ^8.13.2
+        version: 8.13.2
       tsx:
         specifier: ^4.7.2
         version: 4.7.2
@@ -528,8 +531,8 @@ importers:
         specifier: ^19.0.3
         version: 19.0.3(@types/react@19.0.8)
       drizzle-orm:
-        specifier: ^0.38.3
-        version: 0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@19.0.8)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(react@19.0.0)
+        specifier: ^0.39.3
+        version: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
       fastify:
         specifier: ^4.28.1
         version: 4.28.1
@@ -3028,8 +3031,8 @@ packages:
     resolution: {integrity: sha512-HmA/NeewvHywhJ2ENXD3KvOuM/+K2dGLJfxVfIHsGwaqKICJnS+Ke2L6UcSrSrtMJLJaT0Im1Qv4TFXfaZShyw==}
     hasBin: true
 
-  drizzle-orm@0.38.3:
-    resolution: {integrity: sha512-w41Y+PquMpSff/QDRGdItG0/aWca+/J3Sda9PPGkTxBtjWQvgU1jxlFBXdjog5tYvTu58uvi3PwR1NuCx0KeZg==}
+  drizzle-orm@0.39.3:
+    resolution: {integrity: sha512-EZ8ZpYvDIvKU9C56JYLOmUskazhad+uXZCTCRN4OnRMsL+xAJ05dv1eCpAG5xzhsm1hqiuC5kAZUCS924u2DTw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -3044,7 +3047,6 @@ packages:
       '@tidbcloud/serverless': '*'
       '@types/better-sqlite3': '*'
       '@types/pg': '*'
-      '@types/react': '>=18'
       '@types/sql.js': '*'
       '@vercel/postgres': '>=0.8.0'
       '@xata.io/client': '*'
@@ -3054,10 +3056,9 @@ packages:
       knex: '*'
       kysely: '*'
       mysql2: '>=2'
-      pg: '>=8'
+      pg: ^8.13.2
       postgres: '>=3'
       prisma: '*'
-      react: '>=18'
       sql.js: '>=1'
       sqlite3: '>=5'
     peerDependenciesMeta:
@@ -3087,8 +3088,6 @@ packages:
         optional: true
       '@types/pg':
         optional: true
-      '@types/react':
-        optional: true
       '@types/sql.js':
         optional: true
       '@vercel/postgres':
@@ -3112,8 +3111,6 @@ packages:
       postgres:
         optional: true
       prisma:
-        optional: true
-      react:
         optional: true
       sql.js:
         optional: true
@@ -3829,7 +3826,6 @@ packages:
 
   libsql@0.4.7:
     resolution: {integrity: sha512-T9eIRCs6b0J1SHKYIvD8+KCJMcWZ900iZyxdnSCdqxN12Z1ijzT+jY5nrk72Jw4B0HGzms2NgpryArlJqvc3Lw==}
-    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   light-my-request@5.13.0:
@@ -4469,15 +4465,10 @@ packages:
     resolution: {integrity: sha512-BM/Thnrw5jm2kKLE5uJkXqqExRUY/toLHda65XgFTBTFYZyopbKjBe29Ii3RbkvlsMoFwD+tHeGaCjjv0gHlyw==}
     engines: {node: '>=4'}
 
-  pg-pool@3.7.0:
-    resolution: {integrity: sha512-ZOBQForurqh4zZWjrgSwwAtzJ7QiRX0ovFkZr2klsen3Nm0aoh33Ls0fzfv3imeH/nw/O27cjdz5kzYJfeGp/g==}
-    peerDependencies:
-      pg: '>=8.0'
-
   pg-pool@3.7.1:
     resolution: {integrity: sha512-xIOsFoh7Vdhojas6q3596mXFsR8nwBQBXX5JiV7p9buEVAGqYL4yFzclON5P9vFrpu1u7Zwl2oriyDa89n0wbw==}
     peerDependencies:
-      pg: '>=8.0'
+      pg: ^8.13.2
 
   pg-protocol@1.7.0:
     resolution: {integrity: sha512-hTK/mE36i8fDDhgDFjy6xNOG+LCorxLG3WO17tku+ij6sVHXh1jQUJ8hYAnRhNla4QVD2H8er/FOjc/+EgC6yQ==}
@@ -4492,15 +4483,6 @@ packages:
   pg-types@4.0.2:
     resolution: {integrity: sha512-cRL3JpS3lKMGsKaWndugWQoLOCoP+Cic8oseVcbr0qhPzYD5DWXK+RZ9LY9wxRf7RQia4SCwQlXk0q6FCPrVng==}
     engines: {node: '>=10'}
-
-  pg@8.13.1:
-    resolution: {integrity: sha512-OUir1A0rPNZlX//c7ksiu7crsGZTKSOXJPgtNiHGIlC9H0lO+NC6ZDYksSgBYY/thSWhnSRBv8w1lieNNGATNQ==}
-    engines: {node: '>= 8.0.0'}
-    peerDependencies:
-      pg-native: '>=3.0.1'
-    peerDependenciesMeta:
-      pg-native:
-        optional: true
 
   pg@8.13.2:
     resolution: {integrity: sha512-L5QkPvTjVWWHbLaFjCkOSplpb2uCiRYbg0IJ2okCy5ClYfWlSgDDnvdR6dyw3EWAH2AfS4j8E61QFI7gLfTtlw==}
@@ -7872,31 +7854,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@19.0.8)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.1))(mysql2@3.12.0)(pg@8.13.1)(prisma@6.1.0)(react@19.0.0):
+  drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0):
     optionalDependencies:
       '@libsql/client': 0.14.0
       '@prisma/client': 6.1.0(prisma@6.1.0)
       '@types/pg': 8.11.10
-      '@types/react': 19.0.8
-      better-sqlite3: 11.8.1
-      knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.1)
-      mysql2: 3.12.0
-      pg: 8.13.1
-      prisma: 6.1.0
-      react: 19.0.0
-
-  drizzle-orm@0.38.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(@types/react@19.0.8)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(react@19.0.0):
-    optionalDependencies:
-      '@libsql/client': 0.14.0
-      '@prisma/client': 6.1.0(prisma@6.1.0)
-      '@types/pg': 8.11.10
-      '@types/react': 19.0.8
       better-sqlite3: 11.8.1
       knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)
       mysql2: 3.12.0
       pg: 8.13.2
       prisma: 6.1.0
-      react: 19.0.0
 
   dset@3.1.3: {}
 
@@ -8877,30 +8844,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.1):
-    dependencies:
-      colorette: 2.0.19
-      commander: 10.0.1
-      debug: 4.3.4
-      escalade: 3.1.2
-      esm: 3.2.25
-      get-package-type: 0.1.0
-      getopts: 2.3.0
-      interpret: 2.2.0
-      lodash: 4.17.21
-      pg-connection-string: 2.6.2
-      rechoir: 0.8.0
-      resolve-from: 5.0.0
-      tarn: 3.0.2
-      tildify: 2.0.0
-    optionalDependencies:
-      better-sqlite3: 11.8.1
-      mysql2: 3.12.0
-      pg: 8.13.1
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2):
     dependencies:
       colorette: 2.0.19
@@ -9819,10 +9762,6 @@ snapshots:
 
   pg-numeric@1.0.2: {}
 
-  pg-pool@3.7.0(pg@8.13.1):
-    dependencies:
-      pg: 8.13.1
-
   pg-pool@3.7.1(pg@8.13.2):
     dependencies:
       pg: 8.13.2
@@ -9848,16 +9787,6 @@ snapshots:
       postgres-date: 2.1.0
       postgres-interval: 3.0.0
       postgres-range: 1.1.4
-
-  pg@8.13.1:
-    dependencies:
-      pg-connection-string: 2.7.0
-      pg-pool: 3.7.0(pg@8.13.1)
-      pg-protocol: 1.7.0
-      pg-types: 2.2.0
-      pgpass: 1.0.5
-    optionalDependencies:
-      pg-cloudflare: 1.1.1
 
   pg@8.13.2:
     dependencies:

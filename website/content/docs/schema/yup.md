@@ -53,7 +53,7 @@ const IntScalar = yupSilk(number().integer())
 
 ## Defining objects
 
-We can use Yup to define objects and use them as [silk](../fundamentals/silk) to use:
+We can use Yup to define objects and use them as [silk](../silk) to use:
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
 

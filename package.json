@@ -41,6 +41,9 @@
     "patchedDependencies": {
       "graphql@16.8.1": "patches/graphql@16.8.1.patch",
       "@orama/tokenizers@3.0.6": "patches/@orama__tokenizers@3.0.6.patch"
+    },
+    "overrides": {
+      "pg": "^8.13.2"
     }
   }
 }

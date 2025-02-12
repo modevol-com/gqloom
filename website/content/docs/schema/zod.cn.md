@@ -25,7 +25,7 @@ bun add @gqloom/core zod @gqloom/zod
 
 ## 定义简单标量
 
-在 GQLoom 中，可以直接使用 Zod Schema 作为[丝线](../fundamentals/silk)使用：
+在 GQLoom 中，可以直接使用 Zod Schema 作为[丝线](../silk)使用：
 
 ```ts twoslash
 import { z } from "zod"
@@ -56,7 +56,7 @@ export const schema = weave(ZodWeaver, helloResolver)
 
 ## 定义对象
 
-我们可以使用 Zod 定义对象，并将其作为[丝线](../fundamentals/silk)使用：
+我们可以使用 Zod 定义对象，并将其作为[丝线](../silk)使用：
 ```ts twoslash
 import { z } from "zod"
 import { collectNames } from "@gqloom/zod"

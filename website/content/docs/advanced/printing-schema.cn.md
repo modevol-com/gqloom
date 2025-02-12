@@ -41,7 +41,7 @@ if (process.env.NODE_ENV === "development") {
 
 GraphQL Schema 可以用于很多用途，常见的用途包括：
 
-- 将来自多个微服务的 Schema 合并成一个[超级图](https://www.apollographql.com/docs/federation/building-supergraphs/subgraphs-overview)，以便在客户端进行跨服务的统一查询。这种架构被称为[联邦](./federation.mdx)。
+- 将来自多个微服务的 Schema 合并成一个[超级图](https://www.apollographql.com/docs/federation/building-supergraphs/subgraphs-overview)，以便在客户端进行跨服务的统一查询。这种架构被称为[联邦](./federation)。
 
 - 在客户端使用[代码生成](https://the-guild.dev/graphql/codegen)进行开发和类型检查。
 

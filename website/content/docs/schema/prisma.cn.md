@@ -6,7 +6,7 @@ title: Prisma
 
 `@gqloom/prisma` 提供了 GQLoom 与 Prisma 的集成：
 
-- 从 Prisma Schema 生成[丝线](../fundamentals/silk.md)；
+- 从 Prisma Schema 生成[丝线](../silk)；
 - 使用解析器工厂从 Prisma 快速生成 CRUD 操作。
 
 ## 安装
