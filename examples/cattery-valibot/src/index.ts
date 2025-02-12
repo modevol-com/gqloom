@@ -58,6 +58,7 @@ const catResolver = resolver.of(Cat, {
 
 const helloResolver = resolver({
   hello: query(v.string())
+    .description("Say hello to someone") // [!code hl]
     .input({ name: v.nullish(v.string(), "World") })
     .resolve(({ name }) => `Hello, ${name}!`),
 })

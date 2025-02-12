@@ -1,25 +1,21 @@
-import * as fs from "fs"
+import * as fs from "node:fs"
 import { createServer } from "node:http"
-import * as path from "path"
+import * as path from "node:path"
+import { weave } from "@gqloom/core"
 import { PrismaResolverFactory } from "@gqloom/prisma"
-import { ValibotWeaver, query, resolver, weave } from "@gqloom/valibot"
 import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
-import * as v from "valibot"
 import { PrismaClient } from "./generated/client"
 import { Post, User } from "./generated/gqloom"
 
-const db = new PrismaClient({ log: ["query"] })
-
-const helloResolver = resolver({
-  hello: query(v.string(), () => "Hello, World"),
-})
+const db = new PrismaClient()
 
 const userResolver = new PrismaResolverFactory(User, db).resolver()
 const postResolver = new PrismaResolverFactory(Post, db).resolver()
 
-const schema = weave(helloResolver, userResolver, postResolver, ValibotWeaver)
-fs.writeFileSync(path.join(__dirname, "../schema.graphql"), printSchema(schema))
+const schema = weave(userResolver, postResolver)
+
+fs.writeFileSync(path.join(__dirname, "schema.graphql"), printSchema(schema))
 
 const yoga = createYoga({ schema })
 const server = createServer(yoga)

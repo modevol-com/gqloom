@@ -1,5 +1,28 @@
+type User {
+  id: ID!
+  createdAt: String!
+  email: String!
+  name: String
+  role: Role!
+  posts: [Post!]!
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+type Post {
+  id: ID!
+  createdAt: String!
+  updatedAt: String!
+  published: Boolean!
+  title: String!
+  authorId: Int
+  author: User
+}
+
 type Query {
-  hello: String!
   countUser(
     where: UserWhereInput
     orderBy: [UserOrderByWithRelationInput!]
@@ -176,11 +199,6 @@ input EnumRoleFilter {
   not: NestedEnumRoleFilter
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 input NestedEnumRoleFilter {
   equals: Role
   in: [Role!]
@@ -282,25 +300,6 @@ input UserWhereUniqueInput {
   name: StringNullableFilter
   role: EnumRoleFilter
   posts: PostListRelationFilter
-}
-
-type User {
-  id: ID!
-  createdAt: String!
-  email: String!
-  name: String
-  role: Role!
-  posts: [Post!]!
-}
-
-type Post {
-  id: ID!
-  createdAt: String!
-  updatedAt: String!
-  published: Boolean!
-  title: String!
-  authorId: Int
-  author: User
 }
 
 enum UserScalarFieldEnum {

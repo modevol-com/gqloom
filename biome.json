@@ -5,7 +5,8 @@
     "ignoreUnknown": false,
     "ignore": [
       "**/dist/**/*",
-      "website/doc_build/",
+      "website/.next/",
+      "docs/doc_build/",
       "**/generated/**/*",
       "packages/prisma/test/client/**/*",
       "coverage/"
@@ -59,7 +60,8 @@
         "useArrayLiterals": "off",
         "useIsNan": "error",
         "useValidForDirection": "error",
-        "useYield": "error"
+        "useYield": "error",
+        "useExhaustiveDependencies": "warn"
       },
       "style": {
         "noNamespace": "error",

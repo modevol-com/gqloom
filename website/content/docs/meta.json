@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "index",
+    "getting-started",
+    "silk",
+    "resolver",
+    "weave",
+    "context",
+    "dataloader",
+    "middleware",
+    "---Schema Integration---",
+    "...schema",
+    "---Advanced Usages---",
+    "...advanced"
+  ]
+}

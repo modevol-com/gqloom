@@ -14,4 +14,4 @@ In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `
 
 This package provides GQLoom support for [Apollo Federation](https://www.apollographql.com/docs/federation).
 
-Read more at [GQLoom Document](https://gqloom.dev/guide/advanced/federation.html).
+Read more at [GQLoom Document](https://gqloom.devadvanced/federation.html).

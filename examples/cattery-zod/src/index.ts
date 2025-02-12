@@ -50,7 +50,13 @@ const catResolver = resolver.of(Cat, {
 
 const helloResolver = resolver({
   hello: query(z.string())
-    .input({ name: z.string().nullish() })
+    .description("Say hello to someone") // [!code hl]
+    .input({
+      name: z
+        .string()
+        .nullish()
+        .transform((value) => value ?? "World"),
+    })
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 

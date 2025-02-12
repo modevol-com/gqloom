@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "index",
+    "getting-started",
+    "silk",
+    "resolver",
+    "weave",
+    "context",
+    "dataloader",
+    "middleware",
+    "---Schema 集成---",
+    "...schema",
+    "---进阶功能---",
+    "...advanced"
+  ]
+}

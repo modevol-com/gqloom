@@ -32,7 +32,7 @@ const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-## 亮点咫尺可及
+## 亮点
 
 - 🧑‍💻 **开发体验**：更少的样板代码、语义化的 API 设计、广泛的生态集成使开发愉快；
 - 🔒 **类型安全**：从 Schema 自动推导类型，在开发时享受智能提示，在编译时发现潜在问题；
@@ -43,7 +43,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 ## 入门
 
-请参阅[入门](https://gqloom.dev/zh/guide/getting-started.html)，了解如何使用GQLoom。
+请参阅[入门](https://gqloom.dev/zhgetting-started.html)，了解如何使用GQLoom。
 
 ## 仓库导航
 

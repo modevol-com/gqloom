@@ -32,7 +32,7 @@ const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-## Highlights you should not miss
+## Highlights
 
 - 🧑‍💻 **Development Experience**: Fewer boilerplate codes, semantic API design, and extensive ecosystem integration make development enjoyable.
 - 🔒 **Type Safety**: Automatically infer types from the Schema, enjoy intelligent code completion during development, and detect potential problems during compilation.
@@ -43,7 +43,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 ## Getting Started
 
-See [Getting Started](https://gqloom.dev/guide/getting-started.html) to learn how to use GQLoom.
+See [Getting Started](https://gqloom.devgetting-started.html) to learn how to use GQLoom.
 
 ## In this Repository
 

@@ -11,5 +11,5 @@
       "@gqloom/*": ["./packages/*/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "dist", "draft"]
+  "exclude": ["node_modules", "dist", "draft", "website", "docs"]
 }

@@ -15,6 +15,6 @@
     "@gqloom/zod": "workspace:*",
     "graphql": "^16.8.1",
     "graphql-yoga": "^5.6.0",
-    "zod": "^3.24.0"
+    "zod": "^3.24.1"
   }
 }
