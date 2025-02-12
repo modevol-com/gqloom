@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/drizzle",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "GQLoom integration with Drizzle ORM",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,8 +19,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "push": "drizzle-kit push --config=drizzle-mysql.config.ts && drizzle-kit push --config=drizzle-postgres.config.ts && drizzle-kit push --config=drizzle-sqlite.config.ts && drizzle-kit push --config=drizzle-sqlite-1.config.ts",
-    "postinstall": "pnpm run push"
+    "push": "drizzle-kit push --config=drizzle-mysql.config.ts && drizzle-kit push --config=drizzle-postgres.config.ts && drizzle-kit push --config=drizzle-sqlite.config.ts && drizzle-kit push --config=drizzle-sqlite-1.config.ts"
   },
   "files": ["dist"],
   "keywords": [

@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/prisma",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "GQLoom integration with Prisma",
   "type": "module",
   "main": "./dist/index.js",
@@ -31,7 +31,7 @@
     "build": "tsup",
     "init": "exec prisma migrate dev --name init",
     "generate": "prisma generate",
-    "postinstall": "pnpm build && pnpm generate && pnpm run init"
+    "push": "pnpm build && pnpm generate && pnpm run init"
   },
   "bin": {
     "prisma-gqloom": "./bin/generator.cjs"
