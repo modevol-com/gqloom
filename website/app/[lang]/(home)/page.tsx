@@ -2,9 +2,18 @@ import { homeSource } from "@/lib/source"
 import clsx from "clsx"
 import DynamicLink from "fumadocs-core/dynamic-link"
 import {} from "fumadocs-twoslash/ui"
+import { Card, type CardProps, Cards } from "fumadocs-ui/components/card"
 import {} from "fumadocs-ui/components/codeblock"
 import {} from "fumadocs-ui/components/tabs"
-import { ArrowRight } from "lucide-react"
+import {
+  ArrowRight,
+  Fence,
+  HardDriveDownload,
+  RadioTower,
+  Satellite,
+  SatelliteDish,
+  Shuffle,
+} from "lucide-react"
 import type { MDXProps } from "mdx/types"
 import Link from "next/link"
 import { memo } from "react"
@@ -24,6 +33,7 @@ export default async function HomePage(props: {
     <main className="flex flex-col items-center">
       <Hero lang={lang} />
       <SchemaLibrary className="mt-24 lg:mt-32" lang={lang} />
+      <Features className="mt-24 lg:mt-32" lang={lang} />
       <ORMLibrary
         className="mt-24 lg:mt-32"
         lang={lang}
@@ -86,6 +96,116 @@ const Hero = memo<LangProps>(function Hero({ lang }) {
   )
 })
 
+const featuresCn: CardProps[] = [
+  {
+    icon: <RadioTower />,
+    title: "解析器（Resolver）",
+    description:
+      "解析器是 GQLoom 的核心组件，你可以在其中定义查询、变更和订阅操作，还能为对象动态添加额外字段，实现灵活的数据处理。",
+    href: "/[lang]/docs/resolver",
+  },
+  {
+    icon: <Shuffle />,
+    title: "上下文（Context）",
+    description:
+      "借助上下文机制，你能够在应用程序的任意位置便捷地进行数据注入，确保数据在不同组件和层次间高效流通。",
+    href: "/[lang]/docs/context",
+  },
+  {
+    icon: <Fence />,
+    title: "中间件（Middleware）",
+    description:
+      "采用面向切面编程的思想，中间件允许你在解析过程中无缝嵌入额外逻辑，如错误捕获、用户权限校验和日志追踪，增强系统的健壮性和可维护性。",
+    href: "/[lang]/docs/middleware",
+  },
+  {
+    icon: <HardDriveDownload />,
+    title: "数据加载器（Dataloader）",
+    description:
+      "数据加载器是优化性能的利器，它能够批量获取数据，显著减少数据库的查询次数，有效提升系统性能，同时让代码结构更加清晰，易于维护。",
+    href: "/[lang]/docs/dataloader",
+  },
+  {
+    icon: <SatelliteDish />,
+    title: "订阅（Subscription）",
+    description:
+      "订阅功能为客户端提供了实时获取数据更新的能力，无需手动轮询，确保客户端始终与服务器数据保持同步，提升用户体验。",
+    href: "/[lang]/docs/advanced/subscription",
+  },
+  {
+    icon: <Satellite />,
+    title: "联邦图（Federation）",
+    description:
+      "联邦图是一种微服务化的 GraphQL 架构，它能够轻松聚合多个服务，实现跨服务查询，让你可以像操作单个图一样管理复杂的分布式系统。",
+    href: "/[lang]/docs/advanced/federation",
+  },
+]
+
+const featuresEN: CardProps[] = [
+  {
+    icon: <RadioTower />,
+    title: "Resolver",
+    description:
+      "Resolvers are the core components of GraphQL. You can define query, mutation, and subscription operations within them, and also dynamically add additional fields to objects for flexible data processing.",
+    href: "/[lang]/docs/resolver",
+  },
+  {
+    icon: <Shuffle />,
+    title: "Context",
+    description:
+      "With the context mechanism, you can conveniently inject data anywhere in the application, ensuring efficient data flow between different components and layers.",
+    href: "/[lang]/docs/context",
+  },
+  {
+    icon: <Fence />,
+    title: "Middleware",
+    description:
+      "Adopting the concept of aspect - oriented programming, middleware allows you to seamlessly integrate additional logic during the resolution process, such as error handling, user permission verification, and log tracking, enhancing the robustness and maintainability of the system.",
+    href: "/[lang]/docs/middleware",
+  },
+  {
+    icon: <HardDriveDownload />,
+    title: "Dataloader",
+    description:
+      "Dataloader is a powerful tool for optimizing performance. It can fetch data in batches, significantly reducing the number of database queries, effectively improving system performance, and making the code structure clearer and easier to maintain.",
+    href: "/[lang]/docs/dataloader",
+  },
+  {
+    icon: <SatelliteDish />,
+    title: "Subscription",
+    description:
+      "The subscription feature provides clients with the ability to obtain real - time data updates without manual polling, ensuring that clients always stay in sync with server data and enhancing the user experience.",
+    href: "/[lang]/docs/advanced/subscription",
+  },
+  {
+    icon: <Satellite />,
+    title: "Federation",
+    description:
+      "Federation is a microservice - based GraphQL architecture that can easily aggregate multiple services to enable cross - service queries, allowing you to manage complex distributed systems as if operating on a single graph.",
+    href: "/[lang]/docs/advanced/federation",
+  },
+]
+
+const Features = memo<LangProps>(function Features({ lang, className }) {
+  const features = lang === "cn" ? featuresCn : featuresEN
+  const title = lang === "cn" ? "全功能 GraphQL" : "Full Featured GraphQL"
+  return (
+    <section
+      className={clsx("px-6 max-w-5xl flex flex-col items-center", className)}
+    >
+      <h2 className="text-3xl font-bold tracking-wider">{title}</h2>
+      <Cards className="mt-12">
+        {features.map(({ href, ...props }, i) => (
+          <Card
+            key={i}
+            {...props}
+            href={href ? href.replace(/\[lang\]/, lang) : href}
+          />
+        ))}
+      </Cards>
+    </section>
+  )
+})
 const highlightsEN: IHighlight[] = [
   {
     emoji: "🔐",
