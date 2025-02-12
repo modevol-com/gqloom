@@ -68,13 +68,13 @@ const Hero = memo<LangProps>(function Hero({ lang }) {
           <Link
             href="https://github.com/modevol-com/gqloom"
             target="_blank"
-            className="text-nowrap border-orange-400 bg-pink-300/10 border-2 transition-colors duration-300 hover:bg-rose-500/20 dark:hover:bg-orange-300/20 py-3 px-6 rounded-full"
+            className="hover:scale-105 ease-out text-nowrap border-orange-400 bg-pink-300/10 border-2 transition duration-300 hover:bg-rose-500/20 dark:hover:bg-orange-300/20 py-3 px-6 rounded-full"
           >
             {hero.star}
           </Link>
           <DynamicLink
             href="/[lang]/docs/getting-started"
-            className="text-nowrap px-6 py-3 flex items-center font-medium text-white transition-colors duration-300 bg-gradient-to-r from-pink-600 to-orange-400 rounded-full hover:from-pink-500 hover:to-amber-300"
+            className="hover:scale-105 ease-out text-nowrap px-6 py-3 flex items-center font-medium text-white transition duration-300 bg-gradient-to-r from-pink-600 to-orange-400 rounded-full hover:from-pink-500 hover:to-amber-300"
           >
             <span>{hero.start}</span>
             <ArrowRight className="ml-2 inline-block" />
