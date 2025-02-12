@@ -1,15 +1,15 @@
 import { homeSource } from "@/lib/source"
 import clsx from "clsx"
 import DynamicLink from "fumadocs-core/dynamic-link"
-import { Popup, PopupContent, PopupTrigger } from "fumadocs-twoslash/ui"
-import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock"
-import { Tab, Tabs } from "fumadocs-ui/components/tabs"
-import defaultMdxComponents from "fumadocs-ui/mdx"
+import {} from "fumadocs-twoslash/ui"
+import {} from "fumadocs-ui/components/codeblock"
+import {} from "fumadocs-ui/components/tabs"
 import { ArrowRight } from "lucide-react"
 import type { MDXProps } from "mdx/types"
 import Link from "next/link"
 import { memo } from "react"
-import { ORMLibrary } from "./orm-library"
+import { ORMLibrary, type SupportedORM } from "./orm-library"
+import { mdxComponents } from "./utils"
 
 export interface LangProps {
   lang: string
@@ -23,11 +23,22 @@ export default async function HomePage(props: {
     <main className="flex flex-col items-center">
       <Hero lang={lang} />
       <SchemaLibrary lang={lang} />
-      <ORMLibrary lang={lang} />
+      <ORMLibrary
+        lang={lang}
+        DrizzleMDX={<mdx.Drizzle components={mdxComponents} />}
+        PrismaMDX={<mdx.Prisma components={mdxComponents} />}
+        MikroOrmMDX={<mdx.MikroORM components={mdxComponents} />}
+      />
       <GraphQLIntro lang={lang} />
       <div className="h-72" />
     </main>
   )
+}
+
+const mdx: Record<SupportedORM, React.FC<MDXProps>> = {
+  Drizzle: homeSource.getPage(["prisma"])!.data.body,
+  Prisma: homeSource.getPage(["prisma"])!.data.body,
+  MikroORM: homeSource.getPage(["prisma"])!.data.body,
 }
 
 const heroEn = {
@@ -282,20 +293,6 @@ const Highlight = memo<IHighlight & { className?: string }>(function Highlight({
     </li>
   )
 })
-
-const mdxComponents = {
-  ...defaultMdxComponents,
-  pre: ({ children, ...props }: React.ComponentProps<"pre">) => (
-    <CodeBlock {...props}>
-      <Pre className="max-w-xl w-full overflow-auto">{children}</Pre>
-    </CodeBlock>
-  ),
-  Tab,
-  Tabs,
-  Popup,
-  PopupContent,
-  PopupTrigger,
-}
 
 interface IHighlight {
   emoji: string

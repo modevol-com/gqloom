@@ -1,3 +1,68 @@
+
+```ts title="src/index.ts" tab="index.ts"
+import { createServer } from "node:http"
+import { PrismaResolverFactory } from "@gqloom/prisma"
+import { weave } from "@gqloom/valibot"
+import { createYoga } from "graphql-yoga"
+import { PrismaClient } from "./generated/client"
+import { Post, User } from "./generated/gqloom"
+
+const db = new PrismaClient()
+
+const userResolver = new PrismaResolverFactory(User, db).resolver()
+const postResolver = new PrismaResolverFactory(Post, db).resolver()
+
+const schema = weave(userResolver, postResolver)
+
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+```prisma title="prisma/schema.prisma" tab="schema.prisma"
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../src/generated/client"
+}
+
+generator gqloom {
+  provider = "prisma-gqloom"
+  output   = "../src/generated/gqloom"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  email     String   @unique
+  name      String?
+  role      Role     @default(USER)
+  posts     Post[]
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  published Boolean  @default(false)
+  title     String   @db.VarChar(255)
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  Int?
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+```
+
+```graphql title="schema.graphql" tab="schema.graphql"
 type User {
   id: ID!
   createdAt: String!
@@ -23,53 +88,13 @@ type Post {
 }
 
 type Query {
-  countUser(
-    where: UserWhereInput
-    orderBy: [UserOrderByWithRelationInput!]
-    cursor: UserWhereUniqueInput
-    skip: Int
-    take: Int
-  ): Int!
-  findFirstUser(
-    where: UserWhereInput
-    orderBy: [UserOrderByWithRelationInput!]
-    cursor: UserWhereUniqueInput
-    skip: Int
-    take: Int
-    distinct: [UserScalarFieldEnum!]
-  ): User
-  findManyUser(
-    where: UserWhereInput
-    orderBy: [UserOrderByWithRelationInput!]
-    cursor: UserWhereUniqueInput
-    skip: Int
-    take: Int
-    distinct: [UserScalarFieldEnum!]
-  ): [User!]!
+  countUser(where: UserWhereInput, orderBy: [UserOrderByWithRelationInput!], cursor: UserWhereUniqueInput, skip: Int, take: Int): Int!
+  findFirstUser(where: UserWhereInput, orderBy: [UserOrderByWithRelationInput!], cursor: UserWhereUniqueInput, skip: Int, take: Int, distinct: [UserScalarFieldEnum!]): User
+  findManyUser(where: UserWhereInput, orderBy: [UserOrderByWithRelationInput!], cursor: UserWhereUniqueInput, skip: Int, take: Int, distinct: [UserScalarFieldEnum!]): [User!]!
   findUniqueUser(where: UserWhereUniqueInput): User
-  countPost(
-    where: PostWhereInput
-    orderBy: [PostOrderByWithRelationInput!]
-    cursor: PostWhereUniqueInput
-    skip: Int
-    take: Int
-  ): Int!
-  findFirstPost(
-    where: PostWhereInput
-    orderBy: [PostOrderByWithRelationInput!]
-    cursor: PostWhereUniqueInput
-    skip: Int
-    take: Int
-    distinct: [PostScalarFieldEnum!]
-  ): Post
-  findManyPost(
-    where: PostWhereInput
-    orderBy: [PostOrderByWithRelationInput!]
-    cursor: PostWhereUniqueInput
-    skip: Int
-    take: Int
-    distinct: [PostScalarFieldEnum!]
-  ): [Post!]!
+  countPost(where: PostWhereInput, orderBy: [PostOrderByWithRelationInput!], cursor: PostWhereUniqueInput, skip: Int, take: Int): Int!
+  findFirstPost(where: PostWhereInput, orderBy: [PostOrderByWithRelationInput!], cursor: PostWhereUniqueInput, skip: Int, take: Int, distinct: [PostScalarFieldEnum!]): Post
+  findManyPost(where: PostWhereInput, orderBy: [PostOrderByWithRelationInput!], cursor: PostWhereUniqueInput, skip: Int, take: Int, distinct: [PostScalarFieldEnum!]): [Post!]!
   findUniquePost(where: PostWhereUniqueInput): Post
 }
 
@@ -348,29 +373,15 @@ type Mutation {
   deleteUser(where: UserWhereUniqueInput!): User
   deleteManyUser(where: UserWhereInput): BatchPayload
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User!
-  updateManyUser(
-    data: UserUpdateManyMutationInput!
-    where: UserWhereInput
-  ): BatchPayload
-  upsertUser(
-    where: UserWhereUniqueInput!
-    create: UserCreateInput!
-    update: UserUpdateInput!
-  ): User!
+  updateManyUser(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   createPost(data: PostCreateInput!): Post
   createManyPost(data: [PostCreateManyInput!]!): BatchPayload
   deletePost(where: PostWhereUniqueInput!): Post
   deleteManyPost(where: PostWhereInput): BatchPayload
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post!
-  updateManyPost(
-    data: PostUpdateManyMutationInput!
-    where: PostWhereInput
-  ): BatchPayload
-  upsertPost(
-    where: PostWhereUniqueInput!
-    create: PostCreateInput!
-    update: PostUpdateInput!
-  ): Post!
+  updateManyPost(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload
+  upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
 }
 
 input UserCreateInput {
@@ -586,3 +597,4 @@ input UserUpdateToOneWithWhereWithoutPostsInput {
   where: UserWhereInput
   data: UserUpdateWithoutPostsInput!
 }
+```

@@ -16,9 +16,15 @@ const ormIntroEN = {
 }
 
 const supportedORM = ["Drizzle", "MikroORM", "Prisma"] as const
-type SupportedORM = (typeof supportedORM)[number]
+export type SupportedORM = (typeof supportedORM)[number]
 
-export const ORMLibrary = memo<LangProps>(function ORMLibrary({ lang }) {
+export const ORMLibrary = memo<
+  LangProps & {
+    DrizzleMDX: React.ReactNode
+    PrismaMDX: React.ReactNode
+    MikroOrmMDX: React.ReactNode
+  }
+>(function ORMLibrary({ lang, DrizzleMDX, PrismaMDX, MikroOrmMDX }) {
   const intro = lang === "cn" ? ormIntroCN : ormIntroEN
 
   const [tab, SetTab] = useState<SupportedORM>("Drizzle")
@@ -65,6 +71,11 @@ export const ORMLibrary = memo<LangProps>(function ORMLibrary({ lang }) {
         {intro.description}
       </p>
       {OrmDescription}
+      <div className="w-xl max-w-[90vw]">
+        {tab === "Drizzle" && DrizzleMDX}
+        {tab === "Prisma" && PrismaMDX}
+        {tab === "MikroORM" && MikroOrmMDX}
+      </div>
     </section>
   )
 })
