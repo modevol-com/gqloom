@@ -1,4 +1,4 @@
-```ts twoslash title="index.ts" tab="index.ts"
+```ts twoslash title="src/index.ts" tab="index.ts"
 // @filename: entities.ts
 import { type EntitySchemaSilk, mikroSilk } from "@gqloom/mikro-orm"
 import { type Collection, EntitySchema, type Ref } from "@mikro-orm/core"
@@ -111,7 +111,7 @@ server.listen(4000, () => {
 })
 ```
 
-```ts twoslash title="entities.ts" tab="entities.ts"
+```ts twoslash title="src/entities.ts" tab="entities.ts"
 import { type EntitySchemaSilk, mikroSilk } from "@gqloom/mikro-orm"
 import { type Collection, EntitySchema, type Ref } from "@mikro-orm/core"
 
