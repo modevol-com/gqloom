@@ -256,7 +256,7 @@ const SchemaLibrary = memo<LangProps>(function SchemaLibrary({ lang }) {
   return (
     <section className="mt-16 px-6 md:mt-20 flex flex-col items-center">
       <h2 className="text-3xl font-bold tracking-wider">{title}</h2>
-      <div className="flex flex-col md:flex-row gap-x-8 mt-16">
+      <div className="flex flex-col lg:flex-row gap-x-8 mt-16">
         <div className="flex flex-col items-center max-w-[90vw]">
           <div className="w-full h-[33em]">
             <SchemaLibrariesMDX components={mdxComponents} />
