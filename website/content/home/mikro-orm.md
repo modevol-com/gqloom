@@ -80,9 +80,10 @@ const ormPromise = MikroORM.init({
   entities: [User, Post],
   clientUrl: process.env.DATABASE_URL!,
 })
-const emPromise = ormPromise.then((orm) => orm.em.fork())
 
-const userResolverFactory = new MikroResolverFactory(User, () => emPromise)
+const userResolverFactory = new MikroResolverFactory(User, () =>
+  ormPromise.then((orm) => orm.em.fork())
+)
 
 const userResolver = resolver.of(User, {
   user: userResolverFactory.findOneQuery(),
@@ -92,7 +93,9 @@ const userResolver = resolver.of(User, {
   deleteUser: userResolverFactory.deleteOneMutation(),
 })
 
-const postResolverFactory = new MikroResolverFactory(Post, () => emPromise)
+const postResolverFactory = new MikroResolverFactory(Post, () =>
+  ormPromise.then((orm) => orm.em.fork())
+)
 
 const postResolver = resolver.of(Post, {
   post: postResolverFactory.findOneQuery(),
