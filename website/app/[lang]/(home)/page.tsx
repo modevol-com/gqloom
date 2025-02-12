@@ -9,8 +9,9 @@ import { ArrowRight } from "lucide-react"
 import type { MDXProps } from "mdx/types"
 import Link from "next/link"
 import { memo } from "react"
+import { ORMLibrary } from "./orm-library"
 
-interface LangProps {
+export interface LangProps {
   lang: string
 }
 
@@ -22,6 +23,7 @@ export default async function HomePage(props: {
     <main className="flex flex-col items-center">
       <Hero lang={lang} />
       <SchemaLibrary lang={lang} />
+      <ORMLibrary lang={lang} />
       <GraphQLIntro lang={lang} />
       <div className="h-72" />
     </main>
@@ -144,7 +146,7 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
     <Link
       href="https://graphql.org/"
       target="_blank"
-      className="underline text-5xl text-pink-600 dark:text-rose-400 opacity-90 transition-opacity hover:opacity-100"
+      className="underline text-4xl text-pink-600 dark:text-rose-400 opacity-90 transition-opacity hover:opacity-100"
     >
       GraphQL
     </Link>
@@ -153,11 +155,11 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({ lang }) {
   return (
     <section className="flex flex-col px-6 items-center max-w-5xl gap-16 mt-16 md:mt-20">
       {lang === "cn" ? (
-        <h2 className="text-4xl font-bold tracking-wider">
+        <h2 className="text-3xl font-bold tracking-wider">
           {GraphQLLink} 的磅礴之力
         </h2>
       ) : (
-        <h2 className="text-4xl font-bold tracking-wider">
+        <h2 className="text-3xl font-bold tracking-wider">
           Full Power of {GraphQLLink}
         </h2>
       )}

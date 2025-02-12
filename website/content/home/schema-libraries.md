@@ -61,8 +61,8 @@ const Giraffe = yupSilk(
   object({
     name: string().required().meta({ description: "The giraffe's name" }),
     birthday: date().required(),
-  })
-).label("Giraffe")
+  }).label("Giraffe")
+)
 
 const giraffeResolver = resolver.of(Giraffe, {
   age: field(yupSilk(number().integer().nonNullable()))
