@@ -13,7 +13,8 @@
     "check:type": "tsc --noEmit",
     "build": "pnpm -F '@gqloom/*' run build",
     "prepare": "husky",
-    "compose-up": "docker compose up -d"
+    "compose-up": "docker compose up -d",
+    "push": "pnpm -F @gqloom/drizzle -F @gqloom/prisma -F example-prisma push"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json}": ["biome check --no-errors-on-unmatched --write"],

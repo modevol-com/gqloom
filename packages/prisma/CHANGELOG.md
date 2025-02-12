@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## next (YYYY-MM-DD)
+## 0.7.1 (2025-02-12)
+
+* Fix: `package.json` remove `postinstall` 
+* 
+## 0.7.0 (2025-01-28)
 
 * Refactor: rename `PrismaModelBobbin` to `PrismaResolverFactory`
 

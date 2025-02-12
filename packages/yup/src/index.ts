@@ -141,7 +141,6 @@ export class YupWeaver {
           Record<string, unknown>,
           unknown
         >
-        const strictSchema = objectSchema.strict().noUnknown()
         return new GraphQLObjectType({
           interfaces: YupWeaver.ensureInterfaceTypes(interfaces),
           name,
@@ -166,7 +165,6 @@ export class YupWeaver {
               ...rest,
             } as GraphQLFieldConfig<any, any>
           }),
-          isTypeOf: (source) => strictSchema.isValid(source),
           ...objectConfig,
         })
       }

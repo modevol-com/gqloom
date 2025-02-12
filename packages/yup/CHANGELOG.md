@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+## 0.7.1 (2025-02-08)
+
+* fix: remove `isTypeOf` when weave a yup object into a GraphQL object
+
+## 0.7.0 (2025-02-04)
+
 * Feature: auto assign names to objects and inputs
 
 ## 0.5.0 (2024-12-03)

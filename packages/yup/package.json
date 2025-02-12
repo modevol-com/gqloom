@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/yup",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Create GraphQL schema and resolvers easily using using Yup!",
   "type": "module",
   "main": "./dist/index.js",

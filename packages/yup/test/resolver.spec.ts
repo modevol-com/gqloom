@@ -120,7 +120,14 @@ describe("yup resolver", () => {
   })
 
   it("should resolve union", async () => {
-    const Animal = union([Cat, Dog])
+    const Animal = union([Cat, Dog]).meta({
+      asUnionType: {
+        resolveType: (it) => {
+          if (it.loveFish) return "Cat"
+          return "Dog"
+        },
+      },
+    })
 
     collectNames({ Animal, Cat, Dog })
 
