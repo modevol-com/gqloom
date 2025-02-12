@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/catppuccin.css";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-twoslash/twoslash.css";
+
+@source '../node_modules/fumadocs-ui/dist/**/*.js';
+
+:root {
+  --color-fd-primary: hsl(336, 95%, 43%);
+  --color-fd-ring: hsl(336, 84%, 81%);
+}
+
+.dark {
+  --color-fd-primary: hsl(336, 100%, 70%);
+  --color-fd-ring: hsl(336, 84%, 81%);
+}

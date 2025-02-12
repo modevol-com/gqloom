@@ -199,7 +199,12 @@ export class QueryChainFactory<
     resolve: (
       input: InferInputO<TInput, TSchemaIO>
     ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
-  ) {
+  ): FieldOrOperation<
+    any,
+    SchemaToSilk<TSchemaIO, TOutput>,
+    InputSchemaToSilk<TSchemaIO, TInput>,
+    "query"
+  > {
     return createQuery(this.options?.output, {
       ...this.options,
       resolve,
@@ -260,7 +265,12 @@ export class MutationChainFactory<
     resolve: (
       input: InferInputO<TInput, TSchemaIO>
     ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
-  ) {
+  ): FieldOrOperation<
+    any,
+    SchemaToSilk<TSchemaIO, TOutput>,
+    InputSchemaToSilk<TSchemaIO, TInput>,
+    "mutation"
+  > {
     return createMutation(this.options?.output, {
       ...this.options,
       resolve,

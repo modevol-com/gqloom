@@ -276,6 +276,6 @@ export class GraphQLSchemaLoom {
 /**
  * Weave a GraphQL Schema from resolvers
  * @param inputs Resolvers, Global Middlewares or WeaverConfigs
- * @returns GraphQ LSchema
+ * @returns GraphQL Schema
  */
 export const weave = GraphQLSchemaLoom.weave

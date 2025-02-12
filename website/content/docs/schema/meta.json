@@ -1,0 +1,3 @@
+{
+  "pages": ["valibot", "zod", "yup", "drizzle", "prisma", "mikro-orm"]
+}

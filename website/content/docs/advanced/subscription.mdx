@@ -1,0 +1,136 @@
+---
+title: Subscription
+---
+
+In GraphQL, Subscription allows the server to push data to the client.
+
+## Basic Usage
+
+In `GQLoom`, we use the `subscription` function to define a subscription:.
+
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+import { ValibotWeaver, weave, resolver, subscription } from "@gqloom/valibot"
+import * as v from "valibot"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+const countdownResolver = resolver({
+  countdown: subscription(v.number(), {
+    input: { seconds: v.pipe(v.number(), v.integer()) },
+    subscribe: async function* (data) {
+      for (let i = data.seconds; i >= 0; i--) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        yield i
+      }
+    },
+  }),
+})
+
+const schema = weave(countdownResolver)
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+</Tab>
+<Tab value="zod">
+```ts twoslash
+import { weave, resolver, subscription } from "@gqloom/zod"
+import { z } from "zod"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+const countdownResolver = resolver({
+  countdown: subscription(z.number(), {
+    input: { seconds: z.number().int() },
+    subscribe: async function* (data) {
+      for (let i = data.seconds; i >= 0; i--) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        yield i
+      }
+    },
+  }),
+})
+
+const schema = weave(countdownResolver)
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+</Tab>
+</Tabs>
+
+In the code above, we define a `countdown` subscription that accepts a `seconds` parameter.
+We passed in an [asynchronous generator](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator) in the subscription function, which will push a number every second until the number is 0.
+
+## Using publish/subscribe
+
+We can also use the publish/subscribe feature provided by [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started) to push messages more easily:
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+```ts twoslash
+import { resolver, query, subscription } from "@gqloom/core"
+import { createPubSub } from "graphql-yoga"
+import * as v from "valibot"
+
+const pubSub = createPubSub<{ greeting: [string] }>()
+
+const HelloResolver = resolver({
+  hello: query(v.string(), {
+    input: { name: v.string() },
+    resolve: ({ name }) => {
+      const hello = `Hello, ${name}`
+      pubSub.publish("greeting", hello)
+      return hello
+    },
+  }),
+
+  listenGreeting: subscription(v.string(), {
+    subscribe: () => pubSub.subscribe("greeting"),
+    resolve: (payload) => payload,
+  }),
+})
+```
+</Tab>
+<Tab value="zod">
+```ts twoslash
+import { resolver, query, subscription } from "@gqloom/zod"
+import { createPubSub } from "graphql-yoga"
+import { z } from "zod"
+
+const pubSub = createPubSub<{ greeting: [string] }>()
+
+const HelloResolver = resolver({
+  hello: query(z.string(), {
+    input: { name: z.string() },
+    resolve: ({ name }) => {
+      const hello = `Hello, ${name}`
+      pubSub.publish("greeting", hello)
+      return hello
+    },
+  }),
+
+  listenGreeting: subscription(z.string(), {
+    subscribe: () => pubSub.subscribe("greeting"),
+    resolve: (payload) => payload,
+  }),
+})
+```
+</Tab>
+</Tabs>
+
+In the code above, we defined a `hello` query and a `listenGreeting` subscription.
+When the `hello` query is called, it publishes a `greeting` event, and the `listenGreeting` subscription subscribes to this event and pushes a message when it occurs.
+
+You can learn about the detailed usage of the Publish/Subscribe feature at [GraphQL Yoga Documentation](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started).
+
+## Using Subscriptions in Distributed Systems
+
+The subscription feature can work easily in a monolithic application. However, in a distributed system, the subscription feature can get complicated. You may consider using the [event-driven federated subscription](https://cosmo-docs.wundergraph.com/router/event-driven-federated-subscriptions-edfs) feature from [WunderGraph Cosmo](https://cosmo-docs.wundergraph.com/) to handle subscriptions in a distributed system.
