@@ -12,9 +12,10 @@
     "check": "biome check --write . && pnpm run check:type",
     "check:type": "tsc --noEmit",
     "build": "pnpm -F '@gqloom/core' run build && pnpm -F '@gqloom/drizzle' run build && pnpm -F '@gqloom/federation' run build && pnpm -F '@gqloom/mikro-orm' run build && pnpm -F '@gqloom/prisma' run build && pnpm -F '@gqloom/valibot' run build && pnpm -F '@gqloom/yup' run build && pnpm -F '@gqloom/zod' run build",
-    "prepare": "husky && pnpm -r run generate",
+    "prepare": "husky",
     "compose-up": "docker compose up -d",
-    "push": "pnpm -r run push"
+    "push": "pnpm -r",
+    "postinstall": "pnpm -r run generate"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json}": ["biome check --no-errors-on-unmatched --write"],
