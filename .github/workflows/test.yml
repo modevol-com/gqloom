@@ -23,8 +23,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: ./.github/actions/pnpm
       - name: Lint check
         run: pnpm lint
 
