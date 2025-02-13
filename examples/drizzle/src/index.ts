@@ -6,9 +6,10 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
+import { config } from "../env.config"
 import * as tables from "./schema"
 
-const db = drizzle(process.env.DATABASE_URL!, { schema: tables })
+const db = drizzle(config.databaseUrl, { schema: tables })
 
 const userResolver = drizzleResolverFactory(db, "users").resolver()
 const postResolver = drizzleResolverFactory(db, "posts").resolver()
