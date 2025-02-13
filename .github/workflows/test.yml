@@ -56,5 +56,7 @@ jobs:
         uses: ./.github/actions/pnpm
       - name: Build
         run: pnpm run build
+      - name: Init Tables
+        run: pnpm push
       - name: Test
         run: pnpm test

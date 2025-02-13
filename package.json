@@ -14,8 +14,7 @@
     "build": "pnpm -F '@gqloom/core' run build && pnpm -F '@gqloom/drizzle' run build && pnpm -F '@gqloom/federation' run build && pnpm -F '@gqloom/mikro-orm' run build && pnpm -F '@gqloom/prisma' run build && pnpm -F '@gqloom/valibot' run build && pnpm -F '@gqloom/yup' run build && pnpm -F '@gqloom/zod' run build",
     "prepare": "husky",
     "compose-up": "docker compose up -d",
-    "push": "pnpm -F @gqloom/drizzle -F @gqloom/prisma -F example-prisma push",
-    "postinstall": "pnpm run build"
+    "push": "pnpm -F @gqloom/drizzle -F @gqloom/prisma -F example-prisma push"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json}": ["biome check --no-errors-on-unmatched --write"],

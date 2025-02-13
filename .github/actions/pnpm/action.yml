@@ -19,7 +19,3 @@ runs:
     - name: Install dependencies
       shell: bash
       run: pnpm install
-    
-    - name: Init tables
-      shell: bash
-      run: pnpm push
