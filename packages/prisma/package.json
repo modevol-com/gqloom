@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsup",
     "init": "exec prisma migrate dev --name init",
-    "generate": "prisma generate",
+    "generate": "pnpm build && prisma generate",
     "push": "pnpm build && pnpm generate && pnpm run init"
   },
   "bin": {
