@@ -63,7 +63,7 @@ export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
   value: InferInputI<TSchema, GraphQLSilkIO>
 
   /**
-   * Parse the input and return the
+   * Parse the input and return the result
    */
   (): Promise<StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>>
 
