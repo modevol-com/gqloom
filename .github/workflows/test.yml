@@ -43,7 +43,7 @@ jobs:
         run: pnpm run check:type
 
   test:
-    name: Run Unint test
+    name: Run Uint test
     needs: install
     runs-on: ubuntu-latest
     steps:
@@ -60,3 +60,24 @@ jobs:
         run: pnpm push
       - name: Test
         run: pnpm test
+  publish:
+    name: Publish to NPM
+    needs: 
+      - lint
+      - type-check
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Init docker
+        run: |
+          docker compose -f docker-compose.yml up -d
+      - name: Setup pnpm
+        uses: ./.github/actions/pnpm
+      - name: Build
+        run: pnpm run build
+      - name: Publish
+        run: pnpm run ci:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
