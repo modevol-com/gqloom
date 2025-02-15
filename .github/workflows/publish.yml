@@ -3,12 +3,13 @@ name: Publish
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   default_ci:
     name: Run default CI of repository
-    uses: ./.github/workflows/ci.yml
-    
+    uses: ./.github/workflows/test.yml
+
   publish:
     name: Publish to NPM
     runs-on: ubuntu-latest
