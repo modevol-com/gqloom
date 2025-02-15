@@ -60,27 +60,3 @@ jobs:
         run: pnpm push
       - name: Test
         run: pnpm test
-  publish:
-    name: Publish to NPM
-    needs: 
-      - lint
-      - type-check
-      - test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Init docker
-        run: |
-          docker compose -f docker-compose.yml up -d
-      - name: Setup pnpm
-        uses: ./.github/actions/pnpm
-      - name: Build
-        run: pnpm run build
-      - name: Publish
-        run: pnpm run ci:publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
