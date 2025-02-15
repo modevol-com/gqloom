@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+## 0.7.1 (2025-02-25)
+
+* Fix: `query().resolve()` return type
+* Fix: update CallableInputParser interface documentation
+
+## 0.7.0 (2025-01-25)
+
 * Fix: `silk.list` to correctly handle non-nullable list types
 * Refactor: move `EasyDataLoader` to `@gqloom/core`
 
