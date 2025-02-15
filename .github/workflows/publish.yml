@@ -1,4 +1,4 @@
-name: Publish
+name: Test and Publish
 
 on:
   push:
@@ -6,13 +6,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  default_ci:
+  test:
     name: Run default CI of repository
     uses: ./.github/workflows/test.yml
 
   publish:
     name: Publish to NPM
     runs-on: ubuntu-latest
+    needs:
+      - test
     permissions:
       contents: read
       packages: write
