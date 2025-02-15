@@ -1,4 +1,4 @@
-name: Test and Publish
+name: Test Publish
 
 on:
   push:
@@ -21,9 +21,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Init docker
-        run: |
-          docker compose -f docker-compose.yml up -d
       - name: Setup pnpm
         uses: ./.github/actions/pnpm
       - name: Build
