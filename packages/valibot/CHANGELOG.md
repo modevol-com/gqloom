@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+## 0.7.1 (2025-02-16)
+
+* Fix: update document link in README
+
+## 0.7.0 (2025-02-05)
+
 * Feature: auto assign names to objects and inputs
 * Fix: get config in nested field
 

@@ -30,4 +30,4 @@ const helloResolver = resolver({
 export const schema = weave(ZodWeaver, helloResolver)
 ```
 
-Read more at [GQLoom Document](https://gqloom.devschema/zod).
+Read more at [GQLoom Document](https://gqloom.dev/docs/schema/zod).

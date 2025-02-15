@@ -30,4 +30,4 @@ const helloResolver = resolver({
 export const schema = weave(helloResolver)
 ```
 
-Read more at [GQLoom Document](https://gqloom.devschema/yup).
+Read more at [GQLoom Document](https://gqloom.dev/docs/schema/yup).
