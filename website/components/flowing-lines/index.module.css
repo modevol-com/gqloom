@@ -36,10 +36,15 @@
 }
 
 /* 保持原有颜色定义 */
-.line1 { stroke: #ff6b6b; }
-.line2 { stroke: #4ecdc4; }
-.line3 { stroke: #ffe66d; }
-
+.line1 {
+  stroke: #ff6b6b;
+}
+.line2 {
+  stroke: #4ecdc4;
+}
+.line3 {
+  stroke: #ffe66d;
+}
 
 @keyframes flow {
   0% {
