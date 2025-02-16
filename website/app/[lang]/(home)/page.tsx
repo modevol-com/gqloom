@@ -1,3 +1,4 @@
+import { FlowingLines } from "@/components/flowing-lines"
 import { homeSource } from "@/lib/source"
 import clsx from "clsx"
 import DynamicLink from "fumadocs-core/dynamic-link"
@@ -46,6 +47,7 @@ export default async function HomePage(props: {
       />
       <GraphQLIntro className="mt-24 lg:mt-32" lang={lang} />
       <div className="mt-24" />
+      <FlowingLines />
     </main>
   )
 }

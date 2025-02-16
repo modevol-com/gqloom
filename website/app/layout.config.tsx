@@ -1,3 +1,4 @@
+import DocText from "@/components/doc-text"
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared"
 import { memo } from "react"
 
@@ -24,4 +25,11 @@ export const baseOptions: BaseLayoutProps = {
   },
   githubUrl: "https://github.com/modevol-com/gqloom",
   i18n: true,
+  links: [
+    {
+      text: <DocText />,
+      url: "/docs",
+      on: "nav",
+    },
+  ],
 }

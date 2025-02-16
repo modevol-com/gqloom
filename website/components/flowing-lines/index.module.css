@@ -1,0 +1,53 @@
+.background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+  z-index: -1;
+}
+
+.backgroundContainer {
+  position: relative;
+  overflow: hidden;
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+  z-index: -1;
+}
+
+/* flowing-lines.module.css */
+/* 删除 composes 语句，改用标准 CSS 选择器 */
+.path,
+.line1,
+.line2,
+.line3 {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation: flow 12s linear infinite;
+}
+
+/* 保持原有颜色定义 */
+.line1 { stroke: #ff6b6b; }
+.line2 { stroke: #4ecdc4; }
+.line3 { stroke: #ffe66d; }
+
+
+@keyframes flow {
+  0% {
+    stroke-dashoffset: 0;
+    transform: translateX(-5%);
+  }
+  100% {
+    stroke-dashoffset: -1000;
+    transform: translateX(5%);
+  }
+}
