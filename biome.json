@@ -197,7 +197,10 @@
             "noUndeclaredVariables": "off",
             "noUnreachable": "off",
             "noUnreachableSuper": "off",
-            "noUnusedImports": "warn"
+            "noUnusedImports": {
+              "level": "warn",
+              "fix": "unsafe"
+            }
           },
           "style": {
             "noArguments": "error",
