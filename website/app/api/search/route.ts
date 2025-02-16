@@ -3,7 +3,7 @@ import { source } from "@/lib/source"
 import { createTokenizer } from "@orama/tokenizers/mandarin"
 import { createI18nSearchAPI } from "fumadocs-core/search/server"
 
-export const { GET } = createI18nSearchAPI("advanced", {
+export const { GET, search } = createI18nSearchAPI("advanced", {
   i18n,
   indexes: source.getLanguages().flatMap((entry) =>
     entry.pages.map((page) => ({
