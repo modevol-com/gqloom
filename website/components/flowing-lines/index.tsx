@@ -1,38 +1,47 @@
 import clsx from "clsx"
+import { colord, extend } from "colord"
+import mixPlugin from "colord/plugins/mix"
 
-export function FlowingLines() {
+extend([mixPlugin])
+
+const originColors = ["#FBBF24", "#F5775B", "#CA5BF2"]
+const colorTotal = 20
+const colorGroupSize = colorTotal / (originColors.length - 1)
+
+const colorList = new Array(colorTotal).fill(0).map((_, i) => {
+  const currentOriginIndex = Math.floor(i / colorGroupSize)
+  const nextOriginIndex = currentOriginIndex + 1
+
+  return colord(originColors[currentOriginIndex]).mix(
+    originColors[nextOriginIndex],
+    (i % colorGroupSize) / colorGroupSize
+  )
+})
+
+const toBottom = (bottom: number, index: number) =>
+  (index / colorTotal) * bottom + (360 - bottom)
+
+export function FlowingLines({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 1000 1000"
-      className={clsx(
-        "fixed top-0 left-0 w-full h-full",
-        "opacity-10 -z-10" // 背景基础样式
-      )}
+      preserveAspectRatio="none"
+      viewBox="0 0 360 360"
+      className={clsx("size-full", className)}
     >
-      <path
-        className={clsx(
-          "fill-none stroke-[2] stroke-linecap-round", // 公共路径样式
-          "animate-flow motion-reduce:animate-none", // 动画相关
-          "stroke-pink-500/80 dark:stroke-rose-400/60" // 颜色及透明度
-        )}
-        d="M0,500 Q250,300 500,500 T1000,500"
-      />
-      <path
-        className={clsx(
-          "fill-none stroke-[2] stroke-linecap-round",
-          "animate-flow motion-reduce:animate-none delay-[-4000ms]",
-          "stroke-emerald-500/80 dark:stroke-cyan-400/60"
-        )}
-        d="M0,400 Q250,600 500,400 T1000,400"
-      />
-      <path
-        className={clsx(
-          "fill-none stroke-[2] stroke-linecap-round",
-          "animate-flow motion-reduce:animate-none delay-[-2000ms]",
-          "stroke-amber-500/80 dark:stroke-yellow-400/60"
-        )}
-        d="M0,600 Q250,400 500,600 T1000,600"
-      />
+      {colorList.map((color, i) => (
+        <path
+          key={i}
+          d={`M0 ${(i * 360) / colorTotal} Q 120 ${toBottom(120, i)} 360 ${toBottom(90, i)}`}
+          style={{
+            fill: "none",
+            strokeWidth: 1,
+            stroke: color.toHex(),
+            opacity: 0.9 * (i / colorTotal) + 0.1,
+            strokeDasharray: 1000,
+            animationDelay: `-${i * 100}ms`,
+          }}
+        />
+      ))}
     </svg>
   )
 }

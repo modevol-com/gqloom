@@ -1,3 +1,4 @@
+import { FlowingLines } from "@/components/flowing-lines"
 import { homeSource } from "@/lib/source"
 import clsx from "clsx"
 import DynamicLink from "fumadocs-core/dynamic-link"
@@ -33,7 +34,10 @@ export default async function HomePage(props: {
   const lang = (await props.params).lang
 
   return (
-    <main className="flex flex-col items-center">
+    <main className="flex flex-col items-center relative">
+      <div className="left-0 top-0 mt-[5vh] w-full h-[80vh] absolute -z-10 opacity-20">
+        <FlowingLines />
+      </div>
       <Hero lang={lang} />
       <SchemaLibrary className="mt-24 lg:mt-32" lang={lang} />
       <Features className="mt-24 lg:mt-32" lang={lang} />
@@ -75,7 +79,7 @@ function Hero({ lang }: LangProps) {
           <Link
             href="https://github.com/modevol-com/gqloom"
             target="_blank"
-            className="hover:scale-105 ease-out text-nowrap border-orange-400 bg-pink-300/10 border-2 transition duration-300 hover:bg-rose-500/20 dark:hover:bg-orange-300/20 py-3 px-6 rounded-full"
+            className="backdrop-blur-md hover:scale-105 ease-out text-nowrap border-orange-400 bg-pink-100/10 border-2 transition duration-300 hover:bg-rose-400/20 dark:hover:bg-orange-300/20 py-3 px-6 rounded-full"
           >
             {hero.star}
           </Link>
@@ -88,7 +92,10 @@ function Hero({ lang }: LangProps) {
           </DynamicLink>
         </div>
       </div>
-      <img className="sm:w-sm w-3xs" src="/gqloom.svg" alt="GQLoom" />
+      <div className="sm:w-sm w-3xs relative">
+        <div className="blur-3xl absolute left-0 top-0 -z-1 rounded-full opacity-10 dark:opacity-90 bg-gradient-to-br to-rose-400/20 from-yellow-400/10 size-full" />
+        <img className="size-full" src="/gqloom.svg" alt="GQLoom" />
+      </div>
     </section>
   )
 }
