@@ -1,10 +1,7 @@
 import { homeSource } from "@/lib/source"
 import clsx from "clsx"
 import DynamicLink from "fumadocs-core/dynamic-link"
-import {} from "fumadocs-twoslash/ui"
 import { Card, type CardProps, Cards } from "fumadocs-ui/components/card"
-import {} from "fumadocs-ui/components/codeblock"
-import {} from "fumadocs-ui/components/tabs"
 import {
   ArrowRight,
   Fence,
@@ -16,7 +13,6 @@ import {
 } from "lucide-react"
 import type { MDXProps } from "mdx/types"
 import Link from "next/link"
-import { memo } from "react"
 import { ORMLibrary, type SupportedORM } from "./orm-library"
 import { mdxComponents } from "./utils"
 
@@ -25,10 +21,17 @@ export interface LangProps {
   className?: string
 }
 
+const mdx: Record<SupportedORM, React.FC<MDXProps>> = {
+  Drizzle: homeSource.getPage(["drizzle"])!.data.body,
+  Prisma: homeSource.getPage(["prisma"])!.data.body,
+  MikroORM: homeSource.getPage(["mikro-orm"])!.data.body,
+}
+
 export default async function HomePage(props: {
   params: Promise<{ lang: string }>
 }) {
   const lang = (await props.params).lang
+
   return (
     <main className="flex flex-col items-center">
       <Hero lang={lang} />
@@ -37,20 +40,14 @@ export default async function HomePage(props: {
       <ORMLibrary
         className="mt-24 lg:mt-32"
         lang={lang}
-        DrizzleMDX={<mdx.Drizzle components={mdxComponents} />}
-        PrismaMDX={<mdx.Prisma components={mdxComponents} />}
-        MikroOrmMDX={<mdx.MikroORM components={mdxComponents} />}
+        drizzleMDX={<mdx.Drizzle components={mdxComponents} />}
+        prismaMDX={<mdx.Prisma components={mdxComponents} />}
+        mikroOrmMDX={<mdx.MikroORM components={mdxComponents} />}
       />
       <GraphQLIntro className="mt-24 lg:mt-32" lang={lang} />
       <div className="mt-24" />
     </main>
   )
-}
-
-const mdx: Record<SupportedORM, React.FC<MDXProps>> = {
-  Drizzle: homeSource.getPage(["drizzle"])!.data.body,
-  Prisma: homeSource.getPage(["prisma"])!.data.body,
-  MikroORM: homeSource.getPage(["mikro-orm"])!.data.body,
 }
 
 const heroEn = {
@@ -65,8 +62,8 @@ const heroCn = {
   start: "快速上手",
 }
 
-const Hero = memo<LangProps>(function Hero({ lang }) {
-  const hero = lang === "cn" ? heroCn : heroEn
+function Hero({ lang }: LangProps) {
+  const hero = lang === "zh" ? heroCn : heroEn
   return (
     <section className="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full pt-0 pb-12 sm:pt-10 md:pt-16">
       <div className="flex flex-col gap-6 max-w-md text-center items-center">
@@ -94,7 +91,7 @@ const Hero = memo<LangProps>(function Hero({ lang }) {
       <img className="sm:w-sm w-3xs" src="/gqloom.svg" alt="GQLoom" />
     </section>
   )
-})
+}
 
 const featuresCn: CardProps[] = [
   {
@@ -186,9 +183,9 @@ const featuresEN: CardProps[] = [
   },
 ]
 
-const Features = memo<LangProps>(function Features({ lang, className }) {
-  const features = lang === "cn" ? featuresCn : featuresEN
-  const title = lang === "cn" ? "全功能 GraphQL" : "Full Featured GraphQL"
+function Features({ lang, className }: LangProps) {
+  const features = lang === "zh" ? featuresCn : featuresEN
+  const title = lang === "zh" ? "全功能 GraphQL" : "Full Featured GraphQL"
   return (
     <section
       className={clsx("px-6 max-w-5xl flex flex-col items-center", className)}
@@ -205,7 +202,7 @@ const Features = memo<LangProps>(function Features({ lang, className }) {
       </Cards>
     </section>
   )
-})
+}
 const highlightsEN: IHighlight[] = [
   {
     emoji: "🔐",
@@ -272,11 +269,8 @@ const highlightsCN: IHighlight[] = [
   },
 ]
 
-const GraphQLIntro = memo<LangProps>(function GraphQLIntro({
-  lang,
-  className,
-}) {
-  const highlights = lang === "cn" ? highlightsCN : highlightsEN
+function GraphQLIntro({ lang, className }: LangProps) {
+  const highlights = lang === "zh" ? highlightsCN : highlightsEN
 
   const GraphQLLink = (
     <Link
@@ -292,7 +286,7 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({
     <section
       className={clsx("flex flex-col px-6 items-center max-w-5xl", className)}
     >
-      {lang === "cn" ? (
+      {lang === "zh" ? (
         <h2 className="text-3xl font-bold tracking-wider">
           {GraphQLLink} 的磅礴之力
         </h2>
@@ -308,7 +302,7 @@ const GraphQLIntro = memo<LangProps>(function GraphQLIntro({
       </ul>
     </section>
   )
-})
+}
 
 const SchemaLibraryCN: IHighlight[] = [
   {
@@ -374,15 +368,12 @@ const SchemaGraphQlMDX: React.FC<MDXProps> = homeSource.getPage([
   "schema-graphql",
 ])!.data.body
 
-const SchemaLibrary = memo<LangProps>(function SchemaLibrary({
-  lang,
-  className,
-}) {
+const SchemaLibrary = function SchemaLibrary({ lang, className }: LangProps) {
   const title =
-    lang === "cn"
+    lang === "zh"
       ? "最为熟知的 Schema Library"
       : "The most familiar Schema Library"
-  const intros = lang === "cn" ? SchemaLibraryCN : SchemaLibraryEN
+  const intros = lang === "zh" ? SchemaLibraryCN : SchemaLibraryEN
   return (
     <section className={clsx("px-6 flex flex-col items-center", className)}>
       <h2 className="text-3xl font-bold tracking-wider">{title}</h2>
@@ -403,14 +394,14 @@ const SchemaLibrary = memo<LangProps>(function SchemaLibrary({
       </div>
     </section>
   )
-})
+}
 
-const Highlight = memo<IHighlight & { className?: string }>(function Highlight({
+function Highlight({
   emoji,
   heading,
   text,
   className,
-}) {
+}: IHighlight & { className?: string }) {
   return (
     <li className={clsx("flex flex-col items-start text-left", className)}>
       <div className="flex flex-row text-nowrap text-xl gap-3 border-b-3 border-orange-300/50">
@@ -422,7 +413,7 @@ const Highlight = memo<IHighlight & { className?: string }>(function Highlight({
       <p className="opacity-70">{text}</p>
     </li>
   )
-})
+}
 
 interface IHighlight {
   emoji: string

@@ -18,7 +18,7 @@ const inter = Inter({
   subsets: ["latin"],
 })
 
-const cn: Partial<Translations> = {
+const zh: Partial<Translations> = {
   search: "搜索",
   searchNoResult: "没有结果",
   chooseLanguage: "选择语言",
@@ -30,7 +30,7 @@ const cn: Partial<Translations> = {
   lastUpdate: "最后更新于",
 }
 
-const translations: Record<string, Partial<Translations>> = { cn }
+const translations: Record<string, Partial<Translations>> = { zh }
 
 // available languages that will be displayed on UI
 // make sure `locale` is consistent with your i18n config
@@ -41,7 +41,7 @@ const locales = [
   },
   {
     name: "简体中文",
-    locale: "cn",
+    locale: "zh",
   },
 ]
 

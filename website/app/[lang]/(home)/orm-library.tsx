@@ -29,17 +29,17 @@ export type SupportedORM = (typeof supportedORM)[number]
 
 export const ORMLibrary = memo<
   LangProps & {
-    DrizzleMDX: React.ReactNode
-    PrismaMDX: React.ReactNode
-    MikroOrmMDX: React.ReactNode
+    drizzleMDX: React.ReactNode
+    prismaMDX: React.ReactNode
+    mikroOrmMDX: React.ReactNode
   }
->(function ORMLibrary({ lang, DrizzleMDX, PrismaMDX, MikroOrmMDX, className }) {
-  const intro = lang === "cn" ? ormIntroCN : ormIntroEN
+>(function ORMLibrary({ lang, drizzleMDX, prismaMDX, mikroOrmMDX, className }) {
+  const intro = lang === "zh" ? ormIntroCN : ormIntroEN
 
   const [tab, SetTab] = useState<SupportedORM>("Drizzle")
 
   const OrmArray = useMemo(() => {
-    const splitter = lang === "cn" ? "、" : ", "
+    const splitter = lang === "zh" ? "、" : ", "
     return supportedORM.map((orm, index) => (
       <Fragment key={orm}>
         <span
@@ -57,7 +57,7 @@ export const ORMLibrary = memo<
   }, [tab, lang])
 
   const description = useMemo(() => {
-    const hash = lang === "cn" ? "#解析器工厂" : "#resolver-factory"
+    const hash = lang === "zh" ? "#解析器工厂" : "#resolver-factory"
     const ormPage = {
       Drizzle: "drizzle",
       Prisma: "prisma",
@@ -71,7 +71,7 @@ export const ORMLibrary = memo<
         ResolverFactory
       </DynamicLink>
     )
-    if (lang === "cn") {
+    if (lang === "zh") {
       return (
         <>
           通过 {ResolverFactory} 使用在 {OrmArray} 已定义的数据库模型创建 CRUD{" "}
@@ -107,9 +107,9 @@ export const ORMLibrary = memo<
           </ul>
         </div>
         <div className="w-xl max-w-[90vw]">
-          {tab === "Drizzle" && DrizzleMDX}
-          {tab === "Prisma" && PrismaMDX}
-          {tab === "MikroORM" && MikroOrmMDX}
+          {tab === "Drizzle" && drizzleMDX}
+          {tab === "Prisma" && prismaMDX}
+          {tab === "MikroORM" && mikroOrmMDX}
         </div>
       </div>
     </section>

@@ -13,7 +13,7 @@ const config = {
     },
     {
       source: "/zh/guide/schema-integration/:slug",
-      destination: "/cn/docs/schema/:slug",
+      destination: "/zh/docs/schema/:slug",
       permanent: true,
     },
     {
@@ -23,7 +23,7 @@ const config = {
     },
     {
       source: "/zh/guide/:slug",
-      destination: "/cn/docs/:slug",
+      destination: "/zh/docs/:slug",
       permanent: true,
     },
   ],

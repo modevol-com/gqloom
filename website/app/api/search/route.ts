@@ -16,8 +16,8 @@ export const { GET } = createI18nSearchAPI("advanced", {
     }))
   ),
   localeMap: {
-    // the prop name should be its locale code in your i18n config, (e.g. `cn`)
-    cn: {
+    // the prop name should be its locale code in your i18n config, (e.g. `zh`)
+    zh: {
       // options for the language
       tokenizer: await createTokenizer(),
     },
