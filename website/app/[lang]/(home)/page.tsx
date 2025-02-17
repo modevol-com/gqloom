@@ -93,7 +93,7 @@ function Hero({ lang }: LangProps) {
         </div>
       </div>
       <div className="sm:w-sm w-3xs relative">
-        <div className="blur-3xl absolute left-0 top-0 -z-1 rounded-full opacity-10 dark:opacity-90 bg-gradient-to-bl to-rose-400/20 from-yellow-400/5 size-full" />
+        <div className="blur-3xl absolute left-0 top-0 -z-1 rounded-full opacity-10 dark:opacity-30 bg-gradient-to-bl to-rose-400/20 from-yellow-400/5 size-full" />
         <img className="size-full" src="/gqloom.svg" alt="GQLoom" />
       </div>
     </section>
