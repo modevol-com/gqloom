@@ -36,8 +36,7 @@ import { resolver, query, silk } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 
 const helloResolver = resolver({
-  hello: query(
-    silk<string>(new GraphQLNonNull(GraphQLString)),
+  hello: query(silk<string>(new GraphQLNonNull(GraphQLString))).resolve(
     () => "Hello, World"
   ),
 })
@@ -55,7 +54,7 @@ import { resolver, query } from "@gqloom/core"
 import * as v from "valibot"
 
 const helloResolver = resolver({
-  hello: query(v.string(), () => "Hello, World"),
+  hello: query(v.string()).resolve(() => "Hello, World"),
 })
 ```
 
@@ -71,7 +70,7 @@ import { resolver, query } from "@gqloom/core"
 import { z } from "zod"
 
 const helloResolver = resolver({
-  hello: query(z.string(), () => "Hello, World"),
+  hello: query(z.string()).resolve(() => "Hello, World"),
 })
 ```
 
@@ -90,12 +89,11 @@ import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const helloResolver = resolver({
-  hello: query(v.string(), {
-    input: { // [!code hl]
+  hello: query(v.string())
+    .input({ // [!code hl]
       name: v.nullish(v.string(), "World"), // [!code hl]
-    }, // [!code hl]
-    resolve: ({ name }) => `Hello, ${name}`,
-  }),
+    }) // [!code hl]
+    .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
 In the code above, we passed in the `input` property in the second argument of the `query` function to define the input parameter: the `input` property is an object whose key is the name of the input parameter, and whose value is the type definition of the input parameter.
@@ -109,15 +107,14 @@ import { resolver, query } from '@gqloom/zod'
 import { z } from "zod"
 
 const helloResolver = resolver({
-  hello: query(z.string(), {
-    input: { // [!code hl]
+  hello: query(z.string())
+    .input({ // [!code hl]
       name: z // [!code hl]
         .string() // [!code hl]
         .nullish() // [!code hl]
         .transform((value) => value ?? "World"), // [!code hl]
-    }, // [!code hl]
-    resolve: ({ name }) => `Hello, ${name}`,
-  }),
+    }) // [!code hl]
+    .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
 In the code above, we passed in the `input` property in the second argument of the `query` function to define the input parameter: the `input` property is an object whose key is the name of the input parameter, and whose value is the type definition of the input parameter.
@@ -290,7 +287,7 @@ import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
 
 const bookResolver = resolver.of(Book, {
-  books: query(v.array(Book), () => Array.from(bookMap.values())),
+  books: query(v.array(Book)).resolve(() => Array.from(bookMap.values())),
 })
 ```
 </Tab>
@@ -331,7 +328,7 @@ import { resolver, query } from '@gqloom/zod'
 import { z } from "zod"
 
 const bookResolver = resolver.of(Book, {
-  books: query(z.array(Book), () => Array.from(bookMap.values())),
+  books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
 })
 ```
 </Tab>
@@ -379,9 +376,9 @@ import { resolver, query, field } from '@gqloom/core'
 import * as v from "valibot"
 
 const bookResolver = resolver.of(Book, {
-  books: query(v.array(Book), () => Array.from(bookMap.values())),
+  books: query(v.array(Book)).resolve(() => Array.from(bookMap.values())),
 
-  author: field(v.nullish(User), (book) => userMap.get(book.authorID)), // [!code hl]
+  author: field(v.nullish(User)).resolve((book) => userMap.get(book.authorID)), // [!code hl]
 })
 ```
 </Tab>
@@ -422,9 +419,9 @@ import { resolver, query, field } from '@gqloom/zod'
 import { z } from "zod"
 
 const bookResolver = resolver.of(Book, {
-  books: query(z.array(Book), () => Array.from(bookMap.values())),
+  books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
 
-  author: field(User.nullish(), (book) => userMap.get(book.authorID)), // [!code hl]
+  author: field(User.nullish()).resolve((book) => userMap.get(book.authorID)), // [!code hl]
 })
 ```
 </Tab>
@@ -477,17 +474,15 @@ import { resolver, query, field } from '@gqloom/core'
 import * as v from "valibot"
 
 const bookResolver = resolver.of(Book, {
-  books: query(v.array(Book), () => Array.from(bookMap.values())),
+  books: query(v.array(Book)).resolve(() => Array.from(bookMap.values())),
 
-  author: field(v.nullish(User), (book) => userMap.get(book.authorID)),
+  author: field(v.nullish(User)).resolve((book) => userMap.get(book.authorID)),
 
-  signature: field(v.string(), { // [!code hl]
-    input: { // [!code hl]
-      name: v.string(), // [!code hl]
-    }, // [!code hl]
-    resolve: (book, { name }) => // [!code hl]
-      `The book ${book.title} is in ${name}'s collection.`, // [!code hl]
-  }), // [!code hl]
+  signature: field(v.string()) // [!code hl]
+    .input({ name: v.string() }) // [!code hl]
+    .resolve((book, { name }) => { // [!code hl]
+      return `The book ${book.title} is in ${name}'s collection.` // [!code hl]
+    }), // [!code hl]
 })
 ```
 </Tab>
@@ -528,17 +523,15 @@ import { resolver, query, field } from '@gqloom/zod'
 import { z } from "zod"
 
 const bookResolver = resolver.of(Book, {
-  books: query(z.array(Book), () => Array.from(bookMap.values())),
+  books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
 
-  author: field(User.nullish(), (book) => userMap.get(book.authorID)),
+  author: field(User.nullish()).resolve((book) => userMap.get(book.authorID)),
 
-  signature: field(z.string(), { // [!code hl]
-    input: { // [!code hl]
-      name: z.string(), // [!code hl]
-    }, // [!code hl]
-    resolve: (book, { name }) => // [!code hl]
-      `The book ${book.title} is in ${name}'s collection.`, // [!code hl]
-  }), // [!code hl]
+  signature: field(z.string()) // [!code hl]
+    .input({ name: z.string() }) // [!code hl]
+    .resolve((book, { name }) => { // [!code hl]
+      return `The book ${book.title} is in ${name}'s collection.` // [!code hl]
+    }), // [!code hl]
 })
 ```
 </Tab>
