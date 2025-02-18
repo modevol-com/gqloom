@@ -77,7 +77,7 @@ function Hero({ lang, className }: LangProps) {
         className
       )}
     >
-      <div className="flex flex-col gap-6 max-w-md text-center items-center">
+      <div className="flex flex-col gap-6 w-md max-w-screen text-center items-center">
         <h1 className="text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 sm:text-5xl font-bold bg-clip-text">
           GraphQL Loom
         </h1>
