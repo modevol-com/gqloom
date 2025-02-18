@@ -1,4 +1,5 @@
 import { FlowingLines } from "@/components/flowing-lines"
+import { RuntimeTypes } from "@/components/runtime-types"
 import { homeSource } from "@/lib/source"
 import clsx from "clsx"
 import DynamicLink from "fumadocs-core/dynamic-link"
@@ -74,7 +75,15 @@ function Hero({ lang }: LangProps) {
         <h1 className="text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 sm:text-5xl font-bold bg-clip-text">
           GraphQL Loom
         </h1>
-        <p className="text-lg">{hero.description}</p>
+        {lang === "zh" ? (
+          <div className="text-lg">
+            将{<RuntimeTypes />}编织成 GraphQL Schema
+          </div>
+        ) : (
+          <div className="text-lg">
+            Weaving {<RuntimeTypes />} into GraphQL Schema
+          </div>
+        )}
         <div className="flex flex-wrap px-4 gap-4">
           <Link
             href="https://github.com/modevol-com/gqloom"

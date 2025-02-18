@@ -6,7 +6,7 @@ title: Drizzle
 
 `@gqloom/drizzle` 提供了 GQLoom 与 Drizzle 的集成：
 
-- 使用 Drizzle Schema 作为[丝线](../silk)使用；
+- 使用 Drizzle Table 作为[丝线](../silk)使用；
 - 使用解析器工厂从 Drizzle 快速生成 CRUD 操作。
 
 ## 安装
@@ -30,7 +30,7 @@ bun add @gqloom/core @gqloom/drizzle
 
 ## 使用丝线
 
-只需要使用 `drizzleSilk` 包裹 Drizzle Schema，我们就可以轻松地将它们作为[丝线](../silk)使用。
+只需要使用 `drizzleSilk` 包裹 Drizzle Table，我们就可以轻松地将它们作为[丝线](../silk)使用。
 
 ```ts twoslash title="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -169,7 +169,7 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-如上面的代码所示，我们可以直接在 `resolver` 里使用 `drizzleSilk` 包裹的 Drizzle Schema。  
+如上面的代码所示，我们可以直接在 `resolver` 里使用 `drizzleSilk` 包裹的 Drizzle Table。  
 在这里我们使用了 `users` 作为 `resolver.of` 的父类型，并在 resolver 中定义了 `user`、`users` 两个查询和一个名为 `posts` 的字段。其中 `user` 的返回类型是 `users.$nullable()`，表示 `user` 可能为空；`users` 的返回类型是 `users.$list()`，表示 `users` 将返回一个 `users` 的列表；`posts` 字段的返回类型是 `posts.$list()`，在 `posts` 字段中，我们使用了 `user` 参数，TypeScript 将帮助我们推断其类型，我们将 `user` 传递给 `usePostsLoader().load()` 来批量获取 `posts`。
 
 ### 隐藏字段
@@ -273,7 +273,7 @@ const usersResolverFactory = drizzleResolverFactory(db, "users")
 
 ### 关系字段
 
-在 Drizzle Schema 中，我们可以轻松地创建[关系](https://orm.drizzle.team/docs/relations)，使用解析器工厂的 `relationField` 方法可以为关系创建对应的 GraphQL 字段。
+在 Drizzle Table 中，我们可以轻松地创建[关系](https://orm.drizzle.team/docs/relations)，使用解析器工厂的 `relationField` 方法可以为关系创建对应的 GraphQL 字段。
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts

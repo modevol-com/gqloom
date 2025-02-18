@@ -6,7 +6,7 @@ title: Drizzle
 
 `@gqloom/drizzle` provides the integration of GQLoom and Drizzle:
 
-- Use Drizzle Schema as [Silk](../silk);
+- Use Drizzle Table as [Silk](../silk);
 - Use the resolver factory to quickly create CRUD operations from Drizzle.
 
 ## Installation
@@ -273,7 +273,7 @@ const usersResolverFactory = drizzleResolverFactory(db, "users")
 
 ### Relationship Fields
 
-In Drizzle Schema, we can easily create [relationships](https://orm.drizzle.team/docs/relations). We can use the `relationField` method of the resolver factory to create corresponding GraphQL fields for relationships.
+In Drizzle Table, we can easily create [relationships](https://orm.drizzle.team/docs/relations). We can use the `relationField` method of the resolver factory to create corresponding GraphQL fields for relationships.
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
