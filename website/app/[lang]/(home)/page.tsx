@@ -36,11 +36,11 @@ export default async function HomePage(props: {
 
   return (
     <main className="flex flex-col items-center relative">
-      <div className="left-0 top-0 mt-[5vh] w-full h-[80vh] absolute -z-10 opacity-10">
+      <div className="left-0 top-[calc(70vh+max(8vh,4rem)-40vw)] w-full h-[40vw] absolute -z-10 opacity-10">
         <FlowingLines />
       </div>
-      <Hero lang={lang} />
-      <SchemaLibrary className="mt-24 lg:mt-32" lang={lang} />
+      <Hero lang={lang} className="min-h-[64vh]" />
+      <SchemaLibrary className="mt-[max(8vh,4rem)]" lang={lang} />
       <Features className="mt-24 lg:mt-32" lang={lang} />
       <ORMLibrary
         className="mt-24 lg:mt-32"
@@ -67,20 +67,25 @@ const heroCn = {
   start: "快速上手",
 }
 
-function Hero({ lang }: LangProps) {
+function Hero({ lang, className }: LangProps) {
   const hero = lang === "zh" ? heroCn : heroEn
   return (
-    <section className="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full pt-0 pb-12 sm:pt-10 md:pt-16">
+    <section
+      className={clsx(
+        "flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full",
+        className
+      )}
+    >
       <div className="flex flex-col gap-6 max-w-md text-center items-center">
         <h1 className="text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 sm:text-5xl font-bold bg-clip-text">
           GraphQL Loom
         </h1>
         {lang === "zh" ? (
-          <div className="text-lg">
+          <div className="text-lg sm:mt-4">
             将{<RuntimeTypes />}编织成 GraphQL Schema
           </div>
         ) : (
-          <div className="text-lg">
+          <div className="text-lg sm:mt-4">
             Weaving {<RuntimeTypes />} into GraphQL Schema
           </div>
         )}

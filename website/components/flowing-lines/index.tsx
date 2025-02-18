@@ -35,7 +35,7 @@ export function FlowingLines({ className }: { className?: string }) {
         return (
           <path
             key={i}
-            d={`M0 ${(i * 360) / colorTotal - 1} Q 120 ${toBottom(120, i)} 360 ${toBottom(90, i)}`}
+            d={`M0 ${(i * 360) / colorTotal - 1} Q 120 ${toBottom(100, i)} 360 ${toBottom(70, i)}`}
             style={{
               fill: "none",
               strokeWidth: 1,
