@@ -100,7 +100,7 @@ function Hero({ lang, className }: LangProps) {
           </Link>
           <DynamicLink
             href="/[lang]/docs/getting-started"
-            className="hover:scale-105 ease-out text-nowrap px-6 py-3 flex items-center font-medium text-white transition duration-300 bg-gradient-to-r from-pink-600 to-orange-400 rounded-full hover:from-pink-500 hover:to-amber-300"
+            className="hover:scale-105 ease-out text-nowrap px-6 py-3 flex items-center font-medium text-white transition duration-300 bg-gradient-to-r to-pink-600 from-orange-400 rounded-full hover:to-pink-500 hover:from-amber-300"
           >
             <span>{hero.start}</span>
             <ArrowRight className="ml-2 inline-block" />
