@@ -27,6 +27,7 @@ const config = {
       permanent: true,
     },
   ],
+  serverExternalPackages: ["@node-rs/jieba"],
 }
 
 export default withMDX(config)

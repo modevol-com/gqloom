@@ -9,8 +9,8 @@
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
+    "@node-rs/jieba": "^2.0.1",
     "@orama/orama": "^3.0.6",
-    "@orama/tokenizers": "^3.0.6",
     "clsx": "^2.1.1",
     "colord": "^2.9.3",
     "fumadocs-core": "15.0.2",
