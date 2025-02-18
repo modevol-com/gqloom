@@ -30,7 +30,7 @@ export const RuntimeTypes = memo(() => {
       className="relative inline-block h-[1.5em] mx-[0.1em]"
       style={{
         width: widths[currentItem],
-        transition: "width 233ms ease-in-out",
+        transition: "width 233ms ease-out",
       }}
     >
       {items.map((Item, i) => (

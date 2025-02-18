@@ -83,7 +83,7 @@ function Hero({ lang, className }: LangProps) {
         </h1>
         {lang === "zh" ? (
           <div className="text-lg sm:mt-4">
-            将{<RuntimeTypes />}编织成 GraphQL Schema
+            编织{<RuntimeTypes />}为 GraphQL Schema
           </div>
         ) : (
           <div className="text-lg sm:mt-4">
