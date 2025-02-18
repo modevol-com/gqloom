@@ -35,7 +35,7 @@ export default async function HomePage(props: {
 
   return (
     <main className="flex flex-col items-center relative">
-      <div className="left-0 top-0 mt-[5vh] w-full h-[80vh] absolute -z-10 opacity-20">
+      <div className="left-0 top-0 mt-[5vh] w-full h-[80vh] absolute -z-10 opacity-10">
         <FlowingLines />
       </div>
       <Hero lang={lang} />

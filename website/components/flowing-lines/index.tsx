@@ -28,20 +28,24 @@ export function FlowingLines({ className }: { className?: string }) {
       viewBox="0 0 360 360"
       className={clsx("size-full", className)}
     >
-      {colorList.map((color, i) => (
-        <path
-          key={i}
-          d={`M0 ${(i * 360) / colorTotal} Q 120 ${toBottom(120, i)} 360 ${toBottom(90, i)}`}
-          style={{
-            fill: "none",
-            strokeWidth: 1,
-            stroke: color.toHex(),
-            opacity: 0.9 * (i / colorTotal) + 0.1,
-            strokeDasharray: 1000,
-            animationDelay: `-${i * 100}ms`,
-          }}
-        />
-      ))}
+      {colorList.map((color, i) => {
+        const mid = 0.7
+        const x = i / (colorTotal - 1)
+        const factor = 1 / Math.pow(mid, 2)
+        return (
+          <path
+            key={i}
+            d={`M0 ${(i * 360) / colorTotal - 1} Q 120 ${toBottom(120, i)} 360 ${toBottom(90, i)}`}
+            style={{
+              fill: "none",
+              strokeWidth: 1,
+              stroke: color.toHex(),
+              opacity: 1 - Math.pow(x - mid, 2) * factor,
+              strokeDasharray: 1000,
+            }}
+          />
+        )
+      })}
     </svg>
   )
 }
