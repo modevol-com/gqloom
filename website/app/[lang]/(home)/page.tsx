@@ -1,4 +1,5 @@
 import { FlowingLines } from "@/components/flowing-lines"
+import { GQLoomLogo } from "@/components/gqloom-logo"
 import { RuntimeTypes } from "@/components/runtime-types"
 import { homeSource } from "@/lib/source"
 import clsx from "clsx"
@@ -36,7 +37,7 @@ export default async function HomePage(props: {
 
   return (
     <main className="flex flex-col items-center relative">
-      <div className="left-0 absolute -z-10 opacity-10 flex flex-col items-center h-[72vh] w-[max(100vh,100vw)]">
+      <div className="left-0 absolute -z-10 opacity-10 flex flex-col items-center h-[75vh] w-[max(100vh,100vw)]">
         <FlowingLines className="size-full" />
       </div>
       <Hero lang={lang} className="min-h-[64vh]" />
@@ -108,7 +109,7 @@ function Hero({ lang, className }: LangProps) {
       </div>
       <div className="sm:w-sm w-3xs relative">
         <div className="blur-3xl absolute left-0 top-0 -z-1 rounded-full opacity-10 dark:opacity-30 bg-gradient-to-bl to-rose-400/20 from-yellow-400/5 size-full" />
-        <img className="size-full" src="/gqloom.svg" alt="GQLoom" />
+        <GQLoomLogo className="size-full" />
       </div>
     </section>
   )

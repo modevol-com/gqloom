@@ -1,11 +1,12 @@
 import DocText from "@/components/doc-text"
+import { GQLoomLogo } from "@/components/gqloom-logo"
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared"
 import { memo } from "react"
 
 const Title = memo(() => {
   return (
     <>
-      <img className="w-6" src="/gqloom.svg" alt="GQLoom-Logo" />
+      <GQLoomLogo className="w-6" />
       <span className="text-yellow-600 dark:text-amber-200">GQLoom</span>
     </>
   )
@@ -29,7 +30,7 @@ export const baseOptions: BaseLayoutProps = {
     {
       text: <DocText />,
       url: "/docs",
-      on: "nav",
+      on: "all",
     },
   ],
 }
