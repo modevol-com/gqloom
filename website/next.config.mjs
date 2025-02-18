@@ -28,6 +28,9 @@ const config = {
     },
   ],
   serverExternalPackages: ["@node-rs/jieba"],
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
 }
 
 export default withMDX(config)
