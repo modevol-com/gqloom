@@ -1,4 +1,3 @@
-import clsx from "clsx"
 import { colord, extend } from "colord"
 import mixPlugin from "colord/plugins/mix"
 
@@ -23,11 +22,7 @@ const toBottom = (bottom: number, index: number) =>
 
 export function FlowingLines({ className }: { className?: string }) {
   return (
-    <svg
-      preserveAspectRatio="none"
-      viewBox="0 0 360 360"
-      className={clsx("size-full", className)}
-    >
+    <svg preserveAspectRatio="none" viewBox="0 0 360 360" className={className}>
       {colorList.map((color, i) => {
         const mid = 0.7
         const x = i / (colorTotal - 1)

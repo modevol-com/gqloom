@@ -36,8 +36,8 @@ export default async function HomePage(props: {
 
   return (
     <main className="flex flex-col items-center relative">
-      <div className="left-0 top-[calc(70vh+max(8vh,4rem)-40vw)] w-full h-[40vw] absolute -z-10 opacity-10">
-        <FlowingLines />
+      <div className="left-0 absolute -z-10 opacity-10 flex flex-col items-center h-[72vh] w-[max(100vh,100vw)]">
+        <FlowingLines className="size-full" />
       </div>
       <Hero lang={lang} className="min-h-[64vh]" />
       <SchemaLibrary className="mt-[max(8vh,4rem)]" lang={lang} />
