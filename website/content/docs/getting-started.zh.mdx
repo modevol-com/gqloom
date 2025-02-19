@@ -225,9 +225,9 @@ yarn dev
 }
 ```
 
-## 初始化数据库
+## 初始化数据库和表格
 
-我们已经成功地运行了一个简单的 GraphQL 应用，接下来让我们添加更多的业务逻辑。
+我们已经成功地运行了一个简单的 GraphQL 应用，接下来让我们将应用连接到数据库。
 
 首先，让我们安装 [Drizzle ORM](https://orm.drizzle.team/)，我们将使用它来操作 **SQLite** 数据库。
 
@@ -291,4 +291,75 @@ export const catsRelations = relations(cats, ({ one }) => ({
     references: [users.id],
   }),
 }))
+```
+
+### 初始化数据库
+
+我们需要创建一个配置文件:
+```ts twoslash title="drizzle.config.ts"
+import "dotenv/config"
+import { defineConfig } from "drizzle-kit"
+
+export default defineConfig({
+  out: "./drizzle",
+  schema: "./src/schema/index.ts",
+  dialect: "sqlite",
+  dbCredentials: {
+    url: process.env.DB_FILE_NAME ?? "file:local.db",
+  },
+})
+```
+
+然后我们运行 `drizzle-kit push` 命令在数据库中建立已定义的表格：
+```sh
+npx drizzle-kit push
+```
+
+### 使用数据库
+
+为了在应用中使用数据库，我们需要创建一个数据库实例：
+```ts twoslash title="src/providers/index.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+// ---cut---
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
 ```
