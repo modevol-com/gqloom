@@ -78,44 +78,33 @@ yarn dlx -q -p typescript tsc --init
 
 接下来，我们将安装 GQLoom 以及相关依赖，我们可以选择 [Valibot](https://valibot.dev/) 或者 [Zod](https://zod.dev/) 来定义并验证输入：
 
-<Tabs groupId='schema-builder' items={["valibot", "zod"]}>
-<Tab>
 <Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
 <Tab>
 ```sh
+# use Valibot
 npm i graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
-```
-</Tab>
-<Tab>
-```sh
-pnpm add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
-```
-</Tab>
-<Tab>
-```sh
-yarn add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
-```
-</Tab>
-</Tabs>
-</Tab>
-<Tab>
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+
+# use Zod
 npm i graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
 </Tab>
 <Tab>
 ```sh
+# use Valibot
+pnpm add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
+
+# use Zod
 pnpm add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
 </Tab>
 <Tab>
 ```sh
+# use Valibot
+yarn add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
+
+# use zod
 yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
-</Tab>
-</Tabs>
 </Tab>
 </Tabs>
 
@@ -225,9 +214,11 @@ yarn dev
 }
 ```
 
-## 初始化数据库和表格
+到此为止，我们已经创建了一个最简单的 GraphQL 应用。
 
-我们已经成功地运行了一个简单的 GraphQL 应用，接下来让我们将应用连接到数据库。
+接下来我们将使用 Drizzle ORM 来与数据库交互并添加完整的功能。
+
+## 初始化数据库和表格
 
 首先，让我们安装 [Drizzle ORM](https://orm.drizzle.team/)，我们将使用它来操作 **SQLite** 数据库。
 
@@ -362,4 +353,408 @@ import * as schema from "../schema"
 export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
+```
+
+## 用户解析器
+
+让我们先创建一个用户服务，其中将包含一系列对用户表的操作。
+我们将在 `src/services/user.ts` 文件中实现用户服务，并在 `src/resolvers/index.ts` 文件中将整个 `user.ts` 作为 `userService` 导出：
+
+```ts twoslash title="src/services/user.ts" tab="src/services/user.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+```
+```ts twoslash title="src/services/index.ts" tab="src/services/index.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+// ---cut---
+export * as userService from "./user"
+```
+
+现在，我们可以在解析器中使用用户服务，我们将创建一个用户解析器添加以下操作：
+
+- `usersByName`: 通过名称查找用户
+- `userByPhone`: 通过手机号码查找用户
+- `createUser`: 创建一个用户
+
+在完成用户解析器后，我们还需要将它添加到 `src/resolvers/index.ts` 文件里的 `resolvers` 中：
+
+```ts twoslash title="src/resolvers/user.ts" tab="src/resolvers/user.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+export * as userService from "./user"
+// @filename: resolver/user.ts
+// ---cut---
+import { mutation, query, resolver } from "@gqloom/core"
+import { z } from "zod"
+import { users } from "../schema"
+import { userService } from "../services"
+
+export const userResolver = resolver({
+  usersByName: query(users.$list())
+    .input({ name: z.string() })
+    .resolve(({ name }) => userService.findUsersByName(name)),
+
+  userByPhone: query(users.$nullable())
+    .input({ phone: z.string() })
+    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+
+  createUser: mutation(users)
+    .input({
+      data: z.object({
+        name: z.string(),
+        phone: z.string(),
+      }),
+    })
+    .resolve(async ({ data }) => userService.createUser(data)),
+})
+```
+
+```ts twoslash title="src/resolvers/index.ts" tab="src/resolvers/index.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+export * as userService from "./user"
+// @filename: resolver/user.ts
+import { mutation, query, resolver } from "@gqloom/core"
+import { z } from "zod"
+import { users } from "../schema"
+import { userService } from "../services"
+
+export const userResolver = resolver({
+  usersByName: query(users.$list())
+    .input({ name: z.string() })
+    .resolve(({ name }) => userService.findUsersByName(name)),
+
+  userByPhone: query(users.$nullable())
+    .input({ phone: z.string() })
+    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+
+  createUser: mutation(users)
+    .input({
+      data: z.object({
+        name: z.string(),
+        phone: z.string(),
+      }),
+    })
+    .resolve(async ({ data }) => userService.createUser(data)),
+})
+// @filename: resolver/index.ts
+// ---cut---
+import { query, resolver } from "@gqloom/core"
+import { z } from "zod"
+import { userResolver } from "./user" // [!code ++]
+
+const helloResolver = resolver({
+  hello: query(z.string())
+    .input({
+      name: z
+        .string()
+        .nullish()
+        .transform((x) => x ?? "World"),
+    })
+    .resolve(({ name }) => `Hello ${name}!`),
+})
+
+export const resolvers = [helloResolver, userResolver] // [!code ++]
+```
+
+很好，现在让我们在演练场尝试一下：
+```gql title="GraphQL Mutation"
+mutation {
+  createUser(data: {name: "Bob", phone: "001"}) {
+    id
+    name
+    phone
+  }
+}
+```
+
+这将会得到类型下面的结果：
+```json
+{
+  "data": {
+    "createUser": {
+      "id": 1,
+      "name": "Bob",
+      "phone": "001"
+    }
+  }
+}
+```
+
+继续尝试找回刚刚创建的用户：
+```gql title="GraphQL Query"
+{
+  usersByName(name: "Bob") {
+    id
+    name
+    phone
+  }
+}
+```
+
+这将会得到类型下面的结果：
+```json
+{
+  "data": {
+    "usersByName": [
+      {
+        "id": 1,
+        "name": "Bob",
+        "phone": "001"
+      }
+    ]
+  }
+}
 ```

@@ -1,3 +1,20 @@
 type Query {
   hello(name: String): String!
+  usersByName(name: String!): [UsersItem!]!
+  userByPhone(phone: String!): UsersItem
+}
+
+type UsersItem {
+  id: Int!
+  name: String!
+  phone: String!
+}
+
+type Mutation {
+  createUser(data: CreateUserDataInput!): UsersItem!
+}
+
+input CreateUserDataInput {
+  name: String!
+  phone: String!
 }
