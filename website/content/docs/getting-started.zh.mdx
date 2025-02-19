@@ -7,7 +7,7 @@ icon: PencilRuler
 
 我们将搭建一个猫舍应用，并为向外部提供 GraphQL API。
 该应用将包含一些简单的功能：
-- 猫基础信息管理：录入猫的的基本信息，包括名称、性别、生日等，更新、删除和查询猫；
+- 猫基础信息管理：录入猫的的基本信息，包括名称、生日等，更新、删除和查询猫；
 - 用户（猫主人）登记管理：录入用户信息，简单的登录功能，查看用户的猫；
 
 我们将使用以下技术：
@@ -25,7 +25,7 @@ icon: PencilRuler
 
 ## 创建应用
 
-### 初始化项目并安装依赖
+### 初始化项目
 
 首先，让我们新建文件夹并初始化项目：
 
@@ -143,7 +143,7 @@ export const resolvers = [helloResolver]
 
 我们需要将这个解析器编织成 GraphQL Schema，并以 HTTP 服务器的形式运行它：
 
-```ts twoslash
+```ts twoslash title="src/index.ts"
 // @filename: resolvers.ts
 import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
@@ -179,8 +179,10 @@ createServer(yoga).listen(4000, () => {
 很好，我们已经创建了一个简单的 GraphQL 应用。  
 接下来我们尝试运行这个应用，在 `package.json` 里添加 `dev` 脚本：
 ```json
-"scripts": {
-  "dev": "tsx watch src/index.ts"
+{
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  }
 }
 ```
 
@@ -224,3 +226,69 @@ yarn dev
 ```
 
 ## 初始化数据库
+
+我们已经成功地运行了一个简单的 GraphQL 应用，接下来让我们添加更多的业务逻辑。
+
+首先，让我们安装 [Drizzle ORM](https://orm.drizzle.team/)，我们将使用它来操作 **SQLite** 数据库。
+
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
+<Tab>
+```sh
+npm i @gqloom/drizzle drizzle-orm @libsql/client dotenv
+npm i -D drizzle-kit
+```
+</Tab>
+<Tab>
+```sh
+pnpm add @gqloom/drizzle drizzle-orm @libsql/client dotenv
+pnpm add -D drizzle-kit
+```
+</Tab>
+<Tab>
+```sh
+yarn add @gqloom/drizzle drizzle-orm @libsql/client dotenv
+yarn add -D drizzle-kit
+```
+</Tab>
+</Tabs>
+
+### 定义数据库表格
+
+接下来在 `src/schema/index.ts` 文件中定义数据库表格，我们将定义 `users` 和 `cats` 两个表格，并建立它们之间的关系：
+
+```ts twoslash title="src/schema/index.ts"
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+```

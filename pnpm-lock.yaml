@@ -106,9 +106,21 @@ importers:
       '@gqloom/core':
         specifier: ^0.7.2
         version: 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      '@gqloom/drizzle':
+        specifier: ^0.7.2
+        version: 0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/zod':
         specifier: ^0.7.2
         version: 0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.24.2)
+      '@libsql/client':
+        specifier: ^0.14.0
+        version: 0.14.0
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+      drizzle-orm:
+        specifier: ^0.39.3
+        version: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -1411,6 +1423,13 @@ packages:
   '@gqloom/core@0.7.2':
     resolution: {integrity: sha512-Lv7JItEFNXbiGcdJHB1b0Rpz4bhNDyqisNTjDfDpWGmnZEZ2a//MKP55meHhfSZqgzzmfEBQFqTS6iw09f3WdA==}
     peerDependencies:
+      graphql: '>= 16.8.0'
+
+  '@gqloom/drizzle@0.7.2':
+    resolution: {integrity: sha512-PoMXRoSJrJ3eQjSiQlTXjmjpywM0dZvDkzfwu3WewapFlpzwi3DMgZjcd4EeFkAZBxLgIJpzyo15EQj1BGU1vg==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.7.0'
+      drizzle-orm: '>= 0.38.0'
       graphql: '>= 16.8.0'
 
   '@gqloom/mikro-orm@0.7.0':
@@ -6280,6 +6299,12 @@ snapshots:
 
   '@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+
+  '@gqloom/drizzle@0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
+    dependencies:
+      '@gqloom/core': 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      drizzle-orm: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
       graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
 
   '@gqloom/mikro-orm@0.7.0(@gqloom/core@0.7.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(@mikro-orm/core@6.4.6)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
