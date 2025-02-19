@@ -176,4 +176,51 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-很好，我们已经创建了一个简单的 GraphQL 应用，在浏览器中打开 http://localhost:4000/graphql 就可以看到我们的 GraphQL Playground 了。
+很好，我们已经创建了一个简单的 GraphQL 应用。  
+接下来我们尝试运行这个应用，在 `package.json` 里添加 `dev` 脚本：
+```json
+"scripts": {
+  "dev": "tsx watch src/index.ts"
+}
+```
+
+现在让我们运行一下：
+
+<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
+<Tab>
+```sh
+npm run dev
+```
+</Tab>
+<Tab>
+```sh
+pnpm dev
+```
+</Tab>
+<Tab>
+```sh
+yarn dev
+```
+</Tab>
+</Tabs>
+
+在浏览器中打开 http://localhost:4000/graphql 就可以看到 GraphQL 演练场了。  
+让我们尝试发送一个 GraphQL 查询，在演练场里输入:
+
+```gql title="GraphQL Query" 
+{
+  hello(name: "GQLoom")
+}
+```
+
+点击查询按钮，就可以看到结果了：
+
+```json
+{
+  "data": {
+    "hello": "Hello GQLoom!"
+  }
+}
+```
+
+## 初始化数据库
