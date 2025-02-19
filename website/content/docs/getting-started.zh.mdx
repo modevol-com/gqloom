@@ -8,7 +8,7 @@ icon: PencilRuler
 我们将搭建一个猫舍应用，并为向外部提供 GraphQL API。
 该应用将包含一些简单的功能：
 - 猫基础信息管理：录入猫的的基本信息，包括名称、生日等，更新、删除和查询猫；
-- 用户（猫主人）登记管理：录入用户信息，简单的登录功能，查看用户的猫；
+- 用户（猫主人）登记管理：录入用户信息，简单的登录功能，查看自己或其他用户的猫；
 
 我们将使用以下技术：
 - [TypeScript](https://www.typescriptlang.org/): 作为我们的开发语言；
@@ -710,7 +710,7 @@ export const resolvers = [helloResolver, userResolver] // [!code ++]
 ```
 
 很好，现在让我们在演练场尝试一下：
-```gql title="GraphQL Mutation"
+```gql title="GraphQL Mutation" tab="GraphQL Mutation"
 mutation {
   createUser(data: {name: "Bob", phone: "001"}) {
     id
@@ -720,8 +720,7 @@ mutation {
 }
 ```
 
-这将会得到类型下面的结果：
-```json
+```json tab="Response"
 {
   "data": {
     "createUser": {
@@ -734,7 +733,7 @@ mutation {
 ```
 
 继续尝试找回刚刚创建的用户：
-```gql title="GraphQL Query"
+```gql title="GraphQL Query" tab="GraphQL Query"
 {
   usersByName(name: "Bob") {
     id
@@ -744,8 +743,7 @@ mutation {
 }
 ```
 
-这将会得到类型下面的结果：
-```json
+```json tab="Response"
 {
   "data": {
     "usersByName": [
@@ -755,6 +753,281 @@ mutation {
         "phone": "001"
       }
     ]
+  }
+}
+```
+
+### 登录
+
+接下来，让我们尝试添加一个简单的登录功能，再为用户解析器添加一个查询操作：
+
+- `mine`: 返回当前用户信息
+
+为了实现这个查询，首先得有登录功能，让我们来简单写一个：
+
+```ts twoslash title="src/contexts/index.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+export * as userService from "./user"
+// @filename: contexts/index.ts
+// ---cut---
+import { createMemoization, useContext } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+import type { YogaInitialContext } from "graphql-yoga"
+import { userService } from "../services"
+
+export const useCurrentUser = createMemoization(async () => {
+  const phone =
+    useContext<YogaInitialContext>().request.headers.get("authorization")
+  if (phone == null) throw new GraphQLError("Unauthorized")
+
+  const user = await userService.findUserByPhone(phone)
+  if (user == null) throw new GraphQLError("Unauthorized")
+  return user
+})
+```
+
+在上面的代码中，我们创建了一个用于获取当前用户的[上下文](./context)函数，它将返回当前用户的信息。我们使用 `createMemoization()` 将此函数记忆化，这确保在同一个请求内此函数仅执行一次，以避免多余的数据库查询。
+
+我们使用 `useContext()` 获取了 Yoga 提供的上下文（Context），并从请求头中获取了用户的手机号码，并根据手机号码查找用户，如果用户不存在，则抛出 `GraphQLError`。
+
+<Callout type="warn">
+如你所见，这个登录功能非常简陋，仅作为演示使用，完全不保证安全性。在实践中通常推荐使用 `session` 或者 `jwt` 等方案。
+</Callout>
+
+现在，我们在解析器里添加新的查询操作：
+
+```ts twoslash title="src/resolver/user.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+export * as userService from "./user"
+// @filename: contexts/index.ts
+import { createMemoization, useContext } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+import type { YogaInitialContext } from "graphql-yoga"
+import { userService } from "../services"
+
+export const useCurrentUser = createMemoization(async () => {
+  const phone =
+    useContext<YogaInitialContext>().request.headers.get("authorization")
+  if (phone == null) throw new GraphQLError("Unauthorized")
+
+  const user = await userService.findUserByPhone(phone)
+  if (user == null) throw new GraphQLError("Unauthorized")
+  return user
+})
+// @filename: resolver/user.ts
+// ---cut---
+import { mutation, query, resolver } from "@gqloom/core"
+import { z } from "zod"
+import { useCurrentUser } from "../contexts" // [!code ++]
+import { users } from "../schema"
+import { userService } from "../services"
+
+export const userResolver = resolver({
+  mine: query(users).resolve(() => useCurrentUser()), // [!code ++]
+
+  usersByName: query(users.$list())
+    .input({ name: z.string() })
+    .resolve(({ name }) => userService.findUsersByName(name)),
+
+  userByPhone: query(users.$nullable())
+    .input({ phone: z.string() })
+    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+
+  createUser: mutation(users)
+    .input({
+      data: z.object({
+        name: z.string(),
+        phone: z.string(),
+      }),
+    })
+    .resolve(async ({ data }) => userService.createUser(data)),
+})
+```
+
+如果我们在演练场里之间调用这个新的查询，应用程序将给我们未认证的错误：
+```gql title="Graphql Query" tab="Graphql Query"
+{
+  mine {
+    id
+    name
+    phone
+  }
+}
+```
+
+```json tab="Response"
+{
+  "errors": [
+    {
+      "message": "Unauthorized",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "mine"
+      ]
+    }
+  ],
+  "data": null
+}
+```
+
+点开演练场下方的 `Headers`，并在请求头里添加 `authorization` 字段，这里我们使用在上一步中创建的 `Bob` 的手机号码，这样我们就作为`Bob`登录了：
+```json tab="Headers"
+{
+  "authorization": "001"
+}
+```
+
+```gql title="Graphql Query" tab="Graphql Query"
+{
+  mine {
+    id
+    name
+    phone
+  }
+}
+```
+
+```json tab="Response"
+{
+  "data": {
+    "mine": {
+      "id": 1,
+      "name": "Bob",
+      "phone": "001"
+    }
   }
 }
 ```
