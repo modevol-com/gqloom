@@ -104,11 +104,11 @@ importers:
   examples/cattery-zod:
     dependencies:
       '@gqloom/core':
-        specifier: workspace:*
-        version: link:../../packages/core
+        specifier: ^0.7.2
+        version: 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/zod':
-        specifier: workspace:*
-        version: link:../../packages/zod
+        specifier: ^0.7.2
+        version: 0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.24.2)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -116,8 +116,18 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       zod:
-        specifier: ^3.24.1
-        version: 3.24.1
+        specifier: ^3.24.2
+        version: 3.24.2
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.13.4
+      tsx:
+        specifier: ^4.7.2
+        version: 4.7.2
+      typescript:
+        specifier: ^5.7.3
+        version: 5.7.3
 
   examples/drizzle:
     dependencies:
@@ -1398,12 +1408,24 @@ packages:
     peerDependencies:
       graphql: '>= 16.8.0'
 
+  '@gqloom/core@0.7.2':
+    resolution: {integrity: sha512-Lv7JItEFNXbiGcdJHB1b0Rpz4bhNDyqisNTjDfDpWGmnZEZ2a//MKP55meHhfSZqgzzmfEBQFqTS6iw09f3WdA==}
+    peerDependencies:
+      graphql: '>= 16.8.0'
+
   '@gqloom/mikro-orm@0.7.0':
     resolution: {integrity: sha512-95TcqpTGbP9qE79vpRduNFk8tbG+C3ouwiJ88jFwQXd+hFnqaleIILrPGWVhn7wx64HYcrdK+9xRqyHN+Mh0QA==}
     peerDependencies:
       '@gqloom/core': '>= 0.5.0'
       '@mikro-orm/core': '>= 6.0.0'
       graphql: '>= 16.8.0'
+
+  '@gqloom/zod@0.7.2':
+    resolution: {integrity: sha512-AWlKScz6GrugAdK7BJX1ICBDIbLzI+oeZ01C/fPjBV2CyyF4jHTDEb1jZYaF2ZELe70MlzVi4qJT6fTouaTADw==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.7.0'
+      graphql: '>= 16.8.0'
+      zod: '>= 3.24.0'
 
   '@graphql-tools/executor@1.2.8':
     resolution: {integrity: sha512-0qZs/iuRiYRir7bBkA7oN+21wwmSMPQuFK8WcAcxUYJZRhvnlrJ8Nid++PN4OCzTgHPV70GNFyXOajseVCCffA==}
@@ -2561,6 +2583,9 @@ packages:
 
   '@types/node@22.13.1':
     resolution: {integrity: sha512-jK8uzQlrvXqEU91UxiK5J7pKHyzgnI1Qnl0QDHIgVGuolJhRb9EEl28Cj9b3rGR8B2lhFCtvIm5os8lFnO/1Ew==}
+
+  '@types/node@22.13.4':
+    resolution: {integrity: sha512-ywP2X0DYtX3y08eFVx5fNIw7/uIv8hYUKgXoK8oayJlLnKcRfEYCxWMVE1XagUdVtCJlZT1AU4LXEABW+L1Peg==}
 
   '@types/pg@8.11.10':
     resolution: {integrity: sha512-LczQUW4dbOQzsH2RQ5qoeJ6qJPdrcM/DcMLoqWQkMLMsq83J5lAX3LXjdkWdpscFy67JSOWDnh7Ny/sPFykmkg==}
@@ -5651,6 +5676,9 @@ packages:
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
 
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -6250,11 +6278,21 @@ snapshots:
     dependencies:
       graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
 
+  '@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
+    dependencies:
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+
   '@gqloom/mikro-orm@0.7.0(@gqloom/core@0.7.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(@mikro-orm/core@6.4.6)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
       '@gqloom/core': 0.7.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@mikro-orm/core': 6.4.6
       graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+
+  '@gqloom/zod@0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.24.2)':
+    dependencies:
+      '@gqloom/core': 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      zod: 3.24.2
 
   '@graphql-tools/executor@1.2.8(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
@@ -7487,6 +7525,10 @@ snapshots:
       undici-types: 6.20.0
 
   '@types/node@22.13.1':
+    dependencies:
+      undici-types: 6.20.0
+
+  '@types/node@22.13.4':
     dependencies:
       undici-types: 6.20.0
 
@@ -11078,5 +11120,7 @@ snapshots:
   zod@3.24.0: {}
 
   zod@3.24.1: {}
+
+  zod@3.24.2: {}
 
   zwitch@2.0.4: {}

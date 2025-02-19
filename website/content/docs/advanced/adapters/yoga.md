@@ -23,21 +23,7 @@ bun add graphql graphql-yoga @gqloom/core
 
 ## Usage
 
-```ts twoslash
-// @filename: resolvers.ts
-import { resolver, query, silk, weave } from "@gqloom/core"
-import { GraphQLNonNull, GraphQLString } from "graphql"
-import { createServer } from "node:http"
-import { createYoga } from "graphql-yoga"
-
-export const helloResolver = resolver({
-  hello: query(
-    silk<string>(new GraphQLNonNull(GraphQLString)),
-    () => "Hello, World"
-  ),
-})
-// @filename: index.ts
-// ---cut---
+```ts
 import { weave } from "@gqloom/core"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
