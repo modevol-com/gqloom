@@ -407,7 +407,7 @@ export * as userService from "./user"
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
 ```ts twoslash title="src/resolvers/user.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -501,7 +501,7 @@ export const userResolver = resolver.of(users, {
   </Tab>
   <Tab>
 ```ts twoslash title="src/resolvers/index.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -693,7 +693,7 @@ mutation {
 为了实现这个查询，首先得有登录功能，让我们来简单写一个：
 
 ```ts twoslash title="src/contexts/index.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -920,7 +920,7 @@ export const userResolver = resolver({
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -988,7 +988,7 @@ export const catResolver = resolver.of(cats, {
   </Tab>
   <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -1112,7 +1112,7 @@ export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++
 <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
 <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -1243,7 +1243,7 @@ export const catResolver = resolver.of(cats, {
 </Tab>
 <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"

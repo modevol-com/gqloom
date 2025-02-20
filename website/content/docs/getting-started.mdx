@@ -407,7 +407,7 @@ After completing the user resolver, we also need to add it to the `resolvers` in
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
 ```ts twoslash title="src/resolvers/user.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -501,7 +501,7 @@ export const userResolver = resolver.of(users, {
   </Tab>
   <Tab>
 ```ts twoslash title="src/resolvers/index.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -693,7 +693,7 @@ Next, let's try to add a simple login function and add a query operation to the 
 To implement this query, we first need to have a login function. Let's write a simple one:
 
 ```ts twoslash title="src/contexts/index.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -920,7 +920,7 @@ We use the [resolver factory](./schema/drizzle#resolver-factory) to quickly crea
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -988,7 +988,7 @@ export const catResolver = resolver.of(cats, {
   </Tab>
   <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -1112,7 +1112,7 @@ Next, let's try to add a `createCat` mutation. We want only logged-in users to a
 <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
 <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -1243,7 +1243,7 @@ export const catResolver = resolver.of(cats, {
 </Tab>
 <Tab>
 ```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
+// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
