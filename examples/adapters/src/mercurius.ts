@@ -1,9 +1,9 @@
 import { weave } from "@gqloom/core"
 import Fastify from "fastify"
 import mercurius from "mercurius"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 
 const app = Fastify()
 app.register(mercurius, { schema })

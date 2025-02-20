@@ -1,9 +1,9 @@
 import * as fs from "fs"
 import { weave } from "@gqloom/core"
 import { lexicographicSortSchema, printSchema } from "graphql"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 
 const schemaText = printSchema(lexicographicSortSchema(schema))
 

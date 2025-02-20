@@ -1,9 +1,9 @@
 import { createServer } from "node:http"
 import { weave } from "@gqloom/core"
 import { createYoga } from "graphql-yoga"
-import { HelloResolver } from "./resolvers"
+import { helloResolver } from "./resolvers"
 
-const schema = weave(HelloResolver)
+const schema = weave(helloResolver)
 
 const yoga = createYoga({ schema })
 

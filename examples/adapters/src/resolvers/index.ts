@@ -1,9 +1,7 @@
-import { loom, silk } from "@gqloom/core"
+import { query, resolver, silk } from "@gqloom/core"
 import { GraphQLNonNull, GraphQLString } from "graphql"
 
-const { resolver, query } = loom
-
-export const HelloResolver = resolver({
+export const helloResolver = resolver({
   hello: query(
     silk<string>(new GraphQLNonNull(GraphQLString)),
     () => "Hello, World"
