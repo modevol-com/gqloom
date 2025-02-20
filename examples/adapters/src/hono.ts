@@ -8,10 +8,10 @@ export const app = new Hono()
 
 const schema = weave(helloResolver)
 
-app
-  .get("/", (c) => c.text("Hello Node.js!"))
-  .use("/graphql", graphqlServer({ schema, graphiql: true }))
+app.use("/graphql", graphqlServer({ schema, graphiql: true }))
 
 serve(app, (info) => {
-  console.info(`GraphQL server is running on http://localhost:${info.port}`)
+  console.info(
+    `GraphQL server is running on http://localhost:${info.port}/graphql`
+  )
 })

@@ -1,4 +1,5 @@
 import { rehypeCodeDefaultOptions } from "fumadocs-core/mdx-plugins"
+import { remarkInstall } from "fumadocs-docgen"
 import {
   defineCollections,
   defineConfig,
@@ -17,6 +18,7 @@ export const home = defineCollections({
 
 export default defineConfig({
   mdxOptions: {
+    remarkPlugins: [remarkInstall],
     rehypeCodeOptions: {
       themes: {
         light: "github-light",
