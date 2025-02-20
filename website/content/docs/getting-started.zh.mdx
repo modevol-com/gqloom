@@ -2,6 +2,7 @@
 title: 快速上手
 icon: PencilRuler
 ---
+import { File, Folder, Files } from 'fumadocs-ui/components/files';
 
 为了快速上手 GQLoom，我们将一起搭建一个简单的 GraphQL 后端应用。
 
@@ -24,6 +25,49 @@ icon: PencilRuler
 我们只需要安装版本 20 以上的 [Node.js](https://nodejs.org/) 来运行我们的应用。
 
 ## 创建应用
+
+### 项目结构
+
+我们的应用将有以下的结构：
+<Files>
+  <Folder name="src" defaultOpen>
+    <Folder name="contexts">
+      <File name="index.ts" />
+    </Folder>
+    <Folder name="providers">
+      <File name="index.ts" />
+    </Folder>
+    <Folder name="resolvers">
+      <File name="cat.ts" />
+      <File name="index.ts" />
+      <File name="user.ts" />
+    </Folder>
+    <Folder name="schema">
+      <File name="index.ts" />
+    </Folder>
+    <Folder name="services">
+      <File name="index.ts" />
+      <File name="user.ts" />
+    </Folder>
+    <File name="index.ts" />
+  </Folder>
+  <File name="drizzle.config.ts" />
+  <File name="package.json" />
+  <File name="tsconfig.json" />
+</Files>
+
+其中，`src` 目录下的各个文件夹或文件的职能如下：
+
+- `contexts`: 存放上下文，如当前用户；
+- `providers`: 存放需要与外部服务交互的功能，如数据库连接、Redis 连接；
+- `resolvers`: 存放 GraphQL 解析器；
+- `schema`: 存放 schema，主要是数据库表结构；
+- `services`: 存放业务逻辑，如用户登录、用户注册等；
+- `index.ts`: 用于以 HTTP 服务的形式运行 GraphQL 应用；
+
+<Callout>
+GQLoom 对项目的文件结构没有任何要求，这里只提供一个参考，在实践中你可以按照需求和喜好组织文件。
+</Callout>
 
 ### 初始化项目
 
@@ -147,27 +191,10 @@ export const resolvers = [helloResolver]
 ```
 </Tab>
 </Tabs>
+
 我们需要将这个解析器编织成 GraphQL Schema，并以 HTTP 服务器的形式运行它：
 
-```ts twoslash title="src/index.ts"
-// @filename: resolvers.ts
-import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
-
-const helloResolver = resolver({
-  hello: query(z.string())
-    .input({
-      name: z
-        .string()
-        .nullish()
-        .transform((x) => x ?? "World"),
-    })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
-
-export const resolvers = [helloResolver]
-// @filename: index.ts
-// ---cut---
+```ts title="src/index.ts"
 import { createServer } from "node:http"
 import { weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
@@ -304,7 +331,7 @@ export const catsRelations = relations(cats, ({ one }) => ({
 ### 初始化数据库
 
 我们需要创建一个配置文件:
-```ts twoslash title="drizzle.config.ts"
+```ts title="drizzle.config.ts"
 import "dotenv/config"
 import { defineConfig } from "drizzle-kit"
 
@@ -326,44 +353,7 @@ npx drizzle-kit push
 ### 使用数据库
 
 为了在应用中使用数据库，我们需要创建一个数据库实例：
-```ts twoslash title="src/providers/index.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-// ---cut---
+```ts title="src/providers/index.ts"
 import { drizzle } from "drizzle-orm/libsql"
 import * as schema from "../schema"
 
@@ -375,51 +365,7 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 让我们先创建一个用户服务，其中将包含一系列对用户表的操作。
 我们将在 `src/services/user.ts` 文件中实现用户服务，并在 `src/resolvers/index.ts` 文件中将整个 `user.ts` 作为 `userService` 导出：
 
-```ts twoslash title="src/services/user.ts" tab="src/services/user.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
+```ts title="src/services/user.ts" tab="src/services/user.ts"
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -441,73 +387,8 @@ export async function findUserByPhone(phone: string) {
   })
 }
 ```
-```ts twoslash title="src/services/index.ts" tab="src/services/index.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
 
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-// ---cut---
+```ts title="src/services/index.ts" tab="src/services/index.ts"
 export * as userService from "./user"
 ```
 
@@ -569,7 +450,6 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
 // @filename: services/user.ts
-// ---cut---
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -664,7 +544,6 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
 // @filename: services/user.ts
-// ---cut---
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -687,6 +566,7 @@ export async function findUserByPhone(phone: string) {
 }
 // @filename: services/index.ts
 export * as userService from "./user"
+// ---cut---
 // @filename: resolvers/user.ts
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
@@ -755,6 +635,7 @@ export const resolvers = [helloResolver, userResolver]  // [!code ++]
   </Tabs>
 </Tab>
 </Tabs>
+
 很好，现在让我们在演练场尝试一下：
 ```gql title="GraphQL Mutation" tab="Mutation"
 mutation {
@@ -855,7 +736,6 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
 // @filename: services/user.ts
-// ---cut---
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -908,90 +788,7 @@ export const useCurrentUser = createMemoization(async () => {
 
 <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
 <Tab>
-```ts twoslash title="src/resolvers/user.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
-// @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
-import { GraphQLError } from "graphql"
-import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
-
-export const useCurrentUser = createMemoization(async () => {
-  const phone =
-    useContext<YogaInitialContext>().request.headers.get("authorization")
-  if (phone == null) throw new GraphQLError("Unauthorized")
-
-  const user = await userService.findUserByPhone(phone)
-  if (user == null) throw new GraphQLError("Unauthorized")
-  return user
-})
-// @filename: resolvers/user.ts
-// ---cut---
+```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import * as v from "valibot"
 import { useCurrentUser } from "../contexts" // [!code ++]
@@ -1021,90 +818,7 @@ export const userResolver = resolver({
 ```
 </Tab>
 <Tab>
-```ts twoslash title="src/resolvers/user.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
-// @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
-import { GraphQLError } from "graphql"
-import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
-
-export const useCurrentUser = createMemoization(async () => {
-  const phone =
-    useContext<YogaInitialContext>().request.headers.get("authorization")
-  if (phone == null) throw new GraphQLError("Unauthorized")
-
-  const user = await userService.findUserByPhone(phone)
-  if (user == null) throw new GraphQLError("Unauthorized")
-  return user
-})
-// @filename: resolvers/user.ts
-// ---cut---
+```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { useCurrentUser } from "../contexts" // [!code ++]
@@ -1249,7 +963,6 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
 // @filename: resolvers/cat.ts
-// ---cut---
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import * as v from "valibot"
@@ -1442,7 +1155,6 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
 // @filename: services/user.ts
-// ---cut---
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -1574,7 +1286,6 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
 // @filename: services/user.ts
-// ---cut---
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -1740,90 +1451,7 @@ mutation {
 <Tab>
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
-```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
-// @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
-import { GraphQLError } from "graphql"
-import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
-
-export const useCurrentUser = createMemoization(async () => {
-  const phone =
-    useContext<YogaInitialContext>().request.headers.get("authorization")
-  if (phone == null) throw new GraphQLError("Unauthorized")
-
-  const user = await userService.findUserByPhone(phone)
-  if (user == null) throw new GraphQLError("Unauthorized")
-  return user
-})
-// @filename: resolvers/cat.ts
-// ---cut---
+```ts title="src/resolvers/cat.ts"
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import * as v from "valibot"
@@ -1874,90 +1502,7 @@ export const catResolver = resolver.of(cats, {
 ```
   </Tab>
   <Tab>
-```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
-// @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
-import { GraphQLError } from "graphql"
-import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
-
-export const useCurrentUser = createMemoization(async () => {
-  const phone =
-    useContext<YogaInitialContext>().request.headers.get("authorization")
-  if (phone == null) throw new GraphQLError("Unauthorized")
-
-  const user = await userService.findUserByPhone(phone)
-  if (user == null) throw new GraphQLError("Unauthorized")
-  return user
-})
-// @filename: resolvers/cat.ts
-// ---cut---
+```ts title="src/resolvers/cat.ts"
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
@@ -2007,90 +1552,7 @@ export const catResolver = resolver.of(cats, {
 <Tab>
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
-```ts twoslash title="src/resolvers/user.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
-// @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
-import { GraphQLError } from "graphql"
-import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
-
-export const useCurrentUser = createMemoization(async () => {
-  const phone =
-    useContext<YogaInitialContext>().request.headers.get("authorization")
-  if (phone == null) throw new GraphQLError("Unauthorized")
-
-  const user = await userService.findUserByPhone(phone)
-  if (user == null) throw new GraphQLError("Unauthorized")
-  return user
-})
-// @filename: resolvers/user.ts
-// ---cut---
+```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
 import * as v from "valibot"
@@ -2126,90 +1588,7 @@ export const userResolver = resolver.of(users, {
 ```
   </Tab>
   <Tab>
-```ts twoslash title="src/resolvers/user.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
-// @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
-import { GraphQLError } from "graphql"
-import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
-
-export const useCurrentUser = createMemoization(async () => {
-  const phone =
-    useContext<YogaInitialContext>().request.headers.get("authorization")
-  if (phone == null) throw new GraphQLError("Unauthorized")
-
-  const user = await userService.findUserByPhone(phone)
-  if (user == null) throw new GraphQLError("Unauthorized")
-  return user
-})
-// @filename: resolvers/user.ts
-// ---cut---
+```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
 import { z } from "zod"
@@ -2247,6 +1626,7 @@ export const userResolver = resolver.of(users, {
   </Tabs>
 </Tab>
 </Tabs>
+
 在上面的代码中，我们使用解析器工厂为 `cats` 创建了 `owner` 字段；同样地，我们还为 `users` 创建了 `cats` 字段。  
 在幕后，解析器工厂创建的关系字段将使用 `DataLoader` 从数据库查询以避免 N+1 问题。
 
