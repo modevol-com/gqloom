@@ -108,7 +108,7 @@ yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 </Tab>
 </Tabs>
 
-### 你好，世界
+### 你好 世界
 
 让我们编写第一个[解析器](./resolver):
 
@@ -1582,3 +1582,19 @@ export const userResolver = resolver.of(users, {
   }
 }
 ```
+
+## 总结
+
+在本篇文章中，我们创建了一个简单的 GraphQL 服务端应用。我们使用了以下工具：
+
+- `Valibot` 或者 `Zod`: 用于定义和验证输入；
+- `Drizzle`: 用于操作数据库，并且直接使用 `Drizzle` 表格作为 `GraphQL` 输出类型；
+- 上下文: 用于在程序的不同部分之间共享数据，这对于实现登录、追踪日志等场景非常有用；
+- 解析器工厂: 用于快速创建解析器操作；
+- `GraphQL Yoga`: 用于创建 GraphQL HTTP 服务，并且提供了 GraphiQL 演练场；
+
+## 下一步
+
+- 查看 GQLoom 的核心概念：[丝线](./silk)、[解析器](./resolver)、[编织](./weave)；
+- 了解常用功能：[上下文](./context)、[DataLoader](./dataloader)、[中间件](./middleware)
+- 为前端项目添加 GraphQL 客户端：[gql.tada](https://gql-tada.0no.co/)、[Urql](https://commerce.nearform.com/open-source/urql/)、[Apollo Client](https://www.apollographql.com/docs/react)、[TanStack Query](https://tanstack.com/query/latest/docs/framework/react/graphql)、[Graffle](https://graffle.js.org/)
