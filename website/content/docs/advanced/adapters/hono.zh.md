@@ -2,7 +2,7 @@
 title: Hono
 ---
 
-Hono.js 是一个小巧、简单且超快速的 Web 框架，基于 Web 标准构建，能够在多种 JavaScript 运行时环境中运行。它具有零依赖、轻量级的特点，且提供简洁的 API 和一流的 TypeScript 支持，适合构建 Web API、边缘应用等多种应用场景。
+Hono 是一个小巧、简单且超快速的 Web 框架，基于 Web 标准构建，能够在多种 JavaScript 运行时环境中运行。它具有零依赖、轻量级的特点，且提供简洁的 API 和一流的 TypeScript 支持，适合构建 Web API、边缘应用等多种应用场景。
 
 ## 安装
 

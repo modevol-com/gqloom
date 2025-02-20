@@ -2,7 +2,7 @@
 title: Hono
 ---
 
-Hono.js is a small, simple, and extremely fast web framework built based on web standards and capable of running in various JavaScript runtime environments. It has the characteristics of zero dependencies and being lightweight, and provides a concise API and first-class TypeScript support. It is suitable for building various application scenarios such as web APIs and edge applications.
+Hono is a small, simple, and extremely fast web framework built based on web standards and capable of running in various JavaScript runtime environments. It has the characteristics of zero dependencies and being lightweight, and provides a concise API and first-class TypeScript support. It is suitable for building various application scenarios such as web APIs and edge applications.
 
 ## Installation
 
