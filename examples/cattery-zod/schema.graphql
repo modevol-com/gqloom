@@ -1,9 +1,17 @@
+type UsersItem {
+  id: Int!
+  name: String!
+  phone: String!
+  cats: [CatsItem!]!
+}
+
 type CatsItem {
   id: Int!
   name: String!
   birthday: String!
   ownerId: Int!
   age(currentYear: Int): Int!
+  owner: UsersItem
 }
 
 type Query {
@@ -17,12 +25,6 @@ type Query {
     orderBy: [CatsOrderBy!]
     where: CatsFilters
   ): [CatsItem!]!
-}
-
-type UsersItem {
-  id: Int!
-  name: String!
-  phone: String!
 }
 
 input CatsOrderBy {

@@ -571,7 +571,7 @@ export async function findUserByPhone(phone: string) {
 }
 // @filename: services/index.ts
 export * as userService from "./user"
-// @filename: resolver/user.ts
+// @filename: resolvers/user.ts
 // ---cut---
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
@@ -618,7 +618,7 @@ export const resolvers = [helloResolver, userResolver] // [!code ++]
 ```
 
 很好，现在让我们在演练场尝试一下：
-```gql title="GraphQL Mutation" tab="GraphQL Mutation"
+```gql title="GraphQL Mutation" tab="Mutation"
 mutation {
   createUser(data: {name: "Bob", phone: "001"}) {
     id
@@ -641,7 +641,7 @@ mutation {
 ```
 
 继续尝试找回刚刚创建的用户：
-```gql title="GraphQL Query" tab="GraphQL Query"
+```gql title="GraphQL Query" tab="Query"
 {
   usersByName(name: "Bob") {
     id
@@ -768,7 +768,7 @@ export const useCurrentUser = createMemoization(async () => {
 
 现在，我们在解析器里添加新的查询操作：
 
-```ts twoslash title="src/resolver/user.ts"
+```ts twoslash title="src/resolvers/user.ts"
 // @filename: schema/index.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -850,7 +850,7 @@ export const useCurrentUser = createMemoization(async () => {
   if (user == null) throw new GraphQLError("Unauthorized")
   return user
 })
-// @filename: resolver/user.ts
+// @filename: resolvers/user.ts
 // ---cut---
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
@@ -881,7 +881,7 @@ export const userResolver = resolver({
 ```
 
 如果我们在演练场里之间调用这个新的查询，应用程序将给我们未认证的错误：
-```gql title="Graphql Query" tab="Graphql Query"
+```gql title="Graphql Query" tab="Query"
 {
   mine {
     id
@@ -918,7 +918,7 @@ export const userResolver = resolver({
 }
 ```
 
-```gql title="Graphql Query" tab="Graphql Query"
+```gql title="Graphql Query" tab="Query"
 {
   mine {
     id
@@ -1237,6 +1237,348 @@ mutation {
         "age": 3
       }
     ]
+  }
+}
+```
+
+### 关联对象
+
+我们希望在查询猫咪的时候可以获取到猫咪的拥有者，并且在查询用户的时候也可以获取到他所有的猫咪。  
+这在 GraphQL 中非常容易实现。  
+让我们为 `cats` 添加额外的 `owner` 字段，并为 `users` 添加额外的 `cats` 字段：
+
+```ts twoslash title="src/resolver/cat.ts" tab="src/resolver/cat.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+export * as userService from "./user"
+// @filename: contexts/index.ts
+import { createMemoization, useContext } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+import type { YogaInitialContext } from "graphql-yoga"
+import { userService } from "../services"
+
+export const useCurrentUser = createMemoization(async () => {
+  const phone =
+    useContext<YogaInitialContext>().request.headers.get("authorization")
+  if (phone == null) throw new GraphQLError("Unauthorized")
+
+  const user = await userService.findUserByPhone(phone)
+  if (user == null) throw new GraphQLError("Unauthorized")
+  return user
+})
+// @filename: resolvers/cat.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { z } from "zod"
+import { useCurrentUser } from "../contexts"
+import { db } from "../providers"
+import { cats } from "../schema"
+
+const catResolverFactory = drizzleResolverFactory(db, "cats")
+
+export const catResolver = resolver.of(cats, {
+  cats: catResolverFactory.selectArrayQuery(),
+
+  age: field(z.number().int())
+    .input({
+      currentYear: z
+        .number()
+        .int()
+        .nullish()
+        .transform((x) => x ?? new Date().getFullYear()),
+    })
+    .resolve((cat, { currentYear }) => {
+      return currentYear - cat.birthday.getFullYear()
+    }),
+
+  owner: catResolverFactory.relationField("owner"), // [!code ++]
+
+  createCats: catResolverFactory.insertArrayMutation({
+    input: z.object({
+      values: z
+        .object({
+          name: z.string(),
+          birthday: z.coerce.date(),
+        })
+        .transform(async ({ name, birthday }) => ({
+          name,
+          birthday,
+          ownerId: (await useCurrentUser()).id,
+        }))
+        .array(),
+    }), 
+  }),
+})
+```
+
+```ts twoslash title="src/resolver/user.ts" tab="src/resolver/user.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+export * as userService from "./user"
+// @filename: contexts/index.ts
+import { createMemoization, useContext } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+import type { YogaInitialContext } from "graphql-yoga"
+import { userService } from "../services"
+
+export const useCurrentUser = createMemoization(async () => {
+  const phone =
+    useContext<YogaInitialContext>().request.headers.get("authorization")
+  if (phone == null) throw new GraphQLError("Unauthorized")
+
+  const user = await userService.findUserByPhone(phone)
+  if (user == null) throw new GraphQLError("Unauthorized")
+  return user
+})
+// @filename: resolvers/user.ts
+// ---cut---
+import { mutation, query, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
+import { z } from "zod"
+import { useCurrentUser } from "../contexts"
+import { db } from "../providers" // [!code ++]
+import { users } from "../schema"
+import { userService } from "../services"
+
+const userResolverFactory = drizzleResolverFactory(db, "users") // [!code ++]
+
+export const userResolver = resolver.of(users, {
+  cats: userResolverFactory.relationField("cats"),
+
+  mine: query(users).resolve(() => useCurrentUser()), // [!code ++]
+
+  usersByName: query(users.$list())
+    .input({ name: z.string() })
+    .resolve(({ name }) => userService.findUsersByName(name)),
+
+  userByPhone: query(users.$nullable())
+    .input({ phone: z.string() })
+    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+
+  createUser: mutation(users)
+    .input({
+      data: z.object({
+        name: z.string(),
+        phone: z.string(),
+      }),
+    })
+    .resolve(async ({ data }) => userService.createUser(data)),
+})
+```
+
+在上面的代码中，我们使用解析器工厂为 `cats` 创建了 `owner` 字段；同样地，我们还为 `users` 创建了 `cats` 字段。  
+在幕后，解析器工厂创建的关系字段将使用 `DataLoader` 从数据库查询以避免 N+1 问题。
+
+让我们在演练场尝试一下查询猫的所有者：
+```gql title="GraphQL Query" tab="query"
+{
+  cats {
+    id
+    name
+    age
+    owner {
+      id
+      name
+      phone
+    }
+  }
+}
+```
+
+```json tab="Response"
+{
+  "data": {
+    "cats": [
+      {
+        "id": 1,
+        "name": "Mittens",
+        "age": 4,
+        "owner": {
+          "id": 1,
+          "name": "Bob",
+          "phone": "001"
+        }
+      },
+      {
+        "id": 2,
+        "name": "Fluffy",
+        "age": 3,
+        "owner": {
+          "id": 1,
+          "name": "Bob",
+          "phone": "001"
+        }
+      }
+    ]
+  }
+}
+```
+
+让我们尝试一下查询当前用户的猫咪：
+```gql title="GraphQL Query" tab="query"
+{
+  mine {
+    name
+    cats {
+      id
+      name
+      age
+    }
+  }
+}
+```
+
+```json tab="Headers"
+{
+  "authorization": "001"
+}
+```
+
+```json tab="Response"
+{
+  "data": {
+    "mine": {
+      "name": "Bob",
+      "cats": [
+        {
+          "id": 1,
+          "name": "Mittens",
+          "age": 4
+        },
+        {
+          "id": 2,
+          "name": "Fluffy",
+          "age": 3
+        }
+      ]
+    }
   }
 }
 ```

@@ -1,10 +1,16 @@
 import { mutation, query, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
 import { useCurrentUser } from "../contexts"
+import { db } from "../providers"
 import { users } from "../schema"
 import { userService } from "../services"
 
-export const userResolver = resolver({
+const userResolverFactory = drizzleResolverFactory(db, "users")
+
+export const userResolver = resolver.of(users, {
+  cats: userResolverFactory.relationField("cats"),
+
   mine: query(users).resolve(() => useCurrentUser()),
 
   usersByName: query(users.$list())

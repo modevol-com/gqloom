@@ -22,6 +22,8 @@ export const catResolver = resolver.of(cats, {
       return currentYear - cat.birthday.getFullYear()
     }),
 
+  owner: catResolverFactory.relationField("owner"),
+
   createCats: catResolverFactory.insertArrayMutation({
     input: z.object({
       values: z
