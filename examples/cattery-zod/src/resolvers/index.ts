@@ -1,5 +1,6 @@
 import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
+import { catResolver } from "./cat"
 import { userResolver } from "./user"
 
 const helloResolver = resolver({
@@ -13,4 +14,4 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello ${name}!`),
 })
 
-export const resolvers = [helloResolver, userResolver]
+export const resolvers = [helloResolver, userResolver, catResolver]

@@ -598,99 +598,7 @@ export const userResolver = resolver({
 })
 ```
 
-```ts twoslash title="src/resolvers/index.ts" tab="src/resolvers/index.ts"
-// @filename: schema/index.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
-
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
-
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: services/user.ts
-// ---cut---
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
-// @filename: resolver/user.ts
-import { mutation, query, resolver } from "@gqloom/core"
-import { z } from "zod"
-import { users } from "../schema"
-import { userService } from "../services"
-
-export const userResolver = resolver({
-  usersByName: query(users.$list())
-    .input({ name: z.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
-
-  userByPhone: query(users.$nullable())
-    .input({ phone: z.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
-
-  createUser: mutation(users)
-    .input({
-      data: z.object({
-        name: z.string(),
-        phone: z.string(),
-      }),
-    })
-    .resolve(async ({ data }) => userService.createUser(data)),
-})
-// @filename: resolver/index.ts
-// ---cut---
+```ts title="src/resolvers/index.ts" tab="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { userResolver } from "./user" // [!code ++]
@@ -1028,6 +936,307 @@ export const userResolver = resolver({
       "name": "Bob",
       "phone": "001"
     }
+  }
+}
+```
+
+## 猫咪解析器
+
+接下来，我们将添加与猫咪相关的业务逻辑。
+
+我们使用[解析器工厂](./schema/drizzle#解析器工厂)来快速创建接口：
+
+```ts twoslash title="src/resolvers/cat.ts" tab="src/resolvers/cat.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: resolvers/cat.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { z } from "zod"
+import { db } from "../providers"
+import { cats } from "../schema"
+
+const catResolverFactory = drizzleResolverFactory(db, "cats")
+
+export const catResolver = resolver.of(cats, {
+  cats: catResolverFactory.selectArrayQuery(),
+
+  age: field(z.number().int())
+    .input({
+      currentYear: z
+        .number()
+        .int()
+        .nullish()
+        .transform((x) => x ?? new Date().getFullYear()),
+    })
+    .resolve((cat, { currentYear }) => {
+      return currentYear - cat.birthday.getFullYear()
+    }),
+})
+```
+
+```ts title="src/resolvers/index.ts" tab="src/resolvers/index.ts"
+import { query, resolver } from "@gqloom/core"
+import { z } from "zod"
+import { catResolver } from "./cat" // [!code ++]
+import { userResolver } from "./user"
+
+const helloResolver = resolver({
+  hello: query(z.string())
+    .input({
+      name: z
+        .string()
+        .nullish()
+        .transform((x) => x ?? "World"),
+    })
+    .resolve(({ name }) => `Hello ${name}!`),
+})
+
+export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
+```
+
+在上面的代码中，我们使用 `drizzleResolverFactory()` 创建了 `catResolverFactory`，用于快速构建解析器。
+
+我们添加了一个使用 `catResolverFactory` 创建了一个选取数据的查询 ，并将它命名为 `cats`，这个查询将提供完全的对 `cats` 表的查询操作。  
+此外，我们还为猫咪添加了额外的 `age` 字段，用以获取猫咪的年龄。
+
+接下来，让我们尝试添加一个 `createCat` 的变更。我们希望只有登录用户能访问这个接口，并且被创建的猫咪将归属于当前用户:
+
+```ts twoslash title="src/resolvers/cat.ts"
+// @filename: schema/index.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: services/user.ts
+// ---cut---
+import { eq } from "drizzle-orm"
+import { db } from "../providers"
+import { users } from "../schema"
+
+export async function createUser(input: typeof users.$inferInsert) {
+  const [user] = await db.insert(users).values(input).returning()
+  return user
+}
+
+export async function findUsersByName(name: string) {
+  return await db.query.users.findMany({
+    where: eq(users.name, name),
+  })
+}
+
+export async function findUserByPhone(phone: string) {
+  return await db.query.users.findFirst({
+    where: eq(users.phone, phone),
+  })
+}
+// @filename: services/index.ts
+export * as userService from "./user"
+// @filename: contexts/index.ts
+import { createMemoization, useContext } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+import type { YogaInitialContext } from "graphql-yoga"
+import { userService } from "../services"
+
+export const useCurrentUser = createMemoization(async () => {
+  const phone =
+    useContext<YogaInitialContext>().request.headers.get("authorization")
+  if (phone == null) throw new GraphQLError("Unauthorized")
+
+  const user = await userService.findUserByPhone(phone)
+  if (user == null) throw new GraphQLError("Unauthorized")
+  return user
+})
+// @filename: resolvers/cat.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { z } from "zod"
+import { useCurrentUser } from "../contexts"
+import { db } from "../providers"
+import { cats } from "../schema"
+
+const catResolverFactory = drizzleResolverFactory(db, "cats")
+
+export const catResolver = resolver.of(cats, {
+  cats: catResolverFactory.selectArrayQuery(),
+
+  age: field(z.number().int())
+    .input({
+      currentYear: z
+        .number()
+        .int()
+        .nullish()
+        .transform((x) => x ?? new Date().getFullYear()),
+    })
+    .resolve((cat, { currentYear }) => {
+      return currentYear - cat.birthday.getFullYear()
+    }),
+
+  createCats: catResolverFactory.insertArrayMutation({ // [!code ++]
+    input: z.object({ // [!code ++]
+      values: z // [!code ++]
+        .object({ // [!code ++]
+          name: z.string(), // [!code ++]
+          birthday: z.coerce.date(), // [!code ++]
+        }) // [!code ++]
+        .transform(async ({ name, birthday }) => ({ // [!code ++]
+          name, // [!code ++]
+          birthday, // [!code ++]
+          ownerId: (await useCurrentUser()).id, // [!code ++]
+        })) // [!code ++]
+        .array(), // [!code ++]
+    }), // [!code ++]
+  }), // [!code ++]
+})
+```
+
+在上面的代码中，我们使用 `catResolverFactory` 创建了一个向 `cats` 表格添加更多数据的变更，并且我们重写了这个变更的输入。在验证输入时，我们使用 `useCurrentUser()` 获取当前登录用户的 ID，并将作为 `ownerId` 的值传递给 `cats` 表格。
+
+现在让我们在演练场尝试添加几只猫咪:
+
+```gql tab="mutation" title="GraphQL Mutation"
+mutation {
+  createCats(values: [
+    { name: "Mittens", birthday: "2021-01-01" },
+    { name: "Fluffy", birthday: "2022-02-02" },
+  ]) {
+    id
+    name
+    age
+  }
+}
+```
+
+```json tab="Headers"
+{
+  "authorization": "001"
+}
+```
+
+```json tab="Response"
+{
+  "data": {
+    "createCats": [
+      {
+        "id": 1,
+        "name": "Mittens",
+        "age": 4
+      },
+      {
+        "id": 2,
+        "name": "Fluffy",
+        "age": 3
+      }
+    ]
+  }
+}
+```
+
+让我们使用 `cats` 查询再确认一下数据库的数据：
+```gql tab="query" title="GraphQL Query"
+{
+  cats {
+    id
+    name   
+    age
+  }
+}
+```
+
+```json tab="Response"
+{
+  "data": {
+    "cats": [
+      {
+        "id": 1,
+        "name": "Mittens",
+        "age": 4
+      },
+      {
+        "id": 2,
+        "name": "Fluffy",
+        "age": 3
+      }
+    ]
   }
 }
 ```
