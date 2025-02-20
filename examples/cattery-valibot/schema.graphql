@@ -1,0 +1,167 @@
+type UsersItem {
+  id: Int!
+  name: String!
+  phone: String!
+  cats: [CatsItem!]!
+}
+
+type CatsItem {
+  id: Int!
+  name: String!
+  birthday: String!
+  ownerId: Int!
+  age(currentYear: Int): Float!
+  owner: UsersItem
+}
+
+type Query {
+  hello(name: String): String!
+  mine: UsersItem!
+  usersByName(name: String!): [UsersItem!]!
+  userByPhone(phone: String!): UsersItem
+  cats(
+    offset: Int
+    limit: Int
+    orderBy: [CatsOrderBy!]
+    where: CatsFilters
+  ): [CatsItem!]!
+}
+
+input CatsOrderBy {
+  id: OrderDirection
+  name: OrderDirection
+  birthday: OrderDirection
+  ownerId: OrderDirection
+}
+
+enum OrderDirection {
+  asc
+  desc
+}
+
+input CatsFilters {
+  id: SQLiteIntegerFilters
+  name: SQLiteTextFilters
+  birthday: SQLiteTimestampFilters
+  ownerId: SQLiteIntegerFilters
+  OR: [CatsFiltersOr!]
+}
+
+input SQLiteIntegerFilters {
+  eq: Int
+  ne: Int
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  notInArray: [Int!]
+  isNull: Boolean
+  isNotNull: Boolean
+  OR: [SQLiteIntegerFiltersOr!]
+}
+
+input SQLiteIntegerFiltersOr {
+  eq: Int
+  ne: Int
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  inArray: [Int!]
+  notInArray: [Int!]
+  isNull: Boolean
+  isNotNull: Boolean
+}
+
+input SQLiteTextFilters {
+  eq: String
+  ne: String
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  like: String
+  notLike: String
+  ilike: String
+  notIlike: String
+  inArray: [String!]
+  notInArray: [String!]
+  isNull: Boolean
+  isNotNull: Boolean
+  OR: [SQLiteTextFiltersOr!]
+}
+
+input SQLiteTextFiltersOr {
+  eq: String
+  ne: String
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  like: String
+  notLike: String
+  ilike: String
+  notIlike: String
+  inArray: [String!]
+  notInArray: [String!]
+  isNull: Boolean
+  isNotNull: Boolean
+}
+
+input SQLiteTimestampFilters {
+  eq: String
+  ne: String
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  like: String
+  notLike: String
+  ilike: String
+  notIlike: String
+  inArray: [String!]
+  notInArray: [String!]
+  isNull: Boolean
+  isNotNull: Boolean
+  OR: [SQLiteTimestampFiltersOr!]
+}
+
+input SQLiteTimestampFiltersOr {
+  eq: String
+  ne: String
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  like: String
+  notLike: String
+  ilike: String
+  notIlike: String
+  inArray: [String!]
+  notInArray: [String!]
+  isNull: Boolean
+  isNotNull: Boolean
+}
+
+input CatsFiltersOr {
+  id: SQLiteIntegerFilters
+  name: SQLiteTextFilters
+  birthday: SQLiteTimestampFilters
+  ownerId: SQLiteIntegerFilters
+}
+
+type Mutation {
+  createUser(data: CreateUserDataInput!): UsersItem!
+  createCats(values: [CreateCatsValuesInput!]!): [CatsItem!]!
+}
+
+input CreateUserDataInput {
+  name: String!
+  phone: String!
+}
+
+input CreateCatsValuesInput {
+  name: String!
+  birthday: String!
+}

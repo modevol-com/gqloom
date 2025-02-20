@@ -24,8 +24,12 @@ export default defineConfig({
       },
       transformers: [
         ...(rehypeCodeDefaultOptions.transformers ?? []),
-        transformerTwoslash(),
-      ],
+        process.env.NODE_ENV === "production" && transformerTwoslash(),
+      ].filter(notFalse),
     },
   },
 })
+
+function notFalse<T>(value: T | false): value is T {
+  return value !== false
+}

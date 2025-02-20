@@ -71,26 +71,26 @@ importers:
         specifier: ^14.1.0
         version: 14.1.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
 
-  examples/cattery:
-    dependencies:
-      '@gqloom/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      graphql:
-        specifier: ^16.8.1
-        version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
-      graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
-
   examples/cattery-valibot:
     dependencies:
       '@gqloom/core':
-        specifier: workspace:*
-        version: link:../../packages/core
+        specifier: latest
+        version: 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      '@gqloom/drizzle':
+        specifier: latest
+        version: 0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/valibot':
-        specifier: workspace:*
-        version: link:../../packages/valibot
+        specifier: ^0.7.1
+        version: 0.7.1(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@1.0.0-rc.1(typescript@5.7.3))
+      '@libsql/client':
+        specifier: ^0.14.0
+        version: 0.14.0
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+      drizzle-orm:
+        specifier: ^0.39.3
+        version: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -98,17 +98,42 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       valibot:
-        specifier: 1.0.0-beta.7
-        version: 1.0.0-beta.7(typescript@5.7.3)
+        specifier: 1.0.0-rc.1
+        version: 1.0.0-rc.1(typescript@5.7.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.13.4
+      drizzle-kit:
+        specifier: ^0.30.1
+        version: 0.30.1
+      tsx:
+        specifier: ^4.7.2
+        version: 4.7.2
+      typescript:
+        specifier: ^5.7.3
+        version: 5.7.3
 
   examples/cattery-zod:
     dependencies:
       '@gqloom/core':
-        specifier: workspace:*
-        version: link:../../packages/core
+        specifier: latest
+        version: 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      '@gqloom/drizzle':
+        specifier: latest
+        version: 0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/zod':
-        specifier: workspace:*
-        version: link:../../packages/zod
+        specifier: latest
+        version: 0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.24.2)
+      '@libsql/client':
+        specifier: ^0.14.0
+        version: 0.14.0
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+      drizzle-orm:
+        specifier: ^0.39.3
+        version: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
@@ -116,8 +141,21 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       zod:
-        specifier: ^3.24.1
-        version: 3.24.1
+        specifier: ^3.24.2
+        version: 3.24.2
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.13.4
+      drizzle-kit:
+        specifier: ^0.30.1
+        version: 0.30.1
+      tsx:
+        specifier: ^4.7.2
+        version: 4.7.2
+      typescript:
+        specifier: ^5.7.3
+        version: 5.7.3
 
   examples/drizzle:
     dependencies:
@@ -530,6 +568,12 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.3
         version: 19.0.3(@types/react@19.0.8)
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+      drizzle-kit:
+        specifier: ^0.30.1
+        version: 0.30.1
       drizzle-orm:
         specifier: ^0.39.3
         version: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
@@ -1398,12 +1442,38 @@ packages:
     peerDependencies:
       graphql: '>= 16.8.0'
 
+  '@gqloom/core@0.7.2':
+    resolution: {integrity: sha512-Lv7JItEFNXbiGcdJHB1b0Rpz4bhNDyqisNTjDfDpWGmnZEZ2a//MKP55meHhfSZqgzzmfEBQFqTS6iw09f3WdA==}
+    peerDependencies:
+      graphql: '>= 16.8.0'
+
+  '@gqloom/drizzle@0.7.2':
+    resolution: {integrity: sha512-PoMXRoSJrJ3eQjSiQlTXjmjpywM0dZvDkzfwu3WewapFlpzwi3DMgZjcd4EeFkAZBxLgIJpzyo15EQj1BGU1vg==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.7.0'
+      drizzle-orm: '>= 0.38.0'
+      graphql: '>= 16.8.0'
+
   '@gqloom/mikro-orm@0.7.0':
     resolution: {integrity: sha512-95TcqpTGbP9qE79vpRduNFk8tbG+C3ouwiJ88jFwQXd+hFnqaleIILrPGWVhn7wx64HYcrdK+9xRqyHN+Mh0QA==}
     peerDependencies:
       '@gqloom/core': '>= 0.5.0'
       '@mikro-orm/core': '>= 6.0.0'
       graphql: '>= 16.8.0'
+
+  '@gqloom/valibot@0.7.1':
+    resolution: {integrity: sha512-YWVRbli4IN2D6RyIYlGmBU3LFCsY/k/nmpqS21sfa1jKqQs1WDQig/U9qPiS4zEi03spSGO/xU30cdJvgByG4w==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.7.0'
+      graphql: '>= 16.8.0'
+      valibot: '>= 1.0.0'
+
+  '@gqloom/zod@0.7.2':
+    resolution: {integrity: sha512-AWlKScz6GrugAdK7BJX1ICBDIbLzI+oeZ01C/fPjBV2CyyF4jHTDEb1jZYaF2ZELe70MlzVi4qJT6fTouaTADw==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.7.0'
+      graphql: '>= 16.8.0'
+      zod: '>= 3.24.0'
 
   '@graphql-tools/executor@1.2.8':
     resolution: {integrity: sha512-0qZs/iuRiYRir7bBkA7oN+21wwmSMPQuFK8WcAcxUYJZRhvnlrJ8Nid++PN4OCzTgHPV70GNFyXOajseVCCffA==}
@@ -2561,6 +2631,9 @@ packages:
 
   '@types/node@22.13.1':
     resolution: {integrity: sha512-jK8uzQlrvXqEU91UxiK5J7pKHyzgnI1Qnl0QDHIgVGuolJhRb9EEl28Cj9b3rGR8B2lhFCtvIm5os8lFnO/1Ew==}
+
+  '@types/node@22.13.4':
+    resolution: {integrity: sha512-ywP2X0DYtX3y08eFVx5fNIw7/uIv8hYUKgXoK8oayJlLnKcRfEYCxWMVE1XagUdVtCJlZT1AU4LXEABW+L1Peg==}
 
   '@types/pg@8.11.10':
     resolution: {integrity: sha512-LczQUW4dbOQzsH2RQ5qoeJ6qJPdrcM/DcMLoqWQkMLMsq83J5lAX3LXjdkWdpscFy67JSOWDnh7Ny/sPFykmkg==}
@@ -5470,6 +5543,14 @@ packages:
       typescript:
         optional: true
 
+  valibot@1.0.0-rc.1:
+    resolution: {integrity: sha512-bTHNpeeQ403xS7qGHF/tw3EC/zkZOU5VdkfIsmRDu1Sp+BJNTNCm6m5HlwOgyW/03lofP+uQiq3R+Poo9wiCEg==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   value-or-promise@1.0.12:
     resolution: {integrity: sha512-Z6Uz+TYwEqE7ZN50gwn+1LCVo9ZVrpxRPOhOLnncYkY1ZzOYtrX8Fwf/rFktZ8R5mJms6EZf5TqNOMeZmnPq9Q==}
     engines: {node: '>=12'}
@@ -5650,6 +5731,9 @@ packages:
 
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
+
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6250,11 +6334,33 @@ snapshots:
     dependencies:
       graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
 
+  '@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
+    dependencies:
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+
+  '@gqloom/drizzle@0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
+    dependencies:
+      '@gqloom/core': 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      drizzle-orm: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+
   '@gqloom/mikro-orm@0.7.0(@gqloom/core@0.7.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(@mikro-orm/core@6.4.6)(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
       '@gqloom/core': 0.7.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@mikro-orm/core': 6.4.6
       graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+
+  '@gqloom/valibot@0.7.1(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@1.0.0-rc.1(typescript@5.7.3))':
+    dependencies:
+      '@gqloom/core': 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      valibot: 1.0.0-rc.1(typescript@5.7.3)
+
+  '@gqloom/zod@0.7.2(@gqloom/core@0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.24.2)':
+    dependencies:
+      '@gqloom/core': 0.7.2(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      zod: 3.24.2
 
   '@graphql-tools/executor@1.2.8(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
@@ -7425,11 +7531,11 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
 
   '@types/debug@4.1.12':
     dependencies:
@@ -7443,7 +7549,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.5':
     dependencies:
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
       '@types/qs': 6.9.15
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -7475,7 +7581,7 @@ snapshots:
 
   '@types/node-fetch@2.6.11':
     dependencies:
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
       form-data: 4.0.0
 
   '@types/node@20.11.30':
@@ -7490,9 +7596,13 @@ snapshots:
     dependencies:
       undici-types: 6.20.0
 
+  '@types/node@22.13.4':
+    dependencies:
+      undici-types: 6.20.0
+
   '@types/pg@8.11.10':
     dependencies:
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
       pg-protocol: 1.7.0
       pg-types: 4.0.2
 
@@ -7511,12 +7621,12 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
       '@types/send': 0.17.4
 
   '@types/unist@2.0.11': {}
@@ -7527,7 +7637,7 @@ snapshots:
 
   '@types/ws@8.5.13':
     dependencies:
-      '@types/node': 22.13.1
+      '@types/node': 22.13.4
 
   '@typescript/vfs@1.6.1(typescript@5.7.3)':
     dependencies:
@@ -8534,7 +8644,7 @@ snapshots:
       micromatch: 4.0.8
       next: 15.1.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       unist-util-visit: 5.0.0
-      zod: 3.24.1
+      zod: 3.24.2
     transitivePeerDependencies:
       - acorn
       - supports-color
@@ -10905,6 +11015,10 @@ snapshots:
     optionalDependencies:
       typescript: 5.7.3
 
+  valibot@1.0.0-rc.1(typescript@5.7.3):
+    optionalDependencies:
+      typescript: 5.7.3
+
   value-or-promise@1.0.12: {}
 
   vary@1.1.2: {}
@@ -11078,5 +11192,7 @@ snapshots:
   zod@3.24.0: {}
 
   zod@3.24.1: {}
+
+  zod@3.24.2: {}
 
   zwitch@2.0.4: {}
