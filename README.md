@@ -3,6 +3,7 @@
 # GQLoom
 
 [![License: MIT][license-image]][license-url]
+[![CI][ci-image]][ci-url]
 [![NPM version][npm-image]][npm-url]
 [![Downloads][downloads-image]][npm-url]
 
@@ -65,6 +66,8 @@ See [Getting Started](https://gqloom.dev/en/docs/getting-started) to learn how t
 
 [license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT
+[ci-image]: https://img.shields.io/github/actions/workflow/status/modevol-com/gqloom/publish.yml?branch=main&logo=github&style=flat-square
+[ci-url]: https://github.com/modevol-com/gqloom/actions/workflows/publish.yml
 [npm-image]: https://img.shields.io/npm/v/%40gqloom%2Fcore.svg?style=flat-square
 [npm-url]: https://www.npmjs.com/package/@gqloom/core
 [downloads-image]: https://img.shields.io/npm/dm/%40gqloom%2Fcore.svg?style=flat-square
