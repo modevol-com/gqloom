@@ -40,8 +40,3 @@ export const catResolver = resolver.of(cats, {
     }),
   }),
 })
-z.object({
-  __typename: z.literal("Cat").nullish(),
-  name: z.string(),
-  birthday: z.coerce.date(),
-})
