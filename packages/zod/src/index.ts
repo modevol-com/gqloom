@@ -101,7 +101,10 @@ export class ZodWeaver {
 
   static toNullableGraphQLType(schema: Schema): GraphQLOutputType {
     const nullable = (ofType: GraphQLOutputType) => {
-      const isNonNull = !schema.isNullable() && !schema.isOptional()
+      let isNonNull = !schema.isNullable() && !schema.isOptional()
+      if ("coerce" in schema._def && schema._def.coerce === true) {
+        isNonNull = !schema.isOptional()
+      }
       if (!isNonNull) return ofType
       if (isNonNullType(ofType)) return ofType
       return new GraphQLNonNull(ofType)
