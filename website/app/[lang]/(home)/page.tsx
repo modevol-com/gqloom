@@ -392,9 +392,7 @@ const SchemaGraphQlMDX: React.FC<MDXProps> = homeSource.getPage([
 
 const SchemaLibrary = function SchemaLibrary({ lang, className }: LangProps) {
   const title =
-    lang === "zh"
-      ? "最为熟知的 Schema Library"
-      : "The most familiar Schema Library"
+    lang === "zh" ? "最为熟知的类型库" : "The most familiar Schema Library"
   const intros = lang === "zh" ? SchemaLibraryCN : SchemaLibraryEN
   return (
     <section className={clsx("px-6 flex flex-col items-center", className)}>
