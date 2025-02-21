@@ -743,9 +743,9 @@ In the above code, we use `usersResolverFactory.resolver()` to create a Resolver
 
 ## Custom Type Mapping
 
-To adapt to more Prisma types, we can extend GQLoom to add more type mappings.
+To adapt to more Drizzle types, we can extend GQLoom to add more type mappings.
 
-First, we use `PrismaWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSONObject` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering `date` and `json` types, we map them to the corresponding GraphQL scalars.
+First, we use `DrizzleWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSONObject` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering `date` and `json` types, we map them to the corresponding GraphQL scalars.
 
 ```ts twoslash
 import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
@@ -775,13 +775,13 @@ export const schema = weave(drizzleWeaverConfig, usersResolver, postsResolver)
 
 The following table lists the default mapping relationships between Drizzle `dataType` and GraphQL types in GQLoom:
 
-| Drizzle `dataType` | GraphQL Type      |
-| ------------------ | ----------------- |
-| boolean            | `GraphQLBoolean`  |
-| number             | `GraphQLFloat`    |
-| json               | `GraphQLString`   |
-| date               | `GraphQLDateTime` |
-| bigint             | `GraphQLString`   |
-| string             | `GraphQLString`   |
-| buffer             | `GraphQLList`     |
-| array              | `GraphQLList`     |
+| Drizzle `dataType` | GraphQL Type     |
+| ------------------ | ---------------- |
+| boolean            | `GraphQLBoolean` |
+| number             | `GraphQLFloat`   |
+| json               | `GraphQLString`  |
+| date               | `GraphQLString`  |
+| bigint             | `GraphQLString`  |
+| string             | `GraphQLString`  |
+| buffer             | `GraphQLList`    |
+| array              | `GraphQLList`    |
