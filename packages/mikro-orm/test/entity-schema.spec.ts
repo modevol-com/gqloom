@@ -5,8 +5,8 @@ import {
   isSilk,
   silk,
 } from "@gqloom/core"
-import { defineConfig } from "@mikro-orm/better-sqlite"
 import { EntitySchema, MikroORM, RequestContext } from "@mikro-orm/core"
+import { defineConfig } from "@mikro-orm/libsql"
 import {
   GraphQLBoolean,
   GraphQLFloat,

@@ -31,8 +31,8 @@
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "@mikro-orm/better-sqlite": "^6.4.6",
-    "@mikro-orm/core": "^6.4.6"
+    "@mikro-orm/core": "^6.4.6",
+    "@mikro-orm/libsql": "^6.4.6"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

@@ -12,7 +12,7 @@ import {
   RequestContext,
   type RequiredEntityData,
   defineConfig,
-} from "@mikro-orm/better-sqlite"
+} from "@mikro-orm/libsql"
 import {
   GraphQLFloat,
   GraphQLList,
