@@ -22,11 +22,6 @@ export const projectConfig = defineProject({
 })
 
 export default defineConfig({
-  build: {
-    rollupOptions: {
-      external: ["better-sqlite3"],
-    },
-  },
   test: {
     coverage: {
       exclude: [
