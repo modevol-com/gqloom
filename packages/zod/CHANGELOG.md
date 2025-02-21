@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
-## 0.7.2 (2025-02-25)
+## 0.7.3 (2025-02-21)
+
+* Fix: handle `z.coerce` nullable correctly
+
+## 0.7.2 (2025-02-15)
 
 * Fix: update document link in README
 
