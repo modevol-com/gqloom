@@ -247,6 +247,33 @@ describe("ZodWeaver", () => {
     `)
   })
 
+  it("should handle coerce", () => {
+    const Input = z.object({
+      __typename: z.literal("Input").nullish(),
+      coerceNumber: z.coerce.number(),
+      coerceNumberNullish: z.coerce.number().nullish(),
+    })
+    const Cat = z.object({
+      __typename: z.literal("Cat").nullish(),
+      name: z.string(),
+      birthday: z.coerce.date(),
+    })
+
+    expect(printZodSilk(Input)).toMatchInlineSnapshot(`
+      "type Input {
+        coerceNumber: Float!
+        coerceNumberNullish: Float
+      }"
+    `)
+
+    expect(printZodSilk(Cat)).toMatchInlineSnapshot(`
+      "type Cat {
+        name: String!
+        birthday: String!
+      }"
+    `)
+  })
+
   it("should handle enum", () => {
     const fruitZ = z
       .enum(["apple", "banana", "orange"])
