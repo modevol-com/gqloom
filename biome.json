@@ -10,7 +10,8 @@
       "docs/doc_build/",
       "**/generated/**/*",
       "packages/prisma/test/client/**/*",
-      "coverage/"
+      "coverage/",
+      "*.vue"
     ]
   },
   "formatter": {

@@ -1,3 +1,5 @@
+import { URL, fileURLToPath } from "node:url"
+import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vitepress"
 
 // https://vitepress.dev/reference/site-config
@@ -26,5 +28,13 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/vuejs/vitepress" },
     ],
+  },
+  vite: {
+    plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        "@": fileURLToPath(new URL("../", import.meta.url)),
+      },
+    },
   },
 })
