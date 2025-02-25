@@ -1,4 +1,5 @@
 import { URL, fileURLToPath } from "node:url"
+import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vitepress"
 
@@ -22,6 +23,10 @@ export default defineConfig({
             text: "介绍",
             link: "/zh/docs/",
           },
+          {
+            text: "快速上手",
+            link: "/docs/getting-started",
+          },
         ],
         outlineTitle: "本页内容",
       },
@@ -36,10 +41,18 @@ export default defineConfig({
         text: "Introduction",
         link: "/docs/",
       },
+      {
+        text: "Getting Started",
+        link: "/docs/getting-started",
+      },
     ],
     socialLinks: [
       { icon: "github", link: "https://github.com/modevol-com/gqloom" },
     ],
+  },
+  markdown: {
+    codeTransformers: [transformerTwoslash() as any],
+    languages: ["ts"] as any,
   },
   vite: {
     plugins: [tailwindcss()],
