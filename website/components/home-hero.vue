@@ -10,7 +10,7 @@
           class="star text-gray-900 dark:text-gray-100 backdrop-blur-md border-orange-400 bg-pink-100/10 border-2 hover:bg-rose-400/20 dark:hover:bg-orange-300/20 py-3 px-6 rounded-full">
           {{ texts.star }}
         </a>
-        <a href="./docs/"
+        <a href="./docs/getting-started"
           class="start !text-white px-6 py-3 flex items-center font-medium bg-gradient-to-r to-pink-600 from-orange-400 rounded-full hover:to-pink-500 hover:from-amber-300">
           <span>{{ texts.start }}</span>
           <ArrowRight class="ml-2 inline-block" />

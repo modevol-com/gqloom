@@ -105,18 +105,15 @@ yarn init -y
 
 然后，我们将安装一些必要的依赖来以便在 Node.js 运行中 TypeScript 应用：
 
-
 ::: code-group
 ```sh [npm]
 npm i -D typescript @types/node tsx
 npx tsc --init
 ```
-
 ```sh [pnpm]
 pnpm add -D typescript @types/node tsx
 pnpm exec tsc --init
 ```
-
 ```sh [yarn]
 yarn add -D typescript @types/node tsx
 yarn dlx -q -p typescript tsc --init
@@ -124,7 +121,6 @@ yarn dlx -q -p typescript tsc --init
 :::
 
 接下来，我们将安装 GQLoom 以及相关依赖，我们可以选择 [Valibot](https://valibot.dev/) 或者 [Zod](https://zod.dev/) 来定义并验证输入：
-
 
 ::: code-group
 ```sh [npm]
@@ -1104,7 +1100,6 @@ export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++
 
 </InputSchemaCodes>
 
-
 在上面的代码中，我们使用 `drizzleResolverFactory()` 创建了 `catResolverFactory`，用于快速构建解析器。
 
 我们添加了一个使用 `catResolverFactory` 创建了一个选取数据的查询 ，并将它命名为 `cats`，这个查询将提供完全的对 `cats` 表的查询操作。  
@@ -1701,6 +1696,7 @@ export const userResolver = resolver.of(users, {
 :::
 
 让我们尝试一下查询当前用户的猫咪：
+
 ::: code-group
 ```GraphQL [Query]
 {

@@ -2,7 +2,23 @@
 title: Getting Started
 icon: PencilRuler
 ---
-import { File, Folder, Files } from 'fumadocs-ui/components/files';
+<script setup>
+import InputSchemaCodes from "@/components/input-schema-codes.vue"
+import { inputSchema } from "@/components/input-schema.ts"
+</script>
+<style>
+@reference "@/css/tailwind.css";
+
+.input-schema,
+.input-schema-active {
+  @apply font-bold cursor-pointer underline hover:opacity-90 transition-opacity;
+}
+.input-schema {
+  @apply opacity-70;
+}
+</style>
+
+# Getting Started
 
 To quickly get started with GQLoom, we will build a simple GraphQL backend application together.
 
@@ -69,145 +85,104 @@ GQLoom has no requirements for the project's file structure. Here is just for re
 
 First, let's create a new folder and initialize the project:
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 mkdir cattery
 cd ./cattery
 npm init -y
 ```
-</Tab>
-<Tab>
-```sh
+```sh [pnpm]
 mkdir cattery
 cd ./cattery
 pnpm init
 ```
-</Tab>
-<Tab>
-```sh
+```sh [yarn]
 mkdir cattery
 cd ./cattery
 yarn init -y
 ```
-</Tab>
-</Tabs>
+:::
 
 Then, we will install some necessary dependencies to run a TypeScript application in Node.js:
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 npm i -D typescript @types/node tsx
 npx tsc --init
 ```
-</Tab>
-<Tab>
-```sh
+```sh [pnpm]
 pnpm add -D typescript @types/node tsx
 pnpm exec tsc --init
 ```
-</Tab>
-<Tab>
-```sh
+```sh [yarn]
 yarn add -D typescript @types/node tsx
 yarn dlx -q -p typescript tsc --init
 ```
-</Tab>
-</Tabs>
+:::
 
 Next, we will install GQLoom and related dependencies. We can choose [Valibot](https://valibot.dev/) or [Zod](https://zod.dev/) to define and validate inputs:
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 # use Valibot
 npm i graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
 
 # use Zod
 npm i graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
-</Tab>
-<Tab>
-```sh
+
+```sh [pnpm]
 # use Valibot
 pnpm add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
 
 # use Zod
 pnpm add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
-</Tab>
-<Tab>
-```sh
+
+```sh [yarn]
 # use Valibot
 yarn add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
 
 # use zod
 yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
-</Tab>
-</Tabs>
+:::
 
 ### Hello World
 
-Let's write our first [resolver](./resolver):
+Let's write our first [resolver](./resolver), we can choose to use <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> or <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span>::
 
-<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-<Tab>
-```ts twoslash title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
+<InputSchemaCodes>
+<template v-slot:valibot>
 
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
+<<< @/snippets/getting-started/resolvers/index.ts{ts twoslash} [Valibot]
 
-export const resolvers = [helloResolver]
-```
-</Tab>
-<Tab>
-```ts twoslash title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
+</template>
+<template v-slot:zod>
 
-const helloResolver = resolver({
-  hello: query(z.string())
-    .input({
-      name: z
-        .string()
-        .nullish()
-        .transform((x) => x ?? "World"),
-    })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
+<<< @/snippets/getting-started-zod/resolvers/index.ts{ts twoslash} [Zod]
 
-export const resolvers = [helloResolver]
-```
-</Tab>
-</Tabs>
+</template>
+</InputSchemaCodes>
 
 We need to weave this resolver into a GraphQL Schema and run it as an HTTP server:
 
-```ts title="src/index.ts"
-import { createServer } from "node:http"
-import { weave } from "@gqloom/core"
-import { ZodWeaver } from "@gqloom/zod"
-import { createYoga } from "graphql-yoga"
-import { resolvers } from "./resolvers"
+<InputSchemaCodes>
+<template v-slot:valibot>
 
-const schema = weave(ZodWeaver, ...resolvers)
+<<< @/snippets/getting-started/index.ts{ts}
 
-const yoga = createYoga({ schema })
-createServer(yoga).listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql")
-})
-```
+</template>
+<template v-slot:zod>
+
+<<< @/snippets/getting-started-zod/index.ts{ts}
+
+</template>
+</InputSchemaCodes>
 
 Great, we have already created a simple GraphQL application.
 Next, let's try to run this application. Add the `dev` script to the `package.json`: 
-```json
+```JSON
 {
   "scripts": {
     "dev": "tsx watch src/index.ts"
@@ -217,28 +192,22 @@ Next, let's try to run this application. Add the `dev` script to the `package.js
 
 Now let's run it:
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 npm run dev
 ```
-</Tab>
-<Tab>
-```sh
+```sh [pnpm]
 pnpm dev
 ```
-</Tab>
-<Tab>
-```sh
+```sh [yarn]
 yarn dev
 ```
-</Tab>
-</Tabs>
+:::
 
 Open http://localhost:4000/graphql in the browser and you can see the GraphQL playground.
 Let's try to send a GraphQL query. Enter the following in the playground:
 
-```gql title="GraphQL Query" 
+```GraphQL
 {
   hello(name: "GQLoom")
 }
@@ -246,7 +215,7 @@ Let's try to send a GraphQL query. Enter the following in the playground:
 
 Click the query button, and you can see the result:
 
-```json
+```JSON
 {
   "data": {
     "hello": "Hello GQLoom!"
@@ -262,32 +231,27 @@ Next, we will use Drizzle ORM to interact with the database and add complete fun
 
 First, let's install [Drizzle ORM](https://orm.drizzle.team/). We will use it to operate the **SQLite** database.
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 npm i @gqloom/drizzle drizzle-orm @libsql/client dotenv
 npm i -D drizzle-kit
 ```
-</Tab>
-<Tab>
-```sh
+```sh [pnpm]
 pnpm add @gqloom/drizzle drizzle-orm @libsql/client dotenv
 pnpm add -D drizzle-kit
 ```
-</Tab>
-<Tab>
-```sh
+```sh [yarn]
 yarn add @gqloom/drizzle drizzle-orm @libsql/client dotenv
 yarn add -D drizzle-kit
 ```
-</Tab>
-</Tabs>
+:::
 
 ### Define Database Tables
 
 Next, define the database tables in the `src/schema/index.ts` file. We will define two tables, `users` and `cats`, and establish the relationship between them:
 
-```ts twoslash title="src/schema/index.ts"
+```ts twoslash
+// src/schema/index.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -327,7 +291,8 @@ export const catsRelations = relations(cats, ({ one }) => ({
 ### Initialize the Database
 
 We need to create a configuration file:
-```ts title="drizzle.config.ts"
+```ts
+// drizzle.config.ts
 import "dotenv/config"
 import { defineConfig } from "drizzle-kit"
 
@@ -349,7 +314,8 @@ npx drizzle-kit push
 ### Use the Database
 
 To use the database in the application, we need to create a database instance:
-```ts title="src/providers/index.ts"
+```ts
+// src/providers/index.ts
 import { drizzle } from "drizzle-orm/libsql"
 import * as schema from "../schema"
 
@@ -361,7 +327,9 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 Let's first create a user service, which will contain a series of operations on the user table.
 We will implement the user service in the `src/services/user.ts` file and export the entire `user.ts` as `userService` in the `src/resolvers/index.ts` file:
 
-```ts title="src/services/user.ts" tab="src/services/user.ts"
+::: code-group
+```ts [services/user.ts]
+// src/services/user.ts
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -383,10 +351,11 @@ export async function findUserByPhone(phone: string) {
   })
 }
 ```
-
-```ts title="src/services/index.ts" tab="src/services/index.ts"
+```ts [services/index.ts]
+// src/services/index.ts
 export * as userService from "./user"
 ```
+:::
 
 ## Resolvers
 
@@ -398,11 +367,13 @@ Now, we can use the user service in the resolver. We will create a user resolver
 
 After completing the user resolver, we also need to add it to the `resolvers` in the `src/resolvers/index.ts` file:
 
-<Tabs items={["src/resolvers/user.ts", "src/resolvers/index.ts"]}>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts twoslash title="src/resolvers/user.ts"
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
+::: code-group
+
+```ts twoslash [resolvers/user.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -470,6 +441,7 @@ export async function findUserByPhone(phone: string) {
 export * as userService from "./user"
 // @filename: resolvers/user.ts
 // ---cut---
+// src/resolvers/user.ts
 import { mutation, query, resolver } from "@gqloom/core"
 import * as v from "valibot"
 import { users } from "../schema"
@@ -494,9 +466,30 @@ export const userResolver = resolver.of(users, {
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-  </Tab>
-  <Tab>
-```ts twoslash title="src/resolvers/index.ts"
+
+```ts [resolvers/index.ts]
+// src/resolvers/user.ts
+import { query, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { userResolver } from "./user"  // [!code ++]
+
+const helloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello ${name}!`),
+})
+
+export const resolvers = [helloResolver, userResolver]  // [!code ++]
+```
+:::
+
+</template>
+
+<template v-slot:zod>
+
+::: code-group
+
+```ts twoslash [resolvers/user.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -562,8 +555,9 @@ export async function findUserByPhone(phone: string) {
 }
 // @filename: services/index.ts
 export * as userService from "./user"
-// ---cut---
 // @filename: resolvers/user.ts
+// ---cut---
+// src/resolvers/user.ts
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { users } from "../schema"
@@ -588,13 +582,9 @@ export const userResolver = resolver({
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/index.ts"
+
+```ts [resolvers/index.ts]
+// src/resolvers/user.ts
 import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { userResolver } from "./user" // [!code ++]
@@ -612,28 +602,17 @@ const helloResolver = resolver({
 
 export const resolvers = [helloResolver, userResolver] // [!code ++]
 ```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
-import { userResolver } from "./user"  // [!code ++]
 
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
+:::
 
-export const resolvers = [helloResolver, userResolver]  // [!code ++]
-```
-  </Tab>
-  </Tabs>
-</Tab>
-</Tabs>
+</template>
+
+</InputSchemaCodes>
 
 Great, now let's try it in the playground:
-```gql title="GraphQL Mutation" tab="Mutation"
+
+::: code-group
+```GraphQL [Mutation]
 mutation {
   createUser(data: {name: "Bob", phone: "001"}) {
     id
@@ -643,7 +622,7 @@ mutation {
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "createUser": {
@@ -654,9 +633,12 @@ mutation {
   }
 }
 ```
+::: 
 
 Let's continue to try to retrieve the user we just created:
-```gql title="GraphQL Query" tab="Query"
+
+::: code-group
+```GraphQL [Query]
 {
   usersByName(name: "Bob") {
     id
@@ -666,7 +648,7 @@ Let's continue to try to retrieve the user we just created:
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "usersByName": [
@@ -679,6 +661,7 @@ Let's continue to try to retrieve the user we just created:
   }
 }
 ```
+:::
 
 ### Current User Context
 
@@ -688,7 +671,7 @@ Next, let's try to add a simple login function and add a query operation to the 
 
 To implement this query, we first need to have a login function. Let's write a simple one:
 
-```ts twoslash title="src/contexts/index.ts"
+```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -756,6 +739,7 @@ export async function findUserByPhone(phone: string) {
 export * as userService from "./user"
 // @filename: contexts/index.ts
 // ---cut---
+// src/contexts/index.ts
 import { createMemoization, useContext } from "@gqloom/core"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
@@ -782,8 +766,10 @@ As you can see, this login function is very simple and is only used for demonstr
 
 Now, we add the new query operation in the resolver:
 
-<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-<Tab>
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import * as v from "valibot"
@@ -812,8 +798,11 @@ export const userResolver = resolver({
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-</Tab>
-<Tab>
+
+</template>
+
+<template v-slot:zod>
+
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
@@ -842,11 +831,14 @@ export const userResolver = resolver({
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+
+</InputSchemaCodes>
 
 If we directly call this new query in the playground, the application will give us an unauthorized error:
-```gql title="Graphql Query" tab="Query"
+::: code-group
+```GraphQL [Query]
 {
   mine {
     id
@@ -855,8 +847,7 @@ If we directly call this new query in the playground, the application will give 
   }
 }
 ```
-
-```json tab="Response"
+```JSON [Response]
 {
   "errors": [
     {
@@ -875,15 +866,17 @@ If we directly call this new query in the playground, the application will give 
   "data": null
 }
 ```
+:::
 
 Open the `Headers` at the bottom of the playground and add the `authorization` field to the request header. Here we use the phone number of `Bob` created in the previous step, so we are logged in as `Bob`:
-```json tab="Headers"
+
+::: code-group
+```JSON [Headers]
 {
   "authorization": "001"
 }
 ```
-
-```gql title="Graphql Query" tab="Query"
+```GraphQL [Query]
 {
   mine {
     id
@@ -892,8 +885,7 @@ Open the `Headers` at the bottom of the playground and add the `authorization` f
   }
 }
 ```
-
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "mine": {
@@ -904,6 +896,7 @@ Open the `Headers` at the bottom of the playground and add the `authorization` f
   }
 }
 ```
+:::
 
 ### Resolver Factory
 
@@ -911,79 +904,13 @@ Next, we will add the business logic related to cats.
 
 We use the [resolver factory](./schema/drizzle#resolver-factory) to quickly create interfaces:
 
-<Tabs items={["src/resolvers/cat.ts", "src/resolvers/index.ts"]}>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
+<InputSchemaCodes>
 
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
+<template v-slot:valibot>
 
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
+::: code-group
 
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: resolvers/cat.ts
-import { field, resolver } from "@gqloom/core"
-import { drizzleResolverFactory } from "@gqloom/drizzle"
-import * as v from "valibot"
-import { db } from "../providers"
-import { cats } from "../schema"
-
-const catResolverFactory = drizzleResolverFactory(db, "cats")
-
-export const catResolver = resolver.of(cats, {
-  cats: catResolverFactory.selectArrayQuery(),
-
-  age: field(v.pipe(v.number()))
-    .input({
-      currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
-        new Date().getFullYear()
-      ),
-    })
-    .resolve((cat, { currentYear }) => {
-      return currentYear - cat.birthday.getFullYear()
-    }),
-})
-```
-  </Tab>
-  <Tab>
-```ts twoslash title="src/resolvers/cat.ts"
+```ts twoslash [resolvers/cat.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -1028,6 +955,100 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 })
 // @filename: resolvers/cat.ts
 // ---cut---
+// src/resolvers/cat.ts
+import { field, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import * as v from "valibot"
+import { db } from "../providers"
+import { cats } from "../schema"
+
+const catResolverFactory = drizzleResolverFactory(db, "cats")
+
+export const catResolver = resolver.of(cats, {
+  cats: catResolverFactory.selectArrayQuery(),
+
+  age: field(v.pipe(v.number()))
+    .input({
+      currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
+        new Date().getFullYear()
+      ),
+    })
+    .resolve((cat, { currentYear }) => {
+      return currentYear - cat.birthday.getFullYear()
+    }),
+})
+```
+
+```ts [resolvers/index.ts]
+// src/resolvers/index.ts
+import { query, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { catResolver } from "./cat" // [!code ++]
+import { userResolver } from "./user"
+
+const helloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello ${name}!`),
+})
+
+export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
+```
+
+:::
+
+</template>
+
+<template v-slot:zod>
+
+::: code-group
+
+```ts twoslash [resolvers/cat.ts]
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: resolvers/cat.ts
+// ---cut---
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
@@ -1052,29 +1073,8 @@ export const catResolver = resolver.of(cats, {
     }),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
-import { catResolver } from "./cat" // [!code ++]
-import { userResolver } from "./user"
 
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
-
-export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
-```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/index.ts"
+```ts [resolvers/index.ts]
 import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { catResolver } from "./cat" // [!code ++]
@@ -1093,10 +1093,12 @@ const helloResolver = resolver({
 
 export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-</Tabs>
+
+:::
+
+</template>
+
+</InputSchemaCodes>
 
 In the above code, we used `drizzleResolverFactory()` to create `catResolverFactory` for quickly building resolvers.
 
@@ -1105,9 +1107,11 @@ In addition, we also added an additional `age` field for cats to get the age of 
 
 Next, let's try to add a `createCat` mutation. We want only logged-in users to access this interface, and the created cats will belong to the current user:
 
-<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-<Tab>
-```ts twoslash title="src/resolvers/cat.ts"
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
+```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -1190,6 +1194,7 @@ export const useCurrentUser = createMemoization(async () => {
 })
 // @filename: resolvers/cat.ts
 // ---cut---
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import * as v from "valibot"
@@ -1236,8 +1241,11 @@ export const catResolver = resolver.of(cats, {
   }), // [!code ++]
 })
 ```
-</Tab>
-<Tab>
+
+</template>
+
+<template v-slot:zod>
+
 ```ts twoslash title="src/resolvers/cat.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -1321,6 +1329,7 @@ export const useCurrentUser = createMemoization(async () => {
 })
 // @filename: resolvers/cat.ts
 // ---cut---
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
@@ -1362,14 +1371,17 @@ export const catResolver = resolver.of(cats, {
   }), // [!code ++]
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+
+</InputSchemaCodes>
 
 In the above code, we used `catResolverFactory` to create a mutation that adds more data to the `cats` table, and we overwrote the input of this mutation. When validating the input, we used `useCurrentUser()` to get the ID of the currently logged-in user and pass it as the value of `ownerId` to the `cats` table.
 
 Now let's try to add a few cats in the playground:
 
-```gql tab="mutation" title="GraphQL Mutation"
+::: code-group
+```GraphQL [Mutation]
 mutation {
   createCats(values: [
     { name: "Mittens", birthday: "2021-01-01" },
@@ -1382,13 +1394,13 @@ mutation {
 }
 ```
 
-```json tab="Headers"
+```JSON [Headers]
 {
   "authorization": "001"
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "createCats": [
@@ -1406,9 +1418,12 @@ mutation {
   }
 }
 ```
+:::
 
 Let's use the `cats` query to confirm the data in the database again:
-```gql tab="query" title="GraphQL Query"
+
+::: code-group
+```GraphQL [Query]
 {
   cats {
     id
@@ -1418,7 +1433,7 @@ Let's use the `cats` query to confirm the data in the database again:
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "cats": [
@@ -1436,6 +1451,7 @@ Let's use the `cats` query to confirm the data in the database again:
   }
 }
 ```
+:::
 
 ### Associated Objects
 
@@ -1443,11 +1459,14 @@ We want to be able to get the owner of a cat when querying the cat, and also be 
 This is very easy to achieve in GraphQL.
 Let's add an additional `owner` field to `cats` and an additional `cats` field to `users`:
 
-<Tabs items={["src/resolvers/cat.ts", "src/resolvers/user.ts"]}>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/cat.ts"
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
+::: code-group
+
+```ts [resolvers/cat.ts]
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import * as v from "valibot"
@@ -1496,9 +1515,51 @@ export const catResolver = resolver.of(cats, {
   }),
 })
 ```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/cat.ts"
+
+```ts [resolvers/user.ts]
+import { mutation, query, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
+import * as v from "valibot"
+import { useCurrentUser } from "../contexts"
+import { db } from "../providers" // [!code ++]
+import { users } from "../schema"
+import { userService } from "../services"
+
+const userResolverFactory = drizzleResolverFactory(db, "users") // [!code ++]
+
+export const userResolver = resolver.of(users, {
+  cats: userResolverFactory.relationField("cats"), // [!code ++]
+
+  mine: query(users).resolve(() => useCurrentUser()),
+
+  usersByName: query(users.$list())
+    .input({ name: v.string() })
+    .resolve(({ name }) => userService.findUsersByName(name)),
+
+  userByPhone: query(users.$nullable())
+    .input({ phone: v.string() })
+    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+
+  createUser: mutation(users)
+    .input({
+      data: v.object({
+        name: v.string(),
+        phone: v.string(),
+      }),
+    })
+    .resolve(async ({ data }) => userService.createUser(data)),
+})
+```
+
+:::
+
+</template>
+
+<template v-slot:zod>
+
+::: code-group
+
+```ts [resolvers/cat.ts]
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
@@ -1542,49 +1603,8 @@ export const catResolver = resolver.of(cats, {
   }),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/user.ts"
-import { mutation, query, resolver } from "@gqloom/core"
-import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
-import * as v from "valibot"
-import { useCurrentUser } from "../contexts"
-import { db } from "../providers" // [!code ++]
-import { users } from "../schema"
-import { userService } from "../services"
 
-const userResolverFactory = drizzleResolverFactory(db, "users") // [!code ++]
-
-export const userResolver = resolver.of(users, {
-  cats: userResolverFactory.relationField("cats"), // [!code ++]
-
-  mine: query(users).resolve(() => useCurrentUser()),
-
-  usersByName: query(users.$list())
-    .input({ name: v.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
-
-  userByPhone: query(users.$nullable())
-    .input({ phone: v.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
-
-  createUser: mutation(users)
-    .input({
-      data: v.object({
-        name: v.string(),
-        phone: v.string(),
-      }),
-    })
-    .resolve(async ({ data }) => userService.createUser(data)),
-})
-```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/user.ts"
+```ts [resolvers/user.ts]
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
 import { z } from "zod"
@@ -1618,16 +1638,19 @@ export const userResolver = resolver.of(users, {
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-</Tabs>
+
+:::
+
+</template>
+
+</InputSchemaCodes>
 
 In the above code, we used the resolver factory to create the `owner` field for `cats`; similarly, we also created the `cats` field for `users`.
 Behind the scenes, the relationship fields created by the resolver factory will use `DataLoader` to query from the database to avoid the N+1 problem.
 
 Let's try to query the owner of a cat in the playground:
-```gql title="GraphQL Query" tab="query"
+::: code-group
+```GraphQL [Query]
 {
   cats {
     id
@@ -1642,7 +1665,7 @@ Let's try to query the owner of a cat in the playground:
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "cats": [
@@ -1670,9 +1693,12 @@ Let's try to query the owner of a cat in the playground:
   }
 }
 ```
+:::
 
 Let's try to query the cats of the current user:
-```gql title="GraphQL Query" tab="query"
+
+::: code-group
+```GraphQL [Query]
 {
   mine {
     name
@@ -1685,13 +1711,13 @@ Let's try to query the cats of the current user:
 }
 ```
 
-```json tab="Headers"
+```JSON [Headers]
 {
   "authorization": "001"
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "mine": {
@@ -1712,6 +1738,7 @@ Let's try to query the cats of the current user:
   }
 }
 ```
+:::
 
 ## Conclusion
 

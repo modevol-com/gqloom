@@ -39,7 +39,7 @@ export default defineConfig({
       label: "简体中文",
       lang: "zh",
       themeConfig: {
-        nav: [{ text: "主页", link: "/" }],
+        nav: [{ text: "主页", link: "/zh" }],
         sidebar: sidebarZh,
         outlineTitle: "本页内容",
       },
