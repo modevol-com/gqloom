@@ -7,6 +7,16 @@ export default defineConfig({
   title: "GQLoom",
   description:
     "GQLoom is a Code First GraphQL Schema Loom used to weave runtime types in the TypeScript/JavaScript ecosystem into a GraphQL Schema.",
+  locales: {
+    root: {
+      label: "English",
+      lang: "en",
+    },
+    zh: {
+      label: "简体中文",
+      lang: "zh",
+    },
+  },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
