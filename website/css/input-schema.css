@@ -2,8 +2,11 @@
 
 .input-schema,
 .input-schema-active {
-  @apply font-bold cursor-pointer underline hover:opacity-90 transition-opacity;
+  @apply font-bold cursor-pointer border-2 border-solid py-[0.1em] px-[0.3em] rounded-lg hover:opacity-90 transition-colors;
 }
 .input-schema {
-  @apply opacity-70;
+  @apply text-gray-700 dark:text-gray-200;
+}
+.input-schema-active {
+  @apply text-orange-700 dark:text-orange-200;
 }
