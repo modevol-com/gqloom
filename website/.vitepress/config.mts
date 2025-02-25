@@ -5,7 +5,6 @@ import { defineConfig } from "vitepress"
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "GQLoom",
-  srcDir: "./content",
   description:
     "GQLoom is a Code First GraphQL Schema Loom used to weave runtime types in the TypeScript/JavaScript ecosystem into a GraphQL Schema.",
   themeConfig: {
@@ -24,9 +23,8 @@ export default defineConfig({
         ],
       },
     ],
-
     socialLinks: [
-      { icon: "github", link: "https://github.com/vuejs/vitepress" },
+      { icon: "github", link: "https://github.com/modevol-com/gqloom" },
     ],
   },
   vite: {

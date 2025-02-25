@@ -1,11 +1,8 @@
 <template>
   <section class="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full">
     <div class="flex flex-col gap-6 w-md max-w-screen text-center items-center">
-      <h1
-        class="text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 sm:text-5xl font-bold bg-clip-text">
-        GraphQL Loom
-      </h1>
-      <div className="text-lg dark:text-white text-black sm:mt-4">
+      <h1>GraphQL Loom</h1>
+      <div class="text-lg dark:text-white text-black sm:mt-4">
         {{ texts.description }}
       </div>
       <div class="flex flex-wrap px-4 gap-4">
@@ -23,27 +20,28 @@
     <div class="sm:w-sm w-3xs relative">
       <div
         class="blur-3xl absolute left-0 top-0 -z-1 rounded-full opacity-10 dark:opacity-30 bg-gradient-to-bl to-rose-400/20 from-yellow-400/5 size-full aspect-square" />
-      <GQLoomLogo class="size-full aspect-square" />
+      <img src="/gqloom.svg" class="size-full" />
     </div>
   </section>
 </template>
 <style scoped>
 @reference "@/css/tailwind.css";
 
-.vp-doc {
-  a.star {
-    @apply text-gray-900 dark:text-gray-100
-  }
+h1 {
+  @apply text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 sm:text-5xl font-bold bg-clip-text
+}
 
-  a.start {
-    @apply text-white
-  }
+a.star {
+  @apply text-gray-900 dark:text-gray-100
+}
 
-  a.star,
-  a.start {
-    @apply no-underline hover:scale-105 ease-out text-nowrap transition duration-300;
-  }
+a.start {
+  @apply text-white
+}
 
+a.star,
+a.start {
+  @apply no-underline hover:scale-105 ease-out text-nowrap transition duration-300;
 }
 </style>
 <script setup lang="ts">
