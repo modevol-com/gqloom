@@ -2,11 +2,18 @@
 title: Resolver
 icon: RadioTower
 ---
+<script setup>
+import InputSchemaCodes from "@/components/input-schema-codes.vue"
+import { inputSchema } from "@/components/input-schema.ts"
+</script>
+
+# Resolver
 
 A resolver is a place to put GraphQL operations (`query`, `mutation`, `subscription`).
 Usually we put operations that are close to each other in the same resolver, for example user related operations in a resolver called `userResolver`.
 
 ## Distinguishing Operations
+
 First, let's take a brief look at the basic operations of GraphQL and when you should use them:
 
 - **Query** is an operation that is used to get data, such as getting user information, getting a list of products, and so on. Queries usually do not change the persistent data of the service.
@@ -43,10 +50,11 @@ const helloResolver = resolver({
 ```
 
 In the code above, we have defined a `query` operation called `hello` which returns a non-null string.
-Here, we're using the type definition provided by `graphql.js` directly, which as you can see can be slightly verbose, and we could have chosen to simplify the code by using the schema library:
+Here, we're using the type definition provided by `graphql.js` directly, which as you can see can be slightly verbose, and we could have chosen to simplify the code by using the schema library, we can choose to use <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> or <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span>:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 We can define the return type of the `hello` operation using [valibot](. /schema/valibot) to define the return type of the `hello` operation:
 
 ```ts twoslash
@@ -60,8 +68,8 @@ const helloResolver = resolver({
 
 In the code above, we use `v.string()` to define the return type of the `hello` operation. We can directly use the `valibot` schema as the `silk`.
 
-</Tab>
-<Tab value="zod">
+</template>
+<template v-slot:zod>
 
 We can define the return type of the `hello` operation using [zod](. /schema/zod) to define the return type of the `hello` operation:
 
@@ -75,15 +83,18 @@ const helloResolver = resolver({
 ```
 
 In the code above, we use `z.string()` to define the return type of the `hello` operation, and the `zodSilk` function lets us use the Schema definition of `zod` as a `silk`.
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 ## Define the inputs to operations
+
 The `query`, `mutation`, and `subscription` operations can all accept input parameters.
 
 Let's add an input parameter `name` to the `hello` operation:
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
@@ -100,8 +111,10 @@ In the code above, we passed in the `input` property in the second argument of t
 
 Here, we use `v.nullish(v.string(), “World”)` to define the `name` parameter, which is an optional string with a default value of `“World”`.
 In the `resolve` function, we can get the value of the input parameter by the first parameter, and TypeScript will derive its type for us, in this case, we directly deconstruct to get the value of the `name` parameter.
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
 import { z } from "zod"
@@ -121,14 +134,17 @@ In the code above, we passed in the `input` property in the second argument of t
 
 Here, we use `z.string().nullish()` to define the `name` parameter, which is an optional string with a default value of `“World”`.
 In the `resolve` function, we can get the value of the input parameter by the first parameter, and TypeScript will derive its type for us, in this case, we directly deconstruct to get the value of the `name` parameter.
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 ## Adding more information to operations
 
 We can also add more information to the action, such as `description`, `deprecationReason` and `extensions`:
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
@@ -140,8 +156,10 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}!`),
 })
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
 import { z } from "zod"
@@ -158,10 +176,12 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 ## Object resolvers
+
 In GraphQL, we can define resolvers for fields on an object to add additional properties to the object and create relationships between objects.
 This allows GraphQL to build very flexible APIs while maintaining simplicity.
 
@@ -169,8 +189,9 @@ When using `GQLoom`, we can use the `resolver.of` function to define object reso
 
 We start by defining two simple objects `User` and `Book`:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 import * as v from "valibot"
 
@@ -191,8 +212,10 @@ const Book = v.object({
 
 interface IBook extends v.InferOutput<typeof Book> {}
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 import { z } from "zod"
 
@@ -213,8 +236,10 @@ const Book = z.object({
 
 interface IBook extends z.infer<typeof Book> {}
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
+
 In the above code, we have defined two objects `User` and `Book` which represent user and book.
 In `Book`, we define an `authorID` field, which represents the author ID of the book.
 
@@ -249,8 +274,10 @@ const bookMap: Map<number, IBook> = new Map(
 ```
 
 Next, we define a `bookResolver`:
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 const User = v.object({
   __typename: v.nullish(v.literal("User")),
@@ -290,8 +317,10 @@ const bookResolver = resolver.of(Book, {
   books: query(v.array(Book)).resolve(() => Array.from(bookMap.values())),
 })
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 const User = z.object({
   __typename: z.literal("User").nullish(),
@@ -331,15 +360,17 @@ const bookResolver = resolver.of(Book, {
   books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 In the above code, we have used the `resolver.of` function to define `bookResolver`, which is an object resolver for resolving `Book` objects.
 In `bookResolver`, we define a `books` field, which is a query operation to get all the books.
 
 Next, we will add an additional field called `author` to the `Book` object to get the author of the book:
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 const User = v.object({
   __typename: v.nullish(v.literal("User")),
@@ -381,8 +412,9 @@ const bookResolver = resolver.of(Book, {
   author: field(v.nullish(User)).resolve((book) => userMap.get(book.authorID)), // [!code hl]
 })
 ```
-</Tab>
-<Tab value="zod">
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 const User = z.object({
   __typename: z.literal("User").nullish(),
@@ -424,8 +456,9 @@ const bookResolver = resolver.of(Book, {
   author: field(User.nullish()).resolve((book) => userMap.get(book.authorID)), // [!code hl]
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 In the above code, we used the `field` function to define the `author` field.
 The `field` function takes two parameters:
@@ -433,11 +466,14 @@ The `field` function takes two parameters:
   - The second parameter is a parsing function or option, in this case we use a parsing function: we get the `Book` instance from the first parameter of the parsing function, and then we get the corresponding `User` instance from the `userMap` based on the `authorID` field.
 
 ### Defining Field Inputs
+
 In GraphQL, we can define input parameters for fields in order to pass additional data at query time.
 
 In `GQLoom`, we can use the second argument of the `field` function to define the input parameters of a field.
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 const User = v.object({
   __typename: v.nullish(v.literal("User")),
@@ -485,8 +521,9 @@ const bookResolver = resolver.of(Book, {
     }), // [!code hl]
 })
 ```
-</Tab>
-<Tab value="zod">
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 const User = z.object({
   __typename: z.literal("User").nullish(),
@@ -534,8 +571,9 @@ const bookResolver = resolver.of(Book, {
     }), // [!code hl]
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 In the above code, we used the `field` function to define the `signature` field.
 The second argument to the `field` function is an object which contains two fields:
@@ -544,24 +582,28 @@ The second argument to the `field` function is an object which contains two fiel
 
 The `bookResolver` object we just defined can be woven into a GraphQL schema using the [weave](../weave) function:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts
 import { weave } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 
 export const schema = weave(ValibotWeaver, bookResolver)
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts
 import { weave } from '@gqloom/core'
 import { ZodWeaver } from '@gqloom/zod'
 
 export const schema = weave(ZodWeaver, bookResolver)
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 The resulting GraphQL schema is as follows:
 

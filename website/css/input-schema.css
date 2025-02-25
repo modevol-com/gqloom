@@ -1,0 +1,9 @@
+@reference "@/css/tailwind.css";
+
+.input-schema,
+.input-schema-active {
+  @apply font-bold cursor-pointer underline hover:opacity-90 transition-opacity;
+}
+.input-schema {
+  @apply opacity-70;
+}

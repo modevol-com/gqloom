@@ -6,17 +6,6 @@ icon: PencilRuler
 import InputSchemaCodes from "@/components/input-schema-codes.vue"
 import { inputSchema } from "@/components/input-schema.ts"
 </script>
-<style>
-@reference "@/css/tailwind.css";
-
-.input-schema,
-.input-schema-active {
-  @apply font-bold cursor-pointer underline hover:opacity-90 transition-opacity;
-}
-.input-schema {
-  @apply opacity-70;
-}
-</style>
 
 # 快速上手
 

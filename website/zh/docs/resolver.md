@@ -2,11 +2,18 @@
 title: 解析器（Resolver）
 icon: RadioTower
 ---
+<script setup>
+import InputSchemaCodes from "@/components/input-schema-codes.vue"
+import { inputSchema } from "@/components/input-schema.ts"
+</script>
+
+# 解析器（Resolver）
 
 解析器（Resolver）是用来放着 GraphQL 操作（`query`、`mutation`、`subscription`）的地方。
 通常我们将业务相近的操作放在同一个解析器中，比如将用户相关的操作放在一个名为 `userResolver` 的解析器中。
 
 ## 区分操作
+
 首先，我们简单地了解一下 GraphQL 的基本操作和应该在什么时候使用它们：
 
 - **查询（Query）** 是用来获取数据的操作，比如获取用户信息、获取商品列表等。查询操作通常不会改变服务的持久化数据。
@@ -43,10 +50,11 @@ const helloResolver = resolver({
 ```
 
 在上面的代码中，我们定义了一个名为 `hello` 的 `query` 操作，它返回一个非空字符串。
-在这里，我们直接使用 `graphql.js` 提供的类型定义，如你所见，这可能略显啰嗦，我们可以选择使用模式库来简化代码：
+在这里，我们直接使用 `graphql.js` 提供的类型定义，如你所见，这可能略显啰嗦，我们可以选择使用模式库来简化代码，可以选择使用 <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> 或者 <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span> ：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 我们可以使用 [valibot](../schema/valibot) 来定义 `hello` 操作的返回类型：
 
 ```ts twoslash
@@ -60,8 +68,8 @@ const helloResolver = resolver({
 
 在上面的代码中，我们使用 `v.sting()` 来定义 `hello` 操作的返回类型，我们可以直接把 `valibot` 的 Schema 作为`丝线`使用。
 
-</Tab>
-<Tab value="zod">
+</template>
+<template v-slot:zod>
 
 我们可以使用 [zod](../schema/zod) 来定义 `hello` 操作的返回类型：
 
@@ -75,15 +83,18 @@ const helloResolver = resolver({
 ```
 
 在上面的代码中，我们使用 `z.string()` 来定义 `hello` 操作的返回类型，`zodSilk` 函数让我们把 `zod` 的 Schema 定义作为`丝线`使用。
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 ## 定义操作的输入
+
 `query`、`mutation`、`subscription` 操作都可以接受输入参数。
 
 让我们为 `hello` 操作添加一个输入参数 `name`：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
@@ -100,8 +111,10 @@ const helloResolver = resolver({
 
 在这里，我们使用 `v.nullish(v.string(), "World")` 来定义 `name` 参数，它是一个可选的字符串，默认值为 `"World"`。
 在 `resolve` 函数中，我们可以通过第一个参数来获取输入参数的值，TypeScript 将会为我们推导其类型，在这里，我们直接解构得到 `name` 参数的值。
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
 import { z } from "zod"
@@ -121,14 +134,17 @@ const helloResolver = resolver({
 
 在这里，我们使用 `z.string().nullish()` 来定义 `name` 参数，它是一个可选的字符串，默认值为 `"World"`。
 在 `resolve` 函数中，我们可以通过第一个参数来获取输入参数的值，TypeScript 将会为我们推导其类型，在这里，我们直接解构得到 `name` 参数的值。
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 ## 为操作添加更多信息
 
 我们还可以为操作添加更多信息，比如 `description`、`deprecationReason` 和 `extensions`：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
 import * as v from "valibot"
@@ -140,8 +156,10 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}!`),
 })
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
 import { z } from "zod"
@@ -158,10 +176,12 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 ## 对象解析器
+
 在 GraphQL 中，我们可以为对象上的字段定义解析函数，以此为对象添加额外的属性以及创建对象之间的关系。
 这使得 GraphQL 能够构建非常灵活同时保持简洁的 API。
 
@@ -169,8 +189,9 @@ const helloResolver = resolver({
 
 我们首先定义两个简单对象 `User` 和 `Book`：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 import * as v from "valibot"
 
@@ -191,8 +212,10 @@ const Book = v.object({
 
 interface IBook extends v.InferOutput<typeof Book> {}
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 import { z } from "zod"
 
@@ -213,8 +236,10 @@ const Book = z.object({
 
 interface IBook extends z.infer<typeof Book> {}
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
+
 在上面的代码中，我们定义了两个对象 `User` 和 `Book`，它们分别表示用户和书籍。
 在 `Book` 中，我们定义了一个 `authorID` 字段，它表示书籍的作者 ID。
 
@@ -249,8 +274,10 @@ const bookMap: Map<number, IBook> = new Map(
 ```
 
 接下来，我们定义一个 `bookResolver`：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 const User = v.object({
   __typename: v.nullish(v.literal("User")),
@@ -290,8 +317,10 @@ const bookResolver = resolver.of(Book, {
   books: query(v.array(Book)).resolve(() => Array.from(bookMap.values())),
 })
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 const User = z.object({
   __typename: z.literal("User").nullish(),
@@ -331,15 +360,17 @@ const bookResolver = resolver.of(Book, {
   books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 在上面的代码中，我们使用 `resolver.of` 函数来定义 `bookResolver`，它是一个对象解析器，用于解析 `Book` 对象。
 在 `bookResolver` 中，我们定义了一个 `books` 字段，它是一个查询操作，用于获取所有的书籍。
 
 接下来，我们将为 `Book` 对象添加一个名为 `author` 的额外字段用于获取书籍的作者：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 const User = v.object({
   __typename: v.nullish(v.literal("User")),
@@ -381,8 +412,10 @@ const bookResolver = resolver.of(Book, {
   author: field(v.nullish(User)).resolve((book) => userMap.get(book.authorID)), // [!code hl]
 })
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 const User = z.object({
   __typename: z.literal("User").nullish(),
@@ -424,8 +457,8 @@ const bookResolver = resolver.of(Book, {
   author: field(User.nullish()).resolve((book) => userMap.get(book.authorID)), // [!code hl]
 })
 ```
-</Tab>
-</Tabs>
+</template>
+</InputSchemaCodes>
 
 在上面的代码中，我们使用 `field` 函数来定义 `author` 字段。
 `field` 函数接受两个参数：
@@ -433,11 +466,14 @@ const bookResolver = resolver.of(Book, {
   - 第二个参数是解析函数或选项，在这里我们使用了一个解析函数：我们从解析函数的第一个参数获取 `Book` 实例，然后根据 `authorID` 字段从 `userMap` 中获取对应的 `User` 实例。
 
 ### 定义字段输入
+
 在 GraphQL 中，我们可以为字段定义输入参数，以便在查询时传递额外的数据。
 
 在 `GQLoom` 中，我们可以使用 `field` 函数的第二个参数来定义字段的输入参数。
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts twoslash
 const User = v.object({
   __typename: v.nullish(v.literal("User")),
@@ -485,8 +521,9 @@ const bookResolver = resolver.of(Book, {
     }), // [!code hl]
 })
 ```
-</Tab>
-<Tab value="zod">
+</template>
+<template v-slot:zod>
+
 ```ts twoslash
 const User = z.object({
   __typename: z.literal("User").nullish(),
@@ -534,8 +571,9 @@ const bookResolver = resolver.of(Book, {
     }), // [!code hl]
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 在上面的代码中，我们使用 `field` 函数来定义 `signature` 字段。
 `field` 函数的第二个参数是一个对象，它包含两个字段：
@@ -544,24 +582,28 @@ const bookResolver = resolver.of(Book, {
 
 刚刚我们定义的 `bookResolver` 对象可以通过 [weave](../weave) 函数编织成 GraphQL schema：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+<InputSchemaCodes>
+<template v-slot:valibot>
+
 ```ts
 import { weave } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 
 export const schema = weave(ValibotWeaver, bookResolver)
 ```
-</Tab>
-<Tab value="zod">
+
+</template>
+<template v-slot:zod>
+
 ```ts
 import { weave } from '@gqloom/core'
 import { ZodWeaver } from '@gqloom/zod'
 
 export const schema = weave(ZodWeaver, bookResolver)
 ```
-</Tab>
-</Tabs>
+
+</template>
+</InputSchemaCodes>
 
 最终得到的 GraphQL schema 如下：
 

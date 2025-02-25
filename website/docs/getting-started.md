@@ -6,17 +6,6 @@ icon: PencilRuler
 import InputSchemaCodes from "@/components/input-schema-codes.vue"
 import { inputSchema } from "@/components/input-schema.ts"
 </script>
-<style>
-@reference "@/css/tailwind.css";
-
-.input-schema,
-.input-schema-active {
-  @apply font-bold cursor-pointer underline hover:opacity-90 transition-opacity;
-}
-.input-schema {
-  @apply opacity-70;
-}
-</style>
 
 # Getting Started
 
@@ -150,7 +139,7 @@ yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 
 ### Hello World
 
-Let's write our first [resolver](./resolver), we can choose to use <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> or <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span>::
+Let's write our first [resolver](./resolver), we can choose to use <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> or <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span>:
 
 <InputSchemaCodes>
 <template v-slot:valibot>

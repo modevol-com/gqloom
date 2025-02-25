@@ -16,6 +16,10 @@ const sidebarZh = [
     text: "丝线（Silk）",
     link: "/zh/docs/silk",
   },
+  {
+    text: "解析器（Resolver）",
+    link: "/zh/docs/resolver",
+  },
 ] satisfies DefaultTheme.Config["sidebar"]
 
 const sidebarEn = [
@@ -26,6 +30,14 @@ const sidebarEn = [
   {
     text: "Getting Started",
     link: "/docs/getting-started",
+  },
+  {
+    text: "Silk",
+    link: "/docs/silk",
+  },
+  {
+    text: "Resolver",
+    link: "/docs/resolver",
   },
 ] satisfies DefaultTheme.Config["sidebar"]
 
