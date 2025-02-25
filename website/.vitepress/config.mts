@@ -1,7 +1,29 @@
 import { URL, fileURLToPath } from "node:url"
 import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
 import tailwindcss from "@tailwindcss/vite"
-import { defineConfig } from "vitepress"
+import { type DefaultTheme, defineConfig } from "vitepress"
+
+const sidebarZh = [
+  {
+    text: "介绍",
+    link: "/zh/docs/",
+  },
+  {
+    text: "快速上手",
+    link: "/zh/docs/getting-started",
+  },
+] satisfies DefaultTheme.Config["sidebar"]
+
+const sidebarEn = [
+  {
+    text: "Introduction",
+    link: "/docs/",
+  },
+  {
+    text: "Getting Started",
+    link: "/docs/getting-started",
+  },
+] satisfies DefaultTheme.Config["sidebar"]
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -18,16 +40,7 @@ export default defineConfig({
       lang: "zh",
       themeConfig: {
         nav: [{ text: "主页", link: "/" }],
-        sidebar: [
-          {
-            text: "介绍",
-            link: "/zh/docs/",
-          },
-          {
-            text: "快速上手",
-            link: "/docs/getting-started",
-          },
-        ],
+        sidebar: sidebarZh,
         outlineTitle: "本页内容",
       },
     },
@@ -36,19 +49,13 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [{ text: "Home", link: "/" }],
 
-    sidebar: [
-      {
-        text: "Introduction",
-        link: "/docs/",
-      },
-      {
-        text: "Getting Started",
-        link: "/docs/getting-started",
-      },
-    ],
+    sidebar: sidebarEn,
     socialLinks: [
       { icon: "github", link: "https://github.com/modevol-com/gqloom" },
     ],
+    outline: {
+      level: [2, 3],
+    },
   },
   markdown: {
     codeTransformers: [transformerTwoslash() as any],

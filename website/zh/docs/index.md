@@ -31,8 +31,8 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 :::
 
 ### 你好，世界
-
-```ts twoslash tab="valibot"
+::: code-group
+```ts twoslash [valibot]
 import { resolver, query, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -46,7 +46,7 @@ const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-```ts twoslash tab="zod"
+```ts twoslash [zod]
 import { resolver, query, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
@@ -59,6 +59,7 @@ const helloResolver = resolver({
 
 export const schema = weave(ZodWeaver, helloResolver)
 ```
+:::
 
 ### 亮点咫尺可及
 

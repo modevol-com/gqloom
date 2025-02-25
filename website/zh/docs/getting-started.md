@@ -2,7 +2,23 @@
 title: 快速上手
 icon: PencilRuler
 ---
-import { File, Folder, Files } from 'fumadocs-ui/components/files';
+<script setup>
+import InputSchemaCodes from "@/components/input-schema-codes.vue"
+import { inputSchema } from "@/components/input-schema.ts"
+</script>
+<style>
+@reference "@/css/tailwind.css";
+
+.input-schema,
+.input-schema-active {
+  @apply font-bold cursor-pointer underline hover:opacity-90 transition-opacity;
+}
+.input-schema {
+  @apply opacity-70;
+}
+</style>
+
+# 快速上手
 
 为了快速上手 GQLoom，我们将一起搭建一个简单的 GraphQL 后端应用。
 
@@ -61,153 +77,116 @@ cattery/
 - `services`: 存放业务逻辑，如用户登录、用户注册等；
 - `index.ts`: 用于以 HTTP 服务的形式运行 GraphQL 应用；
 
-<Callout>
+::: info
 GQLoom 对项目的文件结构没有任何要求，这里只提供一个参考，在实践中你可以按照需求和喜好组织文件。
-</Callout>
+:::
 
 ### 初始化项目
 
 首先，让我们新建文件夹并初始化项目：
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 mkdir cattery
 cd ./cattery
 npm init -y
 ```
-</Tab>
-<Tab>
-```sh
+```sh [pnpm]
 mkdir cattery
 cd ./cattery
 pnpm init
 ```
-</Tab>
-<Tab>
-```sh
+```sh [yarn]
 mkdir cattery
 cd ./cattery
 yarn init -y
 ```
-</Tab>
-</Tabs>
+:::
 
 然后，我们将安装一些必要的依赖来以便在 Node.js 运行中 TypeScript 应用：
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+
+::: code-group
+```sh [npm]
 npm i -D typescript @types/node tsx
 npx tsc --init
 ```
-</Tab>
-<Tab>
-```sh
+
+```sh [pnpm]
 pnpm add -D typescript @types/node tsx
 pnpm exec tsc --init
 ```
-</Tab>
-<Tab>
-```sh
+
+```sh [yarn]
 yarn add -D typescript @types/node tsx
 yarn dlx -q -p typescript tsc --init
 ```
-</Tab>
-</Tabs>
+:::
 
 接下来，我们将安装 GQLoom 以及相关依赖，我们可以选择 [Valibot](https://valibot.dev/) 或者 [Zod](https://zod.dev/) 来定义并验证输入：
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+
+::: code-group
+```sh [npm]
 # use Valibot
 npm i graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
 
 # use Zod
 npm i graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
-</Tab>
-<Tab>
-```sh
+
+```sh [pnpm]
 # use Valibot
 pnpm add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
 
 # use Zod
 pnpm add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
-</Tab>
-<Tab>
-```sh
+
+```sh [yarn]
 # use Valibot
 yarn add graphql graphql-yoga @gqloom/core valibot @gqloom/valibot
 
 # use zod
 yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 ```
-</Tab>
-</Tabs>
+:::
 
 ### 你好 世界
 
-让我们编写第一个[解析器](./resolver):
+让我们编写第一个 [解析器](./resolver)，可以选择使用 <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> 或者 <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span> ：
 
-<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-<Tab>
-```ts twoslash title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
+<InputSchemaCodes>
+<template v-slot:valibot>
 
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
+<<< @/snippets/getting-started/resolvers/index.ts{ts twoslash} [Valibot]
 
-export const resolvers = [helloResolver]
-```
-</Tab>
-<Tab>
-```ts twoslash title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
+</template>
+<template v-slot:zod>
 
-const helloResolver = resolver({
-  hello: query(z.string())
-    .input({
-      name: z
-        .string()
-        .nullish()
-        .transform((x) => x ?? "World"),
-    })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
+<<< @/snippets/getting-started-zod/resolvers/index.ts{ts twoslash} [Zod]
 
-export const resolvers = [helloResolver]
-```
-</Tab>
-</Tabs>
+</template>
+</InputSchemaCodes>
 
 我们需要将这个解析器编织成 GraphQL Schema，并以 HTTP 服务器的形式运行它：
 
-```ts title="src/index.ts"
-import { createServer } from "node:http"
-import { weave } from "@gqloom/core"
-import { ZodWeaver } from "@gqloom/zod"
-import { createYoga } from "graphql-yoga"
-import { resolvers } from "./resolvers"
+<InputSchemaCodes>
+<template v-slot:valibot>
 
-const schema = weave(ZodWeaver, ...resolvers)
+<<< @/snippets/getting-started/index.ts{ts}
 
-const yoga = createYoga({ schema })
-createServer(yoga).listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql")
-})
-```
+</template>
+<template v-slot:zod>
+
+<<< @/snippets/getting-started-zod/index.ts{ts}
+
+</template>
+</InputSchemaCodes>
 
 很好，我们已经创建了一个简单的 GraphQL 应用。  
 接下来我们尝试运行这个应用，在 `package.json` 里添加 `dev` 脚本：
-```json
+```JSON
 {
   "scripts": {
     "dev": "tsx watch src/index.ts"
@@ -217,28 +196,22 @@ createServer(yoga).listen(4000, () => {
 
 现在让我们运行一下：
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 npm run dev
 ```
-</Tab>
-<Tab>
-```sh
+```sh [pnpm]
 pnpm dev
 ```
-</Tab>
-<Tab>
-```sh
+```sh [yarn]
 yarn dev
 ```
-</Tab>
-</Tabs>
+:::
 
 在浏览器中打开 http://localhost:4000/graphql 就可以看到 GraphQL 演练场了。  
 让我们尝试发送一个 GraphQL 查询，在演练场里输入:
 
-```gql title="GraphQL Query" 
+```GraphQL
 {
   hello(name: "GQLoom")
 }
@@ -246,7 +219,7 @@ yarn dev
 
 点击查询按钮，就可以看到结果了：
 
-```json
+```JSON
 {
   "data": {
     "hello": "Hello GQLoom!"
@@ -262,32 +235,27 @@ yarn dev
 
 首先，让我们安装 [Drizzle ORM](https://orm.drizzle.team/)，我们将使用它来操作 **SQLite** 数据库。
 
-<Tabs groupId="package-manager" items={["npm", "pnpm" , "yarn"]}>
-<Tab>
-```sh
+::: code-group
+```sh [npm]
 npm i @gqloom/drizzle drizzle-orm @libsql/client dotenv
 npm i -D drizzle-kit
 ```
-</Tab>
-<Tab>
-```sh
+```sh [pnpm]
 pnpm add @gqloom/drizzle drizzle-orm @libsql/client dotenv
 pnpm add -D drizzle-kit
 ```
-</Tab>
-<Tab>
-```sh
+```sh [yarn]
 yarn add @gqloom/drizzle drizzle-orm @libsql/client dotenv
 yarn add -D drizzle-kit
 ```
-</Tab>
-</Tabs>
+:::
 
 ### 定义数据库表格
 
 接下来在 `src/schema/index.ts` 文件中定义数据库表格，我们将定义 `users` 和 `cats` 两个表格，并建立它们之间的关系：
 
-```ts twoslash title="src/schema/index.ts"
+```ts twoslash
+// src/schema/index.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
@@ -327,7 +295,8 @@ export const catsRelations = relations(cats, ({ one }) => ({
 ### 初始化数据库
 
 我们需要创建一个配置文件:
-```ts title="drizzle.config.ts"
+```ts
+// drizzle.config.ts
 import "dotenv/config"
 import { defineConfig } from "drizzle-kit"
 
@@ -349,7 +318,8 @@ npx drizzle-kit push
 ### 使用数据库
 
 为了在应用中使用数据库，我们需要创建一个数据库实例：
-```ts title="src/providers/index.ts"
+```ts
+// src/providers/index.ts
 import { drizzle } from "drizzle-orm/libsql"
 import * as schema from "../schema"
 
@@ -361,7 +331,9 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 让我们先创建一个用户服务，其中将包含一系列对用户表的操作。
 我们将在 `src/services/user.ts` 文件中实现用户服务，并在 `src/resolvers/index.ts` 文件中将整个 `user.ts` 作为 `userService` 导出：
 
-```ts title="src/services/user.ts" tab="src/services/user.ts"
+::: code-group
+```ts [services/user.ts]
+// src/services/user.ts
 import { eq } from "drizzle-orm"
 import { db } from "../providers"
 import { users } from "../schema"
@@ -383,10 +355,11 @@ export async function findUserByPhone(phone: string) {
   })
 }
 ```
-
-```ts title="src/services/index.ts" tab="src/services/index.ts"
+```ts [services/index.ts]
+// src/services/index.ts
 export * as userService from "./user"
 ```
+:::
 
 ## 解析器
 
@@ -398,11 +371,13 @@ export * as userService from "./user"
 
 在完成用户解析器后，我们还需要将它添加到 `src/resolvers/index.ts` 文件里的 `resolvers` 中：
 
-<Tabs items={["src/resolvers/user.ts", "src/resolvers/index.ts"]}>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts twoslash title="src/resolvers/user.ts"
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
+::: code-group
+
+```ts twoslash [resolvers/user.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -470,6 +445,7 @@ export async function findUserByPhone(phone: string) {
 export * as userService from "./user"
 // @filename: resolvers/user.ts
 // ---cut---
+// src/resolvers/user.ts
 import { mutation, query, resolver } from "@gqloom/core"
 import * as v from "valibot"
 import { users } from "../schema"
@@ -494,9 +470,30 @@ export const userResolver = resolver.of(users, {
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-  </Tab>
-  <Tab>
-```ts twoslash title="src/resolvers/index.ts"
+
+```ts [resolvers/index.ts]
+// src/resolvers/user.ts
+import { query, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { userResolver } from "./user"  // [!code ++]
+
+const helloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello ${name}!`),
+})
+
+export const resolvers = [helloResolver, userResolver]  // [!code ++]
+```
+:::
+
+</template>
+
+<template v-slot:zod>
+
+::: code-group
+
+```ts twoslash [resolvers/user.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -562,8 +559,9 @@ export async function findUserByPhone(phone: string) {
 }
 // @filename: services/index.ts
 export * as userService from "./user"
-// ---cut---
 // @filename: resolvers/user.ts
+// ---cut---
+// src/resolvers/user.ts
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { users } from "../schema"
@@ -588,13 +586,9 @@ export const userResolver = resolver({
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/index.ts"
+
+```ts [resolvers/index.ts]
+// src/resolvers/user.ts
 import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { userResolver } from "./user" // [!code ++]
@@ -612,28 +606,17 @@ const helloResolver = resolver({
 
 export const resolvers = [helloResolver, userResolver] // [!code ++]
 ```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
-import { userResolver } from "./user"  // [!code ++]
 
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
+:::
 
-export const resolvers = [helloResolver, userResolver]  // [!code ++]
-```
-  </Tab>
-  </Tabs>
-</Tab>
-</Tabs>
+</template>
+
+</InputSchemaCodes>
 
 很好，现在让我们在演练场尝试一下：
-```gql title="GraphQL Mutation" tab="Mutation"
+
+::: code-group
+```GraphQL [Mutation]
 mutation {
   createUser(data: {name: "Bob", phone: "001"}) {
     id
@@ -643,7 +626,7 @@ mutation {
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "createUser": {
@@ -654,9 +637,12 @@ mutation {
   }
 }
 ```
+::: 
 
 继续尝试找回刚刚创建的用户：
-```gql title="GraphQL Query" tab="Query"
+
+::: code-group
+```GraphQL [Query]
 {
   usersByName(name: "Bob") {
     id
@@ -666,7 +652,7 @@ mutation {
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "usersByName": [
@@ -679,8 +665,9 @@ mutation {
   }
 }
 ```
+:::
 
-### 当前用户上下文
+### 上下文
 
 接下来，让我们尝试添加一个简单的登录功能，再为用户解析器添加一个查询操作：
 
@@ -688,7 +675,7 @@ mutation {
 
 为了实现这个查询，首先得有登录功能，让我们来简单写一个：
 
-```ts twoslash title="src/contexts/index.ts"
+```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -756,6 +743,7 @@ export async function findUserByPhone(phone: string) {
 export * as userService from "./user"
 // @filename: contexts/index.ts
 // ---cut---
+// src/contexts/index.ts
 import { createMemoization, useContext } from "@gqloom/core"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
@@ -776,14 +764,16 @@ export const useCurrentUser = createMemoization(async () => {
 
 我们使用 `useContext()` 获取了 Yoga 提供的上下文（Context），并从请求头中获取了用户的手机号码，并根据手机号码查找用户，如果用户不存在，则抛出 `GraphQLError`。
 
-<Callout type="warn">
+::: warning
 如你所见，这个登录功能非常简陋，仅作为演示使用，完全不保证安全性。在实践中通常推荐使用 `session` 或者 `jwt` 等方案。
-</Callout>
+:::
 
 现在，我们在解析器里添加新的查询操作：
 
-<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-<Tab>
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import * as v from "valibot"
@@ -812,8 +802,11 @@ export const userResolver = resolver({
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-</Tab>
-<Tab>
+
+</template>
+
+<template v-slot:zod>
+
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { z } from "zod"
@@ -842,11 +835,14 @@ export const userResolver = resolver({
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+
+</InputSchemaCodes>
 
 如果我们在演练场里之间调用这个新的查询，应用程序将给我们未认证的错误：
-```gql title="Graphql Query" tab="Query"
+::: code-group
+```GraphQL [Query]
 {
   mine {
     id
@@ -855,8 +851,7 @@ export const userResolver = resolver({
   }
 }
 ```
-
-```json tab="Response"
+```JSON [Response]
 {
   "errors": [
     {
@@ -875,15 +870,17 @@ export const userResolver = resolver({
   "data": null
 }
 ```
+:::
 
 点开演练场下方的 `Headers`，并在请求头里添加 `authorization` 字段，这里我们使用在上一步中创建的 `Bob` 的手机号码，这样我们就作为`Bob`登录了：
-```json tab="Headers"
+
+::: code-group
+```JSON [Headers]
 {
   "authorization": "001"
 }
 ```
-
-```gql title="Graphql Query" tab="Query"
+```GraphQL [Query]
 {
   mine {
     id
@@ -892,8 +889,7 @@ export const userResolver = resolver({
   }
 }
 ```
-
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "mine": {
@@ -904,6 +900,7 @@ export const userResolver = resolver({
   }
 }
 ```
+:::
 
 ### 解析器工厂
 
@@ -911,79 +908,13 @@ export const userResolver = resolver({
 
 我们使用[解析器工厂](./schema/drizzle#解析器工厂)来快速创建接口：
 
-<Tabs items={["src/resolvers/cat.ts", "src/resolvers/index.ts"]}>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts twoslash title="src/resolvers/cat.ts"
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
+<InputSchemaCodes>
 
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    phone: t.text().notNull().unique(),
-  })
-)
+<template v-slot:valibot>
 
-export const usersRelations = relations(users, ({ many }) => ({
-  cats: many(cats),
-}))
+::: code-group
 
-export const cats = drizzleSilk(
-  t.sqliteTable("cats", {
-    id: t.integer().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    birthday: t.integer({ mode: "timestamp" }).notNull(),
-    ownerId: t
-      .integer()
-      .notNull()
-      .references(() => users.id),
-  })
-)
-
-export const catsRelations = relations(cats, ({ one }) => ({
-  owner: one(users, {
-    fields: [cats.ownerId],
-    references: [users.id],
-  }),
-}))
-// @filename: providers/index.ts
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
-
-export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
-  schema,
-})
-// @filename: resolvers/cat.ts
-import { field, resolver } from "@gqloom/core"
-import { drizzleResolverFactory } from "@gqloom/drizzle"
-import * as v from "valibot"
-import { db } from "../providers"
-import { cats } from "../schema"
-
-const catResolverFactory = drizzleResolverFactory(db, "cats")
-
-export const catResolver = resolver.of(cats, {
-  cats: catResolverFactory.selectArrayQuery(),
-
-  age: field(v.pipe(v.number()))
-    .input({
-      currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
-        new Date().getFullYear()
-      ),
-    })
-    .resolve((cat, { currentYear }) => {
-      return currentYear - cat.birthday.getFullYear()
-    }),
-})
-```
-  </Tab>
-  <Tab>
-```ts twoslash title="src/resolvers/cat.ts"
+```ts twoslash [resolvers/cat.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -1028,6 +959,100 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 })
 // @filename: resolvers/cat.ts
 // ---cut---
+// src/resolvers/cat.ts
+import { field, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import * as v from "valibot"
+import { db } from "../providers"
+import { cats } from "../schema"
+
+const catResolverFactory = drizzleResolverFactory(db, "cats")
+
+export const catResolver = resolver.of(cats, {
+  cats: catResolverFactory.selectArrayQuery(),
+
+  age: field(v.pipe(v.number()))
+    .input({
+      currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
+        new Date().getFullYear()
+      ),
+    })
+    .resolve((cat, { currentYear }) => {
+      return currentYear - cat.birthday.getFullYear()
+    }),
+})
+```
+
+```ts [resolvers/index.ts]
+// src/resolvers/index.ts
+import { query, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { catResolver } from "./cat" // [!code ++]
+import { userResolver } from "./user"
+
+const helloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello ${name}!`),
+})
+
+export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
+```
+
+:::
+
+</template>
+
+<template v-slot:zod>
+
+::: code-group
+
+```ts twoslash [resolvers/cat.ts]
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    phone: t.text().notNull().unique(),
+  })
+)
+
+export const usersRelations = relations(users, ({ many }) => ({
+  cats: many(cats),
+}))
+
+export const cats = drizzleSilk(
+  t.sqliteTable("cats", {
+    id: t.integer().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    birthday: t.integer({ mode: "timestamp" }).notNull(),
+    ownerId: t
+      .integer()
+      .notNull()
+      .references(() => users.id),
+  })
+)
+
+export const catsRelations = relations(cats, ({ one }) => ({
+  owner: one(users, {
+    fields: [cats.ownerId],
+    references: [users.id],
+  }),
+}))
+// @filename: providers/index.ts
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
+
+export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
+  schema,
+})
+// @filename: resolvers/cat.ts
+// ---cut---
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
@@ -1052,29 +1077,8 @@ export const catResolver = resolver.of(cats, {
     }),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
-import { catResolver } from "./cat" // [!code ++]
-import { userResolver } from "./user"
 
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
-
-export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
-```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/index.ts"
+```ts [resolvers/index.ts]
 import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { catResolver } from "./cat" // [!code ++]
@@ -1093,10 +1097,13 @@ const helloResolver = resolver({
 
 export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-</Tabs>
+
+:::
+
+</template>
+
+</InputSchemaCodes>
+
 
 在上面的代码中，我们使用 `drizzleResolverFactory()` 创建了 `catResolverFactory`，用于快速构建解析器。
 
@@ -1105,9 +1112,11 @@ export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++
 
 接下来，让我们尝试添加一个 `createCat` 的变更。我们希望只有登录用户能访问这个接口，并且被创建的猫咪将归属于当前用户:
 
-<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-<Tab>
-```ts twoslash title="src/resolvers/cat.ts"
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
+```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -1190,6 +1199,7 @@ export const useCurrentUser = createMemoization(async () => {
 })
 // @filename: resolvers/cat.ts
 // ---cut---
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import * as v from "valibot"
@@ -1236,8 +1246,11 @@ export const catResolver = resolver.of(cats, {
   }), // [!code ++]
 })
 ```
-</Tab>
-<Tab>
+
+</template>
+
+<template v-slot:zod>
+
 ```ts twoslash title="src/resolvers/cat.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -1321,6 +1334,7 @@ export const useCurrentUser = createMemoization(async () => {
 })
 // @filename: resolvers/cat.ts
 // ---cut---
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
@@ -1362,14 +1376,17 @@ export const catResolver = resolver.of(cats, {
   }), // [!code ++]
 })
 ```
-</Tab>
-</Tabs>
+
+</template>
+
+</InputSchemaCodes>
 
 在上面的代码中，我们使用 `catResolverFactory` 创建了一个向 `cats` 表格添加更多数据的变更，并且我们重写了这个变更的输入。在验证输入时，我们使用 `useCurrentUser()` 获取当前登录用户的 ID，并将作为 `ownerId` 的值传递给 `cats` 表格。
 
 现在让我们在演练场尝试添加几只猫咪:
 
-```gql tab="mutation" title="GraphQL Mutation"
+::: code-group
+```GraphQL [Mutation]
 mutation {
   createCats(values: [
     { name: "Mittens", birthday: "2021-01-01" },
@@ -1382,13 +1399,13 @@ mutation {
 }
 ```
 
-```json tab="Headers"
+```JSON [Headers]
 {
   "authorization": "001"
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "createCats": [
@@ -1406,9 +1423,12 @@ mutation {
   }
 }
 ```
+:::
 
 让我们使用 `cats` 查询再确认一下数据库的数据：
-```gql tab="query" title="GraphQL Query"
+
+::: code-group
+```GraphQL [Query]
 {
   cats {
     id
@@ -1418,7 +1438,7 @@ mutation {
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "cats": [
@@ -1436,6 +1456,7 @@ mutation {
   }
 }
 ```
+:::
 
 ### 关联对象
 
@@ -1443,11 +1464,14 @@ mutation {
 这在 GraphQL 中非常容易实现。  
 让我们为 `cats` 添加额外的 `owner` 字段，并为 `users` 添加额外的 `cats` 字段：
 
-<Tabs items={["src/resolvers/cat.ts", "src/resolvers/user.ts"]}>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/cat.ts"
+<InputSchemaCodes>
+
+<template v-slot:valibot>
+
+::: code-group
+
+```ts [resolvers/cat.ts]
+// src/resolvers/cat.ts
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import * as v from "valibot"
@@ -1496,9 +1520,51 @@ export const catResolver = resolver.of(cats, {
   }),
 })
 ```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/cat.ts"
+
+```ts [resolvers/user.ts]
+import { mutation, query, resolver } from "@gqloom/core"
+import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
+import * as v from "valibot"
+import { useCurrentUser } from "../contexts"
+import { db } from "../providers" // [!code ++]
+import { users } from "../schema"
+import { userService } from "../services"
+
+const userResolverFactory = drizzleResolverFactory(db, "users") // [!code ++]
+
+export const userResolver = resolver.of(users, {
+  cats: userResolverFactory.relationField("cats"), // [!code ++]
+
+  mine: query(users).resolve(() => useCurrentUser()),
+
+  usersByName: query(users.$list())
+    .input({ name: v.string() })
+    .resolve(({ name }) => userService.findUsersByName(name)),
+
+  userByPhone: query(users.$nullable())
+    .input({ phone: v.string() })
+    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+
+  createUser: mutation(users)
+    .input({
+      data: v.object({
+        name: v.string(),
+        phone: v.string(),
+      }),
+    })
+    .resolve(async ({ data }) => userService.createUser(data)),
+})
+```
+
+:::
+
+</template>
+
+<template v-slot:zod>
+
+::: code-group
+
+```ts [resolvers/cat.ts]
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { z } from "zod"
@@ -1542,49 +1608,8 @@ export const catResolver = resolver.of(cats, {
   }),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-<Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/user.ts"
-import { mutation, query, resolver } from "@gqloom/core"
-import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
-import * as v from "valibot"
-import { useCurrentUser } from "../contexts"
-import { db } from "../providers" // [!code ++]
-import { users } from "../schema"
-import { userService } from "../services"
 
-const userResolverFactory = drizzleResolverFactory(db, "users") // [!code ++]
-
-export const userResolver = resolver.of(users, {
-  cats: userResolverFactory.relationField("cats"), // [!code ++]
-
-  mine: query(users).resolve(() => useCurrentUser()),
-
-  usersByName: query(users.$list())
-    .input({ name: v.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
-
-  userByPhone: query(users.$nullable())
-    .input({ phone: v.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
-
-  createUser: mutation(users)
-    .input({
-      data: v.object({
-        name: v.string(),
-        phone: v.string(),
-      }),
-    })
-    .resolve(async ({ data }) => userService.createUser(data)),
-})
-```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/user.ts"
+```ts [resolvers/user.ts]
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
 import { z } from "zod"
@@ -1618,16 +1643,19 @@ export const userResolver = resolver.of(users, {
     .resolve(async ({ data }) => userService.createUser(data)),
 })
 ```
-  </Tab>
-  </Tabs>
-</Tab>
-</Tabs>
+
+:::
+
+</template>
+
+</InputSchemaCodes>
 
 在上面的代码中，我们使用解析器工厂为 `cats` 创建了 `owner` 字段；同样地，我们还为 `users` 创建了 `cats` 字段。  
 在幕后，解析器工厂创建的关系字段将使用 `DataLoader` 从数据库查询以避免 N+1 问题。
 
 让我们在演练场尝试一下查询猫的所有者：
-```gql title="GraphQL Query" tab="query"
+::: code-group
+```GraphQL [Query]
 {
   cats {
     id
@@ -1642,7 +1670,7 @@ export const userResolver = resolver.of(users, {
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "cats": [
@@ -1670,9 +1698,11 @@ export const userResolver = resolver.of(users, {
   }
 }
 ```
+:::
 
 让我们尝试一下查询当前用户的猫咪：
-```gql title="GraphQL Query" tab="query"
+::: code-group
+```GraphQL [Query]
 {
   mine {
     name
@@ -1685,13 +1715,13 @@ export const userResolver = resolver.of(users, {
 }
 ```
 
-```json tab="Headers"
+```JSON [Headers]
 {
   "authorization": "001"
 }
 ```
 
-```json tab="Response"
+```JSON [Response]
 {
   "data": {
     "mine": {
@@ -1712,6 +1742,7 @@ export const userResolver = resolver.of(users, {
   }
 }
 ```
+:::
 
 ## 总结
 
