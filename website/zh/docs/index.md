@@ -31,6 +31,7 @@ GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql
 :::
 
 ### 你好，世界
+
 ::: code-group
 ```ts twoslash [valibot]
 import { resolver, query, weave } from "@gqloom/core"

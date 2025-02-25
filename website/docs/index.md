@@ -30,9 +30,10 @@ In addition, the **resolver factory** of GQLoom can also create CRUD interfaces 
 The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](https://typegraphql.com/), and some technical implementations refer to [Pothos](https://pothos-graphql.dev/).
 :::
 
-### Hello, World
+### Hello World
 
-```ts twoslash tab="valibot"
+::: code-group
+```ts twoslash [valibot]
 import { resolver, query, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -46,7 +47,7 @@ const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-```ts twoslash tab="zod"
+```ts twoslash [zod]
 import { resolver, query, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
@@ -59,6 +60,7 @@ const helloResolver = resolver({
 
 export const schema = weave(ZodWeaver, helloResolver)
 ```
+:::
 
 ### Highlights you should not miss
 
