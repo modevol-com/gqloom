@@ -1,7 +1,7 @@
 ---
-title: Introduction
 icon: BookMarked
 ---
+# Introduction
 
 ## What is GraphQL
 
@@ -24,11 +24,11 @@ Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://
 The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
 
 When developing backend applications with GQLoom, you only need to write types using the Schema libraries you are familiar with. Modern Schema libraries will infer TypeScript types for you, and GQLoom will weave GraphQL types for you.
-In addition, the **resolver factory** of GQLoom can also create CRUD interfaces for [Prisma](./schema/prisma.mdx#resolver-factory), [MikroORM](./schema/mikro-orm.mdx#resolver-factory), and [Drizzle](./schema/drizzle.mdx#resolver-factory), and supports custom input and adding middleware.
+In addition, the **resolver factory** of GQLoom can also create CRUD interfaces for [Prisma], [MikroORM], and [Drizzle], and supports custom input and adding middleware.
 
-<Callout>
+::: info
 The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](https://typegraphql.com/), and some technical implementations refer to [Pothos](https://pothos-graphql.dev/).
-</Callout>
+:::
 
 ### Hello, World
 
