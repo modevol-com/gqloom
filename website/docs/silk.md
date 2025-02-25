@@ -117,6 +117,6 @@ const Cat = z.object({
 
 In the code above, we have created some simple Schema as silk using [Zod](https://zod.dev/), you can learn how to create more complex types using [Zod integration](../schema/zod) section to learn how to create more complex types using [Zod](https://zod.dev/).
 
-<Callout>
+::: info
 The core library of `GQLoom` follows the [Standard Schema specification](https://github.com/standard-schema/standard-schema). Thanks to `Valibot` and `Zod` also following this specification, we don't need to use additional wrapper functions to use the Schema from Valibot and Zod as Silk.
-</Callout>
+:::

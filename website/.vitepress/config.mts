@@ -12,6 +12,10 @@ const sidebarZh = [
     text: "快速上手",
     link: "/zh/docs/getting-started",
   },
+  {
+    text: "丝线（Silk）",
+    link: "/zh/docs/silk",
+  },
 ] satisfies DefaultTheme.Config["sidebar"]
 
 const sidebarEn = [
@@ -39,7 +43,10 @@ export default defineConfig({
       label: "简体中文",
       lang: "zh",
       themeConfig: {
-        nav: [{ text: "主页", link: "/zh" }],
+        nav: [
+          { text: "主页", link: "/zh" },
+          { text: "文档", link: "/zh/docs/" },
+        ],
         sidebar: sidebarZh,
         outlineTitle: "本页内容",
       },
@@ -47,7 +54,10 @@ export default defineConfig({
   },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    nav: [{ text: "Home", link: "/" }],
+    nav: [
+      { text: "Home", link: "/" },
+      { text: "Documents", link: "/docs/" },
+    ],
 
     sidebar: sidebarEn,
     socialLinks: [
