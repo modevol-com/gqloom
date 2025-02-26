@@ -1,25 +1,27 @@
 ---
-title: 中间件（Middleware）
+title: Middleware
 icon: Fence
 ---
 
-中间件是一种函数，它介入了解析函数的处理流程。它提供了一种在请求和响应流程中插入逻辑的方式，以便在发送响应之前或在请求处理之前执行代码。
-`GQLoom` 的中间件遵循了 [Koa](https://koajs.com/#application) 的洋葱式中间件模式。
+# Middleware
 
-## 定义中间件
+Middleware is a function that intervenes in the processing flow of a parsed function. It provides a way to insert logic into the request and response flow to execute code before a response is sent or before a request is processed.
+`GQLoom`'s middleware follows the onion middleware pattern of [Koa](https://koajs.com/#application).
 
-中间件是一个函数，它将在调用时被注入 `options` 对象作为参数，`options` 包含以下字段：
-  - `outputSilk`: 输出丝线，包含了当前正在解析字段的输出类型；
-  - `parent`: 当前字段的父节点，相当于 `useResolverPayload().root`；
-  - `parseInput`: 用于获取当前字段输入的函数；
-  - `type`: 当前字段的类型，其值为 `query`, `mutation`, `subscription` 或 `field`；
-  - `next`: 用于调用下一个中间件的函数；
+## Define Middleware
 
-`options` 还可以直接作为 `next` 函数使用。
- 
-另外，我们还可以通过 `useContext()` 和 `useResolverPayload()` 获取到当前解析函数的上下文以及更多信息。
+Middleware is a function that will be injected with an `options` object as a parameter when called. The `options` object contains the following fields:
+  - `outputSilk`: output silk, which includes the output type of the field currently being parsed;
+  - `parent`: the parent node of the current field, equivalent to `useResolverPayload().root`;
+  - `parseInput`: a function used to obtain the input of the current field;
+  - `type`: the type of the current field, whose value can be `query`, `mutation`, `subscription`, or `field`;
+  - `next`: a function used to call the next middleware;
 
-一个最基础的中间件函数如下：
+The `options` object can also be directly used as the `next` function.
+
+Additionally, we can use `useContext()` and `useResolverPayload()` to get the context and more information of the current resolver function.
+
+A minimal middleware function is as follows:
 
 ```ts twoslash
 import { Middleware } from '@gqloom/core';
@@ -29,15 +31,14 @@ const middleware: Middleware = async (next) => {
 }
 ```
 
-接下来，我们将介绍一些常见的中间件形式。
+Next, we'll introduce some common types of middleware.
 
-### 错误捕获
+### Error catching
 
-在使用 [Valibot](../schema/valibot) 或 [Zod](../schema/zod) 等库进行输入验证时，我们可以在中间件中捕获验证错误，并返回自定义的错误信息。
+When using [Valibot](../schema/valibot) or [Zod](../schema/zod) libraries for input validation, we can catch validation errors in the middleware and return customized error messages.
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import { type Middleware } from "@gqloom/core"
 import { ValiError } from "valibot"
 import { GraphQLError } from "graphql"
@@ -54,9 +55,7 @@ export const valibotExceptionFilter: Middleware = async (next) => {
   }
 }
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { type Middleware } from "@gqloom/core"
 import { ZodError } from "zod"
 import { GraphQLError } from "graphql"
@@ -74,11 +73,10 @@ export const zodExceptionFilter: Middleware = async (next) => {
   }
 }
 ```
-</Tab>
-</Tabs>
+:::
 
-### 验证输出
-在 `GQLoom`中，默认不会对解析函数的输出执行验证。但我们可以通过中间件来验证解析函数的输出。
+### Validate output
+In `GQLoom`, validation of parser output is not performed by default. However, we can validate the output of parser functions through middleware.
 
 ```ts twoslash
 import { silk, type Middleware } from "@gqloom/core"
@@ -89,10 +87,10 @@ export const outputValidator: Middleware = async ({ next, outputSilk }) => {
 }
 ```
 
-让我们尝试使用这个中间件：
+Let's try to use this middleware:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+#### Valibot
+
 ```ts twoslash
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
@@ -121,10 +119,11 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-在上面的代码中，我们对 `hello` 查询的输出添加了 `v.minLength(10)` 的要求，并在解析函数中添加了 `outputValidator` 中间件。
-我们还在 `weave` 中添加了一个全局中间件 `ValibotExceptionFilter`。
-</Tab>
-<Tab value="zod">
+In the code above, we added the `v.minLength(10)` requirement to the output of the `hello` query and added the `outputValidator` middleware to the parser function.
+We also added a global middleware `ValibotExceptionFilter` to `weave`.
+
+#### Zod
+
 ```ts twoslash
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
@@ -154,21 +153,21 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-在上面的代码中，我们对 `hello` 查询的输出添加了 `z.string().min(10)` 的要求，并在解析函数中添加了 `outputValidator` 中间件。
-我们还在 `weave` 中添加了一个全局中间件 `ValibotExceptionFilter`。
-</Tab>
-</Tabs>
+In the code above, we added a `z.string().min(10)` requirement to the output of the `hello` query and added the `outputValidator` middleware to the parser function.
+We also added a global middleware `ValibotExceptionFilter` to `weave`.
 
-当我们进行以下查询时：
-```graphql title="GraphQL Query"
+#### Query
+
+When we make the following query:
+```GraphQL
 {
   hello(name: "W")
 }
 ```
-将会得到类似如下的结果：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```json
+A result similar to the following will be given:
+
+::: code-group
+```JSON [valibot]
 {
   "errors": [
     {
@@ -200,9 +199,7 @@ createServer(yoga).listen(4000, () => {
   "data": null
 }
 ```
-</Tab>
-<Tab value="zod">
-```json
+```JSON [zod]
 {
   "errors": [
     {
@@ -234,28 +231,29 @@ createServer(yoga).listen(4000, () => {
   "data": null
 }
 ```
-</Tab>
-</Tabs>
-如果我们调整输入，使返回的字符串长度符合要求：
-```graphql title="GraphQL Query"
+:::
+
+If we adjust the input so that the returned string is the required length:
+```GraphQL
 {
   hello(name: "World")
 }
 ```
-将会得到没有异常的响应：
-```json
+It will get a response with no exceptions:
+```JSON
 {
   "data": {
     "hello": "Hello, World"
   }
 }
 ```
-### 鉴权
 
-对用户的权限进行校验是一个常见的需求，我们可以通过中间件来轻易实现。
+### Authentication
 
-考虑我们的用户有 `"admin"` 和 `"editor"` 两种角色，我们希望管理员和编辑员分别可以访问自己的操作。
-首先，我们实现一个 `authGuard` 中间件，用于校验用户的角色：
+Checking a user's permissions is a common requirement that we can easily implement with middleware.
+
+Consider that our user has the roles `“admin”` and `“editor”`, and we want the administrator and editor to have access to their own actions, respectively.
+First, we implement an `authGuard` middleware that checks the user's role:
 
 ```ts twoslash
 // @filename: context.ts
@@ -280,13 +278,13 @@ export function authGuard(role: "admin" | "editor"): Middleware {
   }
 }
 ```
-在上面的代码中，我们声明了一个 `authGuard` 中间件，它接受一个角色参数，并返回一个中间件函数。
-中间件函数会检查用户是否已经认证，并且是否具有指定的角色，如果不符合要求，则抛出一个 `GraphQLError` 异常。
+In the code above, we declare an `authGuard` middleware that takes a role parameter and returns a middleware function.
+The middleware function checks that the user is authenticated and has the specified role, and throws a `GraphQLError` exception if the requirements are not satisfied.
 
-我们可以为不同的解析器应用不同的中间件：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+We can apply different middleware for different resolvers:
+
+::: code-group
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -316,9 +314,8 @@ const editorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+
+```ts twoslash [zod]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -348,14 +345,13 @@ const editorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-</Tab>
-</Tabs>
+:::
 
-在上面的代码中，我们为 `adminResolver` 和 `editorResolver` 分别应用了 `authGuard` 中间件，并指定了不同的角色。这样，只有具有相应角色的用户才能访问对应解析器内的操作。
+In the code above, we have applied the `authGuard` middleware to `AdminResolver` and `EditorResolver` and assigned different roles to them. In this way, only users with the corresponding roles can access the actions within the corresponding resolvers.
 
-### 日志
+### Logging
 
-我们也可以通过中间件来实现日志记录功能。例如，我们可以创建一个 `logger` 中间件，用于记录每个字段解析函数的执行时间：
+We can also implement logging functionality through middleware. For example, we can create a `logger` middleware to log the execution time of each field parsing function:
 ```ts twoslash
 import { type Middleware, useResolverPayload } from "@gqloom/core"
 
@@ -371,16 +367,16 @@ export const logger: Middleware = async (next) => {
 }
 ```
 
-## 使用中间件
+## Using middleware
 
-GQLoom 能够在各种范围内应用中间件，包括解析函数、解析器局部中间件和全局中间件。
+GQLoom is able to apply middleware in a variety of scopes, including resolver functions, resolver local middleware, and global middleware.
 
-### 解析函数中间件
+### Resolve function middleware
 
-我们可以在解析函数中直接使用中间件，只需要在操作构造函数的第二个参数中传入 `middlewares` 字段，例如：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+We can use middleware directly in the resolve function by simply passing the `middlewares` field in the second argument of the operation constructor, for example:
+
+::: code-group
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export const outputValidator: Middleware = (next) => next()
@@ -397,9 +393,8 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts  twoslash
+
+```ts  twoslash [zod]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export const outputValidator: Middleware = (next) => next()
@@ -416,16 +411,15 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-</Tab>
-</Tabs>
+:::
 
-### 解析器局部中间件
+### Resolver-scoped middleware
 
-我们也可以在解析器级别应用中间件，这样中间件将对解析器内的所有操作生效。
-只需要在解析器构造函数的最后一个参数中传入 `middlewares` 字段，例如：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+We can also apply middleware at the resolver level, which will take effect for all operations within the resolver.
+Simply pass the `middlewares` field in the last argument of the resolver constructor, for example:
+
+::: code-group
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -455,9 +449,8 @@ const editorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+
+```ts twoslash [zod]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -487,11 +480,10 @@ const editorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-</Tab>
-</Tabs>
+:::
 
-### 全局中间件
-为了应用全局中间件，我们需要在 `weave` 函数中传入中间件字段，例如：
+### Global middleware
+In order to apply global middleware, we need to pass in the middleware fields in the `weave` function, for example:
 
 ```ts
 import { weave } from "@gqloom/core"

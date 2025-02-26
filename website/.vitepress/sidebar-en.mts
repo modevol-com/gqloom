@@ -29,4 +29,8 @@ export default [
     text: "DataLoader",
     link: "/docs/dataloader",
   },
+  {
+    text: "Middleware",
+    link: "/docs/middleware",
+  },
 ] satisfies DefaultTheme.Config["sidebar"]

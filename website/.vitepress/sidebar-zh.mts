@@ -29,4 +29,8 @@ export default [
     text: "数据加载器（DataLoader）",
     link: "/zh/docs/dataloader",
   },
+  {
+    text: "中间件（Middleware）",
+    link: "/zh/docs/middleware",
+  },
 ] satisfies DefaultTheme.Config["sidebar"]
