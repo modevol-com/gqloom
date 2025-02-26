@@ -1,6 +1,6 @@
 <template>
   <a :href="props.to"
-    class="bg-slate-100/60 dark:bg-slate-900/60 hover:border-orange-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors mb-2 w-fit flex flex-col gap-2 rounded-md p-4 border-2 border-slate-300/20 shadow">
+    class="bg-slate-100/60 dark:bg-slate-900/60 hover:border-orange-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors mb-2 w-fit flex flex-col gap-2 rounded-md p-4 border-2 border-slate-300/10 shadow">
     <div class="bg-slate-200/60 dark:bg-slate-800/60 p-1 size-fit rounded border-solid border border-slate-300/40">
       <LucideIcon :icon="props.icon" class="size-5" />
     </div>
