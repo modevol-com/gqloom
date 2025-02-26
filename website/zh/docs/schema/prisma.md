@@ -2,6 +2,8 @@
 title: Prisma
 ---
 
+# Prisma
+
 [Prisma ORM](https://www.prisma.io/orm)凭借其直观的数据模型、自动迁移、类型安全和自动完成功能，使开发人员在使用数据库时获得了全新的体验。
 
 `@gqloom/prisma` 提供了 GQLoom 与 Prisma 的集成：
@@ -11,22 +13,24 @@ title: Prisma
 
 ## 安装
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i -D prisma
 npm i @gqloom/core @gqloom/prisma
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add -D prisma
 pnpm add @gqloom/core @gqloom/prisma
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add -D prisma
 yarn add @gqloom/core @gqloom/prisma
 ```
-```sh tab="bun"
+```sh [bun]
 bun add -D prisma
 bun add @gqloom/core @gqloom/prisma
 ```
+:::
 
 在 [Prisma 文档](https://www.prisma.io/docs/getting-started/quickstart)中，你可以找到更多关于安装的信息。
 

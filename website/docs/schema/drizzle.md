@@ -2,6 +2,8 @@
 title: Drizzle
 ---
 
+# Drizzle
+
 [Drizzle](https://orm.drizzle.team/) is a modern, type-safe TypeScript ORM designed for Node.js. It offers a concise and easy-to-use API, supports databases such as PostgreSQL, MySQL, and SQLite, and has powerful query builders, transaction processing, and database migration capabilities. At the same time, it remains lightweight and has no external dependencies, making it very suitable for database operation scenarios that require high performance and type safety.
 
 `@gqloom/drizzle` provides the integration of GQLoom and Drizzle:
@@ -15,18 +17,20 @@ Please refer to Drizzle's [Getting Started Guide](https://orm.drizzle.team/docs/
 
 After completing the installation of Drizzle, install `@gqloom/drizzle`:
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i @gqloom/core @gqloom/drizzle
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add @gqloom/core @gqloom/drizzle
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add @gqloom/core @gqloom/drizzle
 ```
-```sh tab="bun"
+```sh [bun]
 bun add @gqloom/core @gqloom/drizzle
 ```
+:::
 
 ## Using Silk
 

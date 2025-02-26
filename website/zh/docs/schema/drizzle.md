@@ -2,6 +2,8 @@
 title: Drizzle
 ---
 
+# Drizzle
+
 [Drizzle](https://orm.drizzle.team/) 是一个现代化的、类型安全的 TypeScript ORM，专为 Node.js 设计。它提供了简洁易用的 API，支持 PostgreSQL、MySQL 和 SQLite 等数据库，具备强大的查询构建器、事务处理和数据库迁移功能，同时保持轻量级和无外部依赖的特点，非常适合需要高性能和类型安全的数据库操作场景。
 
 `@gqloom/drizzle` 提供了 GQLoom 与 Drizzle 的集成：
@@ -15,18 +17,20 @@ title: Drizzle
 
 在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i @gqloom/core @gqloom/drizzle
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add @gqloom/core @gqloom/drizzle
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add @gqloom/core @gqloom/drizzle
 ```
-```sh tab="bun"
+```sh [bun]
 bun add @gqloom/core @gqloom/drizzle
 ```
+:::
 
 ## 使用丝线
 

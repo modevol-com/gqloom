@@ -49,6 +49,14 @@ export default [
         text: "Yup",
         link: "/docs/schema/yup",
       },
+      {
+        text: "Drizzle",
+        link: "/docs/schema/drizzle",
+      },
+      {
+        text: "Prisma",
+        link: "/docs/schema/prisma",
+      },
     ],
   },
 ] satisfies DefaultTheme.Config["sidebar"]

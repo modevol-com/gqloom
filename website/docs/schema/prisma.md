@@ -2,6 +2,8 @@
 title: Prisma
 ---
 
+# Prisma
+
 [Prisma ORM](https://www.prisma.io/orm) offers developers a brand - new experience when working with databases, thanks to its intuitive data models, automatic migrations, type safety, and auto - completion features.
 
 `@gqloom/prisma` provides the integration of GQLoom and Prisma:
@@ -11,22 +13,24 @@ title: Prisma
 
 ## Installation
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i -D prisma
 npm i @gqloom/core @gqloom/prisma
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add -D prisma
 pnpm add @gqloom/core @gqloom/prisma
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add -D prisma
 yarn add @gqloom/core @gqloom/prisma
 ```
-```sh tab="bun"
+```sh [bun]
 bun add -D prisma
 bun add @gqloom/core @gqloom/prisma
 ```
+:::
 
 You can find more information about installation in the [Prisma documentation](https://www.prisma.io/docs/getting-started/quickstart).
 
