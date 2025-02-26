@@ -2,23 +2,27 @@
 title: Apollo
 ---
 
+# Apollo
+
 [Apollo Server](https://www.apollographql.com/docs/apollo-server/) 是一款开源、符合规范的 GraphQL 服务器，与包括 [Apollo Client](https://www.apollographql.com/docs/react) 在内的任何 GraphQL 客户端兼容。
 它是构建生产就绪、自文档化 GraphQL API 的最佳方式，可使用来自任何来源的数据。
 
 ## 安装
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i graphql @apollo/server @gqloom/core
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add graphql @apollo/server @gqloom/core
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add graphql @apollo/server @gqloom/core
 ```
-```sh tab="bun"
+```sh [bun]
 bun add graphql @apollo/server @gqloom/core
 ```
+:::
 
 ## 使用
 ```ts twoslash

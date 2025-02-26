@@ -2,24 +2,28 @@
 title: Yoga
 ---
 
+# Yoga
+
 GraphQL Yoga is a batteries-included cross-platform [GraphQL over HTTP spec-compliant](https://github.com/enisdenjo/graphql-http/tree/master/implementations/graphql-yoga) GraphQL server 
 powered by [Envelop](https://envelop.dev) and [GraphQL Tools](https://graphql-tools.com) that runs anywhere; 
 focused on easy setup, performance and great developer experience.
 
 ## Installation
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i graphql graphql-yoga @gqloom/core
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add graphql graphql-yoga @gqloom/core
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add graphql graphql-yoga @gqloom/core
 ```
-```sh tab="bun"
+```sh [bun]
 bun add graphql graphql-yoga @gqloom/core
 ```
+:::
 
 ## Usage
 

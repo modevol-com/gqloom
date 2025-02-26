@@ -63,4 +63,33 @@ export default [
       },
     ],
   },
+  {
+    text: "Advanced",
+    collapsed: false,
+    items: [
+      {
+        text: "Adapters",
+        link: "/docs/advanced/adapters/",
+        collapsed: true,
+        items: [
+          {
+            text: "Yoga",
+            link: "/docs/advanced/adapters/yoga",
+          },
+          {
+            text: "Mercurius",
+            link: "/docs/advanced/adapters/mercurius",
+          },
+          {
+            text: "Apollo",
+            link: "/docs/advanced/adapters/apollo",
+          },
+          {
+            text: "Hono",
+            link: "/docs/advanced/adapters/hono",
+          },
+        ],
+      },
+    ],
+  },
 ] satisfies DefaultTheme.Config["sidebar"]

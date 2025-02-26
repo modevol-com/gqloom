@@ -63,4 +63,33 @@ export default [
       },
     ],
   },
+  {
+    text: "进阶功能",
+    collapsed: false,
+    items: [
+      {
+        text: "适配器",
+        link: "/zh/docs/advanced/adapters/",
+        collapsed: true,
+        items: [
+          {
+            text: "Yoga",
+            link: "/zh/docs/advanced/adapters/yoga",
+          },
+          {
+            text: "Mercurius",
+            link: "/zh/docs/advanced/adapters/mercurius",
+          },
+          {
+            text: "Apollo",
+            link: "/zh/docs/advanced/adapters/apollo",
+          },
+          {
+            text: "Hono",
+            link: "/zh/docs/advanced/adapters/hono",
+          },
+        ],
+      },
+    ],
+  },
 ] satisfies DefaultTheme.Config["sidebar"]

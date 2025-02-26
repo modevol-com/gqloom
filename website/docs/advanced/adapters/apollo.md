@@ -2,23 +2,27 @@
 title: Apollo
 ---
 
+# Apollo
+
 [Apollo Server](https://www.apollographql.com/docs/apollo-server/) is an open-source, spec-compliant GraphQL server that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react).
 It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
 
 ## Installation
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i graphql @apollo/server @gqloom/core
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add graphql @apollo/server @gqloom/core
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add graphql @apollo/server @gqloom/core
 ```
-```sh tab="bun"
+```sh [bun]
 bun add graphql @apollo/server @gqloom/core
 ```
+:::
 
 ## Usage
 ```ts twoslash

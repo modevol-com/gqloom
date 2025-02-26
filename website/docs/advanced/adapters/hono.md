@@ -2,13 +2,26 @@
 title: Hono
 ---
 
+# Hono
+
 [Hono](https://hono.dev/) is a small, simple, and extremely fast web framework built based on web standards and capable of running in various JavaScript runtime environments. It has the characteristics of zero dependencies and being lightweight, and provides a concise API and first-class TypeScript support. It is suitable for building various application scenarios such as web APIs and edge applications.
 
 ## Installation
 
-```package-install
-hono @hono/graphql-server graphql @gqloom/core
+::: code-group
+```sh [npm]
+npm i @hono/graphql-server graphql @gqloom/core
 ```
+```sh [pnpm]
+pnpm add @hono/graphql-server graphql @gqloom/core
+```
+```sh [yarn]
+yarn add @hono/graphql-server graphql @gqloom/core
+```
+```sh [bun]
+bun add @hono/graphql-server graphql @gqloom/core
+```
+:::
 
 ## Usage
 

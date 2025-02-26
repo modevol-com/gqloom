@@ -2,24 +2,28 @@
 title: Yoga
 ---
 
+# Yoga
+
 [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server) 是一款包含电池的跨平台 [GraphQL over HTTP 规范兼容](<(https://github.com/enisdenjo/graphql-http/tree/master/implementations/graphql-yoga)>)的 GraphQL 服务器，
 由 [Envelop](https://envelop.dev/) 和 [GraphQL Tools](https://graphql-tools.com/) 提供支持，可在任何地方运行；
 重点在于简易设置、性能和良好的开发人员体验。
 
 ## 安装
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i graphql graphql-yoga @gqloom/core
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add graphql graphql-yoga @gqloom/core
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add graphql graphql-yoga @gqloom/core
 ```
-```sh tab="bun"
+```sh [bun]
 bun add graphql graphql-yoga @gqloom/core
 ```
+:::
 
 ## 使用
 

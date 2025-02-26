@@ -2,24 +2,28 @@
 title: Mercurius
 ---
 
-[Mercurius](https://mercurius.dev/) 是用于 [Fastify](https://www.fastify.io/) 的 GraphQL 适配器
+# Mercurius
 
-## 安装
+[Mercurius](https://mercurius.dev/) is a GraphQL adapter for [Fastify](https://www.fastify.io/)
 
-```sh tab="npm"
+## Installation
+
+::: code-group
+```sh [npm]
 npm i fastify mercurius graphql @gqloom/core
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add fastify mercurius graphql @gqloom/core
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add fastify mercurius graphql @gqloom/core
 ```
-```sh tab="bun"
+```sh [bun]
 bun add fastify mercurius graphql @gqloom/core
 ```
+:::
 
-## 使用 
+## Usage 
 ```ts twoslash
 // @filename: resolvers.ts
 import { resolver, query, silk, weave } from "@gqloom/core"
@@ -49,9 +53,9 @@ app.listen({ port: 4000 }, () => {
 })
 ```
 
-## 上下文
+## Contexts
 
-在与 `Mercurius` 同时使用 GQLoom 时，你可以使用 `MercuriusContext` 来标注上下的类型：
+When using GQLoom together with `Mercurius`, you can use `MercuriusContext` to label the type of context:
 
 ```ts twoslash
 import { useContext } from "@gqloom/core"
@@ -62,4 +66,4 @@ export function useAuthorization() {
 }
 ```
 
-你还可以在 [Mercurius 文档](https://mercurius.dev/#/docs/context)中了解更多关于上下文的信息。
+You can also learn more about contexts in the [Mercurius documentation](https://mercurius.dev/#/docs/context).
