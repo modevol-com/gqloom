@@ -57,6 +57,10 @@ export default [
         text: "Prisma",
         link: "/docs/schema/prisma",
       },
+      {
+        text: "MikroORM",
+        link: "/docs/schema/mikro-orm",
+      },
     ],
   },
 ] satisfies DefaultTheme.Config["sidebar"]

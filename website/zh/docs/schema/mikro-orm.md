@@ -2,9 +2,11 @@
 title: Mikro ORM
 ---
 
-<Callout type="warn">
+# Mikro ORM
+
+::: warning
 GQLoom 对于 Mikro ORM 的基础目前处于实验阶段。可能还缺失一些常用的功能。现有的功能还缺乏完善的测试。如果有任何问题，请随时在 [GitHub](https://github.com/modevol-com/gqloom/issues) 上报告。
-</Callout>
+:::
 
 [MikroORM](https://mikro-orm.io/) 是一个出色的 TypeScript ORM，支持多种数据库，如 MySQL、PostgreSQL、SQLite 等。
 
@@ -15,18 +17,20 @@ GQLoom 对于 Mikro ORM 的基础目前处于实验阶段。可能还缺失一�
 
 ## 安装
 
-```sh tab="npm"
+::: code-group
+```sh [npm]
 npm i @gqloom/core @gqloom/mikro-orm @mikro-orm/core
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add @gqloom/core @gqloom/mikro-orm @mikro-orm/core
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add @gqloom/core @gqloom/mikro-orm @mikro-orm/core
 ```
-```sh tab="bun"
+```sh [bun]
 bun add @gqloom/core @gqloom/mikro-orm @mikro-orm/core
 ```
+:::
 
 在 [Mikro ORM 文档](https://mikro-orm.io/docs/quick-start#installation)中，你可以找到更多关于安装的信息。
 
@@ -258,6 +262,7 @@ const schema = weave(giraffeResolver)
 只需要以上简单的代码，我们就可以从 `Giraffe` 实体生成 GraphQL 操作，并使用 `weave` 函数将它们编织到 GraphQL Schema 中。
 得到的完整的 GraphQL Schema 如下：
 
+::: details
 ```graphql
 type Query {
   giraffe(id: ID!): Giraffe!
@@ -510,3 +515,4 @@ input StringMikroComparisonOperators {
   re: String
 }
 ```
+:::
