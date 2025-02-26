@@ -1,33 +1,38 @@
 ---
-title: Federation
+title: 联邦图（Federation）
 ---
 
-[Apollo Federation](https://www.apollographql.com/docs/federation/) lets you declaratively combine multiple GraphQL APIs into a single, federated graph. This federated graph enables clients to interact with multiple APIs through a single request.
+# 联邦图（Federation）
 
-GQLoom Federation provides GQLoom support for Apollo Federation.
+[Apollo Federation](https://www.apollographql.com/docs/federation/) 让您可以声明性地将多个 GraphQL API 组合成一个单一的联合图。联邦图使客户端能够通过单个请求与多个 API 进行交互。
 
-## Installation
+GQLoom Federation 提供了 GQLoom 对 Apollo Federation 的支持。
 
-```sh tab="npm"
+## 安装
+
+::: code-group
+```sh [npm]
 npm i graphql @gqloom/core @apollo/subgraph @gqloom/federation
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add graphql @gqloom/core @apollo/subgraph @gqloom/federation
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add graphql @gqloom/core @apollo/subgraph @gqloom/federation
 ```
-```sh tab="bun"
+```sh [bun]
 bun add graphql @gqloom/core @apollo/subgraph @gqloom/federation
 ```
+:::
 
-## GraphQL Directives
+## GraphQL 指令
 
-Apollo Federation [Directives](https://www.apollographql.com/docs/federation/federated-schemas/federated-directives/) is used to describe how to combine multiple GraphQL APIs into a federated graph.
+Apollo Federation 指令（[Directives](https://www.apollographql.com/docs/federation/federated-schemas/federated-directives/) ）用于描述如何将多个 GraphQL API 组合成一个联合图。
 
-In GQLoom, we can declare GraphQL directives in the `directives` field of the `extensions` property of objects and fields:
+在 GQLoom 中，我们可以在对象和字段的 `extensions` 属性中的 `directives` 字段来声明 GraphQL 指令：
 
-```ts twoslash tab="valibot"
+::: code-group
+```ts twoslash [valibot]
 import * as v from "valibot"
 import { asObjectType } from "@gqloom/valibot"
 
@@ -47,7 +52,7 @@ export const User = v.pipe(
 export interface IUser extends v.InferOutput<typeof User> {}
 ```
 
-```ts twoslash tab="zod"
+```ts twoslash [zod]
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
 
@@ -68,7 +73,7 @@ export const User = z
 export interface IUser extends z.infer<typeof User> {}
 ```
 
-```ts twoslash tab="graphql.js"
+```ts twoslash [graphql.js]
 import { silk } from "@gqloom/core"
 import { GraphQLObjectType, GraphQLString, GraphQLNonNull } from "graphql"
 
@@ -90,8 +95,9 @@ export const User = silk<IUser>(
   })
 )
 ```
+:::
 
-In the above example, we have declared a `@key` directive which marks the `id` field of the `User` object as a resolvable field and we will get the following Schema:
+以上示例中，我们声明了一个 `@key` 指令，该指令将 `User` 对象的 `id` 字段标记为可解析字段，我们将得到如下的 Schema：
 
 ```graphql title="GraphQL Schema"
 type User
@@ -102,8 +108,8 @@ type User
 }
 ```
 
-We have two formats for declaring instructions:
-- Using arrays:
+我们有两种声明指令的格式：
+- 使用数组：
 ```json
 {
   directives: [
@@ -120,7 +126,7 @@ We have two formats for declaring instructions:
   ]
 }
 ```
-- Using key-value pairs:
+- 使用键值对：
 ```json
 {
   directives: {
@@ -132,9 +138,9 @@ We have two formats for declaring instructions:
 }
 ```
 
-## Resolve Reference
+## 解析引用 | Resolve Reference
 
-`@gqloom/apollo` provides the `resolveReference` function to help you resolve references.
+`@gqloom/apollo` 提供了 `resolveReference` 函数来帮助您解析引用。
 
 ```ts twoslash
 import { silk } from "@gqloom/core"
@@ -178,11 +184,11 @@ export const userResolver = resolver.of(
 )
 ```
 
-## Weaving
+## 编织
 
-The `FederatedSchemaWeaver.weave` function, introduced from `@gqloom/federation`, is used to weave Federation Schema. compared to `@gqloom/core`, the ` FederatedSchemaWeaver.weave` function in `@gqloom/apollo` will output Schema with Directives.
+从 `@gqloom/federation` 引入的 `FederatedSchemaWeaver.weave` 函数用于编织 Federation Schema。与 `@gqloom/core` 相比，`@gqloom/apollo` 中的 `FederatedSchemaWeaver.weave` 函数将输出携带指令（Directives）的 Schema。
 
-It is also worth noting that we need to use the `printSubgraphSchema` function imported from `@apollo/subgraph` to convert the Schema to a textual format in order to preserve the Directives.
+另外值得注意的是，我们需要使用从 `@apollo/subgraph` 引入的 `printSubgraphSchema` 函数将 Schema 转换为文本格式以保留指令（Directives）。
 
 ```ts twoslash
 import { silk } from "@gqloom/core"
@@ -230,4 +236,3 @@ import { printSubgraphSchema } from "@apollo/subgraph"
 const schema = FederatedSchemaLoom.weave(userResolver)
 const schemaText = printSubgraphSchema(schema)
 ```
-

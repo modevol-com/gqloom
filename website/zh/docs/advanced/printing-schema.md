@@ -2,6 +2,8 @@
 title: 打印 Schema
 ---
 
+# 打印 Schema
+
 GraphQL Schema 文件是定义 GraphQL API 数据结构和操作的核心文件，它使用 GraphQL Schema Definition Language (SDL) 描述了数据类型、字段、查询（queries）、变更（mutations）和订阅（subscriptions）等信息，既作为服务器端处理请求的基础，也为客户端提供了接口文档，帮助开发者了解可用的数据和操作。
 
 ## 从 Schema 生成文件
@@ -45,4 +47,4 @@ GraphQL Schema 可以用于很多用途，常见的用途包括：
 
 - 在客户端使用[代码生成](https://the-guild.dev/graphql/codegen)进行开发和类型检查。
 
-- 在客户端开发时与 TypeScript 集成，以便在开发过程中获得更好的类型检查和自动补全，更多信息请参阅 [gql.tada](https://gql-tada.0no.co/)。
+- 在客户端开发时与 TypeScript 集成，以便在开发过程中获得更好的类型检查和自动补全，更多信息可参阅 [gql.tada](https://gql-tada.0no.co/)。

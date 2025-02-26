@@ -90,6 +90,18 @@ export default [
           },
         ],
       },
+      {
+        text: "打印 Schema",
+        link: "/zh/docs/advanced/printing-schema",
+      },
+      {
+        text: "订阅（Subscription）",
+        link: "/zh/docs/advanced/subscription",
+      },
+      {
+        text: "联邦图（Federation）",
+        link: "/zh/docs/advanced/federation",
+      },
     ],
   },
 ] satisfies DefaultTheme.Config["sidebar"]

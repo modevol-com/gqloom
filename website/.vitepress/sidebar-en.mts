@@ -90,6 +90,18 @@ export default [
           },
         ],
       },
+      {
+        text: "Printing Schema",
+        link: "/docs/advanced/printing-schema",
+      },
+      {
+        text: "Subscription",
+        link: "/docs/advanced/subscription",
+      },
+      {
+        text: "Federation",
+        link: "/docs/advanced/federation",
+      },
     ],
   },
 ] satisfies DefaultTheme.Config["sidebar"]

@@ -2,16 +2,18 @@
 title: Subscription
 ---
 
+# Subscription
+
 In GraphQL, Subscription allows the server to push data to the client.
 
 ## Basic Usage
 
 In `GQLoom`, we use the `subscription` function to define a subscription:.
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
-import { ValibotWeaver, weave, resolver, subscription } from "@gqloom/valibot"
+::: code-group
+```ts twoslash [valibot]
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -36,10 +38,9 @@ server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
-import { weave, resolver, subscription } from "@gqloom/zod"
+```ts twoslash [zod]
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
@@ -64,8 +65,7 @@ server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-</Tab>
-</Tabs>
+:::
 
 In the code above, we define a `countdown` subscription that accepts a `seconds` parameter.
 We passed in an [asynchronous generator](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator) in the subscription function, which will push a number every second until the number is 0.
@@ -73,9 +73,9 @@ We passed in an [asynchronous generator](https://developer.mozilla.org/docs/Web/
 ## Using publish/subscribe
 
 We can also use the publish/subscribe feature provided by [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started) to push messages more easily:
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+
+::: code-group
+```ts twoslash [valibot]
 import { resolver, query, subscription } from "@gqloom/core"
 import { createPubSub } from "graphql-yoga"
 import * as v from "valibot"
@@ -98,9 +98,7 @@ const HelloResolver = resolver({
   }),
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, query, subscription } from "@gqloom/zod"
 import { createPubSub } from "graphql-yoga"
 import { z } from "zod"
@@ -123,8 +121,7 @@ const HelloResolver = resolver({
   }),
 })
 ```
-</Tab>
-</Tabs>
+:::
 
 In the code above, we defined a `hello` query and a `listenGreeting` subscription.
 When the `hello` query is called, it publishes a `greeting` event, and the `listenGreeting` subscription subscribes to this event and pushes a message when it occurs.

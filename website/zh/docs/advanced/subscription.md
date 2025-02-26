@@ -2,15 +2,16 @@
 title: 订阅（Subscription）
 ---
 
+# 订阅（Subscription）
+
 在 GraphQL 中，订阅（Subscription）允许服务端推送数据到客户端。
 
 ## 基础使用
 
 在 `GQLoom` 中，我们使用 `subscription` 函数来定义一个订阅:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import { weave, resolver, subscription } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -37,9 +38,7 @@ server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { weave, resolver, subscription } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
@@ -66,8 +65,7 @@ server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-</Tab>
-</Tabs>
+::: 
 
 在上面的代码中，我们定义了一个 `countdown` 订阅，它接受一个 `seconds` 参数。
 我们在订阅函数中传入了一个[异步生成器](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator)，它会每秒推送一个数字，直到数字为 0。
@@ -75,9 +73,9 @@ server.listen(4000, () => {
 ## 使用发布/订阅
 
 我们还可以使用 [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started) 提供的发布/订阅（publish/subscribe）功能来更轻松地推送消息：
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+
+::: code-group
+```ts twoslash [valibot]
 import { resolver, query, subscription } from "@gqloom/core"
 import { createPubSub } from "graphql-yoga"
 import * as v from "valibot"
@@ -100,9 +98,7 @@ const HelloResolver = resolver({
   }),
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, query, subscription } from "@gqloom/zod"
 import { createPubSub } from "graphql-yoga"
 import { z } from "zod"
@@ -125,8 +121,7 @@ const HelloResolver = resolver({
   }),
 })
 ```
-</Tab>
-</Tabs>
+:::
 
 在上面的代码中，我们定义了一个 `hello` 查询和一个 `listenGreeting` 订阅。
 当 `hello` 查询被调用时，它会发布一个 `greeting` 事件，然后 `listenGreeting` 订阅会订阅这个事件，并在事件发生时推送消息。
