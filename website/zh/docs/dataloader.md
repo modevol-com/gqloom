@@ -3,6 +3,8 @@ title: 数据加载器（Dataloader）
 icon: HardDriveDownload
 ---
 
+# 数据加载器（Dataloader）
+
 由于 GraphQL 的灵活性，当我们加载某个对象的关联对象时，我们通常需要执行多个查询。
 这就造成了著名的 N+1 查询问题。为了解决这个问题，我们可以使用 [DataLoader](https://github.com/graphql/dataloader)。
 
@@ -12,9 +14,8 @@ icon: HardDriveDownload
 
 考虑我们有如下简单对象 `User` 和 `Book`：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import * as v from "valibot"
 
 const User = v.object({
@@ -34,9 +35,7 @@ const Book = v.object({
 
 interface IBook extends v.InferOutput<typeof Book> {}
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { z } from "zod"
 
 const User = z.object({
@@ -56,8 +55,7 @@ const Book = z.object({
 
 interface IBook extends z.infer<typeof Book> {}
 ```
-</Tab>
-</Tabs>
+:::
 
 在 `Book` 对象上，我们有一个 `authorID` 字段，它引用了 `User` 对象的 `id` 字段。
 
@@ -99,9 +97,8 @@ const books: IBook[] = [
 
 让我们为 `Book` 对象编写一个简单的解析器：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import * as v from "valibot"
 
 const User = v.object({
@@ -135,9 +132,7 @@ const BookResolver = resolver.of(Book, {
   ),
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { z } from "zod"
 
 const User = z.object({
@@ -171,12 +166,11 @@ const BookResolver = resolver.of(Book, {
   ),
 })
 ```
-</Tab>
-</Tabs>
+:::
 
 在上面的代码中，我们为 `Book` 对象定义了一个额外字段 `author`，它将返回与 `authorID` 字段匹配的 `User` 对象。我们还定义了一个名为 `books` 的查询，它将返回所有 `Book` 对象。
 在这里，我们直接使用 `users` 数组来查找用户。对于下面的查询：
-```graphql title="GraphQL Schema"
+```GraphQL
 query books {
   books {
     id
@@ -192,15 +186,15 @@ query books {
 在这里我们共有 6 个 `Book` 实例，因此我们将执行 6 次查找操作。有没有更好的方法来减少查询次数呢？
 
 ### 使用 DataLoader
+
 接下来，我们将使用 DataLoader 来优化我们的查询。
 
 我们可以使用来自 `@gqloom/core` 包的提供基本功能的 `EasyDataLoader` 类，也可以使用更流行的 [DataLoader](https://github.com/graphql/dataloader)
 
 #### 定义批量查询
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import * as v from "valibot"
 
 const User = v.object({
@@ -255,9 +249,7 @@ const BookResolver = resolver.of(Book, {
 })
 
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { z } from "zod"
 
 const User = z.object({
@@ -312,8 +304,7 @@ const BookResolver = resolver.of(Book, {
 })
 
 ```
-</Tab>
-</Tabs>
+:::
 
 在上面的代码中，我们使用 `createMemoization` 创建了一个 `useUserLoader` 函数，该函数返回一个 `DataLoader` 实例。
 记忆化函数确保在同一个请求内总是使用相同的 `DataLoader` 实例。
@@ -332,9 +323,9 @@ const BookResolver = resolver.of(Book, {
 
 6. 最后，我们根据 `authorIDs` 数组的顺序，从 `authorMap` 中获取对应的 `User` 对象，并返回一个包含这些 `User` 对象的数组。
 
-<Callout>
+::: info
 必须保证查询函数的返回数组顺序与 `IDs` 数组顺序一致。`DataLoader` 依赖于此顺序来正确地合并结果。
-</Callout>
+:::
 
 如此一来，我们就可以在 `BookResolver` 中使用 `useUserLoader` 函数来加载 `Book` 对象的 `author` 字段了。
 为所有 6 个 `Book` 实例调用 `author` 字段时，`DataLoader` 会自动合并这些请求，并只对 `users` 数组进行一次遍历，从而提高了性能。

@@ -25,4 +25,8 @@ export default [
     text: "上下文（Context）",
     link: "/zh/docs/context",
   },
+  {
+    text: "数据加载器（DataLoader）",
+    link: "/zh/docs/dataloader",
+  },
 ] satisfies DefaultTheme.Config["sidebar"]

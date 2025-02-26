@@ -3,6 +3,8 @@ title: Dataloader
 icon: HardDriveDownload
 ---
 
+# Dataloader
+
 Due to the flexibility of GraphQL, we often need to execute multiple queries when we load an object's associated objects.
 This causes the famous N+1 query problem. To solve this problem, we can use [DataLoader](https://github.com/graphql/dataloader).
 
@@ -12,9 +14,8 @@ The `DataLoader` is able to reduce the number of queries to the database by merg
 
 Consider that we have the following simple objects `User` and `Book`:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import * as v from "valibot"
 
 const User = v.object({
@@ -34,9 +35,7 @@ const Book = v.object({
 
 interface IBook extends v.InferOutput<typeof Book> {}
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { z } from "zod"
 
 const User = z.object({
@@ -56,8 +55,7 @@ const Book = z.object({
 
 interface IBook extends z.infer<typeof Book> {}
 ```
-</Tab>
-</Tabs>
+:::
 
 On the `Book` object, we have an `authorID` field that references the `id` field of the `User` object.
 
@@ -99,9 +97,8 @@ const books: IBook[] = [
 
 Let's write a simple resolver for the `Book` object:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import * as v from "valibot"
 
 const User = v.object({
@@ -135,9 +132,7 @@ const BookResolver = resolver.of(Book, {
   ),
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { z } from "zod"
 
 const User = z.object({
@@ -171,12 +166,11 @@ const BookResolver = resolver.of(Book, {
   ),
 })
 ```
-</Tab>
-</Tabs>
+:::
 
 In the above code, we have defined an additional field `author` for `Book` objects which will return `User` objects matching the `authorID` field. We also define a query called `books` that will return all `Book` objects.
 Here, we use the `users` array directly to find users. For the following query:
-```graphql title="GraphQL Schema"
+```GraphQL
 query books {
   books {
     id
@@ -191,6 +185,7 @@ query books {
 We will look up the `author` field for each `Book` instance, and in doing so, we will directly traverse the `users` array to find users that match the `authorID` field.
 Here we have 6 `Book` instances, so we will execute 6 lookups. Is there a better way to reduce the number of queries?
 
+
 ### Using the DataLoader
 Next, we'll use the DataLoader to optimize our query.
 
@@ -198,9 +193,8 @@ We can use the `EasyDataLoader` class from the `@gqloom/core` package for basic 
 
 #### Defining Batch Queries
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import * as v from "valibot"
 
 const User = v.object({
@@ -255,9 +249,7 @@ const BookResolver = resolver.of(Book, {
 })
 
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { z } from "zod"
 
 const User = z.object({
@@ -312,8 +304,7 @@ const BookResolver = resolver.of(Book, {
 })
 
 ```
-</Tab>
-</Tabs>
+:::
 
 In the code above, we used `createMemoization` to create a `useUserLoader` function that returns a `EasyDataLoader` instance.
 The memoization function ensures that the same `EasyDataLoader` instance is always used within the same request.
@@ -332,9 +323,9 @@ Inside `createMemoization`, we directly construct an `EasyDataLoader` instance a
 
 6. Finally, we retrieve the corresponding `User` objects from `authorMap` in the order of the `authorIDs` array and return an array containing those `User` objects.
 
-<Callout>
+::: info
 It must be ensured that the order of the return array of the query function matches the order of the `IDs` array. The `DataLoader` relies on this order to merge the results correctly.
-</Callout>
+:::
 
 In this way, we can use the `useUserLoader` function in `BookResolver` to load the `author` field of the `Book` object.
 When calling the `author` field for all 6 `Book` instances, `DataLoader` automatically merges these requests and iterates through the `users` array only once, thus improving performance.

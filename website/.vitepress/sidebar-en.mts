@@ -25,4 +25,8 @@ export default [
     text: "Context",
     link: "/docs/context",
   },
+  {
+    text: "DataLoader",
+    link: "/docs/dataloader",
+  },
 ] satisfies DefaultTheme.Config["sidebar"]

@@ -22,7 +22,7 @@ export const schema = weave(helloResolver, catResolver);
 Sometimes we need to weave a single [silk](../silk) woven into a GraphQL Schema, for example:
 
 ::: code-group
-```ts twoslash
+```ts twoslash [valibot]
 import { resolver, query, mutation, field } from '@gqloom/core'
 
 const helloResolver = resolver({
@@ -56,7 +56,7 @@ const Dog = v.object({
 
 export const schema = weave(ValibotWeaver, helloResolver, catResolver, Dog);
 ```
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, query, mutation, field } from '@gqloom/core'
 
 const helloResolver = resolver({
@@ -158,7 +158,7 @@ Error: Schema must contain uniquely named types but contains multiple types name
 To solve this problem, we need to specify a different name for the `input` type. We can do this using the `getInputObjectName` option in the `SchemaWeaver.config` configuration:
 
 ::: code-group
-```ts twoslash
+```ts twoslash [valibot]
 import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
@@ -184,7 +184,7 @@ export const schema = weave(
   GraphQLSchemaLoom.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/zod'
 import { z } from "zod"
 
