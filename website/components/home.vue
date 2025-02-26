@@ -24,6 +24,8 @@
         <slot name="mikro"></slot>
       </template>
     </HomeOrmLibrary>
+    <GraphQLIntro class="mt-24 lg:mt-32" />
+    <div className="mt-24" />
   </main>
 </template>
 <script lang="tsx" setup>
@@ -32,4 +34,5 @@ import FlowingLines from "./flowing-lines.vue";
 import HomeSchemaLibrary from './home-schema-library.vue'
 import HomeFeatures from './home-features.vue'
 import HomeOrmLibrary from './home-orm-library.vue'
+import GraphQLIntro from './home-graphql-intro.vue'
 </script>
