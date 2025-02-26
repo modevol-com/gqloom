@@ -2,28 +2,32 @@
 title: Yup
 ---
 
-[Yup](https://github.com/jquense/yup) 是一个用于运行时值解析和验证的模式构建器。
-您可以定义模式、转换值以匹配、断言现有值的形状，或两者兼而有之。
-Yup 模式具有极强的表现力，可对复杂、相互依赖的验证或值转换进行建模。
+# Yup
 
-`@gqloom/yup` 提供了 GQLoom 与 Yup 的集成，以便将 Yup Schema 编织成 GraphQL Schema。
+[Yup](https://github.com/jquense/yup) is a schema builder for runtime value parsing and validation. 
+Define a schema, transform a value to match, assert the shape of an existing value, or both. 
+Yup schema are extremely expressive and allow modeling complex, interdependent validations, or value transformation.
 
-## 安装
+`@gqloom/yup` provides integration of GQLoom with Yup to weave Yup Schema into GraphQL Schema.
 
-```sh tab="npm"
+## Installation
+
+::: code-group
+```sh [npm]
 npm i @gqloom/core yup @gqloom/yup
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add @gqloom/core yup @gqloom/yup
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add @gqloom/core yup @gqloom/yup
 ```
-```sh tab="bun"
+```sh [bun]
 bun add @gqloom/core yup @gqloom/yup
 ```
+:::
 
-另外，我们还需要在项目中为 Yup 声明来自 GQLoom 的元数据：
+Also, we need to declare metadata from GQLoom for Yup in the project:
 
 ```ts title="yup.d.ts"
 import 'yup'
@@ -34,9 +38,9 @@ declare module "yup" {
 }
 ```
 
-## 定义简单标量
+## Defining simple scalars
 
-在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../silk)使用：
+Yup Schema can be used as a [silk](../silk) in GQLoom using `yupSilk`:
 
 ```ts twoslash
 import { number, string, boolean } from "yup"
@@ -51,9 +55,9 @@ const FloadtScalar = yupSilk(number())
 const IntScalar = yupSilk(number().integer())
 ```
 
-## 定义对象
+## Defining objects
 
-我们可以使用 Yup 定义对象，并将其作为[丝线](../silk)使用：
+We can use Yup to define objects and use them as [silk](../silk) to use:
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
 
@@ -64,11 +68,11 @@ export const Cat = object({
 }).label("Cat")
 ```
 
-## 名称和更多元数据
+## Names and more metadata
 
-### 为对象定义名称
+### Defining names for objects
 
-#### 使用 `label()`
+#### Using `label()`
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -79,9 +83,9 @@ export const Cat = object({
   loveFish: boolean(),
 }).label("Cat")
 ```
-在上面的代码中，我们使用 `label` 为对象定义了名称，这样在生成的 GraphQL Schema 中，该对象将具有名称 `Cat`。
+In the above code, we have defined the name for the object using `label` so that the object will have the name `Cat` in the generated GraphQL Schema.
 
-#### 使用 `collectNames`
+#### Using `collectNames`
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -96,7 +100,7 @@ export const Cat = object({
 collectNames({ Cat })
 ```
 
-在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
+In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -110,9 +114,9 @@ export const { Cat } = collectNames({
   }),
 })
 ```
-在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
+In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
 
-#### 使用 `asObjectType` 元数据
+#### Using `asObjectType` metadata
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -123,12 +127,12 @@ export const Cat = object({
   loveFish: boolean(),
 }).meta({ asObjectType: { name: "Cat" } })
 ```
-在上面的代码中，我们在 Yup Schema 中使用 `meta` 函数来为对象定义名称。
-在这里，我们定义了名称为 `asObjectType` 元数据，并将其设置为 `{ name: "Cat" }`，这样在生成的 GraphQL Schema 中，该对象将具有名称 `Cat`。
+In the above code, we have used `meta` function in Yup Schema to define the name for the object.
+Here, we have defined the name `asObjectType` metadata and set it to `{ name: “Cat” }` so that in the generated GraphQL Schema, the object will have the name `Cat`.
 
-### 添加更多元数据
+### Add more metadata
 
-我们可以在 Yup Schema 中使用 `meta` 函数来添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
+We can use the `meta` function in Yup Schema to add more metadata, such as `description`, `deprecationReason`, `extensions` and so on.
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
 
@@ -139,7 +143,7 @@ export const Cat = object({
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
 ```
 
-在上面的代码中，我们为 `Cat` 对象添加了 `description` 元数据，这样在生成的 GraphQL Schema 中，该对象将具有描述 `A cute cat`：
+In the above code, we have added `description` metadata to the `Cat` object so that in the generated GraphQL Schema, the object will have the description `A cute cat`:
 
 ```graphql title="GraphQL Schema"
 """A cute cat"""
@@ -150,7 +154,7 @@ type Cat {
 }
 ```
 
-我们还可以使用元数据中的 `asField` 属性为字段添加元数据，例如 `description`、`type` 等：
+We can also use the `asField` attribute in the metadata to add metadata to the field, such as `description`, `type`, and so on:
 
 ```ts twoslash
 import 'yup'
@@ -172,7 +176,7 @@ export const Cat = object({
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
 ```
 
-在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
+In the above code, we added `type` and `description` metadata to the `age` field and ended up with the following GraphQL Schema:
 
 ```graphql title="GraphQL Schema"
 """A cute cat"""
@@ -185,9 +189,9 @@ type Cat {
 }
 ```
 
-#### 声明接口
+#### Declaring Interfaces
 
-我们还可以使用 asObjectType 函数来声明接口，例如：
+We can also use the asObjectType function to declare interfaces, for example:
 ```ts twoslash
 import 'yup'
 import { type GQLoomMetadata } from "@gqloom/yup"
@@ -216,11 +220,11 @@ const Orange = object({
   .meta({ asObjectType: { interfaces: [Fruit] } })
   .label("Orange")
 ```
-在上面的代码中，我们使用 `asObjectType` 中的 `interfaces` 属性将 `Orange` 对象声明为 `Fruit` 接口的实现。
+In the code above, we declared the `Orange` object as an implementation of the `Fruit` interface using the `interfaces` attribute in `asObjectType`.
 
-#### 省略字段
+#### Omitting fields
 
-我们还可以使用 asField 属性将 type 设置为 null 来省略字段，例如：
+We can also omit fields by setting the type to null using the asField attribute, for example:
 ```ts twoslash
 import 'yup'
 import { type GQLoomMetadata } from "@gqloom/yup"
@@ -238,15 +242,15 @@ export const Cat = object({
     .meta({ asField: { type: null } }),
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })
 ```
-将得到如下 GraphQL Schema：
+The following GraphQL Schema will be generated:
 ```graphql title="GraphQL Schema"
 type Dog {
   name: String
 }
 ```
-## 定义联合类型
+## Defining Union Types
 
-使用来自 `@gqloom/yup` 的 `union` 定义联合类型，例如：
+Use `union` from `@gqloom/yup` to define union types, for example:
 ```ts
 import { object, string, number } from "yup"
 import { union } from "@gqloom/yup"
@@ -263,13 +267,13 @@ const Dog = object({
 
 const Animal = union([Cat, Dog]).label("Animal")
 ```
-在上面的代码中，我们使用 `union` 函数将 `Cat` 和 `Dog` 对象声明为 `Animal` 联合类型的成员。
+In the above code, we used the `union` function to define the `Cat` and `Dog` objects as members of the `Animal` union type.
 
-## 定义枚举类型
+## Defining enumerated types
 
-#### 使用 `oneof()`
+#### Using `oneof()`
 
-我们可以使用 `string().oneof()` 来定义枚举类型，例如：
+We can use `string().oneof()` to define enumerated types, for example:
 
 ```ts twoslash
 import 'yup'
@@ -296,9 +300,9 @@ const Fruit = string()
   })
 ```
 
-#### 使用 `enum`
+#### Using `enum`
 
-我们还可以使用 `enum` 来定义枚举类型，例如：
+We can also use `enum` to define enumeration types, for example:
 ```ts twoslash
 import 'yup'
 import { type GQLoomMetadata } from "@gqloom/yup"
@@ -331,11 +335,11 @@ const Fruit = mixed()
   })
 ```
 
-## 自定义类型映射
+## Custom Type Mappings
 
-为了适应更多的 Yup 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
+To accommodate more Yup types, we can extend GQLoom to add more type mappings to it.
 
-首先我们使用 `YupWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`，当遇到 `date` 类型时，我们将其映射到对应的 GraphQL 标量。
+First we use `YupWeaver.config` to define the type mapping configuration. Here we import `GraphQLDateTime` from [graphql-scalars](https://the-guild.dev/graphql/scalars), and when we encounter a `date` type, we map it to the matching GraphQL scalar.
 ```ts twoslash
 import { GraphQLDateTime } from "graphql-scalars"
 import { YupWeaver } from "@gqloom/yup"
@@ -349,8 +353,8 @@ export const yupWeaverConfig = YupWeaver.config({
   },
 })
 ```
+Configurations are passed into the weave function when weaving the GraphQL Schema:
 
-在编织 GraphQL Schema 时传入配置到 weave 函数中：
 ```ts twoslash
 import { GraphQLDateTime } from "graphql-scalars"
 import { resolver } from "@gqloom/core"
@@ -372,11 +376,11 @@ import { weave } from "@gqloom/yup"
 export const schema = weave(yupWeaverConfig, helloResolver)
 ```
 
-## 默认类型映射
+## Default Type Mappings
 
-下表列出了 GQLoom 中 Yup 类型与 GraphQL 类型之间的默认映射关系：
+The following table lists the default mappings between Yup types and GraphQL types in GQLoom:
 
-| Yup 类型                     | GraphQL 类型        |
+| Yup types                    | GraphQL types       |
 | ---------------------------- | ------------------- |
 | `string()`                   | `GraphQLString`     |
 | `number()`                   | `GraphQLFloat`      |

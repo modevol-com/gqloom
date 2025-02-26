@@ -2,28 +2,32 @@
 title: Valibot
 ---
 
-[Valibot](https://valibot.dev/) is the open source schema library for TypeScript with bundle size, type safety and developer experience in mind.
+# Valibot
 
-`@gqloom/valibot` provides integration of GQLoom with Valibot to weave Valibot Schema into GraphQL Schema.
+[Valibot](https://valibot.dev/) 是一个通用的数据验证库，考虑了捆绑包大小、类型安全和开发体验。
 
-## Installation
+`@gqloom/valibot` 提供了 GQLoom 与 Valibot 的集成，以便将 Valibot Schema 编织成 GraphQL Schema。
 
-```sh tab="npm"
+## 安装
+
+::: code-group
+```sh [npm]
 npm i @gqloom/core valibot @gqloom/valibot
 ```
-```sh tab="pnpm"
+```sh [pnpm]
 pnpm add @gqloom/core valibot @gqloom/valibot
 ```
-```sh tab="yarn"
+```sh [yarn]
 yarn add @gqloom/core valibot @gqloom/valibot
 ```
-```sh tab="bun"
+```sh [bun]
 bun add @gqloom/core valibot @gqloom/valibot
 ```
+:::
 
-## Defining simple scalars
+## 定义简单标量
 
-In GQLoom, you can directly use Valibot schemas as [silk](../silk):
+在 GQLoom 中，可以直接 Valibot Schema 作为[丝线](../silk)使用：
 
 ```ts twoslash
 import * as v from "valibot"
@@ -37,9 +41,9 @@ const FloatScalar = v.number() // GraphQLFloat
 const IntScalar = v.pipe(v.number(), v.integer()) // GraphQLInt
 ```
 
-## Weave
+## 编织 | Weave
 
-To ensure that `GQLoom` correctly weaves Valibot schemas into the GraphQL schema, we need to add the `ValibotWeaver` from `@gqloom/valibot` when using the `weave` function.
+为了让 `GQLoom` 能正确地将 Valibot Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
 
 ```ts twoslash
 import { weave, resolver, query } from "@gqloom/core"
@@ -53,28 +57,9 @@ export const helloResolver = resolver({
 export const schema = weave(ValibotWeaver, helloResolver)
 ```
 
-## Defining objects
+## 定义对象
 
-We can use Valibot to define objects and use them as [silk] (... /silk) to use:
-
-```ts twoslash
-import * as v from "valibot"
-
-export const Cat = v.object({
-  __typename: v.nullish(v.literal("Cat")),
-  name: v.string(),
-  age: v.pipe(v.number(), v.integer()),
-  loveFish: v.nullish(v.boolean()),
-})
-```
-
-## Names and more metadata
-
-### Defining names for objects
-
-In `GQLoom` we have multiple ways to define names for objects.
-
-#### Using `__typename` literal
+我们可以使用 Valibot 定义对象，并将其作为[丝线](../silk)使用：
 
 ```ts twoslash
 import * as v from "valibot"
@@ -87,7 +72,26 @@ export const Cat = v.object({
 })
 ```
 
-In the code above, we used the `__typename` literal to define the name for the object. We also set the `__typename` literal to `nullish`, which means that the `__typename` field is optional, and if it exists, it must be “Cat”.
+## 名称和更多元数据
+
+### 为对象定义名称
+
+在 `GQLoom` 中，我们有多种方法来为对象定义名称。
+
+#### 使用 `__typename` 字面量
+
+```ts twoslash
+import * as v from "valibot"
+
+export const Cat = v.object({
+  __typename: v.nullish(v.literal("Cat")),
+  name: v.string(),
+  age: v.pipe(v.number(), v.integer()),
+  loveFish: v.nullish(v.boolean()),
+})
+```
+
+在上面的代码中，我们使用 `__typename` 字面量来为对象定义名称。我们还将 `__typename` 字面量设置为 `nullish`，这意味着 `__typename` 字段是可选的，如果存在，则必须为 "Cat"。
 
 ```ts twoslash
 import * as v from "valibot"
@@ -100,13 +104,13 @@ export const Cat = v.object({
 })
 ```
 
-In the code above, we are still using the `__typename` literal to define the name for the object, but this time we are setting the `__typename` literal to “Cat”, which means that the `__typename` field is required and must be “Cat”. The required `__typename` will be very useful when using GraphQL `interface` and `union`.
+在上面的代码中，我们仍旧使用 `__typename` 字面量来为对象定义名称，但这次我们将 `__typename` 字面量设置为 "Cat"，这意味着 `__typename` 字段是必须的，且必须为 "Cat"。当使用 GraphQL `interface` 和 `union` 时，必填的 `__typename` 将非常有用。
 
-#### Using `collectNames`
+#### 使用 `collectNames`
 
 ```ts twoslash
-import * as v from "valibot"
 import { collectNames } from "@gqloom/core"
+import * as v from "valibot"
 
 export const Cat = v.object({
   name: v.string(),
@@ -114,14 +118,14 @@ export const Cat = v.object({
   loveFish: v.nullish(v.boolean()),
 })
 
-collectNames({ Cat }) // Collect names for Cat, which will be presented in the GraphQL Schema after weaving.
+collectNames({ Cat }) // 为 Cat 收集名称，在编织后将呈现在 GraphQL Schema 中
 ```
 
-In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
+在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
 ```ts twoslash
-import * as v from "valibot"
 import { collectNames } from "@gqloom/core"
+import * as v from "valibot"
 
 export const { Cat } = collectNames({
   Cat: v.object({
@@ -132,13 +136,13 @@ export const { Cat } = collectNames({
 })
 ```
 
-In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
+在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
 
-#### Using `asObjectType`
+#### 使用 `asObjectType`
 
 ```ts twoslash
-import * as v from "valibot"
 import { asObjectType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const Cat = v.pipe(
   v.object({
@@ -150,15 +154,15 @@ export const Cat = v.pipe(
 )
 ```
 
-In the code above, we used the `asObjectType` function to create a metadata and pass it into the `Valibot` pipeline to define a name for the object. The `asObjectType` function takes the complete GraphQL object type definition and returns a metadata.
+在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `Valibot` 管道中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
 
-### Add more data
+### 添加更多元数据
 
-With the `asObjectType` function, we can add more data to the object, such as `description`, `deprecationReason`, `extensions` and so on.
+通过 `asObjectType` 函数，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
 
 ```ts twoslash
-import * as v from "valibot"
 import { asObjectType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const Cat = v.pipe(
   v.object({
@@ -173,7 +177,7 @@ export const Cat = v.pipe(
 )
 ```
 
-In the above code, we have added a `description` metadata to the `Cat` object which will be presented in the GraphQL Schema:
+在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元数据，该元数据将在 GraphQL Schema 中呈现：
 
 ```graphql title="GraphQL Schema"
 """A cute cat"""
@@ -184,12 +188,12 @@ type Cat {
 }
 ```
 
-We can also use the `asField` function to add metadata to a field, such as `description`, `type`, and so on.
+我们还可以使用 `asField` 函数为字段添加元数据，例如 `description`、`type` 等。
 
 ```ts twoslash
-import * as v from "valibot"
 import { asObjectType, asField } from "@gqloom/valibot"
 import { GraphQLInt } from "graphql"
+import * as v from "valibot"
 
 export const Cat = v.pipe(
   v.object({
@@ -207,7 +211,7 @@ export const Cat = v.pipe(
 )
 ```
 
-In the above code, we added `type` and `description` metadata to the `age` field and ended up with the following GraphQL Schema:
+在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
 ```graphql title="GraphQL Schema"
 """A cute cat"""
@@ -220,12 +224,12 @@ type Cat {
 }
 ```
 
-#### Declaring Interfaces
+#### 声明接口
 
-We can use the `asObjectType` function to define interfaces, for example:
+我们可以使用 `asObjectType` 函数来声明接口，例如：
 ```ts twoslash
-import * as v from "valibot"
 import { asObjectType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 const Fruit = v.object({
   __typename: v.nullish(v.literal("Fruit")),
@@ -244,15 +248,15 @@ const Orange = v.pipe(
   asObjectType({ interfaces: [Fruit] })
 )
 ```
-In the above code, we have created an interface `Fruit` using the `asObjectType` function and declared the `Orange` object as an implementation of the `Fruit` interface using the `interfaces` option.
+在上面的代码中，我们使用 `asObjectType` 函数创建了一个接口 `Fruit`，并使用 `interfaces` 选项将 `Orange` 对象声明为 `Fruit` 接口的实现。
 
-#### Omitting Fields
+#### 省略字段
 
-We can also omit fields by setting `type` to `null` using the `asField` function, for example:
+我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
 
 ```ts twoslash
-import * as v from "valibot"
 import { asField } from "@gqloom/valibot"
+import * as v from "valibot"
 
 const Dog = v.object({
   __typename: v.nullish(v.literal("Dog")),
@@ -261,7 +265,7 @@ const Dog = v.object({
 })
 ```
 
-The following GraphQL Schema will be obtained:
+将得到如下 GraphQL Schema：
 
 ```graphql title="GraphQL Schema"
 type Dog {
@@ -269,17 +273,17 @@ type Dog {
 }
 ```
 
-## Defining Union Types
+## 定义联合类型
 
-When using `Valibot`, we can define union types using `variant` or `union`.
+在使用 `Valibot` 时，我们可以使用 `variant` 或 `union` 定义联合类型。
 
-#### Using variant
+#### 使用 variant
 
-We recommend using `variant` to define union types:
+我们推荐使用 `variant` 来定义联合类型：
 
 ```ts twoslash
-import * as v from "valibot"
 import { asUnionType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 const Cat = v.object({
   __typename: v.literal("Cat"),
@@ -301,11 +305,11 @@ const Animal = v.pipe(
 )
 ```
 
-In the above code, we have created a union type using the `variant` function. In the case of `Animal`, it distinguishes the specific type by the `__typename` field.
+在上面的代码中，我们使用 `variant` 函数创建了一个联合类型。对于 `Animal` 来说，它通过 `__typename` 字段来区分具体的类型。
 
-#### Using union
+#### 使用 union
 
-We can also use `union` to define union types:
+我们还可以使用 `union` 来定义联合类型：
 
 ```ts twoslash
 import { collectNames } from "@gqloom/core"
@@ -334,20 +338,20 @@ const Animal = v.pipe(
 collectNames({ Cat, Dog, Animal })
 ```
 
-In the above code, we have created a union type using the `union` function. In the case of `Animal`, it uses the `resolveType` function to differentiate between specific types.
-Here, if an animal likes fish, then it is a cat, otherwise it is a dog.
+在上面的代码中，我们使用 `union` 函数创建了一个联合类型。对于 `Animal` 来说，它通过 `resolveType` 函数来区分具体的类型。
+在这里，如果一个动物它喜欢鱼，那么它就是一只猫，否则就是一只狗。
 
-## Defining Enumeration Types
+## 定义枚举类型
 
-We can define enumeration types using `v.picklist` or `v.enum_`.
+我们可以使用 `v.picklist` 或 `v.enum_` 定义枚举类型。
 
-#### Using picklist
+#### 使用 picklist
 
-In general, we prefer to use `v.picklist` to define enumerated types:
+通常，我们更推荐使用 `v.picklist` 来定义枚举类型：
 
 ```ts twoslash
-import * as v from "valibot"
 import { asEnumType } from "@gqloom/valibot"
+import * as v from "valibot"
 
 export const Fruit = v.pipe(
   v.picklist(["apple", "banana", "orange"]),
@@ -364,9 +368,9 @@ export const Fruit = v.pipe(
 export type IFruit = v.InferOutput<typeof Fruit>
 ```
 
-#### Using enum_
+#### 使用 enum_
 
-We can also use `v.enum_` to define enumeration types:
+我们也可以使用 `v.enum_` 来定义枚举类型：
 
 ```ts twoslash
 import { asEnumType } from "@gqloom/valibot"
@@ -391,11 +395,11 @@ export const FruitE = v.pipe(
 )
 ```
 
-## Custom Type Mappings
+## 自定义类型映射
 
-To accommodate more Valibot types, we can extend GQLoom to add more type mappings.
+为了适应更多的 Valibot 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
 
-First we use `ValibotWeaver.config` to define the type mapping configuration. Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars] and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
+首先我们使用 `ValibotWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
 
 ```ts twoslash
 import {
@@ -419,7 +423,7 @@ export const valibotWeaverConfig = ValibotWeaver.config({
 })
 ```
 
-Configurations are passed into the `weave` function when weaving the GraphQL Schema:
+在编织 GraphQL Schema 时传入配置到 `weave` 函数中：
 
 ```ts twoslash
 import {
@@ -449,11 +453,11 @@ import { weave } from "@gqloom/core"
 export const schema = weave(valibotWeaverConfig, helloResolver)
 ```
 
-## Default Type Mappings
+## 默认类型映射
 
-The following table lists the default mappings between Valibot types and GraphQL types in GQLoom:
+下表列出了 GQLoom 中 Valibot 类型与 GraphQL 类型之间的默认映射关系：
 
-| Valibot types                     | GraphQL types       |
+| Valibot 类型                      | GraphQL 类型        |
 | --------------------------------- | ------------------- |
 | `v.array()`                       | `GraphQLList`       |
 | `v.bigint()`                      | `GraphQLInt`        |

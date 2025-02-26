@@ -33,4 +33,22 @@ export default [
     text: "中间件（Middleware）",
     link: "/zh/docs/middleware",
   },
+  {
+    text: "Schema 集成",
+    collapsed: false,
+    items: [
+      {
+        text: "Valibot",
+        link: "/zh/docs/schema/valibot",
+      },
+      {
+        text: "Zod",
+        link: "/zh/docs/schema/zod",
+      },
+      {
+        text: "Yup",
+        link: "/zh/docs/schema/yup",
+      },
+    ],
+  },
 ] satisfies DefaultTheme.Config["sidebar"]

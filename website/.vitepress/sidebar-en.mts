@@ -33,4 +33,22 @@ export default [
     text: "Middleware",
     link: "/docs/middleware",
   },
+  {
+    text: "Schema Integration",
+    collapsed: false,
+    items: [
+      {
+        text: "Valibot",
+        link: "/docs/schema/valibot",
+      },
+      {
+        text: "Zod",
+        link: "/docs/schema/zod",
+      },
+      {
+        text: "Yup",
+        link: "/docs/schema/yup",
+      },
+    ],
+  },
 ] satisfies DefaultTheme.Config["sidebar"]
