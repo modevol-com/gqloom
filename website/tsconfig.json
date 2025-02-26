@@ -7,5 +7,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["./.vitepress/**/*", "./components", "./css"]
+  "include": ["./.vitepress/**/*", "./components", "./css"],
+  "exclude": ["./snippets"]
 }

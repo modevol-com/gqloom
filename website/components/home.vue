@@ -4,9 +4,18 @@
       <FlowingLines class="size-full" />
     </div>
     <Hero class="min-h-[64vh]" />
+    <HomeSchemaLibrary>
+      <template v-slot:schemaLibraries>
+        <slot name="schemaLibraries"></slot>
+      </template>
+      <template v-slot:schemaGraphQl>
+        <slot name="schemaGraphQl"></slot>
+      </template>
+    </HomeSchemaLibrary>
   </main>
 </template>
 <script lang="tsx" setup>
 import Hero from "./home-hero.vue";
 import FlowingLines from "./flowing-lines.vue";
+import HomeSchemaLibrary from './home-schema-library.vue'
 </script>
