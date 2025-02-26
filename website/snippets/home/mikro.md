@@ -1,4 +1,5 @@
-```ts twoslash title="src/index.ts" tab="index.ts"
+::: code-group
+```ts twoslash [index.ts]
 // @filename: entities.ts
 import { type EntitySchemaSilk, mikroSilk } from "@gqloom/mikro-orm"
 import { type Collection, EntitySchema, type Ref } from "@mikro-orm/core"
@@ -114,7 +115,7 @@ server.listen(4000, () => {
 })
 ```
 
-```ts twoslash title="src/entities.ts" tab="entities.ts"
+```ts twoslash [entities.ts]
 import { type EntitySchemaSilk, mikroSilk } from "@gqloom/mikro-orm"
 import { type Collection, EntitySchema, type Ref } from "@mikro-orm/core"
 
@@ -183,7 +184,7 @@ export const Post: EntitySchemaSilk<EntitySchema<IPost>> = mikroSilk(
 )
 ```
 
-```graphql title="schema.graphql" tab="schema.graphql"
+```GraphQL [schema.graphql]
 type User {
   id: ID!
   createdAt: String!
@@ -418,3 +419,4 @@ input PostUpdateInput {
   title: String
 }
 ```
+:::

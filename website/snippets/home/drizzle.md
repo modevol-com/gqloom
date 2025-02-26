@@ -1,4 +1,5 @@
-```ts twoslash title="src/index.ts" tab="index.ts"
+::: code-group
+```ts twoslash [index.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
@@ -60,7 +61,7 @@ server.listen(4000, () => {
 })
 ```
 
-```ts twoslash title="src/schema.ts" tab="schema.ts"
+```ts twoslash [schema.ts]
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/pg-core"
@@ -100,7 +101,7 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 ```
 
-```graphql title="schema.graphql" tab="schema.graphql"
+```GraphQL [schema.graphql]
 type UsersItem {
   id: Int!
   createdAt: String
@@ -451,3 +452,4 @@ input PostsUpdateInput {
   authorId: Int
 }
 ```
+:::

@@ -1,5 +1,6 @@
+::: code-group
 
-```ts title="src/index.ts" tab="index.ts"
+```ts [index.ts]
 import { createServer } from "node:http"
 import { weave } from "@gqloom/core"
 import { PrismaResolverFactory } from "@gqloom/prisma"
@@ -21,7 +22,7 @@ server.listen(4000, () => {
 })
 ```
 
-```prisma title="prisma/schema.prisma" tab="schema.prisma"
+```Prisma [schema.prisma]
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -62,7 +63,7 @@ enum Role {
 }
 ```
 
-```graphql title="schema.graphql" tab="schema.graphql"
+```GraphQL [schema.graphql]
 type User {
   id: ID!
   createdAt: String!
@@ -598,3 +599,4 @@ input UserUpdateToOneWithWhereWithoutPostsInput {
   data: UserUpdateWithoutPostsInput!
 }
 ```
+:::

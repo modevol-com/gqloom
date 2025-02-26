@@ -31,4 +31,22 @@ type Giraffe {
 
 </template>
 
+<template v-slot:drizzle>
+
+<!--@include: ./snippets/home/drizzle.md-->
+
+</template>
+
+<template v-slot:prisma>
+
+<!--@include: ./snippets/home/prisma.md-->
+
+</template>
+
+<template v-slot:mikro>
+
+<!--@include: ./snippets/home/mikro.md-->
+
+</template>
+
 </Home>

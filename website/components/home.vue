@@ -12,7 +12,18 @@
         <slot name="schemaGraphQl"></slot>
       </template>
     </HomeSchemaLibrary>
-    <HomeFeatures />
+    <HomeFeatures class="mt-24 lg:mt-32" />
+    <HomeOrmLibrary class="mt-24 lg:mt-32">
+      <template v-slot:drizzle>
+        <slot name="drizzle"></slot>
+      </template>
+      <template v-slot:prisma>
+        <slot name="prisma"></slot>
+      </template>
+      <template v-slot:mikro>
+        <slot name="mikro"></slot>
+      </template>
+    </HomeOrmLibrary>
   </main>
 </template>
 <script lang="tsx" setup>
@@ -20,4 +31,5 @@ import Hero from "./home-hero.vue";
 import FlowingLines from "./flowing-lines.vue";
 import HomeSchemaLibrary from './home-schema-library.vue'
 import HomeFeatures from './home-features.vue'
+import HomeOrmLibrary from './home-orm-library.vue'
 </script>

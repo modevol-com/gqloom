@@ -45,7 +45,6 @@ export default async function HomePage(props: {
       <Features className="mt-24 lg:mt-32" lang={lang} />
       <ORMLibrary
         className="mt-24 lg:mt-32"
-        lang={lang}
         drizzleMDX={<mdx.Drizzle components={mdxComponents} />}
         prismaMDX={<mdx.Prisma components={mdxComponents} />}
         mikroOrmMDX={<mdx.MikroORM components={mdxComponents} />}

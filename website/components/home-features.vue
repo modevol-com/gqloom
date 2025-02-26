@@ -1,5 +1,5 @@
 <template>
-  <section class="px-6 max-w-5xl flex flex-col items-center mt-24 lg:mt-32">
+  <section class="px-6 max-w-5xl flex flex-col items-center" :class="props.class">
     <h2 class="!text-3xl !font-bold tracking-wider" :class="props.class">{{ title }}</h2>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-12">
       <FeatureCard v-for="feature in features" :key="feature.title" v-bind="feature" />

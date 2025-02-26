@@ -1,8 +1,7 @@
 "use client"
 import clsx from "clsx"
-import DynamicLink from "fumadocs-core/dynamic-link"
+import { useParams } from "next/navigation"
 import { Fragment, memo, useMemo, useState } from "react"
-import type { LangProps } from "./page"
 
 const ormIntroCN = {
   title: "增删改查接口已就绪，只待启用",
@@ -28,12 +27,15 @@ const supportedORM = ["Drizzle", "MikroORM", "Prisma"] as const
 export type SupportedORM = (typeof supportedORM)[number]
 
 export const ORMLibrary = memo<
-  LangProps & {
+  {
     drizzleMDX: React.ReactNode
     prismaMDX: React.ReactNode
     mikroOrmMDX: React.ReactNode
+  } & {
+    className?: string
   }
->(function ORMLibrary({ lang, drizzleMDX, prismaMDX, mikroOrmMDX, className }) {
+>(function ORMLibrary({ drizzleMDX, prismaMDX, mikroOrmMDX, className }) {
+  const { lang } = useParams<{ lang: string }>()
   const intro = lang === "zh" ? ormIntroCN : ormIntroEN
 
   const [tab, SetTab] = useState<SupportedORM>("Drizzle")
@@ -64,12 +66,12 @@ export const ORMLibrary = memo<
       MikroORM: "mikro-orm",
     }[tab]
     const ResolverFactory = (
-      <DynamicLink
+      <a
         className="text-amber-600 dark:text-orange-400 font-bold"
-        href={`/[lang]/docs/schema/${ormPage}${hash}`}
+        href={`./docs/schema/${ormPage}${hash}`}
       >
         ResolverFactory
-      </DynamicLink>
+      </a>
     )
     if (lang === "zh") {
       return (
