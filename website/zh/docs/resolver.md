@@ -55,7 +55,7 @@ const helloResolver = resolver({
 <InputSchemaCodes>
 <template v-slot:valibot>
 
-我们可以使用 [valibot](../schema/valibot) 来定义 `hello` 操作的返回类型：
+我们可以使用 [valibot](./schema/valibot) 来定义 `hello` 操作的返回类型：
 
 ```ts twoslash
 import { resolver, query } from "@gqloom/core"
@@ -71,7 +71,7 @@ const helloResolver = resolver({
 </template>
 <template v-slot:zod>
 
-我们可以使用 [zod](../schema/zod) 来定义 `hello` 操作的返回类型：
+我们可以使用 [zod](./schema/zod) 来定义 `hello` 操作的返回类型：
 
 ```ts twoslash
 import { resolver, query } from "@gqloom/core"
@@ -580,7 +580,7 @@ const bookResolver = resolver.of(Book, {
   - `input`：字段的输入参数，它是一个对象，包含一个 `name` 字段，它的类型是 `string`；
   - `resolve`：字段的解析函数，它接受两个参数：第一个参数由 `resolver.of` 构造的解析器的源对象，即 `Book` 实例；第二个参数是字段的输入参数，即包含 `name` 字段的输入。
 
-刚刚我们定义的 `bookResolver` 对象可以通过 [weave](../weave) 函数编织成 GraphQL schema：
+刚刚我们定义的 `bookResolver` 对象可以通过 [weave](./weave) 函数编织成 GraphQL schema：
 
 <InputSchemaCodes>
 <template v-slot:valibot>

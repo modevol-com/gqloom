@@ -580,7 +580,7 @@ The second argument to the `field` function is an object which contains two fiel
   - `input`: the input parameter of the field, which is an object containing a `name` field, which is of type `string`;
   - `resolve`: the field's resolver function, which takes two arguments: the first argument is the source object of the resolver constructed by `resolver.of`, which is an instance of `Book`; the second argument is the field's input parameter, which is an object that contains an input of the `name` field.
 
-The `bookResolver` object we just defined can be woven into a GraphQL schema using the [weave](../weave) function:
+The `bookResolver` object we just defined can be woven into a GraphQL schema using the [weave](./weave) function:
 
 <InputSchemaCodes>
 <template v-slot:valibot>

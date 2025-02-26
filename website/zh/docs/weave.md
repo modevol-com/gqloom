@@ -19,7 +19,7 @@ export const schema = weave(helloResolver, catResolver);
 ```
 ## 编织单独丝线
 
-有时候，我们需要将一个单独的[丝线](../silk)编织到 GraphQL Schema 中，例如：
+有时候，我们需要将一个单独的[丝线](./silk)编织到 GraphQL Schema 中，例如：
 
 ::: code-group
 ```ts twoslash [valibot]

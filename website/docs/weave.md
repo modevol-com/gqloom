@@ -19,7 +19,7 @@ export const schema = weave(helloResolver, catResolver);
 ```
 ## Weaving a single silk
 
-Sometimes we need to weave a single [silk](../silk) woven into a GraphQL Schema, for example:
+Sometimes we need to weave a single [silk](./silk) woven into a GraphQL Schema, for example:
 
 ::: code-group
 ```ts twoslash [valibot]

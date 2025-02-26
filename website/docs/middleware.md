@@ -35,7 +35,7 @@ Next, we'll introduce some common types of middleware.
 
 ### Error catching
 
-When using [Valibot](../schema/valibot) or [Zod](../schema/zod) libraries for input validation, we can catch validation errors in the middleware and return customized error messages.
+When using [Valibot](./schema/valibot) or [Zod](./schema/zod) libraries for input validation, we can catch validation errors in the middleware and return customized error messages.
 
 ::: code-group
 ```ts twoslash [valibot]

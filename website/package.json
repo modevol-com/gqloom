@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vitepress dev",
-    "build": "vitepress build",
+    "build": "node --max_old_space_size=16192 ./node_modules/vitepress/bin/vitepress.js build",
     "preview": "vitepress preview"
   },
   "keywords": [],

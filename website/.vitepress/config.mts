@@ -53,6 +53,7 @@ export default defineConfig({
     codeTransformers: [transformerTwoslash() as any],
     languages: ["ts"] as any,
   },
+  ignoreDeadLinks: [/^https?:\/\/localhost/],
   vite: {
     plugins: [tailwindcss()],
     resolve: {
