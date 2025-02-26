@@ -3,6 +3,8 @@ title: Silk
 icon: Volleyball
 ---
 
+# Silk
+
 The full name of `GQLoom` is GraphQL Loom.
 
 The silk is the basic material of the loom, and it reflects both GraphQL types and TypeScript types.
