@@ -3,6 +3,8 @@ title: Weave
 icon: Dam
 ---
 
+# Weave
+
 In GQLoom, the `weave` function is used to weave multiple Resolvers or Silks into a single GraphQL Schema.
 
 The `weave` function can take [resolver](./resolver), [silk](./silk), weaver configuration, global [middleware](./middleware)
@@ -19,8 +21,7 @@ export const schema = weave(helloResolver, catResolver);
 
 Sometimes we need to weave a single [silk](../silk) woven into a GraphQL Schema, for example:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+::: code-group
 ```ts twoslash
 import { resolver, query, mutation, field } from '@gqloom/core'
 
@@ -55,8 +56,6 @@ const Dog = v.object({
 
 export const schema = weave(ValibotWeaver, helloResolver, catResolver, Dog);
 ```
-</Tab>
-<Tab value="zod">
 ```ts twoslash
 import { resolver, query, mutation, field } from '@gqloom/core'
 
@@ -91,8 +90,7 @@ const Dog = z.object({
 
 export const schema = weave(ZodWeaver, helloResolver, catResolver, Dog);
 ```
-</Tab>
-</Tabs>
+:::
 
 ## Weaver configuration
 
@@ -105,9 +103,8 @@ However, when we use the same `object` type for both `type` and `input`, it will
 
 Let's look at an example:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import { resolver, mutation, weave } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
@@ -129,9 +126,7 @@ const catResolver = resolver({
 
 export const schema = weave(ValibotWeaver, catResolver);
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, mutation, weave } from '@gqloom/zod'
 import { ZodWeaver } from '@gqloom/zod'
 import { z } from "zod"
@@ -153,8 +148,7 @@ const catResolver = resolver({
 
 export const schema = weave(ZodWeaver, catResolver);
 ```
-</Tab>
-</Tabs>
+:::
 
 In the above code, we defined a `Cat` object and used it for `type` and `input`. But when we try to weave `catResolver` into the GraphQL Schema, an error is thrown with a duplicate `Cat` name:
 ```bash
@@ -163,8 +157,7 @@ Error: Schema must contain uniquely named types but contains multiple types name
 
 To solve this problem, we need to specify a different name for the `input` type. We can do this using the `getInputObjectName` option in the `SchemaWeaver.config` configuration:
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+::: code-group
 ```ts twoslash
 import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
@@ -191,8 +184,6 @@ export const schema = weave(
   GraphQLSchemaLoom.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```
-</Tab>
-<Tab value="zod">
 ```ts twoslash
 import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/zod'
 import { z } from "zod"
@@ -217,8 +208,7 @@ export const schema = weave(
   GraphQLSchemaLoom.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```
-</Tab>
-</Tabs>
+:::
 
 Thus, `Cat` objects will be converted to `CatInput` types, thus avoiding naming conflicts.
 

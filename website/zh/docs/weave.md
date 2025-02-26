@@ -3,6 +3,8 @@ title: 编织（Weave ）
 icon: Dam
 ---
 
+# 编织（Weave）
+
 在 GQLoom 中，`weave` 函数用于将多个解析器（Resolver）或丝线（Silk）编织到一张 GraphQL Schema 中。
 
 `weave` 函数可以接收[解析器](./resolver)、[丝线](./silk)、编织器配置、全局[中间件](./middleware)
@@ -19,9 +21,8 @@ export const schema = weave(helloResolver, catResolver);
 
 有时候，我们需要将一个单独的[丝线](../silk)编织到 GraphQL Schema 中，例如：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import { resolver, query, mutation, field } from '@gqloom/core'
 
 const helloResolver = resolver({
@@ -55,9 +56,7 @@ const Dog = v.object({
 
 export const schema = weave(ValibotWeaver, helloResolver, catResolver, Dog);
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, query, mutation, field } from '@gqloom/core'
 
 const helloResolver = resolver({
@@ -91,8 +90,7 @@ const Dog = z.object({
 
 export const schema = weave(ZodWeaver, helloResolver, catResolver, Dog);
 ```
-</Tab>
-</Tabs>
+:::
 
 ## 编织器配置
 
@@ -105,9 +103,8 @@ export const schema = weave(ZodWeaver, helloResolver, catResolver, Dog);
 
 让我们来看一个例子：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import { resolver, mutation, weave } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
@@ -129,9 +126,7 @@ const catResolver = resolver({
 
 export const schema = weave(ValibotWeaver, catResolver);
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, mutation, weave } from '@gqloom/zod'
 import { ZodWeaver } from '@gqloom/zod'
 import { z } from "zod"
@@ -153,8 +148,7 @@ const catResolver = resolver({
 
 export const schema = weave(ZodWeaver, catResolver);
 ```
-</Tab>
-</Tabs>
+:::
 
 在上面的代码中，我们定义了一个 `Cat` 对象，并将其用于 `type` 和 `input`。但是当我们尝试将 `catResolver` 编织到 GraphQL Schema 中时，会抛出一个错误，提示 `Cat` 名称重复：
 ```bash
@@ -163,9 +157,8 @@ Error: Schema must contain uniquely named types but contains multiple types name
 
 要解决这个问题，我们需要为 `input` 类型指定一个不同的名称。我们可以使用 `SchemaWeaver.config` 配置中的 `getInputObjectName` 选项来实现这一点：
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+::: code-group
+```ts twoslash [valibot]
 import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/core'
 import { ValibotWeaver } from '@gqloom/valibot'
 import * as v from "valibot"
@@ -191,9 +184,7 @@ export const schema = weave(
   GraphQLSchemaLoom.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/zod'
 import { z } from "zod"
 
@@ -217,8 +208,7 @@ export const schema = weave(
   GraphQLSchemaLoom.config({ getInputObjectName: (name) => `${name}Input` }) // [!code hl]
 )
 ```
-</Tab>
-</Tabs>
+:::
 
 如此一来，`Cat` 对象将被转换为 `CatInput` 类型，从而避免了命名冲突。
 

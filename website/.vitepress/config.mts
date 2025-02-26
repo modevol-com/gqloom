@@ -20,6 +20,10 @@ const sidebarZh = [
     text: "解析器（Resolver）",
     link: "/zh/docs/resolver",
   },
+  {
+    text: "编织（Weave）",
+    link: "/zh/docs/weave",
+  },
 ] satisfies DefaultTheme.Config["sidebar"]
 
 const sidebarEn = [
@@ -38,6 +42,10 @@ const sidebarEn = [
   {
     text: "Resolver",
     link: "/docs/resolver",
+  },
+  {
+    text: "Weave",
+    link: "/docs/weave",
   },
 ] satisfies DefaultTheme.Config["sidebar"]
 
