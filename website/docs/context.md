@@ -1,28 +1,29 @@
 ---
-title: 上下文（Context）
+title: Context
 icon: Shuffle
 ---
 
-在 Node.js 世界中，上下文（Context）允许我们在同一个请求中共享数据和状态。在 GraphQL 中，上下文允许在同一个请求的多个[解析函数](./resolver)和[中间件](./middleware)之间共享数据。
+# Context
 
-一个常见的用例是将当前访问者的身份信息存储在上下文中，以便在解析函数和中间件中访问。
+In the Node.js world, Context allows us to share data and state within the same request. In GraphQL, contexts allow data to be shared between multiple [resolver functions](./resolver) and [middleware](./middleware) for the same request.
 
-## 访问上下文
+A common use case is to store the identity of the current visitor in the context to be accessed in the resolver function and middleware.
 
-在 `GQLoom` 中，我们通过 `useContext()` 函数访问上下文。
+## Accessing Contexts
 
-GQLoom 的 `useContext` 函数的设计参考了 [React](https://zh-hans.react.dev/) 的 `useContext` 函数。
-你可以在[解析器](./resolver)内的任何地方调用 `useContext` 函数以访问当前请求的上下文，而不需要显式地传递 `context` 函数。
-在幕后，`useContext` 使用 Node.js 的 [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) 来隐式传递上下文。
+In `GQLoom`, we access the context through the `useContext()` function.
 
-接下来，让我们尝试在各个地方访问上下文。
-我们将使用 [graphql-yoga](https://the-guild.dev/graphql/yoga-server) 作为适配器。
+GQLoom's `useContext` function is designed to reference [React](https://zh-hans.react.dev/)'s `useContext` function.
+You can call the `useContext` function from anywhere within the [resolver](./resolver) to access the context of the current request without explicitly passing the `context` function.
+Behind the scenes, `useContext` uses Node.js' [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to pass the context implicitly.
 
-### 在解析函数中访问上下文
+Next, let's try to access the context in various places.
+We will use [graphql-yoga](https://the-guild.dev/graphql/yoga-server) as an adapter.
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-```ts twoslash
+### Accessing contexts in resolve functions
+
+::: code-group
+```ts twoslash [valibot]
 import { query, resolver, useContext, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
@@ -42,9 +43,7 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
+```ts twoslash [zod]
 import { query, resolver, useContext, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { z } from "zod"
@@ -64,22 +63,21 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-</Tab>
-</Tabs>
+:::
 
-在上面的代码中，我们使用 `useContext` 函数从上下文中获取当前请求的 `Authorization` 头部，并将其与 `Hello` 字符串连接起来。
-`useContext` 函数接受一个泛型参数，该参数指定上下文的类型，在这里，我们传入了 `YogaInitialContext` 类型。
+In the code above, we use the `useContext` function to get the `Authorization` header of the current request from the context and concatenate it with the `Hello` string.
+The `useContext` function accepts a generic parameter that specifies the type of the context, in this case we passed in the `YogaInitialContext` type.
 
-让我们尝试调用这个查询：
+Let's try to call this query:
 ```shell
 curl -X POST http://localhost:4000/graphql -H "content-type: application/json" -H "authorization: Tom" --data-raw '{"query": "query { hello }"}'
 ```
-你应该会得到以下响应：
+You should get the following response:
 ```json
 {"data":{"hello":"Hello, Tom"}}
 ```
 
-### 在中间件中访问上下文
+### Accessing contexts in middleware
 
 ```ts twoslash
 import { useContext, Middleware } from "@gqloom/core"
@@ -97,16 +95,16 @@ const authGuard: Middleware = (next) => {
   return next()
 }
 ```
-在上面的代码中，我们创建了一个名为 `useUser` 的自定义钩子，它使用 `useContext` 函数从上下文中获取当前请求的 `Authorization` 头部。
-然后，我们创建了一个名为 `authGuard` 的中间件，它使用 `useUser` 钩子来获取用户，并在用户未登录时抛出错误。
+In the code above, we created a custom hook called `useUser` that uses the `useContext` function to get the `Authorization` header of the current request from the context.
+We then created a middleware called `authGuard` which uses the `useUser` hook to fetch the user and throw an error if the user is not logged in.
 
-要了解更多关于中间件的信息，请参阅 [中间件文档](./middleware)。
+To learn more about middleware, see [middleware documentation](./middleware).
 
-### 在验证输入时访问上下文
+### Accessing contexts while validating inputs
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
-我们可以在 `valibot` 中自定义验证或转换，并在其中直接访问上下文。
+#### Valibot
+
+We can customize the validation or transformation in `valibot` and access the context directly within it.
 ```ts twoslash
 const UserService = {
   getUserByAuthorization: async (authorization: string | null) => {
@@ -149,11 +147,11 @@ createServer(yoga).listen(4000, () => {
 })
 ```
 
-在上面的代码中，我们在 `v.transformAsync` 中使用 `useUser()` 来获取上下文中的用户信息，并将其作为 `name` 的值返回。
+In the code above, we use `useUser()` in `v.transformAsync` to get the user information in the context and return it as the value of `name`.
 
-</Tab>
-<Tab value="zod">
-我们可以在 `zod` 中自定义验证或转换，并在其中直接访问上下文：
+#### Zod
+
+We can customize the validation or transformation in `zod` and access the context directly within it:
 ```ts twoslash
 const UserService = {
   getUserByAuthorization: async (authorization: string | null) => {
@@ -195,13 +193,11 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
-在上面的代码中，我们在 `z.transform` 中使用 `useUser()` 来获取上下文中的用户信息，并将其作为 `name` 的值返回。
-</Tab>
-</Tabs>
+In the code above, we use `useUser()` in `z.transform` to get the user information in the context and return it as the value of `name`.
 
-## 记忆化
+## Memorization
 
-考虑我们通过以下自定义函数来访问用户：
+Consider that we access the user through the following custom function:
 
 ```ts twoslash
 const UserService = {
@@ -221,14 +217,14 @@ async function useUser() {
 }
 ```
 
-我们可能在 `useUser()` 中执行一些昂贵的操作，例如从数据库中获取用户信息，并且我们还有可能在同一请求中多次调用它。
-为了避免多次调用造成的额外开销，我们可以使用记忆化（Memoization）来缓存结果，并在后续调用中重用它们。
+We may execute some expensive operations in `useUser()`, such as fetching user information from the database, and we may also call it multiple times in the same request.
+To avoid the extra overhead of multiple calls, we can use memoization to cache the results and reuse them in subsequent calls.
 
-在 GQLoom 中，我们使用 `createMemoization` 函数来创建一个记忆化函数。
-记忆化函数会在第一次被调用后，将其结果缓存在上下文中，并在后续调用中直接返回缓存的结果。
-也就是说，在同一个请求中，记忆化函数只会被执行一次，无论它被调用多少次。
+In GQLoom, we use the `createMemoization` function to create a memoized function.
+A memoization function caches its results in the context after the first call and returns the cached results directly in subsequent calls.
+That is, the memoized function will only be executed once in the same request, no matter how many times it is called.
 
-让我们将 `useUser()` 函数记忆化：
+Let's memoize the `useUser()` function:
 
 ```ts twoslash
 const UserService = {
@@ -248,26 +244,26 @@ const useUser = createMemoization(async () => {
   return user
 })
 ```
-如你所见，我们只需要将函数包装在 `createMemoization` 函数中即可。
-随后，我们可以在解析器内的任何地方调用 `useUser()`，而无需担心多次调用带来的开销。
+As you can see, we simply wrap the function in the `createMemoization` function.
+We can then call `useUser()` from anywhere within the resolver without worrying about the overhead of multiple calls.
 
-## 访问解析器参数
+## Accessing Resolver Payload
 
-除了 `useContext` 函数，GQLoom 还提供了 `useResolverPayload` 函数，用于访问解析器中的所有参数：
+In addition to the `useContext` function, GQLoom provides the `useResolverPayload` function for accessing all parameters in the resolver:
 
-- root: 上一个对象，对于根查询类型上的字段来说，通常不会使用；
+- root: the previous object, not normally used for fields on the root query type;
 
-- args: 在 GraphQL 查询中为字段提供的参数；
+- args: the arguments provided for the field in the GraphQL query;
 
-- context: 在各个解析函数和中间件中共享的上下文对象；
+- context: the context object shared across parser functions and middleware;
 
-- info: 包含有关当前解析器调用的信息，例如 GraphQL 查询的路径、字段名称等；
+- info: contains information about the current resolver call, such as the path to the GraphQL query, field names, etc;
 
-- field: 当前解析器正在解析的字段定义；
+- field: the definition of the field being resolved by the current resolver;
 
-## 在各个适配器中使用上下文
+## Using Contexts across Adapters
 
-在 GraphQL 生态中，每个适配器都提供了不同的上下文对象，你可以在适配器章节中了解如何使用：
+In the GraphQL ecosystem, each adapter provides a different context object, and you can learn how to use it in the Adapters chapter:
 
 - [Yoga](./advanced/adapters/yoga)
 - [Apollo](./advanced/adapters/apollo)

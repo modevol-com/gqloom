@@ -1,53 +1,9 @@
 import { URL, fileURLToPath } from "node:url"
 import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
 import tailwindcss from "@tailwindcss/vite"
-import { type DefaultTheme, defineConfig } from "vitepress"
-
-const sidebarZh = [
-  {
-    text: "介绍",
-    link: "/zh/docs/",
-  },
-  {
-    text: "快速上手",
-    link: "/zh/docs/getting-started",
-  },
-  {
-    text: "丝线（Silk）",
-    link: "/zh/docs/silk",
-  },
-  {
-    text: "解析器（Resolver）",
-    link: "/zh/docs/resolver",
-  },
-  {
-    text: "编织（Weave）",
-    link: "/zh/docs/weave",
-  },
-] satisfies DefaultTheme.Config["sidebar"]
-
-const sidebarEn = [
-  {
-    text: "Introduction",
-    link: "/docs/",
-  },
-  {
-    text: "Getting Started",
-    link: "/docs/getting-started",
-  },
-  {
-    text: "Silk",
-    link: "/docs/silk",
-  },
-  {
-    text: "Resolver",
-    link: "/docs/resolver",
-  },
-  {
-    text: "Weave",
-    link: "/docs/weave",
-  },
-] satisfies DefaultTheme.Config["sidebar"]
+import { defineConfig } from "vitepress"
+import sidebarEn from "./sidebar-en.mjs"
+import sidebarZh from "./sidebar-zh.mjs"
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
