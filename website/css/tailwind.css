@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@source "../components/**/*.vue";
+@source "../**/*.md";
+
+@variant dark (&:where(.dark, .dark *));
