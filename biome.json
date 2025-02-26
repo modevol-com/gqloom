@@ -5,7 +5,7 @@
     "ignoreUnknown": false,
     "ignore": [
       "**/dist/**/*",
-      "website/.next/",
+      "website/.vitepress/cache/",
       "website-fuma/.next/",
       "docs/doc_build/",
       "**/generated/**/*",
