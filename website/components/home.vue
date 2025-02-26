@@ -4,7 +4,7 @@
       <FlowingLines class="size-full" />
     </div>
     <Hero class="min-h-[64vh]" />
-    <HomeSchemaLibrary>
+    <HomeSchemaLibrary class="mt-[max(8vh,4rem)]">
       <template v-slot:schemaLibraries>
         <slot name="schemaLibraries"></slot>
       </template>

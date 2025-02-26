@@ -22,7 +22,7 @@
 
 .vp-doc-home-schema {
   code {
-    @apply max-h-[36em] max-w-xl overflow-auto
+    @apply max-h-[32em] max-w-xl overflow-auto
   }
 }
 </style>

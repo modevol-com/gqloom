@@ -29,7 +29,7 @@ export default defineConfig({
           prev: "上一篇",
           next: "下一篇",
         },
-        outlineTitle: "本页内容",
+        outlineTitle: "目录",
       },
     },
   },

@@ -55,6 +55,10 @@
   --vp-c-rose-2: #e1709d;
   --vp-c-rose-3: #dd3e7e;
   --vp-c-rose-soft: rgba(236, 82, 143, 0.16);
+  --vp-c-bg: #1e1e2e;
+  --vp-c-bg-alt: #181825;
+  --vp-c-bg-elv: #202027;
+  --vp-c-bg-soft: #202027;
 }
 
 :root {
