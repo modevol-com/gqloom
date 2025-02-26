@@ -76,6 +76,7 @@ export default defineConfig({
     languages: ["ts"] as any,
   },
   ignoreDeadLinks: [/^https?:\/\/localhost/],
+  srcExclude: ["snippets/"],
   vite: {
     plugins: [tailwindcss()],
     resolve: {
