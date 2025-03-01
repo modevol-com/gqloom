@@ -7,7 +7,7 @@ export default function NotFound() {
       <body>
         <main className="flex flex-col items-center justify-center h-screen bg-slate-950 text-neutral-100 space-y-6 px-4">
           <div className="text-center space-y-4 relative">
-            <h1 className="text-9xl font-bold bg-gradient-to-r from-amber-400 to-rose-600 bg-clip-text text-transparent animate-pulse">
+            <h1 className="text-9xl font-bold bg-gradient-to-r from-amber-400 to-rose-600 bg-clip-text text-transparent">
               404
             </h1>
             <h2 className="text-2xl font-semibold text-orange-100">
@@ -19,7 +19,7 @@ export default function NotFound() {
           </div>
           <Link
             href="/"
-            className="bg-gradient-to-r from-orange-500 to-rose-600 px-6 py-3 rounded-lg 
+            className="bg-gradient-to-r from-orange-500 to-rose-600 px-6 py-3 rounded-full 
                       font-medium hover:scale-105 transition-transform duration-200
                       flex items-center gap-2 group shadow-lg hover:shadow-orange-500/20"
           >
