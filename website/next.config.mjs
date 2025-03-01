@@ -27,7 +27,7 @@ const config = {
       permanent: true,
     },
   ],
-  serverExternalPackages: ["@node-rs/jieba"],
+  serverExternalPackages: ["@node-rs/jieba", "twoslash"],
   experimental: {
     webpackMemoryOptimizations: true,
   },

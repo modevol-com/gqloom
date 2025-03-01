@@ -28,9 +28,8 @@ export const baseOptions: BaseLayoutProps = {
   i18n: true,
   links: [
     {
-      text: <DocText />,
-      url: "/docs",
-      on: "all",
+      type: "custom",
+      children: <DocText />,
     },
   ],
 }

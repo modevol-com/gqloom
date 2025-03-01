@@ -6,6 +6,7 @@ import {
   defineDocs,
 } from "fumadocs-mdx/config"
 import { transformerTwoslash } from "fumadocs-twoslash"
+import { createFileSystemTypesCache } from "fumadocs-twoslash/cache-fs"
 
 export const { docs, meta } = defineDocs({
   dir: "content/docs",
@@ -26,7 +27,8 @@ export default defineConfig({
       },
       transformers: [
         ...(rehypeCodeDefaultOptions.transformers ?? []),
-        process.env.NODE_ENV === "production" && transformerTwoslash(),
+        process.env.NODE_ENV === "production" &&
+          transformerTwoslash({ typesCache: createFileSystemTypesCache() }),
       ].filter(notFalse),
     },
   },
