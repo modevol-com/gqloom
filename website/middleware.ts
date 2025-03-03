@@ -34,9 +34,9 @@ export const config = {
 }
 
 /**
- * - Registers as many middlwares as needed.
+ * - Registers as many middlewares as needed.
  *
- * - Middlewares are invoked in the order they were registerd.
+ * - Middlewares are invoked in the order they were registered.
  *
  * - The first middleware to return the instance of NextResponse breaks the chain.
  *
