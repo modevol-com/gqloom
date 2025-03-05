@@ -1,9 +1,7 @@
 import {
   type GraphQLSilk,
-  type GraphQLSilkIO,
   SYMBOLS,
   type StandardSchemaV1,
-  createLoom,
   deepMerge,
   ensureInterfaceType,
   isSilk,
@@ -380,10 +378,6 @@ function issuesFromValidationError(
     ...(e.path && { path: [e.path] }),
   }))
 }
-
-export const { query, mutation, field, resolver, subscription } = createLoom<
-  YupSchemaIO | GraphQLSilkIO
->(yupSilk, yupSilk.isSilk)
 
 export {
   collectName,

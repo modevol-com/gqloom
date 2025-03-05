@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+* **Break change** refactor: remove `query`, `mutation`, `field`, `resolver`, `subscription` in `@gqloom/schema`
+
 ## 0.7.2 (2025-02-25)
 
 * Fix: update document link in README

@@ -1,7 +1,10 @@
 import {
   type GQLoomExtensions,
   type SilkResolver,
+  field,
   getGraphQLType,
+  query,
+  resolver,
   weave,
 } from "@gqloom/core"
 import {
@@ -30,15 +33,7 @@ import {
   object,
   string,
 } from "yup"
-import {
-  type GQLoomMetadata,
-  YupWeaver,
-  field,
-  query,
-  resolver,
-  union,
-  yupSilk,
-} from "../src/index"
+import { type GQLoomMetadata, YupWeaver, union, yupSilk } from "../src/index"
 
 declare module "yup" {
   export interface CustomSchemaMetadata extends GQLoomMetadata {}
@@ -101,10 +96,12 @@ describe("YupWeaver", () => {
   })
 
   it("should handle hidden field", () => {
-    const Dog = object({
-      name: string(),
-      birthday: date().meta({ asField: { type: null } }),
-    }).label("Dog")
+    const Dog = yupSilk(
+      object({
+        name: string(),
+        birthday: date().meta({ asField: { type: null } }),
+      }).label("Dog")
+    )
 
     expect(printYupSilk(Dog)).toMatchInlineSnapshot(`
       "type Dog {
@@ -143,7 +140,7 @@ describe("YupWeaver", () => {
       },
     })
 
-    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const r1 = resolver({ dog: query(yupSilk(Dog), () => ({})) })
     const schema1 = weave(r1, config)
 
     const ySilk = YupWeaver.useConfig(config)
@@ -331,11 +328,13 @@ describe("YupWeaver", () => {
       .meta({ description: "Fruit Interface" })
       .label("Fruit")
 
-    const Orange = object({
-      name: string().required(),
-      color: string().required(),
-      prize: number().required(),
-    })
+    const Orange = yupSilk(
+      object({
+        name: string().required(),
+        color: string().required(),
+        prize: number().required(),
+      })
+    )
       .meta({ asObjectType: { interfaces: [Fruit] } })
       .label("Orange")
 
@@ -384,9 +383,11 @@ describe("YupWeaver", () => {
       height: number().required(),
     }).label("Dog")
 
-    const Animal = union([Cat, Dog])
-      .label("Animal")
-      .meta({ description: "Do you love animals ?" })
+    const Animal = yupSilk(
+      union([Cat, Dog])
+        .label("Animal")
+        .meta({ description: "Do you love animals ?" })
+    )
 
     const simpleResolver = resolver({
       animal: query(Animal, () => 0 as any),
@@ -413,20 +414,22 @@ describe("YupWeaver", () => {
 
   describe("should avoid duplicate", () => {
     it("should merge field from multiple resolver", () => {
-      const Dog = object({
-        name: string().required(),
-        birthday: string().required(),
-      }).label("Dog")
+      const Dog = yupSilk(
+        object({
+          name: string().required(),
+          birthday: string().required(),
+        }).label("Dog")
+      )
 
       const r1 = resolver.of(Dog, {
         dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-        age: field(number(), (dog) => {
+        age: field(yupSilk(number()), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
 
       const r2 = resolver.of(Dog, {
-        greeting: field(string(), (dog) => {
+        greeting: field(yupSilk(string()), (dog) => {
           return `Hello ${dog.name}`
         }),
       })
@@ -446,25 +449,27 @@ describe("YupWeaver", () => {
     })
 
     it("should avoid duplicate object", () => {
-      const Dog = object({
-        name: string().required(),
-        birthday: string().required(),
-      }).label("Dog")
+      const Dog = yupSilk(
+        object({
+          name: string().required(),
+          birthday: string().required(),
+        }).label("Dog")
+      )
 
       const r1 = resolver.of(Dog, {
         dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-        dogs: query(array(Dog), {
+        dogs: query(yupSilk(array(Dog)), {
           resolve: () => [
             { name: "Fido", birthday: "2012-12-12" },
             { name: "Rover", birthday: "2012-12-12" },
           ],
         }),
-        mustDog: query(Dog.required(), () => ({
+        mustDog: query(yupSilk(Dog.required()), () => ({
           name: "",
           birthday: "2012-12-12",
         })),
-        mustDogs: query(array(Dog.required()), () => []),
-        age: field(number(), (dog) => {
+        mustDogs: query(yupSilk(array(Dog.required())), () => []),
+        age: field(yupSilk(number()), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
@@ -495,28 +500,28 @@ describe("YupWeaver", () => {
 
       const DogInput = Dog.clone().label("DogInput")
 
-      const r1 = resolver.of(Dog, {
-        unwrap: query(Dog, {
-          input: DogInput,
+      const r1 = resolver.of(yupSilk(Dog), {
+        unwrap: query(yupSilk(Dog), {
+          input: yupSilk(DogInput),
           resolve: (data) => data,
         }),
-        dog: query(Dog, {
-          input: { data: DogInput },
+        dog: query(yupSilk(Dog), {
+          input: { data: yupSilk(DogInput) },
           resolve: ({ data }) => data,
         }),
-        dogs: query(array(Dog.required()), {
+        dogs: query(yupSilk(array(Dog.required())), {
           input: {
-            data: array(DogInput),
-            required: array(DogInput.required()),
-            names: array(string().required()).required(),
+            data: yupSilk(array(DogInput)),
+            required: yupSilk(array(DogInput.required())),
+            names: yupSilk(array(string().required()).required()),
           },
           resolve: ({ data }) => data,
         }),
-        mustDog: query(Dog.required(), {
-          input: { data: DogInput.required() },
+        mustDog: query(yupSilk(Dog.required()), {
+          input: { data: yupSilk(DogInput.required()) },
           resolve: ({ data }) => data,
         }),
-        age: field(number(), (dog) => {
+        age: field(yupSilk(number()), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
@@ -547,10 +552,10 @@ describe("YupWeaver", () => {
     it("should avoid duplicate enum", () => {
       const Fruit = string().oneOf(["apple", "banana", "orange"]).label("Fruit")
       const r1 = resolver({
-        fruit: query(Fruit, () => "apple" as const),
-        fruits: query(array(Fruit), () => []),
-        mustFruit: query(Fruit.required(), () => "apple" as const),
-        mustFruits: query(array(Fruit.required()), () => []),
+        fruit: query(yupSilk(Fruit), () => "apple" as const),
+        fruits: query(yupSilk(array(Fruit)), () => []),
+        mustFruit: query(yupSilk(Fruit.required()), () => "apple" as const),
+        mustFruits: query(yupSilk(array(Fruit.required())), () => []),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -580,12 +585,12 @@ describe("YupWeaver", () => {
         .meta({ asObjectType: { interfaces: [Fruit.clone()] } })
 
       const r1 = resolver({
-        apple: query(Apple, () => ({ flavor: "" })),
-        apples: query(array(Apple), () => []),
-        orange: query(Orange, () => ({ flavor: "" })),
-        oranges: query(array(Orange), () => []),
-        mustOrange: query(Orange.required(), () => ({ flavor: "" })),
-        mustOranges: query(array(Orange.required()), () => []),
+        apple: query(yupSilk(Apple), () => ({ flavor: "" })),
+        apples: query(yupSilk(array(Apple)), () => []),
+        orange: query(yupSilk(Orange), () => ({ flavor: "" })),
+        oranges: query(yupSilk(array(Orange)), () => []),
+        mustOrange: query(yupSilk(Orange.required()), () => ({ flavor: "" })),
+        mustOranges: query(yupSilk(array(Orange.required())), () => []),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -620,10 +625,10 @@ describe("YupWeaver", () => {
       const Fruit = union([Apple, Orange]).label("Fruit")
 
       const r1 = resolver({
-        fruit: query(Fruit, () => ({ flavor: "" })),
-        fruits: query(array(Fruit), () => []),
-        mustFruit: query(Fruit.required(), () => ({ flavor: "" })),
-        mustFruits: query(array(Fruit.required()), () => []),
+        fruit: query(yupSilk(Fruit), () => ({ flavor: "" })),
+        fruits: query(yupSilk(array(Fruit)), () => []),
+        mustFruit: query(yupSilk(Fruit.required()), () => ({ flavor: "" })),
+        mustFruits: query(yupSilk(array(Fruit.required())), () => []),
       })
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
