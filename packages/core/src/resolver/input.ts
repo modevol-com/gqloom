@@ -1,57 +1,36 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import { GraphQLError } from "graphql"
-import type { MayPromise, ObjectOrNever } from "../utils"
+import type { MayPromise } from "../utils"
 import { isSilk } from "./silk"
-import type {
-  AbstractSchemaIO,
-  GraphQLSilk,
-  GraphQLSilkIO,
-  InferSchemaI,
-  InferSchemaO,
-  SchemaToSilk,
-} from "./types"
-
-export type InputSchema<TBaseSchema> =
-  | TBaseSchema
-  | Record<string, TBaseSchema>
-  | undefined
-
-export type InputSchemaToSilk<
-  TSchemaIO extends AbstractSchemaIO,
-  TInput extends InputSchema<TSchemaIO[0]>,
-> = TInput extends undefined
-  ? undefined
-  : TInput extends TSchemaIO[0]
-    ? SchemaToSilk<TSchemaIO, TInput>
-    : {
-        [K in keyof TInput]: TInput[K] extends TSchemaIO[0]
-          ? SchemaToSilk<TSchemaIO, TInput[K]>
-          : never
-      }
+import type { GraphQLSilk } from "./types"
 
 export type InferInputI<
-  TInput extends object | undefined,
-  TSchemaIO extends AbstractSchemaIO,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
 > = TInput extends undefined
   ? undefined
-  : TInput extends TSchemaIO[0]
-    ? ObjectOrNever<InferSchemaI<TInput, TSchemaIO>>
-    : {
-        [K in keyof TInput]: InferSchemaI<TInput[K], TSchemaIO>
-      }
+  : TInput extends GraphQLSilk
+    ? StandardSchemaV1.InferInput<TInput>
+    : TInput extends Record<string, GraphQLSilk>
+      ? {
+          [K in keyof TInput]: StandardSchemaV1.InferInput<TInput[K]>
+        }
+      : undefined
 
 export type InferInputO<
-  TInput extends object | undefined,
-  TSchemaIO extends AbstractSchemaIO,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
 > = TInput extends undefined
   ? undefined
-  : TInput extends TSchemaIO[0]
-    ? ObjectOrNever<InferSchemaO<TInput, TSchemaIO>>
-    : {
-        [K in keyof TInput]: InferSchemaO<TInput[K], TSchemaIO>
-      }
+  : TInput extends GraphQLSilk
+    ? StandardSchemaV1.InferOutput<TInput>
+    : TInput extends Record<string, GraphQLSilk>
+      ? {
+          [K in keyof TInput]: StandardSchemaV1.InferOutput<TInput[K]>
+        }
+      : never
 
-export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
+export interface CallableInputParser<
+  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+> {
   /**
    * input schema
    */
@@ -60,30 +39,23 @@ export interface CallableInputParser<TSchema extends InputSchema<GraphQLSilk>> {
   /**
    *  Origin value to parse
    */
-  value: InferInputI<TSchema, GraphQLSilkIO>
+  value: InferInputI<TSchema>
 
   /**
    * Parse the input and return the result
    */
-  (): Promise<StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>>
+  (): Promise<StandardSchemaV1.Result<InferInputO<TSchema>>>
 
   /**
    * Result of parsing. Set it to `undefined` then the parser will run again.
    */
-  result:
-    | StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>
-    | undefined
+  result: StandardSchemaV1.Result<InferInputO<TSchema>> | undefined
 }
 
 export function createInputParser<
-  TSchema extends InputSchema<GraphQLSilk> | undefined,
->(
-  schema: TSchema,
-  value: InferInputI<TSchema, GraphQLSilkIO>
-): CallableInputParser<TSchema> {
-  let result:
-    | StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>
-    | undefined
+  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+>(schema: TSchema, value: InferInputI<TSchema>): CallableInputParser<TSchema> {
+  let result: StandardSchemaV1.Result<InferInputO<TSchema>> | undefined
 
   const parse = async () => {
     if (result !== undefined) return result
@@ -101,25 +73,20 @@ export function createInputParser<
 }
 
 export function parseInputValue<
-  TSchema extends InputSchema<GraphQLSilk> | undefined,
+  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
 >(
   inputSchema: TSchema,
   input: any
-): MayPromise<StandardSchemaV1.Result<InferInputO<TSchema, GraphQLSilkIO>>> {
+): MayPromise<StandardSchemaV1.Result<InferInputO<TSchema>>> {
   if (inputSchema === undefined) {
-    return { value: input } as StandardSchemaV1.Result<
-      InferInputO<TSchema, GraphQLSilkIO>
-    >
+    return { value: input } as StandardSchemaV1.Result<InferInputO<TSchema>>
   }
 
   if (isSilk(inputSchema)) {
     return inputSchema["~standard"].validate(input)
   }
 
-  return parseInputEntries(inputSchema, input) as InferInputO<
-    TSchema,
-    GraphQLSilkIO
-  >
+  return parseInputEntries(inputSchema, input) as InferInputO<TSchema>
 }
 
 async function parseInputEntries(

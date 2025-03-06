@@ -1,4 +1,9 @@
-import { type StandardSchemaV1, loom, weave } from "@gqloom/core"
+import {
+  type StandardSchemaV1,
+  getStandardValue,
+  loom,
+  weave,
+} from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
@@ -180,11 +185,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const q = UserBobbin.countQuery({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
+
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.count>[0]>
-              >
+              Parameters<typeof db.user.count>[0]
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<number>()
             return next()
@@ -237,11 +241,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const q = UserBobbin.findFirstQuery({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.findFirst>[0]>
-              >
+              Parameters<typeof db.user.findFirst>[0]
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
             return next()
@@ -295,11 +297,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const q = UserBobbin.findManyQuery({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.findMany>[0]>
-              >
+              Parameters<typeof db.user.findMany>[0]
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser[]>()
             return next()
@@ -469,11 +469,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const m = UserBobbin.createManyMutation({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.createMany>[0]>
-              >
+              Parameters<typeof db.user.createMany>[0]
             >()
             return next()
           },
@@ -585,11 +583,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const m = UserBobbin.deleteManyMutation({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.deleteMany>[0]>
-              >
+              Parameters<typeof db.user.deleteMany>[0]
             >()
             return next()
           },

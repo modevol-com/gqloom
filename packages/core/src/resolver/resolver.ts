@@ -21,7 +21,6 @@ import type {
   FieldOptions,
   FieldOrOperation,
   GraphQLSilk,
-  GraphQLSilkIO,
   MutationFactory,
   MutationFactoryWithChain,
   QueryFactory,
@@ -40,7 +39,7 @@ export const createQuery = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
     | (() => MayPromise<unknown>)
-    | QueryMutationOptions<GraphQLSilkIO, any, any>
+    | QueryMutationOptions<any, any>
 ) => {
   if (resolveOrOptions == null) {
     return new QueryChainFactory({ output })
@@ -64,8 +63,8 @@ export const createQuery = (
   } as FieldOrOperation<any, any, any, "query">
 }
 
-export const query: QueryFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  createQuery as QueryFactory<GraphQLSilkIO>,
+export const query: QueryFactoryWithChain = Object.assign(
+  createQuery as QueryFactory,
   QueryChainFactory.methods()
 )
 
@@ -73,7 +72,7 @@ export const createMutation = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
     | (() => MayPromise<unknown>)
-    | QueryMutationOptions<GraphQLSilkIO, any, any>
+    | QueryMutationOptions<any, any>
 ) => {
   if (resolveOrOptions == null) {
     return new MutationChainFactory({ output })
@@ -97,8 +96,8 @@ export const createMutation = (
   } as FieldOrOperation<any, any, any, "mutation">
 }
 
-export const mutation: MutationFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  createMutation as MutationFactory<GraphQLSilkIO>,
+export const mutation: MutationFactoryWithChain = Object.assign(
+  createMutation as MutationFactory,
   MutationChainFactory.methods()
 )
 
@@ -106,7 +105,7 @@ export const createField = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
     | ((parent: unknown) => unknown)
-    | FieldOptions<GraphQLSilkIO, any, any, any>
+    | FieldOptions<any, any, any>
 ) => {
   if (resolveOrOptions == null) {
     return new FieldChainFactory({ output })
@@ -130,8 +129,8 @@ export const createField = (
   } as FieldOrOperation<any, any, any, "field">
 }
 
-export const field: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
-  createField as FieldFactory<GraphQLSilkIO>,
+export const field: FieldFactoryWithUtils = Object.assign(
+  createField as FieldFactory,
   { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
   FieldChainFactory.methods()
 )
@@ -142,7 +141,7 @@ export const createSubscription = (
   output: GraphQLSilk<any, any>,
   subscribeOrOptions?:
     | (() => MayPromise<AsyncIterator<unknown>>)
-    | SubscriptionOptions<GraphQLSilkIO, any, any, any>
+    | SubscriptionOptions<any, any, any>
 ) => {
   if (subscribeOrOptions == null) {
     return new SubscriptionChainFactory({ output })
@@ -170,11 +169,10 @@ export const createSubscription = (
   } as Subscription<any, any, any>
 }
 
-export const subscription: SubscriptionFactoryWithChain<GraphQLSilkIO> =
-  Object.assign(
-    createSubscription as SubscriptionFactory<GraphQLSilkIO>,
-    SubscriptionChainFactory.methods()
-  )
+export const subscription: SubscriptionFactoryWithChain = Object.assign(
+  createSubscription as SubscriptionFactory,
+  SubscriptionChainFactory.methods()
+)
 
 export const ResolverOptionsMap = new WeakMap<
   object,
@@ -238,14 +236,14 @@ function extraOperationOptions<
   }
 }
 
-export const resolver: ResolverFactory<GraphQLSilkIO> = Object.assign(
-  baseResolver as ResolverFactory<GraphQLSilkIO>,
+export const resolver: ResolverFactory = Object.assign(
+  baseResolver as ResolverFactory,
   {
     of: ((parent, operations, options) =>
       baseResolver(
         operations as Record<string, FieldOrOperation<any, any, any>>,
         { ...options, parent } as ResolverOptionsWithParent
-      )) as ResolverFactory<GraphQLSilkIO>["of"],
+      )) as ResolverFactory["of"],
   }
 )
 

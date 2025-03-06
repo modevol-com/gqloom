@@ -11,11 +11,11 @@ export function getOperationOptions<
   T extends FieldOrOperationType = OperationType,
 >(
   resolveOrOptions: T extends "field"
-    ? ((parent: any) => any) | FieldOptions<any, any, any, any>
-    : (() => any) | QueryMutationOptions<any, any, any>
+    ? ((parent: any) => any) | FieldOptions<any, any, any>
+    : (() => any) | QueryMutationOptions<any, any>
 ): T extends "field"
-  ? FieldOptions<any, any, any, any>
-  : QueryMutationOptions<any, any, any> {
+  ? FieldOptions<any, any, any>
+  : QueryMutationOptions<any, any> {
   if (typeof resolveOrOptions === "function") {
     return { resolve: resolveOrOptions }
   }
@@ -23,8 +23,8 @@ export function getOperationOptions<
 }
 
 export function getSubscriptionOptions(
-  subscribeOrOptions: (() => any) | SubscriptionOptions<any, any, any, any>
-): SubscriptionOptions<any, any, any, any> {
+  subscribeOrOptions: (() => any) | SubscriptionOptions<any, any, any>
+): SubscriptionOptions<any, any, any> {
   if (typeof subscribeOrOptions === "function") {
     return { subscribe: subscribeOrOptions }
   }

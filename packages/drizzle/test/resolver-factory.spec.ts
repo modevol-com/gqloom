@@ -212,7 +212,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
             const opts = await parseInput()
             if (opts.issues) throw new Error("Invalid input")
             expectTypeOf(opts.value).toEqualTypeOf<
-              NonNullable<SelectArrayOptions>
+              NonNullable<SelectArrayOptions> | undefined
             >()
             count++
             const answer = await next()
@@ -280,8 +280,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
           async ({ parseInput, next }) => {
             const opts = await parseInput()
             if (opts.issues) throw new Error("Invalid input")
+
             expectTypeOf(opts.value).toEqualTypeOf<
-              NonNullable<SelectSingleOptions>
+              NonNullable<SelectSingleOptions> | undefined
             >()
             count++
             const answer = await next()

@@ -7,6 +7,7 @@ import {
   GraphQLString,
 } from "graphql"
 import { describe, expectTypeOf, it } from "vitest"
+import type { InferInputI } from "../src/resolver"
 import { loom } from "../src/resolver/resolver"
 import { silk } from "../src/resolver/silk"
 
@@ -98,6 +99,13 @@ describe("resolver type", () => {
         .parameter(0)
         .toEqualTypeOf<{ name: string }>()
 
+      type c1 = InferInputI<typeof GiraffeInput>
+
+      expectTypeOf<c1>().toEqualTypeOf<Partial<IGiraffe>>()
+
+      type c2 = StandardSchemaV1.InferInput<typeof GiraffeInput>
+
+      expectTypeOf<c2>().toEqualTypeOf<Partial<IGiraffe>>()
       expectTypeOf(simpleResolver.createGiraffe.resolve)
         .parameter(0)
         .toEqualTypeOf<Partial<IGiraffe>>()

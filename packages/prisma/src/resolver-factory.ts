@@ -3,6 +3,7 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
+  type QueryMutationOptions,
   type ResolverOptionsWithExtensions,
   type StandardSchemaV1,
   loom,
@@ -168,7 +169,7 @@ export class PrismaResolverFactory<
         ...options,
         input,
         resolve: (input) => this.delegate.count(input),
-      }
+      } as QueryMutationOptions<any, any>
     )
   }
 
@@ -227,7 +228,11 @@ export class PrismaResolverFactory<
       ...options,
       input,
       resolve: (input) => this.delegate.findMany(input),
-    }) as PrismaResolverFindManyQuery<TModelSilk, TClient, TInputI>
+    } as QueryMutationOptions<any, any>) as PrismaResolverFindManyQuery<
+      TModelSilk,
+      TClient,
+      TInputI
+    >
   }
 
   public findUniqueQuery<
@@ -312,7 +317,11 @@ export class PrismaResolverFactory<
       ...options,
       input,
       resolve: (input) => this.delegate.createMany(input),
-    }) as PrismaResolverCreateManyMutation<TModelSilk, TClient, TInputI>
+    } as QueryMutationOptions<any, any>) as PrismaResolverCreateManyMutation<
+      TModelSilk,
+      TClient,
+      TInputI
+    >
   }
 
   public deleteMutation<
@@ -376,7 +385,7 @@ export class PrismaResolverFactory<
       resolve: async (input) => {
         return await this.delegate.deleteMany(input)
       },
-    })
+    } as QueryMutationOptions<any, any>)
   }
 
   public updateMutation<
@@ -429,7 +438,7 @@ export class PrismaResolverFactory<
       ...options,
       input,
       resolve: (input) => this.delegate.updateMany(input),
-    })
+    } as QueryMutationOptions<any, any>)
   }
 
   public upsertMutation<
@@ -454,7 +463,11 @@ export class PrismaResolverFactory<
       ...options,
       input,
       resolve: (input) => this.delegate.upsert(input),
-    }) as PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI>
+    } as QueryMutationOptions<any, any>) as PrismaResolverUpsertMutation<
+      TModelSilk,
+      TClient,
+      TInputI
+    >
   }
 
   protected static getDelegate(

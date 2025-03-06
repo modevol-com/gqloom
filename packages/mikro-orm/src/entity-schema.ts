@@ -1,10 +1,7 @@
 import {
-  type AbstractSchemaIO,
   type GQLoomExtensions,
   type GraphQLSilk,
-  type GraphQLSilkIO,
-  type InferSchemaI,
-  type InferSchemaO,
+  type StandardSchemaV1,
   type WeaverContext,
   getGraphQLType,
   mapValue,
@@ -198,13 +195,13 @@ export class EntitySchemaWeaver {
     }
   }
 
-  static createWeaver<TSchemaIO extends AbstractSchemaIO>(
-    toSilk: (schema: TSchemaIO[0]) => GraphQLSilk,
+  static createWeaver(
+    toSilk: (schema: StandardSchemaV1) => GraphQLSilk,
     creatorOptions: EntitySchemaWeaverOptions = {}
-  ): CallableEntitySchemaWeaver<TSchemaIO> {
+  ): CallableEntitySchemaWeaver {
     return Object.assign(
       (
-        silk: TSchemaIO[0],
+        silk: StandardSchemaV1,
         options?: Partial<EntitySchemaMetadata<any>> & EntitySchemaWeaverOptions
       ) =>
         EntitySchemaWeaver.weave(toSilk(silk), undefined, {
@@ -213,7 +210,7 @@ export class EntitySchemaWeaver {
         } as EntitySchemaMetadata<any> & EntitySchemaWeaverOptions),
       {
         withRelations: (
-          silk: TSchemaIO[0],
+          silk: StandardSchemaV1,
           relations: Record<string, RelationProperty<any, any>>,
           options?: Partial<EntitySchemaMetadata<any>> &
             EntitySchemaWeaverOptions
@@ -247,42 +244,35 @@ function getGraphQLTypeWithName(
   }
 }
 
-export interface CallableEntitySchemaWeaver<
-  TSchemaIO extends AbstractSchemaIO,
-> {
-  <TSilk extends TSchemaIO[0]>(
+export interface CallableEntitySchemaWeaver {
+  <TSilk extends GraphQLSilk>(
     silk: TSilk,
-    options?: Partial<
-      EntitySchemaMetadata<SilkSchemaEntity<TSilk, TSchemaIO>>
-    > &
+    options?: Partial<EntitySchemaMetadata<SilkSchemaEntity<TSilk>>> &
       EntitySchemaWeaverOptions
-  ): EntitySilk<SilkSchemaEntity<TSilk, TSchemaIO>>
+  ): EntitySilk<SilkSchemaEntity<TSilk>>
 
   withRelations: <
-    TSilk extends TSchemaIO[0],
+    TSilk extends GraphQLSilk,
     TRelations extends Record<
       string,
-      RelationProperty<any, InferSchemaO<TSilk, TSchemaIO>>
+      RelationProperty<any, StandardSchemaV1.InferOutput<TSilk>>
     > = never,
   >(
     silk: TSilk,
     relations: TRelations,
     options?: Partial<
-      EntitySchemaMetadata<
-        SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>
-      >
+      EntitySchemaMetadata<SilkSchemaEntityWithRelations<TSilk, TRelations>>
     > &
       EntitySchemaWeaverOptions
-  ) => EntitySilk<SilkSchemaEntityWithRelations<TSchemaIO, TSilk, TRelations>>
+  ) => EntitySilk<SilkSchemaEntityWithRelations<TSilk, TRelations>>
 }
 
 export type SilkSchemaEntityWithRelations<
-  TSchemaIO extends AbstractSchemaIO,
-  TSilk extends TSchemaIO[0],
+  TSilk extends GraphQLSilk,
   TRelations extends Record<string, RelationProperty<any, any>> = never,
-> = SilkSchemaEntity<TSilk, TSchemaIO> & InferRelations<TRelations>
+> = SilkSchemaEntity<TSilk> & InferRelations<TRelations>
 
-export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver<GraphQLSilkIO> =
+export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver =
   Object.assign(
     (
       silk: GraphQLSilk,
@@ -326,14 +316,13 @@ export interface EntitySchemaWeaverOptions {
   weaverContext?: WeaverContext
 }
 
-export type SilkSchemaEntity<
-  TSilk,
-  TSchemaIO extends AbstractSchemaIO,
-> = InferSchemaO<TSilk, TSchemaIO> & {
-  [OptionalProps]?: NullishKeys<InferSchemaI<TSilk, TSchemaIO>>
-}
+export type SilkSchemaEntity<TSilk extends GraphQLSilk> =
+  StandardSchemaV1.InferOutput<TSilk> & {
+    [OptionalProps]?: NullishKeys<StandardSchemaV1.InferInput<TSilk>>
+  }
 
-export type GraphQLSilkEntity<TSilk> = SilkSchemaEntity<TSilk, GraphQLSilkIO>
+export type GraphQLSilkEntity<TSilk extends GraphQLSilk> =
+  SilkSchemaEntity<TSilk>
 
 export type InferRelations<
   TRelations extends Record<string, RelationProperty<any, any>>,
