@@ -30,6 +30,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
+  type GraphQLOutputType,
   GraphQLScalarType,
   GraphQLString,
 } from "graphql"
@@ -372,7 +373,7 @@ export class MikroInputFactory<
       new GraphQLObjectType({
         name: name + "Wrapper",
         fields: { data: { type: gqlType } },
-      }),
+      }) as GraphQLOutputType,
       (value) => ({ value: value.data })
     )
   }
@@ -396,7 +397,7 @@ export class MikroInputFactory<
       new GraphQLObjectType({
         name: name + "Wrapper",
         fields: { data: { type: gqlType } },
-      }),
+      }) as GraphQLOutputType,
       (value) => ({ value: value.data })
     )
   }

@@ -7,7 +7,7 @@ import {
   GraphQLString,
 } from "graphql"
 import { describe, expectTypeOf, it } from "vitest"
-import type { InferInputI } from "../src/resolver"
+import { type InferInputI, getStandardValue } from "../src/resolver"
 import { loom } from "../src/resolver/resolver"
 import { silk } from "../src/resolver/silk"
 
@@ -139,7 +139,7 @@ describe("resolver type", () => {
               it("should infer input type", () => {
                 expectTypeOf(input).toEqualTypeOf<
                   StandardSchemaV1.Result<{
-                    myName: string | undefined
+                    myName: string | undefined | null
                   }>
                 >()
               })
@@ -152,7 +152,7 @@ describe("resolver type", () => {
             })
             it("should infer input type", () => {
               expectTypeOf(input).toEqualTypeOf<{
-                myName: string | undefined
+                myName: string | undefined | null
               }>()
             })
             return `Hello, ${input.myName ?? "my friend"}! My name is ${giraffe.name}.`
@@ -166,14 +166,10 @@ describe("resolver type", () => {
               expectTypeOf(parent).toEqualTypeOf<IGiraffe | undefined>()
             })
 
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             it("should infer input type", () => {
               expectTypeOf(input).toEqualTypeOf<
-                | StandardSchemaV1.FailureResult
-                | StandardSchemaV1.SuccessResult<{
-                    myName: string | undefined
-                  }>
-                | StandardSchemaV1.Result<undefined>
+                { myName: string | null | undefined } | undefined
               >()
             })
 

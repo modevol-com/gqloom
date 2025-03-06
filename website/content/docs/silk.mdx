@@ -41,8 +41,8 @@ interface ICat {
   age: number
 }
 
-const Cat = silk<ICat>(
-  new GraphQLObjectType({
+const Cat = silk(
+  new GraphQLObjectType<ICat>({
     name: "Cat",
     fields: {
       name: { type: new GraphQLNonNull(GraphQLString) },

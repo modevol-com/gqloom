@@ -45,7 +45,7 @@ import { PgDatabase, type PgTable } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
-import { GraphQLError } from "graphql"
+import { GraphQLError, type GraphQLOutputType } from "graphql"
 import { DrizzleWeaver, type TableSilk } from "."
 import { inArrayMultiple } from "./helper"
 import {
@@ -530,7 +530,9 @@ export class DrizzleMySQLResolverFactory<
       InsertArrayMutationReturningSuccess<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningSuccess<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.insertArrayArgs())
+    input ??= silk(
+      () => this.inputFactory.insertArrayArgs() as GraphQLOutputType
+    )
 
     return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
       ...options,
@@ -551,7 +553,9 @@ export class DrizzleMySQLResolverFactory<
       InsertSingleMutationReturningSuccess<TTable, TInputI>
     >[]
   } = {}): InsertSingleMutationReturningSuccess<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.insertSingleArgs())
+    input ??= silk(
+      () => this.inputFactory.insertSingleArgs() as GraphQLOutputType
+    )
 
     return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
       ...options,
@@ -570,7 +574,7 @@ export class DrizzleMySQLResolverFactory<
     input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
     middlewares?: Middleware<UpdateMutationReturningSuccess<TTable, TInputI>>[]
   } = {}): UpdateMutationReturningSuccess<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.updateArgs())
+    input ??= silk(() => this.inputFactory.updateArgs() as GraphQLOutputType)
 
     return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
       ...options,
@@ -595,7 +599,7 @@ export class DrizzleMySQLResolverFactory<
     input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
     middlewares?: Middleware<DeleteMutationReturningSuccess<TTable, TInputI>>[]
   } = {}): DeleteMutationReturningSuccess<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.deleteArgs())
+    input ??= silk(() => this.inputFactory.deleteArgs() as GraphQLOutputType)
 
     return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
       ...options,
@@ -638,7 +642,9 @@ export class DrizzlePostgresResolverFactory<
       InsertArrayMutationReturningItems<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.insertArrayArgs())
+    input ??= silk(
+      () => this.inputFactory.insertArrayArgs() as GraphQLOutputType
+    )
 
     return loom.mutation(this.output.$list(), {
       ...options,
@@ -664,7 +670,9 @@ export class DrizzlePostgresResolverFactory<
       InsertSingleMutationReturningItem<TTable, TInputI>
     >[]
   } = {}): InsertSingleMutationReturningItem<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.insertSingleArgs())
+    input ??= silk(
+      () => this.inputFactory.insertSingleArgs() as GraphQLOutputType
+    )
 
     return loom.mutation(this.output.$nullable(), {
       ...options,
@@ -688,7 +696,7 @@ export class DrizzlePostgresResolverFactory<
     input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
     middlewares?: Middleware<UpdateMutationReturningItems<TTable, TInputI>>[]
   } = {}): UpdateMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.updateArgs())
+    input ??= silk(() => this.inputFactory.updateArgs() as GraphQLOutputType)
 
     return loom.mutation(this.output.$list(), {
       ...options,
@@ -710,7 +718,7 @@ export class DrizzlePostgresResolverFactory<
     input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
     middlewares?: Middleware<DeleteMutationReturningItems<TTable, TInputI>>[]
   } = {}): DeleteMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.deleteArgs())
+    input ??= silk(() => this.inputFactory.deleteArgs() as GraphQLOutputType)
 
     return loom.mutation(this.output.$list(), {
       ...options,
@@ -752,7 +760,9 @@ export class DrizzleSQLiteResolverFactory<
       InsertArrayMutationReturningItems<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.insertArrayArgs())
+    input ??= silk(
+      () => this.inputFactory.insertArrayArgs() as GraphQLOutputType
+    )
 
     return loom.mutation(this.output.$list(), {
       ...options,
@@ -777,7 +787,9 @@ export class DrizzleSQLiteResolverFactory<
       InsertSingleMutationReturningItem<TTable, TInputI>
     >[]
   } = {}): InsertSingleMutationReturningItem<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.insertSingleArgs())
+    input ??= silk(
+      () => this.inputFactory.insertSingleArgs() as GraphQLOutputType
+    )
     return loom.mutation(this.output.$nullable(), {
       ...options,
       input,
@@ -800,7 +812,7 @@ export class DrizzleSQLiteResolverFactory<
     input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
     middlewares?: Middleware<UpdateMutationReturningItems<TTable, TInputI>>[]
   } = {}): UpdateMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.updateArgs())
+    input ??= silk(() => this.inputFactory.updateArgs() as GraphQLOutputType)
 
     return loom.mutation(this.output.$list(), {
       ...options,
@@ -822,7 +834,7 @@ export class DrizzleSQLiteResolverFactory<
     input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
     middlewares?: Middleware<DeleteMutationReturningItems<TTable, TInputI>>[]
   } = {}): DeleteMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.deleteArgs())
+    input ??= silk(() => this.inputFactory.deleteArgs() as GraphQLOutputType)
 
     return loom.mutation(this.output.$list(), {
       ...options,
