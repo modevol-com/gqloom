@@ -76,7 +76,7 @@ export class FederatedChainResolver<
   }
 
   /**
-   * Resolve the reference of a federated object.
+   * The `resolveReference` function enables your router's query planner to resolve a particular entity by whatever unique identifier your other subgraphs use to reference it.
    * @param resolve - The function to resolve the reference
    * @returns The resolver instance
    */
