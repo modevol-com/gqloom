@@ -7,13 +7,7 @@ import {
   createQuery,
   createSubscription,
 } from "./resolver"
-import type {
-  EnsureSilk,
-  FieldOrOperation,
-  GraphQLFieldOptions,
-  GraphQLSilk,
-  Subscription,
-} from "./types"
+import type { GraphQLFieldOptions, GraphQLSilk, Loom } from "./types"
 
 export interface IChainFactory<
   TOutput extends GraphQLSilk,
@@ -39,6 +33,10 @@ export interface IChainFactory<
   ): IChainFactory<TOutput, TInputNew>
 }
 
+interface ChainFactoryOptions extends Loom.FieldMeta {
+  middlewares?: Middleware[]
+}
+
 abstract class BaseChainFactory {
   static methods() {
     return {
@@ -48,17 +46,9 @@ abstract class BaseChainFactory {
     }
   }
 
-  constructor(
-    protected readonly options?: Partial<
-      FieldOrOperation<any, any, any, any> & { middlewares: Middleware[] }
-    >
-  ) {}
+  constructor(protected readonly options?: Partial<ChainFactoryOptions>) {}
 
-  protected abstract clone(
-    options?: Partial<
-      FieldOrOperation<any, any, any, any> & { middlewares: Middleware[] }
-    >
-  ): this
+  protected abstract clone(options?: Partial<ChainFactoryOptions>): this
 
   public description(description: GraphQLFieldOptions["description"]): this {
     return this.clone({ description })
@@ -101,16 +91,12 @@ export class FieldChainFactory<
     } as any as FieldChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new FieldChainFactory({ ...this.options, ...options }) as this
   }
 
   public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<any, TOutput, TInput, "field">
-    >[]
+    ...middlewares: Middleware<Loom.Field<any, TOutput, TInput>>[]
   ): this {
     return super.use(...middlewares)
   }
@@ -132,8 +118,9 @@ export class FieldChainFactory<
       parent: StandardSchemaV1.InferOutput<TParent>,
       input: InferInputO<TInput>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): FieldOrOperation<EnsureSilk<TParent>, TOutput, TInput, "field"> {
-    return createField(this.options?.output, {
+  ): Loom.Field<TParent, TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+    return createField(this.options.output, {
       ...this.options,
       resolve,
     }) as any
@@ -160,17 +147,11 @@ export class QueryChainFactory<
     } as any as QueryChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new QueryChainFactory({ ...this.options, ...options }) as this
   }
 
-  public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<any, TOutput, TInput, "query">
-    >[]
-  ): this {
+  public use(...middlewares: Middleware<Loom.Query<TOutput, TInput>>[]): this {
     return super.use(...middlewares)
   }
 
@@ -190,8 +171,9 @@ export class QueryChainFactory<
     resolve: (
       input: InferInputO<TInput>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): FieldOrOperation<undefined, TOutput, TInput, "query"> {
-    return createQuery(this.options?.output, {
+  ): Loom.Query<TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+    return createQuery(this.options.output, {
       ...this.options,
       resolve,
     }) as any
@@ -218,16 +200,12 @@ export class MutationChainFactory<
     } as any as MutationChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new MutationChainFactory({ ...this.options, ...options }) as this
   }
 
   public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<any, TOutput, TInput, "mutation">
-    >[]
+    ...middlewares: Middleware<Loom.Mutation<TOutput, TInput>>[]
   ): this {
     return super.use(...middlewares)
   }
@@ -248,8 +226,9 @@ export class MutationChainFactory<
     resolve: (
       input: InferInputO<TInput>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): FieldOrOperation<any, TOutput, TInput, "mutation"> {
-    return createMutation(this.options?.output, {
+  ): Loom.Mutation<TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+    return createMutation(this.options.output, {
       ...this.options,
       resolve,
     }) as any
@@ -276,16 +255,12 @@ export class SubscriptionChainFactory<
     } as any as SubscriptionChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new SubscriptionChainFactory({ ...this.options, ...options }) as this
   }
 
   public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<any, TOutput, TInput, "subscription">
-    >[]
+    ...middlewares: Middleware<Loom.Subscription<TOutput, TInput, any>>[]
   ): this {
     return super.use(...middlewares)
   }
@@ -306,16 +281,18 @@ export class SubscriptionChainFactory<
     subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
   ): ResolvableSubscription<TOutput, TInput, TValue> {
     const options = this.options
-    const subscription = createSubscription(options?.output, {
+    const output = this.options?.output
+    if (!output) throw new Error("Output is required")
+    const subscription = createSubscription(output, {
       ...options,
       subscribe,
-    }) as Subscription<any, any, any>
+    })
 
-    const subscriptionResolve = subscription.resolve
+    const subscriptionResolve = subscription["~meta"].resolve
 
     const resolve = (...args: any[]) => {
       if (args.length === 1 && typeof args[0] === "function") {
-        return createSubscription(options?.output, {
+        return createSubscription(output, {
           ...options,
           resolve: args[0],
           subscribe,
@@ -335,13 +312,11 @@ export interface ResolvableSubscription<
     | Record<string, GraphQLSilk>
     | undefined = undefined,
   TValue = StandardSchemaV1.InferOutput<TOutput>,
-> extends Subscription<TOutput, TInput, TValue> {
+> extends Loom.Subscription<TOutput, TInput, TValue> {
   resolve(
     resolve: (
       value: TValue,
       input: InferInputO<TInput>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): Subscription<TOutput, TInput, TValue>
-
-  resolve(value: TValue, input: any): MayPromise<any>
+  ): Loom.Subscription<TOutput, TInput, TValue>
 }

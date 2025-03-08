@@ -12,6 +12,7 @@ import * as tables from "./schema"
 const db = drizzle(config.databaseUrl, { schema: tables })
 
 const userResolver = drizzleResolverFactory(db, "users").resolver()
+
 const postResolver = drizzleResolverFactory(db, "posts").resolver()
 
 const schema = weave(userResolver, postResolver)

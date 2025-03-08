@@ -1,13 +1,12 @@
 import {
   type GQLoomExtensions,
   GraphQLSchemaLoom,
-  type SilkResolver,
   field,
   query,
   resolver,
   weave,
 } from "@gqloom/core"
-import type { SchemaWeaver } from "@gqloom/core"
+import type { Loom, SchemaWeaver } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -897,7 +896,7 @@ function print(
   return printType(gqlType as GraphQLNamedType)
 }
 
-function printResolver(...resolvers: SilkResolver[]): string {
+function printResolver(...resolvers: Loom.Resolver[]): string {
   const weaver = new GraphQLSchemaLoom()
   weaver.addVendor(ValibotWeaver)
   for (const r of resolvers) weaver.add(r)

@@ -1,21 +1,18 @@
 import type {
   FieldOptions,
-  FieldOrOperationType,
   GraphQLFieldOptions,
-  OperationType,
-  QueryMutationOptions,
+  MutationOptions,
+  QueryOptions,
   SubscriptionOptions,
 } from "../resolver/types"
 
-export function getOperationOptions<
-  T extends FieldOrOperationType = OperationType,
->(
-  resolveOrOptions: T extends "field"
-    ? ((parent: any) => any) | FieldOptions<any, any, any>
-    : (() => any) | QueryMutationOptions<any, any>
-): T extends "field"
-  ? FieldOptions<any, any, any>
-  : QueryMutationOptions<any, any> {
+export function getOperationOptions(
+  resolveOrOptions:
+    | ((...args: any) => any)
+    | FieldOptions<any, any, any>
+    | QueryOptions<any, any>
+    | MutationOptions<any, any>
+) {
   if (typeof resolveOrOptions === "function") {
     return { resolve: resolveOrOptions }
   }

@@ -1,8 +1,8 @@
 import {
   type GQLoomExtensions,
   GraphQLSchemaLoom,
+  type Loom,
   type SchemaWeaver,
-  type SilkResolver,
   collectNames,
 } from "@gqloom/core"
 import {
@@ -749,7 +749,7 @@ function printZodSilk(schema: Schema): string {
   return printType(gqlType as GraphQLNamedType)
 }
 
-function printResolver(...resolvers: SilkResolver[]): string {
+function printResolver(...resolvers: Loom.Resolver[]): string {
   const weaver = new GraphQLSchemaLoom()
   weaver.addVendor(ZodWeaver)
   for (const r of resolvers) weaver.add(r)

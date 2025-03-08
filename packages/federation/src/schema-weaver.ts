@@ -8,8 +8,8 @@ import {
 import {
   GraphQLSchemaLoom,
   type GraphQLSilk,
+  type Loom,
   type Middleware,
-  type SilkResolver,
   type WeaverConfig,
   query,
   resolver,
@@ -101,7 +101,7 @@ export class FederatedSchemaLoom extends GraphQLSchemaLoom {
    * @returns GraphQL Schema
    */
   static override weave(
-    ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
+    ...inputs: (Loom.Resolver | Middleware | WeaverConfig | GraphQLSilk)[]
   ): GraphQLSchema {
     const { context, configs, middlewares, resolvers, silks, weavers } =
       GraphQLSchemaLoom.optionsFrom(...inputs)

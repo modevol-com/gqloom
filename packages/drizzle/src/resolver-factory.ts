@@ -1,8 +1,10 @@
 import {
+  type ChainResolver,
   EasyDataLoader,
-  type FieldOrOperation,
+  type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
+  type Loom,
   type Middleware,
   capitalize,
   createMemoization,
@@ -450,19 +452,19 @@ export abstract class DrizzleResolverFactory<
         const loader = useLoader()
         return loader.load(parent)
       },
-    }) as any
+    } as FieldOptions<any, any, any>)
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(options?: {
     name?: TTableName
     middlewares?: Middleware[]
-  }): DrizzleResolver<TDatabase, TTable, TTableName> {
+  }): ChainResolver<
+    DrizzleResolver<TDatabase, TTable, TTableName>,
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>
+  > {
     const name = options?.name ?? this.tableName
 
-    const fields: Record<
-      string,
-      FieldOrOperation<any, any, any, any>
-    > = mapValue(
+    const fields: Record<string, Loom.Field<any, any, any>> = mapValue(
       this.db._.schema?.[this.tableName]?.relations ?? {},
       (_, key) => this.relationField(key)
     )
@@ -485,28 +487,28 @@ export abstract class DrizzleResolverFactory<
   public abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
     options?: GraphQLFieldOptions & {
       input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
-      middlewares?: Middleware<InsertArrayMutation<TTable, TInputI>>[]
+      middlewares?: Middleware[]
     }
   ): InsertArrayMutation<TTable, TInputI>
 
   public abstract insertSingleMutation<TInputI = InsertSingleArgs<TTable>>(
     options?: GraphQLFieldOptions & {
       input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
-      middlewares?: Middleware<InsertSingleMutation<TTable, TInputI>>[]
+      middlewares?: Middleware[]
     }
   ): InsertSingleMutation<TTable, TInputI>
 
   public abstract updateMutation<TInputI = UpdateArgs<TTable>>(
     options?: GraphQLFieldOptions & {
       input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
-      middlewares?: Middleware<UpdateMutation<TTable, TInputI>>[]
+      middlewares?: Middleware[]
     }
   ): UpdateMutation<TTable, TInputI>
 
   public abstract deleteMutation<TInputI = DeleteArgs<TTable>>(
     options?: GraphQLFieldOptions & {
       input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
-      middlewares?: Middleware<DeleteMutation<TTable, TInputI>>[]
+      middlewares?: Middleware[]
     }
   ): DeleteMutation<TTable, TInputI>
 }
@@ -620,12 +622,11 @@ export class DrizzleMySQLResolverFactory<
       name?: TTableName
       middlewares?: Middleware[]
     } = {}
-  ): DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName> {
-    return super.resolver(options) as DrizzleResolverReturningSuccess<
-      TDatabase,
-      TTable,
-      TTableName
-    >
+  ): ChainResolver<
+    DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName>,
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>
+  > {
+    return super.resolver(options) as any
   }
 }
 
@@ -738,12 +739,11 @@ export class DrizzlePostgresResolverFactory<
       name?: TTableName
       middlewares?: Middleware[]
     } = {}
-  ): DrizzleResolverReturningItems<TDatabase, TTable, TTableName> {
-    return super.resolver(options) as DrizzleResolverReturningItems<
-      TDatabase,
-      TTable,
-      TTableName
-    >
+  ): ChainResolver<
+    DrizzleResolverReturningItems<TDatabase, TTable, TTableName>,
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>
+  > {
+    return super.resolver(options) as any
   }
 }
 
@@ -854,12 +854,11 @@ export class DrizzleSQLiteResolverFactory<
       name?: TTableName
       middlewares?: Middleware[]
     } = {}
-  ): DrizzleResolverReturningItems<TDatabase, TTable, TTableName> {
-    return super.resolver(options) as DrizzleResolverReturningItems<
-      TDatabase,
-      TTable,
-      TTableName
-    >
+  ): ChainResolver<
+    DrizzleResolverReturningItems<TDatabase, TTable, TTableName>,
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>
+  > {
+    return super.resolver(options) as any
   }
 }
 
@@ -932,11 +931,9 @@ export interface SelectArrayQuery<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectArrayArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Query<
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>,
-    "query"
+    GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
   > {}
 
 export type InferSelectArrayOptions<
@@ -948,14 +945,12 @@ export interface SelectSingleQuery<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectSingleArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Query<
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>,
-    "query"
+    GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
   > {}
 
 export type InferSelectSingleOptions<
@@ -966,27 +961,25 @@ export type InferSelectSingleOptions<
 export interface RelationManyField<
   TTable extends Table,
   TRelationTable extends Table,
-> extends FieldOrOperation<
+> extends Loom.Field<
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable>[],
       InferSelectModel<TRelationTable>[]
     >,
-    undefined,
-    "field"
+    undefined
   > {}
 
 export interface RelationOneField<
   TTable extends Table,
   TRelationTable extends Table,
-> extends FieldOrOperation<
+> extends Loom.Field<
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable> | null | undefined,
       InferSelectModel<TRelationTable> | null | undefined
     >,
-    undefined,
-    "field"
+    undefined
   > {}
 
 export type InsertArrayMutation<
@@ -999,21 +992,17 @@ export type InsertArrayMutation<
 export interface InsertArrayMutationReturningItems<
   TTable extends Table,
   TInputI = InsertArrayArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
   > {}
 
 export interface InsertArrayMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertArrayArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
   > {}
 
 export type InsertSingleMutation<
@@ -1026,24 +1015,20 @@ export type InsertSingleMutation<
 export interface InsertSingleMutationReturningItem<
   TTable extends Table,
   TInputI = InsertSingleArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
   > {}
 
 export interface InsertSingleMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertSingleArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
   > {}
 
 export type UpdateMutation<TTable extends Table, TInputI = UpdateArgs<TTable>> =
@@ -1053,21 +1038,17 @@ export type UpdateMutation<TTable extends Table, TInputI = UpdateArgs<TTable>> =
 export interface UpdateMutationReturningItems<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<UpdateArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<UpdateArgs<TTable>, TInputI>
   > {}
 
 export interface UpdateMutationReturningSuccess<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<UpdateArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<UpdateArgs<TTable>, TInputI>
   > {}
 
 export type DeleteMutation<TTable extends Table, TInputI = DeleteArgs<TTable>> =
@@ -1077,21 +1058,17 @@ export type DeleteMutation<TTable extends Table, TInputI = DeleteArgs<TTable>> =
 export interface DeleteMutationReturningItems<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<DeleteArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<DeleteArgs<TTable>, TInputI>
   > {}
 
 export interface DeleteMutationReturningSuccess<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
-> extends FieldOrOperation<
-    undefined,
+> extends Loom.Mutation<
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<DeleteArgs<TTable>, TInputI>,
-    "mutation"
+    GraphQLSilk<DeleteArgs<TTable>, TInputI>
   > {}
 
 type QueryBuilder<

@@ -1,6 +1,7 @@
 import {
-  type FieldOrOperation,
+  type Loom,
   type MayPromise,
+  loom,
   resolverPayloadStorage,
   silk,
 } from "@gqloom/core"
@@ -26,12 +27,10 @@ type ResolveReference<
   info: GraphQLResolveInfo
 ) => MayPromise<TEntity | null | undefined>
 
-const referenceField: FieldOrOperation<any, any, any, any> = {
-  type: "field",
-  output: silk(GraphQLID),
-  input: undefined,
-  resolve: async () => undefined,
-}
+const referenceField: Loom.Field<any, any, any> = loom.field(
+  silk(GraphQLID),
+  () => undefined
+)
 
 export function resolveReference<
   TEntity extends object,

@@ -13,7 +13,7 @@ function initOptions(): MiddlewareOptions {
     outputSilk: silk(GraphQLString),
     parent: undefined,
     parseInput: createInputParser(undefined, undefined),
-    type: "field",
+    operation: "field",
   }
 }
 

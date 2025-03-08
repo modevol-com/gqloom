@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
-import type { FieldOrOperation } from "../resolver/types"
+import type { Loom } from "../resolver/types"
 import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 
 /**
@@ -8,12 +8,7 @@ import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
  */
 export interface ResolverPayload<
   TContext extends object = object,
-  TField extends FieldOrOperation<any, any, any, any> = FieldOrOperation<
-    any,
-    any,
-    any,
-    any
-  >,
+  TField extends Loom.BaseField = Loom.BaseField,
 > {
   /**
    * The previous object, which for a field on the root Query type is often not used.

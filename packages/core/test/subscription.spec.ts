@@ -2,6 +2,7 @@ import { GraphQLString, parse, subscribe } from "graphql"
 import { assert, describe, expect, it } from "vitest"
 import {
   GraphQLSchemaLoom,
+  type Loom,
   type Middleware,
   type ResolverPayload,
   loom,
@@ -26,9 +27,9 @@ describe("subscription integration", () => {
       .subscribe(fooGenerator)
 
     expect(s).toBeDefined()
-    expect(s).toMatchObject({
+    expect(s["~meta"]).toMatchObject({
       description: "a simple subscription",
-      type: "subscription",
+      operation: "subscription",
     })
 
     const s2 = subscription(silk(GraphQLString))
@@ -37,9 +38,9 @@ describe("subscription integration", () => {
       .subscribe(fooGenerator)
 
     expect(s2).toBeDefined()
-    expect(s2).toMatchObject({
+    expect(s2["~meta"]).toMatchObject({
       description: "a simple subscription",
-      type: "subscription",
+      operation: "subscription",
     })
   })
 
@@ -258,19 +259,25 @@ describe("subscription integration", () => {
     expect(payloads.resolve?.context).toBe(contextValue)
     expect(payloads.resolve?.root).toBe("FooValue")
     expect(payloads.resolve?.info).toMatchObject({ fieldName: "foo" })
-    expect(payloads.resolve?.field).toMatchObject(simpleResolver.foo)
+    expect(payloads.resolve?.field["~meta"]).toMatchObject(
+      reField(simpleResolver["~meta"].fields.foo["~meta"])
+    )
 
     expect(payloads.subscribe).toBeDefined()
     expect(payloads.subscribe?.context).toBe(contextValue)
     expect(payloads.subscribe?.root).toBe(undefined)
     expect(payloads.subscribe?.info).toMatchObject({ fieldName: "foo" })
-    expect(payloads.subscribe?.field).toMatchObject(simpleResolver.foo)
+    expect(payloads.subscribe?.field["~meta"]).toMatchObject(
+      reField(simpleResolver["~meta"].fields.foo["~meta"])
+    )
 
     expect(payloads.middleware).toBeDefined()
     expect(payloads.middleware?.context).toBe(contextValue)
     expect(payloads.middleware?.root).toBe(undefined)
     expect(payloads.middleware?.info).toMatchObject({ fieldName: "foo" })
-    expect(payloads.middleware?.field).toMatchObject(simpleResolver.foo)
+    expect(payloads.middleware?.field["~meta"]).toMatchObject(
+      reField(simpleResolver["~meta"].fields.foo["~meta"])
+    )
   })
 })
 
@@ -283,3 +290,19 @@ function isAsyncIterable(
 ): maybeAsyncIterable is AsyncIterable<unknown> {
   return typeof maybeAsyncIterable?.[Symbol.asyncIterator] === "function"
 }
+
+const reField = ({
+  operation,
+  output,
+  input,
+  deprecationReason,
+  description,
+  extensions,
+}: Loom.FieldMeta) => ({
+  operation,
+  output,
+  input,
+  deprecationReason,
+  description,
+  extensions,
+})

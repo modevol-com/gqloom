@@ -10,6 +10,7 @@ import {
 import { beforeAll, describe, expect, it } from "vitest"
 import {
   GraphQLSchemaLoom,
+  type Loom,
   type Middleware,
   type ResolverPayload,
   createMemoization,
@@ -132,7 +133,9 @@ describe("context integration", () => {
     expect(payloads.helloResolver?.context).toBe(contextValue)
     expect(payloads.helloResolver?.root).toBe(rootValue)
     expect(payloads.helloResolver?.info).toMatchObject({ fieldName: "hello" })
-    expect(payloads.helloResolver?.field).toMatchObject(simpleResolver.hello)
+    expect(payloads.helloResolver?.field["~meta"]).toMatchObject(
+      reField(simpleResolver["~meta"].fields.hello["~meta"])
+    )
     expect(payloads.helloResolver?.args).toMatchObject({ name: "world" })
   })
 
@@ -141,19 +144,25 @@ describe("context integration", () => {
     expect(payloadsInNode[0]?.context).toBe(contextValue)
     expect(payloadsInNode[0]?.root).toBe(rootValue)
     expect(payloadsInNode[0]?.info).toMatchObject({ fieldName: "node" })
-    expect(payloadsInNode[0]?.field).toBe(nodeResolver.node)
+    expect(payloadsInNode[0]?.field["~meta"]).toMatchObject(
+      reField(nodeResolver["~meta"].fields.node["~meta"])
+    )
 
     expect(payloadsInNode[1]).toBeDefined()
     expect(payloadsInNode[1]?.context).toBe(contextValue)
     expect(payloadsInNode[1]?.root).toEqual({ value: 0 })
     expect(payloadsInNode[1]?.info).toMatchObject({ fieldName: "next" })
-    expect(payloadsInNode[1]?.field).toBe(nodeResolver.next)
+    expect(payloadsInNode[1]?.field["~meta"]).toMatchObject(
+      reField(nodeResolver["~meta"].fields.next["~meta"])
+    )
 
     expect(payloadsInNode[2]).toBeDefined()
     expect(payloadsInNode[2]?.context).toBe(contextValue)
     expect(payloadsInNode[2]?.root).toEqual({ value: 1 })
     expect(payloadsInNode[2]?.info).toMatchObject({ fieldName: "next" })
-    expect(payloadsInNode[2]?.field).toBe(nodeResolver.next)
+    expect(payloadsInNode[2]?.field["~meta"]).toMatchObject(
+      reField(nodeResolver["~meta"].fields.next["~meta"])
+    )
   })
 
   it("should available in operation middleware", () => {
@@ -276,4 +285,20 @@ describe("memory integration", () => {
     expect(result2.data?.node.value).toEqual(result2.data?.node.next.value)
     expect(result2.data?.node.value).not.toEqual(result?.data?.node.value)
   })
+})
+
+const reField = ({
+  operation,
+  output,
+  input,
+  deprecationReason,
+  description,
+  extensions,
+}: Loom.FieldMeta) => ({
+  operation,
+  output,
+  input,
+  deprecationReason,
+  description,
+  extensions,
 })

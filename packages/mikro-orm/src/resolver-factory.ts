@@ -1,17 +1,16 @@
 import {
-  type FieldOrOperation,
-  type GenericFieldOrOperation,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type ListSilk,
+  type Loom,
   type MayPromise,
   type Middleware,
+  type MutationOptions,
+  type QueryOptions,
   type StandardSchemaV1,
-  applyMiddlewares,
   compose,
-  createInputParser,
   getFieldOptions,
-  getStandardValue,
+  loom,
   mapValue,
   silk,
   weaverContext,
@@ -89,45 +88,30 @@ export class MikroResolverFactory<
   }: {
     input?: GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
+      Loom.Mutation<
         TSchema,
-        GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>,
-        "mutation"
+        GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>
       >
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
+  } & GraphQLFieldOptions = {}): Loom.Mutation<
     TSchema,
-    GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>,
-    "mutation"
+    GraphQLSilk<RequiredEntityData<InferEntity<TSchema>>, TInputI>
   > {
     const entity = this.entity
 
     const middlewares = this.middlewaresWithFlush(options)
 
-    const type = "mutation"
-
-    return {
+    return loom.mutation(entity, {
       ...getFieldOptions(options),
       input,
-      output: entity,
-      type,
-      resolve: async (inputValue, extraOptions) => {
-        const parseInput = createInputParser(input, inputValue)
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, middlewares),
-          async () => {
-            const em = await this.getEm()
-            const inputResult = getStandardValue(await parseInput())
-            const instance = em.create(entity, inputResult)
-            em.persist(instance)
-            return instance
-          },
-          { parseInput, parent: undefined, outputSilk: entity, type }
-        )
+      middlewares,
+      resolve: async (data) => {
+        const em = await this.getEm()
+        const instance = em.create(entity, data)
+        em.persist(instance)
+        return instance
       },
-    }
+    } as MutationOptions<any, any>)
   }
 
   /**
@@ -142,48 +126,33 @@ export class MikroResolverFactory<
   }: {
     input?: GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
+      Loom.Mutation<
         TSchema,
-        GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>,
-        "mutation"
+        GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>
       >
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
+  } & GraphQLFieldOptions = {}): Loom.Mutation<
     TSchema,
-    GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>,
-    "mutation"
+    GraphQLSilk<UpdateInput<InferEntity<TSchema>>, TInputI>
   > {
     const entity = this.entity
 
     const middlewares = this.middlewaresWithFlush(options)
 
-    const type = "mutation"
-
-    return {
+    return loom.mutation(entity, {
       ...getFieldOptions(options),
       input,
-      output: entity,
-      type,
-      resolve: async (inputValue, extraOptions) => {
-        const parseInput = createInputParser(input, inputValue)
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, middlewares),
-          async () => {
-            const em = await this.getEm()
-            const inputResult = getStandardValue(await parseInput())
-            const pk = Utils.extractPK(inputResult, entity.meta)
-            const instance = await em.findOneOrFail(entity, pk)
-            if (instance == null) return null
-            em.assign(instance, inputResult as any)
-            em.persist(instance)
-            return instance
-          },
-          { parseInput, parent: undefined, outputSilk: entity, type }
-        )
+      middlewares,
+      resolve: async (data) => {
+        const em = await this.getEm()
+        const pk = Utils.extractPK(data, entity.meta)
+        const instance = await em.findOneOrFail(entity, pk)
+        if (instance == null) return null
+        em.assign(instance, data)
+        em.persist(instance)
+        return instance
       },
-    }
+    } as MutationOptions<any, any>)
   }
 
   /**
@@ -198,43 +167,28 @@ export class MikroResolverFactory<
   }: {
     input?: GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
+      Loom.Query<
         TSchema,
-        GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
-        "query"
+        GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
       >
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
+  } & GraphQLFieldOptions = {}): Loom.Query<
     TSchema,
-    GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
-    "query"
+    GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
   > {
     const entity = this.entity
 
-    const type = "query"
-
-    return {
+    return loom.query(entity, {
       ...getFieldOptions(options),
       input,
-      output: entity,
-      type,
-      resolve: (inputValue, extraOptions) => {
-        const parseInput = createInputParser(input, inputValue)
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, options.middlewares),
-          async () => {
-            const em = await this.getEm()
-            const inputResult = getStandardValue(await parseInput())
-            const pk = Utils.extractPK(inputResult, entity.meta)
-            const instance = await em.findOneOrFail(entity, pk)
-            return instance
-          },
-          { parseInput, parent: undefined, outputSilk: entity, type }
-        )
+      middlewares: options.middlewares,
+      resolve: async (data) => {
+        const em = await this.getEm()
+        const pk = Utils.extractPK(data, entity.meta)
+        const instance = await em.findOneOrFail(entity, pk)
+        return instance
       },
-    }
+    } as QueryOptions<any, any>)
   }
 
   /**
@@ -249,47 +203,32 @@ export class MikroResolverFactory<
   }: {
     input?: GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
+      Loom.Mutation<
         NullableSilk<TSchema>,
-        GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
-        "mutation"
+        GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
       >
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
+  } & GraphQLFieldOptions = {}): Loom.Mutation<
     NullableSilk<TSchema>,
-    GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>,
-    "mutation"
+    GraphQLSilk<FindOneFilter<InferEntity<TSchema>>, TInputI>
   > {
     const entity = this.entity
 
     const middlewares = this.middlewaresWithFlush(options)
 
-    const type = "mutation"
-
-    return {
+    return loom.mutation(silk.nullable(entity), {
       ...getFieldOptions(options),
       input,
-      output: silk.nullable(entity),
-      type,
-      resolve: async (inputValue, extraOptions) => {
-        const parseInput = createInputParser(input, inputValue)
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, middlewares),
-          async () => {
-            const em = await this.getEm()
-            const inputResult = getStandardValue(await parseInput())
-            const pk = Utils.extractPK(inputResult, entity.meta)
-            const instance = await em.findOne(entity, pk)
-            if (instance == null) return null
-            em.remove(instance)
-            return instance
-          },
-          { parseInput, parent: undefined, outputSilk: entity, type }
-        )
+      middlewares,
+      resolve: async (data) => {
+        const em = await this.getEm()
+        const pk = Utils.extractPK(data, entity.meta)
+        const instance = await em.findOne(entity, pk)
+        if (instance == null) return null
+        em.remove(instance)
+        return instance
       },
-    }
+    } as MutationOptions<any, any>)
   }
 
   /**
@@ -301,44 +240,29 @@ export class MikroResolverFactory<
   }: {
     input?: GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>
     middlewares?: Middleware<
-      FieldOrOperation<
-        undefined,
+      Loom.Query<
         NullableSilk<TSchema>,
-        GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>,
-        "mutation"
+        GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>
       >
     >[]
-  } & GraphQLFieldOptions = {}): FieldOrOperation<
-    undefined,
+  } & GraphQLFieldOptions = {}): Loom.Query<
     ListSilk<TSchema>,
-    GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>,
-    "query"
+    GraphQLSilk<FindAllOptions<InferEntity<TSchema>>, TInputI>
   > {
     const entity = this.entity
 
-    const type = "query"
-
-    return {
+    return loom.query(silk.list(entity), {
       ...getFieldOptions(options),
       input,
-      output: silk.list(entity),
-      type,
-      resolve: async (inputValue, extraOptions) => {
-        const parseInput = createInputParser(input, inputValue)
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, options.middlewares),
-          async () => {
-            const em = await this.getEm()
-            const inputResult = getStandardValue(await parseInput())
-            return em.findAll(entity, inputResult)
-          },
-          { parseInput, parent: undefined, outputSilk: entity, type }
-        )
+      middlewares: options.middlewares,
+      resolve: async (data) => {
+        const em = await this.getEm()
+        return em.findAll(entity, data)
       },
-    }
+    } as QueryOptions<any, any>)
   }
 
-  protected middlewaresWithFlush<TField extends GenericFieldOrOperation>({
+  protected middlewaresWithFlush<TField extends Loom.BaseField>({
     middlewares,
   }: {
     middlewares?: Middleware<TField>[]

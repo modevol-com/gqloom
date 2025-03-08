@@ -4,15 +4,18 @@ import type {
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
 } from "graphql"
-import type { MayPromise, Middleware, ValueOf } from "../utils"
+import type { MayPromise, Middleware } from "../utils"
 import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
-import type { InferInputI, InferInputO } from "./input"
+import type { InferInputO } from "./input"
 import type {
   FieldChainFactory,
   MutationChainFactory,
   QueryChainFactory,
   SubscriptionChainFactory,
 } from "./resolver-chain-factory"
+import type * as Loom from "./types-loom"
+
+export type { Loom }
 
 /*
  * GraphQLSilk is the base unit for creating GraphQL resolvers.
@@ -26,20 +29,20 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
 }
 
 export interface ResolverOptions<
-  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+  TField extends Loom.FieldOrOperation = Loom.FieldOrOperation,
 > {
   middlewares?: Middleware<TField>[]
 }
 
 export interface ResolverOptionsWithExtensions<
-  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+  TField extends Loom.FieldOrOperation = Loom.FieldOrOperation,
 > extends ResolverOptions<TField>,
     Pick<GraphQLObjectTypeConfig<any, any>, "extensions"> {}
 
 export interface ResolverOptionsWithParent<
-  TField extends GenericFieldOrOperation = GenericFieldOrOperation,
+  TField extends Loom.FieldOrOperation = Loom.FieldOrOperation,
 > extends ResolverOptionsWithExtensions<TField> {
-  parent?: TField extends FieldOrOperation<infer TParent, any, any, any>
+  parent?: TField extends Loom.Field<infer TParent, any, any>
     ? TParent
     : undefined
 }
@@ -57,72 +60,39 @@ export interface GraphQLFieldOptions
     "description" | "deprecationReason" | "extensions"
   > {}
 
+export type InferFieldInput<TField extends Loom.BaseField> =
+  TField["~meta"]["input"]
+
+export type InferFieldOutput<TField extends Loom.BaseField> =
+  TField["~meta"]["output"]
+
 /**
- * Operation or Field for resolver.
+ * Options for creating a GraphQL Query.
  */
-export interface FieldOrOperation<
-  TParent extends undefined | GraphQLSilk,
+export interface QueryOptions<
   TOutput extends GraphQLSilk,
   TInput extends
     | GraphQLSilk
     | Record<string, GraphQLSilk>
     | undefined = undefined,
-  TType extends FieldOrOperationType = FieldOrOperationType,
-> extends GraphQLFieldOptions {
-  type: TType
-  input: TInput
-  output: TOutput
-  resolve: TType extends "field"
-    ? (
-        parent: StandardSchemaV1.InferOutput<NonNullable<TParent>>,
-        input: InferInputI<TInput>,
-        options?: ResolvingOptions
-      ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
-    : TType extends "subscription"
-      ? (
-          value: any,
-          input: InferInputI<TInput>
-        ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
-      : (
-          input: InferInputI<TInput>,
-          options?: ResolvingOptions
-        ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
-
-  subscribe?: TType extends "subscription"
-    ? (
-        input: InferInputI<TInput>,
-        options?: ResolvingOptions
-      ) => MayPromise<AsyncIterator<any>>
-    : undefined
+> extends ResolverOptions<Loom.Query<TOutput, TInput>>,
+    GraphQLFieldOptions {
+  input?: TInput
+  resolve: (
+    input: InferInputO<TInput>
+  ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
-export type GenericFieldOrOperation = FieldOrOperation<any, any, any, any>
-
-export type InferFieldParent<TField extends GenericFieldOrOperation> =
-  TField extends FieldOrOperation<infer TParent, any, any, any>
-    ? TParent
-    : never
-
-export type InferFieldInput<TField extends GenericFieldOrOperation> =
-  TField extends FieldOrOperation<any, any, infer TInput, any> ? TInput : never
-
-export type InferFieldOutput<TField extends GenericFieldOrOperation> =
-  TField extends FieldOrOperation<any, infer TOutput, any, any>
-    ? TOutput
-    : never
-
 /**
- * Options for creating a GraphQL Query or Mutation.
+ * Options for creating a GraphQL Mutation.
  */
-export interface QueryMutationOptions<
+export interface MutationOptions<
   TOutput extends GraphQLSilk,
   TInput extends
     | GraphQLSilk
     | Record<string, GraphQLSilk>
     | undefined = undefined,
-> extends ResolverOptions<
-      FieldOrOperation<undefined, TOutput, TInput, "query" | "mutation">
-    >,
+> extends ResolverOptions<Loom.Mutation<TOutput, TInput>>,
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
@@ -137,7 +107,7 @@ export interface QueryFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): FieldOrOperation<undefined, TOutput, undefined, "query">
+  ): Loom.Query<TOutput, undefined>
 
   <
     TOutput extends GraphQLSilk,
@@ -147,8 +117,8 @@ export interface QueryFactory {
       | undefined = undefined,
   >(
     output: TOutput,
-    options: QueryMutationOptions<TOutput, TInput>
-  ): FieldOrOperation<undefined, TOutput, TInput, "query">
+    options: QueryOptions<TOutput, TInput>
+  ): Loom.Query<TOutput, TInput>
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
@@ -166,7 +136,7 @@ export interface MutationFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): FieldOrOperation<undefined, TOutput, undefined, "mutation">
+  ): Loom.Mutation<TOutput, undefined>
 
   <
     TOutput extends GraphQLSilk,
@@ -176,8 +146,8 @@ export interface MutationFactory {
       | undefined = undefined,
   >(
     output: TOutput,
-    options: QueryMutationOptions<TOutput, TInput>
-  ): FieldOrOperation<undefined, TOutput, TInput, "mutation">
+    options: MutationOptions<TOutput, TInput>
+  ): Loom.Mutation<TOutput, TInput>
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
@@ -201,9 +171,7 @@ export interface FieldOptions<
     | GraphQLSilk
     | Record<string, GraphQLSilk>
     | undefined = undefined,
-> extends ResolverOptions<
-      FieldOrOperation<EnsureSilk<TParent>, TOutput, TInput, "field">
-    >,
+> extends ResolverOptions<Loom.Field<TParent, TOutput, TInput>>,
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
@@ -221,7 +189,7 @@ export interface FieldFactory {
     resolve: (
       parent: StandardSchemaV1.InferOutput<TParent>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): FieldOrOperation<EnsureSilk<TParent>, TOutput, undefined, "field">
+  ): Loom.Field<TParent, TOutput, undefined>
 
   <
     TParent extends GraphQLSilk,
@@ -232,8 +200,8 @@ export interface FieldFactory {
       | undefined = undefined,
   >(
     output: TOutput,
-    options: FieldOptions<EnsureSilk<TParent>, TOutput, TInput>
-  ): FieldOrOperation<EnsureSilk<TParent>, TOutput, TInput, "field">
+    options: FieldOptions<TParent, TOutput, TInput>
+  ): Loom.Field<TParent, TOutput, TInput>
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
@@ -257,7 +225,7 @@ export interface SubscriptionOptions<
     | Record<string, GraphQLSilk>
     | undefined = undefined,
   TValue = StandardSchemaV1.InferOutput<TOutput>,
-> extends ResolverOptions<Subscription<TOutput, TInput, TValue>>,
+> extends ResolverOptions<Loom.Subscription<TOutput, TInput, TValue>>,
     GraphQLFieldOptions {
   input?: TInput
   subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
@@ -265,24 +233,6 @@ export interface SubscriptionOptions<
     value: TValue,
     input: InferInputO<TInput>
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-}
-
-export interface Subscription<
-  TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
-  TValue = StandardSchemaV1.InferOutput<TOutput>,
-> extends FieldOrOperation<undefined, TOutput, TInput, "subscription"> {
-  resolve: (
-    value: TValue,
-    input: InferInputI<TInput>
-  ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
-  subscribe: (
-    input: InferInputI<TInput>,
-    options?: ResolvingOptions
-  ) => MayPromise<AsyncIterator<TValue>>
 }
 
 /**
@@ -294,7 +244,7 @@ export interface SubscriptionFactory {
     subscribe: () => MayPromise<
       AsyncIterator<StandardSchemaV1.InferOutput<TOutput>>
     >
-  ): Subscription<TOutput, undefined, TValue>
+  ): Loom.Subscription<TOutput, undefined, TValue>
 
   <
     TOutput extends GraphQLSilk,
@@ -306,7 +256,7 @@ export interface SubscriptionFactory {
   >(
     output: TOutput,
     options: SubscriptionOptions<TOutput, TInput, TValue>
-  ): Subscription<TOutput, TInput, TValue>
+  ): Loom.Subscription<TOutput, TInput, TValue>
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
@@ -316,42 +266,3 @@ export interface SubscriptionFactory {
 export interface SubscriptionFactoryWithChain
   extends SubscriptionFactory,
     SubscriptionChainFactory<never, undefined> {}
-
-export interface ResolverFactory {
-  of<
-    TParent extends GraphQLSilk,
-    TOperations extends Record<
-      string,
-      | FieldOrOperation<EnsureSilk<TParent>, any, any>
-      | FieldOrOperation<undefined, any, any, OperationType>
-      | typeof FIELD_HIDDEN
-    >,
-  >(
-    parent: TParent,
-    operationOrFields: TOperations,
-    options?: ResolverOptionsWithExtensions<
-      OmitInUnion<ValueOf<TOperations>, typeof FIELD_HIDDEN>
-    >
-  ): TOperations
-
-  <
-    TOperations extends Record<
-      string,
-      FieldOrOperation<undefined, any, any, OperationType>
-    >,
-  >(
-    operations: TOperations,
-    options?: ResolverOptions<ValueOf<TOperations>>
-  ): TOperations
-}
-
-type OmitInUnion<TUnion, TOmit> = TUnion extends infer T
-  ? T extends TOmit
-    ? never
-    : T
-  : never
-
-export type EnsureSilk<T extends GraphQLSilk> = GraphQLSilk<
-  StandardSchemaV1.InferOutput<T>,
-  StandardSchemaV1.InferInput<T>
->

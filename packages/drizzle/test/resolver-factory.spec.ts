@@ -96,7 +96,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const query = userFactory.selectArrayQuery()
 
       let answer
-      answer = await query.resolve({ orderBy: [{ age: "asc" }] })
+      answer = await query["~meta"].resolve({ orderBy: [{ age: "asc" }] })
       expect(answer).toMatchObject([
         { age: 10 },
         { age: 11 },
@@ -105,7 +105,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         { age: 14 },
       ])
 
-      answer = await query.resolve({ orderBy: [{ age: "desc" }] })
+      answer = await query["~meta"].resolve({ orderBy: [{ age: "desc" }] })
       expect(answer).toMatchObject([
         { age: 14 },
         { age: 13 },
@@ -118,64 +118,64 @@ describe.concurrent("DrizzleResolverFactory", () => {
     it("should resolve correctly with filters", async () => {
       const query = userFactory.selectArrayQuery()
       let answer
-      answer = await query.resolve({})
+      answer = await query["~meta"].resolve({})
       expect(answer).toHaveLength(5)
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { age: { gte: 12 } },
       })
       expect(answer).toMatchObject([{ age: 12 }, { age: 13 }, { age: 14 }])
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { age: { lt: 12 } },
       })
       expect(answer).toMatchObject([{ age: 10 }, { age: 11 }])
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { age: { gte: 12, lt: 13 } },
       })
       expect(answer).toMatchObject([{ age: 12 }])
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { age: { inArray: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { age: { notInArray: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(
         new Set([{ age: 12 }, { age: 13 }, { age: 14 }])
       )
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { age: { OR: [{ eq: 10 }, { eq: 11 }] } },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { OR: [{ age: { eq: 10 } }, { age: { eq: 11 } }] },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { name: { like: "J%" } },
       })
       expect(answer).toHaveLength(5)
 
       await expect(() =>
-        query.resolve({
+        query["~meta"].resolve({
           where: { age: { eq: 10 }, OR: [{ age: { eq: 11 } }] },
         })
       ).rejects.toThrow("Cannot specify both fields and 'OR' in table filters!")
       await expect(() =>
-        query.resolve({
+        query["~meta"].resolve({
           where: { age: { eq: 10, OR: [{ eq: 11 }] } },
         })
       ).rejects.toThrow(
         "WHERE age: Cannot specify both fields and 'OR' in column operators!"
       )
 
-      answer = await query.resolve({
+      answer = await query["~meta"].resolve({
         where: { age: { isNull: true } },
       })
       expect(answer).toHaveLength(0)
@@ -194,7 +194,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       })
 
       expect(query).toBeDefined()
-      const answer = await query.resolve({ age: 10 })
+      const answer = await query["~meta"].resolve({ age: 10 })
       expect(answer).toMatchObject([{ age: 10 }])
     })
 
@@ -224,7 +224,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         ],
       })
 
-      await query.resolve({})
+      await query["~meta"].resolve({})
       expect(count).toBe(1)
     })
   })
@@ -238,7 +238,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     it("should resolve correctly with orderBy", async () => {
       const query = userFactory.selectSingleQuery()
       expect(
-        await query.resolve({
+        await query["~meta"].resolve({
           orderBy: [{ age: "asc" }],
         })
       ).toMatchObject({ age: 10 })
@@ -247,7 +247,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     it("should resolve correctly with filters", async () => {
       const query = userFactory.selectSingleQuery()
       expect(
-        await query.resolve({
+        await query["~meta"].resolve({
           where: { age: { eq: 12 } },
         })
       ).toMatchObject({ age: 12 })
@@ -266,7 +266,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
       })
 
       expect(query).toBeDefined()
-      expect(await query.resolve({ age: 10 })).toMatchObject({ age: 10 })
+      expect(await query["~meta"].resolve({ age: 10 })).toMatchObject({
+        age: 10,
+      })
     })
 
     it("should be created with middlewares", async () => {
@@ -294,7 +296,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         ],
       })
 
-      await query.resolve({})
+      await query["~meta"].resolve({})
       expect(count).toBe(1)
     })
   })
@@ -356,7 +358,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       let answer
       answer = await Promise.all(
         studentCourses.map((sc) => {
-          return gradeField.resolve(sc, undefined)
+          return gradeField["~meta"].resolve(sc, undefined)
         })
       )
       expect(new Set(answer)).toMatchObject(
@@ -381,7 +383,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         { authorId: John.id, title: "World" },
       ])
       const postsField = userFactory.relationField("posts")
-      answer = await postsField.resolve(John, undefined)
+      answer = await postsField["~meta"].resolve(John, undefined)
       expect(answer).toMatchObject([
         { authorId: John.id, title: "Hello" },
         { authorId: John.id, title: "World" },
@@ -391,16 +393,16 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
   describe("resolver", () => {
     it("should be created without error", () => {
-      const userResolver = userFactory.resolver()
-      expect(userResolver).toBeDefined()
-      expect(userResolver.user).toBeDefined()
-      expect(userResolver.userSingle).toBeDefined()
-      expect(userResolver.insertIntoUser).toBeDefined()
-      expect(userResolver.insertIntoUserSingle).toBeDefined()
-      expect(userResolver.updateUser).toBeDefined()
-      expect(userResolver.deleteFromUser).toBeDefined()
-      expect(userResolver.courses).toBeDefined()
-      expect(userResolver.posts).toBeDefined()
+      const userExecutor = userFactory.resolver().toExecutor()
+      expect(userExecutor).toBeDefined()
+      expect(userExecutor.user).toBeDefined()
+      expect(userExecutor.userSingle).toBeDefined()
+      expect(userExecutor.insertIntoUser).toBeDefined()
+      expect(userExecutor.insertIntoUserSingle).toBeDefined()
+      expect(userExecutor.updateUser).toBeDefined()
+      expect(userExecutor.deleteFromUser).toBeDefined()
+      expect(userExecutor.courses).toBeDefined()
+      expect(userExecutor.posts).toBeDefined()
     })
   })
 })
@@ -430,7 +432,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertArrayMutation()
       expect(
-        await mutation.resolve({
+        await mutation["~meta"].resolve({
           values: [
             { name: "John", age: 5 },
             { name: "Jane", age: 6 },
@@ -452,7 +454,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
 
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertSingleMutation()
-      const answer = await mutation.resolve({
+      const answer = await mutation["~meta"].resolve({
         value: { name: "John", age: 7 },
       })
       expect(answer).toMatchObject({ isSuccess: true })
@@ -471,7 +473,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
       await db.insert(mysqlSchemas.user).values({ name: "Bob", age: 18 })
       const mutation = userFactory.updateMutation()
       expect(
-        await mutation.resolve({
+        await mutation["~meta"].resolve({
           where: { name: { eq: "Bob" } },
           set: { age: 19 },
         })
@@ -492,7 +494,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
       await db.insert(mysqlSchemas.user).values({ name: "Alice", age: 18 })
       try {
         const mutation = userFactory.deleteMutation()
-        const answer = await mutation.resolve({
+        const answer = await mutation["~meta"].resolve({
           where: { name: { eq: "Alice" } },
         })
         expect(answer).toMatchObject({ isSuccess: true })
@@ -529,7 +531,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
 
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertArrayMutation()
-      const answer = await mutation.resolve({
+      const answer = await mutation["~meta"].resolve({
         values: [
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
@@ -552,7 +554,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
 
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertSingleMutation()
-      const answer = await mutation.resolve({
+      const answer = await mutation["~meta"].resolve({
         value: { name: "John", age: 7 },
       })
 
@@ -572,7 +574,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
       await db.insert(pgSchemas.user).values({ name: "Bob", age: 18 })
       try {
         const mutation = userFactory.updateMutation()
-        const answer = await mutation.resolve({
+        const answer = await mutation["~meta"].resolve({
           where: { name: { eq: "Bob" } },
           set: { age: 19 },
         })
@@ -593,7 +595,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
       await db.insert(pgSchemas.user).values({ name: "Alice", age: 18 })
       try {
         const mutation = userFactory.deleteMutation()
-        const answer = await mutation.resolve({
+        const answer = await mutation["~meta"].resolve({
           where: { name: { eq: "Alice" } },
         })
         expect(answer).toMatchObject([{ name: "Alice", age: 18 }])
@@ -629,7 +631,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertArrayMutation()
 
-      const answer = await mutation.resolve({
+      const answer = await mutation["~meta"].resolve({
         values: [
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
@@ -655,7 +657,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
 
     it("should resolve correctly", async () => {
       const mutation = userFactory.insertSingleMutation()
-      const answer = await mutation.resolve({
+      const answer = await mutation["~meta"].resolve({
         value: { name: "John", age: 7 },
       })
       expect(answer).toMatchObject({ name: "John", age: 7 })
@@ -676,7 +678,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
       await db.insert(sqliteSchemas.user).values({ name: "Bob", age: 18 })
       try {
         const mutation = userFactory.updateMutation()
-        const answer = await mutation.resolve({
+        const answer = await mutation["~meta"].resolve({
           where: { name: { eq: "Bob" } },
           set: { age: 19 },
         })
@@ -699,7 +701,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
       await db.insert(sqliteSchemas.user).values({ name: "Alice", age: 18 })
       try {
         const mutation = userFactory.deleteMutation()
-        const answer = await mutation.resolve({
+        const answer = await mutation["~meta"].resolve({
           where: { name: { eq: "Alice" } },
         })
 

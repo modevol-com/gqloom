@@ -1,8 +1,8 @@
 import {
   type CallableInputParser,
   type GraphQLSilk,
-  baseResolver,
   getGraphQLType,
+  resolver,
   silk,
   weave,
 } from "@gqloom/core"
@@ -71,13 +71,15 @@ describe("MikroResolverFactory", async () => {
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
         ),
       })
-      expectTypeOf(create.resolve)
+      expectTypeOf(create["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<{ data: RequiredEntityData<IGiraffe> }>()
     })
 
     it("should infer Output type", () => {
-      expectTypeOf(create.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
+      expectTypeOf(
+        create["~meta"].resolve
+      ).returns.resolves.toEqualTypeOf<IGiraffe>()
     })
 
     it("should create Create Default Input", () => {
@@ -106,7 +108,7 @@ describe("MikroResolverFactory", async () => {
 
     it("should do create", async () => {
       const one = await RequestContext.create(orm.em, () =>
-        create.resolve({
+        create["~meta"].resolve({
           data: {
             name: "Foo",
             birthday: new Date(),
@@ -129,7 +131,7 @@ describe("MikroResolverFactory", async () => {
     })
 
     it("should weave schema without error", () => {
-      const r = baseResolver({ create }, undefined)
+      const r = resolver({ create })
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Mutation {
@@ -172,13 +174,15 @@ describe("MikroResolverFactory", async () => {
         ),
       })
 
-      expectTypeOf(update.resolve)
+      expectTypeOf(update["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<{ data: UpdateInput<IGiraffe> }>()
     })
 
     it("should infer output type", () => {
-      expectTypeOf(update.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
+      expectTypeOf(
+        update["~meta"].resolve
+      ).returns.resolves.toEqualTypeOf<IGiraffe>()
     })
 
     it("should create Update Default Input", () => {
@@ -207,7 +211,7 @@ describe("MikroResolverFactory", async () => {
 
     it("should do update", async () => {
       await RequestContext.create(orm.em, () =>
-        update.resolve({
+        update["~meta"].resolve({
           data: {
             id: giraffe.id,
             height: 2,
@@ -227,7 +231,7 @@ describe("MikroResolverFactory", async () => {
     })
 
     it("should weave schema without error", () => {
-      const r = baseResolver({ update }, undefined)
+      const r = resolver({ update })
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Mutation {
@@ -280,34 +284,30 @@ describe("MikroResolverFactory", async () => {
         ),
       })
 
-      baseResolver(
-        {
-          findOne: bobbin.findOneQuery({
-            middlewares: [
-              async (next) => {
-                assertType<
-                  CallableInputParser<
-                    GraphQLSilk<
-                      FindOneFilter<IGiraffe>,
-                      FindOneFilter<IGiraffe>
-                    >
-                  >
-                >(next.parseInput)
-                return next()
-              },
-            ],
-          }),
-        },
-        undefined
-      )
+      resolver({
+        findOne: bobbin.findOneQuery({
+          middlewares: [
+            async (next) => {
+              assertType<
+                CallableInputParser<
+                  GraphQLSilk<FindOneFilter<IGiraffe>, FindOneFilter<IGiraffe>>
+                >
+              >(next.parseInput)
+              return next()
+            },
+          ],
+        }),
+      })
 
-      expectTypeOf(findOne.resolve)
+      expectTypeOf(findOne["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<FindOneFilter<IGiraffe>>()
     })
 
     it("should infer output type", () => {
-      expectTypeOf(findOne.resolve).returns.resolves.toEqualTypeOf<IGiraffe>()
+      expectTypeOf(
+        findOne["~meta"].resolve
+      ).returns.resolves.toEqualTypeOf<IGiraffe>()
     })
 
     it("should create FindOneOptions", () => {
@@ -321,7 +321,7 @@ describe("MikroResolverFactory", async () => {
 
     it("should do findOne", async () => {
       const g = await RequestContext.create(orm.em, () =>
-        findOne.resolve({
+        findOne["~meta"].resolve({
           id: giraffe.id,
         })
       )
@@ -349,13 +349,13 @@ describe("MikroResolverFactory", async () => {
 
     it("should infer output type", () => {
       expectTypeOf(
-        deleteOne.resolve
+        deleteOne["~meta"].resolve
       ).returns.resolves.toEqualTypeOf<IGiraffe | null>()
     })
 
     it("should do delete one", async () => {
       const g1 = await RequestContext.create(orm.em, () =>
-        deleteOne.resolve({
+        deleteOne["~meta"].resolve({
           id: giraffe.id,
         })
       )
@@ -368,7 +368,7 @@ describe("MikroResolverFactory", async () => {
       })
 
       const g2 = await RequestContext.create(orm.em, () =>
-        deleteOne.resolve({
+        deleteOne["~meta"].resolve({
           id: giraffe.id,
         })
       )
@@ -529,7 +529,7 @@ describe("MikroResolverFactory", async () => {
     })
 
     it("should weave schema without error", () => {
-      const r = baseResolver({ findMany, findMany2: findMany }, undefined)
+      const r = resolver({ findMany, findMany2: findMany })
       const schema = weave(r)
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`

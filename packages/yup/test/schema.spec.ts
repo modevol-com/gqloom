@@ -1,6 +1,6 @@
 import {
   type GQLoomExtensions,
-  type SilkResolver,
+  type Loom,
   field,
   getGraphQLType,
   query,
@@ -656,7 +656,7 @@ function printYupSilk(schema: Schema): string {
   return printType(getGraphQLType(yupSilk(schema)) as GraphQLNamedType)
 }
 
-function printResolver(...resolvers: SilkResolver[]): string {
+function printResolver(...resolvers: Loom.Resolver[]): string {
   const schema = weave(...resolvers)
   return printSchema(schema)
 }
