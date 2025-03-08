@@ -55,7 +55,7 @@ export class YupWeaver {
    * @param schema Yup Schema
    * @returns GraphQL Silk Like Yup Schema
    */
-  static unravel<TSchema extends Schema<any, any, any, any>>(
+  public static unravel<TSchema extends Schema<any, any, any, any>>(
     schema: TSchema
   ): TSchema & GraphQLSilk<InferType<TSchema>, InferType<TSchema>> {
     const config = weaverContext.value?.getConfig<YupWeaverConfig>("gqloom.yup")
@@ -78,7 +78,7 @@ export class YupWeaver {
     })
   }
 
-  static toNullableGraphQLType(schema: Schema) {
+  public static toNullableGraphQLType(schema: Schema) {
     const description = YupWeaver.describe(schema)
     const gqlType = YupWeaver.toGraphQLType(schema)
 
@@ -92,7 +92,7 @@ export class YupWeaver {
     }
   }
 
-  static toGraphQLType(schema: Schema): GraphQLOutputType {
+  public static toGraphQLType(schema: Schema): GraphQLOutputType {
     const description = YupWeaver.describe(schema)
     const customTypeOrFn = description.meta?.asField?.type
 
@@ -213,14 +213,14 @@ export class YupWeaver {
     }
   }
 
-  static ensureSchema(
+  public static ensureSchema(
     schema: Reference<unknown> | ISchema<unknown, unknown, any, any>
   ): Schema {
     if (schema instanceof Schema) return schema
     throw new Error("type is not supported", { cause: schema })
   }
 
-  static ensureInterfaceTypes(
+  public static ensureInterfaceTypes(
     thunkList: ThunkReadonlyArray<Schema> | undefined
   ): ReadonlyArray<GraphQLInterfaceType> | undefined {
     if (thunkList == null) return undefined
@@ -234,13 +234,15 @@ export class YupWeaver {
     )
   }
 
-  static isEnumType(description: SchemaDescription): boolean {
+  public static isEnumType(description: SchemaDescription): boolean {
     if (description.meta?.asEnumType) return true
     if (description.oneOf.length <= 0) return false
     return description.oneOf.every((value) => typeof value === "string")
   }
 
-  static getEnumType(description: SchemaDescription): GraphQLEnumType | null {
+  public static getEnumType(
+    description: SchemaDescription
+  ): GraphQLEnumType | null {
     if (!YupWeaver.isEnumType(description)) return null
     const meta: GQLoomMetadata | undefined = description.meta
 
@@ -283,7 +285,9 @@ export class YupWeaver {
    * @param config yup weaver config options
    * @returns a yup weaver config object
    */
-  static config = function (config: YupWeaverConfigOptions): YupWeaverConfig {
+  public static config = function (
+    config: YupWeaverConfigOptions
+  ): YupWeaverConfig {
     return {
       ...config,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.yup",
@@ -295,7 +299,7 @@ export class YupWeaver {
    * @param config yup weaver config options
    * @returns a new yup to silk function
    */
-  static useConfig = function (
+  public static useConfig = function (
     config: YupWeaverConfigOptions
   ): typeof YupWeaver.unravel {
     return (schema) =>
@@ -308,7 +312,7 @@ export class YupWeaver {
       )
   }
 
-  static DescriptionMap = new WeakMap<Schema, SchemaDescription>()
+  public static DescriptionMap = new WeakMap<Schema, SchemaDescription>()
 
   protected static describe(schema: Schema): SchemaDescription {
     const existing = YupWeaver.DescriptionMap.get(schema)

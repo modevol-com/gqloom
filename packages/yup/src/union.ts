@@ -33,9 +33,9 @@ export class UnionSchema<
   extends Schema<TType, TContext, TDefault, TFlags>
   implements IUnionSchema<TType, TContext, TDefault, TFlags>
 {
-  declare spec: UnionSchemaSpec
+  public declare spec: UnionSchemaSpec
 
-  constructor(types: ReadonlyArray<Schema>) {
+  public constructor(types: ReadonlyArray<Schema>) {
     super({
       spec: { types } as any,
       type: "union",
@@ -45,13 +45,13 @@ export class UnionSchema<
     })
   }
 
-  cast(value: any, options: any) {
+  public cast(value: any, options: any) {
     const targetSchema = this.findTargetSchemaSync(value)
     if (targetSchema) return targetSchema.cast(value, options) as any
     return super.cast(value, options) as any
   }
 
-  async validate(...args: Parameters<Schema["validate"]>) {
+  public async validate(...args: Parameters<Schema["validate"]>) {
     const [value, options] = args
     const targetSchema = await this.findTargetSchema(value)
     if (targetSchema) return targetSchema.validate(value, options)
@@ -62,7 +62,7 @@ export class UnionSchema<
     throw new ValidationError("Union validation failed", value)
   }
 
-  validateSync(...args: Parameters<Schema["validateSync"]>) {
+  public validateSync(...args: Parameters<Schema["validateSync"]>) {
     const [value, options] = args
     const targetSchema = this.findTargetSchemaSync(value)
     if (targetSchema) return targetSchema.validateSync(value, options)
@@ -72,7 +72,7 @@ export class UnionSchema<
     throw new ValidationError("Union validation failed", value)
   }
 
-  describe(...arg: Parameters<Schema["describe"]>) {
+  public describe(...arg: Parameters<Schema["describe"]>) {
     const [options] = arg
     const next = (options ? this.resolve(options) : this).clone()
     const base = super.describe(options) as SchemaInnerTypeDescription
@@ -92,20 +92,20 @@ export class UnionSchema<
     return base
   }
 
-  validateNil(value: any) {
+  public validateNil(value: any) {
     if (value === null && this.spec.nullable) return true
     if (value === undefined && this.spec.optional) return true
     return false
   }
 
-  async findTargetSchema(value: any): Promise<Schema | undefined> {
+  public async findTargetSchema(value: any): Promise<Schema | undefined> {
     if (value == null) return
     for (const schema of this.spec.types) {
       if (await schema.isValid(value, { strict: true })) return schema
     }
   }
 
-  findTargetSchemaSync(value: any): Schema | undefined {
+  public findTargetSchemaSync(value: any): Schema | undefined {
     if (value == null) return
     for (const schema of this.spec.types) {
       if (schema.isValidSync(value, { strict: true })) return schema

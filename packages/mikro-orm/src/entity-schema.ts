@@ -44,7 +44,7 @@ import type { GQLoomMikroFieldExtensions } from "./types"
 import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
 
 export class EntitySchemaWeaver {
-  static weave(
+  public static weave(
     silk: GraphQLSilk<any, any>,
     relations?: Record<string, RelationProperty<any, object>>,
     options?: Partial<EntitySchemaMetadata<any>> & EntitySchemaWeaverOptions
@@ -95,7 +95,7 @@ export class EntitySchemaWeaver {
     return mikroSilk(entity, options?.asObjectType)
   }
 
-  static toProperties(
+  public static toProperties(
     gqlType: GraphQLObjectType,
     options?: EntitySchemaWeaverOptions
   ): Record<string, EntitySchemaProperty<any, any>> {
@@ -120,7 +120,7 @@ export class EntitySchemaWeaver {
     })
   }
 
-  static getPropertyType(
+  public static getPropertyType(
     wrappedType: GraphQLOutputType,
     field: GraphQLField<any, any, any>,
     options?: EntitySchemaWeaverOptions
@@ -176,7 +176,7 @@ export class EntitySchemaWeaver {
     }
   }
 
-  static getGraphQLScalarType(
+  public static getGraphQLScalarType(
     gqlType: GraphQLScalarType<any, any>
   ): EntityProperty["type"] {
     switch (gqlType) {
@@ -195,7 +195,7 @@ export class EntitySchemaWeaver {
     }
   }
 
-  static createWeaver(
+  public static createWeaver(
     toSilk: (schema: StandardSchemaV1) => GraphQLSilk,
     creatorOptions: EntitySchemaWeaverOptions = {}
   ): CallableEntitySchemaWeaver {

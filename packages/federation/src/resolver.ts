@@ -60,7 +60,7 @@ export class FederatedChainResolver<
   >,
   TParent extends GraphQLSilk,
 > extends ChainResolver<TFields, TParent> {
-  directives(directives: DirectiveList | Record<string, {}>) {
+  public directives(directives: DirectiveList | Record<string, {}>) {
     this.meta.options ??= {}
     this.meta.options.extensions ??= {}
     this.meta.options.extensions = {
@@ -70,7 +70,7 @@ export class FederatedChainResolver<
     return this
   }
 
-  resolveReference<
+  public resolveReference<
     TRequiredKey extends
       keyof StandardSchemaV1.InferOutput<TParent> = keyof StandardSchemaV1.InferOutput<TParent>,
   >(

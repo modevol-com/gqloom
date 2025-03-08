@@ -44,10 +44,10 @@ interface MikroResolverFactoryOptions {
 export class MikroResolverFactory<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
-  readonly options: MikroResolverFactoryOptions
+  public readonly options: MikroResolverFactoryOptions
   protected flushMiddleware: Middleware
   protected inputFactory: MikroInputFactory<TSchema>
-  constructor(
+  public constructor(
     protected readonly entity: TSchema,
     optionsOrGetEntityManager:
       | MikroResolverFactoryOptions
@@ -276,9 +276,9 @@ export class MikroResolverFactory<
 export class MikroInputFactory<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
-  constructor(protected readonly entity: TSchema) {}
+  public constructor(protected readonly entity: TSchema) {}
 
-  createInput(): GraphQLSilk<
+  public createInput(): GraphQLSilk<
     RequiredEntityData<InferEntity<TSchema>>,
     { data: RequiredEntityData<InferEntity<TSchema>> }
   > {
@@ -302,7 +302,7 @@ export class MikroInputFactory<
     )
   }
 
-  updateInput(): GraphQLSilk<
+  public updateInput(): GraphQLSilk<
     UpdateInput<InferEntity<TSchema>>,
     { data: UpdateInput<InferEntity<TSchema>> }
   > {
@@ -326,7 +326,7 @@ export class MikroInputFactory<
     )
   }
 
-  findOneFilter(): GraphQLSilk<
+  public findOneFilter(): GraphQLSilk<
     FindOneFilter<InferEntity<TSchema>>,
     FindOneFilter<InferEntity<TSchema>>
   > {
@@ -344,7 +344,7 @@ export class MikroInputFactory<
     return silk(gqlType, (value) => ({ value }))
   }
 
-  findManyOptions(): GraphQLSilk<any, any> {
+  public findManyOptions(): GraphQLSilk<any, any> {
     const name = `${this.entity.meta.name}FindManyOptions`
 
     const whereType = this.findManyOptionsWhereType()
@@ -395,7 +395,7 @@ export class MikroInputFactory<
     })
   }
 
-  findManyOptionsOrderByType(): GraphQLObjectType {
+  public findManyOptionsOrderByType(): GraphQLObjectType {
     const name = `${this.entity.meta.name}FindManyOptionsOrderBy`
     return (
       weaverContext.getNamedType(name) ??
@@ -416,7 +416,7 @@ export class MikroInputFactory<
     )
   }
 
-  findManyOptionsWhereType(): GraphQLObjectType {
+  public findManyOptionsWhereType(): GraphQLObjectType {
     const name = `${this.entity.meta.name}FindManyOptionsWhere`
 
     return (
@@ -441,7 +441,7 @@ export class MikroInputFactory<
     )
   }
 
-  static queryOrderType(): GraphQLEnumType {
+  public static queryOrderType(): GraphQLEnumType {
     const name = `MikroQueryOrder`
 
     return (
@@ -462,7 +462,7 @@ export class MikroInputFactory<
     )
   }
 
-  static comparisonOperatorsType<TScalarType extends GraphQLScalarType>(
+  public static comparisonOperatorsType<TScalarType extends GraphQLScalarType>(
     type: TScalarType
   ): GraphQLObjectType {
     // https://mikro-orm.io/docs/query-conditions#comparison

@@ -21,7 +21,7 @@ import {
 import { DrizzleWeaver } from "./index"
 
 export class DrizzleInputFactory<TTable extends Table> {
-  constructor(public readonly table: TTable) {}
+  public constructor(public readonly table: TTable) {}
 
   public selectArrayArgs() {
     const name = `${pascalCase(getTableName(this.table))}SelectArrayArgs`

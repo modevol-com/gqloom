@@ -44,12 +44,12 @@ export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, Loom.BaseField>()
   protected hiddenFields = new Set<string>()
 
-  static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
+  public static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
   protected resolverOptions?: ResolvingOptions
 
-  constructor(
+  public constructor(
     objectOrGetter:
       | string
       | GraphQLObjectType
@@ -88,7 +88,7 @@ export class LoomObjectType extends GraphQLObjectType {
     return this._aliases
   }
 
-  addAlias(name: string) {
+  public addAlias(name: string) {
     if (this.hasExplicitName) return
     this._aliases.push(name)
     this.renameByAliases()
@@ -104,11 +104,11 @@ export class LoomObjectType extends GraphQLObjectType {
     if (name) this.name = name
   }
 
-  hideField(name: string) {
+  public hideField(name: string) {
     this.hiddenFields.add(name)
   }
 
-  addField(name: string, resolver: Loom.BaseField) {
+  public addField(name: string, resolver: Loom.BaseField) {
     const existing = this.extraFields.get(name)
     if (existing && existing !== resolver) {
       throw new Error(`Field ${name} already exists in ${this.name}`)
@@ -116,12 +116,14 @@ export class LoomObjectType extends GraphQLObjectType {
     this.extraFields.set(name, resolver)
   }
 
-  mergeExtensions(extensions: GraphQLObjectTypeConfig<any, any>["extensions"]) {
+  public mergeExtensions(
+    extensions: GraphQLObjectTypeConfig<any, any>["extensions"]
+  ) {
     this.extensions = deepMerge(this.extensions, extensions)
   }
 
   private extraFieldMap?: GraphQLFieldMap<any, any>
-  override getFields(): GraphQLFieldMap<any, any> {
+  public override getFields(): GraphQLFieldMap<any, any> {
     const fieldsBySuper = super.getFields()
 
     Object.entries(fieldsBySuper).forEach(
@@ -163,7 +165,7 @@ export class LoomObjectType extends GraphQLObjectType {
     return record
   }
 
-  toFieldConfig(
+  public toFieldConfig(
     field: Loom.BaseField,
     fieldName?: string
   ): GraphQLFieldConfig<any, any> {
@@ -240,7 +242,7 @@ export class LoomObjectType extends GraphQLObjectType {
     return getCacheType(gqlType, { ...this.options, fieldName, parent: this })
   }
 
-  get options() {
+  public get options() {
     const { resolverOptions, weaverContext } = this
     return { resolverOptions, weaverContext }
   }

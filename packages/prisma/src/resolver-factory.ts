@@ -43,7 +43,7 @@ export class PrismaResolverFactory<
   protected delegate: InferPrismaDelegate<TClient, TModelSilk["name"]>
   protected typeWeaver: PrismaActionArgsWeaver
 
-  constructor(
+  public constructor(
     protected readonly silk: TModelSilk,
     protected readonly client: TClient
   ) {
@@ -482,7 +482,7 @@ export class PrismaResolverFactory<
     return delegate as PrismaDelegate
   }
 
-  static batchPayloadSilk(): GraphQLSilk<IBatchPayload, IBatchPayload> {
+  public static batchPayloadSilk(): GraphQLSilk<IBatchPayload, IBatchPayload> {
     return silk(() => PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
       IBatchPayload,
       IBatchPayload

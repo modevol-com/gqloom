@@ -69,13 +69,13 @@ import { ZodIDKinds } from "./utils"
 import { resolveTypeByDiscriminatedUnion } from "./utils"
 
 export class ZodWeaver {
-  static vendor = "zod"
+  public static vendor = "zod"
   /**
    * get GraphQL Silk from Zod Schema
    * @param schema Zod Schema
    * @returns GraphQL Silk Like Zod Schema
    */
-  static unravel<TSchema extends Schema>(
+  public static unravel<TSchema extends Schema>(
     schema: TSchema
   ): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>> {
     const config = weaverContext.value?.getConfig<ZodWeaverConfig>("gqloom.zod")
@@ -95,11 +95,11 @@ export class ZodWeaver {
    * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
    * @returns GraphQL Schema
    */
-  static weave(...inputs: Parameters<typeof weave>) {
+  public static weave(...inputs: Parameters<typeof weave>) {
     return weave(ZodWeaver, ...inputs)
   }
 
-  static toNullableGraphQLType(schema: Schema): GraphQLOutputType {
+  protected static toNullableGraphQLType(schema: Schema): GraphQLOutputType {
     const nullable = (ofType: GraphQLOutputType) => {
       let isNonNull = !schema.isNullable() && !schema.isOptional()
       if ("coerce" in schema._def && schema._def.coerce === true) {
@@ -115,7 +115,7 @@ export class ZodWeaver {
     return nullable(gqlType)
   }
 
-  static toGraphQLType(
+  protected static toGraphQLType(
     schema: Schema,
     config?: TypeOrFieldConfig
   ): GraphQLOutputType {
@@ -125,7 +125,7 @@ export class ZodWeaver {
     return weaverContext.memoGraphQLType(schema, gqlType)
   }
 
-  static toGraphQLTypePurely(
+  protected static toGraphQLTypePurely(
     schema: Schema,
     config?: TypeOrFieldConfig
   ): GraphQLOutputType {
@@ -306,7 +306,7 @@ export class ZodWeaver {
     }
   }
 
-  static getDiscriminatedUnionOptionName(
+  public static getDiscriminatedUnionOptionName(
     option: ZodDiscriminatedUnionOption<any> | undefined,
     config?: TypeOrFieldConfig
   ): string | undefined {
@@ -378,7 +378,9 @@ export class ZodWeaver {
    * @param config Zod weaver config options
    * @returns a Zod weaver config object
    */
-  static config = function (config: ZodWeaverConfigOptions): ZodWeaverConfig {
+  public static config = function (
+    config: ZodWeaverConfigOptions
+  ): ZodWeaverConfig {
     return {
       ...config,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
@@ -390,7 +392,7 @@ export class ZodWeaver {
    * @param config Zod weaver config options
    * @returns a new Zod to silk function
    */
-  static useConfig = function (
+  public static useConfig = function (
     config: ZodWeaverConfigOptions
   ): typeof ZodWeaver.unravel {
     return (schema) =>
@@ -403,11 +405,11 @@ export class ZodWeaver {
       )
   }
 
-  static getGraphQLType(schema: Schema): GraphQLOutputType {
+  public static getGraphQLType(schema: Schema): GraphQLOutputType {
     return ZodWeaver.toNullableGraphQLType(schema)
   }
 
-  static getGraphQLTypeBySelf(this: Schema): GraphQLOutputType {
+  protected static getGraphQLTypeBySelf(this: Schema): GraphQLOutputType {
     return ZodWeaver.toNullableGraphQLType(this)
   }
 }

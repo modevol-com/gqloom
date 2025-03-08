@@ -50,14 +50,16 @@ export class GraphQLSchemaLoom {
    * @param config Schema Weaver config options
    * @returns a Schema Weaver config object
    */
-  static config(config: CoreSchemaWeaverConfigOptions): CoreSchemaWeaverConfig {
+  public static config(
+    config: CoreSchemaWeaverConfigOptions
+  ): CoreSchemaWeaverConfig {
     return {
       ...config,
       [WEAVER_CONFIG]: "gqloom.core.schema",
     }
   }
 
-  constructor(
+  public constructor(
     { query, mutation, subscription, types }: SchemaWeaverParameters = {},
     context?: WeaverContext
   ) {
@@ -204,7 +206,7 @@ export class GraphQLSchemaLoom {
     return { resolverOptions, weaverContext: context }
   }
 
-  static optionsFrom(
+  public static optionsFrom(
     ...inputs: (
       | Loom.Resolver
       | Middleware
@@ -250,7 +252,7 @@ export class GraphQLSchemaLoom {
    * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
    * @returns GraphQL Schema
    */
-  static weave(
+  public static weave(
     ...inputs: (
       | Loom.Resolver
       | Middleware

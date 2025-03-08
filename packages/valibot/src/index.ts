@@ -37,14 +37,14 @@ import type {
 import { flatVariant, nullishTypes } from "./utils"
 
 export class ValibotWeaver {
-  static vendor = "valibot"
+  public static vendor = "valibot"
 
   /**
    * Weave a GraphQL Schema from resolvers with valibot schema
    * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
    * @returns GraphQL Schema
    */
-  static weave(...inputs: Parameters<typeof weave>) {
+  public static weave(...inputs: Parameters<typeof weave>) {
     return weave(ValibotWeaver, ...inputs)
   }
   /**
@@ -52,7 +52,7 @@ export class ValibotWeaver {
    * @param schema Valibot Schema
    * @returns GraphQL Silk Like Valibot Schema
    */
-  static unravel<TSchema extends GenericSchemaOrAsync>(
+  public static unravel<TSchema extends GenericSchemaOrAsync>(
     schema: TSchema
   ): TSchema & GraphQLSilk<v.InferOutput<TSchema>, v.InferInput<TSchema>> {
     const config =
@@ -68,7 +68,7 @@ export class ValibotWeaver {
         : ValibotWeaver.getGraphQLTypeBySelf,
     })
   }
-  static toNullableGraphQLType(
+  public static toNullableGraphQLType(
     schema: GenericSchemaOrAsync
   ): GraphQLOutputType {
     const gqlType = ValibotWeaver.toGraphQLType(schema)
@@ -76,7 +76,7 @@ export class ValibotWeaver {
     return ValibotWeaver.nullable(gqlType, schema)
   }
 
-  static toGraphQLType(
+  public static toGraphQLType(
     schema: GenericSchemaOrAsync,
     ...wrappers: GenericSchemaOrAsync[]
   ): GraphQLOutputType {
@@ -95,7 +95,7 @@ export class ValibotWeaver {
     return weaverContext.memoGraphQLType(schema, gqlType)
   }
 
-  static toGraphQLTypePurely(
+  public static toGraphQLTypePurely(
     valibotSchema: GenericSchemaOrAsync,
     ...wrappers: GenericSchemaOrAsync[]
   ): GraphQLOutputType {
@@ -285,7 +285,7 @@ export class ValibotWeaver {
    * @param config Valibot weaver config options
    * @returns a Valibot weaver config object
    */
-  static config = function (
+  public static config = function (
     config: ValibotWeaverConfigOptions
   ): ValibotWeaverConfig {
     return {
@@ -300,7 +300,7 @@ export class ValibotWeaver {
    * @param config Valibot weaver config options
    * @returns a new Valibot to silk function
    */
-  static useConfig = function (
+  public static useConfig = function (
     config: ValibotWeaverConfigOptions
   ): typeof ValibotWeaver.unravel {
     return (schema) =>
@@ -313,11 +313,15 @@ export class ValibotWeaver {
       )
   }
 
-  static getGraphQLType(schema: GenericSchemaOrAsync): GraphQLOutputType {
+  public static getGraphQLType(
+    schema: GenericSchemaOrAsync
+  ): GraphQLOutputType {
     return ValibotWeaver.toNullableGraphQLType(schema)
   }
 
-  static getGraphQLTypeBySelf(this: GenericSchemaOrAsync): GraphQLOutputType {
+  public static getGraphQLTypeBySelf(
+    this: GenericSchemaOrAsync
+  ): GraphQLOutputType {
     return ValibotWeaver.toNullableGraphQLType(this)
   }
 }

@@ -292,7 +292,7 @@ export class ChainResolver<
     options?: ResolverOptionsWithExtensions
   }
 
-  constructor(
+  public constructor(
     fields: TFields,
     parent: TParent,
     options?: ResolverOptionsWithExtensions<any>
@@ -305,7 +305,7 @@ export class ChainResolver<
     }
   }
 
-  get "~meta"(): {
+  public get "~meta"(): {
     [IS_RESOLVER]: true
     fields: TFields
     parent: TParent
@@ -328,7 +328,7 @@ export class ChainResolver<
     }
   }
 
-  use(
+  public use(
     ...middlewares: Middleware<
       OmitInUnion<ValueOf<TFields>, typeof FIELD_HIDDEN>
     >[]
@@ -339,7 +339,7 @@ export class ChainResolver<
     return this
   }
 
-  extensions(
+  public extensions(
     extensions: TParent extends undefined
       ? never
       : Pick<GraphQLObjectTypeConfig<any, any>, "extensions">["extensions"]
@@ -353,7 +353,7 @@ export class ChainResolver<
     return this
   }
 
-  toExecutor(): Executor<TFields> {
+  public toExecutor(): Executor<TFields> {
     const fields = this["~meta"].fields
     const executor: Record<string, (...args: any) => any> = {}
 

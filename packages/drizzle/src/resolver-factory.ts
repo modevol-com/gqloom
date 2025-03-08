@@ -67,7 +67,7 @@ export abstract class DrizzleResolverFactory<
   TDatabase extends BaseDatabase,
   TTable extends Table,
 > {
-  static create<
+  public static create<
     TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
     TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
   >(
@@ -77,7 +77,7 @@ export abstract class DrizzleResolverFactory<
     TDatabase,
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
-  static create<
+  public static create<
     TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
     TTable extends SQLiteTable,
   >(
@@ -85,7 +85,7 @@ export abstract class DrizzleResolverFactory<
     table: TTable
   ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
 
-  static create<
+  public static create<
     TDatabase extends PgDatabase<any, any, any>,
     TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
   >(
@@ -95,7 +95,7 @@ export abstract class DrizzleResolverFactory<
     TDatabase,
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
-  static create<
+  public static create<
     TDatabase extends PgDatabase<any, any, any>,
     TTable extends PgTable,
   >(
@@ -103,7 +103,7 @@ export abstract class DrizzleResolverFactory<
     table: TTable
   ): DrizzlePostgresResolverFactory<TDatabase, TTable>
 
-  static create<
+  public static create<
     TDatabase extends MySqlDatabase<any, any, any, any>,
     TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
   >(
@@ -113,7 +113,7 @@ export abstract class DrizzleResolverFactory<
     TDatabase,
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
-  static create<
+  public static create<
     TDatabase extends MySqlDatabase<any, any, any, any>,
     TTable extends MySqlTable,
   >(
@@ -121,7 +121,7 @@ export abstract class DrizzleResolverFactory<
     table: TTable
   ): DrizzleMySQLResolverFactory<TDatabase, TTable>
 
-  static create(db: BaseDatabase, tableOrName: Table | string) {
+  public static create(db: BaseDatabase, tableOrName: Table | string) {
     const table =
       typeof tableOrName === "string"
         ? (db._.fullSchema[tableOrName] as Table)
@@ -141,7 +141,7 @@ export abstract class DrizzleResolverFactory<
     TDatabase,
     InferTableName<TTable>
   >
-  constructor(
+  public constructor(
     protected readonly db: TDatabase,
     protected readonly table: TTable
   ) {

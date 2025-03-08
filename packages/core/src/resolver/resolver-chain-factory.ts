@@ -38,7 +38,7 @@ interface ChainFactoryOptions extends Loom.FieldMeta {
 }
 
 abstract class BaseChainFactory {
-  static methods() {
+  public static methods() {
     return {
       description: BaseChainFactory.prototype.description,
       deprecationReason: BaseChainFactory.prototype.deprecationReason,
@@ -46,7 +46,9 @@ abstract class BaseChainFactory {
     }
   }
 
-  constructor(protected readonly options?: Partial<ChainFactoryOptions>) {}
+  public constructor(
+    protected readonly options?: Partial<ChainFactoryOptions>
+  ) {}
 
   protected abstract clone(options?: Partial<ChainFactoryOptions>): this
 
@@ -81,7 +83,7 @@ export class FieldChainFactory<
   extends BaseChainFactory
   implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: FieldChainFactory.prototype.output,
@@ -137,7 +139,7 @@ export class QueryChainFactory<
   extends BaseChainFactory
   implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: QueryChainFactory.prototype.output,
@@ -190,7 +192,7 @@ export class MutationChainFactory<
   extends BaseChainFactory
   implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: MutationChainFactory.prototype.output,
@@ -245,7 +247,7 @@ export class SubscriptionChainFactory<
   extends BaseChainFactory
   implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: SubscriptionChainFactory.prototype.output,

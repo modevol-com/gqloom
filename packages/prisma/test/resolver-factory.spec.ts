@@ -29,7 +29,7 @@ class TestablePrismaModelResolverFactory<
     return super.uniqueWhere(instance)
   }
 
-  name?: TModalSilk["name"]
+  public name?: TModalSilk["name"]
 
   public get modelDelegate(): InferPrismaDelegate<TClient, TModalSilk["name"]> {
     return this.delegate

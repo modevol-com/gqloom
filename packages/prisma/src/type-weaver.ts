@@ -17,7 +17,7 @@ import { gqlType as gt } from "./utils"
 export class PrismaTypeWeaver {
   protected modelMeta: Required<PrismaModelMeta>
 
-  constructor(modelMeta: PrismaModelMeta) {
+  public constructor(modelMeta: PrismaModelMeta) {
     this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
   }
 
@@ -194,7 +194,7 @@ export class PrismaTypeWeaver {
 }
 
 export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
-  constructor(protected readonly silk: PrismaModelSilk<any>) {
+  public constructor(protected readonly silk: PrismaModelSilk<any>) {
     super(silk.meta)
   }
 
@@ -445,7 +445,7 @@ export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
     return weaverContext.memoNamedType(input)
   }
 
-  static batchPayload(): GraphQLObjectType {
+  public static batchPayload(): GraphQLObjectType {
     const name = "BatchPayload"
     const existing = weaverContext.getNamedType(name)
     if (existing) return existing as GraphQLObjectType
