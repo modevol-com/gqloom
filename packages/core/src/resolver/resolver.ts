@@ -2,6 +2,7 @@ import type { GraphQLObjectTypeConfig } from "graphql"
 import {
   type MayPromise,
   type Middleware,
+  type OmitInUnion,
   type ValueOf,
   applyMiddlewares,
   compose,
@@ -284,7 +285,7 @@ export class ChainResolver<
   TParent extends GraphQLSilk | undefined = undefined,
 > implements Loom.Resolver
 {
-  private meta: {
+  protected meta: {
     [IS_RESOLVER]: true
     fields: TFields
     parent: TParent
@@ -372,9 +373,3 @@ type Executor<
     ? TFields[K]["~meta"]["resolve"]
     : never
 }
-
-type OmitInUnion<TUnion, TOmit> = TUnion extends infer T
-  ? T extends TOmit
-    ? never
-    : T
-  : never

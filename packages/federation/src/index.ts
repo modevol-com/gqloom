@@ -1,11 +1,6 @@
-import {
-  type Loom,
-  type MayPromise,
-  loom,
-  resolverPayloadStorage,
-  silk,
-} from "@gqloom/core"
-import { GraphQLID, type GraphQLResolveInfo } from "graphql"
+import { type MayPromise, resolverPayloadStorage } from "@gqloom/core"
+import type { GraphQLResolveInfo } from "graphql"
+import { referenceField } from "./resolver"
 
 export interface ResolveReferenceExtension<
   TEntity extends object,
@@ -26,11 +21,6 @@ type ResolveReference<
   context: object,
   info: GraphQLResolveInfo
 ) => MayPromise<TEntity | null | undefined>
-
-const referenceField: Loom.Field<any, any, any> = loom.field(
-  silk(GraphQLID),
-  () => undefined
-)
 
 export function resolveReference<
   TEntity extends object,
@@ -53,4 +43,5 @@ export function resolveReference<
   }
 }
 
+export * from "./resolver"
 export * from "./schema-weaver"

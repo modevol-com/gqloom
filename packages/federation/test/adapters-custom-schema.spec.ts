@@ -23,10 +23,7 @@ import { mockAst } from "../src/mock-ast"
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions {
     directives?:
-      | {
-          name: string
-          args: Record<string, any>
-        }[]
+      | { name: string; args?: {} }[]
       | Record<string, Record<string, any>>
 
     apollo?: {

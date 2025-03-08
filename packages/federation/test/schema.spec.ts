@@ -10,7 +10,7 @@ import {
   printSchema,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { FederatedSchemaLoom, resolveReference } from "../src"
+import { FederatedSchemaLoom, resolveReference, resolver } from "../src"
 
 describe("FederatedSchemaWeaver", () => {
   interface IUser {
@@ -44,6 +44,13 @@ describe("FederatedSchemaWeaver", () => {
     }
   )
 
+  const r2 = resolver
+    .of(User, {
+      me: loom.query(User, () => ({ id: "2", name: "@ava" })),
+    })
+    .directives({ key: { fields: "id", resolvable: true } })
+    .resolveReference(({ id }) => ({ id, name: "@ava" }))
+
   const schema = FederatedSchemaLoom.weave(
     r1,
     FederatedSchemaLoom.config({
@@ -59,9 +66,27 @@ describe("FederatedSchemaWeaver", () => {
       },
     })
   )
+
+  const schema2 = FederatedSchemaLoom.weave(
+    r2,
+    FederatedSchemaLoom.config({
+      extensions: {
+        directives: {
+          link: [
+            {
+              url: "https://specs.apollo.dev/federation/v2.6",
+              import: ["@extends", "@external", "@key", "@shareable"],
+            },
+          ],
+        },
+      },
+    })
+  )
   it("should weave a federated schema", () => {
     const federatedSdl = printSubgraphSchema(lexicographicSortSchema(schema))
+    const federatedSdl2 = printSubgraphSchema(lexicographicSortSchema(schema2))
 
+    expect(federatedSdl2).toEqual(federatedSdl)
     expect(federatedSdl).toMatchInlineSnapshot(`
       "extend schema
         @link(url: "https://specs.apollo.dev/federation/v2.6", import: ["@extends", "@external", "@key", "@shareable"])
@@ -81,6 +106,8 @@ describe("FederatedSchemaWeaver", () => {
 
   it("should be able to print by graphql.js", () => {
     const sdl = printSchema(lexicographicSortSchema(schema))
+    const sdl2 = printSchema(lexicographicSortSchema(schema2))
+    expect(sdl2).toEqual(sdl)
     expect(sdl).toMatchInlineSnapshot(`
       "type Query {
         _entities(representations: [_Any!]!): [_Entity]!
