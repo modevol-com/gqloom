@@ -14,6 +14,7 @@ import {
   silk,
 } from "@gqloom/core"
 import { GraphQLID } from "graphql"
+import type { ResolveReferenceExtension } from "."
 import type { DirectiveList } from "./mock-ast"
 
 export const resolver = Object.assign(
@@ -79,8 +80,12 @@ export class FederatedChainResolver<
   ) {
     this.meta.options ??= {}
     this.meta.options.extensions ??= {}
-    const apollo = this.meta.options.extensions.apollo ?? {}
-    apollo.subgraph ??= {}
+    const apollo = (this.meta.options.extensions.apollo ??
+      {}) as ResolveReferenceExtension<
+      StandardSchemaV1.InferOutput<TParent>,
+      TRequiredKey
+    >["apollo"]
+    ;(apollo.subgraph as {}) ??= {}
     apollo.subgraph.resolveReference = (root, context, info) =>
       resolverPayloadStorage.run(
         {
