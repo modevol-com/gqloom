@@ -285,6 +285,13 @@ describe("resolver", () => {
       return result
     }
 
+    const resolveMiddlewareInUse: Middleware = async (next) => {
+      logs.push("resolve middleware in use")
+      const result = await next()
+      logs.push("resolve middleware end in use")
+      return result
+    }
+
     const r1 = resolver(
       {
         hello: mutation(silk(GraphQLString), {
@@ -293,7 +300,7 @@ describe("resolver", () => {
         }),
       },
       { middlewares: [resolveMiddleware] }
-    )
+    ).use(resolveMiddlewareInUse)
 
     const e1 = r1.toExecutor()
 
@@ -301,8 +308,10 @@ describe("resolver", () => {
 
     expect(logs).toEqual([
       "resolve middleware",
+      "resolve middleware in use",
       "query middleware",
       "query middleware end",
+      "resolve middleware end in use",
       "resolve middleware end",
     ])
   })

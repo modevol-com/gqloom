@@ -141,7 +141,7 @@ export class PrismaResolverFactory<
         ),
       },
       options as ResolverOptionsWithExtensions<any>
-    ) as ChainResolver<PrismaResolverResolver<TModelSilk, TClient>, TModelSilk>
+    ) as any
   }
 
   public countQuery<

@@ -459,7 +459,7 @@ export abstract class DrizzleResolverFactory<
     name?: TTableName
     middlewares?: Middleware[]
   }): ChainResolver<
-    DrizzleResolver<TDatabase, TTable, TTableName>,
+    any,
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>
   > {
     const name = options?.name ?? this.tableName

@@ -326,6 +326,17 @@ export class ChainResolver<
     }
   }
 
+  use(
+    ...middlewares: Middleware<
+      OmitInUnion<ValueOf<TFields>, typeof FIELD_HIDDEN>
+    >[]
+  ): this {
+    this["~meta"].options ??= {}
+    this["~meta"].options.middlewares ??= []
+    this["~meta"].options.middlewares.push(...(middlewares as Middleware[]))
+    return this
+  }
+
   toExecutor(): Executor<TFields> {
     const fields = this["~meta"].fields
     const executor: Record<string, (...args: any) => any> = {}
