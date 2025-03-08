@@ -2,9 +2,9 @@
 title: Federation
 ---
 
-[Apollo Federation](https://www.apollographql.com/docs/federation/) lets you declaratively combine multiple GraphQL APIs into a single, federated graph. This federated graph enables clients to interact with multiple APIs through a single request.
+[Apollo Federation](https://www.apollographql.com/docs/federation/) allows you to declaratively combine multiple GraphQL APIs into a single federated graph. A federated graph enables clients to interact with multiple APIs through a single request.
 
-GQLoom Federation provides GQLoom support for Apollo Federation.
+GQLoom Federation provides GQLoom's support for Apollo Federation.
 
 ## Installation
 
@@ -23,7 +23,9 @@ bun add graphql @gqloom/core @apollo/subgraph @gqloom/federation
 
 ## GraphQL Directives
 
-Apollo Federation [Directives](https://www.apollographql.com/docs/federation/federated-schemas/federated-directives/) is used to describe how to combine multiple GraphQL APIs into a federated graph.
+Apollo Federation directives ([Directives](https://www.apollographql.com/docs/federation/federated-schemas/federated-directives/)) are used to describe how to combine multiple GraphQL APIs into a federated graph.
+
+### Declare Directives on Objects
 
 In GQLoom, we can declare GraphQL directives in the `directives` field of the `extensions` property of objects and fields:
 
@@ -77,8 +79,8 @@ export interface IUser {
   name: string
 }
 
-export const User = silk<IUser>(
-  new GraphQLObjectType({
+export const User = silk(
+  new GraphQLObjectType<IUser>({
     name: "User",
     fields: {
       id: { type: new GraphQLNonNull(GraphQLString) },
@@ -91,7 +93,7 @@ export const User = silk<IUser>(
 )
 ```
 
-In the above example, we have declared a `@key` directive which marks the `id` field of the `User` object as a resolvable field and we will get the following Schema:
+In the above example, we declared a `@key` directive, which marks the `id` field of the `User` object as a resolvable field. We will get the following Schema:
 
 ```graphql title="GraphQL Schema"
 type User
@@ -102,8 +104,42 @@ type User
 }
 ```
 
-We have two formats for declaring instructions:
-- Using arrays:
+### Declare Directives on Resolvers
+
+We can also use resolvers to declare directives for objects:
+
+```ts
+export const userResolver = resolver
+  .of(User, {
+    // ...
+  })
+  .directives({ key: { fields: "id", resolvable: true } })
+```
+
+### Add Directives to the Schema
+
+```ts
+const schema = FederatedSchemaLoom.weave(
+  userResolver,
+  FederatedSchemaLoom.config({
+    extensions: {
+      directives: {
+        link: [
+          {
+            url: "https://specs.apollo.dev/federation/v2.6",
+            import: ["@extends", "@external", "@key", "@shareable"],
+          },
+        ],
+      },
+    },
+  })
+)
+```
+
+### Directive Formats
+
+We have two formats for declaring directives:
+- Using an array:
 ```json
 {
   directives: [
@@ -162,27 +198,22 @@ function getUserByID(id: string): IUser {
   return { id, name: "Jane Smith" }
 }
 // ---cut---
-import { resolver, query } from "@gqloom/core"
-import { resolveReference } from "@gqloom/federation"
+import { query } from "@gqloom/core"
+import { resolveReference, resolver } from "@gqloom/federation"
 
-export const userResolver = resolver.of(
-  User,
-  {
+export const userResolver = resolver
+  .of(User, {
     user: query(User, () => ({ id: "1", name: "John" })),
-  },
-  {
-    extensions: {
-      ...resolveReference<IUser, "id">((user) => getUserByID(user.id)),
-    },
-  }
-)
+  })
+  .directives({ key: { fields: "id", resolvable: true } })
+  .resolveReference((user) => getUserByID(user.id))
 ```
 
 ## Weaving
 
-The `FederatedSchemaWeaver.weave` function, introduced from `@gqloom/federation`, is used to weave Federation Schema. compared to `@gqloom/core`, the ` FederatedSchemaWeaver.weave` function in `@gqloom/apollo` will output Schema with Directives.
+The `FederatedSchemaWeaver.weave` function imported from `@gqloom/federation` is used to weave the Federation Schema. Compared with `@gqloom/core`, the `FederatedSchemaWeaver.weave` function in `@gqloom/apollo` will output a Schema with directives.
 
-It is also worth noting that we need to use the `printSubgraphSchema` function imported from `@apollo/subgraph` to convert the Schema to a textual format in order to preserve the Directives.
+It's also worth noting that we need to use the `printSubgraphSchema` function imported from `@apollo/subgraph` to convert the Schema to text format to preserve the directives.
 
 ```ts twoslash
 import { silk } from "@gqloom/core"
@@ -230,4 +261,3 @@ import { printSubgraphSchema } from "@apollo/subgraph"
 const schema = FederatedSchemaLoom.weave(userResolver)
 const schemaText = printSubgraphSchema(schema)
 ```
-
