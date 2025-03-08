@@ -315,4 +315,13 @@ describe("resolver", () => {
       "resolve middleware end",
     ])
   })
+
+  it("should keep extensions for object", async () => {
+    const r1 = resolver.of(Giraffe, {}).extensions({ foo: "bar" })
+
+    const schema = weave(r1)
+
+    const g = schema.getType("Giraffe") as GraphQLObjectType<IGiraffe>
+    expect(g.extensions).toEqual({ foo: "bar" })
+  })
 })

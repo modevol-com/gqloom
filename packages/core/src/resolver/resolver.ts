@@ -1,3 +1,4 @@
+import type { GraphQLObjectTypeConfig } from "graphql"
 import {
   type MayPromise,
   type Middleware,
@@ -331,9 +332,23 @@ export class ChainResolver<
       OmitInUnion<ValueOf<TFields>, typeof FIELD_HIDDEN>
     >[]
   ): this {
-    this["~meta"].options ??= {}
-    this["~meta"].options.middlewares ??= []
-    this["~meta"].options.middlewares.push(...(middlewares as Middleware[]))
+    this.meta.options ??= {}
+    this.meta.options.middlewares ??= []
+    this.meta.options.middlewares.push(...(middlewares as Middleware[]))
+    return this
+  }
+
+  extensions(
+    extensions: TParent extends undefined
+      ? never
+      : Pick<GraphQLObjectTypeConfig<any, any>, "extensions">["extensions"]
+  ): this {
+    this.meta.options ??= {}
+    this.meta.options.extensions ??= {}
+    this.meta.options.extensions = {
+      ...this.meta.options.extensions,
+      ...extensions,
+    }
     return this
   }
 
