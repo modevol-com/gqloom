@@ -75,6 +75,11 @@ export class FederatedChainResolver<
     return this
   }
 
+  /**
+   * Resolve the reference of a federated object.
+   * @param resolve - The function to resolve the reference
+   * @returns The resolver instance
+   */
   public resolveReference<
     TRequiredKey extends
       keyof StandardSchemaV1.InferOutput<TParent> = keyof StandardSchemaV1.InferOutput<TParent>,
