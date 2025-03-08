@@ -60,6 +60,11 @@ export class FederatedChainResolver<
   >,
   TParent extends GraphQLSilk,
 > extends ChainResolver<TFields, TParent> {
+  /**
+   * A directive decorates part of a GraphQL schema or operation with additional configuration.
+   * @param directives - Directives for the root object of the resolver
+   * @returns The resolver instance
+   */
   public directives(directives: DirectiveList | Record<string, {}>) {
     this.meta.options ??= {}
     this.meta.options.extensions ??= {}

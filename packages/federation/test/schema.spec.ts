@@ -38,7 +38,7 @@ describe("FederatedSchemaWeaver", () => {
     },
     {
       extensions: {
-        directives: { key: { fields: "id", resolvable: true } },
+        directives: [{ name: "key", args: { fields: "id", resolvable: true } }],
         ...resolveReference<IUser, "id">(({ id }) => ({ id, name: "@ava" })),
       },
     }
@@ -165,8 +165,13 @@ describe("FederatedSchemaWeaver", () => {
       schema,
       plugins: [ApolloServerPluginInlineTraceDisabled()],
     })
+
+    const server2 = new ApolloServer({
+      schema: schema2,
+      plugins: [ApolloServerPluginInlineTraceDisabled()],
+    })
     it("should execute normal query", async () => {
-      const response = await server.executeOperation({
+      let response = await server.executeOperation({
         query: queries.me,
       })
 
@@ -175,10 +180,38 @@ describe("FederatedSchemaWeaver", () => {
       expect(response.body.singleResult.data).toMatchObject({
         me: { id: "1", name: "@ava" },
       })
+
+      response = await server2.executeOperation({
+        query: queries.me,
+      })
+
+      if (response.body.kind !== "single") throw new Error("unexpected")
+
+      expect(response.body.singleResult.data).toMatchObject({
+        me: { id: "2", name: "@ava" },
+      })
     })
 
     it("should execute query for entities", async () => {
-      const response = await server.executeOperation({
+      let response
+      response = await server.executeOperation({
+        query: queries.entities,
+        variables: {
+          representations: [
+            { __typename: "User", id: "1" },
+            { __typename: "User", id: "2" },
+          ],
+        },
+      })
+
+      if (response.body.kind !== "single") throw new Error("unexpected")
+      expect(response.body.singleResult.data).toMatchObject({
+        _entities: [
+          { id: "1", name: "@ava" },
+          { id: "2", name: "@ava" },
+        ],
+      })
+      response = await server2.executeOperation({
         query: queries.entities,
         variables: {
           representations: [
