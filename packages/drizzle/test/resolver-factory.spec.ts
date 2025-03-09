@@ -20,9 +20,12 @@ import {
   type DrizzlePostgresResolverFactory,
   DrizzleResolverFactory,
   type DrizzleSQLiteResolverFactory,
-  type InferSelectArrayOptions,
-  type InferSelectSingleOptions,
+  drizzleResolverFactory,
 } from "../src"
+import type {
+  InferSelectArrayOptions,
+  InferSelectSingleOptions,
+} from "../src/factory/types"
 import * as mysqlSchemas from "./schema/mysql"
 import * as pgSchemas from "./schema/postgres"
 import * as sqliteSchemas from "./schema/sqlite"
@@ -42,7 +45,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       connection: { url: `file:${pathToDB.pathname}` },
     })
 
-    userFactory = DrizzleResolverFactory.create(db, sqliteSchemas.user)
+    userFactory = drizzleResolverFactory(db, sqliteSchemas.user)
 
     await db.insert(sqliteSchemas.user).values([
       {
@@ -81,7 +84,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     const unknownTable = sqlite.sqliteTable("unknown", {
       id: sqlite.integer("id").primaryKey(),
     })
-    expect(() => DrizzleResolverFactory.create(db, unknownTable)).toThrow(
+    expect(() => drizzleResolverFactory(db, unknownTable)).toThrow(
       "GQLoom-Drizzle Error: Table unknown not found in drizzle instance. Did you forget to pass schema to drizzle constructor?"
     )
   })
@@ -313,16 +316,13 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const postsField = userFactory.relationField("posts")
       expect(postsField).toBeDefined()
 
-      const postFactory = DrizzleResolverFactory.create(db, "post")
+      const postFactory = drizzleResolverFactory(db, "post")
       const authorField = postFactory.relationField("author")
       expect(authorField).toBeDefined()
     })
 
     it("should resolve correctly", async () => {
-      const studentCourseFactory = DrizzleResolverFactory.create(
-        db,
-        "studentToCourse"
-      )
+      const studentCourseFactory = drizzleResolverFactory(db, "studentToCourse")
       const gradeField = studentCourseFactory.relationField("grade")
       const John = await db.query.user.findFirst({
         where: eq(sqliteSchemas.user.name, "John"),
@@ -419,7 +419,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
 
   beforeAll(async () => {
     db = mysqlDrizzle(config.mysqlUrl, { schema, mode: "default" })
-    userFactory = DrizzleResolverFactory.create(db, "drizzle_user")
+    userFactory = drizzleResolverFactory(db, "drizzle_user")
     await db.execute(sql`select 1`)
   })
 
@@ -519,7 +519,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
 
   beforeAll(async () => {
     db = pgDrizzle(config.postgresUrl, { schema })
-    userFactory = DrizzleResolverFactory.create(db, "drizzle_user")
+    userFactory = drizzleResolverFactory(db, "drizzle_user")
     await db.execute(sql`select 1`)
   })
 
@@ -619,7 +619,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
       connection: { url: `file:${pathToDB.pathname}` },
     })
 
-    userFactory = DrizzleResolverFactory.create(db, "user")
+    userFactory = drizzleResolverFactory(db, "user")
   })
 
   describe("insertArrayMutation", () => {

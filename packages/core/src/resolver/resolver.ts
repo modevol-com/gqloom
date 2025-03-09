@@ -370,3 +370,5 @@ type Executor<
     ? TFields[K]["~meta"]["resolve"]
     : never
 }
+
+export * from "./resolver-chain-factory"

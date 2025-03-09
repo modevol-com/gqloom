@@ -18,7 +18,7 @@ import {
   GraphQLString,
   isNonNullType,
 } from "graphql"
-import { DrizzleWeaver } from "./index"
+import { DrizzleWeaver } from "../index"
 
 export class DrizzleInputFactory<TTable extends Table> {
   public constructor(public readonly table: TTable) {}

@@ -10,7 +10,7 @@ import {
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { config } from "../env.config"
-import { DrizzleResolverFactory } from "../src"
+import { drizzleResolverFactory } from "../src"
 import { post, postsRelations, user, usersRelations } from "./schema/mysql"
 
 const schema = {
@@ -49,8 +49,8 @@ describe("resolver by mysql", () => {
   beforeAll(async () => {
     try {
       db = drizzle(config.mysqlUrl, { schema, mode: "default" })
-      const userFactory = DrizzleResolverFactory.create(db, "drizzle_user")
-      const postFactory = DrizzleResolverFactory.create(db, "drizzle_post")
+      const userFactory = drizzleResolverFactory(db, "drizzle_user")
+      const postFactory = drizzleResolverFactory(db, "drizzle_post")
       gqlSchema = weave(
         userFactory.resolver({ name: "user" }),
         postFactory.resolver({ name: "post" })

@@ -46,11 +46,11 @@ export interface IChainFactory<
   ): IChainFactory<TOutput, TInputNew>
 }
 
-interface ChainFactoryOptions extends Loom.FieldMeta {
+export interface ChainFactoryOptions extends Loom.FieldMeta {
   middlewares?: Middleware[]
 }
 
-abstract class BaseChainFactory {
+export abstract class BaseChainFactory {
   public static methods() {
     return {
       description: BaseChainFactory.prototype.description,
