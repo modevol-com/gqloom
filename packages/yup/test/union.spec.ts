@@ -64,14 +64,27 @@ describe("union", () => {
         },
       ],
     })
+    expect(
+      Animal.describe({ value: { name: "Tom", color: "white" } })
+    ).toBeDefined()
   })
 
+  it("should cast without error", () => {
+    const Animal = union([Cat, Dog]).label("Animal")
+    expect(Animal.cast({ name: "Tom", color: "white" })).toMatchObject({
+      color: "white",
+      name: "Tom",
+    })
+  })
   describe("validate", () => {
     it("should validate", async () => {
       const Animal = union([Cat, Dog])
-      expect(Animal.isValidSync({ name: "Tom", color: "white" })).toBeTruthy()
+      expect(Animal.isValid({ name: "Tom", color: "white" })).toBeTruthy()
       expect(Animal.isValidSync({ name: "Tom", height: 5 })).toBeTruthy()
       expect(Animal.isValidSync({ name: "Tom" })).toBeFalsy()
+      expect(await Animal.isValid({ name: "Tom", color: "white" })).toBeTruthy()
+      expect(await Animal.isValid({ name: "Tom", height: 5 })).toBeTruthy()
+      expect(await Animal.isValid({ name: "Tom" })).toBeFalsy()
     })
 
     it("should allow optional", () => {
