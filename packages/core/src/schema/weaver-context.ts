@@ -95,6 +95,7 @@ type GlobalContextRequiredKeys =
   | "names"
   | "getConfig"
   | "setConfig"
+  | "deleteConfig"
   | "getNamedType"
   | "memoNamedType"
 

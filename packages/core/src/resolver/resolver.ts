@@ -9,6 +9,7 @@ import {
   getFieldOptions,
   getOperationOptions,
   getSubscriptionOptions,
+  meta,
 } from "../utils"
 import { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
 import { createInputParser, getStandardValue } from "./input"
@@ -253,10 +254,6 @@ export const loom = {
   field,
   subscription,
   mutation,
-}
-
-function meta<T>(data: T): { "~meta": T } {
-  return { "~meta": data }
 }
 
 export interface ResolverFactory {

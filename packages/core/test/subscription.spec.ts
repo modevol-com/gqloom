@@ -154,6 +154,7 @@ describe("subscription integration", () => {
       logs.push("Field End")
       return answer
     }
+
     const resolverMiddleware: Middleware = async (next) => {
       logs.push("Resolver Start")
       const answer = await next()
@@ -170,13 +171,12 @@ describe("subscription integration", () => {
     const simpleResolver = resolver(
       {
         hello,
-        foo: subscription(silk(GraphQLString), {
-          async subscribe() {
+        foo: subscription(silk(GraphQLString))
+          .use(fieldMiddleware)
+          .subscribe(async () => {
             await new Promise((resolve) => setTimeout(resolve, 6))
             return fooGenerator()
-          },
-          middlewares: [fieldMiddleware],
-        }),
+          }),
       },
       { middlewares: [resolverMiddleware] }
     )

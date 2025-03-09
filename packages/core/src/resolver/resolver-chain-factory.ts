@@ -1,6 +1,19 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import type { MayPromise, Middleware } from "../utils"
-import type { InferInputO } from "./input"
+import {
+  EasyDataLoader,
+  type MayPromise,
+  type Middleware,
+  applyMiddlewares,
+  compose,
+  createMemoization,
+  getFieldOptions,
+  meta,
+} from "../utils"
+import {
+  type CallableInputParser,
+  type InferInputO,
+  createInputParser,
+} from "./input"
 import {
   createField,
   createMutation,
@@ -126,6 +139,55 @@ export class FieldChainFactory<
       ...this.options,
       resolve,
     }) as any
+  }
+
+  public load<TParent extends GraphQLSilk>(
+    resolve: (
+      parents: StandardSchemaV1.InferOutput<TParent>[],
+      input: InferInputO<TInput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
+  ): Loom.Field<TParent, TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+
+    const useUnifiedParseInput = createMemoization<{
+      current?: CallableInputParser<TInput>
+    }>(() => ({ current: undefined }))
+
+    const useUserLoader = createMemoization(
+      () =>
+        new EasyDataLoader(
+          async (parents: StandardSchemaV1.InferOutput<TParent>[]) =>
+            resolve(
+              parents,
+              (await useUnifiedParseInput().current?.getResult()) as InferInputO<TInput>
+            )
+        )
+    )
+
+    const operation = "field"
+    return meta({
+      ...getFieldOptions(this.options),
+      operation,
+      input: this.options.input as TInput,
+      output: this.options.output as TOutput,
+      resolve: async (
+        parent,
+        inputValue,
+        extraOptions
+      ): Promise<StandardSchemaV1.InferOutput<TOutput>> => {
+        const unifiedParseInput = useUnifiedParseInput()
+        unifiedParseInput.current ??= createInputParser(
+          this.options?.input,
+          inputValue
+        ) as CallableInputParser<TInput>
+        const parseInput = unifiedParseInput.current
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, this.options?.middlewares),
+          async () => useUserLoader().load(parent),
+          { parseInput, parent, outputSilk: this.output, operation }
+        )
+      },
+    }) as Loom.Field<TParent, TOutput, TInput>
   }
 }
 

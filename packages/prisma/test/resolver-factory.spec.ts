@@ -185,7 +185,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const q = UserBobbin.countQuery({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = getStandardValue(await parseInput())
+            const input = await parseInput.getResult()
 
             expectTypeOf(input).toEqualTypeOf<
               Parameters<typeof db.user.count>[0]

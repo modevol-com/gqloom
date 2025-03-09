@@ -55,18 +55,11 @@ describe("resolver", () => {
     callCount++
     return next()
   }
-  const giraffeResolver = resolver.of(
-    Giraffe,
-    {
+  const giraffeResolver = resolver
+    .of(Giraffe, {
       age: field(silk(GraphQLInt), async (giraffe) => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
-
-      // greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
-      //   input: { myName: silk(GraphQLString) },
-      //   resolve: (giraffe, { myName }) =>
-      //     `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
-      // }),
 
       greeting: field(silk<string>(new GraphQLNonNull(GraphQLString)))
         .description("a normal greeting")
@@ -75,17 +68,17 @@ describe("resolver", () => {
           return `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`
         }),
 
-      nominalAge: field(silk(new GraphQLNonNull(GraphQLInt)), {
-        middlewares: [async (next) => (await next()) + 1],
-        resolve: async (giraffe) => {
+      nominalAge: field(silk(new GraphQLNonNull(GraphQLInt)))
+        .use(async (next) => (await next()) + 1)
+        .resolve(async (giraffe) => {
           return new Date().getFullYear() - giraffe.birthday.getFullYear()
-        },
+        }),
+
+      self: field(Giraffe).load((giraffes) => {
+        return giraffes
       }),
-    },
-    {
-      middlewares: [callCounter],
-    }
-  )
+    })
+    .use(callCounter)
 
   const giraffeExecutor = giraffeResolver.toExecutor()
 
@@ -175,13 +168,28 @@ describe("resolver", () => {
         return result + 1
       }
 
-      const queryNumber = query(numberSchema, {
+      let queryNumber
+      queryNumber = query(numberSchema, {
         input: { n: numberSchema },
         middlewares: [middleware],
         resolve: ({ n }) => n,
       })
 
       expect(await queryNumber["~meta"].resolve({ n: 1 })).toEqual(2)
+
+      queryNumber = query(numberSchema)
+        .input({ n: numberSchema })
+        .use(middleware)
+        .resolve(({ n }) => n)
+
+      expect(await queryNumber["~meta"].resolve({ n: 1 })).toEqual(2)
+
+      const mutationNumber = mutation(numberSchema)
+        .input({ n: numberSchema })
+        .use(middleware)
+        .resolve(({ n }) => n)
+
+      expect(await mutationNumber["~meta"].resolve({ n: 1 })).toEqual(2)
     })
   })
 
@@ -241,6 +249,10 @@ describe("resolver", () => {
       expect(await giraffeExecutor.nominalAge(Skyler, undefined)).toEqual(
         new Date().getFullYear() - Skyler.birthday.getFullYear() + 1
       )
+    })
+
+    it("should load related field", async () => {
+      expect(await giraffeExecutor.self(Skyler, undefined)).toEqual(Skyler)
     })
 
     it("should hidden fields", () => {

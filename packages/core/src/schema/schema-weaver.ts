@@ -6,6 +6,7 @@ export interface SchemaWeaver {
 }
 
 export function isSchemaVendorWeaver(some: any): some is SchemaWeaver {
+  if (some == null) return false
   if (typeof some !== "object" && typeof some !== "function") return false
   if (!("getGraphQLType" in some) || typeof some.getGraphQLType !== "function")
     return false

@@ -11,13 +11,14 @@ import {
 import { describe, expect, it } from "vitest"
 import { getGraphQLType, silk } from "../resolver"
 import { loom } from "../resolver"
+import { WEAVER_CONFIG } from "../utils/symbols"
 import { ensureInterfaceType } from "./interface"
 import { GraphQLSchemaLoom, weave } from "./schema-loom"
 import { provideWeaverContext } from "./weaver-context"
 
 const { resolver, query, mutation, field } = loom
 
-describe("SchemaWeaver", () => {
+describe("GraphQLSchemaLoom", () => {
   it("should weave schema", () => {
     interface IGiraffe {
       name: string
@@ -176,6 +177,52 @@ describe("SchemaWeaver", () => {
         name: String!
       }"
     `)
+  })
+
+  it("should classify various inputs", () => {
+    const middleware1 = () => 0 as any
+    const middleware2 = () => 0 as any
+    const resolver1 = resolver.of(silk(GraphQLString), {})
+    const resolver2 = resolver.of(silk(GraphQLString), {})
+    const weaver1 = {
+      vendor: "vendor1",
+      getGraphQLType: () => 0 as any,
+    }
+    const weaver2 = {
+      vendor: "vendor2",
+      getGraphQLType: () => 0 as any,
+    }
+    const config1 = {
+      [WEAVER_CONFIG]: "gqloom.core.schema",
+      vendorWeaver: weaver1,
+      weaverContext: {},
+    }
+    const config2 = {
+      [WEAVER_CONFIG]: "gqloom.core.schema",
+      vendorWeaver: weaver2,
+      weaverContext: {},
+    }
+    const silk1 = silk(GraphQLString)
+    const silk2 = silk(GraphQLString)
+
+    const result = GraphQLSchemaLoom.optionsFrom(
+      middleware1,
+      resolver1,
+      weaver1,
+      config1,
+      silk1,
+      middleware2,
+      resolver2,
+      weaver2,
+      config2,
+      silk2
+    )
+
+    expect(result.middlewares).toEqual(new Set([middleware1, middleware2]))
+    expect(result.resolvers).toEqual(new Set([resolver1, resolver2]))
+    expect(result.weavers).toEqual(new Set([weaver1, weaver2]))
+    expect(result.configs).toEqual(new Set([config1, config2]))
+    expect(result.silks).toEqual(new Set([silk1, silk2]))
   })
 
   it("should avoid duplicate name", () => {

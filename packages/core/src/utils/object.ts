@@ -68,6 +68,21 @@ export function deepMerge<T extends Record<string, any>>(
   return result
 }
 
+/**
+ * Wraps the provided data in an object with a single key `"~meta"`.
+ *
+ * @template T - The type of the data to be wrapped.
+ * @param {T} data - The data to be wrapped.
+ * @returns {{ "~meta": T }} - An object with a single key `"~meta"` containing the provided data.
+ * @example
+ * const originalData = { key: "value" };
+ * const metaData = meta(originalData);
+ * console.log(metaData); // Output: { "~meta": { key: "value" } }
+ */
+export function meta<T>(data: T): { "~meta": T } {
+  return { "~meta": data }
+}
+
 type Maybe<T> = null | undefined | T
 
 type ReadOnlyObjMapLike<T> = ReadOnlyObjMap<T> | { readonly [key: string]: T }

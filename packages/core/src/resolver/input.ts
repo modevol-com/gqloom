@@ -42,7 +42,7 @@ export interface CallableInputParser<
   value: InferInputI<TSchema>
 
   /**
-   * Parse the input and return the result
+   * Parse the input and return the standard result
    */
   (): Promise<StandardSchemaV1.Result<InferInputO<TSchema>>>
 
@@ -50,6 +50,11 @@ export interface CallableInputParser<
    * Result of parsing. Set it to `undefined` then the parser will run again.
    */
   result: StandardSchemaV1.Result<InferInputO<TSchema>> | undefined
+
+  /**
+   * Parse the input and return the result
+   */
+  getResult(): Promise<InferInputO<TSchema>>
 }
 
 export function createInputParser<
@@ -67,6 +72,9 @@ export function createInputParser<
   Object.defineProperty(parse, "result", {
     get: () => result,
     set: (value) => (result = value),
+  })
+  Object.defineProperty(parse, "getResult", {
+    value: async () => getStandardValue(await parse()),
   })
 
   return parse as unknown as CallableInputParser<TSchema>

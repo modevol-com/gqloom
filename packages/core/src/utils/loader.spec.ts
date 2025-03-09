@@ -70,4 +70,34 @@ describe("EasyDataLoader", () => {
     await expect(load1).rejects.toThrow("Failed to load key 1")
     await expect(load2).resolves.toEqual({ id: 2, value: "value-2" })
   })
+
+  it("should clear cache", async () => {
+    const p1 = dataLoader.load(1)
+    const p2 = dataLoader.load(2)
+    await Promise.all([p1, p2])
+    expect(batchLoadFn).toHaveBeenCalledTimes(1)
+
+    dataLoader.clear()
+
+    await EasyDataLoader.nextTick()
+    await dataLoader.load(1)
+    await EasyDataLoader.nextTick()
+    await dataLoader.load(2)
+    expect(batchLoadFn).toHaveBeenCalledTimes(3)
+  })
+
+  it("should clear cache by key", async () => {
+    const p1 = dataLoader.load(1)
+    const p2 = dataLoader.load(2)
+    await Promise.all([p1, p2])
+    expect(batchLoadFn).toHaveBeenCalledTimes(1)
+
+    dataLoader.clearByKey(1)
+
+    await EasyDataLoader.nextTick()
+    await dataLoader.load(1)
+    await EasyDataLoader.nextTick()
+    await dataLoader.load(2)
+    expect(batchLoadFn).toHaveBeenCalledTimes(2)
+  })
 })
