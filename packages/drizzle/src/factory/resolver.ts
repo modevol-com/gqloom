@@ -6,6 +6,7 @@ import {
   type GraphQLSilk,
   type Loom,
   type Middleware,
+  type QueryOptions,
   capitalize,
   createMemoization,
   loom,
@@ -44,6 +45,7 @@ import {
 import { GraphQLError } from "graphql"
 import { DrizzleWeaver, type TableSilk } from ".."
 import { inArrayMultiple } from "../helper"
+import { QueryFactoryWithResolve } from "./field"
 import {
   type ColumnFilters,
   type DeleteArgs,
@@ -131,13 +133,13 @@ export abstract class DrizzleResolverFactory<
       })
     ) as GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
 
-    return loom.query(this.output.$list(), {
+    return new QueryFactoryWithResolve(this.output.$list(), {
       input,
       ...options,
       resolve: (opts) => {
-        return queryBase.findMany(opts) as any
+        return queryBase.findMany(opts)
       },
-    })
+    } as QueryOptions<any, any>)
   }
 
   public selectSingleQuery<TInputI = SelectSingleArgs<TTable>>({

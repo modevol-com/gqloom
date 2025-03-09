@@ -6,6 +6,7 @@ import type { PgDatabase } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
+import type { QueryFactoryWithResolve } from "./field"
 import type {
   DeleteArgs,
   InsertArrayArgs,
@@ -83,7 +84,8 @@ export interface SelectArrayQuery<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectArrayArgs<TTable>,
-> extends Loom.Query<
+> extends QueryFactoryWithResolve<
+    InferSelectArrayOptions<TDatabase, TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
     GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
   > {}
