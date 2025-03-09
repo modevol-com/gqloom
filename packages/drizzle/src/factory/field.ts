@@ -11,7 +11,7 @@ export class QueryFactoryWithResolve<
     TOutput extends GraphQLSilk,
     TInput extends GraphQLSilk<TInputO>,
   >
-  extends BaseChainFactory
+  extends BaseChainFactory<Loom.Query<TOutput, TInput>>
   implements Loom.Query<TOutput, TInput>
 {
   public get "~meta"(): Loom.Query<TOutput, TInput>["~meta"] {
@@ -21,7 +21,7 @@ export class QueryFactoryWithResolve<
   }
 
   public constructor(
-    protected output: GraphQLSilk,
+    protected output: TOutput,
     protected readonly options: QueryOptions<TOutput, TInput>
   ) {
     super(options)

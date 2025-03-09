@@ -185,7 +185,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should be created with custom input", async () => {
-      const query = userFactory.selectArrayQuery({
+      let query, answer
+      query = userFactory.selectArrayQuery({
         input: v.pipe(
           v.object({
             age: v.nullish(v.number()),
@@ -197,7 +198,25 @@ describe.concurrent("DrizzleResolverFactory", () => {
       })
 
       expect(query).toBeDefined()
-      const answer = await query["~meta"].resolve({ age: 10 })
+      answer = await query["~meta"].resolve({ age: 10 })
+      expect(answer).toMatchObject([{ age: 10 }])
+
+      query = userFactory
+        .selectArrayQuery()
+        .description("query with custom input")
+        .input(
+          v.pipe(
+            v.object({
+              age: v.nullish(v.number()),
+            }),
+            v.transform(({ age }) => ({
+              where: age != null ? eq(sqliteSchemas.user.age, age) : undefined,
+            }))
+          )
+        )
+
+      expect(query).toBeDefined()
+      answer = await query["~meta"].resolve({ age: 10 })
       expect(answer).toMatchObject([{ age: 10 }])
     })
 

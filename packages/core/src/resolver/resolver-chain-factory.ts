@@ -50,7 +50,7 @@ export interface ChainFactoryOptions extends Loom.FieldMeta {
   middlewares?: Middleware[]
 }
 
-export abstract class BaseChainFactory {
+export abstract class BaseChainFactory<TField extends Loom.BaseField = any> {
   public static methods() {
     return {
       description: BaseChainFactory.prototype.description,
@@ -79,7 +79,7 @@ export abstract class BaseChainFactory {
     return this.clone({ extensions })
   }
 
-  public use(...middlewares: Middleware[]): this {
+  public use(...middlewares: Middleware<TField>[]): this {
     return this.clone({
       middlewares: [...(this.options?.middlewares ?? []), ...middlewares],
     })
@@ -93,7 +93,7 @@ export class FieldChainFactory<
       | Record<string, GraphQLSilk>
       | undefined = undefined,
   >
-  extends BaseChainFactory
+  extends BaseChainFactory<Loom.Field<any, TOutput, TInput>>
   implements IChainFactory<TOutput, TInput>
 {
   public static methods() {
@@ -108,12 +108,6 @@ export class FieldChainFactory<
 
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new FieldChainFactory({ ...this.options, ...options }) as this
-  }
-
-  public use(
-    ...middlewares: Middleware<Loom.Field<any, TOutput, TInput>>[]
-  ): this {
-    return super.use(...middlewares)
   }
 
   public output<TOutputNew extends GraphQLSilk>(
@@ -198,7 +192,7 @@ export class QueryChainFactory<
       | Record<string, GraphQLSilk>
       | undefined = undefined,
   >
-  extends BaseChainFactory
+  extends BaseChainFactory<Loom.Query<TOutput, TInput>>
   implements IChainFactory<TOutput, TInput>
 {
   public static methods() {
@@ -213,10 +207,6 @@ export class QueryChainFactory<
 
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new QueryChainFactory({ ...this.options, ...options }) as this
-  }
-
-  public use(...middlewares: Middleware<Loom.Query<TOutput, TInput>>[]): this {
-    return super.use(...middlewares)
   }
 
   public output<TOutputNew extends GraphQLSilk>(
@@ -251,7 +241,7 @@ export class MutationChainFactory<
       | Record<string, GraphQLSilk>
       | undefined = undefined,
   >
-  extends BaseChainFactory
+  extends BaseChainFactory<Loom.Mutation<TOutput, TInput>>
   implements IChainFactory<TOutput, TInput>
 {
   public static methods() {
@@ -266,12 +256,6 @@ export class MutationChainFactory<
 
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new MutationChainFactory({ ...this.options, ...options }) as this
-  }
-
-  public use(
-    ...middlewares: Middleware<Loom.Mutation<TOutput, TInput>>[]
-  ): this {
-    return super.use(...middlewares)
   }
 
   public output<TOutputNew extends GraphQLSilk>(
@@ -306,7 +290,7 @@ export class SubscriptionChainFactory<
       | Record<string, GraphQLSilk>
       | undefined = undefined,
   >
-  extends BaseChainFactory
+  extends BaseChainFactory<Loom.Subscription<TOutput, TInput, any>>
   implements IChainFactory<TOutput, TInput>
 {
   public static methods() {
@@ -321,12 +305,6 @@ export class SubscriptionChainFactory<
 
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new SubscriptionChainFactory({ ...this.options, ...options }) as this
-  }
-
-  public use(
-    ...middlewares: Middleware<Loom.Subscription<TOutput, TInput, any>>[]
-  ): this {
-    return super.use(...middlewares)
   }
 
   public output<TOutputNew extends GraphQLSilk>(
