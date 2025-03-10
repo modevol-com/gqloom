@@ -1,10 +1,10 @@
 import {
-  type ChainResolver,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
   MutationFactoryWithResolve,
   type MutationOptions,
+  type ObjectChainResolver,
   silk,
 } from "@gqloom/core"
 import type { InferSelectModel } from "drizzle-orm"
@@ -132,9 +132,9 @@ export class DrizzleSQLiteResolverFactory<
       name?: TTableName
       middlewares?: Middleware[]
     } = {}
-  ): ChainResolver<
-    DrizzleResolverReturningItems<TDatabase, TTable, TTableName>,
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>
+  ): ObjectChainResolver<
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    DrizzleResolverReturningItems<TDatabase, TTable, TTableName>
   > {
     return super.resolver(options) as any
   }

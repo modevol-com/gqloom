@@ -1,5 +1,4 @@
 import {
-  type ChainResolver,
   EasyDataLoader,
   FieldFactoryWithResolve,
   type FieldOptions,
@@ -7,6 +6,7 @@ import {
   type GraphQLSilk,
   type Loom,
   type Middleware,
+  type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
   capitalize,
@@ -407,9 +407,9 @@ export abstract class DrizzleResolverFactory<
   public resolver<TTableName extends string = TTable["_"]["name"]>(options?: {
     name?: TTableName
     middlewares?: Middleware[]
-  }): ChainResolver<
-    any,
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>
+  }): ObjectChainResolver<
+    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    any
   > {
     const name = options?.name ?? this.tableName
 

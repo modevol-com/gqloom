@@ -1,11 +1,11 @@
 import {
-  type ChainResolver,
   FieldFactoryWithResolve,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
   MutationFactoryWithResolve,
   type MutationOptions,
+  type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
   type ResolverOptionsWithExtensions,
@@ -121,7 +121,10 @@ export class PrismaResolverFactory<
 
   public resolver(
     options?: ResolverOptionsWithExtensions
-  ): ChainResolver<PrismaResolverResolver<TModelSilk, TClient>, TModelSilk> {
+  ): ObjectChainResolver<
+    TModelSilk,
+    PrismaResolverResolver<TModelSilk, TClient>
+  > {
     const name = capitalize(this.silk.name)
     return loom.resolver.of(
       this.silk,
