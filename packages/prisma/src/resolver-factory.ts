@@ -1,5 +1,6 @@
 import {
   FieldFactoryWithResolve,
+  type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
@@ -15,7 +16,6 @@ import {
 } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
-import type { FieldOptions } from "../../core/dist"
 import { PrismaActionArgsWeaver } from "./type-weaver"
 import type {
   IBatchPayload,
