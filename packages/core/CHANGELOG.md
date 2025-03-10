@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+## 0.8.0 (2025-03-11)
+
 - Feat: `field.load()` to easier load data using data loader
 - Feat: chaining resolver factory
 - Feat: enhance type inference for `silk`

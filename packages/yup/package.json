@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/yup",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "Create GraphQL schema and resolvers easily using using Yup!",
   "type": "module",
   "main": "./dist/index.js",
@@ -34,7 +34,7 @@
   "license": "MIT",
   "peerDependencies": {
     "graphql": ">= 16.8.0",
-    "@gqloom/core": ">= 0.7.0",
+    "@gqloom/core": ">= 0.8.0",
     "yup": ">= 1.0.0"
   },
   "devDependencies": {

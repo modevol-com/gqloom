@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/core",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "Create GraphQL schema and resolvers with TypeScript.",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/prisma",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "GQLoom integration with Prisma",
   "type": "module",
   "main": "./dist/index.js",
@@ -41,7 +41,7 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.5.0",
+    "@gqloom/core": ">= 0.8.0",
     "graphql": ">= 16.8.0",
     "prisma": ">= 5.0.0"
   },
