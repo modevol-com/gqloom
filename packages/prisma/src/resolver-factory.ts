@@ -1,10 +1,12 @@
 import {
   type ChainResolver,
+  FieldFactoryWithResolve,
   type GraphQLFieldOptions,
   type GraphQLSilk,
-  type Loom,
   type Middleware,
+  MutationFactoryWithResolve,
   type MutationOptions,
+  QueryFactoryWithResolve,
   type QueryOptions,
   type ResolverOptionsWithExtensions,
   type StandardSchemaV1,
@@ -13,6 +15,7 @@ import {
 } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
+import type { FieldOptions } from "../../core/dist"
 import { PrismaActionArgsWeaver } from "./type-weaver"
 import type {
   IBatchPayload,
@@ -70,7 +73,7 @@ export class PrismaResolverFactory<
     if (field.kind !== "object" || field.relationName == null)
       throw new Error(`Field ${String(key)} is not a relation`)
 
-    return loom.field(this.relationFieldOutput(field), {
+    return new FieldFactoryWithResolve(this.relationFieldOutput(field), {
       ...options,
       resolve: (parent) => {
         const promise = this.delegate.findUnique({
@@ -80,7 +83,7 @@ export class PrismaResolverFactory<
           return promise[key]()
         return null
       },
-    })
+    } as FieldOptions<any, any, any>)
   }
 
   protected relationFieldOutput(field: DMMF.Field): GraphQLSilk<any> {
@@ -165,7 +168,7 @@ export class PrismaResolverFactory<
       TInputI
     >
 
-    return loom.query(
+    return new QueryFactoryWithResolve(
       silk<number>(() => gt.nonNull(gt.int)),
       {
         ...options,
@@ -197,7 +200,7 @@ export class PrismaResolverFactory<
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
-    return loom.query(output.nullable(), {
+    return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
       resolve: (input) => this.delegate.findFirst(input),
@@ -226,15 +229,11 @@ export class PrismaResolverFactory<
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
-    return loom.query(output.list(), {
+    return new QueryFactoryWithResolve(output.list(), {
       ...options,
       input,
       resolve: (input) => this.delegate.findMany(input),
-    } as QueryOptions<any, any>) as PrismaResolverFindManyQuery<
-      TModelSilk,
-      TClient,
-      TInputI
-    >
+    } as QueryOptions<any, any>)
   }
 
   public findUniqueQuery<
@@ -259,7 +258,7 @@ export class PrismaResolverFactory<
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
-    return loom.query(output.nullable(), {
+    return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
       resolve: (input) => this.delegate.findUnique(input),
@@ -286,7 +285,7 @@ export class PrismaResolverFactory<
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
-    return loom.mutation(output.nullable(), {
+    return new MutationFactoryWithResolve(output.nullable(), {
       ...options,
       input,
       resolve: (input) => this.delegate.create(input),
@@ -315,7 +314,7 @@ export class PrismaResolverFactory<
 
     const output = PrismaResolverFactory.batchPayloadSilk()
 
-    return loom.mutation(output, {
+    return new MutationFactoryWithResolve(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.createMany(input),
@@ -342,7 +341,7 @@ export class PrismaResolverFactory<
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
-    return loom.mutation(output.nullable(), {
+    return new MutationFactoryWithResolve(output.nullable(), {
       ...options,
       input,
       resolve: async (input) => {
@@ -377,7 +376,7 @@ export class PrismaResolverFactory<
   } = {}): PrismaResolverDeleteManyMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.deleteManyArgs()))
     const output = PrismaResolverFactory.batchPayloadSilk()
-    return loom.mutation(output, {
+    return new MutationFactoryWithResolve(output, {
       ...options,
       input,
       resolve: async (input) => {
@@ -404,7 +403,7 @@ export class PrismaResolverFactory<
   } = {}): PrismaResolverUpdateMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.updateArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
-    return loom.mutation(output, {
+    return new MutationFactoryWithResolve(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.update(input),
@@ -432,7 +431,7 @@ export class PrismaResolverFactory<
     input ??= silk(() => gt.nonNull(this.typeWeaver.updateManyArgs()))
     const output = PrismaResolverFactory.batchPayloadSilk()
 
-    return loom.mutation(output, {
+    return new MutationFactoryWithResolve(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.updateMany(input),
@@ -457,7 +456,7 @@ export class PrismaResolverFactory<
   } = {}): PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI> {
     input ??= silk(() => gt.nonNull(this.typeWeaver.upsertArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
-    return loom.mutation(output, {
+    return new MutationFactoryWithResolve(output, {
       ...options,
       input,
       resolve: (input) => this.delegate.upsert(input),
@@ -493,10 +492,9 @@ export class PrismaResolverFactory<
 export interface PrismaResolverRelationField<
   TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TKey extends keyof NonNullable<TModelSilk["relations"]>,
-> extends Loom.Field<
+> extends FieldFactoryWithResolve<
     TModelSilk,
-    GraphQLSilk<NonNullable<TModelSilk["relations"]>[TKey]>,
-    undefined
+    GraphQLSilk<NonNullable<TModelSilk["relations"]>[TKey]>
   > {}
 
 export interface PrismaResolverCountQuery<
@@ -505,7 +503,8 @@ export interface PrismaResolverCountQuery<
   TInputI = InferDelegateCountArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Query<
+> extends QueryFactoryWithResolve<
+    InferDelegateCountArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
     GraphQLSilk<number>,
     GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
@@ -519,7 +518,10 @@ export interface PrismaResolverFindFirstQuery<
   TInputI = InferDelegateFindFirstArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Query<
+> extends QueryFactoryWithResolve<
+    InferDelegateFindFirstArgs<
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
+    >,
     ReturnType<TModelSilk["nullable"]>,
     GraphQLSilk<
       InferDelegateFindFirstArgs<
@@ -535,7 +537,8 @@ export interface PrismaResolverFindManyQuery<
   TInputI = InferDelegateFindManyArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Query<
+> extends QueryFactoryWithResolve<
+    InferDelegateFindManyArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
     ReturnType<TModelSilk["list"]>,
     GraphQLSilk<
       InferDelegateFindManyArgs<
@@ -551,7 +554,10 @@ export interface PrismaResolverFindUniqueQuery<
   TInputI = InferDelegateFindUniqueArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Query<
+> extends QueryFactoryWithResolve<
+    InferDelegateFindUniqueArgs<
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
+    >,
     ReturnType<TModelSilk["nullable"]>,
     GraphQLSilk<
       InferDelegateFindUniqueArgs<
@@ -567,7 +573,8 @@ export interface PrismaResolverCreateMutation<
   TInputI = InferDelegateCreateArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
     TModelSilk,
     GraphQLSilk<
       InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
@@ -581,7 +588,10 @@ export interface PrismaResolverCreateManyMutation<
   TInputI = InferDelegateCreateManyArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InferDelegateCreateManyArgs<
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
+    >,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
       InferDelegateCreateManyArgs<
@@ -596,7 +606,8 @@ export interface PrismaResolverDeleteMutation<
   TInputI = InferDelegateDeleteArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InferDelegateDeleteArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
     ReturnType<TModelSilk["nullable"]>,
     GraphQLSilk<
       InferDelegateDeleteArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
@@ -610,7 +621,10 @@ export interface PrismaResolverDeleteManyMutation<
   TInputI = InferDelegateDeleteManyArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InferDelegateDeleteManyArgs<
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
+    >,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
       InferDelegateDeleteManyArgs<
@@ -626,7 +640,8 @@ export interface PrismaResolverUpdateMutation<
   TInputI = InferDelegateUpdateArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
     TModelSilk,
     GraphQLSilk<
       InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
@@ -640,7 +655,10 @@ export interface PrismaResolverUpdateManyMutation<
   TInputI = InferDelegateUpdateManyArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InferDelegateUpdateManyArgs<
+      InferPrismaDelegate<TClient, TModelSilk["name"]>
+    >,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
       InferDelegateUpdateManyArgs<
@@ -656,7 +674,8 @@ export interface PrismaResolverUpsertMutation<
   TInputI = InferDelegateUpsertArgs<
     InferPrismaDelegate<TClient, TModelSilk["name"]>
   >,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
     GraphQLSilk<IBatchPayload, IBatchPayload>,
     GraphQLSilk<
       InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
