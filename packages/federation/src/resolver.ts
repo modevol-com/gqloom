@@ -3,6 +3,7 @@ import {
   type GraphQLSilk,
   type Loom,
   type MayPromise,
+  ObjectChainResolver,
   type OmitInUnion,
   type ResolverOptions,
   type ResolverOptionsWithExtensions,
@@ -19,12 +20,12 @@ import type { DirectiveList } from "./mock-ast"
 
 export const resolver = Object.assign(
   (operations: Record<string, Loom.Operation>, options: ResolverOptions) =>
-    new ChainResolver(operations, undefined, options),
+    new ChainResolver(operations, options),
   {
     of: ((parent, operations, options) =>
       new FederatedChainResolver(
-        operations,
         parent,
+        operations,
         options
       )) as FederatedResolverFactory["of"],
   }
@@ -45,21 +46,21 @@ export interface FederatedResolverFactory {
     options?: ResolverOptionsWithExtensions<
       OmitInUnion<ValueOf<TFields>, typeof SYMBOLS.FIELD_HIDDEN>
     >
-  ): FederatedChainResolver<TFields, TParent>
+  ): FederatedChainResolver<TParent, TFields>
 
   <TFields extends Record<string, Loom.Operation>>(
     operations: TFields,
     options?: ResolverOptions<ValueOf<TFields>>
-  ): ChainResolver<TFields, undefined>
+  ): ChainResolver<TFields>
 }
 
 export class FederatedChainResolver<
+  TParent extends GraphQLSilk,
   TFields extends Record<
     string,
     Loom.FieldOrOperation | typeof SYMBOLS.FIELD_HIDDEN
   >,
-  TParent extends GraphQLSilk,
-> extends ChainResolver<TFields, TParent> {
+> extends ObjectChainResolver<TParent, TFields> {
   /**
    * A directive decorates part of a GraphQL schema or operation with additional configuration.
    * @param directives - Directives for the root object of the resolver

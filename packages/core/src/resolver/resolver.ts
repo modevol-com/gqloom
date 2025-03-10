@@ -241,10 +241,14 @@ function extraOperationOptions<TField extends Loom.FieldOrOperation>(
 
 export const resolver: ResolverFactory = Object.assign(
   ((operations, options) =>
-    new ChainResolver(operations, undefined, options)) as ResolverFactory,
+    new ChainResolver(operations, options)) as ResolverFactory,
   {
     of: ((parent, operations, options) =>
-      new ChainResolver(operations, parent, options)) as ResolverFactory["of"],
+      new ObjectChainResolver(
+        parent,
+        operations,
+        options
+      )) as ResolverFactory["of"],
   }
 )
 
@@ -269,45 +273,36 @@ export interface ResolverFactory {
     options?: ResolverOptionsWithExtensions<
       OmitInUnion<ValueOf<TFields>, typeof FIELD_HIDDEN>
     >
-  ): ChainResolver<TFields, TParent>
+  ): ObjectChainResolver<TParent, TFields>
 
   <TFields extends Record<string, Loom.Operation>>(
     operations: TFields,
     options?: ResolverOptions<ValueOf<TFields>>
-  ): ChainResolver<TFields, undefined>
+  ): ChainResolver<TFields>
 }
 
 export class ChainResolver<
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
-  TParent extends GraphQLSilk | undefined = undefined,
 > implements Loom.Resolver
 {
   protected meta: {
     [IS_RESOLVER]: true
     fields: TFields
-    parent: TParent
     options?: ResolverOptionsWithExtensions
   }
 
   public constructor(
     fields: TFields,
-    parent: TParent,
     options?: ResolverOptionsWithExtensions<any>
   ) {
     this.meta = {
       [IS_RESOLVER]: true,
       fields,
-      parent,
       options,
     }
   }
 
-  public get "~meta"(): {
-    [IS_RESOLVER]: true
-    fields: TFields
-    parent: TParent
-    options?: ResolverOptionsWithExtensions
-  } {
+  public get "~meta"(): typeof this.meta {
     const fields: Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN> =
       {}
 
@@ -336,20 +331,6 @@ export class ChainResolver<
     return this
   }
 
-  public extensions(
-    extensions: TParent extends undefined
-      ? never
-      : Pick<GraphQLObjectTypeConfig<any, any>, "extensions">["extensions"]
-  ): this {
-    this.meta.options ??= {}
-    this.meta.options.extensions ??= {}
-    this.meta.options.extensions = {
-      ...this.meta.options.extensions,
-      ...extensions,
-    }
-    return this
-  }
-
   public toExecutor(): Executor<TFields> {
     const fields = this["~meta"].fields
     const executor: Record<string, (...args: any) => any> = {}
@@ -360,6 +341,51 @@ export class ChainResolver<
     })
 
     return executor as Executor<TFields>
+  }
+}
+
+export class ObjectChainResolver<
+  TParent extends GraphQLSilk,
+  TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
+> extends ChainResolver<TFields> {
+  protected meta: {
+    [IS_RESOLVER]: true
+    fields: TFields
+    parent: TParent
+    options?: ResolverOptionsWithExtensions
+  }
+
+  public constructor(
+    parent: TParent,
+    fields: TFields,
+    options?: ResolverOptionsWithExtensions<any>
+  ) {
+    super(fields, options)
+    this.meta = {
+      [IS_RESOLVER]: true,
+      fields,
+      parent,
+      options,
+    }
+  }
+
+  public get "~meta"(): typeof this.meta {
+    return super["~meta"] as typeof this.meta
+  }
+
+  public extensions(
+    extensions: Pick<
+      GraphQLObjectTypeConfig<any, any>,
+      "extensions"
+    >["extensions"]
+  ): this {
+    this.meta.options ??= {}
+    this.meta.options.extensions ??= {}
+    this.meta.options.extensions = {
+      ...this.meta.options.extensions,
+      ...extensions,
+    }
+    return this
   }
 }
 
