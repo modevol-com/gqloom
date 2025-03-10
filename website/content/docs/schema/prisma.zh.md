@@ -240,15 +240,15 @@ const postResolver = resolver.of(Post, {
 解析器工厂预置的查询和变更支持自定义输入，你可以通过 `input` 选项来定义输入类型：
 
 ```ts
-import * as v from 'valibot'
+import * as v from "valibot"
 
 const userResolver = resolver.of(User, {
-  user: userResolverFactory.findUniqueQuery({
-    input: v.pipe( // [!code hl]
+  user: userResolverFactory.findUniqueQuery().input(
+    v.pipe( // [!code hl]
       v.object({ id: v.number() }), // [!code hl]
       v.transform(({ id }) => ({ where: { id } })) // [!code hl]
-    ), // [!code hl]
-  }),
+    ) // [!code hl]
+  ),
 
   posts: userResolverFactory.relationField("posts"),
 })
@@ -262,17 +262,13 @@ const userResolver = resolver.of(User, {
 
 ```ts
 const postResolver = resolver.of(Post, {
-  createPost: postResolverFactory.createMutation({
-    middlewares: [ // [!code hl]
-      async (next) => { // [!code hl]
-        const user = await useAuthedUser() // [!code hl]
-        if (user == null) throw new GraphQLError('Please login first') // [!code hl]
-        return next() // [!code hl]
-      }, // [!code hl]
-    ], // [!code hl]
-  }),
+  createPost: postResolverFactory.createMutation().use(async (next) => {
+    const user = await useAuthedUser() // [!code hl]
+    if (user == null) throw new GraphQLError("Please login first") // [!code hl]
+    return next() // [!code hl]
+  }), // [!code hl]
 
-  author: postResolverFactory.relationField('author'),
+  author: postResolverFactory.relationField("author"),
 
   authorId: field.hidden,
 })

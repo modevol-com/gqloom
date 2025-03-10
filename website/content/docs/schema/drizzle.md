@@ -585,12 +585,12 @@ const db = drizzle({
 const usersResolverFactory = drizzleResolverFactory(db, "users")
 // ---cut---
 export const usersResolver = resolver.of(users, {
-  user: usersResolverFactory.selectSingleQuery({
-    input: v.pipe( // [!code hl]
+  user: usersResolverFactory.selectSingleQuery().input(
+    v.pipe( // [!code hl]
       v.object({ id: v.number() }), // [!code hl]
       v.transform(({ id }) => ({ where: eq(users.id, id) })) // [!code hl]
-    ), // [!code hl]
-  }), 
+    ) // [!code hl]
+  ),
 
   users: usersResolverFactory.selectArrayQuery(),
 
@@ -663,15 +663,11 @@ const useAuthedUser = createMemoization( async ()=> ({
 
 // ---cut---
 const postResolver = resolver.of(posts, {
-  createPost: postsResolverFactory.insertSingleMutation({
-    middlewares: [
-      async (next) => {
-        const user = await useAuthedUser()
-        if (user == null) throw new GraphQLError("Please login first")
-        return next()
-      },
-    ],
-  }),
+  createPost: postsResolverFactory.insertSingleMutation().use(async (next) => { // [!code hl]
+    const user = await useAuthedUser() // [!code hl]
+    if (user == null) throw new GraphQLError("Please login first") // [!code hl]
+    return next() // [!code hl]
+  }), // [!code hl]
 
   author: postsResolverFactory.relationField("author"),
 
