@@ -463,6 +463,32 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
         .delete(mysqlSchemas.user)
         .where(inArray(mysqlSchemas.user.age, [5, 6]))
     })
+
+    it("should be created with custom input", async () => {
+      const mutation = userFactory
+        .insertArrayMutation()
+        .description("Insert users")
+        .input(
+          v.pipe(
+            v.array(v.object({ name: v.string(), age: v.number() })),
+            v.transform((values) => ({ values }))
+          )
+        )
+
+      expect(mutation).toBeDefined()
+      expect(
+        await mutation["~meta"].resolve([
+          { name: "John", age: 5 },
+          { name: "Jane", age: 6 },
+        ])
+      ).toMatchObject({
+        isSuccess: true,
+      })
+
+      await db
+        .delete(mysqlSchemas.user)
+        .where(inArray(mysqlSchemas.user.age, [5, 6]))
+    })
   })
 
   describe("insertSingleMutation", () => {
@@ -562,6 +588,33 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
       ])
 
       await db.delete(pgSchemas.user).where(inArray(pgSchemas.user.age, [5, 6]))
+    })
+
+    it("should be created with custom input", async () => {
+      const mutation = userFactory
+        .insertArrayMutation()
+        .description("Insert users")
+        .input(
+          v.pipe(
+            v.array(v.object({ name: v.string(), age: v.number() })),
+            v.transform((values) => ({ values }))
+          )
+        )
+
+      expect(mutation).toBeDefined()
+      expect(
+        await mutation["~meta"].resolve([
+          { name: "John", age: 5 },
+          { name: "Jane", age: 6 },
+        ])
+      ).toMatchObject([
+        { name: "John", age: 5 },
+        { name: "Jane", age: 6 },
+      ])
+
+      await db
+        .delete(pgSchemas.user)
+        .where(inArray(mysqlSchemas.user.age, [5, 6]))
     })
   })
 
@@ -684,6 +737,33 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
       await db
         .delete(sqliteSchemas.user)
         .where(eq(sqliteSchemas.user.id, answer!.id))
+    })
+
+    it("should be created with custom input", async () => {
+      const mutation = userFactory
+        .insertArrayMutation()
+        .description("Insert users")
+        .input(
+          v.pipe(
+            v.array(v.object({ name: v.string(), age: v.number() })),
+            v.transform((values) => ({ values }))
+          )
+        )
+
+      expect(mutation).toBeDefined()
+      expect(
+        await mutation["~meta"].resolve([
+          { name: "John", age: 5 },
+          { name: "Jane", age: 6 },
+        ])
+      ).toMatchObject([
+        { name: "John", age: 5 },
+        { name: "Jane", age: 6 },
+      ])
+
+      await db
+        .delete(sqliteSchemas.user)
+        .where(inArray(sqliteSchemas.user.age, [5, 6]))
     })
   })
 

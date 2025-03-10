@@ -164,13 +164,13 @@ export abstract class DrizzleResolverFactory<
       })
     ) as GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
 
-    return loom.query(this.output.$nullable(), {
+    return new QueryFactoryWithResolve(this.output.$nullable(), {
       input,
       ...options,
       resolve: (opts) => {
         return queryBase.findFirst(opts) as any
       },
-    })
+    } as QueryOptions<any, any>)
   }
 
   protected extractOrderBy(

@@ -3,12 +3,13 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
-  loom,
+  type MutationOptions,
   silk,
 } from "@gqloom/core"
 import type { InferSelectModel } from "drizzle-orm"
 import type { MySqlDatabase, MySqlTable } from "drizzle-orm/mysql-core"
 import type { GraphQLOutputType } from "graphql"
+import { MutationFactoryWithResolve } from "./field"
 import {
   type DeleteArgs,
   DrizzleInputFactory,
@@ -49,14 +50,17 @@ export class DrizzleMySQLResolverFactory<
       () => this.inputFactory.insertArrayArgs() as GraphQLOutputType
     )
 
-    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
-      ...options,
-      input,
-      resolve: async (input) => {
-        await this.db.insert(this.table).values(input.values)
-        return { isSuccess: true }
-      },
-    })
+    return new MutationFactoryWithResolve(
+      DrizzleMySQLResolverFactory.mutationResult,
+      {
+        ...options,
+        input,
+        resolve: async (input) => {
+          await this.db.insert(this.table).values(input.values)
+          return { isSuccess: true }
+        },
+      } as MutationOptions<any, any>
+    )
   }
 
   public insertSingleMutation<TInputI = InsertSingleArgs<TTable>>({
@@ -72,14 +76,17 @@ export class DrizzleMySQLResolverFactory<
       () => this.inputFactory.insertSingleArgs() as GraphQLOutputType
     )
 
-    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
-      ...options,
-      input,
-      resolve: async (args) => {
-        await this.db.insert(this.table).values(args.value)
-        return { isSuccess: true }
-      },
-    })
+    return new MutationFactoryWithResolve(
+      DrizzleMySQLResolverFactory.mutationResult,
+      {
+        ...options,
+        input,
+        resolve: async (args) => {
+          await this.db.insert(this.table).values(args.value)
+          return { isSuccess: true }
+        },
+      } as MutationOptions<any, any>
+    )
   }
 
   public updateMutation<TInputI = UpdateArgs<TTable>>({
@@ -91,20 +98,21 @@ export class DrizzleMySQLResolverFactory<
   } = {}): UpdateMutationReturningSuccess<TTable, TInputI> {
     input ??= silk(() => this.inputFactory.updateArgs() as GraphQLOutputType)
 
-    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
-      ...options,
-      input,
-      resolve: async (args) => {
-        let query = this.db.update(this.table).set(args.set)
-        if (args.where) {
-          query = query.where(this.extractFilters(args.where)) as any
-        }
-
-        await query
-
-        return { isSuccess: true }
-      },
-    })
+    return new MutationFactoryWithResolve(
+      DrizzleMySQLResolverFactory.mutationResult,
+      {
+        ...options,
+        input,
+        resolve: async (args) => {
+          let query = this.db.update(this.table).set(args.set)
+          if (args.where) {
+            query = query.where(this.extractFilters(args.where)) as any
+          }
+          await query
+          return { isSuccess: true }
+        },
+      } as MutationOptions<any, any>
+    )
   }
 
   public deleteMutation<TInputI = DeleteArgs<TTable>>({
@@ -116,18 +124,21 @@ export class DrizzleMySQLResolverFactory<
   } = {}): DeleteMutationReturningSuccess<TTable, TInputI> {
     input ??= silk(() => this.inputFactory.deleteArgs() as GraphQLOutputType)
 
-    return loom.mutation(DrizzleMySQLResolverFactory.mutationResult, {
-      ...options,
-      input,
-      resolve: async (args) => {
-        let query = this.db.delete(this.table)
-        if (args.where) {
-          query = query.where(this.extractFilters(args.where)) as any
-        }
-        await query
-        return { isSuccess: true }
-      },
-    })
+    return new MutationFactoryWithResolve(
+      DrizzleMySQLResolverFactory.mutationResult,
+      {
+        ...options,
+        input,
+        resolve: async (args) => {
+          let query = this.db.delete(this.table)
+          if (args.where) {
+            query = query.where(this.extractFilters(args.where)) as any
+          }
+          await query
+          return { isSuccess: true }
+        },
+      } as MutationOptions<any, any>
+    )
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(

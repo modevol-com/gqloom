@@ -3,12 +3,13 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
-  loom,
+  type MutationOptions,
   silk,
 } from "@gqloom/core"
 import type { InferSelectModel } from "drizzle-orm"
 import type { PgDatabase, PgTable } from "drizzle-orm/pg-core"
 import type { GraphQLOutputType } from "graphql"
+import { MutationFactoryWithResolve } from "./field"
 import type {
   DeleteArgs,
   InsertArrayArgs,
@@ -41,7 +42,7 @@ export class DrizzlePostgresResolverFactory<
       () => this.inputFactory.insertArrayArgs() as GraphQLOutputType
     )
 
-    return loom.mutation(this.output.$list(), {
+    return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
       resolve: async (args) => {
@@ -53,7 +54,7 @@ export class DrizzlePostgresResolverFactory<
 
         return result
       },
-    })
+    } as MutationOptions<any, any>)
   }
 
   public insertSingleMutation<TInputI = InsertSingleArgs<TTable>>({
@@ -69,7 +70,7 @@ export class DrizzlePostgresResolverFactory<
       () => this.inputFactory.insertSingleArgs() as GraphQLOutputType
     )
 
-    return loom.mutation(this.output.$nullable(), {
+    return new MutationFactoryWithResolve(this.output.$nullable(), {
       ...options,
       input,
       resolve: async (args) => {
@@ -81,7 +82,7 @@ export class DrizzlePostgresResolverFactory<
 
         return result[0] as any
       },
-    })
+    } as MutationOptions<any, any>)
   }
 
   public updateMutation<TInputI = UpdateArgs<TTable>>({
@@ -93,7 +94,7 @@ export class DrizzlePostgresResolverFactory<
   } = {}): UpdateMutationReturningItems<TTable, TInputI> {
     input ??= silk(() => this.inputFactory.updateArgs() as GraphQLOutputType)
 
-    return loom.mutation(this.output.$list(), {
+    return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
       resolve: async (args) => {
@@ -103,7 +104,7 @@ export class DrizzlePostgresResolverFactory<
         }
         return await query.returning()
       },
-    })
+    } as MutationOptions<any, any>)
   }
 
   public deleteMutation<TInputI = DeleteArgs<TTable>>({
@@ -115,7 +116,7 @@ export class DrizzlePostgresResolverFactory<
   } = {}): DeleteMutationReturningItems<TTable, TInputI> {
     input ??= silk(() => this.inputFactory.deleteArgs() as GraphQLOutputType)
 
-    return loom.mutation(this.output.$list(), {
+    return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
       resolve: async (args) => {
@@ -125,7 +126,7 @@ export class DrizzlePostgresResolverFactory<
         }
         return await query.returning()
       },
-    })
+    } as MutationOptions<any, any>)
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(

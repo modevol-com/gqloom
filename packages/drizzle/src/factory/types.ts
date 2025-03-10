@@ -6,7 +6,10 @@ import type { PgDatabase } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
-import type { QueryFactoryWithResolve } from "./field"
+import type {
+  MutationFactoryWithResolve,
+  QueryFactoryWithResolve,
+} from "./field"
 import type {
   DeleteArgs,
   InsertArrayArgs,
@@ -99,7 +102,8 @@ export interface SelectSingleQuery<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectSingleArgs<TTable>,
-> extends Loom.Query<
+> extends QueryFactoryWithResolve<
+    InferSelectSingleOptions<TDatabase, TTable>,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
@@ -146,7 +150,8 @@ export type InsertArrayMutation<
 export interface InsertArrayMutationReturningItems<
   TTable extends Table,
   TInputI = InsertArrayArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InsertArrayArgs<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
     GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
   > {}
@@ -154,7 +159,8 @@ export interface InsertArrayMutationReturningItems<
 export interface InsertArrayMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertArrayArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InsertArrayArgs<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
   > {}
@@ -169,7 +175,8 @@ export type InsertSingleMutation<
 export interface InsertSingleMutationReturningItem<
   TTable extends Table,
   TInputI = InsertSingleArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InsertSingleArgs<TTable>,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
@@ -180,7 +187,8 @@ export interface InsertSingleMutationReturningItem<
 export interface InsertSingleMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertSingleArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    InsertSingleArgs<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
   > {}
@@ -192,7 +200,8 @@ export type UpdateMutation<TTable extends Table, TInputI = UpdateArgs<TTable>> =
 export interface UpdateMutationReturningItems<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    UpdateArgs<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
     GraphQLSilk<UpdateArgs<TTable>, TInputI>
   > {}
@@ -200,7 +209,8 @@ export interface UpdateMutationReturningItems<
 export interface UpdateMutationReturningSuccess<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    UpdateArgs<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<UpdateArgs<TTable>, TInputI>
   > {}
@@ -212,7 +222,8 @@ export type DeleteMutation<TTable extends Table, TInputI = DeleteArgs<TTable>> =
 export interface DeleteMutationReturningItems<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    DeleteArgs<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
     GraphQLSilk<DeleteArgs<TTable>, TInputI>
   > {}
@@ -220,7 +231,8 @@ export interface DeleteMutationReturningItems<
 export interface DeleteMutationReturningSuccess<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
-> extends Loom.Mutation<
+> extends MutationFactoryWithResolve<
+    DeleteArgs<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
     GraphQLSilk<DeleteArgs<TTable>, TInputI>
   > {}

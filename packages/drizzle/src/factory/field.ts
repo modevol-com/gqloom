@@ -2,6 +2,7 @@ import {
   BaseChainFactory,
   type GraphQLSilk,
   type Loom,
+  type MutationOptions,
   type QueryOptions,
   loom,
 } from "@gqloom/core"
@@ -41,5 +42,44 @@ export class QueryFactoryWithResolve<
       ...this.options,
       input,
     } as QueryOptions<any, any>)
+  }
+}
+
+export class MutationFactoryWithResolve<
+    TInputO,
+    TOutput extends GraphQLSilk,
+    TInput extends GraphQLSilk<TInputO>,
+  >
+  extends BaseChainFactory<Loom.Query<TOutput, TInput>>
+  implements Loom.Mutation<TOutput, TInput>
+{
+  public get "~meta"(): Loom.Mutation<TOutput, TInput>["~meta"] {
+    return loom.mutation(
+      this.output,
+      this.options as MutationOptions<any, any>
+    )["~meta"]
+  }
+
+  public constructor(
+    protected output: TOutput,
+    protected readonly options: MutationOptions<TOutput, TInput>
+  ) {
+    super(options)
+  }
+
+  protected clone(options?: Partial<typeof this.options> | undefined): this {
+    return new MutationFactoryWithResolve(this.output, {
+      ...this.options,
+      ...options,
+    }) as this
+  }
+
+  public input<TInputNew extends GraphQLSilk<TInputO>>(
+    input: TInputNew
+  ): MutationFactoryWithResolve<TInputO, TOutput, TInputNew> {
+    return new MutationFactoryWithResolve(this.output, {
+      ...this.options,
+      input,
+    } as MutationOptions<any, any>)
   }
 }
