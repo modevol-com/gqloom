@@ -33,14 +33,16 @@ import {
 import type { DrizzleWeaverConfig, DrizzleWeaverConfigOptions } from "./types"
 
 export class DrizzleWeaver {
-  static vendor = "gqloom.drizzle"
+  public static vendor = "gqloom.drizzle"
 
   /**
    * get GraphQL Silk from drizzle table
    * @param table drizzle table
    * @returns GraphQL Silk Like drizzle table
    */
-  static unravel<TTable extends Table>(table: TTable): TableSilk<TTable> {
+  public static unravel<TTable extends Table>(
+    table: TTable
+  ): TableSilk<TTable> {
     Object.defineProperty(table, "~standard", {
       value: {
         version: 1,
@@ -84,11 +86,13 @@ export class DrizzleWeaver {
     return table as TableSilk<TTable>
   }
 
-  static getGraphQLTypeBySelf(this: Table): GraphQLOutputType {
+  public static getGraphQLTypeBySelf(this: Table): GraphQLOutputType {
     return DrizzleWeaver.getGraphQLType(this)
   }
 
-  static getGraphQLType(table: Table): GraphQLNonNull<GraphQLObjectType> {
+  public static getGraphQLType(
+    table: Table
+  ): GraphQLNonNull<GraphQLObjectType> {
     const name = `${pascalCase(getTableName(table))}Item`
 
     const existing = weaverContext.getNamedType(name)
@@ -108,7 +112,7 @@ export class DrizzleWeaver {
     )
   }
 
-  static getFieldConfig(column: Column): GraphQLFieldConfig<any, any> {
+  public static getFieldConfig(column: Column): GraphQLFieldConfig<any, any> {
     let type = DrizzleWeaver.getColumnType(column)
 
     if (column.notNull && !isNonNullType(type)) {
@@ -117,7 +121,7 @@ export class DrizzleWeaver {
     return { type }
   }
 
-  static getColumnType(column: Column): GraphQLOutputType {
+  public static getColumnType(column: Column): GraphQLOutputType {
     const config =
       weaverContext.getConfig<DrizzleWeaverConfig>("gqloom.drizzle")
 
@@ -161,7 +165,9 @@ export class DrizzleWeaver {
     }
   }
 
-  static config(config: DrizzleWeaverConfigOptions): DrizzleWeaverConfig {
+  public static config(
+    config: DrizzleWeaverConfigOptions
+  ): DrizzleWeaverConfig {
     return {
       ...config,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.drizzle",
@@ -192,5 +198,4 @@ export type TableSilk<TTable extends Table> = TTable &
     >
   }
 
-export * from "./input-factory"
-export * from "./resolver-factory"
+export * from "./factory"

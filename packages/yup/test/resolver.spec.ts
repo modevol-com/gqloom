@@ -1,4 +1,12 @@
-import { collectNames, silk, weave } from "@gqloom/core"
+import {
+  collectNames,
+  field,
+  mutation,
+  query,
+  resolver,
+  silk,
+  weave,
+} from "@gqloom/core"
 import {
   GraphQLInt,
   GraphQLObjectType,
@@ -8,7 +16,7 @@ import {
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { type InferType, boolean, date, number, object, string } from "yup"
-import { field, mutation, query, resolver, union } from "../src"
+import { union, yupSilk } from "../src"
 
 describe("yup resolver", () => {
   const Giraffe = object({
@@ -33,8 +41,8 @@ describe("yup resolver", () => {
 
   collectNames({ Cat, Dog }, { Giraffe, GiraffeInput })
 
-  const createGiraffe = mutation(Giraffe, {
-    input: GiraffeInput,
+  const createGiraffe = mutation(yupSilk(Giraffe), {
+    input: yupSilk(GiraffeInput),
     resolve: (data) => ({
       name: data.name ?? "Giraffe",
       birthday: data.birthday ?? new Date(),
@@ -46,13 +54,13 @@ describe("yup resolver", () => {
     createGiraffe: createGiraffe,
   })
 
-  const giraffeResolver = resolver.of(Giraffe, {
-    age: field(number(), async (giraffe) => {
+  const giraffeResolver = resolver.of(yupSilk(Giraffe), {
+    age: field(yupSilk(number()), async (giraffe) => {
       return new Date().getFullYear() - giraffe.birthday.getFullYear()
     }),
 
-    giraffe: query(Giraffe, {
-      input: { name: string().required() },
+    giraffe: query(yupSilk(Giraffe), {
+      input: { name: yupSilk(string().required()) },
       resolve: ({ name }) => ({
         name,
         birthday: new Date(),
@@ -60,33 +68,37 @@ describe("yup resolver", () => {
       }),
     }),
 
-    greeting: field(string(), {
-      input: { myName: string() },
+    greeting: field(yupSilk(string()), {
+      input: { myName: yupSilk(string()) },
       resolve: (giraffe, { myName }) =>
         `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
     }),
   })
   it("should infer input type", () => {
-    expectTypeOf(simpleGiraffeResolver.createGiraffe.resolve)
+    expectTypeOf(
+      simpleGiraffeResolver["~meta"].fields.createGiraffe["~meta"].resolve
+    )
       .parameter(0)
       .toEqualTypeOf<InferType<typeof GiraffeInput>>()
   })
 
   it("should infer output type", () => {
     expectTypeOf(
-      simpleGiraffeResolver.createGiraffe.resolve
+      simpleGiraffeResolver["~meta"].fields.createGiraffe["~meta"].resolve
     ).returns.resolves.toEqualTypeOf<InferType<typeof Giraffe>>()
   })
 
   it("should infer parent type", () => {
-    expectTypeOf(giraffeResolver.age.resolve)
+    expectTypeOf(giraffeResolver["~meta"].fields.age["~meta"].resolve)
       .parameter(0)
       .toEqualTypeOf<InferType<typeof Giraffe>>()
   })
 
   it("should resolve mutation", async () => {
     expect(
-      await simpleGiraffeResolver.createGiraffe.resolve({
+      await simpleGiraffeResolver["~meta"].fields.createGiraffe[
+        "~meta"
+      ].resolve({
         name: "Giraffe",
         birthday: new Date("2022-2-22"),
       })
@@ -99,7 +111,7 @@ describe("yup resolver", () => {
 
   it("should resolve query", async () => {
     expect(
-      await giraffeResolver.giraffe.resolve({
+      await giraffeResolver["~meta"].fields.giraffe["~meta"].resolve({
         name: "Giraffe",
       })
     ).toEqual({
@@ -110,13 +122,18 @@ describe("yup resolver", () => {
   })
 
   it("should resolve field", async () => {
-    const giraffe = await giraffeResolver.giraffe.resolve({
+    const giraffe = await giraffeResolver["~meta"].fields.giraffe[
+      "~meta"
+    ].resolve({
       name: "Giraffe",
     })
 
-    expect(await giraffeResolver.age.resolve(giraffe, undefined)).toEqual(
-      expect.any(Number)
-    )
+    expect(
+      await giraffeResolver["~meta"].fields.age["~meta"].resolve(
+        giraffe,
+        undefined
+      )
+    ).toEqual(expect.any(Number))
   })
 
   it("should resolve union", async () => {
@@ -132,13 +149,13 @@ describe("yup resolver", () => {
     collectNames({ Animal, Cat, Dog })
 
     const animalResolver = resolver({
-      cat: query(Animal, () => ({
+      cat: query(yupSilk(Animal), () => ({
         name: "Kitty",
         age: 1,
         loveFish: true,
       })),
 
-      dog: query(Animal, () => ({
+      dog: query(yupSilk(Animal), () => ({
         name: "Sadie",
         age: 2,
         loveBone: true,
@@ -223,12 +240,12 @@ describe("yup resolver", () => {
 
     const horseResolver = resolver.of(Horse, {
       createHorse,
-      hello: field(string(), (horse) => {
+      hello: field(yupSilk(string()), (horse) => {
         assertType<IHorse>(horse)
         return `Neh! Neh! --${horse.name}`
       }),
       horse: query(Horse, {
-        input: { name: string().required() },
+        input: { name: yupSilk(string().required()) },
         resolve: ({ name }) => ({
           name,
           age: 1,
@@ -237,26 +254,26 @@ describe("yup resolver", () => {
     })
 
     it("should infer input type", () => {
-      expectTypeOf(horseResolver.createHorse.resolve)
+      expectTypeOf(horseResolver["~meta"].fields.createHorse["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<Partial<IHorse>>()
     })
 
     it("should infer output type", () => {
       expectTypeOf(
-        horseResolver.createHorse.resolve
+        horseResolver["~meta"].fields.createHorse["~meta"].resolve
       ).returns.resolves.toEqualTypeOf<IHorse>()
     })
 
     it("should infer parent type", () => {
-      expectTypeOf(horseResolver.hello.resolve)
+      expectTypeOf(horseResolver["~meta"].fields.hello["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<IHorse>()
     })
 
     it("should resolve mutation", async () => {
       expect(
-        await horseResolver.createHorse.resolve({
+        await horseResolver["~meta"].fields.createHorse["~meta"].resolve({
           name: "Horse",
           age: 1,
         })
@@ -267,7 +284,7 @@ describe("yup resolver", () => {
     })
     it("should resolve query", async () => {
       expect(
-        await horseResolver.horse.resolve({
+        await horseResolver["~meta"].fields.horse["~meta"].resolve({
           name: "Horse",
         })
       ).toEqual({
@@ -277,7 +294,10 @@ describe("yup resolver", () => {
     })
     it("should resolve field", async () => {
       expect(
-        await horseResolver.hello.resolve({ name: "Horse", age: 1 }, undefined)
+        await horseResolver["~meta"].fields.hello["~meta"].resolve(
+          { name: "Horse", age: 1 },
+          undefined
+        )
       ).toEqual("Neh! Neh! --Horse")
     })
   })
@@ -290,7 +310,7 @@ describe("yup resolver", () => {
       })
 
       const animalResolver = resolver({
-        cat: query(Cat, () => ({
+        cat: query(yupSilk(Cat), () => ({
           name: "Kitty",
           age: 1,
         })),
@@ -315,12 +335,12 @@ describe("yup resolver", () => {
         age: number(),
       })
       const animalResolver = resolver({
-        cat: query(Cat, () => ({
+        cat: query(yupSilk(Cat), () => ({
           name: "Kitty",
           age: 1,
         })),
-        addCat: mutation(Cat, {
-          input: object({ data: Cat }),
+        addCat: mutation(yupSilk(Cat), {
+          input: yupSilk(object({ data: Cat })),
           resolve: ({ data }) => data,
         }),
       })

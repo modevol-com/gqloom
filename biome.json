@@ -130,72 +130,6 @@
             "noSetterReturn": "off",
             "noUndeclaredVariables": "off",
             "noUnreachable": "off",
-            "noUnreachableSuper": "off"
-          },
-          "style": {
-            "noArguments": "error",
-            "noVar": "error",
-            "useConst": "error"
-          },
-          "suspicious": {
-            "noDuplicateClassMembers": "off",
-            "noDuplicateObjectKeys": "off",
-            "noDuplicateParameters": "off",
-            "noFunctionAssign": "off",
-            "noImportAssign": "off",
-            "noRedeclare": "off",
-            "noUnsafeNegation": "off",
-            "useGetterReturn": "off"
-          }
-        }
-      }
-    },
-    {
-      "include": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noConstAssign": "off",
-            "noGlobalObjectCalls": "off",
-            "noInvalidBuiltinInstantiation": "off",
-            "noInvalidConstructorSuper": "off",
-            "noNewSymbol": "off",
-            "noSetterReturn": "off",
-            "noUndeclaredVariables": "off",
-            "noUnreachable": "off",
-            "noUnreachableSuper": "off"
-          },
-          "style": {
-            "noArguments": "error",
-            "noVar": "error",
-            "useConst": "error"
-          },
-          "suspicious": {
-            "noDuplicateClassMembers": "off",
-            "noDuplicateObjectKeys": "off",
-            "noDuplicateParameters": "off",
-            "noFunctionAssign": "off",
-            "noImportAssign": "off",
-            "noRedeclare": "off",
-            "noUnsafeNegation": "off",
-            "useGetterReturn": "off"
-          }
-        }
-      }
-    },
-    {
-      "include": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noConstAssign": "off",
-            "noGlobalObjectCalls": "off",
-            "noInvalidBuiltinInstantiation": "off",
-            "noInvalidConstructorSuper": "off",
-            "noNewSymbol": "off",
-            "noSetterReturn": "off",
-            "noUndeclaredVariables": "off",
-            "noUnreachable": "off",
             "noUnreachableSuper": "off",
             "noUnusedImports": {
               "level": "warn",
@@ -216,6 +150,24 @@
             "noRedeclare": "off",
             "noUnsafeNegation": "off",
             "useGetterReturn": "off"
+          },
+          "nursery": {
+            "useConsistentMemberAccessibility": {
+              "level": "warn",
+              "options": {
+                "accessibility": "explicit"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "include": ["website/**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "useConsistentMemberAccessibility": "off"
           }
         }
       }

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
-import type { FieldOrOperation } from "../resolver/types"
+import type { Loom } from "../resolver/types"
 import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 
 /**
@@ -8,12 +8,7 @@ import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
  */
 export interface ResolverPayload<
   TContext extends object = object,
-  TField extends FieldOrOperation<any, any, any, any> = FieldOrOperation<
-    any,
-    any,
-    any,
-    any
-  >,
+  TField extends Loom.BaseField = Loom.BaseField,
 > {
   /**
    * The previous object, which for a field on the root Query type is often not used.
@@ -108,8 +103,8 @@ interface ContextMemoryOptions {
  * Create a memoization in context to store the result of a getter function
  */
 export class ContextMemoization<T> implements ContextMemoryOptions {
-  constructor(
-    readonly getter: () => T,
+  public constructor(
+    public readonly getter: () => T,
     options: Partial<ContextMemoryOptions> = {}
   ) {
     this.getter = getter
@@ -117,14 +112,14 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
     this.key = options.key ?? this.getter
   }
 
-  getMemoizationMap: () => WeakMap<WeakKey, any> | undefined
-  readonly key: WeakKey
+  public getMemoizationMap: () => WeakMap<WeakKey, any> | undefined
+  public readonly key: WeakKey
 
   /**
    * Get the value in memoization or call the getter function
    * @returns the value of the getter function
    */
-  get(): T {
+  public get(): T {
     const map = this.getMemoizationMap()
     if (!map) return this.getter()
 
@@ -139,7 +134,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
    * Clear the memoization
    * @returns true if the memoization is cleared, undefined if the context is not found
    */
-  clear(): boolean | undefined {
+  public clear(): boolean | undefined {
     const map = this.getMemoizationMap()
     if (!map) return
     return map.delete(this.key)
@@ -149,7 +144,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
    * Check if the memoization exists
    * @returns true if the memoization exists, undefined if the context is not found
    */
-  exists(): boolean | undefined {
+  public exists(): boolean | undefined {
     const map = this.getMemoizationMap()
     if (!map) return
     return map.has(this.key)
@@ -160,13 +155,13 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
    * @param value  the new value to set
    * @returns the memoization map or undefined if the context is not found
    */
-  set(value: T): WeakMap<WeakKey, any> | undefined {
+  public set(value: T): WeakMap<WeakKey, any> | undefined {
     const map = this.getMemoizationMap()
     if (!map) return
     return map.set(this.key, value)
   }
 
-  static assignMemoizationMap(
+  public static assignMemoizationMap(
     target: ContextMemoryContainer
   ): WeakMap<WeakKey, any> {
     target[CONTEXT_MEMORY_MAP_KEY] ??= new WeakMap()

@@ -21,7 +21,9 @@ import type { PipedSchema, SupportedSchema } from "./types"
 import { isNullish } from "./utils"
 
 export class ValibotMetadataCollector {
-  static getFieldConfig(...schemas: PipedSchema[]): FieldConfig | undefined {
+  public static getFieldConfig(
+    ...schemas: PipedSchema[]
+  ): FieldConfig | undefined {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
 
     let defaultValue: any
@@ -55,7 +57,7 @@ export class ValibotMetadataCollector {
       : config
   }
 
-  static getObjectConfig(
+  public static getObjectConfig(
     ...schemas: PipedSchema[]
   ): AsObjectTypeMetadata<object>["config"] | undefined {
     return ValibotMetadataCollector.getConfig<AsObjectTypeMetadata<object>>(
@@ -64,7 +66,7 @@ export class ValibotMetadataCollector {
     )
   }
 
-  static getEnumConfig(
+  public static getEnumConfig(
     ...schemas: PipedSchema[]
   ): AsEnumTypeMetadata<any>["config"] | undefined {
     return ValibotMetadataCollector.getConfig<AsEnumTypeMetadata<any>>(
@@ -73,7 +75,7 @@ export class ValibotMetadataCollector {
     )
   }
 
-  static getUnionConfig(
+  public static getUnionConfig(
     ...schemas: PipedSchema[]
   ): AsUnionTypeMetadata<object>["config"] | undefined {
     return ValibotMetadataCollector.getConfig<AsUnionTypeMetadata<object>>(
@@ -129,21 +131,21 @@ export class ValibotMetadataCollector {
     }
   }
 
-  static isInteger(...schemas: PipedSchema[]): boolean {
+  public static isInteger(...schemas: PipedSchema[]): boolean {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
     return pipe.some((item) => item.type === "integer")
   }
 
-  static IDActionTypes: Set<string> = new Set(["cuid2", "ulid", "uuid"])
+  public static IDActionTypes: Set<string> = new Set(["cuid2", "ulid", "uuid"])
 
-  static isID(...schemas: PipedSchema[]): boolean {
+  public static isID(...schemas: PipedSchema[]): boolean {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
     return pipe.some((item) =>
       ValibotMetadataCollector.IDActionTypes.has(item.type)
     )
   }
 
-  static getPipe(...schemas: (PipedSchema | undefined)[]) {
+  public static getPipe(...schemas: (PipedSchema | undefined)[]) {
     const pipe: (
       | PipeItemAsync<unknown, unknown, BaseIssue<unknown>>
       | PipeItem<unknown, unknown, BaseIssue<unknown>>

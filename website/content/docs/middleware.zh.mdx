@@ -377,7 +377,7 @@ GQLoom 能够在各种范围内应用中间件，包括解析函数、解析器�
 
 ### 解析函数中间件
 
-我们可以在解析函数中直接使用中间件，只需要在操作构造函数的第二个参数中传入 `middlewares` 字段，例如：
+我们可以在解析函数中直接使用中间件，只需要在构造时使用 `use` 方法，例如：
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
 <Tab value="valibot">
 ```ts twoslash
@@ -422,7 +422,7 @@ const helloResolver = resolver({
 ### 解析器局部中间件
 
 我们也可以在解析器级别应用中间件，这样中间件将对解析器内的所有操作生效。
-只需要在解析器构造函数的最后一个参数中传入 `middlewares` 字段，例如：
+只需要使用 `use` 方法为解析器构添加 `middlewares`：
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
 <Tab value="valibot">
 ```ts twoslash
@@ -437,23 +437,15 @@ import { resolver, mutation } from "@gqloom/core"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 
-const adminResolver = resolver(
-  {
-    deleteArticle: mutation(v.boolean(), () => true),
-  },
-  {
-    middlewares: [authGuard("admin")], // [!code hl]
-  }
-)
+const adminResolver = resolver({
+  deleteArticle: mutation(v.boolean(), () => true),
+}).use(authGuard("admin")) // [!code hl]
 
-const editorResolver = resolver(
-  {
-    createArticle: mutation(v.boolean(), () => true),
+const editorResolver = resolver({
+  createArticle: mutation(v.boolean(), () => true),
 
-    updateArticle: mutation(v.boolean(), () => true),
-  },
-  { middlewares: [authGuard("editor")] } // [!code hl]
-)
+  updateArticle: mutation(v.boolean(), () => true),
+}).use(authGuard("editor")) // [!code hl]
 ```
 </Tab>
 <Tab value="zod">
@@ -469,23 +461,15 @@ import { resolver, mutation } from "@gqloom/zod"
 import { z } from "zod"
 import { authGuard } from "./middlewares"
 
-const adminResolver = resolver(
-  {
-    deleteArticle: mutation(z.boolean(), () => true),
-  },
-  {
-    middlewares: [authGuard("admin")], // [!code hl]
-  }
-)
+const adminResolver = resolver({
+  deleteArticle: mutation(z.boolean(), () => true),
+}).use(authGuard("admin")) // [!code hl]
 
-const editorResolver = resolver(
-  {
-    createArticle: mutation(z.boolean(), () => true),
+const editorResolver = resolver({
+  createArticle: mutation(z.boolean(), () => true),
 
-    updateArticle: mutation(z.boolean(), () => true),
-  },
-  { middlewares: [authGuard("editor")] } // [!code hl]
-)
+  updateArticle: mutation(z.boolean(), () => true),
+}).use(authGuard("editor")) // [!code hl]
 ```
 </Tab>
 </Tabs>

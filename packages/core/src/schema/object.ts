@@ -19,6 +19,7 @@ import {
   resolveObjMapThunk,
 } from "graphql"
 import {
+  type Loom,
   type ResolvingOptions,
   defaultSubscriptionResolve,
   getGraphQLType,
@@ -32,7 +33,6 @@ import {
   toObjMap,
 } from "../utils"
 import { inputToArgs } from "./input"
-import type { SilkFieldOrOperation } from "./types"
 import {
   type WeaverContext,
   initWeaverContext,
@@ -41,15 +41,15 @@ import {
 } from "./weaver-context"
 
 export class LoomObjectType extends GraphQLObjectType {
-  protected extraFields = new Map<string, SilkFieldOrOperation>()
+  protected extraFields = new Map<string, Loom.BaseField>()
   protected hiddenFields = new Set<string>()
 
-  static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
+  public static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
   protected resolverOptions?: ResolvingOptions
 
-  constructor(
+  public constructor(
     objectOrGetter:
       | string
       | GraphQLObjectType
@@ -88,7 +88,7 @@ export class LoomObjectType extends GraphQLObjectType {
     return this._aliases
   }
 
-  addAlias(name: string) {
+  public addAlias(name: string) {
     if (this.hasExplicitName) return
     this._aliases.push(name)
     this.renameByAliases()
@@ -104,11 +104,11 @@ export class LoomObjectType extends GraphQLObjectType {
     if (name) this.name = name
   }
 
-  hideField(name: string) {
+  public hideField(name: string) {
     this.hiddenFields.add(name)
   }
 
-  addField(name: string, resolver: SilkFieldOrOperation) {
+  public addField(name: string, resolver: Loom.BaseField) {
     const existing = this.extraFields.get(name)
     if (existing && existing !== resolver) {
       throw new Error(`Field ${name} already exists in ${this.name}`)
@@ -116,12 +116,14 @@ export class LoomObjectType extends GraphQLObjectType {
     this.extraFields.set(name, resolver)
   }
 
-  mergeExtensions(extensions: GraphQLObjectTypeConfig<any, any>["extensions"]) {
+  public mergeExtensions(
+    extensions: GraphQLObjectTypeConfig<any, any>["extensions"]
+  ) {
     this.extensions = deepMerge(this.extensions, extensions)
   }
 
   private extraFieldMap?: GraphQLFieldMap<any, any>
-  override getFields(): GraphQLFieldMap<any, any> {
+  public override getFields(): GraphQLFieldMap<any, any> {
     const fieldsBySuper = super.getFields()
 
     Object.entries(fieldsBySuper).forEach(
@@ -152,7 +154,7 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   protected mapToFieldConfig(
-    map: Map<string, SilkFieldOrOperation>
+    map: Map<string, Loom.BaseField>
   ): Record<string, GraphQLFieldConfig<any, any>> {
     const record: Record<string, GraphQLFieldConfig<any, any>> = {}
 
@@ -163,20 +165,20 @@ export class LoomObjectType extends GraphQLObjectType {
     return record
   }
 
-  toFieldConfig(
-    field: SilkFieldOrOperation,
+  public toFieldConfig(
+    field: Loom.BaseField,
     fieldName?: string
   ): GraphQLFieldConfig<any, any> {
     try {
       const outputType = this.getCacheType(
-        getGraphQLType(field.output),
+        getGraphQLType(field["~meta"].output),
         fieldName
       )
 
       return {
         ...extract(field),
         type: outputType,
-        args: inputToArgs(field.input, {
+        args: inputToArgs(field["~meta"].input, {
           fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
         }),
         ...this.provideForResolve(field),
@@ -188,41 +190,47 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   protected provideForResolve(
-    field: SilkFieldOrOperation
+    field: Loom.BaseField
   ): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
-    if (field?.resolve == null) return
-    if (field.resolve === defaultSubscriptionResolve)
+    if (field?.["~meta"]?.resolve == null) return
+    if (field["~meta"].resolve === defaultSubscriptionResolve)
       return { resolve: defaultSubscriptionResolve }
     const resolve: GraphQLFieldResolver<any, any> =
-      field.type === "field"
+      field["~meta"].operation === "field"
         ? (root, args, context, info) =>
             resolverPayloadStorage.run(
               { root, args, context, info, field },
-              () => field.resolve(root, args, this.resolverOptions)
+              () => field["~meta"].resolve(root, args, this.resolverOptions)
             )
-        : field.type === "subscription"
+        : field["~meta"].operation === "subscription"
           ? (root, args, context, info) =>
               resolverPayloadStorage.run(
                 { root, args, context, info, field },
-                () => field.resolve(root, args)
+                () => field["~meta"].resolve(root, args)
               )
           : (root, args, context, info) =>
               resolverPayloadStorage.run(
                 { root, args, context, info, field },
-                () => field.resolve(args, this.resolverOptions)
+                () => field["~meta"].resolve(args, this.resolverOptions)
               )
 
     return { resolve }
   }
 
   protected provideForSubscribe(
-    field: SilkFieldOrOperation
+    field: Loom.BaseField | Loom.Subscription<any, any, any>
   ): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
-    if (field?.subscribe == null) return
+    if (
+      (field as Loom.Subscription<any, any, any>)?.["~meta"]?.subscribe == null
+    )
+      return
     return {
       subscribe: (root, args, context, info) =>
         resolverPayloadStorage.run({ root, args, context, info, field }, () =>
-          field.subscribe?.(args, this.resolverOptions)
+          (field as Loom.Subscription<any, any, any>)["~meta"].subscribe?.(
+            args,
+            this.resolverOptions
+          )
         ),
     }
   }
@@ -234,17 +242,14 @@ export class LoomObjectType extends GraphQLObjectType {
     return getCacheType(gqlType, { ...this.options, fieldName, parent: this })
   }
 
-  get options() {
+  public get options() {
     const { resolverOptions, weaverContext } = this
     return { resolverOptions, weaverContext }
   }
 }
 
-function extract({
-  deprecationReason,
-  description,
-  extensions,
-}: SilkFieldOrOperation): Partial<GraphQLFieldConfig<any, any>> {
+function extract(field: Loom.BaseField): Partial<GraphQLFieldConfig<any, any>> {
+  const { deprecationReason, description, extensions } = field["~meta"]
   return {
     description,
     deprecationReason,

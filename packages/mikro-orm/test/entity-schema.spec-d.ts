@@ -12,8 +12,8 @@ import {
   weaveEntitySchemaBySilk,
 } from "../src/entity-schema"
 
-const Book = silk<{ title: string }>(
-  new GraphQLObjectType({
+const Book = silk(
+  new GraphQLObjectType<{ title?: string }>({
     name: "Book",
     fields: {
       title: { type: GraphQLString },
@@ -21,11 +21,8 @@ const Book = silk<{ title: string }>(
   })
 )
 
-const Author = silk<
-  { name: string; age: number },
-  { name: string; age?: number }
->(
-  new GraphQLObjectType({
+const Author = silk(
+  new GraphQLObjectType<{ name: string; age?: number }>({
     name: "Author",
     fields: {
       name: { type: GraphQLString },
@@ -72,8 +69,8 @@ const AuthorEntity: EntitySilk<IAuthorEntity> =
     books: oneToMany(() => BookEntity, { mappedBy: "author" }),
   })
 
-const Label = silk<{ name: string }>(
-  new GraphQLObjectType({
+const Label = silk(
+  new GraphQLObjectType<{ name: string }>({
     name: "Label",
     fields: { name: { type: GraphQLString } },
   })

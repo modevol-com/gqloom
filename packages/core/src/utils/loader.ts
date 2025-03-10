@@ -12,7 +12,7 @@ export class EasyDataLoader<TKey, TData> {
       reject: (reason?: any) => void,
     ]
   >
-  constructor(protected readonly batchLoadFn: BatchLoadFn<TKey, TData>) {
+  public constructor(protected readonly batchLoadFn: BatchLoadFn<TKey, TData>) {
     this.queue = []
     this.cache = new Map()
     this.resolvers = new Map()
@@ -78,7 +78,7 @@ export class EasyDataLoader<TKey, TData> {
     return this.nextTickPromise
   }
 
-  static nextTick(): Promise<void> {
+  public static nextTick(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve))
   }
 }

@@ -10,10 +10,8 @@ import {
 import { describe, expect, it } from "vitest"
 import { weave } from "../schema"
 import type { Middleware } from "../utils"
-import { loom } from "./resolver"
+import { field, mutation, query, resolver } from "./resolver"
 import { silk } from "./silk"
-
-const { resolver, query, mutation, field } = loom
 
 interface IGiraffe {
   name: string
@@ -21,15 +19,17 @@ interface IGiraffe {
   heightInMeters: number
 }
 
-const Giraffe = silk<IGiraffe>(
-  new GraphQLObjectType({
-    name: "Giraffe",
-    fields: {
-      name: { type: new GraphQLNonNull(GraphQLString) },
-      birthday: { type: new GraphQLNonNull(GraphQLString) },
-      heightInMeters: { type: new GraphQLNonNull(GraphQLFloat) },
-    },
-  })
+const Giraffe = silk(
+  new GraphQLNonNull(
+    new GraphQLObjectType<IGiraffe>({
+      name: "Giraffe",
+      fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        birthday: { type: new GraphQLNonNull(GraphQLString) },
+        heightInMeters: { type: new GraphQLNonNull(GraphQLFloat) },
+      },
+    })
+  )
 )
 
 const GiraffeInput = silk<Partial<IGiraffe>>(
@@ -55,18 +55,11 @@ describe("resolver", () => {
     callCount++
     return next()
   }
-  const giraffeResolver = resolver.of(
-    Giraffe,
-    {
+  const giraffeResolver = resolver
+    .of(Giraffe, {
       age: field(silk(GraphQLInt), async (giraffe) => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
-
-      // greeting: field(silk(new GraphQLNonNull(GraphQLString)), {
-      //   input: { myName: silk(GraphQLString) },
-      //   resolve: (giraffe, { myName }) =>
-      //     `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
-      // }),
 
       greeting: field(silk<string>(new GraphQLNonNull(GraphQLString)))
         .description("a normal greeting")
@@ -75,27 +68,29 @@ describe("resolver", () => {
           return `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`
         }),
 
-      nominalAge: field(silk<number>(GraphQLInt), {
-        middlewares: [async (next) => (await next()) + 1],
-        resolve: async (giraffe) => {
+      nominalAge: field(silk(new GraphQLNonNull(GraphQLInt)))
+        .use(async (next) => (await next()) + 1)
+        .resolve(async (giraffe) => {
           return new Date().getFullYear() - giraffe.birthday.getFullYear()
-        },
+        }),
+
+      self: field(Giraffe).load((giraffes) => {
+        return giraffes
       }),
-    },
-    {
-      middlewares: [callCounter],
-    }
-  )
+    })
+    .use(callCounter)
+
+  const giraffeExecutor = giraffeResolver.toExecutor()
 
   describe("query and mutation", () => {
     it("should work", async () => {
       const queryGiraffe = query(Giraffe, () => Skyler)
-      expect(await queryGiraffe.resolve(undefined)).toEqual(Skyler)
+      expect(await queryGiraffe["~meta"].resolve(undefined)).toEqual(Skyler)
       const queryGiraffe2 = query
         .output(Giraffe)
         .description("a simple query")
         .resolve(() => Skyler)
-      expect(await queryGiraffe2.resolve(undefined)).toEqual(Skyler)
+      expect(await queryGiraffe2["~meta"].resolve(undefined)).toEqual(Skyler)
     })
 
     it("should work using chian", async () => {
@@ -106,9 +101,9 @@ describe("resolver", () => {
         .resolve(() => Skyler)
 
       expect(q).toBeDefined()
-      expect(q).toMatchObject({
+      expect(q["~meta"]).toMatchObject({
         description: "a simple query",
-        type: "query",
+        operation: "query",
       })
 
       const m = mutation
@@ -118,9 +113,9 @@ describe("resolver", () => {
         .resolve(() => Skyler)
 
       expect(m).toBeDefined()
-      expect(m).toMatchObject({
+      expect(m["~meta"]).toMatchObject({
         description: "a simple mutation",
-        type: "mutation",
+        operation: "mutation",
       })
 
       const q2 = query(Giraffe)
@@ -129,9 +124,9 @@ describe("resolver", () => {
         .resolve(() => Skyler)
 
       expect(q2).toBeDefined()
-      expect(q2).toMatchObject({
+      expect(q2["~meta"]).toMatchObject({
         description: "a simple query",
-        type: "query",
+        operation: "query",
       })
 
       const m2 = mutation(Giraffe)
@@ -140,9 +135,9 @@ describe("resolver", () => {
         .resolve(() => Skyler)
 
       expect(m2).toBeDefined()
-      expect(m2).toMatchObject({
+      expect(m2["~meta"]).toMatchObject({
         description: "a simple mutation",
-        type: "mutation",
+        operation: "mutation",
       })
     })
 
@@ -156,13 +151,13 @@ describe("resolver", () => {
         }),
       })
       const birthday = new Date()
-      expect(await createGiraffe.resolve({ name: "Skyler", birthday })).toEqual(
-        {
-          name: "Skyler",
-          birthday,
-          heightInMeters: 5,
-        }
-      )
+      expect(
+        await createGiraffe["~meta"].resolve({ name: "Skyler", birthday })
+      ).toEqual({
+        name: "Skyler",
+        birthday,
+        heightInMeters: 5,
+      })
     })
 
     it("should work with middlewares", async () => {
@@ -173,19 +168,34 @@ describe("resolver", () => {
         return result + 1
       }
 
-      const queryNumber = query(numberSchema, {
+      let queryNumber
+      queryNumber = query(numberSchema, {
         input: { n: numberSchema },
         middlewares: [middleware],
         resolve: ({ n }) => n,
       })
 
-      expect(await queryNumber.resolve({ n: 1 })).toEqual(2)
+      expect(await queryNumber["~meta"].resolve({ n: 1 })).toEqual(2)
+
+      queryNumber = query(numberSchema)
+        .input({ n: numberSchema })
+        .use(middleware)
+        .resolve(({ n }) => n)
+
+      expect(await queryNumber["~meta"].resolve({ n: 1 })).toEqual(2)
+
+      const mutationNumber = mutation(numberSchema)
+        .input({ n: numberSchema })
+        .use(middleware)
+        .resolve(({ n }) => n)
+
+      expect(await mutationNumber["~meta"].resolve({ n: 1 })).toEqual(2)
     })
   })
 
   describe("field", () => {
     it("should work", async () => {
-      expect(await giraffeResolver.age.resolve(Skyler, undefined)).toEqual(
+      expect(await giraffeExecutor.age(Skyler, undefined)).toEqual(
         new Date().getFullYear() - Skyler.birthday.getFullYear()
       )
     })
@@ -204,11 +214,11 @@ describe("resolver", () => {
         .resolve((_, { int }) => int)
 
       expect(f).toBeDefined()
-      expect(f).toMatchObject({
+      expect(f["~meta"]).toMatchObject({
         deprecationReason: "not depredate yet",
         description: "a normal field",
         extensions: { foo: "bar" },
-        type: "field",
+        operation: "field",
       })
 
       const f2 = field(silk(GraphQLInt))
@@ -221,24 +231,28 @@ describe("resolver", () => {
         .resolve((_, { int }) => int)
 
       expect(f2).toBeDefined()
-      expect(f2).toMatchObject({
+      expect(f2["~meta"]).toMatchObject({
         deprecationReason: "not depredate yet",
         description: "a normal field",
         extensions: { foo: "bar" },
-        type: "field",
+        operation: "field",
       })
     })
 
     it("should accept input", async () => {
       expect(
-        await giraffeResolver.greeting.resolve(Skyler, { myName: "Hilun" })
+        await giraffeExecutor.greeting(Skyler, { myName: "Hilun" })
       ).toEqual(`Hello, Hilun! My name is Skyler.`)
     })
 
     it("should work with middlewares", async () => {
-      expect(
-        await giraffeResolver.nominalAge.resolve(Skyler, undefined)
-      ).toEqual(new Date().getFullYear() - Skyler.birthday.getFullYear() + 1)
+      expect(await giraffeExecutor.nominalAge(Skyler, undefined)).toEqual(
+        new Date().getFullYear() - Skyler.birthday.getFullYear() + 1
+      )
+    })
+
+    it("should load related field", async () => {
+      expect(await giraffeExecutor.self(Skyler, undefined)).toEqual(Skyler)
     })
 
     it("should hidden fields", () => {
@@ -257,14 +271,14 @@ describe("resolver", () => {
         }
 
         type Query {
-          hello: Giraffe
+          hello: Giraffe!
         }"
       `)
     })
   })
 
   it("should call middlewares", async () => {
-    await giraffeResolver.age.resolve(Skyler, undefined)
+    await giraffeExecutor.age(Skyler, undefined)
     expect(callCount).toBeGreaterThanOrEqual(1)
   })
 
@@ -283,6 +297,13 @@ describe("resolver", () => {
       return result
     }
 
+    const resolveMiddlewareInUse: Middleware = async (next) => {
+      logs.push("resolve middleware in use")
+      const result = await next()
+      logs.push("resolve middleware end in use")
+      return result
+    }
+
     const r1 = resolver(
       {
         hello: mutation(silk(GraphQLString), {
@@ -291,15 +312,28 @@ describe("resolver", () => {
         }),
       },
       { middlewares: [resolveMiddleware] }
-    )
+    ).use(resolveMiddlewareInUse)
 
-    await r1.hello.resolve(undefined)
+    const e1 = r1.toExecutor()
+
+    await e1.hello(undefined)
 
     expect(logs).toEqual([
       "resolve middleware",
+      "resolve middleware in use",
       "query middleware",
       "query middleware end",
+      "resolve middleware end in use",
       "resolve middleware end",
     ])
+  })
+
+  it("should keep extensions for object", async () => {
+    const r1 = resolver.of(Giraffe, {}).extensions({ foo: "bar" })
+
+    const schema = weave(r1)
+
+    const g = schema.getType("Giraffe") as GraphQLObjectType<IGiraffe>
+    expect(g.extensions).toEqual({ foo: "bar" })
   })
 })

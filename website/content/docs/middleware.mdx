@@ -377,7 +377,7 @@ GQLoom is able to apply middleware in a variety of scopes, including resolver fu
 
 ### Resolve function middleware
 
-We can use middleware directly in the resolve function by simply passing the `middlewares` field in the second argument of the operation constructor, for example:
+We can use middleware directly in the resolver function by using the `use` method during its construction, for example:
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
 <Tab value="valibot">
 ```ts twoslash
@@ -421,8 +421,8 @@ const helloResolver = resolver({
 
 ### Resolver-scoped middleware
 
-We can also apply middleware at the resolver level, which will take effect for all operations within the resolver.
-Simply pass the `middlewares` field in the last argument of the resolver constructor, for example:
+We can also apply middleware at the resolver level, so the middleware will take effect for all operations within the resolver.
+We just need to use the `use` method to add `middlewares` to the resolver:
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
 <Tab value="valibot">
 ```ts twoslash
@@ -437,23 +437,15 @@ import { resolver, mutation } from "@gqloom/core"
 import * as v from "valibot"
 import { authGuard } from "./middlewares"
 
-const adminResolver = resolver(
-  {
-    deleteArticle: mutation(v.boolean(), () => true),
-  },
-  {
-    middlewares: [authGuard("admin")], // [!code hl]
-  }
-)
+const adminResolver = resolver({
+  deleteArticle: mutation(v.boolean(), () => true),
+}).use(authGuard("admin")) // [!code hl]
 
-const editorResolver = resolver(
-  {
-    createArticle: mutation(v.boolean(), () => true),
+const editorResolver = resolver({
+  createArticle: mutation(v.boolean(), () => true),
 
-    updateArticle: mutation(v.boolean(), () => true),
-  },
-  { middlewares: [authGuard("editor")] } // [!code hl]
-)
+  updateArticle: mutation(v.boolean(), () => true),
+}).use(authGuard("editor")) // [!code hl]
 ```
 </Tab>
 <Tab value="zod">
@@ -469,23 +461,15 @@ import { resolver, mutation } from "@gqloom/zod"
 import { z } from "zod"
 import { authGuard } from "./middlewares"
 
-const adminResolver = resolver(
-  {
-    deleteArticle: mutation(z.boolean(), () => true),
-  },
-  {
-    middlewares: [authGuard("admin")], // [!code hl]
-  }
-)
+const adminResolver = resolver({
+  deleteArticle: mutation(z.boolean(), () => true),
+}).use(authGuard("admin")) // [!code hl]
 
-const editorResolver = resolver(
-  {
-    createArticle: mutation(z.boolean(), () => true),
+const editorResolver = resolver({
+  createArticle: mutation(z.boolean(), () => true),
 
-    updateArticle: mutation(z.boolean(), () => true),
-  },
-  { middlewares: [authGuard("editor")] } // [!code hl]
-)
+  updateArticle: mutation(z.boolean(), () => true),
+}).use(authGuard("editor")) // [!code hl]
 ```
 </Tab>
 </Tabs>

@@ -7,6 +7,7 @@ import {
   GraphQLString,
 } from "graphql"
 import { describe, expectTypeOf, it } from "vitest"
+import { type InferInputI, getStandardValue } from "../src/resolver"
 import { loom } from "../src/resolver/resolver"
 import { silk } from "../src/resolver/silk"
 
@@ -90,15 +91,24 @@ describe("resolver type", () => {
     })
     it("should infer output type", () => {
       expectTypeOf(
-        simpleResolver.giraffe.resolve
+        simpleResolver["~meta"].fields.giraffe["~meta"].resolve
       ).returns.resolves.toEqualTypeOf<IGiraffe>()
     })
     it("should infer input type", () => {
-      expectTypeOf(simpleResolver.giraffe.resolve)
+      expectTypeOf(simpleResolver["~meta"].fields.giraffe["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<{ name: string }>()
 
-      expectTypeOf(simpleResolver.createGiraffe.resolve)
+      type c1 = InferInputI<typeof GiraffeInput>
+
+      expectTypeOf<c1>().toEqualTypeOf<Partial<IGiraffe>>()
+
+      type c2 = StandardSchemaV1.InferInput<typeof GiraffeInput>
+
+      expectTypeOf<c2>().toEqualTypeOf<Partial<IGiraffe>>()
+      expectTypeOf(
+        simpleResolver["~meta"].fields.createGiraffe["~meta"].resolve
+      )
         .parameter(0)
         .toEqualTypeOf<Partial<IGiraffe>>()
     })
@@ -131,7 +141,7 @@ describe("resolver type", () => {
               it("should infer input type", () => {
                 expectTypeOf(input).toEqualTypeOf<
                   StandardSchemaV1.Result<{
-                    myName: string | undefined
+                    myName: string | undefined | null
                   }>
                 >()
               })
@@ -144,7 +154,7 @@ describe("resolver type", () => {
             })
             it("should infer input type", () => {
               expectTypeOf(input).toEqualTypeOf<{
-                myName: string | undefined
+                myName: string | undefined | null
               }>()
             })
             return `Hello, ${input.myName ?? "my friend"}! My name is ${giraffe.name}.`
@@ -158,14 +168,10 @@ describe("resolver type", () => {
               expectTypeOf(parent).toEqualTypeOf<IGiraffe | undefined>()
             })
 
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             it("should infer input type", () => {
               expectTypeOf(input).toEqualTypeOf<
-                | StandardSchemaV1.FailureResult
-                | StandardSchemaV1.SuccessResult<{
-                    myName: string | undefined
-                  }>
-                | StandardSchemaV1.Result<undefined>
+                { myName: string | null | undefined } | undefined
               >()
             })
 
@@ -180,14 +186,14 @@ describe("resolver type", () => {
       }
     )
     it("should infer input type", () => {
-      expectTypeOf(simpleResolver.age.resolve)
+      expectTypeOf(simpleResolver["~meta"].fields.age["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<IGiraffe>()
     })
 
     it("should infer output type", () => {
       expectTypeOf(
-        simpleResolver.age.resolve
+        simpleResolver["~meta"].fields.age["~meta"].resolve
       ).returns.resolves.toEqualTypeOf<number>()
     })
   })
@@ -216,7 +222,7 @@ describe("resolver type", () => {
     })
     it("should infer output type", () => {
       expectTypeOf(
-        simpleResolver.newGiraffe.resolve
+        simpleResolver["~meta"].fields.newGiraffe["~meta"].resolve
       ).returns.resolves.toEqualTypeOf<IGiraffe>()
     })
   })

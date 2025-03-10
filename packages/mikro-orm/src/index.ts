@@ -36,13 +36,13 @@ import type {
 import { EntityGraphQLTypes } from "./utils"
 
 export class MikroWeaver {
-  static vendor = "gqloom.mikro-orm"
+  public static vendor = "gqloom.mikro-orm"
   /**
    * get GraphQL Silk from Mikro Entity Schema
    * @param schema Mikro Entity Schema
    * @returns GraphQL Silk Like Mikro Entity Schema
    */
-  static unravel<TSchema extends EntitySchema>(
+  public static unravel<TSchema extends EntitySchema>(
     schema: TSchema
   ): EntitySchemaSilk<TSchema> {
     return Object.assign(schema, {
@@ -63,12 +63,12 @@ export class MikroWeaver {
     })
   }
 
-  static ObjectConfigMap = new WeakMap<
+  public static ObjectConfigMap = new WeakMap<
     EntitySchema,
     Partial<GraphQLObjectTypeConfig<any, any>>
   >()
 
-  static asObjectType(
+  public static asObjectType(
     schema: EntitySchema,
     config: Partial<GraphQLObjectTypeConfig<any, any>>
   ) {
@@ -76,11 +76,11 @@ export class MikroWeaver {
     return schema
   }
 
-  static getGraphQLTypeBySelf(this: EntitySchema) {
+  public static getGraphQLTypeBySelf(this: EntitySchema) {
     return MikroWeaver.getGraphQLType(this)
   }
 
-  static getGraphQLType<TSchema extends EntitySchema>(
+  public static getGraphQLType<TSchema extends EntitySchema>(
     entity: TSchema,
     {
       required,
@@ -134,7 +134,7 @@ export class MikroWeaver {
     )
   }
 
-  static getFieldConfig(
+  public static getFieldConfig(
     property: EntityProperty,
     {
       nullable,
@@ -176,7 +176,9 @@ export class MikroWeaver {
     }
   }
 
-  static getFieldType(property: EntityProperty): GraphQLOutputType | undefined {
+  public static getFieldType(
+    property: EntityProperty
+  ): GraphQLOutputType | undefined {
     const config =
       weaverContext.getConfig<MikroWeaverConfig>("gqloom.mikro-orm")
     const presetType = config?.presetGraphQLType?.(property)
@@ -207,7 +209,7 @@ export class MikroWeaver {
   }
 
   // mikro-orm Platform.extractSimpleType
-  static extractSimpleType(type: string): EntityProperty["type"] {
+  protected static extractSimpleType(type: string): EntityProperty["type"] {
     return type.toLowerCase().match(/[^(), ]+/)![0]
   }
 
@@ -216,7 +218,7 @@ export class MikroWeaver {
    * @param config Valibot weaver config options
    * @returns a Valibot weaver config object
    */
-  static config = function (
+  public static config = function (
     config: MikroWeaverConfigOptions
   ): MikroWeaverConfig {
     return {
@@ -230,7 +232,7 @@ export class MikroWeaver {
    * @param config Valibot weaver config options
    * @returns a new Valibot to silk function
    */
-  static useConfig = function (
+  public static useConfig = function (
     config: MikroWeaverConfigOptions
   ): typeof MikroWeaver.unravel {
     return (schema) => {

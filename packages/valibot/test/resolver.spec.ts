@@ -80,25 +80,29 @@ describe("valibot resolver", () => {
   })
 
   it("should infer input type", () => {
-    expectTypeOf(simpleGiraffeResolver.createGiraffe.resolve)
+    expectTypeOf(
+      simpleGiraffeResolver["~meta"].fields.createGiraffe["~meta"].resolve
+    )
       .parameter(0)
       .toEqualTypeOf<v.InferInput<typeof GiraffeInput>>()
   })
 
   it("should infer output type", () => {
     expectTypeOf(
-      simpleGiraffeResolver.createGiraffe.resolve
+      simpleGiraffeResolver["~meta"].fields.createGiraffe["~meta"].resolve
     ).returns.resolves.toEqualTypeOf<v.InferOutput<typeof Giraffe>>()
   })
 
   it("should infer parent type", () => {
-    expectTypeOf(giraffeResolver.age.resolve)
+    expectTypeOf(giraffeResolver["~meta"].fields.age["~meta"].resolve)
       .parameter(0)
       .toEqualTypeOf<v.InferOutput<typeof Giraffe>>()
   })
 
   it("should resolve mutation", async () => {
-    const output = await simpleGiraffeResolver.createGiraffe.resolve({
+    const output = await simpleGiraffeResolver["~meta"].fields.createGiraffe[
+      "~meta"
+    ].resolve({
       name: "Giraffe",
       birthday: new Date("2022-2-22"),
     })
@@ -111,7 +115,7 @@ describe("valibot resolver", () => {
 
   it("should resolve query", async () => {
     expect(
-      await giraffeResolver.giraffe.resolve({
+      await giraffeResolver["~meta"].fields.giraffe["~meta"].resolve({
         name: "Giraffe",
       })
     ).toEqual({
@@ -122,13 +126,18 @@ describe("valibot resolver", () => {
   })
 
   it("should resolve field", async () => {
-    const giraffe = await giraffeResolver.giraffe.resolve({
+    const giraffe = await giraffeResolver["~meta"].fields.giraffe[
+      "~meta"
+    ].resolve({
       name: "Giraffe",
     })
 
-    expect(await giraffeResolver.age.resolve(giraffe, undefined)).toEqual(
-      expect.any(Number)
-    )
+    expect(
+      await giraffeResolver["~meta"].fields.age["~meta"].resolve(
+        giraffe,
+        undefined
+      )
+    ).toEqual(expect.any(Number))
   })
 
   it("should resolve union", async () => {
@@ -278,7 +287,7 @@ describe("valibot resolver", () => {
 
   it("should throw for invalid input", async () => {
     await expect(
-      simpleGiraffeResolver.createGiraffe.resolve({
+      simpleGiraffeResolver["~meta"].fields.createGiraffe["~meta"].resolve({
         name: "2",
         birthday: new Date("2022-2-22"),
       })
@@ -331,26 +340,26 @@ describe("valibot resolver", () => {
     })
 
     it("should infer input type", () => {
-      expectTypeOf(horseResolver.createHorse.resolve)
+      expectTypeOf(horseResolver["~meta"].fields.createHorse["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<Partial<IHorse>>()
     })
 
     it("should infer output type", () => {
       expectTypeOf(
-        horseResolver.createHorse.resolve
+        horseResolver["~meta"].fields.createHorse["~meta"].resolve
       ).returns.resolves.toEqualTypeOf<IHorse>()
     })
 
     it("should infer parent type", () => {
-      expectTypeOf(horseResolver.hello.resolve)
+      expectTypeOf(horseResolver["~meta"].fields.hello["~meta"].resolve)
         .parameter(0)
         .toEqualTypeOf<IHorse>()
     })
 
     it("should resolve mutation", async () => {
       expect(
-        await horseResolver.createHorse.resolve({
+        await horseResolver["~meta"].fields.createHorse["~meta"].resolve({
           name: "Horse",
           age: 1,
         })
@@ -361,7 +370,7 @@ describe("valibot resolver", () => {
     })
     it("should resolve query", async () => {
       expect(
-        await horseResolver.horse.resolve({
+        await horseResolver["~meta"].fields.horse["~meta"].resolve({
           name: "Horse",
         })
       ).toEqual({
@@ -371,7 +380,10 @@ describe("valibot resolver", () => {
     })
     it("should resolve field", async () => {
       expect(
-        await horseResolver.hello.resolve({ name: "Horse", age: 1 }, undefined)
+        await horseResolver["~meta"].fields.hello["~meta"].resolve(
+          { name: "Horse", age: 1 },
+          undefined
+        )
       ).toEqual("Neh! Neh! --Horse")
     })
   })

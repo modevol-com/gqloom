@@ -240,15 +240,15 @@ In the above code, we use `postResolverFactory.createMutation()` to define the `
 The pre-defined queries and mutations of the resolver factory support custom input. You can define the input type through the `input` option:
 
 ```ts
-import * as v from 'valibot'
+import * as v from "valibot"
 
 const userResolver = resolver.of(User, {
-  user: userResolverFactory.findUniqueQuery({
-    input: v.pipe( // [!code hl]
+  user: userResolverFactory.findUniqueQuery().input(
+    v.pipe( // [!code hl]
       v.object({ id: v.number() }), // [!code hl]
       v.transform(({ id }) => ({ where: { id } })) // [!code hl]
-    ), // [!code hl]
-  }),
+    ) // [!code hl]
+  ),
 
   posts: userResolverFactory.relationField("posts"),
 })
@@ -262,17 +262,13 @@ The pre-defined queries, mutations, and fields of the resolver factory support a
 
 ```ts
 const postResolver = resolver.of(Post, {
-  createPost: postResolverFactory.createMutation({
-    middlewares: [ // [!code hl]
-      async (next) => { // [!code hl]
-        const user = await useAuthedUser() // [!code hl]
-        if (user == null) throw new GraphQLError('Please login first') // [!code hl]
-        return next() // [!code hl]
-      }, // [!code hl]
-    ], // [!code hl]
-  }),
+  createPost: postResolverFactory.createMutation().use(async (next) => {
+    const user = await useAuthedUser() // [!code hl]
+    if (user == null) throw new GraphQLError("Please login first") // [!code hl]
+    return next() // [!code hl]
+  }), // [!code hl]
 
-  author: postResolverFactory.relationField('author'),
+  author: postResolverFactory.relationField("author"),
 
   authorId: field.hidden,
 })

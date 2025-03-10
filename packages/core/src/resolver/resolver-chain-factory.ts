@@ -1,24 +1,41 @@
-import type { MayPromise, Middleware } from "../utils"
-import type { InferInputO, InputSchema, InputSchemaToSilk } from "./input"
+import type { StandardSchemaV1 } from "@standard-schema/spec"
+import {
+  EasyDataLoader,
+  type MayPromise,
+  type Middleware,
+  applyMiddlewares,
+  compose,
+  createMemoization,
+  getFieldOptions,
+  meta,
+} from "../utils"
+import {
+  type CallableInputParser,
+  type InferInputO,
+  createInputParser,
+} from "./input"
 import {
   createField,
   createMutation,
   createQuery,
   createSubscription,
+  loom,
 } from "./resolver"
 import type {
-  AbstractSchemaIO,
-  FieldOrOperation,
+  FieldOptions,
   GraphQLFieldOptions,
-  InferSchemaO,
-  SchemaToSilk,
-  Subscription,
+  GraphQLSilk,
+  Loom,
+  MutationOptions,
+  QueryOptions,
 } from "./types"
 
 export interface IChainFactory<
-  TSchemaIO extends AbstractSchemaIO,
-  TOutput extends TSchemaIO[0],
-  TInput extends InputSchema<TSchemaIO[0]> = undefined,
+  TOutput extends GraphQLSilk,
+  TInput extends
+    | GraphQLSilk
+    | Record<string, GraphQLSilk>
+    | undefined = undefined,
 > {
   description(description: GraphQLFieldOptions["description"]): this
 
@@ -28,17 +45,21 @@ export interface IChainFactory<
 
   extensions(extensions: GraphQLFieldOptions["extensions"]): this
 
-  output<TOutputNew extends TSchemaIO[0]>(
+  output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
-  ): IChainFactory<TSchemaIO, TOutputNew, TInput>
+  ): IChainFactory<TOutputNew, TInput>
 
-  input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+  input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
-  ): IChainFactory<TSchemaIO, TOutput, TInputNew>
+  ): IChainFactory<TOutput, TInputNew>
 }
 
-abstract class BaseChainFactory {
-  static methods() {
+export interface ChainFactoryOptions extends Loom.FieldMeta {
+  middlewares?: Middleware[]
+}
+
+export abstract class BaseChainFactory<TField extends Loom.BaseField = any> {
+  public static methods() {
     return {
       description: BaseChainFactory.prototype.description,
       deprecationReason: BaseChainFactory.prototype.deprecationReason,
@@ -46,17 +67,11 @@ abstract class BaseChainFactory {
     }
   }
 
-  constructor(
-    protected readonly options?: Partial<
-      FieldOrOperation<any, any, any, any> & { middlewares: Middleware[] }
-    >
+  public constructor(
+    protected readonly options?: Partial<ChainFactoryOptions>
   ) {}
 
-  protected abstract clone(
-    options?: Partial<
-      FieldOrOperation<any, any, any, any> & { middlewares: Middleware[] }
-    >
-  ): this
+  protected abstract clone(options?: Partial<ChainFactoryOptions>): this
 
   public description(description: GraphQLFieldOptions["description"]): this {
     return this.clone({ description })
@@ -72,7 +87,7 @@ abstract class BaseChainFactory {
     return this.clone({ extensions })
   }
 
-  public use(...middlewares: Middleware[]): this {
+  public use(...middlewares: Middleware<TField>[]): this {
     return this.clone({
       middlewares: [...(this.options?.middlewares ?? []), ...middlewares],
     })
@@ -80,132 +95,147 @@ abstract class BaseChainFactory {
 }
 
 export class FieldChainFactory<
-    TSchemaIO extends AbstractSchemaIO,
-    TOutput extends TSchemaIO[0] = never,
-    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+    TOutput extends GraphQLSilk = never,
+    TInput extends
+      | GraphQLSilk
+      | Record<string, GraphQLSilk>
+      | undefined = undefined,
   >
-  extends BaseChainFactory
-  implements IChainFactory<TSchemaIO, TOutput, TInput>
+  extends BaseChainFactory<Loom.Field<any, TOutput, TInput>>
+  implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: FieldChainFactory.prototype.output,
       input: FieldChainFactory.prototype.input,
       resolve: FieldChainFactory.prototype.resolve,
       clone: FieldChainFactory.prototype.clone,
-    } as any as FieldChainFactory<any, never, undefined>
+    } as any as FieldChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new FieldChainFactory({ ...this.options, ...options }) as this
   }
 
-  public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<
-        any,
-        SchemaToSilk<TSchemaIO, TOutput>,
-        InputSchemaToSilk<TSchemaIO, TInput>,
-        "field"
-      >
-    >[]
-  ): this {
-    return super.use(...middlewares)
-  }
-
-  public output<TOutputNew extends TSchemaIO[0]>(
+  public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
-  ): FieldChainFactory<TSchemaIO, TOutputNew, TInput> {
+  ): FieldChainFactory<TOutputNew, TInput> {
     return new FieldChainFactory({ ...this.options, output })
   }
 
-  public input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
-  ): FieldChainFactory<TSchemaIO, TOutput, TInputNew> {
+  ): FieldChainFactory<TOutput, TInputNew> {
     return new FieldChainFactory({ ...this.options, input })
   }
 
-  public resolve<TParent extends TSchemaIO[0]>(
+  public resolve<TParent extends GraphQLSilk>(
     resolve: (
-      parent: InferSchemaO<TParent, TSchemaIO>,
-      input: InferInputO<TInput, TSchemaIO>
-    ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
-  ): FieldOrOperation<
-    SchemaToSilk<TSchemaIO, TParent>,
-    SchemaToSilk<TSchemaIO, TOutput>,
-    InputSchemaToSilk<TSchemaIO, TInput>,
-    "field"
-  > {
-    return createField(this.options?.output, {
+      parent: StandardSchemaV1.InferOutput<TParent>,
+      input: InferInputO<TInput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+  ): Loom.Field<TParent, TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+    return createField(this.options.output, {
       ...this.options,
       resolve,
     }) as any
   }
+
+  public load<TParent extends GraphQLSilk>(
+    resolve: (
+      parents: StandardSchemaV1.InferOutput<TParent>[],
+      input: InferInputO<TInput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
+  ): Loom.Field<TParent, TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+
+    const useUnifiedParseInput = createMemoization<{
+      current?: CallableInputParser<TInput>
+    }>(() => ({ current: undefined }))
+
+    const useUserLoader = createMemoization(
+      () =>
+        new EasyDataLoader(
+          async (parents: StandardSchemaV1.InferOutput<TParent>[]) =>
+            resolve(
+              parents,
+              (await useUnifiedParseInput().current?.getResult()) as InferInputO<TInput>
+            )
+        )
+    )
+
+    const operation = "field"
+    return meta({
+      ...getFieldOptions(this.options),
+      operation,
+      input: this.options.input as TInput,
+      output: this.options.output as TOutput,
+      resolve: async (
+        parent,
+        inputValue,
+        extraOptions
+      ): Promise<StandardSchemaV1.InferOutput<TOutput>> => {
+        const unifiedParseInput = useUnifiedParseInput()
+        unifiedParseInput.current ??= createInputParser(
+          this.options?.input,
+          inputValue
+        ) as CallableInputParser<TInput>
+        const parseInput = unifiedParseInput.current
+        return applyMiddlewares(
+          compose(extraOptions?.middlewares, this.options?.middlewares),
+          async () => useUserLoader().load(parent),
+          { parseInput, parent, outputSilk: this.output, operation }
+        )
+      },
+    }) as Loom.Field<TParent, TOutput, TInput>
+  }
 }
 
 export class QueryChainFactory<
-    TSchemaIO extends AbstractSchemaIO,
-    TOutput extends TSchemaIO[0] = never,
-    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+    TOutput extends GraphQLSilk = never,
+    TInput extends
+      | GraphQLSilk
+      | Record<string, GraphQLSilk>
+      | undefined = undefined,
   >
-  extends BaseChainFactory
-  implements IChainFactory<TSchemaIO, TOutput, TInput>
+  extends BaseChainFactory<Loom.Query<TOutput, TInput>>
+  implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: QueryChainFactory.prototype.output,
       input: QueryChainFactory.prototype.input,
       resolve: QueryChainFactory.prototype.resolve,
       clone: QueryChainFactory.prototype.clone,
-    } as any as QueryChainFactory<any, never, undefined>
+    } as any as QueryChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new QueryChainFactory({ ...this.options, ...options }) as this
   }
 
-  public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<
-        any,
-        SchemaToSilk<TSchemaIO, TOutput>,
-        InputSchemaToSilk<TSchemaIO, TInput>,
-        "query"
-      >
-    >[]
-  ): this {
-    return super.use(...middlewares)
-  }
-
-  public output<TOutputNew extends TSchemaIO[0]>(
+  public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
-  ): QueryChainFactory<TSchemaIO, TOutputNew, TInput> {
+  ): QueryChainFactory<TOutputNew, TInput> {
     return new QueryChainFactory({ ...this.options, output })
   }
 
-  public input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
-  ): QueryChainFactory<TSchemaIO, TOutput, TInputNew> {
+  ): QueryChainFactory<TOutput, TInputNew> {
     return new QueryChainFactory({ ...this.options, input })
   }
 
   public resolve(
     resolve: (
-      input: InferInputO<TInput, TSchemaIO>
-    ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
-  ): FieldOrOperation<
-    any,
-    SchemaToSilk<TSchemaIO, TOutput>,
-    InputSchemaToSilk<TSchemaIO, TInput>,
-    "query"
-  > {
-    return createQuery(this.options?.output, {
+      input: InferInputO<TInput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+  ): Loom.Query<TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+    return createQuery(this.options.output, {
       ...this.options,
       resolve,
     }) as any
@@ -213,65 +243,48 @@ export class QueryChainFactory<
 }
 
 export class MutationChainFactory<
-    TSchemaIO extends AbstractSchemaIO,
-    TOutput extends TSchemaIO[0] = never,
-    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+    TOutput extends GraphQLSilk = never,
+    TInput extends
+      | GraphQLSilk
+      | Record<string, GraphQLSilk>
+      | undefined = undefined,
   >
-  extends BaseChainFactory
-  implements IChainFactory<TSchemaIO, TOutput, TInput>
+  extends BaseChainFactory<Loom.Mutation<TOutput, TInput>>
+  implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: MutationChainFactory.prototype.output,
       input: MutationChainFactory.prototype.input,
       resolve: MutationChainFactory.prototype.resolve,
       clone: MutationChainFactory.prototype.clone,
-    } as any as MutationChainFactory<any, never, undefined>
+    } as any as MutationChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new MutationChainFactory({ ...this.options, ...options }) as this
   }
 
-  public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<
-        any,
-        SchemaToSilk<TSchemaIO, TOutput>,
-        InputSchemaToSilk<TSchemaIO, TInput>,
-        "mutation"
-      >
-    >[]
-  ): this {
-    return super.use(...middlewares)
-  }
-
-  public output<TOutputNew extends TSchemaIO[0]>(
+  public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
-  ): MutationChainFactory<TSchemaIO, TOutputNew, TInput> {
+  ): MutationChainFactory<TOutputNew, TInput> {
     return new MutationChainFactory({ ...this.options, output })
   }
 
-  public input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
-  ): MutationChainFactory<TSchemaIO, TOutput, TInputNew> {
+  ): MutationChainFactory<TOutput, TInputNew> {
     return new MutationChainFactory({ ...this.options, input })
   }
 
   public resolve(
     resolve: (
-      input: InferInputO<TInput, TSchemaIO>
-    ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
-  ): FieldOrOperation<
-    any,
-    SchemaToSilk<TSchemaIO, TOutput>,
-    InputSchemaToSilk<TSchemaIO, TInput>,
-    "mutation"
-  > {
-    return createMutation(this.options?.output, {
+      input: InferInputO<TInput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+  ): Loom.Mutation<TOutput, TInput> {
+    if (!this.options?.output) throw new Error("Output is required")
+    return createMutation(this.options.output, {
       ...this.options,
       resolve,
     }) as any
@@ -279,70 +292,57 @@ export class MutationChainFactory<
 }
 
 export class SubscriptionChainFactory<
-    TSchemaIO extends AbstractSchemaIO,
-    TOutput extends TSchemaIO[0] = never,
-    TInput extends InputSchema<TSchemaIO[0]> = undefined,
+    TOutput extends GraphQLSilk = never,
+    TInput extends
+      | GraphQLSilk
+      | Record<string, GraphQLSilk>
+      | undefined = undefined,
   >
-  extends BaseChainFactory
-  implements IChainFactory<TSchemaIO, TOutput, TInput>
+  extends BaseChainFactory<Loom.Subscription<TOutput, TInput, any>>
+  implements IChainFactory<TOutput, TInput>
 {
-  static methods() {
+  public static methods() {
     return {
       ...BaseChainFactory.methods(),
       output: SubscriptionChainFactory.prototype.output,
       input: SubscriptionChainFactory.prototype.input,
       subscribe: SubscriptionChainFactory.prototype.subscribe,
       clone: SubscriptionChainFactory.prototype.clone,
-    } as any as SubscriptionChainFactory<any, never, undefined>
+    } as any as SubscriptionChainFactory<never, undefined>
   }
 
-  protected clone(
-    options?: Partial<FieldOrOperation<any, any, any, any>>
-  ): this {
+  protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new SubscriptionChainFactory({ ...this.options, ...options }) as this
   }
 
-  public use(
-    ...middlewares: Middleware<
-      FieldOrOperation<
-        any,
-        SchemaToSilk<TSchemaIO, TOutput>,
-        InputSchemaToSilk<TSchemaIO, TInput>,
-        "subscription"
-      >
-    >[]
-  ): this {
-    return super.use(...middlewares)
-  }
-
-  public output<TOutputNew extends TSchemaIO[0]>(
+  public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
-  ): SubscriptionChainFactory<TSchemaIO, TOutputNew, TInput> {
+  ): SubscriptionChainFactory<TOutputNew, TInput> {
     return new SubscriptionChainFactory({ ...this.options, output })
   }
 
-  public input<TInputNew extends InputSchema<TSchemaIO[0]>>(
+  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
-  ): SubscriptionChainFactory<TSchemaIO, TOutput, TInputNew> {
+  ): SubscriptionChainFactory<TOutput, TInputNew> {
     return new SubscriptionChainFactory({ ...this.options, input })
   }
 
-  public subscribe<TValue = InferSchemaO<TOutput, TSchemaIO>>(
-    subscribe: (
-      input: InferInputO<TInput, TSchemaIO>
-    ) => MayPromise<AsyncIterator<TValue>>
-  ): ResolvableSubscription<TSchemaIO, TOutput, TInput, TValue> {
+  public subscribe<TValue = StandardSchemaV1.InferOutput<TOutput>>(
+    subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
+  ): ResolvableSubscription<TOutput, TInput, TValue> {
     const options = this.options
-    const subscription = createSubscription(options?.output, {
+    const output = this.options?.output
+    if (!output) throw new Error("Output is required")
+    const subscription = createSubscription(output, {
       ...options,
       subscribe,
-    }) as Subscription<any, any, any>
+    })
 
-    const subscriptionResolve = subscription.resolve
+    const subscriptionResolve = subscription["~meta"].resolve
 
     const resolve = (...args: any[]) => {
       if (args.length === 1 && typeof args[0] === "function") {
-        return createSubscription(options?.output, {
+        return createSubscription(output, {
           ...options,
           resolve: args[0],
           subscribe,
@@ -356,25 +356,112 @@ export class SubscriptionChainFactory<
 }
 
 export interface ResolvableSubscription<
-  TSchemaIO extends AbstractSchemaIO,
-  TOutput extends TSchemaIO[0],
-  TInput extends InputSchema<TSchemaIO[0]> = undefined,
-  TValue = InferSchemaO<TOutput, TSchemaIO>,
-> extends Subscription<
-    SchemaToSilk<TSchemaIO, TOutput>,
-    InputSchemaToSilk<TSchemaIO, TInput>,
-    TValue
-  > {
+  TOutput extends GraphQLSilk,
+  TInput extends
+    | GraphQLSilk
+    | Record<string, GraphQLSilk>
+    | undefined = undefined,
+  TValue = StandardSchemaV1.InferOutput<TOutput>,
+> extends Loom.Subscription<TOutput, TInput, TValue> {
   resolve(
     resolve: (
       value: TValue,
-      input: InferInputO<TInput, TSchemaIO>
-    ) => MayPromise<InferSchemaO<TOutput, TSchemaIO>>
-  ): Subscription<
-    SchemaToSilk<TSchemaIO, TOutput>,
-    InputSchemaToSilk<TSchemaIO, TInput>,
-    TValue
-  >
+      input: InferInputO<TInput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+  ): Loom.Subscription<TOutput, TInput, TValue>
+}
 
-  resolve(value: TValue, input: any): MayPromise<any>
+export class QueryFactoryWithResolve<
+    TInputO,
+    TOutput extends GraphQLSilk,
+    TInput extends GraphQLSilk<TInputO>,
+  >
+  extends BaseChainFactory<Loom.Query<TOutput, TInput>>
+  implements Loom.Query<TOutput, TInput>
+{
+  public get "~meta"(): Loom.Query<TOutput, TInput>["~meta"] {
+    return loom.query(this.output, this.options)["~meta"]
+  }
+
+  public constructor(
+    protected output: TOutput,
+    protected readonly options: QueryOptions<TOutput, TInput>
+  ) {
+    super(options)
+  }
+
+  protected clone(options?: Partial<typeof this.options> | undefined): this {
+    return new QueryFactoryWithResolve(this.output, {
+      ...this.options,
+      ...options,
+    }) as this
+  }
+
+  public input<TInputNew extends GraphQLSilk<TInputO>>(
+    input: TInputNew
+  ): QueryFactoryWithResolve<TInputO, TOutput, TInputNew> {
+    return new QueryFactoryWithResolve(this.output, {
+      ...this.options,
+      input,
+    } as QueryOptions<any, any>)
+  }
+}
+
+export class MutationFactoryWithResolve<
+    TInputO,
+    TOutput extends GraphQLSilk,
+    TInput extends GraphQLSilk<TInputO>,
+  >
+  extends BaseChainFactory<Loom.Query<TOutput, TInput>>
+  implements Loom.Mutation<TOutput, TInput>
+{
+  public get "~meta"(): Loom.Mutation<TOutput, TInput>["~meta"] {
+    return loom.mutation(this.output, this.options)["~meta"]
+  }
+
+  public constructor(
+    protected output: TOutput,
+    protected readonly options: MutationOptions<TOutput, TInput>
+  ) {
+    super(options)
+  }
+
+  protected clone(options?: Partial<typeof this.options> | undefined): this {
+    return new MutationFactoryWithResolve(this.output, {
+      ...this.options,
+      ...options,
+    }) as this
+  }
+
+  public input<TInputNew extends GraphQLSilk<TInputO>>(
+    input: TInputNew
+  ): MutationFactoryWithResolve<TInputO, TOutput, TInputNew> {
+    return new MutationFactoryWithResolve(this.output, {
+      ...this.options,
+      input,
+    } as MutationOptions<any, any>)
+  }
+}
+
+export class FieldFactoryWithResolve<
+  TParent extends GraphQLSilk,
+  TOutput extends GraphQLSilk,
+> extends BaseChainFactory<Loom.Field<TParent, TOutput, undefined>> {
+  public get "~meta"(): Loom.Field<TParent, TOutput, undefined>["~meta"] {
+    return loom.field(this.output, this.options)["~meta"]
+  }
+
+  public constructor(
+    protected output: TOutput,
+    protected readonly options: FieldOptions<TParent, TOutput, undefined>
+  ) {
+    super(options)
+  }
+
+  protected clone(options?: Partial<typeof this.options> | undefined): this {
+    return new FieldFactoryWithResolve(this.output, {
+      ...this.options,
+      ...options,
+    }) as this
+  }
 }

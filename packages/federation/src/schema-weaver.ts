@@ -8,8 +8,8 @@ import {
 import {
   GraphQLSchemaLoom,
   type GraphQLSilk,
+  type Loom,
   type Middleware,
-  type SilkResolver,
   type WeaverConfig,
   query,
   resolver,
@@ -73,7 +73,7 @@ export class FederatedSchemaLoom extends GraphQLSchemaLoom {
     return federatedSchema
   }
 
-  static hasResolvableKey(type: GraphQLNamedType) {
+  public static hasResolvableKey(type: GraphQLNamedType) {
     if (Array.isArray(type.extensions?.directives)) {
       return type.extensions?.directives.some(
         (d: { name: string; args: Record<string, unknown> }) =>
@@ -100,8 +100,8 @@ export class FederatedSchemaLoom extends GraphQLSchemaLoom {
    * @param inputs Resolvers, Global Middlewares or WeaverConfigs
    * @returns GraphQL Schema
    */
-  static override weave(
-    ...inputs: (SilkResolver | Middleware | WeaverConfig | GraphQLSilk)[]
+  public static override weave(
+    ...inputs: (Loom.Resolver | Middleware | WeaverConfig | GraphQLSilk)[]
   ): GraphQLSchema {
     const { context, configs, middlewares, resolvers, silks, weavers } =
       GraphQLSchemaLoom.optionsFrom(...inputs)

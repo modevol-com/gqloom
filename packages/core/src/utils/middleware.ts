@@ -1,37 +1,38 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type {
   CallableInputParser,
-  FieldOrOperation,
-  FieldOrOperationType,
-  GenericFieldOrOperation,
+  GraphQLSilk,
   InferFieldOutput,
+  Loom,
 } from "../resolver"
 import type { MayPromise } from "./types"
 
 export interface MiddlewareOptions<
-  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
+  TField extends Loom.BaseField = Loom.BaseField,
 > {
   /** The Output Silk of the field */
   outputSilk: StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
 
   /** The previous object, which for a field on the root Query type is often not used. */
-  parent: TField extends FieldOrOperation<infer TParent, any, any, any>
-    ? TParent extends undefined
-      ? undefined
-      : StandardSchemaV1.InferOutput<NonNullable<TParent>>
-    : never
-
-  /** A function to parse the input of the field */
-  parseInput: TField extends FieldOrOperation<any, any, infer TInput, any>
-    ? CallableInputParser<TInput>
+  parent: TField extends Loom.Field<
+    GraphQLSilk,
+    GraphQLSilk,
+    GraphQLSilk | Record<string, GraphQLSilk> | undefined
+  >
+    ? StandardSchemaV1.InferOutput<
+        NonNullable<TField["~meta"]["types"]>["parent"]
+      >
     : undefined
 
-  /** The type of the field: `query`, `mutation`, `subscription` or `field` */
-  type: FieldOrOperationType
+  /** A function to parse the input of the field */
+  parseInput: CallableInputParser<TField["~meta"]["input"]>
+
+  /** The operation of the field: `query`, `mutation`, `subscription` or `field` */
+  operation: Loom.BaseField["~meta"]["operation"]
 }
 
 export interface CallableMiddlewareOptions<
-  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
+  TField extends Loom.BaseField = Loom.BaseField,
 > extends MiddlewareOptions<TField> {
   /** The function to call next in the middleware chain. */
   next: () => MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
@@ -40,14 +41,12 @@ export interface CallableMiddlewareOptions<
   (): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
 }
 
-export type Middleware<
-  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
-> = (
+export type Middleware<TField extends Loom.BaseField = any> = (
   options: CallableMiddlewareOptions<TField>
 ) => MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
 
 export function applyMiddlewares<
-  TField extends GenericFieldOrOperation = FieldOrOperation<any, any, any, any>,
+  TField extends Loom.BaseField = Loom.BaseField,
 >(
   middlewares: Middleware[],
   resolveFunction: () => MayPromise<

@@ -27,9 +27,9 @@ import type {
 } from "./types"
 
 export class PrismaWeaver {
-  static vendor = "gqloom.prisma"
+  public static vendor = "gqloom.prisma"
 
-  static unravel<TModal>(
+  public static unravel<TModal>(
     model: DMMF.Model,
     meta: PrismaModelMeta
   ): PrismaModelSilk<TModal> {
@@ -53,7 +53,7 @@ export class PrismaWeaver {
     }
   }
 
-  static unravelEnum<TEnum = any>(
+  public static unravelEnum<TEnum = any>(
     enumType: DMMF.DatamodelEnum
   ): PrismaEnumSilk<TEnum> {
     return {
@@ -68,7 +68,10 @@ export class PrismaWeaver {
     }
   }
 
-  static getGraphQLTypeByModel(model: DMMF.Model, meta?: PrismaModelMeta) {
+  public static getGraphQLTypeByModel(
+    model: DMMF.Model,
+    meta?: PrismaModelMeta
+  ) {
     const existing = weaverContext.getNamedType(model.name)
     if (existing != null) return new GraphQLNonNull(existing)
 
@@ -95,7 +98,7 @@ export class PrismaWeaver {
     )
   }
 
-  static getGraphQLField(
+  public static getGraphQLField(
     field: DMMF.Field,
     meta?: PrismaModelMeta
   ): GraphQLFieldConfig<any, any> | undefined {
@@ -121,14 +124,14 @@ export class PrismaWeaver {
     return { type, description }
   }
 
-  static config(config: PrismaWeaverConfigOptions): PrismaWeaverConfig {
+  public static config(config: PrismaWeaverConfigOptions): PrismaWeaverConfig {
     return {
       ...config,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.prisma",
     }
   }
 
-  static getGraphQLTypeByField(
+  public static getGraphQLTypeByField(
     type: string,
     field?: DMMF.Field
   ): GraphQLOutputType {
@@ -154,7 +157,9 @@ export class PrismaWeaver {
     }
   }
 
-  static getGraphQLEnumType(enumType: DMMF.DatamodelEnum): GraphQLEnumType {
+  public static getGraphQLEnumType(
+    enumType: DMMF.DatamodelEnum
+  ): GraphQLEnumType {
     const existing = weaverContext.getNamedType(
       enumType.name
     ) as GraphQLEnumType

@@ -16,12 +16,7 @@ import {
   isObjectType,
   isUnionType,
 } from "graphql"
-import {
-  type GraphQLSilk,
-  type InputSchema,
-  getGraphQLType,
-  isSilk,
-} from "../resolver"
+import { type GraphQLSilk, getGraphQLType, isSilk } from "../resolver"
 import { mapValue, pascalCase, tryIn } from "../utils"
 import { LoomObjectType } from "./object"
 import type { CoreSchemaWeaverConfig } from "./types"
@@ -32,7 +27,7 @@ interface EnsureInputOptions {
 }
 
 export function inputToArgs(
-  input: InputSchema<GraphQLSilk>,
+  input: GraphQLSilk | Record<string, GraphQLSilk> | undefined,
   options: EnsureInputOptions | undefined
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined

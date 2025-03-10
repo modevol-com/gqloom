@@ -2,6 +2,8 @@ import type { StandardSchemaV1 } from "@standard-schema/spec"
 import {
   GraphQLList,
   GraphQLNonNull,
+  type GraphQLNullableType,
+  type GraphQLObjectType,
   type GraphQLOutputType,
   type GraphQLScalarType,
 } from "graphql"
@@ -13,16 +15,31 @@ import type { GraphQLSilk } from "./types"
 /**
  * Create a Silk from Scalar.
  */
-export function silk<TScalar extends GraphQLScalarType>(
+export function silk<TScalar extends GraphQLVariants<GraphQLScalarType>>(
   type: TScalar | (() => TScalar),
-  parse?: (
-    value: InferScalarExternal<TScalar>
+  validate?: (
+    value: InferScalarExternalByVariants<TScalar>
   ) =>
-    | StandardSchemaV1.Result<InferScalarExternal<TScalar>>
-    | Promise<StandardSchemaV1.Result<InferScalarInternal<TScalar>>>
+    | StandardSchemaV1.Result<InferScalarExternalByVariants<TScalar>>
+    | Promise<StandardSchemaV1.Result<InferScalarInternalByVariants<TScalar>>>
 ): GraphQLSilk<
-  InferScalarInternal<TScalar> | undefined,
-  InferScalarInternal<TScalar> | undefined
+  InferScalarInternalByVariants<TScalar>,
+  InferScalarInternalByVariants<TScalar>
+>
+
+/**
+ * Create a GraphQLSilk Object.
+ */
+export function silk<TObject extends GraphQLVariants<GraphQLObjectType>>(
+  type: TObject | (() => TObject),
+  validate?: (
+    value: InferObjectSourceByVariants<TObject>
+  ) =>
+    | StandardSchemaV1.Result<InferObjectSourceByVariants<TObject>>
+    | Promise<StandardSchemaV1.Result<InferObjectSourceByVariants<TObject>>>
+): GraphQLSilk<
+  InferObjectSourceByVariants<TObject>,
+  InferObjectSourceByVariants<TObject>
 >
 
 /**
@@ -186,10 +203,52 @@ export function isSilk(target: any): target is GraphQLSilk {
   )
 }
 
-type InferScalarInternal<T extends GraphQLScalarType> =
-  T extends GraphQLScalarType<infer TInternal> ? TInternal : never
+type GraphQLVariants<TSource extends GraphQLNullableType> =
+  | TSource
+  | GraphQLList<TSource>
+  | GraphQLList<GraphQLNonNull<TSource>>
+  | GraphQLNonNull<TSource>
+  | GraphQLNonNull<GraphQLList<TSource>>
+  | GraphQLNonNull<GraphQLList<GraphQLNonNull<TSource>>>
 
-type InferScalarExternal<T extends GraphQLScalarType> =
-  T extends GraphQLScalarType<any, infer TExternal> ? TExternal : never
+type InferScalarInternalByVariants<
+  T extends GraphQLVariants<GraphQLScalarType>,
+> = T extends GraphQLNonNull<infer U>
+  ? U extends GraphQLVariants<GraphQLScalarType>
+    ? NonNullable<InferScalarInternalByVariants<U>>
+    : never
+  : T extends GraphQLList<infer U>
+    ? U extends GraphQLVariants<GraphQLScalarType>
+      ? InferScalarInternalByVariants<U>[]
+      : never
+    : T extends GraphQLScalarType<infer TInternal, any>
+      ? TInternal | null | undefined
+      : never
 
+type InferScalarExternalByVariants<
+  T extends GraphQLVariants<GraphQLScalarType>,
+> = T extends GraphQLNonNull<infer U>
+  ? U extends GraphQLVariants<GraphQLScalarType>
+    ? NonNullable<InferScalarExternalByVariants<U>>
+    : never
+  : T extends GraphQLList<infer U>
+    ? U extends GraphQLVariants<GraphQLScalarType>
+      ? InferScalarExternalByVariants<U>[]
+      : never
+    : T extends GraphQLScalarType<any, infer TExternal>
+      ? TExternal | null | undefined
+      : never
+
+type InferObjectSourceByVariants<T extends GraphQLVariants<GraphQLObjectType>> =
+  T extends GraphQLNonNull<infer U>
+    ? U extends GraphQLVariants<GraphQLObjectType>
+      ? NonNullable<InferObjectSourceByVariants<U>>
+      : never
+    : T extends GraphQLList<infer U>
+      ? U extends GraphQLVariants<GraphQLObjectType>
+        ? InferObjectSourceByVariants<U>[]
+        : never
+      : T extends GraphQLObjectType<infer TSource>
+        ? TSource | null | undefined
+        : never
 type EnsureArray<T> = T extends Array<infer U> ? U[] : T[]

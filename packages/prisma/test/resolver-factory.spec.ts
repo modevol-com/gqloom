@@ -1,4 +1,9 @@
-import { type StandardSchemaV1, loom, weave } from "@gqloom/core"
+import {
+  type StandardSchemaV1,
+  getStandardValue,
+  loom,
+  weave,
+} from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
@@ -24,7 +29,7 @@ class TestablePrismaModelResolverFactory<
     return super.uniqueWhere(instance)
   }
 
-  name?: TModalSilk["name"]
+  public name?: TModalSilk["name"]
 
   public get modelDelegate(): InferPrismaDelegate<TClient, TModalSilk["name"]> {
     return this.delegate
@@ -151,15 +156,15 @@ describe("PrismaModelPrismaResolverFactory", () => {
     it("should be able to create a relationField", () => {
       const postsField = UserBobbin.relationField("posts")
       expect(postsField).toBeDefined()
-      expect(postsField.output).toBeTypeOf("object")
-      expect(postsField.type).toEqual("field")
-      expect(postsField.resolve).toBeTypeOf("function")
+      expect(postsField["~meta"].output).toBeTypeOf("object")
+      expect(postsField["~meta"].operation).toEqual("field")
+      expect(postsField["~meta"].resolve).toBeTypeOf("function")
 
       const userField = PostBobbin.relationField("author")
       expect(userField).toBeDefined()
-      expect(userField.output).toBeTypeOf("object")
-      expect(userField.type).toEqual("field")
-      expect(userField.resolve).toBeTypeOf("function")
+      expect(userField["~meta"].output).toBeTypeOf("object")
+      expect(userField["~meta"].operation).toEqual("field")
+      expect(userField["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to weave user schema", () => {
@@ -180,11 +185,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const q = UserBobbin.countQuery({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = await parseInput.getResult()
+
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.count>[0]>
-              >
+              Parameters<typeof db.user.count>[0]
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<number>()
             return next()
@@ -193,9 +197,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(q).toBeDefined()
-      expect(q.output).toBeTypeOf("object")
-      expect(q.type).toEqual("query")
-      expect(q.resolve).toBeTypeOf("function")
+      expect(q["~meta"].output).toBeTypeOf("object")
+      expect(q["~meta"].operation).toEqual("query")
+      expect(q["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", () => {
@@ -237,11 +241,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const q = UserBobbin.findFirstQuery({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.findFirst>[0]>
-              >
+              Parameters<typeof db.user.findFirst>[0]
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
             return next()
@@ -250,9 +252,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(q).toBeDefined()
-      expect(q.output).toBeTypeOf("object")
-      expect(q.type).toEqual("query")
-      expect(q.resolve).toBeTypeOf("function")
+      expect(q["~meta"].output).toBeTypeOf("object")
+      expect(q["~meta"].operation).toEqual("query")
+      expect(q["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -295,11 +297,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const q = UserBobbin.findManyQuery({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.findMany>[0]>
-              >
+              Parameters<typeof db.user.findMany>[0]
             >()
             expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser[]>()
             return next()
@@ -308,9 +308,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(q).toBeDefined()
-      expect(q.output).toBeTypeOf("object")
-      expect(q.type).toEqual("query")
-      expect(q.resolve).toBeTypeOf("function")
+      expect(q["~meta"].output).toBeTypeOf("object")
+      expect(q["~meta"].operation).toEqual("query")
+      expect(q["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -366,9 +366,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(q).toBeDefined()
-      expect(q.output).toBeTypeOf("object")
-      expect(q.type).toEqual("query")
-      expect(q.resolve).toBeTypeOf("function")
+      expect(q["~meta"].output).toBeTypeOf("object")
+      expect(q["~meta"].operation).toEqual("query")
+      expect(q["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -424,9 +424,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(m).toBeDefined()
-      expect(m.output).toBeTypeOf("object")
-      expect(m.type).toEqual("mutation")
-      expect(m.resolve).toBeTypeOf("function")
+      expect(m["~meta"].output).toBeTypeOf("object")
+      expect(m["~meta"].operation).toEqual("mutation")
+      expect(m["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -469,11 +469,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const m = UserBobbin.createManyMutation({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.createMany>[0]>
-              >
+              Parameters<typeof db.user.createMany>[0]
             >()
             return next()
           },
@@ -481,9 +479,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(m).toBeDefined()
-      expect(m.output).toBeTypeOf("object")
-      expect(m.type).toEqual("mutation")
-      expect(m.resolve).toBeTypeOf("function")
+      expect(m["~meta"].output).toBeTypeOf("object")
+      expect(m["~meta"].operation).toEqual("mutation")
+      expect(m["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -540,9 +538,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(m).toBeDefined()
-      expect(m.output).toBeTypeOf("object")
-      expect(m.type).toEqual("mutation")
-      expect(m.resolve).toBeTypeOf("function")
+      expect(m["~meta"].output).toBeTypeOf("object")
+      expect(m["~meta"].operation).toEqual("mutation")
+      expect(m["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -585,11 +583,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       const m = UserBobbin.deleteManyMutation({
         middlewares: [
           async ({ next, parseInput }) => {
-            const input = await parseInput()
+            const input = getStandardValue(await parseInput())
             expectTypeOf(input).toEqualTypeOf<
-              StandardSchemaV1.Result<
-                NonNullable<Parameters<typeof db.user.deleteMany>[0]>
-              >
+              Parameters<typeof db.user.deleteMany>[0]
             >()
             return next()
           },
@@ -597,9 +593,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(m).toBeDefined()
-      expect(m.output).toBeTypeOf("object")
-      expect(m.type).toEqual("mutation")
-      expect(m.resolve).toBeTypeOf("function")
+      expect(m["~meta"].output).toBeTypeOf("object")
+      expect(m["~meta"].operation).toEqual("mutation")
+      expect(m["~meta"].resolve).toBeTypeOf("function")
     })
     it("should be able to use custom input", async () => {
       const UserDeleteManyInput = z.object({
@@ -657,9 +653,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(m).toBeDefined()
-      expect(m.output).toBeTypeOf("object")
-      expect(m.type).toEqual("mutation")
-      expect(m.resolve).toBeTypeOf("function")
+      expect(m["~meta"].output).toBeTypeOf("object")
+      expect(m["~meta"].operation).toEqual("mutation")
+      expect(m["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -724,9 +720,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(m).toBeDefined()
-      expect(m.output).toBeTypeOf("object")
-      expect(m.type).toEqual("mutation")
-      expect(m.resolve).toBeTypeOf("function")
+      expect(m["~meta"].output).toBeTypeOf("object")
+      expect(m["~meta"].operation).toEqual("mutation")
+      expect(m["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {
@@ -795,9 +791,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       expect(m).toBeDefined()
-      expect(m.output).toBeTypeOf("object")
-      expect(m.type).toEqual("mutation")
-      expect(m.resolve).toBeTypeOf("function")
+      expect(m["~meta"].output).toBeTypeOf("object")
+      expect(m["~meta"].operation).toEqual("mutation")
+      expect(m["~meta"].resolve).toBeTypeOf("function")
     })
 
     it("should be able to use custom input", async () => {

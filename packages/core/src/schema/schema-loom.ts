@@ -9,19 +9,18 @@ import {
 } from "graphql"
 import {
   type GraphQLSilk,
-  ResolverOptionsMap,
+  type Loom,
   type ResolvingOptions,
   getGraphQLType,
   isSilk,
 } from "../resolver"
 import type { Middleware } from "../utils"
-import { FIELD_HIDDEN, WEAVER_CONFIG } from "../utils/symbols"
+import { FIELD_HIDDEN, IS_RESOLVER, WEAVER_CONFIG } from "../utils/symbols"
 import { LoomObjectType } from "./object"
 import { type SchemaWeaver, isSchemaVendorWeaver } from "./schema-weaver"
 import type {
   CoreSchemaWeaverConfig,
   CoreSchemaWeaverConfigOptions,
-  SilkResolver,
 } from "./types"
 import {
   type WeaverConfig,
@@ -51,14 +50,16 @@ export class GraphQLSchemaLoom {
    * @param config Schema Weaver config options
    * @returns a Schema Weaver config object
    */
-  static config(config: CoreSchemaWeaverConfigOptions): CoreSchemaWeaverConfig {
+  public static config(
+    config: CoreSchemaWeaverConfigOptions
+  ): CoreSchemaWeaverConfig {
     return {
       ...config,
       [WEAVER_CONFIG]: "gqloom.core.schema",
     }
   }
 
-  constructor(
+  public constructor(
     { query, mutation, subscription, types }: SchemaWeaverParameters = {},
     context?: WeaverContext
   ) {
@@ -76,7 +77,7 @@ export class GraphQLSchemaLoom {
     return this
   }
 
-  public add(resolver: SilkResolver) {
+  public add(resolver: Loom.Resolver) {
     provideWeaverContext(() => this.addResolver(resolver), this.context)
     return this
   }
@@ -129,9 +130,9 @@ export class GraphQLSchemaLoom {
     return schema
   }
 
-  protected addResolver(resolver: SilkResolver) {
-    const resolverOptions = ResolverOptionsMap.get(resolver)
-    const parent = resolverOptions?.parent
+  protected addResolver(resolver: Loom.Resolver) {
+    const resolverOptions = resolver["~meta"].options
+    const parent = resolver["~meta"].parent
     const parentObject = (() => {
       if (parent == null) return undefined
       let gqlType = getGraphQLType(parent)
@@ -155,16 +156,18 @@ export class GraphQLSchemaLoom {
     if (resolverOptions?.extensions && parentObject)
       parentObject.mergeExtensions(resolverOptions.extensions)
 
-    Object.entries(resolver).forEach(([name, operation]) => {
-      if (operation === FIELD_HIDDEN) {
+    Object.entries(resolver["~meta"].fields).forEach(([name, field]) => {
+      if (field === FIELD_HIDDEN) {
         if (parentObject == null) return
         parentObject.hideField(name)
-      } else if (operation.type === "field") {
+      } else if (field["~meta"].operation === "field") {
         if (parentObject == null) return
-        parentObject.addField(name, operation)
+        parentObject.addField(name, field)
       } else {
-        const operationObject = this.getOperationObject(operation.type)
-        operationObject.addField(name, operation)
+        const operationObject = this.getOperationObject(
+          field["~meta"].operation
+        )
+        operationObject.addField(name, field)
       }
     })
     return this
@@ -203,9 +206,9 @@ export class GraphQLSchemaLoom {
     return { resolverOptions, weaverContext: context }
   }
 
-  static optionsFrom(
+  public static optionsFrom(
     ...inputs: (
-      | SilkResolver
+      | Loom.Resolver
       | Middleware
       | SchemaWeaver
       | WeaverConfig
@@ -214,7 +217,7 @@ export class GraphQLSchemaLoom {
   ) {
     const configs = new Set<WeaverConfig>()
     const middlewares = new Set<Middleware>()
-    const resolvers = new Set<SilkResolver>()
+    const resolvers = new Set<Loom.Resolver>()
     const silks = new Set<GraphQLSilk>()
     const weavers = new Set<SchemaWeaver>()
     let context: WeaverContext | undefined
@@ -236,7 +239,7 @@ export class GraphQLSchemaLoom {
         }
       } else if (isSilk(item)) {
         silks.add(item)
-      } else {
+      } else if (item["~meta"][IS_RESOLVER]) {
         resolvers.add(item)
       }
     }
@@ -249,9 +252,9 @@ export class GraphQLSchemaLoom {
    * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
    * @returns GraphQL Schema
    */
-  static weave(
+  public static weave(
     ...inputs: (
-      | SilkResolver
+      | Loom.Resolver
       | Middleware
       | SchemaWeaver
       | WeaverConfig

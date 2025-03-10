@@ -1,13 +1,17 @@
+import type { GraphQLObjectTypeConfig } from "graphql"
 import {
   type MayPromise,
   type Middleware,
+  type OmitInUnion,
+  type ValueOf,
   applyMiddlewares,
   compose,
   getFieldOptions,
   getOperationOptions,
   getSubscriptionOptions,
+  meta,
 } from "../utils"
-import { FIELD_HIDDEN } from "../utils/symbols"
+import { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
 import { createInputParser, getStandardValue } from "./input"
 import {
   FieldChainFactory,
@@ -19,18 +23,18 @@ import type {
   FieldFactory,
   FieldFactoryWithUtils,
   FieldOptions,
-  FieldOrOperation,
   GraphQLSilk,
-  GraphQLSilkIO,
+  Loom,
   MutationFactory,
   MutationFactoryWithChain,
+  MutationOptions,
   QueryFactory,
   QueryFactoryWithChain,
-  QueryMutationOptions,
-  ResolverFactory,
+  QueryOptions,
+  ResolverOptions,
+  ResolverOptionsWithExtensions,
   ResolverOptionsWithParent,
   ResolvingOptions,
-  Subscription,
   SubscriptionFactory,
   SubscriptionFactoryWithChain,
   SubscriptionOptions,
@@ -38,17 +42,15 @@ import type {
 
 export const createQuery = (
   output: GraphQLSilk<any, any>,
-  resolveOrOptions?:
-    | (() => MayPromise<unknown>)
-    | QueryMutationOptions<GraphQLSilkIO, any, any>
+  resolveOrOptions?: (() => MayPromise<unknown>) | QueryOptions<any, any>
 ) => {
   if (resolveOrOptions == null) {
     return new QueryChainFactory({ output })
   }
 
   const options = getOperationOptions(resolveOrOptions)
-  const type = "query"
-  return {
+  const operation = "query"
+  return meta({
     ...getFieldOptions(options),
     input: options.input,
     output,
@@ -57,31 +59,29 @@ export const createQuery = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(getStandardValue(await parseInput())),
-        { parseInput, parent: undefined, outputSilk: output, type }
+        { parseInput, parent: undefined, outputSilk: output, operation }
       )
     },
-    type,
-  } as FieldOrOperation<any, any, any, "query">
+    operation,
+  }) as Loom.Query<any, any>
 }
 
-export const query: QueryFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  createQuery as QueryFactory<GraphQLSilkIO>,
+export const query: QueryFactoryWithChain = Object.assign(
+  createQuery as QueryFactory,
   QueryChainFactory.methods()
 )
 
 export const createMutation = (
   output: GraphQLSilk<any, any>,
-  resolveOrOptions?:
-    | (() => MayPromise<unknown>)
-    | QueryMutationOptions<GraphQLSilkIO, any, any>
+  resolveOrOptions?: (() => MayPromise<unknown>) | MutationOptions<any, any>
 ) => {
   if (resolveOrOptions == null) {
     return new MutationChainFactory({ output })
   }
 
   const options = getOperationOptions(resolveOrOptions)
-  const type = "mutation"
-  return {
+  const operation = "mutation"
+  return meta({
     ...getFieldOptions(options),
     input: options.input,
     output,
@@ -90,15 +90,15 @@ export const createMutation = (
       return applyMiddlewares(
         compose(extraOptions?.middlewares, options.middlewares),
         async () => options.resolve(getStandardValue(await parseInput())),
-        { parseInput, parent: undefined, outputSilk: output, type }
+        { parseInput, parent: undefined, outputSilk: output, operation }
       )
     },
-    type,
-  } as FieldOrOperation<any, any, any, "mutation">
+    operation,
+  }) as Loom.Mutation<any, any>
 }
 
-export const mutation: MutationFactoryWithChain<GraphQLSilkIO> = Object.assign(
-  createMutation as MutationFactory<GraphQLSilkIO>,
+export const mutation: MutationFactoryWithChain = Object.assign(
+  createMutation as MutationFactory,
   MutationChainFactory.methods()
 )
 
@@ -106,14 +106,14 @@ export const createField = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
     | ((parent: unknown) => unknown)
-    | FieldOptions<GraphQLSilkIO, any, any, any>
+    | FieldOptions<any, any, any>
 ) => {
   if (resolveOrOptions == null) {
     return new FieldChainFactory({ output })
   }
-  const options = getOperationOptions<"field">(resolveOrOptions)
-  const type = "field"
-  return {
+  const options = getOperationOptions(resolveOrOptions)
+  const operation = "field"
+  return meta({
     ...getFieldOptions(options),
     input: options.input,
     output,
@@ -123,34 +123,45 @@ export const createField = (
         compose(extraOptions?.middlewares, options.middlewares),
         async () =>
           options.resolve(parent, getStandardValue(await parseInput())),
-        { parseInput, parent, outputSilk: output, type }
+        { parseInput, parent, outputSilk: output, operation }
       )
     },
-    type,
-  } as FieldOrOperation<any, any, any, "field">
+    operation,
+  }) as Loom.Field<any, any, any>
 }
 
-export const field: FieldFactoryWithUtils<GraphQLSilkIO> = Object.assign(
-  createField as FieldFactory<GraphQLSilkIO>,
+export const field: FieldFactoryWithUtils = Object.assign(
+  createField as FieldFactory,
   { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
   FieldChainFactory.methods()
 )
 
 export const defaultSubscriptionResolve = (source: any) => source
 
-export const createSubscription = (
+export function createSubscription(
+  output: GraphQLSilk<any, any>
+): SubscriptionChainFactory
+
+export function createSubscription(
+  output: GraphQLSilk<any, any>,
+  subscribeOrOptions:
+    | (() => MayPromise<AsyncIterator<unknown>>)
+    | SubscriptionOptions<any, any, any>
+): Loom.Subscription<any, any, any>
+
+export function createSubscription(
   output: GraphQLSilk<any, any>,
   subscribeOrOptions?:
     | (() => MayPromise<AsyncIterator<unknown>>)
-    | SubscriptionOptions<GraphQLSilkIO, any, any, any>
-) => {
+    | SubscriptionOptions<any, any, any>
+) {
   if (subscribeOrOptions == null) {
     return new SubscriptionChainFactory({ output })
   }
 
   const options = getSubscriptionOptions(subscribeOrOptions)
-  const type = "subscription"
-  return {
+  const operation = "subscription"
+  return meta({
     ...getFieldOptions(options),
     input: options.input,
     output,
@@ -162,90 +173,82 @@ export const createSubscription = (
           options.middlewares
         ),
         async () => options.subscribe(getStandardValue(await parseInput())),
-        { parseInput, parent: undefined, outputSilk: output, type }
+        { parseInput, parent: undefined, outputSilk: output, operation }
       )
     },
     resolve: options.resolve ?? defaultSubscriptionResolve,
-    type,
-  } as Subscription<any, any, any>
+    operation,
+  }) as Loom.Subscription<any, any, any>
 }
 
-export const subscription: SubscriptionFactoryWithChain<GraphQLSilkIO> =
-  Object.assign(
-    createSubscription as SubscriptionFactory<GraphQLSilkIO>,
-    SubscriptionChainFactory.methods()
-  )
+export const subscription: SubscriptionFactoryWithChain = Object.assign(
+  createSubscription as SubscriptionFactory,
+  SubscriptionChainFactory.methods()
+)
 
-export const ResolverOptionsMap = new WeakMap<
-  object,
-  ResolverOptionsWithParent
->()
-
-export function baseResolver(
-  operations: Record<string, FieldOrOperation<any, any, any>>,
-  options: ResolverOptionsWithParent | undefined
-) {
-  const record: Record<string, FieldOrOperation<any, any, any>> = {}
-
-  Object.entries(operations).forEach(([name, operation]) => {
-    record[name] = extraOperationOptions(operation, options)
-  })
-
-  if (options) ResolverOptionsMap.set(record, options)
-  return record
-}
-
-function extraOperationOptions<
-  TOperation extends FieldOrOperation<any, any, any>,
->(
-  operation: TOperation,
+function extraOperationOptions<TField extends Loom.FieldOrOperation>(
+  field: TField,
   options: ResolverOptionsWithParent<any> | undefined
-): TOperation {
+): TField {
+  if (typeof field === "symbol") return field
+
   const composeMiddlewares = (
     extraOptions: { middlewares?: Middleware[] } | undefined
   ): Middleware[] => compose(extraOptions?.middlewares, options?.middlewares)
 
-  if (typeof operation === "symbol") return operation
-
-  switch (operation.type) {
+  switch (field["~meta"].operation) {
     case "field":
       return {
-        ...operation,
-        resolve: (parent, input, extraOptions) =>
-          operation.resolve(parent, input, {
-            ...extraOptions,
-            middlewares: composeMiddlewares(extraOptions),
-          }),
+        ...field,
+        "~meta": {
+          ...field["~meta"],
+          resolve: (parent, input, extraOptions) =>
+            field["~meta"].resolve(parent, input, {
+              ...extraOptions,
+              middlewares: composeMiddlewares(extraOptions),
+            }),
+        },
       }
     case "subscription":
       return {
-        ...operation,
-        subscribe: (input, extraOptions) =>
-          (operation as Subscription<any, any, any>).subscribe(input, {
-            ...extraOptions,
-            middlewares: composeMiddlewares(extraOptions),
-          }),
+        ...field,
+        "~meta": {
+          ...field["~meta"],
+          subscribe: (input, extraOptions) =>
+            (field as Loom.Subscription<any, any, any>)["~meta"].subscribe(
+              input,
+              {
+                ...extraOptions,
+                middlewares: composeMiddlewares(extraOptions),
+              }
+            ),
+        },
       }
     default:
       return {
-        ...operation,
-        resolve: (input: any, extraOptions: ResolvingOptions | undefined) =>
-          operation.resolve(input, {
-            ...extraOptions,
-            middlewares: composeMiddlewares(extraOptions),
-          }),
+        ...field,
+        "~meta": {
+          ...field["~meta"],
+          resolve: (input: any, extraOptions: ResolvingOptions | undefined) =>
+            field["~meta"].resolve(input, {
+              ...extraOptions,
+              middlewares: composeMiddlewares(extraOptions),
+            }),
+        },
       }
   }
 }
 
-export const resolver: ResolverFactory<GraphQLSilkIO> = Object.assign(
-  baseResolver as ResolverFactory<GraphQLSilkIO>,
+export const resolver: ResolverFactory = Object.assign(
+  ((operations, options) =>
+    new ChainResolver(operations, options)) as ResolverFactory,
   {
     of: ((parent, operations, options) =>
-      baseResolver(
-        operations as Record<string, FieldOrOperation<any, any, any>>,
-        { ...options, parent } as ResolverOptionsWithParent
-      )) as ResolverFactory<GraphQLSilkIO>["of"],
+      new ObjectChainResolver(
+        parent,
+        operations,
+        options
+      )) as ResolverFactory["of"],
   }
 )
 
@@ -256,3 +259,142 @@ export const loom = {
   subscription,
   mutation,
 }
+
+export interface ResolverFactory {
+  of<
+    TParent extends GraphQLSilk,
+    TFields extends Record<
+      string,
+      Loom.Field<TParent, any, any> | Loom.Operation | typeof FIELD_HIDDEN
+    >,
+  >(
+    parent: TParent,
+    fields: TFields,
+    options?: ResolverOptionsWithExtensions<
+      OmitInUnion<ValueOf<TFields>, typeof FIELD_HIDDEN>
+    >
+  ): ObjectChainResolver<TParent, TFields>
+
+  <TFields extends Record<string, Loom.Operation>>(
+    operations: TFields,
+    options?: ResolverOptions<ValueOf<TFields>>
+  ): ChainResolver<TFields>
+}
+
+export class ChainResolver<
+  TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
+> implements Loom.Resolver
+{
+  protected meta: {
+    [IS_RESOLVER]: true
+    fields: TFields
+    options?: ResolverOptionsWithExtensions
+  }
+
+  public constructor(
+    fields: TFields,
+    options?: ResolverOptionsWithExtensions<any>
+  ) {
+    this.meta = {
+      [IS_RESOLVER]: true,
+      fields,
+      options,
+    }
+  }
+
+  public get "~meta"(): typeof this.meta {
+    const fields: Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN> =
+      {}
+
+    Object.entries(this.meta.fields).forEach(([name, field]) => {
+      if (field === FIELD_HIDDEN) {
+        fields[name] = field
+      } else {
+        fields[name] = extraOperationOptions(field, this.meta.options)
+      }
+    })
+
+    return {
+      ...this.meta,
+      fields: fields as TFields,
+    }
+  }
+
+  public use(
+    ...middlewares: Middleware<
+      OmitInUnion<ValueOf<TFields>, typeof FIELD_HIDDEN>
+    >[]
+  ): this {
+    this.meta.options ??= {}
+    this.meta.options.middlewares ??= []
+    this.meta.options.middlewares.push(...(middlewares as Middleware[]))
+    return this
+  }
+
+  public toExecutor(): Executor<TFields> {
+    const fields = this["~meta"].fields
+    const executor: Record<string, (...args: any) => any> = {}
+
+    Object.entries(fields).forEach(([name, field]) => {
+      if (field === FIELD_HIDDEN) return
+      executor[name] = field["~meta"].resolve
+    })
+
+    return executor as Executor<TFields>
+  }
+}
+
+export class ObjectChainResolver<
+  TParent extends GraphQLSilk,
+  TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
+> extends ChainResolver<TFields> {
+  protected meta: {
+    [IS_RESOLVER]: true
+    fields: TFields
+    parent: TParent
+    options?: ResolverOptionsWithExtensions
+  }
+
+  public constructor(
+    parent: TParent,
+    fields: TFields,
+    options?: ResolverOptionsWithExtensions<any>
+  ) {
+    super(fields, options)
+    this.meta = {
+      [IS_RESOLVER]: true,
+      fields,
+      parent,
+      options,
+    }
+  }
+
+  public get "~meta"(): typeof this.meta {
+    return super["~meta"] as typeof this.meta
+  }
+
+  public extensions(
+    extensions: Pick<
+      GraphQLObjectTypeConfig<any, any>,
+      "extensions"
+    >["extensions"]
+  ): this {
+    this.meta.options ??= {}
+    this.meta.options.extensions ??= {}
+    this.meta.options.extensions = {
+      ...this.meta.options.extensions,
+      ...extensions,
+    }
+    return this
+  }
+}
+
+type Executor<
+  TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
+> = {
+  [K in keyof TFields]: TFields[K] extends Loom.FieldOrOperation
+    ? TFields[K]["~meta"]["resolve"]
+    : never
+}
+
+export * from "./resolver-chain-factory"
