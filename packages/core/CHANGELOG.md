@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: `field.load()` to easier load data using data loader
 - Feat: chaining resolver factory
 - Feat: enhance type inference for `silk`
 - **Break change** refactor: rename `MiddlewareOptions.type` to `MiddlewareOptions.operation`
