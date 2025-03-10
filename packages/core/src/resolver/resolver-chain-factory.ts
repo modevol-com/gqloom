@@ -380,9 +380,7 @@ export class QueryFactoryWithResolve<
   implements Loom.Query<TOutput, TInput>
 {
   public get "~meta"(): Loom.Query<TOutput, TInput>["~meta"] {
-    return loom.query(this.output, this.options as QueryOptions<any, any>)[
-      "~meta"
-    ]
+    return loom.query(this.output, this.options)["~meta"]
   }
 
   public constructor(
@@ -418,10 +416,7 @@ export class MutationFactoryWithResolve<
   implements Loom.Mutation<TOutput, TInput>
 {
   public get "~meta"(): Loom.Mutation<TOutput, TInput>["~meta"] {
-    return loom.mutation(
-      this.output,
-      this.options as MutationOptions<any, any>
-    )["~meta"]
+    return loom.mutation(this.output, this.options)["~meta"]
   }
 
   public constructor(
@@ -453,9 +448,7 @@ export class FieldFactoryWithResolve<
   TOutput extends GraphQLSilk,
 > extends BaseChainFactory<Loom.Field<TParent, TOutput, undefined>> {
   public get "~meta"(): Loom.Field<TParent, TOutput, undefined>["~meta"] {
-    return loom.field(this.output, this.options as FieldOptions<any, any, any>)[
-      "~meta"
-    ]
+    return loom.field(this.output, this.options)["~meta"]
   }
 
   public constructor(
