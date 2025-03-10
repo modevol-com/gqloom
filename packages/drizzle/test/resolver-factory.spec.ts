@@ -228,26 +228,39 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       let count = 0
 
-      const query = userFactory.selectArrayQuery({
-        middlewares: [
-          async ({ parseInput, next }) => {
-            const opts = await parseInput()
-            if (opts.issues) throw new Error("Invalid input")
-            expectTypeOf(opts.value).toEqualTypeOf<
-              NonNullable<SelectArrayOptions> | undefined
-            >()
-            count++
-            const answer = await next()
-            expectTypeOf(answer).toEqualTypeOf<
-              (typeof sqliteSchemas.user.$inferSelect)[]
-            >()
-            return answer
-          },
-        ],
-      })
+      const query = userFactory
+        .selectArrayQuery({
+          middlewares: [
+            async ({ parseInput, next }) => {
+              const opts = await parseInput()
+              if (opts.issues) throw new Error("Invalid input")
+              expectTypeOf(opts.value).toEqualTypeOf<
+                NonNullable<SelectArrayOptions> | undefined
+              >()
+              count++
+              const answer = await next()
+              expectTypeOf(answer).toEqualTypeOf<
+                (typeof sqliteSchemas.user.$inferSelect)[]
+              >()
+              return answer
+            },
+          ],
+        })
+        .use(async ({ parseInput, next }) => {
+          const value = await parseInput.getResult()
+          expectTypeOf(value).toEqualTypeOf<
+            NonNullable<SelectArrayOptions> | undefined
+          >()
+          count++
+          const answer = await next()
+          expectTypeOf(answer).toEqualTypeOf<
+            (typeof sqliteSchemas.user.$inferSelect)[]
+          >()
+          return answer
+        })
 
       await query["~meta"].resolve({})
-      expect(count).toBe(1)
+      expect(count).toBe(2)
     })
   })
 
