@@ -1,4 +1,4 @@
-import type { GraphQLSilk, Loom } from "@gqloom/core"
+import type { GraphQLSilk } from "@gqloom/core"
 import type { InferSelectModel, Many, Table } from "drizzle-orm"
 import type { MySqlDatabase } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
@@ -7,6 +7,7 @@ import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
 import type {
+  FieldFactoryWithResolve,
   MutationFactoryWithResolve,
   QueryFactoryWithResolve,
 } from "./field"
@@ -119,25 +120,23 @@ export type InferSelectSingleOptions<
 export interface RelationManyField<
   TTable extends Table,
   TRelationTable extends Table,
-> extends Loom.Field<
+> extends FieldFactoryWithResolve<
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable>[],
       InferSelectModel<TRelationTable>[]
-    >,
-    undefined
+    >
   > {}
 
 export interface RelationOneField<
   TTable extends Table,
   TRelationTable extends Table,
-> extends Loom.Field<
+> extends FieldFactoryWithResolve<
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable> | null | undefined,
       InferSelectModel<TRelationTable> | null | undefined
-    >,
-    undefined
+    >
   > {}
 
 export type InsertArrayMutation<

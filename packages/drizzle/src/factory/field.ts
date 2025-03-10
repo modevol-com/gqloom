@@ -1,5 +1,6 @@
 import {
   BaseChainFactory,
+  type FieldOptions,
   type GraphQLSilk,
   type Loom,
   type MutationOptions,
@@ -81,5 +82,30 @@ export class MutationFactoryWithResolve<
       ...this.options,
       input,
     } as MutationOptions<any, any>)
+  }
+}
+
+export class FieldFactoryWithResolve<
+  TParent extends GraphQLSilk,
+  TOutput extends GraphQLSilk,
+> extends BaseChainFactory<Loom.Field<TParent, TOutput, undefined>> {
+  public get "~meta"(): Loom.Field<TParent, TOutput, undefined>["~meta"] {
+    return loom.field(this.output, this.options as FieldOptions<any, any, any>)[
+      "~meta"
+    ]
+  }
+
+  public constructor(
+    protected output: TOutput,
+    protected readonly options: FieldOptions<TParent, TOutput, undefined>
+  ) {
+    super(options)
+  }
+
+  protected clone(options?: Partial<typeof this.options> | undefined): this {
+    return new FieldFactoryWithResolve(this.output, {
+      ...this.options,
+      ...options,
+    }) as this
   }
 }

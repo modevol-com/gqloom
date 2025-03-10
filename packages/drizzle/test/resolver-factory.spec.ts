@@ -345,11 +345,13 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should be created without error", () => {
-      const postsField = userFactory.relationField("posts")
+      const postsField = userFactory.relationField("posts").description("posts")
       expect(postsField).toBeDefined()
 
       const postFactory = drizzleResolverFactory(db, "post")
-      const authorField = postFactory.relationField("author")
+      const authorField = postFactory
+        .relationField("author")
+        .description("author")
       expect(authorField).toBeDefined()
     })
 

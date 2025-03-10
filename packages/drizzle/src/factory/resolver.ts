@@ -45,7 +45,7 @@ import {
 import { GraphQLError } from "graphql"
 import { DrizzleWeaver, type TableSilk } from ".."
 import { inArrayMultiple } from "../helper"
-import { QueryFactoryWithResolve } from "./field"
+import { FieldFactoryWithResolve, QueryFactoryWithResolve } from "./field"
 import {
   type ColumnFilters,
   type DeleteArgs,
@@ -391,13 +391,16 @@ export abstract class DrizzleResolverFactory<
       })
     })
 
-    return loom.field(isList ? output.$list() : output.$nullable(), {
-      ...options,
-      resolve: (parent) => {
-        const loader = useLoader()
-        return loader.load(parent)
-      },
-    } as FieldOptions<any, any, any>)
+    return new FieldFactoryWithResolve(
+      isList ? output.$list() : output.$nullable(),
+      {
+        ...options,
+        resolve: (parent) => {
+          const loader = useLoader()
+          return loader.load(parent)
+        },
+      } as FieldOptions<any, any, any>
+    )
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(options?: {
