@@ -3,13 +3,13 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
+  MutationFactoryWithResolve,
   type MutationOptions,
   silk,
 } from "@gqloom/core"
 import type { InferSelectModel } from "drizzle-orm"
 import type { MySqlDatabase, MySqlTable } from "drizzle-orm/mysql-core"
 import type { GraphQLOutputType } from "graphql"
-import { MutationFactoryWithResolve } from "./field"
 import {
   type DeleteArgs,
   DrizzleInputFactory,

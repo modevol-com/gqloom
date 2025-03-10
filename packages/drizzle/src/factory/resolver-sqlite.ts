@@ -3,13 +3,13 @@ import {
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Middleware,
+  MutationFactoryWithResolve,
   type MutationOptions,
   silk,
 } from "@gqloom/core"
 import type { InferSelectModel } from "drizzle-orm"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { GraphQLOutputType } from "graphql"
-import { MutationFactoryWithResolve } from "./field"
 import type {
   DeleteArgs,
   InsertArrayArgs,

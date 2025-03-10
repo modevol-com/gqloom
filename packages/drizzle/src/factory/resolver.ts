@@ -1,11 +1,13 @@
 import {
   type ChainResolver,
   EasyDataLoader,
+  FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Loom,
   type Middleware,
+  QueryFactoryWithResolve,
   type QueryOptions,
   capitalize,
   createMemoization,
@@ -45,7 +47,6 @@ import {
 import { GraphQLError } from "graphql"
 import { DrizzleWeaver, type TableSilk } from ".."
 import { inArrayMultiple } from "../helper"
-import { FieldFactoryWithResolve, QueryFactoryWithResolve } from "./field"
 import {
   type ColumnFilters,
   type DeleteArgs,
