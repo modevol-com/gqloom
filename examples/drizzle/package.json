@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch --env-file .env src/index.ts",
-    "push": "drizzle-kit push"
+    "dev:loader": "tsx watch --env-file .env src/loader.ts",
+    "push": "drizzle-kit push",
+    "seed": "tsx src/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +24,7 @@
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "workspace:*",
     "dotenv": "^16.4.7",
+    "drizzle-seed": "^0.3.1",
     "graphql": "^16.8.1",
     "graphql-yoga": "^5.6.0",
     "pg": "^8.13.1"
