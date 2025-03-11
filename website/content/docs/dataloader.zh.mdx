@@ -10,331 +10,257 @@ icon: HardDriveDownload
 
 ## 示例
 
-考虑我们有如下简单对象 `User` 和 `Book`：
+### 表格定义
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+考虑我们有两张表 `users` 和 `posts`，其中 `posts` 通过 `posts.authorId` 关联到 `users` 的 `id`：
+
 ```ts twoslash
-import * as v from "valibot"
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/pg-core"
 
-const User = v.object({
-  __typename: v.nullish(v.literal("User")),
-  id: v.number(),
-  name: v.string(),
-})
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
 
-interface IUser extends v.InferOutput<typeof User> {}
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
+)
 
-const Book = v.object({
-  __typename: v.nullish(v.literal("Book")),
-  id: v.number(),
-  title: v.string(),
-  authorID: v.number(),
-})
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}))
 
-interface IBook extends v.InferOutput<typeof Book> {}
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer().notNull(),
+  })
+)
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+}))
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
-import { z } from "zod"
 
-const User = z.object({
-  __typename: z.literal("User").nullish(),
-  id: z.number(),
-  name: z.string(),
-})
+### 数据填充
 
-interface IUser extends z.infer<typeof User> {}
+让我们使用 [drizzle-seed](https://orm.drizzle.team/docs/seed-overview) 为数据库填充一些数据：
 
-const Book = z.object({
-  __typename: z.literal("Book").nullish(),
-  id: z.number(),
-  title: z.string(),
-  authorID: z.number(),
-})
+```ts
+import { drizzle } from "drizzle-orm/node-postgres"
+import { reset, seed } from "drizzle-seed"
+import { config } from "../env.config"
+import * as schema from "./schema"
 
-interface IBook extends z.infer<typeof Book> {}
-```
-</Tab>
-</Tabs>
-
-在 `Book` 对象上，我们有一个 `authorID` 字段，它引用了 `User` 对象的 `id` 字段。
-
-另外，我们还需要准备一些简单的数据：
-
-```ts twoslash
-interface IUser {
-  id: number
-  name: string
+async function main() {
+  const db = drizzle(config.databaseUrl, { logger: true })
+  await reset(db, schema)
+  await seed(db, schema).refine(() => ({
+    users: {
+      count: 20,
+      with: {
+        posts: [
+          { weight: 0.6, count: [1, 2, 3] },
+          { weight: 0.3, count: [5, 6, 7] },
+          { weight: 0.1, count: [8, 9, 10] },
+        ],
+      },
+    },
+  }))
 }
-interface IBook {
-  id: number
-  title: string
-  authorID: number
-}
-// ---cut---
-const users: IUser[] = [
-  { id: 1, name: "Alice" },
-  { id: 2, name: "Bob" },
-  { id: 3, name: "Charlie" },
-  { id: 4, name: "David" },
-  { id: 5, name: "Eve" },
-  { id: 6, name: "Frank" },
-  { id: 7, name: "Grace" },
-  { id: 8, name: "Heidi" },
-  { id: 9, name: "Igor" },
-  { id: 10, name: "Jack" },
-]
 
-const books: IBook[] = [
-  { id: 1, title: "The Cat in the Hat", authorID: 1 },
-  { id: 2, title: "Green Eggs and Ham", authorID: 1 },
-  { id: 3, title: "War and Peace", authorID: 2 },
-  { id: 4, title: "1984", authorID: 2 },
-  { id: 5, title: "The Great Gatsby", authorID: 3 },
-  { id: 6, title: "To Kill a Mockingbird", authorID: 3},
-]
+main()
 ```
 
-让我们为 `Book` 对象编写一个简单的解析器：
+### 创建解析器
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+让我们为 `User` 对象编写一个简单的解析器：
+
 ```ts twoslash
-import * as v from "valibot"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/pg-core"
 
-const User = v.object({
-  __typename: v.nullish(v.literal("User")),
-  id: v.number(),
-  name: v.string(),
-})
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
 
-interface IUser extends v.InferOutput<typeof User> {}
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
+)
 
-const Book = v.object({
-  __typename: v.nullish(v.literal("Book")),
-  id: v.number(),
-  title: v.string(),
-  authorID: v.number(),
-})
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}))
 
-interface IBook extends v.InferOutput<typeof Book> {}
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer().notNull(),
+  })
+)
 
-const users: IUser[] = []
-
-const books: IBook[] = []
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+}))
+// @filename: env.config.ts
+export const config = { databaseUrl: "" }
+// @filename: index.ts
 // ---cut---
-import { resolver, query, field } from "@gqloom/core"
+import { field, query, resolver, weave } from "@gqloom/core"
+import { eq, inArray } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { config } from "./env.config"
+import * as tables from "./schema"
+import { posts, users } from "./schema"
 
-const BookResolver = resolver.of(Book, {
-  books: query(v.array(Book)).resolve(() => books),
-  
-  author: field(v.nullish(User)).resolve((book) =>
-    users.find((u) => u.id === book.authorID)
+const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+
+const userResolver = resolver.of(users, {
+  users: query(users.$list()).resolve(() => db.select().from(users)),
+
+  posts: field(posts.$list()).resolve((user) =>
+    db.select().from(posts).where(eq(posts.authorId, user.id))
   ),
 })
+
+export const schema = weave(userResolver)
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
-import { z } from "zod"
 
-const User = z.object({
-  __typename: z.literal("User").nullish(),
-  id: z.number(),
-  name: z.string(),
-})
+在上面的代码中，我们定义了一个用户解析器，它包含：  
+- `users` 查询：用于获取所有用户
+- `posts` 字段：用于获取对应用户的所有帖子
 
-interface IUser extends z.infer<typeof User> {}
-
-const Book = z.object({
-  __typename: z.literal("Book").nullish(),
-  id: z.number(),
-  title: z.string(),
-  authorID: z.number(),
-})
-
-interface IBook extends z.infer<typeof Book> {}
-
-const users: IUser[] = []
-
-const books: IBook[] = []
-// ---cut---
-import { resolver, query, field } from "@gqloom/zod"
-
-const BookResolver = resolver.of(Book, {
-  books: query(Book.array()).resolve(() => books),
-  
-  author: field(User.nullish()).resolve((book) =>
-    users.find((u) => u.id === book.authorID)
-  ),
-})
-```
-</Tab>
-</Tabs>
-
-在上面的代码中，我们为 `Book` 对象定义了一个额外字段 `author`，它将返回与 `authorID` 字段匹配的 `User` 对象。我们还定义了一个名为 `books` 的查询，它将返回所有 `Book` 对象。
-在这里，我们直接使用 `users` 数组来查找用户。对于下面的查询：
-```graphql title="GraphQL Schema"
-query books {
-  books {
+下面是一个示例查询，它将返回所有用户的信息以及对应的帖子：
+```graphql title="GraphQL Query"
+query usersWithPosts {
+  users {
     id
-    title
-    author {
+    name
+    email
+    posts {
       id
-      name
+      title
     }
   }
 }
 ```
-我们会为每个 `Book` 实例查询 `author` 字段，在此过程中，我们将直接遍历 `users` 数组以查找与 `authorID` 字段匹配的用户。
-在这里我们共有 6 个 `Book` 实例，因此我们将执行 6 次查找操作。有没有更好的方法来减少查询次数呢？
+这个查询将为每个用户分别查询他们的帖子。我们在前一步在数据库里填充了 20 个用户，所以这个查询将引起 20 次对 `posts` 表的查询。  
+这显然是一种非常低效的方式，让我们来看看如何使用 DataLoader 来减少查询次数。
 
 ### 使用 DataLoader
+
 接下来，我们将使用 DataLoader 来优化我们的查询。
 
-我们可以使用来自 `@gqloom/core` 包的提供基本功能的 `EasyDataLoader` 类，也可以使用更流行的 [DataLoader](https://github.com/graphql/dataloader)
-
-#### 定义批量查询
-
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
 ```ts twoslash
-import * as v from "valibot"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/pg-core"
 
-const User = v.object({
-  __typename: v.nullish(v.literal("User")),
-  id: v.number(),
-  name: v.string(),
-})
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
 
-interface IUser extends v.InferOutput<typeof User> {}
-
-const Book = v.object({
-  __typename: v.nullish(v.literal("Book")),
-  id: v.number(),
-  title: v.string(),
-  authorID: v.number(),
-})
-
-interface IBook extends v.InferOutput<typeof Book> {}
-
-const users: IUser[] = []
-
-const books: IBook[] = []
-// ---cut---
-import {
-  EasyDataLoader,
-  createMemoization,
-  field,
-  query,
-  resolver,
-} from "@gqloom/core"
-
-const useUserLoader = createMemoization(
-  () =>
-    new EasyDataLoader(async (authorIDs: number[]) => {
-      const authorIDSet = new Set(authorIDs)
-      const authorMap = new Map<number, IUser>()
-      for (const user of users) {
-        if (authorIDSet.has(user.id)) {
-          authorMap.set(user.id, user)
-        }
-      }
-      return authorIDs.map((authorID) => authorMap.get(authorID))
-    })
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
 )
 
-const BookResolver = resolver.of(Book, {
-  books: query(v.array(Book)).resolve(() => books),
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}))
 
-  author: field(v.nullish(User)).resolve((book) =>
-    useUserLoader().load(book.authorID)
-  ),
-})
-
-```
-</Tab>
-<Tab value="zod">
-```ts twoslash
-import { z } from "zod"
-
-const User = z.object({
-  __typename: z.literal("User").nullish(),
-  id: z.number(),
-  name: z.string(),
-})
-
-interface IUser extends z.infer<typeof User> {}
-
-const Book = z.object({
-  __typename: z.literal("Book").nullish(),
-  id: z.number(),
-  title: z.string(),
-  authorID: z.number(),
-})
-
-interface IBook extends z.infer<typeof Book> {}
-
-const users: IUser[] = []
-
-const books: IBook[] = []
-// ---cut---
-import {
-  EasyDataLoader,
-  createMemoization,
-  field,
-  query,
-  resolver,
-} from "@gqloom/core"
-
-const useUserLoader = createMemoization(
-  () =>
-    new EasyDataLoader(async (authorIDs: number[]) => {
-      const authorIDSet = new Set(authorIDs)
-      const authorMap = new Map<number, IUser>()
-      for (const user of users) {
-        if (authorIDSet.has(user.id)) {
-          authorMap.set(user.id, user)
-        }
-      }
-      return authorIDs.map((authorID) => authorMap.get(authorID))
-    })
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer().notNull(),
+  })
 )
 
-const BookResolver = resolver.of(Book, {
-  books: query(Book.array()).resolve(() => books),
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+}))
+// @filename: env.config.ts
+export const config = { databaseUrl: "" }
+// @filename: index.ts
+// ---cut---
+import { field, query, resolver, weave } from "@gqloom/core"
+import { eq, inArray } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { config } from "./env.config"
+import * as tables from "./schema"
+import { posts, users } from "./schema"
 
-  author: field(User.nullish()).resolve((book) =>
-    useUserLoader().load(book.authorID)
-  ),
+const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+
+const userResolver = resolver.of(users, {
+  users: query(users.$list()).resolve(() => db.select().from(users)),
+
+  posts_: field(posts.$list()).resolve((user) => // [!code --]
+    db.select().from(posts).where(eq(posts.authorId, user.id)) // [!code --]
+  ), // [!code --]
+
+  posts: field(posts.$list()).load(async (userList) => { // [!code ++]
+    const postList = await db // [!code ++]
+      .select() // [!code ++]
+      .from(posts) // [!code ++]
+      .where( // [!code ++]
+        inArray( // [!code ++]
+          posts.authorId, // [!code ++]
+          userList.map((u) => u.id) // [!code ++]
+        ) // [!code ++]
+      ) // [!code ++]
+    const postMap = Map.groupBy(postList, (p) => p.authorId) // [!code ++]
+    return userList.map((u) => postMap.get(u.id) ?? []) // [!code ++]
+  }), // [!code ++]
 })
 
+export const schema = weave(userResolver)
 ```
-</Tab>
-</Tabs>
 
-在上面的代码中，我们使用 `createMemoization` 创建了一个 `useUserLoader` 函数，该函数返回一个 `DataLoader` 实例。
-记忆化函数确保在同一个请求内总是使用相同的 `DataLoader` 实例。
+在上面的代码中，我们使用 `field().load()` 来启用数据批量加载，在幕后这将使用 `DataLoader` 来批量加载数据。  
+在 `load()` 内部，我们通过以下步骤实现数据批量加载：  
+1. 使用 `in` 操作从 `posts` 表中一次性获取所有当前加载的用户的帖子；  
+2. 使用 `Map.groupBy()` 将帖子列表按作者 ID 分组；
+3. 将用户列表按顺序映射到帖子列表，如果某个用户没有帖子，则返回一个空数组。
 
-在 `createMemoization` 中，我们直接构建了 `EasyDataLoader` 实例，并传递了一个查询函数，让我们深入了解这个查询函数是如何工作的：
-
-1. 我们在构造 `EasyDataLoader` 时传递了一个参数为 `number[]` 的批量查询函数。
-
-2. 在查询函数中，我们接收一个 `authorIDs` 数组，该数组包含要加载的 `User` 对象的 `id`。当我们对 `Book` 对象调用 `author` 字段时，`DataLoader` 会自动合并同一个请求内的所有 `authorID`，并传递给查询函数。
-
-3. 在查询函数中，我们首先创建一个 `Set` 对象，用于快速检查 `authorID` 是否存在于 `authorIDs` 数组中。
-
-4. 然后，我们创建一个 `Map` 对象，用于存储 `authorID` 和 `User` 对象之间的映射关系。
-
-5. 接下来，我们遍历 `users` 数组，如果 `user.id` 存在于 `authorIDSet` 中，则将其添加到 `authorMap` 中。
-
-6. 最后，我们根据 `authorIDs` 数组的顺序，从 `authorMap` 中获取对应的 `User` 对象，并返回一个包含这些 `User` 对象的数组。
+如此一来，我们将原先的 20 次查询合并为 1 次查询，从而实现了性能优化。
 
 <Callout>
 必须保证查询函数的返回数组顺序与 `IDs` 数组顺序一致。`DataLoader` 依赖于此顺序来正确地合并结果。
 </Callout>
-
-如此一来，我们就可以在 `BookResolver` 中使用 `useUserLoader` 函数来加载 `Book` 对象的 `author` 字段了。
-为所有 6 个 `Book` 实例调用 `author` 字段时，`DataLoader` 会自动合并这些请求，并只对 `users` 数组进行一次遍历，从而提高了性能。

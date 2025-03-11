@@ -3,338 +3,264 @@ title: Dataloader
 icon: HardDriveDownload
 ---
 
-Due to the flexibility of GraphQL, we often need to execute multiple queries when we load an object's associated objects.
-This causes the famous N+1 query problem. To solve this problem, we can use [DataLoader](https://github.com/graphql/dataloader).
+Due to the flexibility of GraphQL, when we load the associated objects of a certain object, we usually need to execute multiple queries.
+This leads to the well-known N+1 query problem. To solve this problem, we can use [DataLoader](https://github.com/graphql/dataloader).
 
-The `DataLoader` is able to reduce the number of queries to the database by merging multiple requests into a single one, and also caches the results of the query to avoid repetitive queries.
+`DataLoader` can combine multiple requests into one request, thus reducing the number of database queries. It can also cache query results to avoid duplicate queries.
 
-## Example
+## Examples
 
-Consider that we have the following simple objects `User` and `Book`:
+### Table Definition
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+Consider that we have two tables, `users` and `posts`, where `posts` is associated with the `id` of `users` through `posts.authorId`:
+
 ```ts twoslash
-import * as v from "valibot"
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/pg-core"
 
-const User = v.object({
-  __typename: v.nullish(v.literal("User")),
-  id: v.number(),
-  name: v.string(),
-})
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
 
-interface IUser extends v.InferOutput<typeof User> {}
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
+)
 
-const Book = v.object({
-  __typename: v.nullish(v.literal("Book")),
-  id: v.number(),
-  title: v.string(),
-  authorID: v.number(),
-})
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}))
 
-interface IBook extends v.InferOutput<typeof Book> {}
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer().notNull(),
+  })
+)
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+}))
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
-import { z } from "zod"
 
-const User = z.object({
-  __typename: z.literal("User").nullish(),
-  id: z.number(),
-  name: z.string(),
-})
+### Data Seeding
 
-interface IUser extends z.infer<typeof User> {}
+Let's use [drizzle-seed](https://orm.drizzle.team/docs/seed-overview) to populate some data into the database:
 
-const Book = z.object({
-  __typename: z.literal("Book").nullish(),
-  id: z.number(),
-  title: z.string(),
-  authorID: z.number(),
-})
+```ts
+import { drizzle } from "drizzle-orm/node-postgres"
+import { reset, seed } from "drizzle-seed"
+import { config } from "../env.config"
+import * as schema from "./schema"
 
-interface IBook extends z.infer<typeof Book> {}
-```
-</Tab>
-</Tabs>
-
-On the `Book` object, we have an `authorID` field that references the `id` field of the `User` object.
-
-In addition, we need to prepare some simple data:
-
-```ts twoslash
-interface IUser {
-  id: number
-  name: string
+async function main() {
+  const db = drizzle(config.databaseUrl, { logger: true })
+  await reset(db, schema)
+  await seed(db, schema).refine(() => ({
+    users: {
+      count: 20,
+      with: {
+        posts: [
+          { weight: 0.6, count: [1, 2, 3] },
+          { weight: 0.3, count: [5, 6, 7] },
+          { weight: 0.1, count: [8, 9, 10] },
+        ],
+      },
+    },
+  }))
 }
-interface IBook {
-  id: number
-  title: string
-  authorID: number
-}
-// ---cut---
-const users: IUser[] = [
-  { id: 1, name: "Alice" },
-  { id: 2, name: "Bob" },
-  { id: 3, name: "Charlie" },
-  { id: 4, name: "David" },
-  { id: 5, name: "Eve" },
-  { id: 6, name: "Frank" },
-  { id: 7, name: "Grace" },
-  { id: 8, name: "Heidi" },
-  { id: 9, name: "Igor" },
-  { id: 10, name: "Jack" },
-]
 
-const books: IBook[] = [
-  { id: 1, title: "The Cat in the Hat", authorID: 1 },
-  { id: 2, title: "Green Eggs and Ham", authorID: 1 },
-  { id: 3, title: "War and Peace", authorID: 2 },
-  { id: 4, title: "1984", authorID: 2 },
-  { id: 5, title: "The Great Gatsby", authorID: 3 },
-  { id: 6, title: "To Kill a Mockingbird", authorID: 3},
-]
+main()
 ```
 
-Let's write a simple resolver for the `Book` object:
+### Create a Resolver
 
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
+Let's write a simple resolver for the `User` object:
+
 ```ts twoslash
-import * as v from "valibot"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/pg-core"
 
-const User = v.object({
-  __typename: v.nullish(v.literal("User")),
-  id: v.number(),
-  name: v.string(),
-})
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
 
-interface IUser extends v.InferOutput<typeof User> {}
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
+)
 
-const Book = v.object({
-  __typename: v.nullish(v.literal("Book")),
-  id: v.number(),
-  title: v.string(),
-  authorID: v.number(),
-})
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}))
 
-interface IBook extends v.InferOutput<typeof Book> {}
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer().notNull(),
+  })
+)
 
-const users: IUser[] = []
-
-const books: IBook[] = []
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+}))
+// @filename: env.config.ts
+export const config = { databaseUrl: "" }
+// @filename: index.ts
 // ---cut---
-import { resolver, query, field } from "@gqloom/core"
+import { field, query, resolver, weave } from "@gqloom/core"
+import { eq, inArray } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { config } from "./env.config"
+import * as tables from "./schema"
+import { posts, users } from "./schema"
 
-const BookResolver = resolver.of(Book, {
-  books: query(v.array(Book)).resolve(() => books),
-  
-  author: field(v.nullish(User)).resolve((book) =>
-    users.find((u) => u.id === book.authorID)
+const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+
+const userResolver = resolver.of(users, {
+  users: query(users.$list()).resolve(() => db.select().from(users)),
+
+  posts: field(posts.$list()).resolve((user) =>
+    db.select().from(posts).where(eq(posts.authorId, user.id))
   ),
 })
+
+export const schema = weave(userResolver)
 ```
-</Tab>
-<Tab value="zod">
-```ts twoslash
-import { z } from "zod"
 
-const User = z.object({
-  __typename: z.literal("User").nullish(),
-  id: z.number(),
-  name: z.string(),
-})
+In the above code, we defined a user resolver, which includes:
+- `users` query: used to get all users
+- `posts` field: used to get all posts of the corresponding user
 
-interface IUser extends z.infer<typeof User> {}
-
-const Book = z.object({
-  __typename: z.literal("Book").nullish(),
-  id: z.number(),
-  title: z.string(),
-  authorID: z.number(),
-})
-
-interface IBook extends z.infer<typeof Book> {}
-
-const users: IUser[] = []
-
-const books: IBook[] = []
-// ---cut---
-import { resolver, query, field } from "@gqloom/zod"
-
-const BookResolver = resolver.of(Book, {
-  books: query(Book.array()).resolve(() => books),
-  
-  author: field(User.nullish()).resolve((book) =>
-    users.find((u) => u.id === book.authorID)
-  ),
-})
-```
-</Tab>
-</Tabs>
-
-In the above code, we have defined an additional field `author` for `Book` objects which will return `User` objects matching the `authorID` field. We also define a query called `books` that will return all `Book` objects.
-Here, we use the `users` array directly to find users. For the following query:
-```graphql title="GraphQL Schema"
-query books {
-  books {
+Here is an example query that will return the information of all users and their corresponding posts:
+```graphql title="GraphQL Query"
+query usersWithPosts {
+  users {
     id
-    title
-    author {
+    name
+    email
+    posts {
       id
-      name
+      title
     }
   }
 }
 ```
-We will look up the `author` field for each `Book` instance, and in doing so, we will directly traverse the `users` array to find users that match the `authorID` field.
-Here we have 6 `Book` instances, so we will execute 6 lookups. Is there a better way to reduce the number of queries?
+This query will query the posts for each user separately. We populated 20 users in the database in the previous step, so this query will cause 20 queries to the `posts` table.
+This is obviously a very inefficient way. Let's see how to use DataLoader to reduce the number of queries.
 
-### Using the DataLoader
-Next, we'll use the DataLoader to optimize our query.
+### Using DataLoader
 
-We can use the `EasyDataLoader` class from the `@gqloom/core` package for basic functionality, or opt for the more popular [DataLoader](https://github.com/graphql/dataloader).
+Next, we will use DataLoader to optimize our query.
 
-#### Defining Batch Queries
-
-<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
-<Tab value="valibot">
 ```ts twoslash
-import * as v from "valibot"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import { relations } from "drizzle-orm"
+import * as t from "drizzle-orm/pg-core"
 
-const User = v.object({
-  __typename: v.nullish(v.literal("User")),
-  id: v.number(),
-  name: v.string(),
-})
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
 
-interface IUser extends v.InferOutput<typeof User> {}
-
-const Book = v.object({
-  __typename: v.nullish(v.literal("Book")),
-  id: v.number(),
-  title: v.string(),
-  authorID: v.number(),
-})
-
-interface IBook extends v.InferOutput<typeof Book> {}
-
-const users: IUser[] = []
-
-const books: IBook[] = []
-// ---cut---
-import {
-  EasyDataLoader,
-  createMemoization,
-  field,
-  query,
-  resolver,
-} from "@gqloom/core"
-
-const useUserLoader = createMemoization(
-  () =>
-    new EasyDataLoader(async (authorIDs: number[]) => {
-      const authorIDSet = new Set(authorIDs)
-      const authorMap = new Map<number, IUser>()
-      for (const user of users) {
-        if (authorIDSet.has(user.id)) {
-          authorMap.set(user.id, user)
-        }
-      }
-      return authorIDs.map((authorID) => authorMap.get(authorID))
-    })
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
 )
 
-const BookResolver = resolver.of(Book, {
-  books: query(v.array(Book)).resolve(() => books),
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}))
 
-  author: field(v.nullish(User)).resolve((book) =>
-    useUserLoader().load(book.authorID)
-  ),
-})
-
-```
-</Tab>
-<Tab value="zod">
-```ts twoslash
-import { z } from "zod"
-
-const User = z.object({
-  __typename: z.literal("User").nullish(),
-  id: z.number(),
-  name: z.string(),
-})
-
-interface IUser extends z.infer<typeof User> {}
-
-const Book = z.object({
-  __typename: z.literal("Book").nullish(),
-  id: z.number(),
-  title: z.string(),
-  authorID: z.number(),
-})
-
-interface IBook extends z.infer<typeof Book> {}
-
-const users: IUser[] = []
-
-const books: IBook[] = []
-// ---cut---
-import {
-  EasyDataLoader,
-  createMemoization,
-  field,
-  query,
-  resolver,
-} from "@gqloom/core"
-
-const useUserLoader = createMemoization(
-  () =>
-    new EasyDataLoader(async (authorIDs: number[]) => {
-      const authorIDSet = new Set(authorIDs)
-      const authorMap = new Map<number, IUser>()
-      for (const user of users) {
-        if (authorIDSet.has(user.id)) {
-          authorMap.set(user.id, user)
-        }
-      }
-      return authorIDs.map((authorID) => authorMap.get(authorID))
-    })
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer().notNull(),
+  })
 )
 
-const BookResolver = resolver.of(Book, {
-  books: query(Book.array()).resolve(() => books),
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+}))
+// @filename: env.config.ts
+export const config = { databaseUrl: "" }
+// @filename: index.ts
+// ---cut---
+import { field, query, resolver, weave } from "@gqloom/core"
+import { eq, inArray } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/node-postgres"
+import { config } from "./env.config"
+import * as tables from "./schema"
+import { posts, users } from "./schema"
 
-  author: field(User.nullish()).resolve((book) =>
-    useUserLoader().load(book.authorID)
-  ),
+const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+
+const userResolver = resolver.of(users, {
+  users: query(users.$list()).resolve(() => db.select().from(users)),
+
+  posts_: field(posts.$list()).resolve((user) => // [!code --]
+    db.select().from(posts).where(eq(posts.authorId, user.id)) // [!code --]
+  ), // [!code --]
+
+  posts: field(posts.$list()).load(async (userList) => { // [!code ++]
+    const postList = await db // [!code ++]
+      .select() // [!code ++]
+      .from(posts) // [!code ++]
+      .where( // [!code ++]
+        inArray( // [!code ++]
+          posts.authorId, // [!code ++]
+          userList.map((u) => u.id) // [!code ++]
+        ) // [!code ++]
+      ) // [!code ++]
+    const postMap = Map.groupBy(postList, (p) => p.authorId) // [!code ++]
+    return userList.map((u) => postMap.get(u.id) ?? []) // [!code ++]
+  }), // [!code ++]
 })
 
+export const schema = weave(userResolver)
 ```
-</Tab>
-</Tabs>
 
-In the code above, we used `createMemoization` to create a `useUserLoader` function that returns a `EasyDataLoader` instance.
-The memoization function ensures that the same `EasyDataLoader` instance is always used within the same request.
+In the above code, we use `field().load()` to enable batch data loading. Behind the scenes, this will use `DataLoader` to batch load data.
+Inside `load()`, we implement batch data loading through the following steps:
+1. Use the `in` operation to get all the posts of the currently loaded users from the `posts` table at once;
+2. Use `Map.groupBy()` to group the list of posts by the author ID;
+3. Map the list of users to the list of posts in order. If a user has no posts, return an empty array.
 
-Inside `createMemoization`, we directly construct an `EasyDataLoader` instance and pass a query function. Let's delve into how this query function works:
-
-1. We pass a batch query function that takes a parameter of type `number[]` when constructing the `EasyDataLoader`.
-
-2. In the query function, we receive an array of `authorIDs` containing the `id` of the `User` object to be loaded. When we call the `author` field on the `Book` object, the `DataLoader` automatically merges all the `authorIDs` within the same request and passes them to the query function.
-
-3. In the query function, we first create a `Set` object, which we use to quickly check if `authorID` exists in the `authorIDs` array.
-
-4. We then create a `Map` object to store the mapping between `authorID` and `User` objects.
-
-5. Next, we iterate through the `users` array and add `user.id` to the `authorMap` if it exists in the `authorIDSet`.
-
-6. Finally, we retrieve the corresponding `User` objects from `authorMap` in the order of the `authorIDs` array and return an array containing those `User` objects.
+In this way, we combine the original 20 queries into 1 query, thus achieving performance optimization.
 
 <Callout>
-It must be ensured that the order of the return array of the query function matches the order of the `IDs` array. The `DataLoader` relies on this order to merge the results correctly.
+It is necessary to ensure that the order of the returned array of the query function is consistent with the order of the `IDs` array. `DataLoader` relies on this order to correctly merge the results.
 </Callout>
-
-In this way, we can use the `useUserLoader` function in `BookResolver` to load the `author` field of the `Book` object.
-When calling the `author` field for all 6 `Book` instances, `DataLoader` automatically merges these requests and iterates through the `users` array only once, thus improving performance.

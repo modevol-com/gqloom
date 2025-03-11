@@ -136,7 +136,7 @@ In the above code, we hide the `authorId` field, which means it will not appear 
 ## Resolver Factory
 
 `@gqloom/prisma` provides the `PrismaResolverFactory` to help you create resolver factories.
-With the resolver factory, you can quickly define common queries, mutations, and fields. The resolver factory also pre - defines the input types for common operation inputs. Using the resolver factory can significantly reduce boilerplate code, which is very useful for rapid development.
+With the resolver factory, you can quickly define common queries, mutations, and fields. The resolver factory also pre-defines the input types for common operation inputs. Using the resolver factory can significantly reduce boilerplate code, which is very useful for rapid development.
 
 ```ts
 import { Post, User } from '@gqloom/prisma/generated'
@@ -186,7 +186,7 @@ The `relationField` method accepts a string parameter representing the name of t
 
 ### Queries
 
-The resolver factory pre - defines common queries:
+The resolver factory pre-defines common queries:
   - countQuery
   - findFirstQuery
   - findManyQuery
@@ -212,7 +212,7 @@ In the above code, we use `userResolverFactory.findUniqueQuery()` to define the 
 
 ### Mutations
 
-The resolver factory pre - defines common mutations:
+The resolver factory pre-defines common mutations:
   - createMutation
   - createManyMutation
   - deleteMutation
