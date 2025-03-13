@@ -14,7 +14,7 @@ In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `
 
 This package provides GQLoom integration with [Mikro ORM](https://mikro-orm.io/):
 
-- Use MikroORM's Entity Schema as the silk thread;
+- Use MikroORM's Entity Schema as the silk;
 - Weaving the silk into MikroORM's Entity Schema;
 - Generating GraphQL operations from MikroORM's Entity Schema;
 
