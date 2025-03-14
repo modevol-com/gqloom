@@ -60,12 +60,14 @@ const heroEn = {
   description: "Weaving runtime types into GraphQL Schema",
   star: "Star on GitHub",
   start: "Getting Started",
+  buildServer: "build GraphQL server enjoyably and efficiently",
 }
 
 const heroCn = {
   description: "将运行时类型编织成 GraphQL Schema",
   star: "在 GitHub 点亮繁星",
   start: "快速上手",
+  buildServer: "愉快且高效地建构 GraphQL 服务",
 }
 
 function Hero({ lang, className }: LangProps) {
@@ -81,15 +83,18 @@ function Hero({ lang, className }: LangProps) {
         <h1 className="text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 sm:text-5xl font-bold bg-clip-text">
           GraphQL Loom
         </h1>
-        {lang === "zh" ? (
-          <div className="text-lg sm:mt-4">
-            编织{<RuntimeTypes />}为 GraphQL Schema
-          </div>
-        ) : (
-          <div className="text-lg sm:mt-4">
-            Weaving {<RuntimeTypes />} into GraphQL Schema
-          </div>
-        )}
+        <div className="sm:mt-4">
+          {lang === "zh" ? (
+            <div className="text-lg">
+              编织{<RuntimeTypes />}为 GraphQL Schema
+            </div>
+          ) : (
+            <div className="text-lg sm:mt-4">
+              Weaving {<RuntimeTypes />} into GraphQL Schema
+            </div>
+          )}
+          <div className="mt-1 opacity-70">{hero.buildServer}</div>
+        </div>
         <div className="flex flex-wrap px-4 gap-4">
           <Link
             href="https://github.com/modevol-com/gqloom"
