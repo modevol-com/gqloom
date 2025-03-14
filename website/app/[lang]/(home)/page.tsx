@@ -93,7 +93,7 @@ function Hero({ lang, className }: LangProps) {
               Weaving {<RuntimeTypes />} into GraphQL Schema
             </div>
           )}
-          <div className="mt-1 opacity-70">{hero.buildServer}</div>
+          <p className="mt-1 opacity-70">{hero.buildServer}</p>
         </div>
         <div className="flex flex-wrap px-4 gap-4">
           <Link
