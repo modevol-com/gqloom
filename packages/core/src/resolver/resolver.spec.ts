@@ -61,7 +61,7 @@ describe("resolver", () => {
         return new Date().getFullYear() - giraffe.birthday.getFullYear()
       }),
 
-      greeting: field(silk<string>(new GraphQLNonNull(GraphQLString)))
+      greeting: field(silk(new GraphQLNonNull(GraphQLString)))
         .description("a normal greeting")
         .input({ myName: silk(GraphQLString) })
         .resolve((giraffe, { myName }) => {
