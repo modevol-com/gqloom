@@ -199,3 +199,4 @@ export type TableSilk<TTable extends Table> = TTable &
   }
 
 export * from "./factory"
+export * from "./types"

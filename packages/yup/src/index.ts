@@ -383,6 +383,7 @@ function issuesFromValidationError(
   }))
 }
 
+export * from "./types"
 export {
   collectName,
   collectNames,

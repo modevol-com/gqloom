@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: export all types
+
 ## 0.8.0 (2025-03-11)
 
 ## 0.7.1 (2025-02-16)
