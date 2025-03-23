@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: export Resolver types
+
 ## 0.8.0 (2025-03-11)
 
 - Feat: `field.load()` to easier load data using data loader

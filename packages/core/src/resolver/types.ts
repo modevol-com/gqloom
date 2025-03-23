@@ -15,6 +15,7 @@ import type {
 } from "./resolver-chain-factory"
 import type * as Loom from "./types-loom"
 
+export * from "./types-loom"
 export type { Loom }
 
 /*
