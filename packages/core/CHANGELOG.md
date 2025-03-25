@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Fix: improve type inference for `subscription`
+
 ## 0.8.1 (2025-03-23)
 
 - Feat: export Resolver types
