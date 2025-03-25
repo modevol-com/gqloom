@@ -18,15 +18,14 @@ import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
 const countdownResolver = resolver({
-  countdown: subscription(v.number(), {
-    input: { seconds: v.pipe(v.number(), v.integer()) },
-    subscribe: async function* (data) {
+  countdown: subscription(v.number())
+    .input({ seconds: v.pipe(v.number(), v.integer()) })
+    .subscribe(async function* (data) {
       for (let i = data.seconds; i >= 0; i--) {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         yield i
       }
-    },
-  }),
+    }),
 })
 
 const schema = weave(countdownResolver)
@@ -47,15 +46,14 @@ import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 
 const countdownResolver = resolver({
-  countdown: subscription(z.number(), {
-    input: { seconds: z.number().int() },
-    subscribe: async function* (data) {
+  countdown: subscription(z.number())
+    .input({ seconds: z.number().int() })
+    .subscribe(async function* (data) {
       for (let i = data.seconds; i >= 0; i--) {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         yield i
       }
-    },
-  }),
+    }),
 })
 
 const schema = weave(ZodWeaver, countdownResolver)
@@ -85,19 +83,17 @@ import * as v from "valibot"
 const pubSub = createPubSub<{ greeting: [string] }>()
 
 const HelloResolver = resolver({
-  hello: query(v.string(), {
-    input: { name: v.string() },
-    resolve: ({ name }) => {
+  hello: query(v.string())
+    .input({ name: v.string() })
+    .resolve(({ name }) => {
       const hello = `Hello, ${name}`
       pubSub.publish("greeting", hello)
       return hello
-    },
-  }),
+    }),
 
-  listenGreeting: subscription(v.string(), {
-    subscribe: () => pubSub.subscribe("greeting"),
-    resolve: (payload) => payload,
-  }),
+  listenGreeting: subscription(v.string())
+    .subscribe(() => pubSub.subscribe("greeting"))
+    .resolve((payload) => payload),
 })
 ```
 </Tab>
@@ -110,19 +106,17 @@ import { z } from "zod"
 const pubSub = createPubSub<{ greeting: [string] }>()
 
 const HelloResolver = resolver({
-  hello: query(z.string(), {
-    input: { name: z.string() },
-    resolve: ({ name }) => {
+  hello: query(z.string())
+    .input({ name: z.string() })
+    .resolve(({ name }) => {
       const hello = `Hello, ${name}`
       pubSub.publish("greeting", hello)
       return hello
-    },
-  }),
+    }),
 
-  listenGreeting: subscription(z.string(), {
-    subscribe: () => pubSub.subscribe("greeting"),
-    resolve: (payload) => payload,
-  }),
+  listenGreeting: subscription(z.string())
+    .subscribe(() => pubSub.subscribe("greeting"))
+    .resolve((payload) => payload),
 })
 ```
 </Tab>

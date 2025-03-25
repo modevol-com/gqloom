@@ -23,19 +23,17 @@ const CountdownResolver = resolver({
 const pubSub = createPubSub<{ greeting: [string] }>()
 
 const HelloResolver = resolver({
-  hello: query(v.string(), {
-    input: { name: v.string() },
-    resolve: ({ name }) => {
+  hello: query(v.string())
+    .input({ name: v.string() })
+    .resolve(({ name }) => {
       const hello = `Hello, ${name}`
       pubSub.publish("greeting", hello)
       return hello
-    },
-  }),
+    }),
 
-  listenGreeting: subscription(v.string(), {
-    subscribe: () => pubSub.subscribe("greeting"),
-    resolve: (payload) => payload,
-  }),
+  listenGreeting: subscription(v.string())
+    .subscribe(() => pubSub.subscribe("greeting"))
+    .resolve((payload) => payload),
 })
 
 const schema = weave(ValibotWeaver, CountdownResolver, HelloResolver)
