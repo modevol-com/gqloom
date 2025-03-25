@@ -329,7 +329,9 @@ export class SubscriptionChainFactory<
 
   public subscribe<TValue = StandardSchemaV1.InferOutput<TOutput>>(
     subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
-  ): ResolvableSubscription<TOutput, TInput, TValue> {
+  ): TValue extends StandardSchemaV1.InferOutput<TOutput>
+    ? ResolvableSubscription<TOutput, TInput, TValue>
+    : SubscriptionNeedResolve<TOutput, TInput, TValue> {
     const options = this.options
     const output = this.options?.output
     if (!output) throw new Error("Output is required")
@@ -363,6 +365,22 @@ export interface ResolvableSubscription<
     | undefined = undefined,
   TValue = StandardSchemaV1.InferOutput<TOutput>,
 > extends Loom.Subscription<TOutput, TInput, TValue> {
+  resolve(
+    resolve: (
+      value: TValue,
+      input: InferInputO<TInput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+  ): Loom.Subscription<TOutput, TInput, TValue>
+}
+
+export interface SubscriptionNeedResolve<
+  TOutput extends GraphQLSilk,
+  TInput extends
+    | GraphQLSilk
+    | Record<string, GraphQLSilk>
+    | undefined = undefined,
+  TValue = StandardSchemaV1.InferOutput<TOutput>,
+> {
   resolve(
     resolve: (
       value: TValue,

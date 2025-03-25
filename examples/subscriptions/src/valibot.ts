@@ -10,15 +10,14 @@ import { createPubSub, createYoga } from "graphql-yoga"
 import * as v from "valibot"
 
 const CountdownResolver = resolver({
-  countdown: subscription(v.number(), {
-    input: { seconds: v.pipe(v.number(), v.integer()) },
-    subscribe: async function* (data) {
+  countdown: subscription(v.number())
+    .input({ seconds: v.pipe(v.number(), v.integer()) })
+    .subscribe(async function* (data) {
       for (let i = data.seconds; i >= 0; i--) {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         yield i
       }
-    },
-  }),
+    }),
 })
 
 const pubSub = createPubSub<{ greeting: [string] }>()
