@@ -182,7 +182,7 @@ export function createSubscription(
 }
 
 export const subscription: SubscriptionFactoryWithChain = Object.assign(
-  createSubscription as SubscriptionFactory,
+  createSubscription as unknown as SubscriptionFactory,
   SubscriptionChainFactory.methods()
 )
 
