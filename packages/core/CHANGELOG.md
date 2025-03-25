@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+## 0.8.2 (2025-03-26)
+
 - Fix: improve type inference for `subscription`
 
 ## 0.8.1 (2025-03-23)
