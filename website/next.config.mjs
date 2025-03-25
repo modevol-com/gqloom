@@ -17,7 +17,7 @@ const config = {
       permanent: true,
     },
     {
-      source: "/guide/introduction",
+      source: "/guide/introduction.html",
       destination: "/docs",
       permanent: true,
     },
