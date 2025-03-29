@@ -16,7 +16,6 @@ describe("bindAsyncGenerator", () => {
 
     const boundGenerator = bindAsyncGenerator(storage, testGenerator())
 
-    // 设置上下文值并执行生成器
     await storage.run(42, async () => {
       const result1 = await boundGenerator.next()
       expect(result1.value).toBe(1)
