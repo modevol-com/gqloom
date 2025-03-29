@@ -2,8 +2,13 @@ import type { AsyncLocalStorage } from "node:async_hooks"
 
 export function bindAsyncGenerator<
   TAsyncLocalStorage extends AsyncLocalStorage<unknown>,
-  TGenerator extends AsyncGenerator<unknown, unknown, unknown>,
->(storage: TAsyncLocalStorage, generator: TGenerator): TGenerator {
+  T = unknown,
+  TReturn = any,
+  TNext = unknown,
+>(
+  storage: TAsyncLocalStorage,
+  generator: AsyncGenerator<T, TReturn, TNext>
+): AsyncGenerator<T, TReturn, TNext> {
   return {
     next: (...args) =>
       storage.run(storage.getStore(), () =>
@@ -21,5 +26,5 @@ export function bindAsyncGenerator<
     [Symbol.asyncIterator]() {
       return bindAsyncGenerator(storage, generator[Symbol.asyncIterator]())
     },
-  } as TGenerator
+  } satisfies AsyncGenerator<T, TReturn, TNext>
 }
