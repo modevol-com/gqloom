@@ -220,17 +220,15 @@ describe("subscription integration", () => {
     const simpleResolver = resolver(
       {
         hello,
-        foo: subscription(silk(GraphQLString), {
-          async subscribe() {
-            await new Promise((resolve) => setTimeout(resolve, 6))
+        foo: subscription(silk(GraphQLString))
+          .subscribe(async function* fooGenerator() {
             payloads.subscribe = useResolverPayload()
-            return fooGenerator()
-          },
-          resolve(value) {
+            yield "FooValue"
+          })
+          .resolve(async (value) => {
             payloads.resolve = useResolverPayload()
             return value + " Resolved"
-          },
-        }),
+          }),
       },
       { middlewares: [middleware] }
     )
