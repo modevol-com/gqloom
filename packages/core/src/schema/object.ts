@@ -32,7 +32,7 @@ import {
   resolverPayloadStorage,
   toObjMap,
 } from "../utils"
-import { bindAsyncGenerator } from "../utils/async-generator"
+import { bindAsyncIterator } from "../utils/async-iterator"
 import { inputToArgs } from "./input"
 import {
   type WeaverContext,
@@ -233,7 +233,7 @@ export class LoomObjectType extends GraphQLObjectType {
             const generator = await (field as Loom.Subscription<any, any, any>)[
               "~meta"
             ].subscribe?.(args, this.resolverOptions)
-            return bindAsyncGenerator(resolverPayloadStorage, generator)
+            return bindAsyncIterator(resolverPayloadStorage, generator)
           }
         ),
     }

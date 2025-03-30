@@ -1,9 +1,9 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { describe, expect, it } from "vitest"
-import { bindAsyncGenerator } from "./async-generator"
+import { bindAsyncIterator } from "./async-iterator"
 
-describe("bindAsyncGenerator", () => {
-  it("should bind async generator to AsyncLocalStorage", async () => {
+describe("bindAsyncIterator", () => {
+  it("should bind async iterator to AsyncLocalStorage", async () => {
     const storage = new AsyncLocalStorage<number>()
     let contextValue: number | undefined
 
@@ -14,9 +14,9 @@ describe("bindAsyncGenerator", () => {
       return 3
     }
 
-    const boundGenerator = bindAsyncGenerator(storage, testGenerator())
-
     await storage.run(42, async () => {
+      const boundGenerator = bindAsyncIterator(storage, testGenerator())
+
       const result1 = await boundGenerator.next()
       expect(result1.value).toBe(1)
       expect(contextValue).toBe(42)
@@ -43,7 +43,7 @@ describe("bindAsyncGenerator", () => {
       return 2
     }
 
-    const boundGenerator = bindAsyncGenerator(storage, testGenerator())
+    const boundGenerator = bindAsyncIterator(storage, testGenerator())
 
     await storage.run(42, async () => {
       const result = await boundGenerator.return(3)
@@ -66,9 +66,8 @@ describe("bindAsyncGenerator", () => {
       throw new Error("test error")
     }
 
-    const boundGenerator = bindAsyncGenerator(storage, testGenerator())
-
     await storage.run(42, async () => {
+      const boundGenerator = bindAsyncIterator(storage, testGenerator())
       const result = await boundGenerator.next()
       expect(result.value).toBe(1)
       expect(contextValue).toBe(42)
@@ -89,7 +88,7 @@ describe("bindAsyncGenerator", () => {
       yield 3
     }
 
-    const boundGenerator = bindAsyncGenerator(storage, testGenerator())
+    const boundGenerator = bindAsyncIterator(storage, testGenerator())
 
     await storage.run(42, async () => {
       for await (const value of boundGenerator) {
