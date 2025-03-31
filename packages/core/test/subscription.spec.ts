@@ -8,6 +8,7 @@ import {
   loom,
   silk,
   useResolverPayload,
+  weave,
 } from "../src"
 
 const { subscription, resolver, query } = loom
@@ -208,7 +209,7 @@ describe("subscription integration", () => {
 
   it("should work with context", async () => {
     const payloads = {} as Record<
-      "subscribe" | "resolve" | "middleware",
+      "subscribe" | "resolve" | "middleware" | "iterator",
       ResolverPayload | undefined
     >
 
@@ -220,17 +221,15 @@ describe("subscription integration", () => {
     const simpleResolver = resolver(
       {
         hello,
-        foo: subscription(silk(GraphQLString), {
-          async subscribe() {
-            await new Promise((resolve) => setTimeout(resolve, 6))
+        foo: subscription(silk(GraphQLString))
+          .subscribe(() => {
             payloads.subscribe = useResolverPayload()
             return fooGenerator()
-          },
-          resolve(value) {
+          })
+          .resolve(async (value) => {
             payloads.resolve = useResolverPayload()
             return value + " Resolved"
-          },
-        }),
+          }),
       },
       { middlewares: [middleware] }
     )
@@ -246,12 +245,37 @@ describe("subscription integration", () => {
       contextValue,
     })
 
+    const iteratorResolver = resolver({
+      hello,
+      foo: subscription(silk(GraphQLString)).subscribe(async function* () {
+        await new Promise((resolve) => setTimeout(resolve, 6))
+        payloads.iterator = useResolverPayload()
+        yield "FooValue"
+      }),
+    })
+
+    const iteratorSchema = weave(iteratorResolver)
+
+    const iteratorSubscriber = await subscribe({
+      schema: iteratorSchema,
+      document,
+      contextValue,
+    })
+
     assert(isAsyncIterable(subscriber))
+    assert(isAsyncIterable(iteratorSubscriber))
 
     expect(await subscriber.next()).toMatchObject({
       done: false,
       value: {
         data: { foo: "FooValue Resolved" },
+      },
+    })
+
+    expect(await iteratorSubscriber.next()).toMatchObject({
+      done: false,
+      value: {
+        data: { foo: "FooValue" },
       },
     })
 
@@ -277,6 +301,14 @@ describe("subscription integration", () => {
     expect(payloads.middleware?.info).toMatchObject({ fieldName: "foo" })
     expect(payloads.middleware?.field["~meta"]).toMatchObject(
       reField(simpleResolver["~meta"].fields.foo["~meta"])
+    )
+
+    expect(payloads.iterator).toBeDefined()
+    expect(payloads.iterator?.context).toBe(contextValue)
+    expect(payloads.iterator?.root).toBe(undefined)
+    expect(payloads.iterator?.info).toMatchObject({ fieldName: "foo" })
+    expect(payloads.iterator?.field["~meta"]).toMatchObject(
+      reField(iteratorResolver["~meta"].fields.foo["~meta"])
     )
   })
 })
