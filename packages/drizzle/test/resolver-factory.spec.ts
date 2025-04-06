@@ -532,6 +532,14 @@ describe.concurrent("DrizzleResolverFactory", () => {
         { authorId: John.id, title: "World" },
       ])
     })
+
+    it("should throw an error when relation is not found", () => {
+      expect(() => {
+        userFactory.relationField("nonExistentRelation" as any)
+      }).toThrow(
+        "GQLoom-Drizzle Error: Relation users.nonExistentRelation not found in drizzle instance"
+      )
+    })
   })
 
   describe("relationField with multiple field relations", () => {

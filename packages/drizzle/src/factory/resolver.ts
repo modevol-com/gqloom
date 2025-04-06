@@ -354,19 +354,12 @@ export abstract class DrizzleResolverFactory<
     const relation = this.db._.relations["config"]?.[this.tableName]?.[
       relationName
     ] as Relation
-    if (!relation) {
+    const targetTable = relation?.targetTable
+    if (!relation || !(targetTable instanceof Table)) {
       throw new Error(
         `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
           relationName
         )} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
-      )
-    }
-    const targetTable = relation.targetTable
-    if (!(targetTable instanceof Table)) {
-      throw new Error(
-        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
-          relationName
-        )} is not a table relation!`
       )
     }
 
