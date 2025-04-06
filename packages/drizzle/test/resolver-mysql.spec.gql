@@ -81,14 +81,16 @@ enum OrderDirection {
 }
 
 input PostsFilters {
-  OR: [PostsFiltersOr!]
+  AND: [PostsFiltersNested!]
+  NOT: PostsFiltersNested
+  OR: [PostsFiltersNested!]
   authorId: MySqlIntFilters
   content: MySqlTextFilters
   id: MySqlIntFilters
   title: MySqlTextFilters
 }
 
-input PostsFiltersOr {
+input PostsFiltersNested {
   authorId: MySqlIntFilters
   content: MySqlTextFilters
   id: MySqlIntFilters
@@ -132,14 +134,16 @@ type Query {
 }
 
 input UsersFilters {
-  OR: [UsersFiltersOr!]
+  AND: [UsersFiltersNested!]
+  NOT: UsersFiltersNested
+  OR: [UsersFiltersNested!]
   age: MySqlIntFilters
   email: MySqlTextFilters
   id: MySqlIntFilters
   name: MySqlTextFilters
 }
 
-input UsersFiltersOr {
+input UsersFiltersNested {
   age: MySqlIntFilters
   email: MySqlTextFilters
   id: MySqlIntFilters

@@ -15,14 +15,16 @@ enum OrderDirection {
 }
 
 input PostsFilters {
-  OR: [PostsFiltersOr!]
+  AND: [PostsFiltersNested!]
+  NOT: PostsFiltersNested
+  OR: [PostsFiltersNested!]
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
-input PostsFiltersOr {
+input PostsFiltersNested {
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
@@ -134,14 +136,16 @@ type StudentToCoursesItem {
 }
 
 input UsersFilters {
-  OR: [UsersFiltersOr!]
+  AND: [UsersFiltersNested!]
+  NOT: UsersFiltersNested
+  OR: [UsersFiltersNested!]
   age: SQLiteIntegerFilters
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters
   name: SQLiteTextFilters
 }
 
-input UsersFiltersOr {
+input UsersFiltersNested {
   age: SQLiteIntegerFilters
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters

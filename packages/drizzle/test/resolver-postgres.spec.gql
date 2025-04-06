@@ -104,14 +104,16 @@ input PgTextFiltersOr {
 }
 
 input PostsFilters {
-  OR: [PostsFiltersOr!]
+  AND: [PostsFiltersNested!]
+  NOT: PostsFiltersNested
+  OR: [PostsFiltersNested!]
   authorId: PgIntegerFilters
   content: PgTextFilters
   id: PgSerialFilters
   title: PgTextFilters
 }
 
-input PostsFiltersOr {
+input PostsFiltersNested {
   authorId: PgIntegerFilters
   content: PgTextFilters
   id: PgSerialFilters
@@ -155,14 +157,16 @@ type Query {
 }
 
 input UsersFilters {
-  OR: [UsersFiltersOr!]
+  AND: [UsersFiltersNested!]
+  NOT: UsersFiltersNested
+  OR: [UsersFiltersNested!]
   age: PgIntegerFilters
   email: PgTextFilters
   id: PgSerialFilters
   name: PgTextFilters
 }
 
-input UsersFiltersOr {
+input UsersFiltersNested {
   age: PgIntegerFilters
   email: PgTextFilters
   id: PgSerialFilters

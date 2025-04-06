@@ -181,8 +181,8 @@ export class DrizzleInputFactory<TTable extends Table> {
       type: DrizzleInputFactory.columnFilters(column),
     }))
 
-    const filtersOr = new GraphQLObjectType({
-      name: `${pascalCase(getTableName(this.table))}FiltersOr`,
+    const filtersNested = new GraphQLObjectType({
+      name: `${pascalCase(getTableName(this.table))}FiltersNested`,
       fields: { ...filterFields },
     })
     return weaverContext.memoNamedType(
@@ -190,7 +190,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: {
           ...filterFields,
-          OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+          OR: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          AND: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          NOT: { type: filtersNested },
         },
       })
     )
@@ -325,27 +327,31 @@ export type FiltersCore<TTable extends Table> = Partial<{
 
 export type Filters<TTable extends Table> = FiltersCore<TTable> & {
   OR?: FiltersCore<TTable>[]
+  AND?: FiltersCore<TTable>[]
+  NOT?: FiltersCore<TTable>
 }
 
 export interface ColumnFiltersCore<TType = any> {
   eq?: TType
   ne?: TType
-  lt?: TType
-  lte?: TType
   gt?: TType
   gte?: TType
-  like?: TType extends string ? string : never
-  notLike?: TType extends string ? string : never
-  ilike?: TType extends string ? string : never
-  notIlike?: TType extends string ? string : never
+  lt?: TType
+  lte?: TType
   in?: TType[]
   notIn?: TType[]
+  like?: TType extends string ? string : never
+  ilike?: TType extends string ? string : never
+  notLike?: TType extends string ? string : never
+  notIlike?: TType extends string ? string : never
   isNull?: boolean
   isNotNull?: boolean
 }
 
 export interface ColumnFilters<TType = any> extends ColumnFiltersCore<TType> {
   OR?: ColumnFiltersCore<TType>[]
+  AND?: ColumnFiltersCore<TType>[]
+  NOT?: ColumnFiltersCore<TType>
 }
 
 export interface MutationResult {
