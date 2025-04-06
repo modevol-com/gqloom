@@ -42,7 +42,6 @@ import {
   notLike,
   or,
 } from "drizzle-orm"
-import { GraphQLError } from "graphql"
 import { DrizzleWeaver, type TableSilk } from ".."
 import { inArrayMultiple } from "../helper"
 import {
@@ -242,29 +241,6 @@ export abstract class DrizzleResolverFactory<
     if (!operators.OR?.length) delete operators.OR
 
     const entries = Object.entries(operators)
-
-    if (operators.OR) {
-      if (entries.length > 1) {
-        throw new GraphQLError(
-          `WHERE ${columnName}: Cannot specify both fields and 'OR' in column operators!`
-        )
-      }
-
-      const variants = [] as SQL[]
-
-      for (const variant of operators.OR) {
-        const extracted = this.extractFiltersColumn(
-          column,
-          columnName,
-          variant,
-          table
-        )
-
-        if (extracted) variants.push(extracted)
-      }
-
-      return or(...variants)
-    }
 
     const variants: SQL[] = []
     const binaryOperators = { eq, ne, gt, gte, lt, lte }

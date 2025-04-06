@@ -155,11 +155,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
       )
 
       answer = await query["~meta"].resolve({
-        where: { age: { OR: [{ eq: 10 }, { eq: 11 }] } },
-      })
-      expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
-
-      answer = await query["~meta"].resolve({
         where: { OR: [{ age: { eq: 10 } }, { age: { eq: 11 } }] },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
