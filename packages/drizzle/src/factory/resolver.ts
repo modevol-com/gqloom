@@ -123,7 +123,9 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectArrayArgs(),
       (args) => ({
         value: {
-          where: args.where,
+          where: {
+            RAW: (table: Table) => this.extractFilters(args.where, table),
+          },
           orderBy: args.orderBy,
           limit: args.limit,
           offset: args.offset,
@@ -155,7 +157,9 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectSingleArgs(),
       (args) => ({
         value: {
-          where: args.where,
+          where: {
+            RAW: (table: Table) => this.extractFilters(args.where, table),
+          },
           orderBy: args.orderBy,
           offset: args.offset,
         },
@@ -172,7 +176,8 @@ export abstract class DrizzleResolverFactory<
   }
 
   protected extractFilters(
-    filters: SelectArrayArgs<TTable>["where"]
+    filters: SelectArrayArgs<TTable>["where"],
+    table?: any
   ): SQL | undefined {
     if (filters == null) return
     const tableName = getTableName(this.table)
@@ -191,7 +196,7 @@ export abstract class DrizzleResolverFactory<
       const variants = [] as SQL[]
 
       for (const variant of filters.OR) {
-        const extracted = this.extractFilters(variant)
+        const extracted = this.extractFilters(variant, table)
         if (extracted) variants.push(extracted)
       }
 
@@ -203,7 +208,9 @@ export abstract class DrizzleResolverFactory<
       if (operators == null) continue
 
       const column = getTableColumns(this.table)[columnName]!
-      variants.push(this.extractFiltersColumn(column, columnName, operators)!)
+      variants.push(
+        this.extractFiltersColumn(column, columnName, operators, table)!
+      )
     }
 
     return and(...variants)
@@ -212,7 +219,8 @@ export abstract class DrizzleResolverFactory<
   protected extractFiltersColumn<TColumn extends Column>(
     column: TColumn,
     columnName: string,
-    operators: ColumnFilters<TColumn["_"]["data"]>
+    operators: ColumnFilters<TColumn["_"]["data"]>,
+    table?: any
   ): SQL | undefined {
     if (!operators.OR?.length) delete operators.OR
 
@@ -228,7 +236,12 @@ export abstract class DrizzleResolverFactory<
       const variants = [] as SQL[]
 
       for (const variant of operators.OR) {
-        const extracted = this.extractFiltersColumn(column, columnName, variant)
+        const extracted = this.extractFiltersColumn(
+          column,
+          columnName,
+          variant,
+          table
+        )
 
         if (extracted) variants.push(extracted)
       }
@@ -242,25 +255,27 @@ export abstract class DrizzleResolverFactory<
     const arrayOperators = { in: inArray, notIn: notInArray }
     const nullOperators = { isNull, isNotNull }
 
+    const tableColumn = table ? table[columnName] : column
+
     for (const [operatorName, operatorValue] of entries) {
       if (operatorValue === null || operatorValue === false) continue
 
       if (operatorName in binaryOperators) {
         const operator =
           binaryOperators[operatorName as keyof typeof binaryOperators]
-        variants.push(operator(column, operatorValue))
+        variants.push(operator(tableColumn, operatorValue))
       } else if (operatorName in textOperators) {
         const operator =
           textOperators[operatorName as keyof typeof textOperators]
-        variants.push(operator(column, operatorValue))
+        variants.push(operator(tableColumn, operatorValue))
       } else if (operatorName in arrayOperators) {
         const operator =
           arrayOperators[operatorName as keyof typeof arrayOperators]
-        variants.push(operator(column, operatorValue))
+        variants.push(operator(tableColumn, operatorValue))
       } else if (operatorName in nullOperators) {
         const operator =
           nullOperators[operatorName as keyof typeof nullOperators]
-        if (operatorValue === true) variants.push(operator(column))
+        if (operatorValue === true) variants.push(operator(tableColumn))
       }
     }
 
