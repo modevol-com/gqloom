@@ -36,6 +36,7 @@ import {
   lt,
   lte,
   ne,
+  not,
   notIlike,
   notInArray,
   notLike,
@@ -180,37 +181,53 @@ export abstract class DrizzleResolverFactory<
     table?: any
   ): SQL | undefined {
     if (filters == null) return
-    const tableName = getTableName(this.table)
-
-    if (!filters.OR?.length) delete filters.OR
 
     const entries = Object.entries(filters as FiltersCore<TTable>)
+    const variants: (SQL | undefined)[] = []
 
-    if (filters.OR) {
-      if (entries.length > 1) {
-        throw new GraphQLError(
-          `WHERE ${tableName}: Cannot specify both fields and 'OR' in table filters!`
-        )
-      }
-
-      const variants = [] as SQL[]
-
-      for (const variant of filters.OR) {
-        const extracted = this.extractFilters(variant, table)
-        if (extracted) variants.push(extracted)
-      }
-
-      return or(...variants)
-    }
-
-    const variants: SQL[] = []
     for (const [columnName, operators] of entries) {
       if (operators == null) continue
 
+      if (columnName === "OR" && Array.isArray(operators)) {
+        const orConditions: SQL[] = []
+        for (const variant of operators) {
+          const extracted = this.extractFilters(variant, table)
+          if (extracted) orConditions.push(extracted)
+        }
+        if (orConditions.length > 0) {
+          variants.push(or(...orConditions))
+        }
+        continue
+      }
+
+      if (columnName === "AND" && Array.isArray(operators)) {
+        const andConditions: SQL[] = []
+        for (const variant of operators) {
+          const extracted = this.extractFilters(variant, table)
+          if (extracted) andConditions.push(extracted)
+        }
+        if (andConditions.length > 0) {
+          variants.push(and(...andConditions))
+        }
+        continue
+      }
+
+      if (columnName === "NOT" && operators) {
+        const extracted = this.extractFilters(operators as any, table)
+        if (extracted) {
+          variants.push(not(extracted))
+        }
+        continue
+      }
+
       const column = getTableColumns(this.table)[columnName]!
-      variants.push(
-        this.extractFiltersColumn(column, columnName, operators, table)!
+      const extractedColumn = this.extractFiltersColumn(
+        column,
+        columnName,
+        operators,
+        table
       )
+      if (extractedColumn) variants.push(extractedColumn)
     }
 
     return and(...variants)

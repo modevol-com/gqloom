@@ -94,7 +94,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
   })
 
   describe.concurrent("selectArrayQuery", () => {
-    // db.query.users.findMany({ orderBy: () => [] })
     it("should be created without error", async () => {
       const query = userFactory.selectArrayQuery()
       expect(query).toBeDefined()
@@ -253,6 +252,48 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       await query["~meta"].resolve({})
       expect(count).toBe(2)
+    })
+
+    it("should work with AND operators", async () => {
+      const query = userFactory.selectArrayQuery()
+      let answer
+      answer = await query["~meta"].resolve({
+        where: { AND: [{ name: { eq: "John" } }, { age: { gt: 10 } }] },
+      })
+      expect(answer).toHaveLength(0)
+
+      answer = await query["~meta"].resolve({
+        where: { AND: [{ name: { eq: "John" } }, { age: { gte: 10 } }] },
+      })
+      expect(answer).toHaveLength(1)
+    })
+
+    it("should work with OR operators", async () => {
+      const query = userFactory.selectArrayQuery()
+      let answer
+      answer = await query["~meta"].resolve({
+        where: { OR: [{ name: { eq: "John" } }, { age: { gt: 12 } }] },
+      })
+      expect(answer).toHaveLength(3)
+
+      answer = await query["~meta"].resolve({
+        where: { OR: [{ age: { gte: 14 } }, { age: { lte: 10 } }] },
+      })
+      expect(answer).toHaveLength(2)
+    })
+
+    it("should work with NOT operators", async () => {
+      const query = userFactory.selectArrayQuery()
+      let answer
+      answer = await query["~meta"].resolve({
+        where: { NOT: { name: { eq: "John" } } },
+      })
+      expect(answer).toHaveLength(4)
+
+      answer = await query["~meta"].resolve({
+        where: { NOT: { age: { lte: 10 } } },
+      })
+      expect(answer).toHaveLength(4)
     })
   })
 
