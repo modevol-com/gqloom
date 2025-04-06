@@ -212,7 +212,7 @@ export abstract class DrizzleResolverFactory<
       }
 
       if (columnName === "NOT" && operators) {
-        const extracted = this.extractFilters(operators as any, table)
+        const extracted = this.extractFilters(operators, table)
         if (extracted) {
           variants.push(not(extracted))
         }
@@ -238,17 +238,61 @@ export abstract class DrizzleResolverFactory<
     operators: ColumnFilters<TColumn["_"]["data"]>,
     table?: any
   ): SQL | undefined {
-    if (!operators.OR?.length) delete operators.OR
-
     const entries = Object.entries(operators)
 
-    const variants: SQL[] = []
+    const variants: (SQL | undefined)[] = []
     const binaryOperators = { eq, ne, gt, gte, lt, lte }
     const textOperators = { like, notLike, ilike, notIlike }
     const arrayOperators = { in: inArray, notIn: notInArray }
     const nullOperators = { isNull, isNotNull }
 
     const tableColumn = table ? table[columnName] : column
+
+    if (operators.OR) {
+      const orVariants = [] as SQL[]
+
+      for (const variant of operators.OR) {
+        const extracted = this.extractFiltersColumn(
+          column,
+          columnName,
+          variant,
+          table
+        )
+
+        if (extracted) orVariants.push(extracted)
+      }
+
+      variants.push(or(...orVariants))
+    }
+
+    if (operators.AND) {
+      const andVariants = [] as SQL[]
+
+      for (const variant of operators.AND) {
+        const extracted = this.extractFiltersColumn(
+          column,
+          columnName,
+          variant,
+          table
+        )
+
+        if (extracted) andVariants.push(extracted)
+      }
+
+      variants.push(and(...andVariants))
+    }
+
+    if (operators.NOT) {
+      const extracted = this.extractFiltersColumn(
+        column,
+        columnName,
+        operators.NOT,
+        table
+      )
+      if (extracted) {
+        variants.push(not(extracted))
+      }
+    }
 
     for (const [operatorName, operatorValue] of entries) {
       if (operatorValue === null || operatorValue === false) continue
