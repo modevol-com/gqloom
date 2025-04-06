@@ -1,8 +1,8 @@
 import * as t from "drizzle-orm/pg-core"
 import { drizzleSilk } from "../../src"
 
-export const user = drizzleSilk(
-  t.pgTable("user", {
+export const users = drizzleSilk(
+  t.pgTable("users", {
     id: t.serial().primaryKey(),
     name: t.text().notNull(),
     age: t.integer(),
@@ -10,11 +10,11 @@ export const user = drizzleSilk(
   })
 )
 
-export const post = drizzleSilk(
-  t.pgTable("post", {
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
     id: t.serial().primaryKey(),
     title: t.text().notNull(),
     content: t.text(),
-    authorId: t.integer().references(() => user.id, { onDelete: "cascade" }),
+    authorId: t.integer().references(() => users.id, { onDelete: "cascade" }),
   })
 )

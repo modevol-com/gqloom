@@ -2,31 +2,31 @@ import { defineRelations } from "drizzle-orm"
 import * as schema from "./sqlite"
 
 export const relations = defineRelations(schema, (r) => ({
-  user: {
-    posts: r.many.post(),
-    courses: r.many.studentToCourse(),
+  users: {
+    posts: r.many.posts(),
+    courses: r.many.studentToCourses(),
   },
-  post: {
-    author: r.one.user({
-      from: r.post.authorId,
-      to: r.user.id,
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
     }),
   },
-  course: {
-    students: r.many.studentToCourse(),
+  courses: {
+    students: r.many.studentToCourses(),
   },
-  studentToCourse: {
-    student: r.one.user({
-      from: r.studentToCourse.studentId,
-      to: r.user.id,
+  studentToCourses: {
+    student: r.one.users({
+      from: r.studentToCourses.studentId,
+      to: r.users.id,
     }),
-    course: r.one.course({
-      from: r.studentToCourse.courseId,
-      to: r.course.id,
+    course: r.one.courses({
+      from: r.studentToCourses.courseId,
+      to: r.courses.id,
     }),
-    grade: r.one.studentCourseGrade({
-      from: [r.studentToCourse.studentId, r.studentToCourse.courseId],
-      to: [r.studentCourseGrade.studentId, r.studentCourseGrade.courseId],
+    grade: r.one.studentCourseGrades({
+      from: [r.studentToCourses.studentId, r.studentToCourses.courseId],
+      to: [r.studentCourseGrades.studentId, r.studentCourseGrades.courseId],
     }),
   },
 }))

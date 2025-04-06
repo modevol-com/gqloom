@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPost(where: PostFilters): [PostItem!]!
-  deleteFromUser(where: UserFilters): [UserItem!]!
-  insertIntoPost(values: [PostInsertInput!]!): [PostItem!]!
-  insertIntoPostSingle(value: PostInsertInput!): PostItem
-  insertIntoUser(values: [UserInsertInput!]!): [UserItem!]!
-  insertIntoUserSingle(value: UserInsertInput!): UserItem
-  updatePost(set: PostUpdateInput!, where: PostFilters): [PostItem!]!
-  updateUser(set: UserUpdateInput!, where: UserFilters): [UserItem!]!
+  deleteFromPosts(where: PostsFilters): [PostsItem!]!
+  deleteFromUsers(where: UsersFilters): [UsersItem!]!
+  insertIntoPosts(values: [PostsInsertInput!]!): [PostsItem!]!
+  insertIntoPostsSingle(value: PostsInsertInput!): PostsItem
+  insertIntoUsers(values: [UsersInsertInput!]!): [UsersItem!]!
+  insertIntoUsersSingle(value: UsersInsertInput!): UsersItem
+  updatePosts(set: PostsUpdateInput!, where: PostsFilters): [PostsItem!]!
+  updateUsers(set: UsersUpdateInput!, where: UsersFilters): [UsersItem!]!
 }
 
 enum OrderDirection {
@@ -14,44 +14,44 @@ enum OrderDirection {
   desc
 }
 
-input PostFilters {
-  OR: [PostFiltersOr!]
+input PostsFilters {
+  OR: [PostsFiltersOr!]
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
-input PostFiltersOr {
+input PostsFiltersOr {
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
-input PostInsertInput {
+input PostsInsertInput {
   authorId: Int
   content: String
   id: Int
   title: String!
 }
 
-type PostItem {
-  author: UserItem
+type PostsItem {
+  author: UsersItem
   authorId: Int
   content: String
   id: Int!
   title: String!
 }
 
-input PostOrderBy {
+input PostsOrderBy {
   authorId: OrderDirection
   content: OrderDirection
   id: OrderDirection
   title: OrderDirection
 }
 
-input PostUpdateInput {
+input PostsUpdateInput {
   authorId: Int
   content: String
   id: Int
@@ -59,10 +59,10 @@ input PostUpdateInput {
 }
 
 type Query {
-  post(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [PostItem!]!
-  postSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): PostItem
-  user(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [UserItem!]!
-  userSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): UserItem
+  posts(limit: Int, offset: Int, orderBy: PostsOrderBy, where: PostsFilters): [PostsItem!]!
+  postsSingle(offset: Int, orderBy: PostsOrderBy, where: PostsFilters): PostsItem
+  users(limit: Int, offset: Int, orderBy: UsersOrderBy, where: UsersFilters): [UsersItem!]!
+  usersSingle(offset: Int, orderBy: UsersOrderBy, where: UsersFilters): UsersItem
 }
 
 input SQLiteIntegerFilters {
@@ -127,51 +127,51 @@ input SQLiteTextFiltersOr {
   notLike: String
 }
 
-type StudentToCourseItem {
+type StudentToCoursesItem {
   courseId: Int
   createdAt: String
   studentId: Int
 }
 
-input UserFilters {
-  OR: [UserFiltersOr!]
+input UsersFilters {
+  OR: [UsersFiltersOr!]
   age: SQLiteIntegerFilters
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters
   name: SQLiteTextFilters
 }
 
-input UserFiltersOr {
+input UsersFiltersOr {
   age: SQLiteIntegerFilters
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters
   name: SQLiteTextFilters
 }
 
-input UserInsertInput {
+input UsersInsertInput {
   age: Int
   email: String
   id: Int
   name: String!
 }
 
-type UserItem {
+type UsersItem {
   age: Int
-  courses: [StudentToCourseItem!]!
+  courses: [StudentToCoursesItem!]!
   email: String
   id: Int!
   name: String!
-  posts: [PostItem!]!
+  posts: [PostsItem!]!
 }
 
-input UserOrderBy {
+input UsersOrderBy {
   age: OrderDirection
   email: OrderDirection
   id: OrderDirection
   name: OrderDirection
 }
 
-input UserUpdateInput {
+input UsersUpdateInput {
   age: Int
   email: String
   id: Int

@@ -10,12 +10,12 @@ import { type YogaServerInstance, createYoga } from "graphql-yoga"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
-import { post, user } from "./schema/mysql"
+import { posts, users } from "./schema/mysql"
 import { relations } from "./schema/mysql-relations"
 
 const schema = {
-  user,
-  post,
+  users,
+  posts,
 }
 
 describe("resolver by mysql", () => {
@@ -47,29 +47,29 @@ describe("resolver by mysql", () => {
   beforeAll(async () => {
     try {
       db = drizzle(config.mysqlUrl, { schema, relations, mode: "default" })
-      const userFactory = drizzleResolverFactory(db, "user")
-      const postFactory = drizzleResolverFactory(db, "post")
+      const userFactory = drizzleResolverFactory(db, "users")
+      const postFactory = drizzleResolverFactory(db, "posts")
       gqlSchema = weave(
-        userFactory.resolver({ name: "user" }),
-        postFactory.resolver({ name: "post" })
+        userFactory.resolver({ name: "users" }),
+        postFactory.resolver({ name: "posts" })
       )
       yoga = createYoga({ schema: gqlSchema })
 
       await db
-        .insert(user)
+        .insert(users)
         .values([{ name: "Tom" }, { name: "Tony" }, { name: "Taylor" }])
-      const Tom = await db.query.user.findFirst({
+      const Tom = await db.query.users.findFirst({
         where: { name: "Tom" },
       })
-      const Tony = await db.query.user.findFirst({
+      const Tony = await db.query.users.findFirst({
         where: { name: "Tony" },
       })
-      const Taylor = await db.query.user.findFirst({
+      const Taylor = await db.query.users.findFirst({
         where: { name: "Taylor" },
       })
       if (!Tom || !Tony || !Taylor) throw new Error("User not found")
 
-      await db.insert(post).values([
+      await db.insert(posts).values([
         { title: "Post 1", authorId: Tom.id },
         { title: "Post 2", authorId: Tony.id },
         { title: "Post 3", authorId: Taylor.id },
@@ -81,8 +81,8 @@ describe("resolver by mysql", () => {
   })
 
   afterAll(async () => {
-    await db.delete(post)
-    await db.delete(user)
+    await db.delete(posts)
+    await db.delete(users)
   })
 
   it("should weave GraphQL schema correctly", async () => {
@@ -94,13 +94,13 @@ describe("resolver by mysql", () => {
   describe.concurrent("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-        query user(
-          $orderBy: UserOrderBy!
-          $where: UserFilters!
+        query users(
+          $orderBy: UsersOrderBy!
+          $where: UsersFilters!
           $limit: Int
           $offset: Int
         ) {
-          user(
+          users(
             orderBy: $orderBy
             where: $where
             limit: $limit
@@ -117,7 +117,7 @@ describe("resolver by mysql", () => {
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
+        users: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
       })
 
       await expect(
@@ -127,7 +127,7 @@ describe("resolver by mysql", () => {
           limit: 2,
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Taylor" }, { name: "Tom" }],
+        users: [{ name: "Taylor" }, { name: "Tom" }],
       })
 
       await expect(
@@ -138,7 +138,7 @@ describe("resolver by mysql", () => {
           offset: 1,
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Tom" }],
+        users: [{ name: "Tom" }],
       })
     })
 
@@ -146,12 +146,12 @@ describe("resolver by mysql", () => {
       await expect(
         execute(
           /* GraphQL */ `
-            query user(
-              $orderBy: UserOrderBy
-              $where: UserFilters!
+            query users(
+              $orderBy: UsersOrderBy
+              $where: UsersFilters!
               $offset: Int
             ) {
-              userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
+              usersSingle(orderBy: $orderBy, where: $where, offset: $offset) {
                 id
                 name
               }
@@ -162,19 +162,19 @@ describe("resolver by mysql", () => {
           }
         )
       ).resolves.toMatchObject({
-        userSingle: { name: "Taylor" },
+        usersSingle: { name: "Taylor" },
       })
     })
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query user(
-          $orderBy: UserOrderBy!
-          $where: UserFilters!
+        query users(
+          $orderBy: UsersOrderBy!
+          $where: UsersFilters!
           $limit: Int
           $offset: Int
         ) {
-          user(
+          users(
             orderBy: $orderBy
             where: $where
             limit: $limit
@@ -196,7 +196,7 @@ describe("resolver by mysql", () => {
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
-        user: [
+        users: [
           {
             name: "Taylor",
             posts: [{ title: "Post 3" }],
@@ -217,8 +217,8 @@ describe("resolver by mysql", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUser($values: [UserInsertInput!]!) {
-          insertIntoUser(values: $values) {
+        mutation insertIntoUsers($values: [UsersInsertInput!]!) {
+          insertIntoUsers(values: $values) {
             isSuccess
           }
         }
@@ -229,11 +229,11 @@ describe("resolver by mysql", () => {
           values: [{ name: "Tina" }],
         })
       ).resolves.toMatchObject({
-        insertIntoUser: { isSuccess: true },
+        insertIntoUsers: { isSuccess: true },
       })
 
       // Verify the user was inserted
-      const Tina = await db.query.user.findFirst({
+      const Tina = await db.query.users.findFirst({
         where: { name: "Tina" },
       })
       expect(Tina).toBeDefined()
@@ -241,21 +241,21 @@ describe("resolver by mysql", () => {
 
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUser(
-          $set: UserUpdateInput!
-          $where: UserFilters!
+        mutation updateUsers(
+          $set: UsersUpdateInput!
+          $where: UsersFilters!
         ) {
-          updateUser(set: $set, where: $where) {
+          updateUsers(set: $set, where: $where) {
             isSuccess
           }
         }
       `
 
       const [TroyID] = await db
-        .insert(user)
+        .insert(users)
         .values({ name: "Troy" })
         .$returningId()
-      const Troy = await db.query.user.findFirst({
+      const Troy = await db.query.users.findFirst({
         where: { id: TroyID.id },
       })
       if (!Troy) throw new Error("User not found")
@@ -266,11 +266,11 @@ describe("resolver by mysql", () => {
           where: { id: { eq: Troy.id } },
         })
       ).resolves.toMatchObject({
-        updateUser: { isSuccess: true },
+        updateUsers: { isSuccess: true },
       })
 
       // Verify the user was updated
-      const updatedUser = await db.query.user.findFirst({
+      const updatedUser = await db.query.users.findFirst({
         where: { name: "Tiffany" },
       })
       expect(updatedUser).toBeDefined()
@@ -278,14 +278,14 @@ describe("resolver by mysql", () => {
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUser($where: UserFilters!) {
-          deleteFromUser(where: $where) {
+        mutation deleteFromUsers($where: UsersFilters!) {
+          deleteFromUsers(where: $where) {
             isSuccess
           }
         }
       `
 
-      const Tony = await db.query.user.findFirst({
+      const Tony = await db.query.users.findFirst({
         where: { name: "Tony" },
       })
       if (!Tony) throw new Error("User not found")
@@ -295,13 +295,13 @@ describe("resolver by mysql", () => {
           where: { id: { eq: Tony.id } },
         })
       ).resolves.toMatchObject({
-        deleteFromUser: {
+        deleteFromUsers: {
           isSuccess: true,
         },
       })
 
       // Verify the user was deleted
-      const deletedUser = await db.query.user.findFirst({
+      const deletedUser = await db.query.users.findFirst({
         where: { name: "Tony" },
       })
       expect(deletedUser).toBeUndefined()
@@ -309,14 +309,14 @@ describe("resolver by mysql", () => {
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPost($values: [PostInsertInput!]!) {
-          insertIntoPost(values: $values) {
+        mutation insertIntoPosts($values: [PostsInsertInput!]!) {
+          insertIntoPosts(values: $values) {
             isSuccess
           }
         }
       `
 
-      const Tom = await db.query.user.findFirst({
+      const Tom = await db.query.users.findFirst({
         where: { name: "Tom" },
       })
       if (!Tom) throw new Error("User not found")
@@ -326,13 +326,13 @@ describe("resolver by mysql", () => {
           values: [{ title: "Post 5", authorId: Tom.id }],
         })
       ).resolves.toMatchObject({
-        insertIntoPost: {
+        insertIntoPosts: {
           isSuccess: true,
         },
       })
 
       // Verify the post was inserted
-      const p = await db.query.post.findFirst({
+      const p = await db.query.posts.findFirst({
         where: { title: "Post 5" },
       })
       expect(p).toBeDefined()
@@ -340,22 +340,22 @@ describe("resolver by mysql", () => {
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePost(
-          $set: PostUpdateInput!
-          $where: PostFilters!
+        mutation updatePosts(
+          $set: PostsUpdateInput!
+          $where: PostsFilters!
         ) {
-          updatePost(set: $set, where: $where) {
+          updatePosts(set: $set, where: $where) {
             isSuccess
           }
         }
       `
 
       const [PostUID] = await db
-        .insert(post)
+        .insert(posts)
         .values({ title: "Post U" })
         .$returningId()
 
-      const PostU = await db.query.post.findFirst({
+      const PostU = await db.query.posts.findFirst({
         where: { id: PostUID.id },
       })
       if (!PostU) throw new Error("Post not found")
@@ -366,11 +366,11 @@ describe("resolver by mysql", () => {
           where: { id: { eq: PostU.id } },
         })
       ).resolves.toMatchObject({
-        updatePost: { isSuccess: true },
+        updatePosts: { isSuccess: true },
       })
 
       // Verify the post was updated
-      const updatedPost = await db.query.post.findFirst({
+      const updatedPost = await db.query.posts.findFirst({
         where: { title: "Updated Post U" },
       })
       expect(updatedPost).toBeDefined()
@@ -378,19 +378,19 @@ describe("resolver by mysql", () => {
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPost($where: PostFilters!) {
-          deleteFromPost(where: $where) {
+        mutation deleteFromPosts($where: PostsFilters!) {
+          deleteFromPosts(where: $where) {
             isSuccess
           }
         }
       `
 
       const [PostDID] = await db
-        .insert(post)
+        .insert(posts)
         .values({ title: "Post D" })
         .$returningId()
 
-      const PostD = await db.query.post.findFirst({
+      const PostD = await db.query.posts.findFirst({
         where: { id: PostDID.id },
       })
       if (!PostD) throw new Error("Post not found")
@@ -400,11 +400,11 @@ describe("resolver by mysql", () => {
           where: { id: { eq: PostD.id } },
         })
       ).resolves.toMatchObject({
-        deleteFromPost: { isSuccess: true },
+        deleteFromPosts: { isSuccess: true },
       })
 
       // Verify the post was deleted
-      const deletedPost = await db.query.post.findFirst({
+      const deletedPost = await db.query.posts.findFirst({
         where: { id: PostD.id },
       })
       expect(deletedPost).toBeUndefined()

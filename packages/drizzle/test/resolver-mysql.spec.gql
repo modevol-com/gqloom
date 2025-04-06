@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPost(where: PostFilters): MutationSuccessResult
-  deleteFromUser(where: UserFilters): MutationSuccessResult
-  insertIntoPost(values: [PostInsertInput!]!): MutationSuccessResult
-  insertIntoPostSingle(value: PostInsertInput!): MutationSuccessResult
-  insertIntoUser(values: [UserInsertInput!]!): MutationSuccessResult
-  insertIntoUserSingle(value: UserInsertInput!): MutationSuccessResult
-  updatePost(set: PostUpdateInput!, where: PostFilters): MutationSuccessResult
-  updateUser(set: UserUpdateInput!, where: UserFilters): MutationSuccessResult
+  deleteFromPosts(where: PostsFilters): MutationSuccessResult
+  deleteFromUsers(where: UsersFilters): MutationSuccessResult
+  insertIntoPosts(values: [PostsInsertInput!]!): MutationSuccessResult
+  insertIntoPostsSingle(value: PostsInsertInput!): MutationSuccessResult
+  insertIntoUsers(values: [UsersInsertInput!]!): MutationSuccessResult
+  insertIntoUsersSingle(value: UsersInsertInput!): MutationSuccessResult
+  updatePosts(set: PostsUpdateInput!, where: PostsFilters): MutationSuccessResult
+  updateUsers(set: UsersUpdateInput!, where: UsersFilters): MutationSuccessResult
 }
 
 type MutationSuccessResult {
@@ -80,44 +80,44 @@ enum OrderDirection {
   desc
 }
 
-input PostFilters {
-  OR: [PostFiltersOr!]
+input PostsFilters {
+  OR: [PostsFiltersOr!]
   authorId: MySqlIntFilters
   content: MySqlTextFilters
   id: MySqlIntFilters
   title: MySqlTextFilters
 }
 
-input PostFiltersOr {
+input PostsFiltersOr {
   authorId: MySqlIntFilters
   content: MySqlTextFilters
   id: MySqlIntFilters
   title: MySqlTextFilters
 }
 
-input PostInsertInput {
+input PostsInsertInput {
   authorId: Int
   content: String
   id: Int
   title: String!
 }
 
-type PostItem {
-  author: UserItem
+type PostsItem {
+  author: UsersItem
   authorId: Int
   content: String
   id: Int!
   title: String!
 }
 
-input PostOrderBy {
+input PostsOrderBy {
   authorId: OrderDirection
   content: OrderDirection
   id: OrderDirection
   title: OrderDirection
 }
 
-input PostUpdateInput {
+input PostsUpdateInput {
   authorId: Int
   content: String
   id: Int
@@ -125,50 +125,50 @@ input PostUpdateInput {
 }
 
 type Query {
-  post(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [PostItem!]!
-  postSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): PostItem
-  user(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [UserItem!]!
-  userSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): UserItem
+  posts(limit: Int, offset: Int, orderBy: PostsOrderBy, where: PostsFilters): [PostsItem!]!
+  postsSingle(offset: Int, orderBy: PostsOrderBy, where: PostsFilters): PostsItem
+  users(limit: Int, offset: Int, orderBy: UsersOrderBy, where: UsersFilters): [UsersItem!]!
+  usersSingle(offset: Int, orderBy: UsersOrderBy, where: UsersFilters): UsersItem
 }
 
-input UserFilters {
-  OR: [UserFiltersOr!]
+input UsersFilters {
+  OR: [UsersFiltersOr!]
   age: MySqlIntFilters
   email: MySqlTextFilters
   id: MySqlIntFilters
   name: MySqlTextFilters
 }
 
-input UserFiltersOr {
+input UsersFiltersOr {
   age: MySqlIntFilters
   email: MySqlTextFilters
   id: MySqlIntFilters
   name: MySqlTextFilters
 }
 
-input UserInsertInput {
+input UsersInsertInput {
   age: Int
   email: String
   id: Int
   name: String!
 }
 
-type UserItem {
+type UsersItem {
   age: Int
   email: String
   id: Int!
   name: String!
-  posts: [PostItem!]!
+  posts: [PostsItem!]!
 }
 
-input UserOrderBy {
+input UsersOrderBy {
   age: OrderDirection
   email: OrderDirection
   id: OrderDirection
   name: OrderDirection
 }
 
-input UserUpdateInput {
+input UsersUpdateInput {
   age: Int
   email: String
   id: Int
