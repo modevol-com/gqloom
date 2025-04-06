@@ -68,7 +68,9 @@ type Query {
 }
 
 input SQLiteIntegerFilters {
-  OR: [SQLiteIntegerFiltersOr!]
+  AND: [SQLiteIntegerFiltersNested!]
+  NOT: SQLiteIntegerFiltersNested
+  OR: [SQLiteIntegerFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
@@ -81,7 +83,7 @@ input SQLiteIntegerFilters {
   notIn: [Int!]
 }
 
-input SQLiteIntegerFiltersOr {
+input SQLiteIntegerFiltersNested {
   eq: Int
   gt: Int
   gte: Int
@@ -95,7 +97,9 @@ input SQLiteIntegerFiltersOr {
 }
 
 input SQLiteTextFilters {
-  OR: [SQLiteTextFiltersOr!]
+  AND: [SQLiteTextFiltersNested!]
+  NOT: SQLiteTextFiltersNested
+  OR: [SQLiteTextFiltersNested!]
   eq: String
   gt: String
   gte: String
@@ -112,7 +116,7 @@ input SQLiteTextFilters {
   notLike: String
 }
 
-input SQLiteTextFiltersOr {
+input SQLiteTextFiltersNested {
   eq: String
   gt: String
   gte: String

@@ -224,8 +224,8 @@ export class DrizzleInputFactory<TTable extends Table> {
       isNotNull: { type: GraphQLBoolean },
     }
 
-    const filtersOr = new GraphQLObjectType({
-      name: `${pascalCase(column.columnType)}FiltersOr`,
+    const filtersNested = new GraphQLObjectType({
+      name: `${pascalCase(column.columnType)}FiltersNested`,
       fields: { ...baseFields },
     })
 
@@ -234,7 +234,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: {
           ...baseFields,
-          OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+          OR: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          AND: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          NOT: { type: filtersNested },
         },
       })
     )

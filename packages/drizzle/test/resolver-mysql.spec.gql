@@ -14,7 +14,9 @@ type MutationSuccessResult {
 }
 
 input MySqlIntFilters {
-  OR: [MySqlIntFiltersOr!]
+  AND: [MySqlIntFiltersNested!]
+  NOT: MySqlIntFiltersNested
+  OR: [MySqlIntFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
@@ -27,7 +29,7 @@ input MySqlIntFilters {
   notIn: [Int!]
 }
 
-input MySqlIntFiltersOr {
+input MySqlIntFiltersNested {
   eq: Int
   gt: Int
   gte: Int
@@ -41,7 +43,9 @@ input MySqlIntFiltersOr {
 }
 
 input MySqlTextFilters {
-  OR: [MySqlTextFiltersOr!]
+  AND: [MySqlTextFiltersNested!]
+  NOT: MySqlTextFiltersNested
+  OR: [MySqlTextFiltersNested!]
   eq: String
   gt: String
   gte: String
@@ -58,7 +62,7 @@ input MySqlTextFilters {
   notLike: String
 }
 
-input MySqlTextFiltersOr {
+input MySqlTextFiltersNested {
   eq: String
   gt: String
   gte: String

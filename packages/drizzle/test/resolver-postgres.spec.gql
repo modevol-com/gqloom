@@ -15,7 +15,9 @@ enum OrderDirection {
 }
 
 input PgIntegerFilters {
-  OR: [PgIntegerFiltersOr!]
+  AND: [PgIntegerFiltersNested!]
+  NOT: PgIntegerFiltersNested
+  OR: [PgIntegerFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
@@ -28,7 +30,7 @@ input PgIntegerFilters {
   notIn: [Int!]
 }
 
-input PgIntegerFiltersOr {
+input PgIntegerFiltersNested {
   eq: Int
   gt: Int
   gte: Int
@@ -42,7 +44,9 @@ input PgIntegerFiltersOr {
 }
 
 input PgSerialFilters {
-  OR: [PgSerialFiltersOr!]
+  AND: [PgSerialFiltersNested!]
+  NOT: PgSerialFiltersNested
+  OR: [PgSerialFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
@@ -55,7 +59,7 @@ input PgSerialFilters {
   notIn: [Int!]
 }
 
-input PgSerialFiltersOr {
+input PgSerialFiltersNested {
   eq: Int
   gt: Int
   gte: Int
@@ -69,7 +73,9 @@ input PgSerialFiltersOr {
 }
 
 input PgTextFilters {
-  OR: [PgTextFiltersOr!]
+  AND: [PgTextFiltersNested!]
+  NOT: PgTextFiltersNested
+  OR: [PgTextFiltersNested!]
   eq: String
   gt: String
   gte: String
@@ -86,7 +92,7 @@ input PgTextFilters {
   notLike: String
 }
 
-input PgTextFiltersOr {
+input PgTextFiltersNested {
   eq: String
   gt: String
   gte: String
