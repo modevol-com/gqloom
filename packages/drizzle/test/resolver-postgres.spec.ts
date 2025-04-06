@@ -1,5 +1,4 @@
 import { weave } from "@gqloom/core"
-import { eq } from "drizzle-orm"
 import { type NodePgDatabase, drizzle } from "drizzle-orm/node-postgres"
 import {
   type GraphQLSchema,
@@ -10,17 +9,13 @@ import { type YogaServerInstance, createYoga } from "graphql-yoga"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
-import { post, postsRelations, user, usersRelations } from "./schema/postgres"
+import { post, user } from "./schema/postgres"
+import { relations } from "./schema/postgres-relations"
 
-const schema = {
-  drizzle_user: user,
-  drizzle_post: post,
-  usersRelations,
-  postsRelations,
-}
+const schema = { user, post }
 
 describe("resolver by postgres", () => {
-  let db: NodePgDatabase<typeof schema>
+  let db: NodePgDatabase<typeof schema, typeof relations>
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
 
@@ -47,9 +42,9 @@ describe("resolver by postgres", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.postgresUrl, { schema })
-      const userFactory = drizzleResolverFactory(db, "drizzle_user")
-      const postFactory = drizzleResolverFactory(db, "drizzle_post")
+      db = drizzle(config.postgresUrl, { schema, relations })
+      const userFactory = drizzleResolverFactory(db, "user")
+      const postFactory = drizzleResolverFactory(db, "post")
       gqlSchema = weave(
         userFactory.resolver({ name: "user" }),
         postFactory.resolver({ name: "post" })
@@ -59,14 +54,14 @@ describe("resolver by postgres", () => {
       await db
         .insert(user)
         .values([{ name: "Tom" }, { name: "Tony" }, { name: "Taylor" }])
-      const Tom = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tom"),
+      const Tom = await db.query.user.findFirst({
+        where: { name: "Tom" },
       })
-      const Tony = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tony"),
+      const Tony = await db.query.user.findFirst({
+        where: { name: "Tony" },
       })
-      const Taylor = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Taylor"),
+      const Taylor = await db.query.user.findFirst({
+        where: { name: "Taylor" },
       })
       if (!Tom || !Tony || !Taylor) throw new Error("User not found")
 
@@ -95,16 +90,26 @@ describe("resolver by postgres", () => {
   describe.concurrent("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-      query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
-        user(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
-          id
-          name
+        query user(
+          $orderBy: UserOrderBy
+          $where: UserFilters!
+          $limit: Int
+          $offset: Int
+        ) {
+          user(
+            orderBy: $orderBy
+            where: $where
+            limit: $limit
+            offset: $offset
+          ) {
+            id
+            name
+          }
         }
-      }
-    `
+      `
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
@@ -113,7 +118,7 @@ describe("resolver by postgres", () => {
 
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
           limit: 2,
         })
@@ -123,7 +128,7 @@ describe("resolver by postgres", () => {
 
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
           limit: 1,
           offset: 1,
@@ -137,13 +142,17 @@ describe("resolver by postgres", () => {
       await expect(
         execute(
           /* GraphQL */ `
-          query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $offset: Int) {
-            userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
-              id
-              name
+            query user(
+              $orderBy: UserOrderBy
+              $where: UserFilters!
+              $offset: Int
+            ) {
+              userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
+                id
+                name
+              }
             }
-          }
-        `,
+          `,
           {
             where: { name: { eq: "Taylor" } },
           }
@@ -155,8 +164,18 @@ describe("resolver by postgres", () => {
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
-          user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
+        query user(
+          $orderBy: UserOrderBy
+          $where: UserFilters!
+          $limit: Int
+          $offset: Int
+        ) {
+          user(
+            orderBy: $orderBy
+            where: $where
+            limit: $limit
+            offset: $offset
+          ) {
             id
             name
             posts {
@@ -169,7 +188,7 @@ describe("resolver by postgres", () => {
 
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
@@ -194,7 +213,7 @@ describe("resolver by postgres", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUser($values: [DrizzleUserInsertInput!]!) {
+        mutation insertIntoUser($values: [UserInsertInput!]!) {
           insertIntoUser(values: $values) {
             id
             name
@@ -211,15 +230,18 @@ describe("resolver by postgres", () => {
       })
 
       // Verify the user was inserted
-      const Tina = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tina"),
+      const Tina = await db.query.user.findFirst({
+        where: { name: "Tina" },
       })
       expect(Tina).toBeDefined()
     })
 
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUser($set: DrizzleUserUpdateInput!, $where: DrizzleUserFilters!) {
+        mutation updateUser(
+          $set: UserUpdateInput!
+          $where: UserFilters!
+        ) {
           updateUser(set: $set, where: $where) {
             id
             name
@@ -231,8 +253,8 @@ describe("resolver by postgres", () => {
         .insert(user)
         .values({ name: "Troy" })
         .returning()
-      const Troy = await db.query.drizzle_user.findFirst({
-        where: eq(user.id, TroyID.id),
+      const Troy = await db.query.user.findFirst({
+        where: { id: TroyID.id },
       })
       if (!Troy) throw new Error("User not found")
 
@@ -246,15 +268,15 @@ describe("resolver by postgres", () => {
       })
 
       // Verify the user was updated
-      const updatedUser = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tiffany"),
+      const updatedUser = await db.query.user.findFirst({
+        where: { name: "Tiffany" },
       })
       expect(updatedUser).toBeDefined()
     })
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUser($where: DrizzleUserFilters!) {
+        mutation deleteFromUser($where: UserFilters!) {
           deleteFromUser(where: $where) {
             id
             name
@@ -262,8 +284,8 @@ describe("resolver by postgres", () => {
         }
       `
 
-      const Tony = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tony"),
+      const Tony = await db.query.user.findFirst({
+        where: { name: "Tony" },
       })
       if (!Tony) throw new Error("User not found")
 
@@ -276,15 +298,15 @@ describe("resolver by postgres", () => {
       })
 
       // Verify the user was deleted
-      const deletedUser = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tony"),
+      const deletedUser = await db.query.user.findFirst({
+        where: { name: "Tony" },
       })
       expect(deletedUser).toBeUndefined()
     })
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPost($values: [DrizzlePostInsertInput!]!) {
+        mutation insertIntoPost($values: [PostInsertInput!]!) {
           insertIntoPost(values: $values) {
             id
             title
@@ -293,8 +315,8 @@ describe("resolver by postgres", () => {
         }
       `
 
-      const Tom = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tom"),
+      const Tom = await db.query.user.findFirst({
+        where: { name: "Tom" },
       })
       if (!Tom) throw new Error("User not found")
 
@@ -307,15 +329,18 @@ describe("resolver by postgres", () => {
       })
 
       // Verify the post was inserted
-      const p = await db.query.drizzle_post.findFirst({
-        where: eq(post.title, "Post 5"),
+      const p = await db.query.post.findFirst({
+        where: { title: "Post 5" },
       })
       expect(p).toBeDefined()
     })
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePost($set: DrizzlePostUpdateInput!, $where: DrizzlePostFilters!) {
+        mutation updatePost(
+          $set: PostUpdateInput!
+          $where: PostFilters!
+        ) {
           updatePost(set: $set, where: $where) {
             id
             title
@@ -328,8 +353,8 @@ describe("resolver by postgres", () => {
         .values({ title: "Post U" })
         .returning()
 
-      const PostU = await db.query.drizzle_post.findFirst({
-        where: eq(post.id, PostUID.id),
+      const PostU = await db.query.post.findFirst({
+        where: { id: PostUID.id },
       })
       if (!PostU) throw new Error("Post not found")
 
@@ -343,15 +368,15 @@ describe("resolver by postgres", () => {
       })
 
       // Verify the post was updated
-      const updatedPost = await db.query.drizzle_post.findFirst({
-        where: eq(post.title, "Updated Post U"),
+      const updatedPost = await db.query.post.findFirst({
+        where: { title: "Updated Post U" },
       })
       expect(updatedPost).toBeDefined()
     })
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPost($where: DrizzlePostFilters!) {
+        mutation deleteFromPost($where: PostFilters!) {
           deleteFromPost(where: $where) {
             id
             title
@@ -364,8 +389,8 @@ describe("resolver by postgres", () => {
         .values({ title: "Post D" })
         .returning()
 
-      const PostD = await db.query.drizzle_post.findFirst({
-        where: eq(post.id, PostDID.id),
+      const PostD = await db.query.post.findFirst({
+        where: { id: PostDID.id },
       })
       if (!PostD) throw new Error("Post not found")
 
@@ -378,8 +403,8 @@ describe("resolver by postgres", () => {
       })
 
       // Verify the post was deleted
-      const deletedPost = await db.query.drizzle_post.findFirst({
-        where: eq(post.id, PostD.id),
+      const deletedPost = await db.query.post.findFirst({
+        where: { id: PostD.id },
       })
       expect(deletedPost).toBeUndefined()
     })

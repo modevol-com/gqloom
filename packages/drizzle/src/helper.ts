@@ -7,14 +7,15 @@ import { sql } from "drizzle-orm"
  */
 export function inArrayMultiple(
   columns: Column[],
-  values: readonly unknown[][]
+  values: readonly unknown[][],
+  table: any
 ): SQL<unknown> {
   // Early return for empty values
   if (values.length === 0) return sql`FALSE`
 
   // Create (col1, col2, ...) part
   const columnsPart = sql`(${sql.join(
-    columns.map((c) => sql`${c}`),
+    columns.map((c) => sql`${table[c.name]}`),
     sql`, `
   )})`
 

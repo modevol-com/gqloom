@@ -59,10 +59,10 @@ input PostUpdateInput {
 }
 
 type Query {
-  post(limit: Int, offset: Int, orderBy: [PostOrderBy!], where: PostFilters): [PostItem!]!
-  postSingle(offset: Int, orderBy: [PostOrderBy!], where: PostFilters): PostItem
-  user(limit: Int, offset: Int, orderBy: [UserOrderBy!], where: UserFilters): [UserItem!]!
-  userSingle(offset: Int, orderBy: [UserOrderBy!], where: UserFilters): UserItem
+  post(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [PostItem!]!
+  postSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): PostItem
+  user(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [UserItem!]!
+  userSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): UserItem
 }
 
 input SQLiteIntegerFilters {
@@ -70,26 +70,26 @@ input SQLiteIntegerFilters {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input SQLiteIntegerFiltersOr {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input SQLiteTextFilters {
@@ -98,7 +98,7 @@ input SQLiteTextFilters {
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -106,7 +106,7 @@ input SQLiteTextFilters {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
@@ -115,7 +115,7 @@ input SQLiteTextFiltersOr {
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -123,7 +123,7 @@ input SQLiteTextFiltersOr {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 

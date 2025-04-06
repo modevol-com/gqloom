@@ -35,7 +35,7 @@ export class DrizzleInputFactory<TTable extends Table> {
           offset: { type: GraphQLInt },
           limit: { type: GraphQLInt },
           orderBy: {
-            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+            type: this.orderBy(),
           },
           where: { type: this.filters() },
         },
@@ -54,7 +54,7 @@ export class DrizzleInputFactory<TTable extends Table> {
         fields: {
           offset: { type: GraphQLInt },
           orderBy: {
-            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+            type: this.orderBy(),
           },
           where: { type: this.filters() },
         },
@@ -216,8 +216,8 @@ export class DrizzleInputFactory<TTable extends Table> {
         ilike: { type: GraphQLString },
         notIlike: { type: GraphQLString },
       }),
-      inArray: { type: gqlListType },
-      notInArray: { type: gqlListType },
+      in: { type: gqlListType },
+      notIn: { type: gqlListType },
       isNull: { type: GraphQLBoolean },
       isNotNull: { type: GraphQLBoolean },
     }
@@ -290,13 +290,13 @@ export class DrizzleInputFactory<TTable extends Table> {
 export interface SelectArrayArgs<TTable extends Table> {
   offset?: number
   limit?: number
-  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
   where?: Filters<TTable>
 }
 
 export interface SelectSingleArgs<TTable extends Table> {
   offset?: number
-  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
   where?: Filters<TTable>
 }
 
@@ -338,8 +338,8 @@ export interface ColumnFiltersCore<TType = any> {
   notLike?: TType extends string ? string : never
   ilike?: TType extends string ? string : never
   notIlike?: TType extends string ? string : never
-  inArray?: TType[]
-  notInArray?: TType[]
+  in?: TType[]
+  notIn?: TType[]
   isNull?: boolean
   isNotNull?: boolean
 }

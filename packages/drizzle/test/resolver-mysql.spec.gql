@@ -1,100 +1,12 @@
-input DrizzlePostFilters {
-  OR: [DrizzlePostFiltersOr!]
-  authorId: MySqlIntFilters
-  content: MySqlTextFilters
-  id: MySqlIntFilters
-  title: MySqlTextFilters
-}
-
-input DrizzlePostFiltersOr {
-  authorId: MySqlIntFilters
-  content: MySqlTextFilters
-  id: MySqlIntFilters
-  title: MySqlTextFilters
-}
-
-input DrizzlePostInsertInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String!
-}
-
-type DrizzlePostItem {
-  author: DrizzleUserItem
-  authorId: Int
-  content: String
-  id: Int!
-  title: String!
-}
-
-input DrizzlePostOrderBy {
-  authorId: OrderDirection
-  content: OrderDirection
-  id: OrderDirection
-  title: OrderDirection
-}
-
-input DrizzlePostUpdateInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String
-}
-
-input DrizzleUserFilters {
-  OR: [DrizzleUserFiltersOr!]
-  age: MySqlIntFilters
-  email: MySqlTextFilters
-  id: MySqlIntFilters
-  name: MySqlTextFilters
-}
-
-input DrizzleUserFiltersOr {
-  age: MySqlIntFilters
-  email: MySqlTextFilters
-  id: MySqlIntFilters
-  name: MySqlTextFilters
-}
-
-input DrizzleUserInsertInput {
-  age: Int
-  email: String
-  id: Int
-  name: String!
-}
-
-type DrizzleUserItem {
-  age: Int
-  email: String
-  id: Int!
-  name: String!
-  posts: [DrizzlePostItem!]!
-}
-
-input DrizzleUserOrderBy {
-  age: OrderDirection
-  email: OrderDirection
-  id: OrderDirection
-  name: OrderDirection
-}
-
-input DrizzleUserUpdateInput {
-  age: Int
-  email: String
-  id: Int
-  name: String
-}
-
 type Mutation {
-  deleteFromPost(where: DrizzlePostFilters): MutationSuccessResult
-  deleteFromUser(where: DrizzleUserFilters): MutationSuccessResult
-  insertIntoPost(values: [DrizzlePostInsertInput!]!): MutationSuccessResult
-  insertIntoPostSingle(value: DrizzlePostInsertInput!): MutationSuccessResult
-  insertIntoUser(values: [DrizzleUserInsertInput!]!): MutationSuccessResult
-  insertIntoUserSingle(value: DrizzleUserInsertInput!): MutationSuccessResult
-  updatePost(set: DrizzlePostUpdateInput!, where: DrizzlePostFilters): MutationSuccessResult
-  updateUser(set: DrizzleUserUpdateInput!, where: DrizzleUserFilters): MutationSuccessResult
+  deleteFromPost(where: PostFilters): MutationSuccessResult
+  deleteFromUser(where: UserFilters): MutationSuccessResult
+  insertIntoPost(values: [PostInsertInput!]!): MutationSuccessResult
+  insertIntoPostSingle(value: PostInsertInput!): MutationSuccessResult
+  insertIntoUser(values: [UserInsertInput!]!): MutationSuccessResult
+  insertIntoUserSingle(value: UserInsertInput!): MutationSuccessResult
+  updatePost(set: PostUpdateInput!, where: PostFilters): MutationSuccessResult
+  updateUser(set: UserUpdateInput!, where: UserFilters): MutationSuccessResult
 }
 
 type MutationSuccessResult {
@@ -106,26 +18,26 @@ input MySqlIntFilters {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input MySqlIntFiltersOr {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input MySqlTextFilters {
@@ -134,7 +46,7 @@ input MySqlTextFilters {
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -142,7 +54,7 @@ input MySqlTextFilters {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
@@ -151,7 +63,7 @@ input MySqlTextFiltersOr {
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -159,7 +71,7 @@ input MySqlTextFiltersOr {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
@@ -168,9 +80,97 @@ enum OrderDirection {
   desc
 }
 
+input PostFilters {
+  OR: [PostFiltersOr!]
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+  title: MySqlTextFilters
+}
+
+input PostFiltersOr {
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+  title: MySqlTextFilters
+}
+
+input PostInsertInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String!
+}
+
+type PostItem {
+  author: UserItem
+  authorId: Int
+  content: String
+  id: Int!
+  title: String!
+}
+
+input PostOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+  title: OrderDirection
+}
+
+input PostUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String
+}
+
 type Query {
-  post(limit: Int, offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): [DrizzlePostItem!]!
-  postSingle(offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): DrizzlePostItem
-  user(limit: Int, offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): [DrizzleUserItem!]!
-  userSingle(offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): DrizzleUserItem
+  post(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [PostItem!]!
+  postSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): PostItem
+  user(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [UserItem!]!
+  userSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): UserItem
+}
+
+input UserFilters {
+  OR: [UserFiltersOr!]
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+  name: MySqlTextFilters
+}
+
+input UserFiltersOr {
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+  name: MySqlTextFilters
+}
+
+input UserInsertInput {
+  age: Int
+  email: String
+  id: Int
+  name: String!
+}
+
+type UserItem {
+  age: Int
+  email: String
+  id: Int!
+  name: String!
+  posts: [PostItem!]!
+}
+
+input UserOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+  name: OrderDirection
+}
+
+input UserUpdateInput {
+  age: Int
+  email: String
+  id: Int
+  name: String
 }

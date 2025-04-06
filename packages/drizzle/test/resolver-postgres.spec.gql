@@ -1,100 +1,12 @@
-input DrizzlePostFilters {
-  OR: [DrizzlePostFiltersOr!]
-  authorId: PgIntegerFilters
-  content: PgTextFilters
-  id: PgSerialFilters
-  title: PgTextFilters
-}
-
-input DrizzlePostFiltersOr {
-  authorId: PgIntegerFilters
-  content: PgTextFilters
-  id: PgSerialFilters
-  title: PgTextFilters
-}
-
-input DrizzlePostInsertInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String!
-}
-
-type DrizzlePostItem {
-  author: DrizzleUserItem
-  authorId: Int
-  content: String
-  id: Int!
-  title: String!
-}
-
-input DrizzlePostOrderBy {
-  authorId: OrderDirection
-  content: OrderDirection
-  id: OrderDirection
-  title: OrderDirection
-}
-
-input DrizzlePostUpdateInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String
-}
-
-input DrizzleUserFilters {
-  OR: [DrizzleUserFiltersOr!]
-  age: PgIntegerFilters
-  email: PgTextFilters
-  id: PgSerialFilters
-  name: PgTextFilters
-}
-
-input DrizzleUserFiltersOr {
-  age: PgIntegerFilters
-  email: PgTextFilters
-  id: PgSerialFilters
-  name: PgTextFilters
-}
-
-input DrizzleUserInsertInput {
-  age: Int
-  email: String
-  id: Int
-  name: String!
-}
-
-type DrizzleUserItem {
-  age: Int
-  email: String
-  id: Int!
-  name: String!
-  posts: [DrizzlePostItem!]!
-}
-
-input DrizzleUserOrderBy {
-  age: OrderDirection
-  email: OrderDirection
-  id: OrderDirection
-  name: OrderDirection
-}
-
-input DrizzleUserUpdateInput {
-  age: Int
-  email: String
-  id: Int
-  name: String
-}
-
 type Mutation {
-  deleteFromPost(where: DrizzlePostFilters): [DrizzlePostItem!]!
-  deleteFromUser(where: DrizzleUserFilters): [DrizzleUserItem!]!
-  insertIntoPost(values: [DrizzlePostInsertInput!]!): [DrizzlePostItem!]!
-  insertIntoPostSingle(value: DrizzlePostInsertInput!): DrizzlePostItem
-  insertIntoUser(values: [DrizzleUserInsertInput!]!): [DrizzleUserItem!]!
-  insertIntoUserSingle(value: DrizzleUserInsertInput!): DrizzleUserItem
-  updatePost(set: DrizzlePostUpdateInput!, where: DrizzlePostFilters): [DrizzlePostItem!]!
-  updateUser(set: DrizzleUserUpdateInput!, where: DrizzleUserFilters): [DrizzleUserItem!]!
+  deleteFromPost(where: PostFilters): [PostItem!]!
+  deleteFromUser(where: UserFilters): [UserItem!]!
+  insertIntoPost(values: [PostInsertInput!]!): [PostItem!]!
+  insertIntoPostSingle(value: PostInsertInput!): PostItem
+  insertIntoUser(values: [UserInsertInput!]!): [UserItem!]!
+  insertIntoUserSingle(value: UserInsertInput!): UserItem
+  updatePost(set: PostUpdateInput!, where: PostFilters): [PostItem!]!
+  updateUser(set: UserUpdateInput!, where: UserFilters): [UserItem!]!
 }
 
 enum OrderDirection {
@@ -107,26 +19,26 @@ input PgIntegerFilters {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input PgIntegerFiltersOr {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input PgSerialFilters {
@@ -134,26 +46,26 @@ input PgSerialFilters {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input PgSerialFiltersOr {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input PgTextFilters {
@@ -162,7 +74,7 @@ input PgTextFilters {
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -170,7 +82,7 @@ input PgTextFilters {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
@@ -179,7 +91,7 @@ input PgTextFiltersOr {
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -187,13 +99,101 @@ input PgTextFiltersOr {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
+input PostFilters {
+  OR: [PostFiltersOr!]
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+  title: PgTextFilters
+}
+
+input PostFiltersOr {
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+  title: PgTextFilters
+}
+
+input PostInsertInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String!
+}
+
+type PostItem {
+  author: UserItem
+  authorId: Int
+  content: String
+  id: Int!
+  title: String!
+}
+
+input PostOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+  title: OrderDirection
+}
+
+input PostUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String
+}
+
 type Query {
-  post(limit: Int, offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): [DrizzlePostItem!]!
-  postSingle(offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): DrizzlePostItem
-  user(limit: Int, offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): [DrizzleUserItem!]!
-  userSingle(offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): DrizzleUserItem
+  post(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [PostItem!]!
+  postSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): PostItem
+  user(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [UserItem!]!
+  userSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): UserItem
+}
+
+input UserFilters {
+  OR: [UserFiltersOr!]
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+  name: PgTextFilters
+}
+
+input UserFiltersOr {
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+  name: PgTextFilters
+}
+
+input UserInsertInput {
+  age: Int
+  email: String
+  id: Int
+  name: String!
+}
+
+type UserItem {
+  age: Int
+  email: String
+  id: Int!
+  name: String!
+  posts: [PostItem!]!
+}
+
+input UserOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+  name: OrderDirection
+}
+
+input UserUpdateInput {
+  age: Int
+  email: String
+  id: Int
+  name: String
 }

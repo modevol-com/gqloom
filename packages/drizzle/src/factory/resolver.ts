@@ -21,10 +21,8 @@ import {
   Many,
   type Relation,
   type SQL,
-  type Table,
+  Table,
   and,
-  asc,
-  desc,
   eq,
   getTableColumns,
   getTableName,
@@ -38,7 +36,6 @@ import {
   lt,
   lte,
   ne,
-  normalizeRelation,
   notIlike,
   notInArray,
   notLike,
@@ -126,8 +123,8 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectArrayArgs(),
       (args) => ({
         value: {
-          where: this.extractFilters(args.where),
-          orderBy: this.extractOrderBy(args.orderBy),
+          where: args.where,
+          orderBy: args.orderBy,
           limit: args.limit,
           offset: args.offset,
         },
@@ -158,8 +155,8 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectSingleArgs(),
       (args) => ({
         value: {
-          where: this.extractFilters(args.where),
-          orderBy: this.extractOrderBy(args.orderBy),
+          where: args.where,
+          orderBy: args.orderBy,
           offset: args.offset,
         },
       })
@@ -172,25 +169,6 @@ export abstract class DrizzleResolverFactory<
         return queryBase.findFirst(opts) as any
       },
     } as QueryOptions<any, any>)
-  }
-
-  protected extractOrderBy(
-    orders?: SelectArrayArgs<TTable>["orderBy"]
-  ): SQL[] | undefined {
-    if (orders == null) return
-    const answer: SQL[] = []
-    const columns = getTableColumns(this.table)
-    for (const order of orders) {
-      for (const [column, direction] of Object.entries(order)) {
-        if (!direction) continue
-        if (column in columns) {
-          answer.push(
-            direction === "asc" ? asc(columns[column]) : desc(columns[column])
-          )
-        }
-      }
-    }
-    return answer
   }
 
   protected extractFilters(
@@ -261,7 +239,7 @@ export abstract class DrizzleResolverFactory<
     const variants: SQL[] = []
     const binaryOperators = { eq, ne, gt, gte, lt, lte }
     const textOperators = { like, notLike, ilike, notIlike }
-    const arrayOperators = { inArray, notInArray }
+    const arrayOperators = { in: inArray, notIn: notInArray }
     const nullOperators = { isNull, isNotNull }
 
     for (const [operatorName, operatorValue] of entries) {
@@ -299,7 +277,7 @@ export abstract class DrizzleResolverFactory<
       middlewares?: Middleware<
         InferTableRelationalConfig<
           QueryBuilder<TDatabase, InferTableName<TTable>>
-        >["relations"][TRelationName] extends Many<any>
+        >["relations"][TRelationName] extends Many<any, any>
           ? RelationManyField<
               TTable,
               InferRelationTable<TDatabase, TTable, TRelationName>
@@ -312,7 +290,7 @@ export abstract class DrizzleResolverFactory<
     }
   ): InferTableRelationalConfig<
     QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"][TRelationName] extends Many<any>
+  >["relations"][TRelationName] extends Many<any, any>
     ? RelationManyField<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
@@ -321,42 +299,46 @@ export abstract class DrizzleResolverFactory<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
       > {
-    const relation = this.db._.schema?.[this.tableName]?.relations?.[
+    const relation = this.db._.relations["config"]?.[this.tableName]?.[
       relationName
     ] as Relation
     if (!relation) {
       throw new Error(
-        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(relationName)} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
+        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
+          relationName
+        )} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
       )
     }
-    const output = DrizzleWeaver.unravel(relation.referencedTable)
-    const tableName = getTableName(relation.referencedTable)
+    const targetTable = relation.targetTable
+    if (!(targetTable instanceof Table)) {
+      throw new Error(
+        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
+          relationName
+        )} is not a table relation!`
+      )
+    }
+
+    const output = DrizzleWeaver.unravel(targetTable)
+    const tableName = getTableName(targetTable)
     const queryBuilder = this.db.query[
       tableName as keyof typeof this.db.query
     ] as AnyQueryBuilder
 
-    const normalizedRelation = normalizeRelation(
-      this.db._.schema,
-      this.db._.tableNamesMap,
-      relation
-    )
     const isList = relation instanceof Many
-    const fieldsLength = normalizedRelation.fields.length
+    const fieldsLength = relation.sourceColumns.length
 
     const getKeyByField = (parent: any) => {
       if (fieldsLength === 1) {
-        return parent[normalizedRelation.fields[0].name]
+        return parent[relation.sourceColumns[0].name]
       }
-      return normalizedRelation.fields
-        .map((field) => parent[field.name])
-        .join("-")
+      return relation.sourceColumns.map((field) => parent[field.name]).join("-")
     }
 
     const getKeyByReference = (item: any) => {
       if (fieldsLength === 1) {
-        return item[normalizedRelation.references[0].name]
+        return item[relation.targetColumns[0].name]
       }
-      return normalizedRelation.references
+      return relation.targetColumns
         .map((reference) => item[reference.name])
         .join("-")
     }
@@ -366,14 +348,20 @@ export abstract class DrizzleResolverFactory<
         const where = (() => {
           if (fieldsLength === 1) {
             const values = parents.map(
-              (parent) => parent[normalizedRelation.fields[0].name]
+              (parent) => parent[relation.sourceColumns[0].name]
             )
-            return inArray(normalizedRelation.references[0], values)
+            // return inArray(relation.targetColumns[0], values)
+            return {
+              [relation.targetColumns[0].name]: { in: values },
+            }
           }
           const values = parents.map((parent) =>
-            normalizedRelation.fields.map((field) => parent[field.name])
+            relation.sourceColumns.map((field) => parent[field.name])
           )
-          return inArrayMultiple(normalizedRelation.references, values)
+          return {
+            RAW: (table: Table) =>
+              inArrayMultiple(relation.targetColumns, values, table),
+          }
         })()
 
         const list = await queryBuilder.findMany({ where })
@@ -414,7 +402,7 @@ export abstract class DrizzleResolverFactory<
     const name = options?.name ?? this.tableName
 
     const fields: Record<string, Loom.Field<any, any, any>> = mapValue(
-      this.db._.schema?.[this.tableName]?.relations ?? {},
+      this.db._.relations.config[this.tableName] ?? {},
       (_, key) => this.relationField(key)
     )
 

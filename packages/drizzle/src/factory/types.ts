@@ -4,7 +4,7 @@ import type {
   MutationFactoryWithResolve,
   QueryFactoryWithResolve,
 } from "@gqloom/core"
-import type { InferSelectModel, Many, Table } from "drizzle-orm"
+import type { AnyRelations, InferSelectModel, Many, Table } from "drizzle-orm"
 import type { MySqlDatabase } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
 import type { PgDatabase } from "drizzle-orm/pg-core"
@@ -74,7 +74,7 @@ export type DrizzleResolverRelations<
     QueryBuilder<TDatabase, InferTableName<TTable>>
   >["relations"]]: InferTableRelationalConfig<
     QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"][TRelationName] extends Many<any>
+  >["relations"][TRelationName] extends Many<any, any>
     ? RelationManyField<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
@@ -247,7 +247,7 @@ export type QueryBuilder<
 export type AnyQueryBuilder =
   | MySqlRelationalQueryBuilder<any, any, any>
   | PgRelationalQueryBuilder<any, any>
-  | SQLiteRelationalQueryBuilder<any, any, any, any>
+  | SQLiteRelationalQueryBuilder<any, any, any>
 
 export type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
   TQueryBuilder extends MySqlRelationalQueryBuilder<
@@ -264,25 +264,21 @@ export type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
       : TQueryBuilder extends SQLiteRelationalQueryBuilder<
             any,
             any,
-            any,
             infer TTableRelationalConfig
           >
         ? TTableRelationalConfig
         : never
 
 export type BaseDatabase =
-  | BaseSQLiteDatabase<any, any, any, any>
-  | PgDatabase<any, any, any>
-  | MySqlDatabase<any, any, any, any>
+  | BaseSQLiteDatabase<any, any, any, AnyRelations, any, any>
+  | PgDatabase<any, any, AnyRelations, any, any>
+  | MySqlDatabase<any, any, any, AnyRelations, any, any>
 
 export type InferTableName<TTable extends Table> = TTable["_"]["name"]
 
 export type InferRelationTable<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-  TRelationName extends keyof InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"],
-> = TDatabase["_"]["fullSchema"][InferTableRelationalConfig<
-  QueryBuilder<TDatabase, InferTableName<TTable>>
->["relations"][TRelationName]["referencedTableName"]]
+  TTargetTableName extends
+    keyof TDatabase["_"]["relations"]["config"][TTable["_"]["name"]],
+> = TDatabase["_"]["relations"]["config"][TTable["_"]["name"]]["relations"][TTargetTableName]["targetTable"]

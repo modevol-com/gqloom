@@ -27,13 +27,16 @@ import type {
   InferSelectSingleOptions,
 } from "../src/factory/types"
 import * as mysqlSchemas from "./schema/mysql"
+import { relations as mysqlRelations } from "./schema/mysql-relations"
 import * as pgSchemas from "./schema/postgres"
+import { relations as pgRelations } from "./schema/postgres-relations"
 import * as sqliteSchemas from "./schema/sqlite"
+import { relations as sqliteRelations } from "./schema/sqlite-relations"
 
 const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
 
 describe.concurrent("DrizzleResolverFactory", () => {
-  let db: LibSQLDatabase<typeof sqliteSchemas>
+  let db: LibSQLDatabase<typeof sqliteSchemas, typeof sqliteRelations>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
     typeof sqliteSchemas.user
@@ -42,10 +45,11 @@ describe.concurrent("DrizzleResolverFactory", () => {
   beforeAll(async () => {
     db = sqliteDrizzle({
       schema: sqliteSchemas,
+      relations: sqliteRelations,
       connection: { url: `file:${pathToDB.pathname}` },
     })
 
-    userFactory = drizzleResolverFactory(db, sqliteSchemas.user)
+    userFactory = drizzleResolverFactory(db, "user")
 
     await db.insert(sqliteSchemas.user).values([
       {
@@ -90,6 +94,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
   })
 
   describe.concurrent("selectArrayQuery", () => {
+    // db.query.user.findMany({ orderBy: () => [] })
     it("should be created without error", async () => {
       const query = userFactory.selectArrayQuery()
       expect(query).toBeDefined()
@@ -99,7 +104,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const query = userFactory.selectArrayQuery()
 
       let answer
-      answer = await query["~meta"].resolve({ orderBy: [{ age: "asc" }] })
+      answer = await query["~meta"].resolve({ orderBy: { age: "asc" } })
       expect(answer).toMatchObject([
         { age: 10 },
         { age: 11 },
@@ -108,7 +113,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         { age: 14 },
       ])
 
-      answer = await query["~meta"].resolve({ orderBy: [{ age: "desc" }] })
+      answer = await query["~meta"].resolve({ orderBy: { age: "desc" } })
       expect(answer).toMatchObject([
         { age: 14 },
         { age: 13 },
@@ -139,12 +144,12 @@ describe.concurrent("DrizzleResolverFactory", () => {
       expect(answer).toMatchObject([{ age: 12 }])
 
       answer = await query["~meta"].resolve({
-        where: { age: { inArray: [10, 11] } },
+        where: { age: { in: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
       answer = await query["~meta"].resolve({
-        where: { age: { notInArray: [10, 11] } },
+        where: { age: { notIn: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(
         new Set([{ age: 12 }, { age: 13 }, { age: 14 }])
@@ -165,19 +170,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
       })
       expect(answer).toHaveLength(5)
 
-      await expect(() =>
-        query["~meta"].resolve({
-          where: { age: { eq: 10 }, OR: [{ age: { eq: 11 } }] },
-        })
-      ).rejects.toThrow("Cannot specify both fields and 'OR' in table filters!")
-      await expect(() =>
-        query["~meta"].resolve({
-          where: { age: { eq: 10, OR: [{ eq: 11 }] } },
-        })
-      ).rejects.toThrow(
-        "WHERE age: Cannot specify both fields and 'OR' in column operators!"
-      )
-
       answer = await query["~meta"].resolve({
         where: { age: { isNull: true } },
       })
@@ -192,7 +184,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
             age: v.nullish(v.number()),
           }),
           v.transform(({ age }) => ({
-            where: age != null ? eq(sqliteSchemas.user.age, age) : undefined,
+            where: age != null ? { age } : undefined,
           }))
         ),
       })
@@ -210,7 +202,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
               age: v.nullish(v.number()),
             }),
             v.transform(({ age }) => ({
-              where: age != null ? eq(sqliteSchemas.user.age, age) : undefined,
+              where: age != null ? { age } : undefined,
             }))
           )
         )
@@ -274,7 +266,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const query = userFactory.selectSingleQuery()
       expect(
         await query["~meta"].resolve({
-          orderBy: [{ age: "asc" }],
+          orderBy: { age: "asc" },
         })
       ).toMatchObject({ age: 10 })
     })
@@ -295,7 +287,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
             age: v.nullish(v.number()),
           }),
           v.transform(({ age }) => ({
-            where: age != null ? eq(sqliteSchemas.user.age, age) : undefined,
+            where: age != null ? { age } : undefined,
           }))
         ),
       })
@@ -359,11 +351,11 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const studentCourseFactory = drizzleResolverFactory(db, "studentToCourse")
       const gradeField = studentCourseFactory.relationField("grade")
       const John = await db.query.user.findFirst({
-        where: eq(sqliteSchemas.user.name, "John"),
+        where: { name: "John" },
       })
       if (!John) throw new Error("John not found")
       const Joe = await db.query.user.findFirst({
-        where: eq(sqliteSchemas.user.name, "Joe"),
+        where: { name: "Joe" },
       })
       if (!Joe) throw new Error("Joe not found")
 
@@ -395,6 +387,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
           return gradeField["~meta"].resolve(sc, undefined)
         })
       )
+
       expect(new Set(answer)).toMatchObject(
         new Set([
           { studentId: John.id, courseId: math.id, grade: expect.any(Number) },
@@ -443,17 +436,21 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
 describe.concurrent("DrizzleMySQLResolverFactory", () => {
   const schema = {
-    drizzle_user: mysqlSchemas.user,
+    user: mysqlSchemas.user,
   }
-  let db: MySql2Database<typeof schema>
+  let db: MySql2Database<typeof schema, typeof mysqlRelations>
   let userFactory: DrizzleMySQLResolverFactory<
     typeof db,
     typeof mysqlSchemas.user
   >
 
   beforeAll(async () => {
-    db = mysqlDrizzle(config.mysqlUrl, { schema, mode: "default" })
-    userFactory = drizzleResolverFactory(db, "drizzle_user")
+    db = mysqlDrizzle(config.mysqlUrl, {
+      schema,
+      relations: mysqlRelations,
+      mode: "default",
+    })
+    userFactory = drizzleResolverFactory(db, "user")
     await db.execute(sql`select 1`)
   })
 
@@ -569,17 +566,20 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
 
 describe.concurrent("DrizzlePostgresResolverFactory", () => {
   const schema = {
-    drizzle_user: pgSchemas.user,
+    user: pgSchemas.user,
   }
-  let db: NodePgDatabase<typeof schema>
+  let db: NodePgDatabase<typeof schema, typeof pgRelations>
   let userFactory: DrizzlePostgresResolverFactory<
     typeof db,
     typeof pgSchemas.user
   >
 
   beforeAll(async () => {
-    db = pgDrizzle(config.postgresUrl, { schema })
-    userFactory = drizzleResolverFactory(db, "drizzle_user")
+    db = pgDrizzle(config.postgresUrl, {
+      schema,
+      relations: pgRelations,
+    })
+    userFactory = drizzleResolverFactory(db, "user")
     await db.execute(sql`select 1`)
   })
 
@@ -694,7 +694,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
 })
 
 describe.concurrent("DrizzleSQLiteResolverFactory", () => {
-  let db: LibSQLDatabase<typeof sqliteSchemas>
+  let db: LibSQLDatabase<typeof sqliteSchemas, typeof sqliteRelations>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
     typeof sqliteSchemas.user
@@ -703,6 +703,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
   beforeAll(async () => {
     db = sqliteDrizzle({
       schema: sqliteSchemas,
+      relations: sqliteRelations,
       connection: { url: `file:${pathToDB.pathname}` },
     })
 
