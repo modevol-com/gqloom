@@ -4,7 +4,6 @@ import * as v from "valibot"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { users } from "../schema"
-import { userService } from "../services"
 
 const userResolverFactory = drizzleResolverFactory(db, "users")
 
@@ -15,11 +14,11 @@ export const userResolver = resolver.of(users, {
 
   usersByName: query(users.$list())
     .input({ name: v.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
+    .resolve(({ name }) => db.query.users.findMany({ where: { name } })),
 
   userByPhone: query(users.$nullable())
     .input({ phone: v.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+    .resolve(({ phone }) => db.query.users.findFirst({ where: { phone } })),
 
   createUser: mutation(users)
     .input({
@@ -28,5 +27,8 @@ export const userResolver = resolver.of(users, {
         phone: v.string(),
       }),
     })
-    .resolve(async ({ data }) => userService.createUser(data)),
+    .resolve(async ({ data }) => {
+      const [user] = await db.insert(users).values(data).returning()
+      return user
+    }),
 })
