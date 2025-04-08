@@ -1,5 +1,5 @@
-import type { Column, SQL } from "drizzle-orm"
-import { sql } from "drizzle-orm"
+import { pascalCase } from "@gqloom/core"
+import { type Column, type SQL, getTableName, sql } from "drizzle-orm"
 
 /**
  * Creates an IN clause for multiple columns
@@ -31,4 +31,17 @@ export function inArrayMultiple(
 
   // Combine into final IN clause
   return sql`${columnsPart} IN (${valuesPart})`
+}
+
+export function getEnumNameByColumn(column: Column): string | undefined {
+  if (!column.enumValues?.length) return undefined
+
+  const useColumnName = () =>
+    `${pascalCase(getTableName(column.table))}${pascalCase(column.name)}Enum`
+  if ("config" in column && "enum" in (column as any).config) {
+    const enumName = (column as any).config.enum.enumName
+    if (enumName) return pascalCase(enumName)
+  }
+
+  return useColumnName()
 }

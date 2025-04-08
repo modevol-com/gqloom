@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+## 0.8.4 (2025-04-08)
+
+- Feat: add `screamingSnakeCase` to convert strings to screaming snake case
+
 ## 0.8.3 (2025-03-31)
 
 - Fix: ensure context work in subscription
