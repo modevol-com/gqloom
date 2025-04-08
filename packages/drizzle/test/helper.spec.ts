@@ -1,7 +1,7 @@
 import * as mysql from "drizzle-orm/mysql-core"
 import * as pg from "drizzle-orm/pg-core"
 import { describe, expect, it } from "vitest"
-import { getEnumNameByColumn } from "../src/utils"
+import { getEnumNameByColumn } from "../src/helper"
 
 describe("getEnumNameByColumn", () => {
   it("should return the enum name for a pg enum column", () => {
