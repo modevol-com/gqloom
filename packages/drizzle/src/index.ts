@@ -32,8 +32,8 @@ import {
   GraphQLString,
   isNonNullType,
 } from "graphql"
+import { getEnumNameByColumn } from "./helper"
 import type { DrizzleWeaverConfig, DrizzleWeaverConfigOptions } from "./types"
-import { getEnumNameByColumn } from "./utils"
 
 export class DrizzleWeaver {
   public static vendor = "gqloom.drizzle"
