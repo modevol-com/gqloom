@@ -3,8 +3,13 @@ type UsersItem {
   createdAt: String
   email: String!
   name: String
-  role: String
+  role: Role
   posts: [PostsItem!]!
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 type PostsItem {
@@ -13,7 +18,7 @@ type PostsItem {
   updatedAt: String
   published: Boolean
   title: String!
-  authorId: Int
+  authorId: Int!
   author: UsersItem
 }
 
@@ -162,36 +167,28 @@ input PgTextFiltersOr {
 }
 
 input PgEnumColumnFilters {
-  eq: String
-  ne: String
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  like: String
-  notLike: String
-  ilike: String
-  notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+  eq: Role
+  ne: Role
+  lt: Role
+  lte: Role
+  gt: Role
+  gte: Role
+  inArray: [Role!]
+  notInArray: [Role!]
   isNull: Boolean
   isNotNull: Boolean
   OR: [PgEnumColumnFiltersOr!]
 }
 
 input PgEnumColumnFiltersOr {
-  eq: String
-  ne: String
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  like: String
-  notLike: String
-  ilike: String
-  notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+  eq: Role
+  ne: Role
+  lt: Role
+  lte: Role
+  gt: Role
+  gte: Role
+  inArray: [Role!]
+  notInArray: [Role!]
   isNull: Boolean
   isNotNull: Boolean
 }
@@ -337,7 +334,7 @@ input UsersInsertInput {
   createdAt: String
   email: String!
   name: String
-  role: String
+  role: Role
 }
 
 input UsersUpdateInput {
@@ -345,7 +342,7 @@ input UsersUpdateInput {
   createdAt: String
   email: String
   name: String
-  role: String
+  role: Role
 }
 
 input PostsInsertInput {
@@ -354,7 +351,7 @@ input PostsInsertInput {
   updatedAt: String
   published: Boolean
   title: String!
-  authorId: Int
+  authorId: Int!
 }
 
 input PostsUpdateInput {
