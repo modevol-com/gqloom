@@ -16,6 +16,7 @@ import { DrizzleWeaver, drizzleSilk } from "../src"
 
 describe("drizzleSilk", () => {
   it("should handle pg table and column types", () => {
+    const moodEnum = pg.pgEnum("mood", ["sad", "ok", "happy"])
     const Foo = drizzleSilk(
       pgTable("foo", {
         serial: pg.serial().primaryKey(),
@@ -37,6 +38,7 @@ describe("drizzleSilk", () => {
         date: pg.date(),
         interval: pg.interval(),
         array: pg.text().array(),
+        enum: moodEnum(),
       })
     )
 
@@ -62,6 +64,129 @@ describe("drizzleSilk", () => {
         date: String
         interval: String
         array: [String!]
+        enum: Mood
+      }"
+    `)
+  })
+
+  it("should handle enum with different naming conventions", () => {
+    const statusEnum = pg.pgEnum("status", [
+      "active",
+      "inactive",
+      "pending_review",
+    ])
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        status: statusEnum(),
+      })
+    )
+
+    const schema = weave(Foo)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type FooItem {
+        status: Status
+      }
+
+      enum Status {
+        Active
+        Inactive
+        PendingReview
+      }"
+    `)
+  })
+
+  it("should handle enum with special characters", () => {
+    const specialEnum = pg.pgEnum("special", [
+      "with-hyphen",
+      "with_underscore",
+      "with space",
+    ])
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        special: specialEnum(),
+      })
+    )
+
+    const schema = weave(Foo)
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type FooItem {
+        special: Special
+      }
+
+      enum Special {
+        WithHyphen
+        WithUnderscore
+        WithSpace
+      }"
+    `)
+  })
+
+  it("should handle multiple enums in same table", () => {
+    const roleEnum = pg.pgEnum("role", ["admin", "user", "guest"])
+    const priorityEnum = pg.pgEnum("priority", ["low", "medium", "high"])
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        role: roleEnum(),
+        priority: priorityEnum(),
+      })
+    )
+
+    const schema = weave(Foo)
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type FooItem {
+        role: Role
+        priority: Priority
+      }
+
+      enum Role {
+        Admin
+        User
+        Guest
+      }
+
+      enum Priority {
+        Low
+        Medium
+        High
+      }"
+    `)
+  })
+
+  it("should reuse same enum type across different tables", () => {
+    const roleEnum = pg.pgEnum("role", ["admin", "user", "guest"])
+
+    const User = drizzleSilk(
+      pgTable("user", {
+        id: pg.serial().primaryKey(),
+        role: roleEnum(),
+      })
+    )
+
+    const Post = drizzleSilk(
+      pgTable("post", {
+        id: pg.serial().primaryKey(),
+        authorRole: roleEnum(),
+      })
+    )
+
+    const schema = weave(User, Post)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type UserItem {
+        id: Int!
+        role: Role
+      }
+
+      enum Role {
+        Admin
+        User
+        Guest
+      }
+
+      type PostItem {
+        id: Int!
+        authorRole: Role
       }"
     `)
   })

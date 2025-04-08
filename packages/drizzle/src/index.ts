@@ -20,6 +20,7 @@ import { type PgArray, PgInteger, PgSerial } from "drizzle-orm/pg-core"
 import { SQLiteInteger } from "drizzle-orm/sqlite-core"
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   type GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLInt,
@@ -31,6 +32,7 @@ import {
   isNonNullType,
 } from "graphql"
 import type { DrizzleWeaverConfig, DrizzleWeaverConfigOptions } from "./types"
+import { getEnumNameByColumn } from "./utils"
 
 export class DrizzleWeaver {
   public static vendor = "gqloom.drizzle"
@@ -127,6 +129,24 @@ export class DrizzleWeaver {
 
     const presetType = config?.presetGraphQLType?.(column)
     if (presetType) return presetType
+
+    const enumName = getEnumNameByColumn(column)
+    if (enumName && column.enumValues) {
+      const existing = weaverContext.getNamedType(enumName)
+      if (existing != null) return existing
+
+      return weaverContext.memoNamedType(
+        new GraphQLEnumType({
+          name: enumName,
+          values: Object.fromEntries(
+            column.enumValues.map((value) => [
+              pascalCase(value),
+              { value: value },
+            ])
+          ),
+        })
+      )
+    }
 
     switch (column.dataType) {
       case "boolean": {
