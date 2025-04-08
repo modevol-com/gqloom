@@ -4,6 +4,7 @@ import {
   type StandardSchemaV1,
   mapValue,
   pascalCase,
+  screamingSnakeCase,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -140,7 +141,7 @@ export class DrizzleWeaver {
           name: enumName,
           values: Object.fromEntries(
             column.enumValues.map((value) => [
-              pascalCase(value),
+              screamingSnakeCase(value),
               { value: value },
             ])
           ),

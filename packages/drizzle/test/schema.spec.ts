@@ -88,9 +88,9 @@ describe("drizzleSilk", () => {
       }
 
       enum Status {
-        Active
-        Inactive
-        PendingReview
+        ACTIVE
+        INACTIVE
+        PENDING_REVIEW
       }"
     `)
   })
@@ -115,9 +115,9 @@ describe("drizzleSilk", () => {
       }
 
       enum Special {
-        WithHyphen
-        WithUnderscore
-        WithSpace
+        WITH_HYPHEN
+        WITH_UNDERSCORE
+        WITH_SPACE
       }"
     `)
   })
@@ -141,15 +141,15 @@ describe("drizzleSilk", () => {
       }
 
       enum Role {
-        Admin
-        User
-        Guest
+        ADMIN
+        USER
+        GUEST
       }
 
       enum Priority {
-        Low
-        Medium
-        High
+        LOW
+        MEDIUM
+        HIGH
       }"
     `)
   })
@@ -179,9 +179,9 @@ describe("drizzleSilk", () => {
       }
 
       enum Role {
-        Admin
-        User
-        Guest
+        ADMIN
+        USER
+        GUEST
       }
 
       type PostItem {
