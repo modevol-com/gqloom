@@ -40,7 +40,9 @@ describe("DrizzleInputFactory", () => {
         id: PgSerialFilters
         name: PgTextFilters
         email: PgTextFilters
-        OR: [UsersFiltersOr!]
+        OR: [UsersFiltersNested!]
+        AND: [UsersFiltersNested!]
+        NOT: UsersFiltersNested
       }"
     `)
   })

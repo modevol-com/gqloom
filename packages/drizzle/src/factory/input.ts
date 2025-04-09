@@ -35,7 +35,7 @@ export class DrizzleInputFactory<TTable extends Table> {
           offset: { type: GraphQLInt },
           limit: { type: GraphQLInt },
           orderBy: {
-            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+            type: this.orderBy(),
           },
           where: { type: this.filters() },
         },
@@ -54,7 +54,7 @@ export class DrizzleInputFactory<TTable extends Table> {
         fields: {
           offset: { type: GraphQLInt },
           orderBy: {
-            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+            type: this.orderBy(),
           },
           where: { type: this.filters() },
         },
@@ -181,8 +181,8 @@ export class DrizzleInputFactory<TTable extends Table> {
       type: DrizzleInputFactory.columnFilters(column),
     }))
 
-    const filtersOr = new GraphQLObjectType({
-      name: `${pascalCase(getTableName(this.table))}FiltersOr`,
+    const filtersNested = new GraphQLObjectType({
+      name: `${pascalCase(getTableName(this.table))}FiltersNested`,
       fields: { ...filterFields },
     })
     return weaverContext.memoNamedType(
@@ -190,7 +190,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: {
           ...filterFields,
-          OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+          OR: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          AND: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          NOT: { type: filtersNested },
         },
       })
     )
@@ -216,14 +218,14 @@ export class DrizzleInputFactory<TTable extends Table> {
         ilike: { type: GraphQLString },
         notIlike: { type: GraphQLString },
       }),
-      inArray: { type: gqlListType },
-      notInArray: { type: gqlListType },
+      in: { type: gqlListType },
+      notIn: { type: gqlListType },
       isNull: { type: GraphQLBoolean },
       isNotNull: { type: GraphQLBoolean },
     }
 
-    const filtersOr = new GraphQLObjectType({
-      name: `${pascalCase(column.columnType)}FiltersOr`,
+    const filtersNested = new GraphQLObjectType({
+      name: `${pascalCase(column.columnType)}FiltersNested`,
       fields: { ...baseFields },
     })
 
@@ -232,7 +234,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: {
           ...baseFields,
-          OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+          OR: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          AND: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          NOT: { type: filtersNested },
         },
       })
     )
@@ -290,13 +294,13 @@ export class DrizzleInputFactory<TTable extends Table> {
 export interface SelectArrayArgs<TTable extends Table> {
   offset?: number
   limit?: number
-  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
   where?: Filters<TTable>
 }
 
 export interface SelectSingleArgs<TTable extends Table> {
   offset?: number
-  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
   where?: Filters<TTable>
 }
 
@@ -325,27 +329,31 @@ export type FiltersCore<TTable extends Table> = Partial<{
 
 export type Filters<TTable extends Table> = FiltersCore<TTable> & {
   OR?: FiltersCore<TTable>[]
+  AND?: FiltersCore<TTable>[]
+  NOT?: FiltersCore<TTable>
 }
 
 export interface ColumnFiltersCore<TType = any> {
   eq?: TType
   ne?: TType
-  lt?: TType
-  lte?: TType
   gt?: TType
   gte?: TType
+  lt?: TType
+  lte?: TType
+  in?: TType[]
+  notIn?: TType[]
   like?: TType extends string ? string : never
-  notLike?: TType extends string ? string : never
   ilike?: TType extends string ? string : never
+  notLike?: TType extends string ? string : never
   notIlike?: TType extends string ? string : never
-  inArray?: TType[]
-  notInArray?: TType[]
   isNull?: boolean
   isNotNull?: boolean
 }
 
 export interface ColumnFilters<TType = any> extends ColumnFiltersCore<TType> {
   OR?: ColumnFiltersCore<TType>[]
+  AND?: ColumnFiltersCore<TType>[]
+  NOT?: ColumnFiltersCore<TType>
 }
 
 export interface MutationResult {

@@ -14,9 +14,9 @@ icon: HardDriveDownload
 
 考虑我们有两张表 `users` 和 `posts`，其中 `posts` 通过 `posts.authorId` 关联到 `users` 的 `id`：
 
-```ts twoslash
+```ts twoslash tab="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
+import { defineRelations } from "drizzle-orm"
 import * as t from "drizzle-orm/pg-core"
 
 export const roleEnum = t.pgEnum("role", ["user", "admin"])
@@ -31,10 +31,6 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
-
 export const posts = drizzleSilk(
   t.pgTable("posts", {
     id: t.serial().primaryKey(),
@@ -48,9 +44,25 @@ export const posts = drizzleSilk(
     authorId: t.integer().notNull(),
   })
 )
+```
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+```ts twoslash tab="relations.ts"
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 ```
 
@@ -61,7 +73,7 @@ export const postsRelations = relations(posts, ({ one }) => ({
 ```ts
 import { drizzle } from "drizzle-orm/node-postgres"
 import { reset, seed } from "drizzle-seed"
-import { config } from "../env.config"
+import { config } from "./env.config"
 import * as schema from "./schema"
 
 async function main() {
@@ -91,7 +103,6 @@ main()
 ```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/pg-core"
 
 export const roleEnum = t.pgEnum("role", ["user", "admin"])
@@ -105,10 +116,6 @@ export const users = drizzleSilk(
     role: roleEnum().default("user"),
   })
 )
-
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
 
 export const posts = drizzleSilk(
   t.pgTable("posts", {
@@ -124,8 +131,23 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 // @filename: env.config.ts
 export const config = { databaseUrl: "" }
@@ -135,10 +157,15 @@ import { field, query, resolver, weave } from "@gqloom/core"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { config } from "./env.config"
+import { relations } from "./relations"
 import * as tables from "./schema"
 import { posts, users } from "./schema"
 
-const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+const db = drizzle(config.databaseUrl, {
+  schema: tables,
+  relations,
+  logger: true,
+})
 
 const userResolver = resolver.of(users, {
   users: query(users.$list()).resolve(() => db.select().from(users)),
@@ -179,7 +206,6 @@ query usersWithPosts {
 ```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/pg-core"
 
 export const roleEnum = t.pgEnum("role", ["user", "admin"])
@@ -193,10 +219,6 @@ export const users = drizzleSilk(
     role: roleEnum().default("user"),
   })
 )
-
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
 
 export const posts = drizzleSilk(
   t.pgTable("posts", {
@@ -212,9 +234,27 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, { fields: [posts.authorId], references: [users.id] }),
-}))
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(
+  { users: tables.users, posts: tables.posts },
+  (r) => ({
+    users: {
+      posts: r.many.posts({
+        from: r.users.id,
+        to: r.posts.authorId,
+      }),
+    },
+    posts: {
+      author: r.one.users({
+        from: r.posts.authorId,
+        to: r.users.id,
+      }),
+    },
+  })
+)
 // @filename: env.config.ts
 export const config = { databaseUrl: "" }
 // @filename: index.ts
@@ -223,10 +263,15 @@ import { field, query, resolver, weave } from "@gqloom/core"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { config } from "./env.config"
+import { relations } from "./relations"
 import * as tables from "./schema"
 import { posts, users } from "./schema"
 
-const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+const db = drizzle(config.databaseUrl, {
+  schema: tables,
+  relations,
+  logger: true,
+})
 
 const userResolver = resolver.of(users, {
   users: query(users.$list()).resolve(() => db.select().from(users)),

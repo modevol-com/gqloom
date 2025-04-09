@@ -1,100 +1,12 @@
-input DrizzlePostFilters {
-  OR: [DrizzlePostFiltersOr!]
-  authorId: MySqlIntFilters
-  content: MySqlTextFilters
-  id: MySqlIntFilters
-  title: MySqlTextFilters
-}
-
-input DrizzlePostFiltersOr {
-  authorId: MySqlIntFilters
-  content: MySqlTextFilters
-  id: MySqlIntFilters
-  title: MySqlTextFilters
-}
-
-input DrizzlePostInsertInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String!
-}
-
-type DrizzlePostItem {
-  author: DrizzleUserItem
-  authorId: Int
-  content: String
-  id: Int!
-  title: String!
-}
-
-input DrizzlePostOrderBy {
-  authorId: OrderDirection
-  content: OrderDirection
-  id: OrderDirection
-  title: OrderDirection
-}
-
-input DrizzlePostUpdateInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String
-}
-
-input DrizzleUserFilters {
-  OR: [DrizzleUserFiltersOr!]
-  age: MySqlIntFilters
-  email: MySqlTextFilters
-  id: MySqlIntFilters
-  name: MySqlTextFilters
-}
-
-input DrizzleUserFiltersOr {
-  age: MySqlIntFilters
-  email: MySqlTextFilters
-  id: MySqlIntFilters
-  name: MySqlTextFilters
-}
-
-input DrizzleUserInsertInput {
-  age: Int
-  email: String
-  id: Int
-  name: String!
-}
-
-type DrizzleUserItem {
-  age: Int
-  email: String
-  id: Int!
-  name: String!
-  posts: [DrizzlePostItem!]!
-}
-
-input DrizzleUserOrderBy {
-  age: OrderDirection
-  email: OrderDirection
-  id: OrderDirection
-  name: OrderDirection
-}
-
-input DrizzleUserUpdateInput {
-  age: Int
-  email: String
-  id: Int
-  name: String
-}
-
 type Mutation {
-  deleteFromPost(where: DrizzlePostFilters): MutationSuccessResult
-  deleteFromUser(where: DrizzleUserFilters): MutationSuccessResult
-  insertIntoPost(values: [DrizzlePostInsertInput!]!): MutationSuccessResult
-  insertIntoPostSingle(value: DrizzlePostInsertInput!): MutationSuccessResult
-  insertIntoUser(values: [DrizzleUserInsertInput!]!): MutationSuccessResult
-  insertIntoUserSingle(value: DrizzleUserInsertInput!): MutationSuccessResult
-  updatePost(set: DrizzlePostUpdateInput!, where: DrizzlePostFilters): MutationSuccessResult
-  updateUser(set: DrizzleUserUpdateInput!, where: DrizzleUserFilters): MutationSuccessResult
+  deleteFromPosts(where: PostsFilters): MutationSuccessResult
+  deleteFromUsers(where: UsersFilters): MutationSuccessResult
+  insertIntoPosts(values: [PostsInsertInput!]!): MutationSuccessResult
+  insertIntoPostsSingle(value: PostsInsertInput!): MutationSuccessResult
+  insertIntoUsers(values: [UsersInsertInput!]!): MutationSuccessResult
+  insertIntoUsersSingle(value: UsersInsertInput!): MutationSuccessResult
+  updatePosts(set: PostsUpdateInput!, where: PostsFilters): MutationSuccessResult
+  updateUsers(set: UsersUpdateInput!, where: UsersFilters): MutationSuccessResult
 }
 
 type MutationSuccessResult {
@@ -102,39 +14,43 @@ type MutationSuccessResult {
 }
 
 input MySqlIntFilters {
-  OR: [MySqlIntFiltersOr!]
+  AND: [MySqlIntFiltersNested!]
+  NOT: MySqlIntFiltersNested
+  OR: [MySqlIntFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
-input MySqlIntFiltersOr {
+input MySqlIntFiltersNested {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input MySqlTextFilters {
-  OR: [MySqlTextFiltersOr!]
+  AND: [MySqlTextFiltersNested!]
+  NOT: MySqlTextFiltersNested
+  OR: [MySqlTextFiltersNested!]
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -142,16 +58,16 @@ input MySqlTextFilters {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
-input MySqlTextFiltersOr {
+input MySqlTextFiltersNested {
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -159,7 +75,7 @@ input MySqlTextFiltersOr {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
@@ -168,9 +84,101 @@ enum OrderDirection {
   desc
 }
 
+input PostsFilters {
+  AND: [PostsFiltersNested!]
+  NOT: PostsFiltersNested
+  OR: [PostsFiltersNested!]
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+  title: MySqlTextFilters
+}
+
+input PostsFiltersNested {
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+  title: MySqlTextFilters
+}
+
+input PostsInsertInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String!
+}
+
+type PostsItem {
+  author: UsersItem
+  authorId: Int
+  content: String
+  id: Int!
+  title: String!
+}
+
+input PostsOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+  title: OrderDirection
+}
+
+input PostsUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String
+}
+
 type Query {
-  post(limit: Int, offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): [DrizzlePostItem!]!
-  postSingle(offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): DrizzlePostItem
-  user(limit: Int, offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): [DrizzleUserItem!]!
-  userSingle(offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): DrizzleUserItem
+  posts(limit: Int, offset: Int, orderBy: PostsOrderBy, where: PostsFilters): [PostsItem!]!
+  postsSingle(offset: Int, orderBy: PostsOrderBy, where: PostsFilters): PostsItem
+  users(limit: Int, offset: Int, orderBy: UsersOrderBy, where: UsersFilters): [UsersItem!]!
+  usersSingle(offset: Int, orderBy: UsersOrderBy, where: UsersFilters): UsersItem
+}
+
+input UsersFilters {
+  AND: [UsersFiltersNested!]
+  NOT: UsersFiltersNested
+  OR: [UsersFiltersNested!]
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+  name: MySqlTextFilters
+}
+
+input UsersFiltersNested {
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+  name: MySqlTextFilters
+}
+
+input UsersInsertInput {
+  age: Int
+  email: String
+  id: Int
+  name: String!
+}
+
+type UsersItem {
+  age: Int
+  email: String
+  id: Int!
+  name: String!
+  posts: [PostsItem!]!
+}
+
+input UsersOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+  name: OrderDirection
+}
+
+input UsersUpdateInput {
+  age: Int
+  email: String
+  id: Int
+  name: String
 }
