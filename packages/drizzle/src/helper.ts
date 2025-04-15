@@ -62,18 +62,24 @@ export function isColumnVisible(
 ): boolean {
   // Get specific column configuration
   const columnConfig = options?.[columnName as keyof typeof options]
-  if (columnConfig && typeof columnConfig === "object") {
+  // Get global default configuration
+  const defaultConfig = options?.["*"]
+  if (columnConfig != null) {
+    if (typeof columnConfig === "boolean") {
+      return columnConfig
+    }
     const specificBehavior = columnConfig[behavior]
-    if (typeof specificBehavior === "boolean") {
+    if (specificBehavior != null) {
       return specificBehavior
     }
   }
 
-  // Get global default configuration
-  const defaultConfig = options?.["*"]
-  if (defaultConfig && typeof defaultConfig === "object") {
+  if (defaultConfig != null) {
+    if (typeof defaultConfig === "boolean") {
+      return defaultConfig
+    }
     const defaultBehavior = defaultConfig[behavior]
-    if (typeof defaultBehavior === "boolean") {
+    if (defaultBehavior != null) {
       return defaultBehavior
     }
   }

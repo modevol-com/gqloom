@@ -108,8 +108,6 @@ describe("DrizzleInputFactory", () => {
           name: String
           email: String!
           password: String!
-          createdAt: String
-          updatedAt: String
         }"
       `)
     })
@@ -123,8 +121,6 @@ describe("DrizzleInputFactory", () => {
           name: String
           email: String
           password: String
-          createdAt: String
-          updatedAt: String
         }"
       `)
     })

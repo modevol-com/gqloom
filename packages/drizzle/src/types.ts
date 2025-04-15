@@ -45,10 +45,10 @@ export interface VisibilityBehavior {
 }
 
 export type DrizzleFactoryInputVisibilityBehaviors<TTable extends Table> = {
-  [K in keyof TTable["_"]["columns"]]?: VisibilityBehavior | undefined
+  [K in keyof TTable["_"]["columns"]]?: VisibilityBehavior | boolean | undefined
 } & {
   /**
    * Config the default visibility behavior of all columns
    */
-  "*"?: VisibilityBehavior | undefined
+  "*"?: VisibilityBehavior | boolean | undefined
 }

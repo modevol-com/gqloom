@@ -141,13 +141,9 @@ export class DrizzleInputFactory<TTable extends Table> {
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
-        fields: mapValue(columns, (column) => {
+        fields: mapValue(columns, (column, columnName) => {
           if (
-            isColumnVisible(
-              column.name,
-              this.options?.input ?? {},
-              "insert"
-            ) === false
+            !isColumnVisible(columnName, this.options?.input ?? {}, "insert")
           ) {
             return mapValue.SKIP
           }
@@ -174,13 +170,9 @@ export class DrizzleInputFactory<TTable extends Table> {
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
-        fields: mapValue(columns, (column) => {
+        fields: mapValue(columns, (column, columnName) => {
           if (
-            isColumnVisible(
-              column.name,
-              this.options?.input ?? {},
-              "update"
-            ) === false
+            !isColumnVisible(columnName, this.options?.input ?? {}, "update")
           ) {
             return mapValue.SKIP
           }
@@ -200,9 +192,9 @@ export class DrizzleInputFactory<TTable extends Table> {
     const filterFields: Record<
       string,
       GraphQLFieldConfig<any, any, any>
-    > = mapValue(columns, (column) => {
+    > = mapValue(columns, (column, columnName) => {
       if (
-        isColumnVisible(column.name, this.options?.input ?? {}, "filters") ===
+        isColumnVisible(columnName, this.options?.input ?? {}, "filters") ===
         false
       ) {
         return mapValue.SKIP
