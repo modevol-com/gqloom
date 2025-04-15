@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 - Refactor: Migrating to Relational Queries version 2
 
+## 0.8.3 (2025-04-16)
+
+- Feat: add count query functionality to resolver factory
+- Feat: Add column visibility configuration for input and filter generation
+
 ## 0.8.2 (2025-04-08)
 
 - Feat: support drizzle text enum

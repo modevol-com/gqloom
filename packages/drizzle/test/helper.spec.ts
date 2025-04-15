@@ -1,7 +1,15 @@
+import type { Table } from "drizzle-orm"
+import type { Column } from "drizzle-orm"
+import { sql } from "drizzle-orm"
 import * as mysql from "drizzle-orm/mysql-core"
 import * as pg from "drizzle-orm/pg-core"
 import { describe, expect, it } from "vitest"
-import { getEnumNameByColumn } from "../src/helper"
+import {
+  getEnumNameByColumn,
+  inArrayMultiple,
+  isColumnVisible,
+} from "../src/helper"
+import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
 
 describe("getEnumNameByColumn", () => {
   it("should return the enum name for a pg enum column", () => {
@@ -24,5 +32,36 @@ describe("getEnumNameByColumn", () => {
       id: pg.serial("id").primaryKey(),
     })
     expect(getEnumNameByColumn(table.id)).toBeUndefined()
+  })
+})
+
+describe("helper", () => {
+  describe("inArrayMultiple", () => {
+    it("should handle empty values", () => {
+      const columns: Column[] = []
+      const values: unknown[][] = []
+      const result = inArrayMultiple(columns, values, {})
+      expect(result).toEqual(sql`FALSE`)
+    })
+  })
+
+  describe("isColumnVisible", () => {
+    it("should handle boolean configuration", () => {
+      const options: DrizzleFactoryInputVisibilityBehaviors<Table> = {
+        "*": true,
+        column1: false,
+        column2: {
+          filters: true,
+          insert: false,
+          update: true,
+        },
+      }
+
+      expect(isColumnVisible("column1", options, "filters")).toBe(false)
+      expect(isColumnVisible("column2", options, "filters")).toBe(true)
+      expect(isColumnVisible("column2", options, "insert")).toBe(false)
+      expect(isColumnVisible("column2", options, "update")).toBe(true)
+      expect(isColumnVisible("column3", options, "filters")).toBe(true)
+    })
   })
 })
