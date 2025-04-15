@@ -20,12 +20,12 @@ import {
 } from "graphql"
 import { isColumnVisible } from "../helper"
 import { DrizzleWeaver } from "../index"
-import type { DrizzleFactoryOptionsColumn } from "../types"
+import type { DrizzleResolverFactoryOptions } from "../types"
 
 export class DrizzleInputFactory<TTable extends Table> {
   public constructor(
     public readonly table: TTable,
-    public readonly options?: DrizzleFactoryOptionsColumn<TTable>
+    public readonly options?: DrizzleResolverFactoryOptions<TTable>
   ) {}
 
   public selectArrayArgs() {
@@ -143,7 +143,11 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: mapValue(columns, (column) => {
           if (
-            isColumnVisible(column.name, this.options ?? {}, "insert") === false
+            isColumnVisible(
+              column.name,
+              this.options?.input ?? {},
+              "insert"
+            ) === false
           ) {
             return mapValue.SKIP
           }
@@ -172,7 +176,11 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: mapValue(columns, (column) => {
           if (
-            isColumnVisible(column.name, this.options ?? {}, "update") === false
+            isColumnVisible(
+              column.name,
+              this.options?.input ?? {},
+              "update"
+            ) === false
           ) {
             return mapValue.SKIP
           }
@@ -194,7 +202,8 @@ export class DrizzleInputFactory<TTable extends Table> {
       GraphQLFieldConfig<any, any, any>
     > = mapValue(columns, (column) => {
       if (
-        isColumnVisible(column.name, this.options ?? {}, "filters") === false
+        isColumnVisible(column.name, this.options?.input ?? {}, "filters") ===
+        false
       ) {
         return mapValue.SKIP
       }

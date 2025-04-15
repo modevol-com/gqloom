@@ -25,7 +25,7 @@ export interface DrizzleResolverFactoryOptions<TTable extends Table> {
   /**
    * Config the visibility behavior of the columns
    */
-  column: DrizzleFactoryOptionsColumn<TTable>
+  input: DrizzleFactoryInputVisibilityBehaviors<TTable>
 }
 
 export interface VisibilityBehavior {
@@ -44,7 +44,7 @@ export interface VisibilityBehavior {
   update?: boolean
 }
 
-export type DrizzleFactoryOptionsColumn<TTable extends Table> = {
+export type DrizzleFactoryInputVisibilityBehaviors<TTable extends Table> = {
   [K in keyof TTable["_"]["columns"]]?: VisibilityBehavior | undefined
 } & {
   /**

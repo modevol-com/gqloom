@@ -2,7 +2,7 @@ import type { Table } from "drizzle-orm"
 import { MySqlDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
 import { PgDatabase, type PgTable } from "drizzle-orm/pg-core"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
-import type { DrizzleFactoryOptionsColumn } from "../types"
+import type { DrizzleFactoryInputVisibilityBehaviors } from "../types"
 import { DrizzleMySQLResolverFactory } from "./resolver-mysql"
 import { DrizzlePostgresResolverFactory } from "./resolver-postgres"
 import { DrizzleSQLiteResolverFactory } from "./resolver-sqlite"
@@ -14,7 +14,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   tableName: TTableName,
-  options?: DrizzleFactoryOptionsColumn<
+  options?: DrizzleFactoryInputVisibilityBehaviors<
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
 ): DrizzleSQLiteResolverFactory<
@@ -27,7 +27,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   table: TTable,
-  options?: DrizzleFactoryOptionsColumn<TTable>
+  options?: DrizzleFactoryInputVisibilityBehaviors<TTable>
 ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory<
@@ -36,7 +36,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   tableName: TTableName,
-  options?: DrizzleFactoryOptionsColumn<
+  options?: DrizzleFactoryInputVisibilityBehaviors<
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
 ): DrizzlePostgresResolverFactory<
@@ -49,7 +49,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   table: TTable,
-  options?: DrizzleFactoryOptionsColumn<TTable>
+  options?: DrizzleFactoryInputVisibilityBehaviors<TTable>
 ): DrizzlePostgresResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory<
@@ -58,7 +58,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   tableName: TTableName,
-  options?: DrizzleFactoryOptionsColumn<
+  options?: DrizzleFactoryInputVisibilityBehaviors<
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
 ): DrizzleMySQLResolverFactory<
@@ -71,7 +71,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   table: TTable,
-  options?: DrizzleFactoryOptionsColumn<TTable>
+  options?: DrizzleFactoryInputVisibilityBehaviors<TTable>
 ): DrizzleMySQLResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory(

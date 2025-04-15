@@ -6,7 +6,10 @@ import {
   getTableName,
   sql,
 } from "drizzle-orm"
-import type { DrizzleFactoryOptionsColumn, VisibilityBehavior } from "./types"
+import type {
+  DrizzleFactoryInputVisibilityBehaviors,
+  VisibilityBehavior,
+} from "./types"
 
 /**
  * Creates an IN clause for multiple columns
@@ -54,7 +57,7 @@ export function getEnumNameByColumn(column: Column): string | undefined {
 
 export function isColumnVisible(
   columnName: string,
-  options: DrizzleFactoryOptionsColumn<Table>,
+  options: DrizzleFactoryInputVisibilityBehaviors<Table>,
   behavior: keyof VisibilityBehavior
 ): boolean {
   // Get specific column configuration

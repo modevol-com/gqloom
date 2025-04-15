@@ -2,7 +2,7 @@ import * as pg from "drizzle-orm/pg-core"
 import { printType } from "graphql"
 import { describe, expect, it } from "vitest"
 import { DrizzleInputFactory } from "../src"
-import type { DrizzleFactoryOptionsColumn } from "../src/types"
+import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
 
 describe("DrizzleInputFactory", () => {
   const userTable = pg.pgTable("users", {
@@ -72,7 +72,7 @@ describe("DrizzleInputFactory", () => {
   })
 
   describe("with column visibility options", () => {
-    const options: DrizzleFactoryOptionsColumn<typeof userTable> = {
+    const options: DrizzleFactoryInputVisibilityBehaviors<typeof userTable> = {
       "*": {
         filters: true,
         insert: true,
@@ -95,7 +95,9 @@ describe("DrizzleInputFactory", () => {
       },
     }
 
-    const inputFactoryWithOptions = new DrizzleInputFactory(userTable, options)
+    const inputFactoryWithOptions = new DrizzleInputFactory(userTable, {
+      input: options,
+    })
 
     it("should respect column visibility in InsertInput", () => {
       expect(
