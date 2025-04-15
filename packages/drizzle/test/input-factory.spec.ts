@@ -2,6 +2,7 @@ import * as pg from "drizzle-orm/pg-core"
 import { printType } from "graphql"
 import { describe, expect, it } from "vitest"
 import { DrizzleInputFactory } from "../src"
+import type { DrizzleFactoryOptionsColumn } from "../src/types"
 
 describe("DrizzleInputFactory", () => {
   const userTable = pg.pgTable("users", {
@@ -11,6 +12,9 @@ describe("DrizzleInputFactory", () => {
       .notNull()
       .$defaultFn(() => "John Doe"),
     email: pg.text("email").notNull(),
+    password: pg.text("password").notNull(),
+    createdAt: pg.timestamp("created_at").notNull().defaultNow(),
+    updatedAt: pg.timestamp("updated_at").notNull().defaultNow(),
   })
 
   const inputFactory = new DrizzleInputFactory(userTable)
@@ -20,6 +24,9 @@ describe("DrizzleInputFactory", () => {
         id: Int
         name: String
         email: String!
+        password: String!
+        createdAt: String
+        updatedAt: String
       }"
     `)
   })
@@ -30,6 +37,9 @@ describe("DrizzleInputFactory", () => {
         id: Int
         name: String
         email: String
+        password: String
+        createdAt: String
+        updatedAt: String
       }"
     `)
   })
@@ -40,6 +50,9 @@ describe("DrizzleInputFactory", () => {
         id: PgSerialFilters
         name: PgTextFilters
         email: PgTextFilters
+        password: PgTextFilters
+        createdAt: PgTimestampFilters
+        updatedAt: PgTimestampFilters
         OR: [UsersFiltersOr!]
       }"
     `)
@@ -51,7 +64,97 @@ describe("DrizzleInputFactory", () => {
         id: OrderDirection
         name: OrderDirection
         email: OrderDirection
+        password: OrderDirection
+        createdAt: OrderDirection
+        updatedAt: OrderDirection
       }"
     `)
+  })
+
+  describe("with column visibility options", () => {
+    const options: DrizzleFactoryOptionsColumn<typeof userTable> = {
+      "*": {
+        filters: true,
+        insert: true,
+        update: true,
+      },
+      password: {
+        filters: false,
+        insert: true,
+        update: true,
+      },
+      createdAt: {
+        filters: true,
+        insert: false,
+        update: false,
+      },
+      updatedAt: {
+        filters: true,
+        insert: false,
+        update: false,
+      },
+    }
+
+    const inputFactoryWithOptions = new DrizzleInputFactory(userTable, options)
+
+    it("should respect column visibility in InsertInput", () => {
+      expect(
+        printType(inputFactoryWithOptions.insertInput())
+      ).toMatchInlineSnapshot(`
+        "type UsersInsertInput {
+          id: Int
+          name: String
+          email: String!
+          password: String!
+          createdAt: String
+          updatedAt: String
+        }"
+      `)
+    })
+
+    it("should respect column visibility in UpdateInput", () => {
+      expect(
+        printType(inputFactoryWithOptions.updateInput())
+      ).toMatchInlineSnapshot(`
+        "type UsersUpdateInput {
+          id: Int
+          name: String
+          email: String
+          password: String
+          createdAt: String
+          updatedAt: String
+        }"
+      `)
+    })
+
+    it("should respect column visibility in Filters", () => {
+      expect(
+        printType(inputFactoryWithOptions.filters())
+      ).toMatchInlineSnapshot(`
+        "type UsersFilters {
+          id: PgSerialFilters
+          name: PgTextFilters
+          email: PgTextFilters
+          createdAt: PgTimestampFilters
+          updatedAt: PgTimestampFilters
+          OR: [UsersFiltersOr!]
+        }"
+      `)
+    })
+
+    it("should respect column visibility in OrderBy", () => {
+      expect(
+        printType(inputFactoryWithOptions.orderBy())
+      ).toMatchInlineSnapshot(`
+        "type UsersOrderBy {
+          id: OrderDirection
+          name: OrderDirection
+          email: OrderDirection
+          password: OrderDirection
+          createdAt: OrderDirection
+          updatedAt: OrderDirection
+        }"
+      `)
+    })
   })
 })

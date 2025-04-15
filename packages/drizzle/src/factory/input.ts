@@ -18,15 +18,20 @@ import {
   GraphQLString,
   isNonNullType,
 } from "graphql"
+import { isColumnVisible } from "../helper"
 import { DrizzleWeaver } from "../index"
+import type { DrizzleFactoryOptionsColumn } from "../types"
 
 export class DrizzleInputFactory<TTable extends Table> {
-  public constructor(public readonly table: TTable) {}
+  public constructor(
+    public readonly table: TTable,
+    public readonly options?: DrizzleFactoryOptionsColumn<TTable>
+  ) {}
 
   public selectArrayArgs() {
     const name = `${pascalCase(getTableName(this.table))}SelectArrayArgs`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
-    if (existing) return existing
+    if (existing != null) return existing
 
     return weaverContext.memoNamedType(
       new GraphQLObjectType<SelectArrayArgs<TTable>>({
@@ -137,6 +142,11 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLObjectType({
         name,
         fields: mapValue(columns, (column) => {
+          if (
+            isColumnVisible(column.name, this.options ?? {}, "insert") === false
+          ) {
+            return mapValue.SKIP
+          }
           const type = (() => {
             const t = DrizzleWeaver.getColumnType(column)
             if (column.hasDefault) return t
@@ -161,6 +171,11 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLObjectType({
         name,
         fields: mapValue(columns, (column) => {
+          if (
+            isColumnVisible(column.name, this.options ?? {}, "update") === false
+          ) {
+            return mapValue.SKIP
+          }
           const type = DrizzleWeaver.getColumnType(column)
           return { type }
         }),
@@ -177,9 +192,16 @@ export class DrizzleInputFactory<TTable extends Table> {
     const filterFields: Record<
       string,
       GraphQLFieldConfig<any, any, any>
-    > = mapValue(columns, (column) => ({
-      type: DrizzleInputFactory.columnFilters(column),
-    }))
+    > = mapValue(columns, (column) => {
+      if (
+        isColumnVisible(column.name, this.options ?? {}, "filters") === false
+      ) {
+        return mapValue.SKIP
+      }
+      return {
+        type: DrizzleInputFactory.columnFilters(column),
+      }
+    })
 
     const filtersOr = new GraphQLObjectType({
       name: `${pascalCase(getTableName(this.table))}FiltersOr`,

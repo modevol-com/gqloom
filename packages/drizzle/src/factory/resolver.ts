@@ -45,7 +45,11 @@ import {
   or,
 } from "drizzle-orm"
 import { GraphQLError } from "graphql"
-import { DrizzleWeaver, type TableSilk } from ".."
+import {
+  type DrizzleFactoryOptionsColumn,
+  DrizzleWeaver,
+  type TableSilk,
+} from ".."
 import { inArrayMultiple } from "../helper"
 import {
   type ColumnFilters,
@@ -89,9 +93,10 @@ export abstract class DrizzleResolverFactory<
   >
   public constructor(
     protected readonly db: TDatabase,
-    protected readonly table: TTable
+    protected readonly table: TTable,
+    protected readonly options?: DrizzleFactoryOptionsColumn<TTable>
   ) {
-    this.inputFactory = new DrizzleInputFactory(table)
+    this.inputFactory = new DrizzleInputFactory(table, options)
     this.tableName = getTableName(table)
     const queryBuilder = this.db.query[
       this.tableName as keyof typeof this.db.query
