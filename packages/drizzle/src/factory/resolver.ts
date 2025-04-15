@@ -44,7 +44,7 @@ import {
   notLike,
   or,
 } from "drizzle-orm"
-import { GraphQLError } from "graphql"
+import { GraphQLError, GraphQLInt, GraphQLNonNull } from "graphql"
 import {
   type DrizzleResolverFactoryOptions,
   DrizzleWeaver,
@@ -53,6 +53,7 @@ import {
 import { inArrayMultiple } from "../helper"
 import {
   type ColumnFilters,
+  type CountArgs,
   type DeleteArgs,
   DrizzleInputFactory,
   type FiltersCore,
@@ -65,6 +66,7 @@ import {
 import type {
   AnyQueryBuilder,
   BaseDatabase,
+  CountQuery,
   DeleteMutation,
   InferRelationTable,
   InferSelectArrayOptions,
@@ -175,6 +177,26 @@ export abstract class DrizzleResolverFactory<
       ...options,
       resolve: (opts) => {
         return queryBase.findFirst(opts) as any
+      },
+    } as QueryOptions<any, any>)
+  }
+
+  public countQuery<TInputI = CountArgs<TTable>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<CountArgs<TTable>, TInputI>
+    middlewares?: Middleware<CountQuery<TTable, TInputI>>[]
+  } = {}): CountQuery<TTable, TInputI> {
+    input ??= silk<CountArgs<TTable>, CountArgs<TTable>>(() =>
+      this.inputFactory.countArgs()
+    ) as GraphQLSilk<CountArgs<TTable>, TInputI>
+
+    return new QueryFactoryWithResolve(silk(new GraphQLNonNull(GraphQLInt)), {
+      input,
+      ...options,
+      resolve: (args) => {
+        return this.db.$count(this.table, this.extractFilters(args.where))
       },
     } as QueryOptions<any, any>)
   }
@@ -429,6 +451,7 @@ export abstract class DrizzleResolverFactory<
         ...fields,
         [name]: this.selectArrayQuery(),
         [`${name}Single`]: this.selectSingleQuery(),
+        [`${name}Count`]: this.countQuery(),
         [`insertInto${capitalize(name)}`]: this.insertArrayMutation(),
         [`insertInto${capitalize(name)}Single`]: this.insertSingleMutation(),
         [`update${capitalize(name)}`]: this.updateMutation(),
