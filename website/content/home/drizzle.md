@@ -1,7 +1,5 @@
 ```ts twoslash title="src/index.ts" tab="index.ts"
-// @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/pg-core"
 
 export const roleEnum = t.pgEnum("role", ["user", "admin"])
@@ -16,9 +14,37 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer(),
+  })
+)
+```
+
+```ts twoslash title="src/relations.ts" tab="relations.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/pg-core"
+
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
+
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
+)
 
 export const posts = drizzleSilk(
   t.pgTable("posts", {
@@ -34,8 +60,17 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({ from: r.users.id, to: r.posts.authorId }),
+  },
+  posts: {
+    author: r.one.users({ from: r.posts.authorId, to: r.users.id }),
+  },
 }))
 // @filename: index.ts
 // ---cut---
@@ -44,9 +79,10 @@ import { weave } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { createYoga } from "graphql-yoga"
+import { relations } from "./relations"
 import * as tables from "./schema"
 
-const db = drizzle(process.env.DATABASE_URL!, { schema: tables })
+const db = drizzle(process.env.DATABASE_URL!, { schema: tables, relations })
 
 const userResolver = drizzleResolverFactory(db, "users").resolver()
 const postResolver = drizzleResolverFactory(db, "posts").resolver()
@@ -62,7 +98,6 @@ server.listen(4000, () => {
 
 ```ts twoslash title="src/schema.ts" tab="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/pg-core"
 
 export const roleEnum = t.pgEnum("role", ["user", "admin"])
@@ -77,9 +112,37 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
+export const posts = drizzleSilk(
+  t.pgTable("posts", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    updatedAt: t
+      .timestamp()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    published: t.boolean().default(false),
+    title: t.varchar({ length: 255 }).notNull(),
+    authorId: t.integer(),
+  })
+)
+```
+
+```ts twoslash title="src/relations.ts" tab="relations.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/pg-core"
+
+export const roleEnum = t.pgEnum("role", ["user", "admin"])
+
+export const users = drizzleSilk(
+  t.pgTable("users", {
+    id: t.serial().primaryKey(),
+    createdAt: t.timestamp().defaultNow(),
+    email: t.text().unique().notNull(),
+    name: t.text(),
+    role: roleEnum().default("user"),
+  })
+)
 
 export const posts = drizzleSilk(
   t.pgTable("posts", {
@@ -95,8 +158,18 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+// @filename: relations.ts
+// ---cut---
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({ from: r.users.id, to: r.posts.authorId }),
+  },
+  posts: {
+    author: r.one.users({ from: r.posts.authorId, to: r.users.id }),
+  },
 }))
 ```
 

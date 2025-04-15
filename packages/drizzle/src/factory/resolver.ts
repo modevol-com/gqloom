@@ -21,10 +21,8 @@ import {
   Many,
   type Relation,
   type SQL,
-  type Table,
+  Table,
   and,
-  asc,
-  desc,
   eq,
   getTableColumns,
   getTableName,
@@ -38,13 +36,13 @@ import {
   lt,
   lte,
   ne,
-  normalizeRelation,
+  not,
   notIlike,
   notInArray,
   notLike,
   or,
 } from "drizzle-orm"
-import { GraphQLError, GraphQLInt, GraphQLNonNull } from "graphql"
+import { GraphQLInt, GraphQLNonNull } from "graphql"
 import {
   type DrizzleResolverFactoryOptions,
   DrizzleWeaver,
@@ -133,8 +131,10 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectArrayArgs(),
       (args) => ({
         value: {
-          where: this.extractFilters(args.where),
-          orderBy: this.extractOrderBy(args.orderBy),
+          where: {
+            RAW: (table: Table) => this.extractFilters(args.where, table),
+          },
+          orderBy: args.orderBy,
           limit: args.limit,
           offset: args.offset,
         },
@@ -165,8 +165,10 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectSingleArgs(),
       (args) => ({
         value: {
-          where: this.extractFilters(args.where),
-          orderBy: this.extractOrderBy(args.orderBy),
+          where: {
+            RAW: (table: Table) => this.extractFilters(args.where, table),
+          },
+          orderBy: args.orderBy,
           offset: args.offset,
         },
       })
@@ -201,58 +203,58 @@ export abstract class DrizzleResolverFactory<
     } as QueryOptions<any, any>)
   }
 
-  protected extractOrderBy(
-    orders?: SelectArrayArgs<TTable>["orderBy"]
-  ): SQL[] | undefined {
-    if (orders == null) return
-    const answer: SQL[] = []
-    const columns = getTableColumns(this.table)
-    for (const order of orders) {
-      for (const [column, direction] of Object.entries(order)) {
-        if (!direction) continue
-        if (column in columns) {
-          answer.push(
-            direction === "asc" ? asc(columns[column]) : desc(columns[column])
-          )
-        }
-      }
-    }
-    return answer
-  }
-
   protected extractFilters(
-    filters: SelectArrayArgs<TTable>["where"]
+    filters: SelectArrayArgs<TTable>["where"],
+    table?: any
   ): SQL | undefined {
     if (filters == null) return
-    const tableName = getTableName(this.table)
-
-    if (!filters.OR?.length) delete filters.OR
 
     const entries = Object.entries(filters as FiltersCore<TTable>)
+    const variants: (SQL | undefined)[] = []
 
-    if (filters.OR) {
-      if (entries.length > 1) {
-        throw new GraphQLError(
-          `WHERE ${tableName}: Cannot specify both fields and 'OR' in table filters!`
-        )
-      }
-
-      const variants = [] as SQL[]
-
-      for (const variant of filters.OR) {
-        const extracted = this.extractFilters(variant)
-        if (extracted) variants.push(extracted)
-      }
-
-      return or(...variants)
-    }
-
-    const variants: SQL[] = []
     for (const [columnName, operators] of entries) {
       if (operators == null) continue
 
+      if (columnName === "OR" && Array.isArray(operators)) {
+        const orConditions: SQL[] = []
+        for (const variant of operators) {
+          const extracted = this.extractFilters(variant, table)
+          if (extracted) orConditions.push(extracted)
+        }
+        if (orConditions.length > 0) {
+          variants.push(or(...orConditions))
+        }
+        continue
+      }
+
+      if (columnName === "AND" && Array.isArray(operators)) {
+        const andConditions: SQL[] = []
+        for (const variant of operators) {
+          const extracted = this.extractFilters(variant, table)
+          if (extracted) andConditions.push(extracted)
+        }
+        if (andConditions.length > 0) {
+          variants.push(and(...andConditions))
+        }
+        continue
+      }
+
+      if (columnName === "NOT" && operators) {
+        const extracted = this.extractFilters(operators, table)
+        if (extracted) {
+          variants.push(not(extracted))
+        }
+        continue
+      }
+
       const column = getTableColumns(this.table)[columnName]!
-      variants.push(this.extractFiltersColumn(column, columnName, operators)!)
+      const extractedColumn = this.extractFiltersColumn(
+        column,
+        columnName,
+        operators,
+        table
+      )
+      if (extractedColumn) variants.push(extractedColumn)
     }
 
     return and(...variants)
@@ -261,35 +263,64 @@ export abstract class DrizzleResolverFactory<
   protected extractFiltersColumn<TColumn extends Column>(
     column: TColumn,
     columnName: string,
-    operators: ColumnFilters<TColumn["_"]["data"]>
+    operators: ColumnFilters<TColumn["_"]["data"]>,
+    table?: any
   ): SQL | undefined {
-    if (!operators.OR?.length) delete operators.OR
-
     const entries = Object.entries(operators)
 
-    if (operators.OR) {
-      if (entries.length > 1) {
-        throw new GraphQLError(
-          `WHERE ${columnName}: Cannot specify both fields and 'OR' in column operators!`
-        )
-      }
-
-      const variants = [] as SQL[]
-
-      for (const variant of operators.OR) {
-        const extracted = this.extractFiltersColumn(column, columnName, variant)
-
-        if (extracted) variants.push(extracted)
-      }
-
-      return or(...variants)
-    }
-
-    const variants: SQL[] = []
+    const variants: (SQL | undefined)[] = []
     const binaryOperators = { eq, ne, gt, gte, lt, lte }
     const textOperators = { like, notLike, ilike, notIlike }
-    const arrayOperators = { inArray, notInArray }
+    const arrayOperators = { in: inArray, notIn: notInArray }
     const nullOperators = { isNull, isNotNull }
+
+    const tableColumn = table ? table[columnName] : column
+
+    if (operators.OR) {
+      const orVariants = [] as SQL[]
+
+      for (const variant of operators.OR) {
+        const extracted = this.extractFiltersColumn(
+          column,
+          columnName,
+          variant,
+          table
+        )
+
+        if (extracted) orVariants.push(extracted)
+      }
+
+      variants.push(or(...orVariants))
+    }
+
+    if (operators.AND) {
+      const andVariants = [] as SQL[]
+
+      for (const variant of operators.AND) {
+        const extracted = this.extractFiltersColumn(
+          column,
+          columnName,
+          variant,
+          table
+        )
+
+        if (extracted) andVariants.push(extracted)
+      }
+
+      variants.push(and(...andVariants))
+    }
+
+    if (operators.NOT) {
+      const extracted = this.extractFiltersColumn(
+        column,
+        columnName,
+        operators.NOT,
+        table
+      )
+      if (extracted) {
+        variants.push(not(extracted))
+      }
+    }
 
     for (const [operatorName, operatorValue] of entries) {
       if (operatorValue === null || operatorValue === false) continue
@@ -297,19 +328,19 @@ export abstract class DrizzleResolverFactory<
       if (operatorName in binaryOperators) {
         const operator =
           binaryOperators[operatorName as keyof typeof binaryOperators]
-        variants.push(operator(column, operatorValue))
+        variants.push(operator(tableColumn, operatorValue))
       } else if (operatorName in textOperators) {
         const operator =
           textOperators[operatorName as keyof typeof textOperators]
-        variants.push(operator(column, operatorValue))
+        variants.push(operator(tableColumn, operatorValue))
       } else if (operatorName in arrayOperators) {
         const operator =
           arrayOperators[operatorName as keyof typeof arrayOperators]
-        variants.push(operator(column, operatorValue))
+        variants.push(operator(tableColumn, operatorValue))
       } else if (operatorName in nullOperators) {
         const operator =
           nullOperators[operatorName as keyof typeof nullOperators]
-        if (operatorValue === true) variants.push(operator(column))
+        if (operatorValue === true) variants.push(operator(tableColumn))
       }
     }
 
@@ -326,7 +357,7 @@ export abstract class DrizzleResolverFactory<
       middlewares?: Middleware<
         InferTableRelationalConfig<
           QueryBuilder<TDatabase, InferTableName<TTable>>
-        >["relations"][TRelationName] extends Many<any>
+        >["relations"][TRelationName] extends Many<any, any>
           ? RelationManyField<
               TTable,
               InferRelationTable<TDatabase, TTable, TRelationName>
@@ -339,7 +370,7 @@ export abstract class DrizzleResolverFactory<
     }
   ): InferTableRelationalConfig<
     QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"][TRelationName] extends Many<any>
+  >["relations"][TRelationName] extends Many<any, any>
     ? RelationManyField<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
@@ -348,42 +379,39 @@ export abstract class DrizzleResolverFactory<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
       > {
-    const relation = this.db._.schema?.[this.tableName]?.relations?.[
+    const relation = this.db._.relations["config"]?.[this.tableName]?.[
       relationName
     ] as Relation
-    if (!relation) {
+    const targetTable = relation?.targetTable
+    if (!relation || !(targetTable instanceof Table)) {
       throw new Error(
-        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(relationName)} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
+        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
+          relationName
+        )} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
       )
     }
-    const output = DrizzleWeaver.unravel(relation.referencedTable)
-    const tableName = getTableName(relation.referencedTable)
+
+    const output = DrizzleWeaver.unravel(targetTable)
+    const tableName = getTableName(targetTable)
     const queryBuilder = this.db.query[
       tableName as keyof typeof this.db.query
     ] as AnyQueryBuilder
 
-    const normalizedRelation = normalizeRelation(
-      this.db._.schema,
-      this.db._.tableNamesMap,
-      relation
-    )
     const isList = relation instanceof Many
-    const fieldsLength = normalizedRelation.fields.length
+    const fieldsLength = relation.sourceColumns.length
 
     const getKeyByField = (parent: any) => {
       if (fieldsLength === 1) {
-        return parent[normalizedRelation.fields[0].name]
+        return parent[relation.sourceColumns[0].name]
       }
-      return normalizedRelation.fields
-        .map((field) => parent[field.name])
-        .join("-")
+      return relation.sourceColumns.map((field) => parent[field.name]).join("-")
     }
 
     const getKeyByReference = (item: any) => {
       if (fieldsLength === 1) {
-        return item[normalizedRelation.references[0].name]
+        return item[relation.targetColumns[0].name]
       }
-      return normalizedRelation.references
+      return relation.targetColumns
         .map((reference) => item[reference.name])
         .join("-")
     }
@@ -393,14 +421,20 @@ export abstract class DrizzleResolverFactory<
         const where = (() => {
           if (fieldsLength === 1) {
             const values = parents.map(
-              (parent) => parent[normalizedRelation.fields[0].name]
+              (parent) => parent[relation.sourceColumns[0].name]
             )
-            return inArray(normalizedRelation.references[0], values)
+            // return inArray(relation.targetColumns[0], values)
+            return {
+              [relation.targetColumns[0].name]: { in: values },
+            }
           }
           const values = parents.map((parent) =>
-            normalizedRelation.fields.map((field) => parent[field.name])
+            relation.sourceColumns.map((field) => parent[field.name])
           )
-          return inArrayMultiple(normalizedRelation.references, values)
+          return {
+            RAW: (table: Table) =>
+              inArrayMultiple(relation.targetColumns, values, table),
+          }
         })()
 
         const list = await queryBuilder.findMany({ where })
@@ -441,7 +475,7 @@ export abstract class DrizzleResolverFactory<
     const name = options?.name ?? this.tableName
 
     const fields: Record<string, Loom.Field<any, any, any>> = mapValue(
-      this.db._.schema?.[this.tableName]?.relations ?? {},
+      this.db._.relations.config[this.tableName] ?? {},
       (_, key) => this.relationField(key)
     )
 

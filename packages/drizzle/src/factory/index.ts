@@ -9,7 +9,7 @@ import { DrizzleSQLiteResolverFactory } from "./resolver-sqlite"
 import type { BaseDatabase } from "./types"
 
 export function drizzleResolverFactory<
-  TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
+  TDatabase extends BaseSQLiteDatabase<any, any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
 >(
   db: TDatabase,
@@ -22,7 +22,7 @@ export function drizzleResolverFactory<
   NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
 >
 export function drizzleResolverFactory<
-  TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
+  TDatabase extends BaseSQLiteDatabase<any, any, any, any, any, any>,
   TTable extends SQLiteTable,
 >(
   db: TDatabase,
@@ -31,7 +31,7 @@ export function drizzleResolverFactory<
 ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory<
-  TDatabase extends PgDatabase<any, any, any>,
+  TDatabase extends PgDatabase<any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
 >(
   db: TDatabase,
@@ -44,7 +44,7 @@ export function drizzleResolverFactory<
   NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
 >
 export function drizzleResolverFactory<
-  TDatabase extends PgDatabase<any, any, any>,
+  TDatabase extends PgDatabase<any, any, any, any, any>,
   TTable extends PgTable,
 >(
   db: TDatabase,
@@ -53,7 +53,7 @@ export function drizzleResolverFactory<
 ): DrizzlePostgresResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory<
-  TDatabase extends MySqlDatabase<any, any, any, any>,
+  TDatabase extends MySqlDatabase<any, any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
 >(
   db: TDatabase,
@@ -66,7 +66,7 @@ export function drizzleResolverFactory<
   NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
 >
 export function drizzleResolverFactory<
-  TDatabase extends MySqlDatabase<any, any, any, any>,
+  TDatabase extends MySqlDatabase<any, any, any, any, any, any>,
   TTable extends MySqlTable,
 >(
   db: TDatabase,

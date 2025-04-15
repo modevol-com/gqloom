@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPost(where: PostFilters): [PostItem!]!
-  deleteFromUser(where: UserFilters): [UserItem!]!
-  insertIntoPost(values: [PostInsertInput!]!): [PostItem!]!
-  insertIntoPostSingle(value: PostInsertInput!): PostItem
-  insertIntoUser(values: [UserInsertInput!]!): [UserItem!]!
-  insertIntoUserSingle(value: UserInsertInput!): UserItem
-  updatePost(set: PostUpdateInput!, where: PostFilters): [PostItem!]!
-  updateUser(set: UserUpdateInput!, where: UserFilters): [UserItem!]!
+  deleteFromPosts(where: PostsFilters): [PostsItem!]!
+  deleteFromUsers(where: UsersFilters): [UsersItem!]!
+  insertIntoPosts(values: [PostsInsertInput!]!): [PostsItem!]!
+  insertIntoPostsSingle(value: PostsInsertInput!): PostsItem
+  insertIntoUsers(values: [UsersInsertInput!]!): [UsersItem!]!
+  insertIntoUsersSingle(value: UsersInsertInput!): UsersItem
+  updatePosts(set: PostsUpdateInput!, where: PostsFilters): [PostsItem!]!
+  updateUsers(set: UsersUpdateInput!, where: UsersFilters): [UsersItem!]!
 }
 
 enum OrderDirection {
@@ -14,44 +14,46 @@ enum OrderDirection {
   desc
 }
 
-input PostFilters {
-  OR: [PostFiltersOr!]
+input PostsFilters {
+  AND: [PostsFiltersNested!]
+  NOT: PostsFiltersNested
+  OR: [PostsFiltersNested!]
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
-input PostFiltersOr {
+input PostsFiltersNested {
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
-input PostInsertInput {
+input PostsInsertInput {
   authorId: Int
   content: String
   id: Int
   title: String!
 }
 
-type PostItem {
-  author: UserItem
+type PostsItem {
+  author: UsersItem
   authorId: Int
   content: String
   id: Int!
   title: String!
 }
 
-input PostOrderBy {
+input PostsOrderBy {
   authorId: OrderDirection
   content: OrderDirection
   id: OrderDirection
   title: OrderDirection
 }
 
-input PostUpdateInput {
+input PostsUpdateInput {
   authorId: Int
   content: String
   id: Int
@@ -59,48 +61,52 @@ input PostUpdateInput {
 }
 
 type Query {
-  post(limit: Int, offset: Int, orderBy: [PostOrderBy!], where: PostFilters): [PostItem!]!
-  postCount(where: PostFilters): Int!
-  postSingle(offset: Int, orderBy: [PostOrderBy!], where: PostFilters): PostItem
-  user(limit: Int, offset: Int, orderBy: [UserOrderBy!], where: UserFilters): [UserItem!]!
-  userCount(where: UserFilters): Int!
-  userSingle(offset: Int, orderBy: [UserOrderBy!], where: UserFilters): UserItem
+  posts(limit: Int, offset: Int, orderBy: PostsOrderBy, where: PostsFilters): [PostsItem!]!
+  postsCount(where: PostsFilters): Int!
+  postsSingle(offset: Int, orderBy: PostsOrderBy, where: PostsFilters): PostsItem
+  users(limit: Int, offset: Int, orderBy: UsersOrderBy, where: UsersFilters): [UsersItem!]!
+  usersCount(where: UsersFilters): Int!
+  usersSingle(offset: Int, orderBy: UsersOrderBy, where: UsersFilters): UsersItem
 }
 
 input SQLiteIntegerFilters {
-  OR: [SQLiteIntegerFiltersOr!]
+  AND: [SQLiteIntegerFiltersNested!]
+  NOT: SQLiteIntegerFiltersNested
+  OR: [SQLiteIntegerFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
-input SQLiteIntegerFiltersOr {
+input SQLiteIntegerFiltersNested {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input SQLiteTextFilters {
-  OR: [SQLiteTextFiltersOr!]
+  AND: [SQLiteTextFiltersNested!]
+  NOT: SQLiteTextFiltersNested
+  OR: [SQLiteTextFiltersNested!]
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -108,16 +114,16 @@ input SQLiteTextFilters {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
-input SQLiteTextFiltersOr {
+input SQLiteTextFiltersNested {
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -125,55 +131,57 @@ input SQLiteTextFiltersOr {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
-type StudentToCourseItem {
+type StudentToCoursesItem {
   courseId: Int
   createdAt: String
   studentId: Int
 }
 
-input UserFilters {
-  OR: [UserFiltersOr!]
+input UsersFilters {
+  AND: [UsersFiltersNested!]
+  NOT: UsersFiltersNested
+  OR: [UsersFiltersNested!]
   age: SQLiteIntegerFilters
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters
   name: SQLiteTextFilters
 }
 
-input UserFiltersOr {
+input UsersFiltersNested {
   age: SQLiteIntegerFilters
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters
   name: SQLiteTextFilters
 }
 
-input UserInsertInput {
+input UsersInsertInput {
   age: Int
   email: String
   id: Int
   name: String!
 }
 
-type UserItem {
+type UsersItem {
   age: Int
-  courses: [StudentToCourseItem!]!
+  courses: [StudentToCoursesItem!]!
   email: String
   id: Int!
   name: String!
-  posts: [PostItem!]!
+  posts: [PostsItem!]!
 }
 
-input UserOrderBy {
+input UsersOrderBy {
   age: OrderDirection
   email: OrderDirection
   id: OrderDirection
   name: OrderDirection
 }
 
-input UserUpdateInput {
+input UsersUpdateInput {
   age: Int
   email: String
   id: Int

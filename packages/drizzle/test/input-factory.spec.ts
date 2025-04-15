@@ -53,7 +53,9 @@ describe("DrizzleInputFactory", () => {
         password: PgTextFilters
         createdAt: PgTimestampFilters
         updatedAt: PgTimestampFilters
-        OR: [UsersFiltersOr!]
+        OR: [UsersFiltersNested!]
+        AND: [UsersFiltersNested!]
+        NOT: UsersFiltersNested
       }"
     `)
   })
@@ -135,7 +137,9 @@ describe("DrizzleInputFactory", () => {
           email: PgTextFilters
           createdAt: PgTimestampFilters
           updatedAt: PgTimestampFilters
-          OR: [UsersFiltersOr!]
+          OR: [UsersFiltersNested!]
+          AND: [UsersFiltersNested!]
+          NOT: UsersFiltersNested
         }"
       `)
     })

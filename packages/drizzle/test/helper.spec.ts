@@ -40,7 +40,7 @@ describe("helper", () => {
     it("should handle empty values", () => {
       const columns: Column[] = []
       const values: unknown[][] = []
-      const result = inArrayMultiple(columns, values)
+      const result = inArrayMultiple(columns, values, {})
       expect(result).toEqual(sql`FALSE`)
     })
   })
