@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+## 0.8.3 (2025-04-16)
+
 - Feat: add count query functionality to resolver factory
 - Feat: Add column visibility configuration for input and filter generation
 
