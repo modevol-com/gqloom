@@ -1,5 +1,15 @@
 import { pascalCase } from "@gqloom/core"
-import { type Column, type SQL, getTableName, sql } from "drizzle-orm"
+import {
+  type Column,
+  type SQL,
+  type Table,
+  getTableName,
+  sql,
+} from "drizzle-orm"
+import type {
+  DrizzleFactoryInputVisibilityBehaviors,
+  VisibilityBehavior,
+} from "./types"
 
 /**
  * Creates an IN clause for multiple columns
@@ -43,4 +53,37 @@ export function getEnumNameByColumn(column: Column): string | undefined {
   }
 
   return useColumnName()
+}
+
+export function isColumnVisible(
+  columnName: string,
+  options: DrizzleFactoryInputVisibilityBehaviors<Table>,
+  behavior: keyof VisibilityBehavior
+): boolean {
+  // Get specific column configuration
+  const columnConfig = options?.[columnName as keyof typeof options]
+  // Get global default configuration
+  const defaultConfig = options?.["*"]
+  if (columnConfig != null) {
+    if (typeof columnConfig === "boolean") {
+      return columnConfig
+    }
+    const specificBehavior = columnConfig[behavior]
+    if (specificBehavior != null) {
+      return specificBehavior
+    }
+  }
+
+  if (defaultConfig != null) {
+    if (typeof defaultConfig === "boolean") {
+      return defaultConfig
+    }
+    const defaultBehavior = defaultConfig[behavior]
+    if (defaultBehavior != null) {
+      return defaultBehavior
+    }
+  }
+
+  // Default to visible
+  return true
 }
