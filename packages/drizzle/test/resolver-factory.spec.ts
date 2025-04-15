@@ -334,6 +334,77 @@ describe.concurrent("DrizzleResolverFactory", () => {
       await query["~meta"].resolve({})
       expect(count).toBe(1)
     })
+
+    describe.concurrent("countQuery", () => {
+      it("should be created without error", async () => {
+        const query = userFactory.countQuery()
+        expect(query).toBeDefined()
+      })
+
+      it("should resolve correctly with filters", async () => {
+        const query = userFactory.countQuery()
+        let answer
+
+        answer = await query["~meta"].resolve({})
+        expect(answer).toBe(5)
+
+        answer = await query["~meta"].resolve({
+          where: { age: { gte: 12 } },
+        })
+        expect(answer).toBe(3)
+
+        answer = await query["~meta"].resolve({
+          where: { age: { lt: 12 } },
+        })
+        expect(answer).toBe(2)
+
+        answer = await query["~meta"].resolve({
+          where: { age: { inArray: [10, 11] } },
+        })
+        expect(answer).toBe(2)
+
+        answer = await query["~meta"].resolve({
+          where: { name: { like: "J%" } },
+        })
+        expect(answer).toBe(5)
+      })
+
+      it("should be created with custom input", async () => {
+        const query = userFactory.countQuery({
+          input: v.pipe(
+            v.object({
+              age: v.nullish(v.number()),
+            }),
+            v.transform(({ age }) => ({
+              where: age != null ? { age: { eq: age } } : undefined,
+            }))
+          ),
+        })
+
+        expect(query).toBeDefined()
+        expect(await query["~meta"].resolve({ age: 10 })).toBe(1)
+        expect(await query["~meta"].resolve({ age: null })).toBe(5)
+      })
+
+      it("should be created with middlewares", async () => {
+        let count = 0
+        const query = userFactory.countQuery({
+          middlewares: [
+            async ({ parseInput, next }) => {
+              const opts = await parseInput()
+              if (opts.issues) throw new Error("Invalid input")
+              count++
+              const answer = await next()
+              expectTypeOf(answer).toEqualTypeOf<number>()
+              return answer
+            },
+          ],
+        })
+
+        await query["~meta"].resolve({})
+        expect(count).toBe(1)
+      })
+    })
   })
 
   describe("relationField", () => {

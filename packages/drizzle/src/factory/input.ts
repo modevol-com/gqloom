@@ -67,6 +67,21 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
+  public countArgs() {
+    const name = `${pascalCase(getTableName(this.table))}CountArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<CountArgs<TTable>>({
+        name,
+        fields: {
+          where: { type: this.filters() },
+        },
+      })
+    )
+  }
+
   public insertArrayArgs() {
     const name = `${pascalCase(getTableName(this.table))}InsertArrayArgs`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
@@ -320,6 +335,10 @@ export interface SelectArrayArgs<TTable extends Table> {
 export interface SelectSingleArgs<TTable extends Table> {
   offset?: number
   orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  where?: Filters<TTable>
+}
+
+export interface CountArgs<TTable extends Table> {
   where?: Filters<TTable>
 }
 

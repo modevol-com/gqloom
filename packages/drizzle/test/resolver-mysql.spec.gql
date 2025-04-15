@@ -170,7 +170,9 @@ enum OrderDirection {
 
 type Query {
   post(limit: Int, offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): [DrizzlePostItem!]!
+  postCount(where: DrizzlePostFilters): Int!
   postSingle(offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): DrizzlePostItem
   user(limit: Int, offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): [DrizzleUserItem!]!
+  userCount(where: DrizzleUserFilters): Int!
   userSingle(offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): DrizzleUserItem
 }

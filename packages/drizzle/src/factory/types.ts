@@ -13,6 +13,7 @@ import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
 
 import type {
+  CountArgs,
   DeleteArgs,
   InsertArrayArgs,
   InsertSingleArgs,
@@ -99,6 +100,15 @@ export type InferSelectArrayOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
 > = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findMany"]>[0]
+
+export interface CountQuery<
+  TTable extends Table,
+  TInputI = SelectArrayArgs<TTable>,
+> extends QueryFactoryWithResolve<
+    CountArgs<TTable>,
+    GraphQLSilk<number, number>,
+    GraphQLSilk<CountArgs<TTable>, TInputI>
+  > {}
 
 export interface SelectSingleQuery<
   TDatabase extends BaseDatabase,

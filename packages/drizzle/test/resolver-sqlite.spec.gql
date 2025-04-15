@@ -60,8 +60,10 @@ input PostUpdateInput {
 
 type Query {
   post(limit: Int, offset: Int, orderBy: [PostOrderBy!], where: PostFilters): [PostItem!]!
+  postCount(where: PostFilters): Int!
   postSingle(offset: Int, orderBy: [PostOrderBy!], where: PostFilters): PostItem
   user(limit: Int, offset: Int, orderBy: [UserOrderBy!], where: UserFilters): [UserItem!]!
+  userCount(where: UserFilters): Int!
   userSingle(offset: Int, orderBy: [UserOrderBy!], where: UserFilters): UserItem
 }
 
