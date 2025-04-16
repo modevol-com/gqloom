@@ -1,5 +1,5 @@
 import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 import { catResolver } from "./cat"
 import { userResolver } from "./user"
 

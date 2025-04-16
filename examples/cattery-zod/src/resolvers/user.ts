@@ -1,6 +1,6 @@
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { users } from "../schema"
