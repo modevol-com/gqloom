@@ -8,7 +8,7 @@ import { ZodWeaver } from "@gqloom/zod"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
 import { beforeEach, describe, expect, expectTypeOf, it } from "vitest"
-import { z } from "zod"
+import * as z from "zod"
 import {
   type InferPrismaDelegate,
   type PrismaModelSilk,
