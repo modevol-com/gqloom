@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: Support zod v4
+
 ## 0.8.1 (2025-03-23)
 
 - Feat: export all types

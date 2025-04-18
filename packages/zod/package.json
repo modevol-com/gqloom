@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/zod",
-  "version": "0.8.1",
+  "version": "0.9.0-beta.0",
   "description": "Create GraphQL schema and resolvers easily using using Zod!",
   "type": "module",
   "main": "./dist/index.js",
