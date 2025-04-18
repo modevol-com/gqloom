@@ -174,7 +174,7 @@ export const resolvers = [helloResolver]
 <Tab>
 ```ts twoslash title="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())
@@ -569,7 +569,7 @@ export * as userService from "./user"
 // ---cut---
 // @filename: resolvers/user.ts
 import { mutation, query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 import { users } from "../schema"
 import { userService } from "../services"
 
@@ -600,7 +600,7 @@ export const userResolver = resolver({
   <Tab>
 ```ts title="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 import { userResolver } from "./user" // [!code ++]
 
 const helloResolver = resolver({
@@ -820,7 +820,7 @@ export const userResolver = resolver({
 <Tab>
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts" // [!code ++]
 import { users } from "../schema"
 import { userService } from "../services"
@@ -1034,7 +1034,7 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 // ---cut---
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { db } from "../providers"
 import { cats } from "../schema"
 
@@ -1080,7 +1080,7 @@ export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++
   <Tab>
 ```ts title="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 import { catResolver } from "./cat" // [!code ++]
 import { userResolver } from "./user"
 
@@ -1327,7 +1327,7 @@ export const useCurrentUser = createMemoization(async () => {
 // ---cut---
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { cats } from "../schema"
@@ -1505,7 +1505,7 @@ export const catResolver = resolver.of(cats, {
 ```ts title="src/resolvers/cat.ts"
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { cats } from "../schema"
@@ -1591,7 +1591,7 @@ export const userResolver = resolver.of(users, {
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers" // [!code ++]
 import { users } from "../schema"
