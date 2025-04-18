@@ -67,7 +67,7 @@ const helloResolver = resolver({
 
 ```ts twoslash
 import { resolver, query } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string()).resolve(() => "Hello, World"),
@@ -104,7 +104,7 @@ const helloResolver = resolver({
 <Tab value="zod">
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())
@@ -144,7 +144,7 @@ const helloResolver = resolver({
 <Tab value="zod">
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())
@@ -194,7 +194,7 @@ interface IBook extends v.InferOutput<typeof Book> {}
 </Tab>
 <Tab value="zod">
 ```ts twoslash
-import { z } from "zod"
+import * as z from "zod"
 
 const User = z.object({
   __typename: z.literal("User").nullish(),
@@ -325,7 +325,7 @@ const bookMap: Map<number, IBook> = new Map(
 )
 // ---cut---
 import { resolver, query } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const bookResolver = resolver.of(Book, {
   books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
@@ -416,7 +416,7 @@ const bookMap: Map<number, IBook> = new Map(
 )
 // ---cut---
 import { resolver, query, field } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const bookResolver = resolver.of(Book, {
   books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
@@ -520,7 +520,7 @@ const bookMap: Map<number, IBook> = new Map(
 )
 // ---cut---
 import { resolver, query, field } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const bookResolver = resolver.of(Book, {
   books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),

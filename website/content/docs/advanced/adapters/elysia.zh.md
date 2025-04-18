@@ -18,7 +18,7 @@ elysia @elysiajs/graphql-yoga graphql @gqloom/core
 import { Elysia } from 'elysia'
 import { query, resolver, weave } from '@gqloom/core'
 import { yoga } from '@elysiajs/graphql-yoga'
-import { z } from 'zod'
+import * as z from 'zod'
 import { ZodWeaver } from '@gqloom/zod'
 import { helloResolver } from "./resolvers"
 

@@ -138,15 +138,13 @@ describe("zod resolver", () => {
       age: z.number().int(),
       loveBone: z.boolean().optional(),
     })
-    const Animal = z.union([Cat, Dog]).superRefine(
-      asUnionType({
-        name: "Animal",
-        resolveType: (it) => {
-          if (it.loveFish) return "Cat"
-          return "Dog"
-        },
-      })
-    )
+    const Animal = z.union([Cat, Dog]).register(asUnionType, {
+      name: "Animal",
+      resolveType: (it) => {
+        if (it.loveFish) return "Cat"
+        return "Dog"
+      },
+    })
 
     collectNames({ Cat, Dog, Animal })
 

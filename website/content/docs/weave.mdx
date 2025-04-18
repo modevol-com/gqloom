@@ -81,7 +81,7 @@ const catResolver = resolver({
 // ---cut---
 import { weave } from '@gqloom/core'
 import { ZodWeaver } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const Dog = z.object({
   __typename: z.literal("Dog").nullish(),
@@ -134,7 +134,7 @@ export const schema = weave(ValibotWeaver, catResolver);
 ```ts twoslash
 import { resolver, mutation, weave } from '@gqloom/zod'
 import { ZodWeaver } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const Cat = z.object({
   __typename: z.literal("Cat").nullish(),
@@ -195,7 +195,7 @@ export const schema = weave(
 <Tab value="zod">
 ```ts twoslash
 import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/zod'
-import { z } from "zod"
+import * as z from "zod"
 
 const Cat = z.object({
   __typename: z.literal("Cat").nullish(),

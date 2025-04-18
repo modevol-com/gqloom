@@ -1,7 +1,7 @@
 import { createServer } from "node:http"
 import { query, resolver, weave } from "@gqloom/zod"
 import { createYoga } from "graphql-yoga"
-import { z } from "zod"
+import * as z from "zod"
 import { ZodExceptionFilter, outputValidator } from "./middlewares"
 
 const HelloResolver = resolver({
