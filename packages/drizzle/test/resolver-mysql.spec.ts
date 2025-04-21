@@ -46,9 +46,9 @@ describe("resolver by mysql", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.mysqlUrl, { schema, relations, mode: "default" })
-      const userFactory = drizzleResolverFactory(db, "users")
-      const postFactory = drizzleResolverFactory(db, "posts")
+      db = drizzle(config.mysqlUrl, { relations, mode: "default" })
+      const userFactory = drizzleResolverFactory(db, users)
+      const postFactory = drizzleResolverFactory(db, posts)
       gqlSchema = weave(
         userFactory.resolver({ name: "users" }),
         postFactory.resolver({ name: "posts" })

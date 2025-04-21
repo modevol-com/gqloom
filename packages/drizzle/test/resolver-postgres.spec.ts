@@ -42,9 +42,9 @@ describe("resolver by postgres", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.postgresUrl, { schema, relations })
-      const userFactory = drizzleResolverFactory(db, "users")
-      const postFactory = drizzleResolverFactory(db, "posts")
+      db = drizzle(config.postgresUrl, { relations })
+      const userFactory = drizzleResolverFactory(db, users)
+      const postFactory = drizzleResolverFactory(db, posts)
       gqlSchema = weave(
         userFactory.resolver({ name: "users" }),
         postFactory.resolver({ name: "posts" })

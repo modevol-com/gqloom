@@ -44,12 +44,11 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
   beforeAll(async () => {
     db = sqliteDrizzle({
-      schema: sqliteSchemas,
       relations: sqliteRelations,
       connection: { url: `file:${pathToDB.pathname}` },
     })
 
-    userFactory = drizzleResolverFactory(db, "users")
+    userFactory = drizzleResolverFactory(db, sqliteSchemas.users)
 
     await db.insert(sqliteSchemas.users).values([
       {
@@ -524,7 +523,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const postsField = userFactory.relationField("posts").description("posts")
       expect(postsField).toBeDefined()
 
-      const postFactory = drizzleResolverFactory(db, "posts")
+      const postFactory = drizzleResolverFactory(db, sqliteSchemas.posts)
       const authorField = postFactory
         .relationField("author")
         .description("author")
@@ -534,7 +533,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     it("should resolve correctly", async () => {
       const studentCourseFactory = drizzleResolverFactory(
         db,
-        "studentToCourses"
+        sqliteSchemas.studentToCourses
       )
       const gradeField = studentCourseFactory.relationField("grade")
       const John = await db.query.users.findFirst({
@@ -624,7 +623,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // This test specifically targets the multi-field relation handling in relationField
       const studentCourseFactory = drizzleResolverFactory(
         db,
-        "studentToCourses"
+        sqliteSchemas.studentToCourses
       )
 
       // Setup test data
@@ -673,7 +672,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     it("should handle loading relation data correctly when using multiple fields", async () => {
       const studentCourseFactory = drizzleResolverFactory(
         db,
-        "studentToCourses"
+        sqliteSchemas.studentToCourses
       )
 
       // Setup test data for multiple students
@@ -774,7 +773,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // Now, create and test real data to verify the full flow
       const studentCourseFactory = drizzleResolverFactory(
         db,
-        "studentToCourses"
+        sqliteSchemas.studentToCourses
       )
 
       // Setup test data for a composite key scenario
@@ -879,11 +878,10 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
 
   beforeAll(async () => {
     db = mysqlDrizzle(config.mysqlUrl, {
-      schema,
       relations: mysqlRelations,
       mode: "default",
     })
-    userFactory = drizzleResolverFactory(db, "users")
+    userFactory = drizzleResolverFactory(db, mysqlSchemas.users)
     await db.execute(sql`select 1`)
   })
 
@@ -1009,10 +1007,9 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
 
   beforeAll(async () => {
     db = pgDrizzle(config.postgresUrl, {
-      schema,
       relations: pgRelations,
     })
-    userFactory = drizzleResolverFactory(db, "users")
+    userFactory = drizzleResolverFactory(db, pgSchemas.users)
     await db.execute(sql`select 1`)
   })
 
@@ -1139,12 +1136,11 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
 
   beforeAll(async () => {
     db = sqliteDrizzle({
-      schema: sqliteSchemas,
       relations: sqliteRelations,
       connection: { url: `file:${pathToDB.pathname}` },
     })
 
-    userFactory = drizzleResolverFactory(db, "users")
+    userFactory = drizzleResolverFactory(db, sqliteSchemas.users)
   })
 
   describe("insertArrayMutation", () => {

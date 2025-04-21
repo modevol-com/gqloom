@@ -8,7 +8,7 @@ import {
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { drizzleResolverFactory } from "../src"
-import * as schema from "./schema/sqlite"
+import type * as schema from "./schema/sqlite"
 import { posts, users } from "./schema/sqlite"
 import { relations } from "./schema/sqlite-relations"
 
@@ -41,12 +41,11 @@ describe("resolver by sqlite", () => {
 
   beforeAll(async () => {
     db = drizzle({
-      schema,
       relations,
       connection: { url: `file:${pathToDB.pathname}` },
     })
-    const userFactory = drizzleResolverFactory(db, "users")
-    const postFactory = drizzleResolverFactory(db, "posts")
+    const userFactory = drizzleResolverFactory(db, users)
+    const postFactory = drizzleResolverFactory(db, posts)
     gqlSchema = weave(userFactory.resolver(), postFactory.resolver())
     yoga = createYoga({ schema: gqlSchema })
 

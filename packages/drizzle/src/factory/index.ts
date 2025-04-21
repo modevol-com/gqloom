@@ -8,6 +8,19 @@ import { DrizzlePostgresResolverFactory } from "./resolver-postgres"
 import { DrizzleSQLiteResolverFactory } from "./resolver-sqlite"
 import type { BaseDatabase } from "./types"
 
+/**
+ * @deprecated directly use `table` instead of `tableName`.
+ *
+ * ## Example
+ * ⛔️ Don't do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, "users")
+ * ```
+ * ✅ Do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, users)
+ * ```
+ */
 export function drizzleResolverFactory<
   TDatabase extends BaseSQLiteDatabase<any, any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
@@ -30,6 +43,19 @@ export function drizzleResolverFactory<
   options?: DrizzleResolverFactoryOptions<TTable>
 ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
 
+/**
+ * @deprecated directly use `table` instead of `tableName`.
+ *
+ * ## Example
+ * ⛔️ Don't do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, "users")
+ * ```
+ * ✅ Do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, users)
+ * ```
+ */
 export function drizzleResolverFactory<
   TDatabase extends PgDatabase<any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
@@ -52,6 +78,19 @@ export function drizzleResolverFactory<
   options?: DrizzleResolverFactoryOptions<TTable>
 ): DrizzlePostgresResolverFactory<TDatabase, TTable>
 
+/**
+ * @deprecated directly use `table` instead of `tableName`.
+ *
+ * ## Example
+ * ⛔️ Don't do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, "users")
+ * ```
+ * ✅ Do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, users)
+ * ```
+ */
 export function drizzleResolverFactory<
   TDatabase extends MySqlDatabase<any, any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
