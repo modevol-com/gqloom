@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 - Refactor: Migrating to Relational Queries version 2
 
+## 0.8.4 (2025-04-21)
+
+- Fix: update resolver factory options type
+
 ## 0.8.3 (2025-04-16)
 
 - Feat: add count query functionality to resolver factory

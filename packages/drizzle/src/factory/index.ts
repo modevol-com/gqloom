@@ -2,7 +2,7 @@ import type { Table } from "drizzle-orm"
 import { MySqlDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
 import { PgDatabase, type PgTable } from "drizzle-orm/pg-core"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
-import type { DrizzleFactoryInputVisibilityBehaviors } from "../types"
+import type { DrizzleResolverFactoryOptions } from "../types"
 import { DrizzleMySQLResolverFactory } from "./resolver-mysql"
 import { DrizzlePostgresResolverFactory } from "./resolver-postgres"
 import { DrizzleSQLiteResolverFactory } from "./resolver-sqlite"
@@ -14,7 +14,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   tableName: TTableName,
-  options?: DrizzleFactoryInputVisibilityBehaviors<
+  options?: DrizzleResolverFactoryOptions<
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
 ): DrizzleSQLiteResolverFactory<
@@ -27,7 +27,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   table: TTable,
-  options?: DrizzleFactoryInputVisibilityBehaviors<TTable>
+  options?: DrizzleResolverFactoryOptions<TTable>
 ): DrizzleSQLiteResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory<
@@ -36,7 +36,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   tableName: TTableName,
-  options?: DrizzleFactoryInputVisibilityBehaviors<
+  options?: DrizzleResolverFactoryOptions<
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
 ): DrizzlePostgresResolverFactory<
@@ -49,7 +49,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   table: TTable,
-  options?: DrizzleFactoryInputVisibilityBehaviors<TTable>
+  options?: DrizzleResolverFactoryOptions<TTable>
 ): DrizzlePostgresResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory<
@@ -58,7 +58,7 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   tableName: TTableName,
-  options?: DrizzleFactoryInputVisibilityBehaviors<
+  options?: DrizzleResolverFactoryOptions<
     NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
   >
 ): DrizzleMySQLResolverFactory<
@@ -71,24 +71,25 @@ export function drizzleResolverFactory<
 >(
   db: TDatabase,
   table: TTable,
-  options?: DrizzleFactoryInputVisibilityBehaviors<TTable>
+  options?: DrizzleResolverFactoryOptions<TTable>
 ): DrizzleMySQLResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory(
   db: BaseDatabase,
-  tableOrName: Table | string
+  tableOrName: Table | string,
+  options?: DrizzleResolverFactoryOptions<Table>
 ) {
   const table =
     typeof tableOrName === "string"
       ? (db._.fullSchema[tableOrName] as Table)
       : tableOrName
   if (db instanceof PgDatabase) {
-    return new DrizzlePostgresResolverFactory(db, table as PgTable)
+    return new DrizzlePostgresResolverFactory(db, table as PgTable, options)
   }
   if (db instanceof MySqlDatabase) {
-    return new DrizzleMySQLResolverFactory(db, table as MySqlTable)
+    return new DrizzleMySQLResolverFactory(db, table as MySqlTable, options)
   }
-  return new DrizzleSQLiteResolverFactory(db, table as SQLiteTable)
+  return new DrizzleSQLiteResolverFactory(db, table as SQLiteTable, options)
 }
 
 export * from "./input"
