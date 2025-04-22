@@ -274,7 +274,7 @@ const postResolver = resolver.of(Post, {
 })
 ```
 
-In the above code, we use the `middlewares` option to define middleware. `async (next) => { ... }` defines a middleware. `useAuthedUser()` is a custom function used to get the currently logged - in user. If the user is not logged in, an error is thrown; otherwise, `next()` is called to continue execution.
+In the above code, we use the `middlewares` option to define middleware. `async (next) => { ... }` defines a middleware. `useAuthedUser()` is a custom function used to get the currently logged-in user. If the user is not logged in, an error is thrown; otherwise, `next()` is called to continue execution.
 
 ### Creating a Resolver
 
@@ -290,7 +290,7 @@ This Resolver will include all queries, mutations, and fields in the resolver fa
 
 To adapt to more Prisma types, we can extend GQLoom to add more type mappings.
 
-First, we use `PrismaWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` from [graphql - scalars](https://the - guild.dev/graphql/scalars). When encountering the `DateTime` type, we map it to the corresponding GraphQL scalar.
+First, we use `PrismaWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering the `DateTime` type, we map it to the corresponding GraphQL scalar.
 
 ```ts twoslash
 import { GraphQLDateTime } from 'graphql-scalars'

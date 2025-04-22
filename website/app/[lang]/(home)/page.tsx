@@ -184,7 +184,7 @@ const featuresEN: CardProps[] = [
     icon: <Fence />,
     title: "Middleware",
     description:
-      "Adopting the concept of aspect - oriented programming, middleware allows you to seamlessly integrate additional logic during the resolution process, such as error handling, user permission verification, and log tracking, enhancing the robustness and maintainability of the system.",
+      "Adopting the concept of aspect-oriented programming, middleware allows you to seamlessly integrate additional logic during the resolution process, such as error handling, user permission verification, and log tracking, enhancing the robustness and maintainability of the system.",
     href: "/[lang]/docs/middleware",
   },
   {
@@ -198,14 +198,14 @@ const featuresEN: CardProps[] = [
     icon: <SatelliteDish />,
     title: "Subscription",
     description:
-      "The subscription feature provides clients with the ability to obtain real - time data updates without manual polling, ensuring that clients always stay in sync with server data and enhancing the user experience.",
+      "The subscription feature provides clients with the ability to obtain real-time data updates without manual polling, ensuring that clients always stay in sync with server data and enhancing the user experience.",
     href: "/[lang]/docs/advanced/subscription",
   },
   {
     icon: <Satellite />,
     title: "Federation",
     description:
-      "Federation is a microservice - based GraphQL architecture that can easily aggregate multiple services to enable cross - service queries, allowing you to manage complex distributed systems as if operating on a single graph.",
+      "Federation is a microservice-based GraphQL architecture that can easily aggregate multiple services to enable cross-service queries, allowing you to manage complex distributed systems as if operating on a single graph.",
     href: "/[lang]/docs/advanced/federation",
   },
 ]
