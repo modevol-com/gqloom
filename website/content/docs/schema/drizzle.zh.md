@@ -598,7 +598,7 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-在上面的代码中，我们使用 `valibot` 来定义输入类型， `v.object({ id: v.number() })` 定义了输入对象的类型，`v.transform(({ id }) => ({ where: eq(users.id, id) }))` 将输入参数转换为 Prisma 的查询参数。
+在上面的代码中，我们使用 `valibot` 来定义输入类型， `v.object({ id: v.number() })` 定义了输入对象的类型，`v.transform(({ id }) => ({ where: eq(users.id, id) }))` 将输入参数转换为 Drizzle 的查询参数。
 
 ### 添加中间件
 
