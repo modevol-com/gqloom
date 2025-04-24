@@ -50,7 +50,6 @@ export class DrizzlePostgresResolverFactory<
           .insert(this.table)
           .values(args.values)
           .returning()
-          .onConflictDoNothing()
 
         return result
       },
@@ -78,7 +77,6 @@ export class DrizzlePostgresResolverFactory<
           .insert(this.table)
           .values(args.value)
           .returning()
-          .onConflictDoNothing()
 
         return result[0] as any
       },

@@ -50,7 +50,6 @@ export class DrizzleSQLiteResolverFactory<
           .insert(this.table)
           .values(args.values)
           .returning()
-          .onConflictDoNothing()
         return result
       },
     } as MutationOptions<any, any>)
@@ -76,7 +75,6 @@ export class DrizzleSQLiteResolverFactory<
           .insert(this.table)
           .values(args.value)
           .returning()
-          .onConflictDoNothing()
 
         return result[0] as any
       },
