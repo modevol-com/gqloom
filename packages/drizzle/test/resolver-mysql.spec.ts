@@ -96,7 +96,7 @@ describe("resolver by mysql", () => {
   describe.concurrent("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-      query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
+      query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
         user(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
           id
           name
@@ -138,7 +138,7 @@ describe("resolver by mysql", () => {
       await expect(
         execute(
           /* GraphQL */ `
-          query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $offset: Int) {
+          query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $offset: Int) {
             userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
               id
               name
@@ -156,7 +156,7 @@ describe("resolver by mysql", () => {
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
+        query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
           user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
             id
             name
@@ -195,7 +195,7 @@ describe("resolver by mysql", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-      mutation insertIntoUser($values: [DrizzleUserInsertInput!]!) {
+      mutation insertIntoUser($values: [UserInsertInput!]!) {
         insertIntoUser(values: $values) {
           isSuccess
         }
@@ -219,7 +219,7 @@ describe("resolver by mysql", () => {
 
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUser($set: DrizzleUserUpdateInput!, $where: DrizzleUserFilters!) {
+        mutation updateUser($set: UserUpdateInput!, $where: UserFilters!) {
           updateUser(set: $set, where: $where) {
             isSuccess
           }
@@ -253,7 +253,7 @@ describe("resolver by mysql", () => {
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUser($where: DrizzleUserFilters!) {
+        mutation deleteFromUser($where: UserFilters!) {
           deleteFromUser(where: $where) {
             isSuccess
           }
@@ -284,7 +284,7 @@ describe("resolver by mysql", () => {
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPost($values: [DrizzlePostInsertInput!]!) {
+        mutation insertIntoPost($values: [PostInsertInput!]!) {
           insertIntoPost(values: $values) {
             isSuccess
           }
@@ -315,7 +315,7 @@ describe("resolver by mysql", () => {
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePost($set: DrizzlePostUpdateInput!, $where: DrizzlePostFilters!) {
+        mutation updatePost($set: PostUpdateInput!, $where: PostFilters!) {
           updatePost(set: $set, where: $where) {
             isSuccess
           }
@@ -350,7 +350,7 @@ describe("resolver by mysql", () => {
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPost($where: DrizzlePostFilters!) {
+        mutation deleteFromPost($where: PostFilters!) {
           deleteFromPost(where: $where) {
             isSuccess
           }

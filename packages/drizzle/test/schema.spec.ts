@@ -279,6 +279,34 @@ describe("drizzleSilk", () => {
       "Type: PgCustomColumn is not implemented!"
     )
   })
+
+  it("should handle config", () => {
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        id: pg.serial().primaryKey(),
+        name: pg.text(),
+        hidden: pg.text(),
+      }),
+      {
+        description: "some description of the foo",
+        fields: {
+          name: { description: "name of the foo" },
+          hidden: { type: null },
+        },
+      }
+    )
+
+    const schema = weave(Foo)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      """"some description of the foo"""
+      type FooItem {
+        id: Int!
+
+        """name of the foo"""
+        name: String
+      }"
+    `)
+  })
 })
 
 function unwrap(gqlType: GraphQLOutputType) {

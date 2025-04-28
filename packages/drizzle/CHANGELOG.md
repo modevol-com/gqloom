@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: Enhanced the drizzleSilk function to accept configuration options, improving flexibility in schema generation.
 - Feat: add `onConflictDoUpdate` and `onConflictDoNothing` to insert mutation for Postgres and SQLite
 
 ## 0.8.4 (2025-04-21)
