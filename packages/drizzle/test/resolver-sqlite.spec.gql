@@ -42,7 +42,7 @@ input PostInsertOnConflictDoNothingInput {
 }
 
 input PostInsertOnConflictDoUpdateInput {
-  set: PostInsertInput
+  set: PostUpdateInput
   setWhere: PostFilters
   target: [PostTableColumn!]!
   targetWhere: PostFilters
@@ -200,7 +200,7 @@ input UserInsertOnConflictDoNothingInput {
 }
 
 input UserInsertOnConflictDoUpdateInput {
-  set: UserInsertInput
+  set: UserUpdateInput
   setWhere: UserFilters
   target: [UserTableColumn!]!
   targetWhere: UserFilters

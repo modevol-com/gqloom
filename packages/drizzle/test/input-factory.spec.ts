@@ -90,7 +90,7 @@ describe("DrizzleInputFactory", () => {
     ).toMatchInlineSnapshot(`
       "type UsersInsertOnConflictDoUpdateInput {
         target: [UsersTableColumn!]!
-        set: UsersInsertInput
+        set: UsersUpdateInput
         targetWhere: UsersFilters
         setWhere: UsersFilters
       }"
