@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPosts(where: PostsFilters): [PostsItem!]!
-  deleteFromUsers(where: UsersFilters): [UsersItem!]!
-  insertIntoPosts(values: [PostsInsertInput!]!): [PostsItem!]!
-  insertIntoPostsSingle(value: PostsInsertInput!): PostsItem
-  insertIntoUsers(values: [UsersInsertInput!]!): [UsersItem!]!
-  insertIntoUsersSingle(value: UsersInsertInput!): UsersItem
-  updatePosts(set: PostsUpdateInput!, where: PostsFilters): [PostsItem!]!
-  updateUsers(set: UsersUpdateInput!, where: UsersFilters): [UsersItem!]!
+  deleteFromPosts(where: PostFilters): [Post!]!
+  deleteFromUsers(where: UserFilters): [User!]!
+  insertIntoPosts(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, values: [PostInsertInput!]!): [Post!]!
+  insertIntoPostsSingle(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, value: PostInsertInput!): Post
+  insertIntoUsers(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, values: [UserInsertInput!]!): [User!]!
+  insertIntoUsersSingle(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, value: UserInsertInput!): User
+  updatePosts(set: PostUpdateInput!, where: PostFilters): [Post!]!
+  updateUsers(set: UserUpdateInput!, where: UserFilters): [User!]!
 }
 
 enum OrderDirection {
@@ -14,46 +14,65 @@ enum OrderDirection {
   desc
 }
 
-input PostsFilters {
-  AND: [PostsFiltersNested!]
-  NOT: PostsFiltersNested
-  OR: [PostsFiltersNested!]
-  authorId: SQLiteIntegerFilters
-  content: SQLiteTextFilters
-  id: SQLiteIntegerFilters
-  title: SQLiteTextFilters
-}
-
-input PostsFiltersNested {
-  authorId: SQLiteIntegerFilters
-  content: SQLiteTextFilters
-  id: SQLiteIntegerFilters
-  title: SQLiteTextFilters
-}
-
-input PostsInsertInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String!
-}
-
-type PostsItem {
-  author: UsersItem
+type Post {
+  author: User
   authorId: Int
   content: String
   id: Int!
   title: String!
 }
 
-input PostsOrderBy {
+input PostFilters {
+  AND: [PostFiltersNested!]
+  NOT: PostFiltersNested
+  OR: [PostFiltersNested!]
+  authorId: SQLiteIntegerFilters
+  content: SQLiteTextFilters
+  id: SQLiteIntegerFilters
+  title: SQLiteTextFilters
+}
+
+input PostFiltersNested {
+  authorId: SQLiteIntegerFilters
+  content: SQLiteTextFilters
+  id: SQLiteIntegerFilters
+  title: SQLiteTextFilters
+}
+
+input PostInsertInput {
+  authorId: Int
+  content: String
+  id: Int
+  title: String!
+}
+
+input PostInsertOnConflictDoNothingInput {
+  target: [PostTableColumn!]
+  where: PostFilters
+}
+
+input PostInsertOnConflictDoUpdateInput {
+  set: PostInsertInput
+  setWhere: PostFilters
+  target: [PostTableColumn!]!
+  targetWhere: PostFilters
+}
+
+input PostOrderBy {
   authorId: OrderDirection
   content: OrderDirection
   id: OrderDirection
   title: OrderDirection
 }
 
-input PostsUpdateInput {
+enum PostTableColumn {
+  authorId
+  content
+  id
+  title
+}
+
+input PostUpdateInput {
   authorId: Int
   content: String
   id: Int
@@ -61,12 +80,12 @@ input PostsUpdateInput {
 }
 
 type Query {
-  posts(limit: Int, offset: Int, orderBy: PostsOrderBy, where: PostsFilters): [PostsItem!]!
-  postsCount(where: PostsFilters): Int!
-  postsSingle(offset: Int, orderBy: PostsOrderBy, where: PostsFilters): PostsItem
-  users(limit: Int, offset: Int, orderBy: UsersOrderBy, where: UsersFilters): [UsersItem!]!
-  usersCount(where: UsersFilters): Int!
-  usersSingle(offset: Int, orderBy: UsersOrderBy, where: UsersFilters): UsersItem
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  postsCount(where: PostFilters): Int!
+  postsSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): Post
+  users(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [User!]!
+  usersCount(where: UserFilters): Int!
+  usersSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): User
 }
 
 input SQLiteIntegerFilters {
@@ -141,49 +160,108 @@ type StudentToCoursesItem {
   studentId: Int
 }
 
-input UsersFilters {
-  AND: [UsersFiltersNested!]
-  NOT: UsersFiltersNested
-  OR: [UsersFiltersNested!]
-  age: SQLiteIntegerFilters
-  email: SQLiteTextFilters
-  id: SQLiteIntegerFilters
-  name: SQLiteTextFilters
-}
-
-input UsersFiltersNested {
-  age: SQLiteIntegerFilters
-  email: SQLiteTextFilters
-  id: SQLiteIntegerFilters
-  name: SQLiteTextFilters
-}
-
-input UsersInsertInput {
-  age: Int
-  email: String
-  id: Int
-  name: String!
-}
-
-type UsersItem {
+"""A user"""
+type User {
+  """The age of the user"""
   age: Int
   courses: [StudentToCoursesItem!]!
+
+  """The email of the user"""
   email: String
   id: Int!
+
+  """The name of the user"""
   name: String!
-  posts: [PostsItem!]!
+  posts: [Post!]!
 }
 
-input UsersOrderBy {
+"""A user"""
+input UserFilters {
+  AND: [UserFiltersNested!]
+  NOT: UserFiltersNested
+  OR: [UserFiltersNested!]
+
+  """The age of the user"""
+  age: SQLiteIntegerFilters
+
+  """The email of the user"""
+  email: SQLiteTextFilters
+  id: SQLiteIntegerFilters
+
+  """The name of the user"""
+  name: SQLiteTextFilters
+}
+
+input UserFiltersNested {
+  """The age of the user"""
+  age: SQLiteIntegerFilters
+
+  """The email of the user"""
+  email: SQLiteTextFilters
+  id: SQLiteIntegerFilters
+
+  """The name of the user"""
+  name: SQLiteTextFilters
+}
+
+"""A user"""
+input UserInsertInput {
+  """The age of the user"""
+  age: Int
+
+  """The email of the user"""
+  email: String
+  id: Int
+
+  """The name of the user"""
+  name: String!
+}
+
+input UserInsertOnConflictDoNothingInput {
+  target: [UserTableColumn!]
+  where: UserFilters
+}
+
+input UserInsertOnConflictDoUpdateInput {
+  set: UserInsertInput
+  setWhere: UserFilters
+  target: [UserTableColumn!]!
+  targetWhere: UserFilters
+}
+
+input UserOrderBy {
+  """The age of the user"""
   age: OrderDirection
+
+  """The email of the user"""
   email: OrderDirection
   id: OrderDirection
+
+  """The name of the user"""
   name: OrderDirection
 }
 
-input UsersUpdateInput {
+enum UserTableColumn {
+  """The age of the user"""
+  age
+
+  """The email of the user"""
+  email
+  id
+
+  """The name of the user"""
+  name
+}
+
+"""A user"""
+input UserUpdateInput {
+  """The age of the user"""
   age: Int
+
+  """The email of the user"""
   email: String
   id: Int
+
+  """The name of the user"""
   name: String
 }

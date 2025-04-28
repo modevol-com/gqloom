@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 - Refactor: Migrating to Relational Queries version 2
 
+## 0.8.5 (2025-04-28)
+
+- Feat: Enhanced the drizzleSilk function to accept configuration options, improving flexibility in schema generation.
+- Feat: add `onConflictDoUpdate` and `onConflictDoNothing` to insert mutation for Postgres and SQLite
+
 ## 0.8.4 (2025-04-21)
 
 - Fix: update resolver factory options type

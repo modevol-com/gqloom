@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPosts(where: PostsFilters): MutationSuccessResult
-  deleteFromUsers(where: UsersFilters): MutationSuccessResult
-  insertIntoPosts(values: [PostsInsertInput!]!): MutationSuccessResult
-  insertIntoPostsSingle(value: PostsInsertInput!): MutationSuccessResult
-  insertIntoUsers(values: [UsersInsertInput!]!): MutationSuccessResult
-  insertIntoUsersSingle(value: UsersInsertInput!): MutationSuccessResult
-  updatePosts(set: PostsUpdateInput!, where: PostsFilters): MutationSuccessResult
-  updateUsers(set: UsersUpdateInput!, where: UsersFilters): MutationSuccessResult
+  deleteFromPosts(where: PostFilters): MutationSuccessResult
+  deleteFromUsers(where: UserFilters): MutationSuccessResult
+  insertIntoPosts(values: [PostInsertInput!]!): MutationSuccessResult
+  insertIntoPostsSingle(value: PostInsertInput!): MutationSuccessResult
+  insertIntoUsers(values: [UserInsertInput!]!): MutationSuccessResult
+  insertIntoUsersSingle(value: UserInsertInput!): MutationSuccessResult
+  updatePosts(set: PostUpdateInput!, where: PostFilters): MutationSuccessResult
+  updateUsers(set: UserUpdateInput!, where: UserFilters): MutationSuccessResult
 }
 
 type MutationSuccessResult {
@@ -84,103 +84,135 @@ enum OrderDirection {
   desc
 }
 
-input PostsFilters {
-  AND: [PostsFiltersNested!]
-  NOT: PostsFiltersNested
-  OR: [PostsFiltersNested!]
-  authorId: MySqlIntFilters
-  content: MySqlTextFilters
-  id: MySqlIntFilters
-  title: MySqlTextFilters
-}
-
-input PostsFiltersNested {
-  authorId: MySqlIntFilters
-  content: MySqlTextFilters
-  id: MySqlIntFilters
-  title: MySqlTextFilters
-}
-
-input PostsInsertInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String!
-}
-
-type PostsItem {
-  author: UsersItem
+"""A post"""
+type Post {
+  author: User
   authorId: Int
   content: String
   id: Int!
+
+  """The title of the post"""
   title: String!
 }
 
-input PostsOrderBy {
-  authorId: OrderDirection
-  content: OrderDirection
-  id: OrderDirection
-  title: OrderDirection
+"""A post"""
+input PostFilters {
+  AND: [PostFiltersNested!]
+  NOT: PostFiltersNested
+  OR: [PostFiltersNested!]
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+
+  """The title of the post"""
+  title: MySqlTextFilters
 }
 
-input PostsUpdateInput {
+input PostFiltersNested {
+  authorId: MySqlIntFilters
+  content: MySqlTextFilters
+  id: MySqlIntFilters
+
+  """The title of the post"""
+  title: MySqlTextFilters
+}
+
+"""A post"""
+input PostInsertInput {
   authorId: Int
   content: String
   id: Int
+
+  """The title of the post"""
+  title: String!
+}
+
+input PostOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+
+  """The title of the post"""
+  title: OrderDirection
+}
+
+"""A post"""
+input PostUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+
+  """The title of the post"""
   title: String
 }
 
 type Query {
-  posts(limit: Int, offset: Int, orderBy: PostsOrderBy, where: PostsFilters): [PostsItem!]!
-  postsCount(where: PostsFilters): Int!
-  postsSingle(offset: Int, orderBy: PostsOrderBy, where: PostsFilters): PostsItem
-  users(limit: Int, offset: Int, orderBy: UsersOrderBy, where: UsersFilters): [UsersItem!]!
-  usersCount(where: UsersFilters): Int!
-  usersSingle(offset: Int, orderBy: UsersOrderBy, where: UsersFilters): UsersItem
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  postsCount(where: PostFilters): Int!
+  postsSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): Post
+  users(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [User!]!
+  usersCount(where: UserFilters): Int!
+  usersSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): User
 }
 
-input UsersFilters {
-  AND: [UsersFiltersNested!]
-  NOT: UsersFiltersNested
-  OR: [UsersFiltersNested!]
-  age: MySqlIntFilters
-  email: MySqlTextFilters
-  id: MySqlIntFilters
-  name: MySqlTextFilters
-}
-
-input UsersFiltersNested {
-  age: MySqlIntFilters
-  email: MySqlTextFilters
-  id: MySqlIntFilters
-  name: MySqlTextFilters
-}
-
-input UsersInsertInput {
-  age: Int
-  email: String
-  id: Int
-  name: String!
-}
-
-type UsersItem {
+"""A user"""
+type User {
   age: Int
   email: String
   id: Int!
+
+  """The name of the user"""
   name: String!
-  posts: [PostsItem!]!
+  posts: [Post!]!
 }
 
-input UsersOrderBy {
-  age: OrderDirection
-  email: OrderDirection
-  id: OrderDirection
-  name: OrderDirection
+"""A user"""
+input UserFilters {
+  AND: [UserFiltersNested!]
+  NOT: UserFiltersNested
+  OR: [UserFiltersNested!]
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+
+  """The name of the user"""
+  name: MySqlTextFilters
 }
 
-input UsersUpdateInput {
+input UserFiltersNested {
+  age: MySqlIntFilters
+  email: MySqlTextFilters
+  id: MySqlIntFilters
+
+  """The name of the user"""
+  name: MySqlTextFilters
+}
+
+"""A user"""
+input UserInsertInput {
   age: Int
   email: String
   id: Int
+
+  """The name of the user"""
+  name: String!
+}
+
+input UserOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+
+  """The name of the user"""
+  name: OrderDirection
+}
+
+"""A user"""
+input UserUpdateInput {
+  age: Int
+  email: String
+  id: Int
+
+  """The name of the user"""
   name: String
 }

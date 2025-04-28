@@ -33,7 +33,8 @@ describe("resolver by sqlite", () => {
 
     const { data, errors } = await response.json()
 
-    if (response.status !== 200) {
+    if (response.status !== 200 || errors != null) {
+      console.info(errors)
       throw new Error(JSON.stringify(errors))
     }
     return data
@@ -85,7 +86,7 @@ describe("resolver by sqlite", () => {
   describe.concurrent("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-      query users ($orderBy: UsersOrderBy, $where: UsersFilters!, $limit: Int, $offset: Int) {
+      query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
         users(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
           id
           name
@@ -127,7 +128,7 @@ describe("resolver by sqlite", () => {
       await expect(
         execute(
           /* GraphQL */ `
-          query users ($orderBy: UsersOrderBy, $where: UsersFilters!, $offset: Int) {
+          query users ($orderBy: UserOrderBy, $where: UserFilters!, $offset: Int) {
             usersSingle(orderBy: $orderBy, where: $where, offset: $offset) {
               id
               name
@@ -145,7 +146,7 @@ describe("resolver by sqlite", () => {
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query users ($orderBy: UsersOrderBy, $where: UsersFilters!, $limit: Int, $offset: Int) {
+        query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
           users(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
             id
             name
@@ -184,7 +185,7 @@ describe("resolver by sqlite", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-      mutation insertIntoUsers($values: [UsersInsertInput!]!) {
+      mutation insertIntoUsers($values: [UserInsertInput!]!) {
         insertIntoUsers(values: $values) {
           id
           name
@@ -207,9 +208,107 @@ describe("resolver by sqlite", () => {
       expect(Tina).toBeDefined()
     })
 
+    it("should insert a user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUsers($values: [UserInsertInput!]!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUsers(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, values: $values) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsers: [{ name: "Tina" }],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsers: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsers: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "TinaInsert", id: 77 }],
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsers: [{ name: "TinaUpdate" }],
+      })
+    })
+
+    it("should insert a single user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUsersSingle($value: UserInsertInput!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUsersSingle(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, value: $value) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsersSingle: { name: "Tina" },
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsersSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsersSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUsersSingle: { name: "TinaUpdate" },
+      })
+    })
+
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUsers($set: UsersUpdateInput!, $where: UsersFilters!) {
+        mutation updateUsers($set: UserUpdateInput!, $where: UserFilters!) {
           updateUsers(set: $set, where: $where) {
             id
             name
@@ -238,7 +337,7 @@ describe("resolver by sqlite", () => {
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUsers($where: UsersFilters!) {
+        mutation deleteFromUsers($where: UserFilters!) {
           deleteFromUsers(where: $where) {
             id
             name
@@ -268,7 +367,7 @@ describe("resolver by sqlite", () => {
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPosts($values: [PostsInsertInput!]!) {
+        mutation insertIntoPosts($values: [PostInsertInput!]!) {
           insertIntoPosts(values: $values) {
             id
             title
@@ -299,7 +398,7 @@ describe("resolver by sqlite", () => {
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePosts($set: PostsUpdateInput!, $where: PostsFilters!) {
+        mutation updatePosts($set: PostUpdateInput!, $where: PostFilters!) {
           updatePosts(set: $set, where: $where) {
             id
             title
@@ -331,7 +430,7 @@ describe("resolver by sqlite", () => {
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPosts($where: PostsFilters!) {
+        mutation deleteFromPosts($where: PostFilters!) {
           deleteFromPosts(where: $where) {
             id
             title

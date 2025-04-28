@@ -8,7 +8,16 @@ export const users = drizzleSilk(
     name: t.text().notNull(),
     age: t.int(),
     email: t.text(),
-  })
+  }),
+  {
+    name: "User",
+    description: "A user",
+    fields: {
+      name: { description: "The name of the user" },
+      age: { description: "The age of the user" },
+      email: { description: "The email of the user" },
+    },
+  }
 )
 
 export const posts = drizzleSilk(
@@ -17,7 +26,8 @@ export const posts = drizzleSilk(
     title: t.text().notNull(),
     content: t.text(),
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
+  }),
+  { name: "Post" }
 )
 
 export const courses = drizzleSilk(

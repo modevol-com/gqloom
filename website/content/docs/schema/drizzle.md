@@ -630,7 +630,7 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-In the above code, we use `valibot` to define the input type. `v.object({ id: v.number() })` defines the type of the input object, and `v.transform(({ id }) => ({ where: { id } }))` converts the input parameters into Prisma query parameters.
+In the above code, we use `valibot` to define the input type. `v.object({ id: v.number() })` defines the type of the input object, and `v.transform(({ id }) => ({ where: { id } }))` converts the input parameters into Drizzle query parameters.
 
 ### Adding Middleware
 

@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPosts(where: PostsFilters): [PostsItem!]!
-  deleteFromUsers(where: UsersFilters): [UsersItem!]!
-  insertIntoPosts(values: [PostsInsertInput!]!): [PostsItem!]!
-  insertIntoPostsSingle(value: PostsInsertInput!): PostsItem
-  insertIntoUsers(values: [UsersInsertInput!]!): [UsersItem!]!
-  insertIntoUsersSingle(value: UsersInsertInput!): UsersItem
-  updatePosts(set: PostsUpdateInput!, where: PostsFilters): [PostsItem!]!
-  updateUsers(set: UsersUpdateInput!, where: UsersFilters): [UsersItem!]!
+  deleteFromPosts(where: PostFilters): [Post!]!
+  deleteFromUsers(where: UserFilters): [User!]!
+  insertIntoPosts(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, values: [PostInsertInput!]!): [Post!]!
+  insertIntoPostsSingle(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, value: PostInsertInput!): Post
+  insertIntoUsers(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, values: [UserInsertInput!]!): [User!]!
+  insertIntoUsersSingle(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, value: UserInsertInput!): User
+  updatePosts(set: PostUpdateInput!, where: PostFilters): [Post!]!
+  updateUsers(set: UserUpdateInput!, where: UserFilters): [User!]!
 }
 
 enum OrderDirection {
@@ -109,103 +109,177 @@ input PgTextFiltersNested {
   notLike: String
 }
 
-input PostsFilters {
-  AND: [PostsFiltersNested!]
-  NOT: PostsFiltersNested
-  OR: [PostsFiltersNested!]
-  authorId: PgIntegerFilters
-  content: PgTextFilters
-  id: PgSerialFilters
-  title: PgTextFilters
-}
-
-input PostsFiltersNested {
-  authorId: PgIntegerFilters
-  content: PgTextFilters
-  id: PgSerialFilters
-  title: PgTextFilters
-}
-
-input PostsInsertInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String!
-}
-
-type PostsItem {
-  author: UsersItem
+"""A post"""
+type Post {
+  author: User
   authorId: Int
   content: String
   id: Int!
+
+  """The title of the post"""
   title: String!
 }
 
-input PostsOrderBy {
-  authorId: OrderDirection
-  content: OrderDirection
-  id: OrderDirection
-  title: OrderDirection
+"""A post"""
+input PostFilters {
+  AND: [PostFiltersNested!]
+  NOT: PostFiltersNested
+  OR: [PostFiltersNested!]
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+
+  """The title of the post"""
+  title: PgTextFilters
 }
 
-input PostsUpdateInput {
+input PostFiltersNested {
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+
+  """The title of the post"""
+  title: PgTextFilters
+}
+
+"""A post"""
+input PostInsertInput {
   authorId: Int
   content: String
   id: Int
+
+  """The title of the post"""
+  title: String!
+}
+
+input PostInsertOnConflictDoNothingInput {
+  target: [PostTableColumn!]
+  where: PostFilters
+}
+
+input PostInsertOnConflictDoUpdateInput {
+  set: PostInsertInput
+  setWhere: PostFilters
+  target: [PostTableColumn!]!
+  targetWhere: PostFilters
+}
+
+input PostOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+
+  """The title of the post"""
+  title: OrderDirection
+}
+
+enum PostTableColumn {
+  authorId
+  content
+  id
+
+  """The title of the post"""
+  title
+}
+
+"""A post"""
+input PostUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+
+  """The title of the post"""
   title: String
 }
 
 type Query {
-  posts(limit: Int, offset: Int, orderBy: PostsOrderBy, where: PostsFilters): [PostsItem!]!
-  postsCount(where: PostsFilters): Int!
-  postsSingle(offset: Int, orderBy: PostsOrderBy, where: PostsFilters): PostsItem
-  users(limit: Int, offset: Int, orderBy: UsersOrderBy, where: UsersFilters): [UsersItem!]!
-  usersCount(where: UsersFilters): Int!
-  usersSingle(offset: Int, orderBy: UsersOrderBy, where: UsersFilters): UsersItem
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  postsCount(where: PostFilters): Int!
+  postsSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): Post
+  users(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [User!]!
+  usersCount(where: UserFilters): Int!
+  usersSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): User
 }
 
-input UsersFilters {
-  AND: [UsersFiltersNested!]
-  NOT: UsersFiltersNested
-  OR: [UsersFiltersNested!]
-  age: PgIntegerFilters
-  email: PgTextFilters
-  id: PgSerialFilters
-  name: PgTextFilters
-}
-
-input UsersFiltersNested {
-  age: PgIntegerFilters
-  email: PgTextFilters
-  id: PgSerialFilters
-  name: PgTextFilters
-}
-
-input UsersInsertInput {
-  age: Int
-  email: String
-  id: Int
-  name: String!
-}
-
-type UsersItem {
+"""A user"""
+type User {
   age: Int
   email: String
   id: Int!
+
+  """The name of the user"""
   name: String!
-  posts: [PostsItem!]!
+  posts: [Post!]!
 }
 
-input UsersOrderBy {
-  age: OrderDirection
-  email: OrderDirection
-  id: OrderDirection
-  name: OrderDirection
+"""A user"""
+input UserFilters {
+  AND: [UserFiltersNested!]
+  NOT: UserFiltersNested
+  OR: [UserFiltersNested!]
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+
+  """The name of the user"""
+  name: PgTextFilters
 }
 
-input UsersUpdateInput {
+input UserFiltersNested {
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+
+  """The name of the user"""
+  name: PgTextFilters
+}
+
+"""A user"""
+input UserInsertInput {
   age: Int
   email: String
   id: Int
+
+  """The name of the user"""
+  name: String!
+}
+
+input UserInsertOnConflictDoNothingInput {
+  target: [UserTableColumn!]
+  where: UserFilters
+}
+
+input UserInsertOnConflictDoUpdateInput {
+  set: UserInsertInput
+  setWhere: UserFilters
+  target: [UserTableColumn!]!
+  targetWhere: UserFilters
+}
+
+input UserOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+
+  """The name of the user"""
+  name: OrderDirection
+}
+
+enum UserTableColumn {
+  age
+  email
+  id
+
+  """The name of the user"""
+  name
+}
+
+"""A user"""
+input UserUpdateInput {
+  age: Int
+  email: String
+  id: Int
+
+  """The name of the user"""
   name: String
 }

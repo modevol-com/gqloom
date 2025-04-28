@@ -170,7 +170,7 @@ We have two formats for declaring directives:
 
 ## Resolve Reference
 
-`@gqloom/apollo` provides the `resolveReference` function to help you resolve references.
+`@gqloom/federation` provides the `resolveReference` function to help you resolve references.
 
 ```ts twoslash
 import { silk } from "@gqloom/core"
@@ -211,7 +211,7 @@ export const userResolver = resolver
 
 ## Weaving
 
-The `FederatedSchemaWeaver.weave` function imported from `@gqloom/federation` is used to weave the Federation Schema. Compared with `@gqloom/core`, the `FederatedSchemaWeaver.weave` function in `@gqloom/apollo` will output a Schema with directives.
+The `FederatedSchemaWeaver.weave` function imported from `@gqloom/federation` is used to weave the Federation Schema. Compared with `@gqloom/core`, the `FederatedSchemaWeaver.weave` function in `@gqloom/federation` will output a Schema with directives.
 
 It's also worth noting that we need to use the `printSubgraphSchema` function imported from `@apollo/subgraph` to convert the Schema to text format to preserve the directives.
 

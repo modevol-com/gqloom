@@ -73,6 +73,43 @@ describe("DrizzleInputFactory", () => {
     `)
   })
 
+  it("should generate TableColumnEnum type for a table", () => {
+    expect(printType(inputFactory.tableColumnEnum())).toMatchInlineSnapshot(`
+      "enum UsersTableColumn {
+        id
+        name
+        email
+        password
+        createdAt
+        updatedAt
+      }"
+    `)
+  })
+
+  it("should generate InsertOnConflictDoUpdateInput type for a table", () => {
+    expect(
+      printType(inputFactory.insertOnConflictDoUpdateInput())
+    ).toMatchInlineSnapshot(`
+      "type UsersInsertOnConflictDoUpdateInput {
+        target: [UsersTableColumn!]!
+        set: UsersInsertInput
+        targetWhere: UsersFilters
+        setWhere: UsersFilters
+      }"
+    `)
+  })
+
+  it("should generate InsertOnConflictDoNothingInput type for a table", () => {
+    expect(
+      printType(inputFactory.insertOnConflictDoNothingInput())
+    ).toMatchInlineSnapshot(`
+      "type UsersInsertOnConflictDoNothingInput {
+        target: [UsersTableColumn!]
+        where: UsersFilters
+      }"
+    `)
+  })
+
   describe("with column visibility options", () => {
     const options: DrizzleFactoryInputVisibilityBehaviors<typeof userTable> = {
       "*": {

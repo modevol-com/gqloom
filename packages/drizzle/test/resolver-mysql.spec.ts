@@ -94,22 +94,12 @@ describe("resolver by mysql", () => {
   describe.concurrent("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-        query users(
-          $orderBy: UsersOrderBy!
-          $where: UsersFilters!
-          $limit: Int
-          $offset: Int
-        ) {
-          users(
-            orderBy: $orderBy
-            where: $where
-            limit: $limit
-            offset: $offset
-          ) {
-            id
-            name
-          }
+      query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
+        users(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
+          id
+          name
         }
+      }
       `
       await expect(
         execute(q, {
@@ -146,16 +136,12 @@ describe("resolver by mysql", () => {
       await expect(
         execute(
           /* GraphQL */ `
-            query users(
-              $orderBy: UsersOrderBy
-              $where: UsersFilters!
-              $offset: Int
-            ) {
-              usersSingle(orderBy: $orderBy, where: $where, offset: $offset) {
-                id
-                name
-              }
+          query users ($orderBy: UserOrderBy, $where: UserFilters!, $offset: Int) {
+            usersSingle(orderBy: $orderBy, where: $where, offset: $offset) {
+              id
+              name
             }
+          }
           `,
           {
             where: { name: { eq: "Taylor" } },
@@ -168,18 +154,8 @@ describe("resolver by mysql", () => {
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query users(
-          $orderBy: UsersOrderBy!
-          $where: UsersFilters!
-          $limit: Int
-          $offset: Int
-        ) {
-          users(
-            orderBy: $orderBy
-            where: $where
-            limit: $limit
-            offset: $offset
-          ) {
+        query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
+          users(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
             id
             name
             posts {
@@ -217,11 +193,11 @@ describe("resolver by mysql", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUsers($values: [UsersInsertInput!]!) {
-          insertIntoUsers(values: $values) {
-            isSuccess
-          }
+      mutation insertIntoUsers($values: [UserInsertInput!]!) {
+        insertIntoUsers(values: $values) {
+          isSuccess
         }
+      }
       `
 
       await expect(
@@ -241,10 +217,7 @@ describe("resolver by mysql", () => {
 
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUsers(
-          $set: UsersUpdateInput!
-          $where: UsersFilters!
-        ) {
+        mutation updateUser($set: UserUpdateInput!, $where: UserFilters!) {
           updateUsers(set: $set, where: $where) {
             isSuccess
           }
@@ -278,7 +251,7 @@ describe("resolver by mysql", () => {
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUsers($where: UsersFilters!) {
+        mutation deleteFromUsers($where: UserFilters!) {
           deleteFromUsers(where: $where) {
             isSuccess
           }
@@ -309,7 +282,7 @@ describe("resolver by mysql", () => {
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPosts($values: [PostsInsertInput!]!) {
+        mutation insertIntoPosts($values: [PostInsertInput!]!) {
           insertIntoPosts(values: $values) {
             isSuccess
           }
@@ -340,10 +313,7 @@ describe("resolver by mysql", () => {
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePosts(
-          $set: PostsUpdateInput!
-          $where: PostsFilters!
-        ) {
+        mutation updatePosts($set: PostUpdateInput!, $where: PostFilters!) {
           updatePosts(set: $set, where: $where) {
             isSuccess
           }
@@ -378,7 +348,7 @@ describe("resolver by mysql", () => {
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPosts($where: PostsFilters!) {
+        mutation deleteFromPosts($where: PostFilters!) {
           deleteFromPosts(where: $where) {
             isSuccess
           }

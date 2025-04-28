@@ -8,6 +8,7 @@ import {
 } from "drizzle-orm"
 import type {
   DrizzleFactoryInputVisibilityBehaviors,
+  ValueOrGetter,
   VisibilityBehavior,
 } from "./types"
 
@@ -87,4 +88,10 @@ export function isColumnVisible(
 
   // Default to visible
   return true
+}
+
+export function getValue<T>(valueOrGetter: ValueOrGetter<T>): T {
+  return typeof valueOrGetter === "function"
+    ? (valueOrGetter as () => T)()
+    : valueOrGetter
 }

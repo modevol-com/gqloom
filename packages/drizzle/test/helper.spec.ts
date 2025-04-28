@@ -6,6 +6,7 @@ import * as pg from "drizzle-orm/pg-core"
 import { describe, expect, it } from "vitest"
 import {
   getEnumNameByColumn,
+  getValue,
   inArrayMultiple,
   isColumnVisible,
 } from "../src/helper"
@@ -62,6 +63,27 @@ describe("helper", () => {
       expect(isColumnVisible("column2", options, "insert")).toBe(false)
       expect(isColumnVisible("column2", options, "update")).toBe(true)
       expect(isColumnVisible("column3", options, "filters")).toBe(true)
+    })
+  })
+
+  describe("getValue", () => {
+    it("should return the value directly when given a non-function value", () => {
+      expect(getValue(42)).toBe(42)
+      expect(getValue("hello")).toBe("hello")
+      expect(getValue({ foo: "bar" })).toEqual({ foo: "bar" })
+    })
+
+    it("should execute and return the result when given a function", () => {
+      expect(getValue(() => 42)).toBe(42)
+      expect(getValue(() => "hello")).toBe("hello")
+      expect(getValue(() => ({ foo: "bar" }))).toEqual({ foo: "bar" })
+    })
+
+    it("should handle complex types", () => {
+      type ComplexType = { id: number; name: string }
+      const value: ComplexType = { id: 1, name: "test" }
+      expect(getValue(value)).toEqual(value)
+      expect(getValue(() => value)).toEqual(value)
     })
   })
 })
