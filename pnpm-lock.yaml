@@ -83,11 +83,11 @@ importers:
   examples/cattery-valibot:
     dependencies:
       '@gqloom/core':
-        specifier: latest
+        specifier: ^0.8.4
         version: 0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/drizzle':
-        specifier: latest
-        version: 0.8.2(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+        specifier: 0.9.0-beta.5
+        version: 0.9.0-beta.5(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/valibot':
         specifier: ^0.7.1
         version: 0.7.1(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(valibot@1.0.0-rc.1(typescript@5.7.3))
@@ -100,6 +100,9 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+      graphql-scalars:
+        specifier: ^1.24.1
+        version: 1.24.1(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
@@ -130,7 +133,7 @@ importers:
         version: 0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.8.2(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+        version: 0.8.5(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       '@gqloom/zod':
         specifier: latest
         version: 0.8.1(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))(zod@3.24.2)
@@ -1459,11 +1462,18 @@ packages:
     peerDependencies:
       graphql: '>= 16.8.0'
 
-  '@gqloom/drizzle@0.8.2':
-    resolution: {integrity: sha512-DYNtTYFlU/9cDCYyr2rfJMx2GGbJA7GgihPcIXCwmLb5Eq5T5eNSux22dlZ1XJ/KQB5R4ONpyxIKR3uginFcjw==}
+  '@gqloom/drizzle@0.8.5':
+    resolution: {integrity: sha512-fBZQotNZSvm/wAy7v0fKmKL3UrKcj8SY9Q2MPUO3qi6BD0sGI25DPty7L0/YJmuG7gmxLHOfAiUI0EGEHN7o5g==}
     peerDependencies:
       '@gqloom/core': '>= 0.8.0'
       drizzle-orm: '>= 0.38.0'
+      graphql: '>= 16.8.0'
+
+  '@gqloom/drizzle@0.9.0-beta.5':
+    resolution: {integrity: sha512-VrCStXrei9xuqO+UEVFaSOSGN1h/+gXYQLQhQ7w/GuTeh4VUeYa+HvkNfpMlmheZG6E67ee20rhhwOwv2ckmHg==}
+    peerDependencies:
+      '@gqloom/core': '>= 0.8.0'
+      drizzle-orm: '>= 1.0.0-beta.1'
       graphql: '>= 16.8.0'
 
   '@gqloom/mikro-orm@0.7.0':
@@ -6793,7 +6803,13 @@ snapshots:
     dependencies:
       graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
 
-  '@gqloom/drizzle@0.8.2(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
+  '@gqloom/drizzle@0.8.5(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
+    dependencies:
+      '@gqloom/core': 0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
+      drizzle-orm: 1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7)
+      graphql: 16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)
+
+  '@gqloom/drizzle@0.9.0-beta.5(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq)))(drizzle-orm@1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))':
     dependencies:
       '@gqloom/core': 0.8.4(graphql@16.8.1(patch_hash=2p6wc42resg5at2p4utt5idamq))
       drizzle-orm: 1.0.0-beta.1-7946562(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(gel@2.0.2)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7)

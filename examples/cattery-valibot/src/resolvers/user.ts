@@ -5,7 +5,7 @@ import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { users } from "../schema"
 
-const userResolverFactory = drizzleResolverFactory(db, "users")
+const userResolverFactory = drizzleResolverFactory(db, users)
 
 export const userResolver = resolver.of(users, {
   cats: userResolverFactory.relationField("cats"),
