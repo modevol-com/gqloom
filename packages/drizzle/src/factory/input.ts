@@ -256,7 +256,7 @@ export class DrizzleInputFactory<TTable extends Table> {
               new GraphQLList(new GraphQLNonNull(this.tableColumnEnum()))
             ),
           },
-          set: { type: this.insertInput() },
+          set: { type: this.updateInput() },
           targetWhere: { type: this.filters() },
           setWhere: { type: this.filters() },
         },

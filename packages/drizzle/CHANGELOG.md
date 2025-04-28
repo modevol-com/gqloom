@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## next (YYYY-MM-DD)
 
 - Refactor: Migrating to Relational Queries version 2
+  
+## 0.8.6 (2025-04-28)
+
+- Fix: update input types for onConflictDoUpdate operations
 
 ## 0.8.5 (2025-04-28)
 
