@@ -316,6 +316,16 @@ export abstract class DrizzleResolverFactory<
     return and(...variants)
   }
 
+  protected toColumn(columnName: string) {
+    const column = getTableColumns(this.table)[columnName]
+    if (!column) {
+      throw new Error(
+        `Column ${columnName} not found in table ${this.tableName}`
+      )
+    }
+    return column
+  }
+
   public relationField<
     TRelationName extends keyof InferTableRelationalConfig<
       QueryBuilder<TDatabase, InferTableName<TTable>>

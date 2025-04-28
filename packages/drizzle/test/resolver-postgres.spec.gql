@@ -20,6 +20,18 @@ input DrizzlePostInsertInput {
   title: String!
 }
 
+input DrizzlePostInsertOnConflictDoNothingInput {
+  target: [DrizzlePostTableColumn!]
+  where: DrizzlePostFilters
+}
+
+input DrizzlePostInsertOnConflictDoUpdateInput {
+  set: DrizzlePostInsertInput
+  setWhere: DrizzlePostFilters
+  target: [DrizzlePostTableColumn!]!
+  targetWhere: DrizzlePostFilters
+}
+
 type DrizzlePostItem {
   author: DrizzleUserItem
   authorId: Int
@@ -33,6 +45,13 @@ input DrizzlePostOrderBy {
   content: OrderDirection
   id: OrderDirection
   title: OrderDirection
+}
+
+enum DrizzlePostTableColumn {
+  authorId
+  content
+  id
+  title
 }
 
 input DrizzlePostUpdateInput {
@@ -64,6 +83,18 @@ input DrizzleUserInsertInput {
   name: String!
 }
 
+input DrizzleUserInsertOnConflictDoNothingInput {
+  target: [DrizzleUserTableColumn!]
+  where: DrizzleUserFilters
+}
+
+input DrizzleUserInsertOnConflictDoUpdateInput {
+  set: DrizzleUserInsertInput
+  setWhere: DrizzleUserFilters
+  target: [DrizzleUserTableColumn!]!
+  targetWhere: DrizzleUserFilters
+}
+
 type DrizzleUserItem {
   age: Int
   email: String
@@ -79,6 +110,13 @@ input DrizzleUserOrderBy {
   name: OrderDirection
 }
 
+enum DrizzleUserTableColumn {
+  age
+  email
+  id
+  name
+}
+
 input DrizzleUserUpdateInput {
   age: Int
   email: String
@@ -89,10 +127,10 @@ input DrizzleUserUpdateInput {
 type Mutation {
   deleteFromPost(where: DrizzlePostFilters): [DrizzlePostItem!]!
   deleteFromUser(where: DrizzleUserFilters): [DrizzleUserItem!]!
-  insertIntoPost(values: [DrizzlePostInsertInput!]!): [DrizzlePostItem!]!
-  insertIntoPostSingle(value: DrizzlePostInsertInput!): DrizzlePostItem
-  insertIntoUser(values: [DrizzleUserInsertInput!]!): [DrizzleUserItem!]!
-  insertIntoUserSingle(value: DrizzleUserInsertInput!): DrizzleUserItem
+  insertIntoPost(onConflictDoNothing: DrizzlePostInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzlePostInsertOnConflictDoUpdateInput, values: [DrizzlePostInsertInput!]!): [DrizzlePostItem!]!
+  insertIntoPostSingle(onConflictDoNothing: DrizzlePostInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzlePostInsertOnConflictDoUpdateInput, value: DrizzlePostInsertInput!): DrizzlePostItem
+  insertIntoUser(onConflictDoNothing: DrizzleUserInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzleUserInsertOnConflictDoUpdateInput, values: [DrizzleUserInsertInput!]!): [DrizzleUserItem!]!
+  insertIntoUserSingle(onConflictDoNothing: DrizzleUserInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzleUserInsertOnConflictDoUpdateInput, value: DrizzleUserInsertInput!): DrizzleUserItem
   updatePost(set: DrizzlePostUpdateInput!, where: DrizzlePostFilters): [DrizzlePostItem!]!
   updateUser(set: DrizzleUserUpdateInput!, where: DrizzleUserFilters): [DrizzleUserItem!]!
 }

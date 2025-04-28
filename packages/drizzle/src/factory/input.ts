@@ -101,6 +101,27 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
+  public insertArrayWithOnConflictArgs() {
+    const name = `${pascalCase(getTableName(this.table))}InsertArrayArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<InsertArrayWithOnConflictArgs<TTable>>({
+        name,
+        fields: {
+          values: {
+            type: new GraphQLNonNull(
+              new GraphQLList(new GraphQLNonNull(this.insertInput()))
+            ),
+          },
+          onConflictDoUpdate: { type: this.insertOnConflictDoUpdateInput() },
+          onConflictDoNothing: { type: this.insertOnConflictDoNothingInput() },
+        },
+      })
+    )
+  }
+
   public insertSingleArgs() {
     const name = `${pascalCase(getTableName(this.table))}InsertSingleArgs`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
@@ -111,6 +132,23 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: {
           value: { type: new GraphQLNonNull(this.insertInput()) },
+        },
+      })
+    )
+  }
+
+  public insertSingleWithOnConflictArgs() {
+    const name = `${pascalCase(getTableName(this.table))}InsertSingleArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<InsertSingleWithOnConflictArgs<TTable>>({
+        name,
+        fields: {
+          value: { type: new GraphQLNonNull(this.insertInput()) },
+          onConflictDoUpdate: { type: this.insertOnConflictDoUpdateInput() },
+          onConflictDoNothing: { type: this.insertOnConflictDoNothingInput() },
         },
       })
     )
@@ -147,6 +185,21 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
+  public tableColumnEnum() {
+    const name = `${pascalCase(getTableName(this.table))}TableColumn`
+    const existing = weaverContext.getNamedType(name) as GraphQLEnumType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLEnumType({
+        name,
+        values: mapValue(getTableColumns(this.table), (_, columnName) => {
+          return { value: columnName }
+        }),
+      })
+    )
+  }
+
   public insertInput() {
     const name = `${pascalCase(getTableName(this.table))}InsertInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
@@ -172,6 +225,46 @@ export class DrizzleInputFactory<TTable extends Table> {
 
           return { type }
         }),
+      })
+    )
+  }
+
+  public insertOnConflictDoUpdateInput() {
+    const name = `${pascalCase(getTableName(this.table))}InsertOnConflictDoUpdateInput`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: {
+          target: {
+            type: new GraphQLNonNull(
+              new GraphQLList(new GraphQLNonNull(this.tableColumnEnum()))
+            ),
+          },
+          set: { type: this.insertInput() },
+          targetWhere: { type: this.filters() },
+          setWhere: { type: this.filters() },
+        },
+      })
+    )
+  }
+
+  public insertOnConflictDoNothingInput() {
+    const name = `${pascalCase(getTableName(this.table))}InsertOnConflictDoNothingInput`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: {
+          target: {
+            type: new GraphQLList(new GraphQLNonNull(this.tableColumnEnum())),
+          },
+          where: { type: this.filters() },
+        },
       })
     )
   }
@@ -346,10 +439,37 @@ export interface InsertArrayArgs<TTable extends Table> {
   values: InferInsertModel<TTable>[]
 }
 
+export interface InsertArrayWithOnConflictArgs<TTable extends Table>
+  extends InsertArrayArgs<TTable> {
+  onConflictDoUpdate?: {
+    target: string[]
+    set?: Partial<InferInsertModel<TTable>>
+    targetWhere?: Filters<TTable>
+    setWhere?: Filters<TTable>
+  }
+  onConflictDoNothing?: {
+    target?: string[]
+    where?: Filters<TTable>
+  }
+}
+
 export interface InsertSingleArgs<TTable extends Table> {
   value: InferInsertModel<TTable>
 }
 
+export interface InsertSingleWithOnConflictArgs<TTable extends Table>
+  extends InsertSingleArgs<TTable> {
+  onConflictDoUpdate?: {
+    target: string[]
+    set?: Partial<InferInsertModel<TTable>>
+    targetWhere?: Filters<TTable>
+    setWhere?: Filters<TTable>
+  }
+  onConflictDoNothing?: {
+    target?: string[]
+    where?: Filters<TTable>
+  }
+}
 export interface UpdateArgs<TTable extends Table> {
   where?: Filters<TTable>
   set: Partial<InferInsertModel<TTable>>

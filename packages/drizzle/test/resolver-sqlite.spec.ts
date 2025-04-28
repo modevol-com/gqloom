@@ -33,7 +33,8 @@ describe("resolver by sqlite", () => {
 
     const { data, errors } = await response.json()
 
-    if (response.status !== 200) {
+    if (response.status !== 200 || errors != null) {
+      console.info(errors)
       throw new Error(JSON.stringify(errors))
     }
     return data
@@ -205,6 +206,104 @@ describe("resolver by sqlite", () => {
         where: eq(user.name, "Tina"),
       })
       expect(Tina).toBeDefined()
+    })
+
+    it("should insert a user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUser($values: [UserInsertInput!]!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUser(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, values: $values) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [{ name: "Tina" }],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "TinaInsert", id: 77 }],
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [{ name: "TinaUpdate" }],
+      })
+    })
+
+    it("should insert a single user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUserSingle($value: UserInsertInput!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUserSingle(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, value: $value) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: { name: "Tina" },
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: { name: "TinaUpdate" },
+      })
     })
 
     it("should update user information correctly", async () => {
