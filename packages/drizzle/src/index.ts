@@ -31,7 +31,7 @@ import {
   GraphQLString,
   isNonNullType,
 } from "graphql"
-import { getEnumNameByColumn } from "./helper"
+import { getEnumNameByColumn, getValue } from "./helper"
 import type {
   DrizzleSilkConfig,
   DrizzleWeaverConfig,
@@ -99,18 +99,15 @@ export class DrizzleWeaver {
   public static getGraphQLType(
     table: Table
   ): GraphQLNonNull<GraphQLObjectType> {
-    const name = `${pascalCase(getTableName(table))}Item`
+    const config = DrizzleWeaver.silkConfigs.get(table)
+    const name = config?.name ?? `${pascalCase(getTableName(table))}Item`
 
     const existing = weaverContext.getNamedType(name)
     if (existing != null) {
       return new GraphQLNonNull(existing as GraphQLObjectType)
     }
 
-    const config = DrizzleWeaver.silkConfigs.get(table)
-    const fieldsConfig =
-      typeof config?.fields === "function"
-        ? config.fields()
-        : (config?.fields ?? {})
+    const fieldsConfig = getValue(config?.fields) ?? {}
 
     const columns = getTableColumns(table)
     return new GraphQLNonNull(

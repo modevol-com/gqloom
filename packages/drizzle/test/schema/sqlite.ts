@@ -8,7 +8,15 @@ export const user = drizzleSilk(
     name: t.text().notNull(),
     age: t.int(),
     email: t.text(),
-  })
+  }),
+  {
+    description: "A user",
+    fields: {
+      name: { description: "The name of the user" },
+      age: { description: "The age of the user" },
+      email: { description: "The email of the user" },
+    },
+  }
 )
 
 export const usersRelations = relations(user, ({ many }) => ({

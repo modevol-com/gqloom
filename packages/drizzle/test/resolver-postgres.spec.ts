@@ -95,7 +95,7 @@ describe("resolver by postgres", () => {
   describe.concurrent("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-      query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
+      query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
         user(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
           id
           name
@@ -137,7 +137,7 @@ describe("resolver by postgres", () => {
       await expect(
         execute(
           /* GraphQL */ `
-          query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $offset: Int) {
+          query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $offset: Int) {
             userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
               id
               name
@@ -155,7 +155,7 @@ describe("resolver by postgres", () => {
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
+        query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
           user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
             id
             name
@@ -194,7 +194,7 @@ describe("resolver by postgres", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUser($values: [DrizzleUserInsertInput!]!) {
+        mutation insertIntoUser($values: [UserInsertInput!]!) {
           insertIntoUser(values: $values) {
             id
             name
@@ -219,7 +219,7 @@ describe("resolver by postgres", () => {
 
     it("should insert a user with on conflict correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUser($values: [DrizzleUserInsertInput!]!, $doNothing: DrizzleUserInsertOnConflictDoNothingInput, $doUpdate: DrizzleUserInsertOnConflictDoUpdateInput) {
+        mutation insertIntoUser($values: [UserInsertInput!]!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
           insertIntoUser(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, values: $values) {
             id
             name
@@ -268,7 +268,7 @@ describe("resolver by postgres", () => {
 
     it("should insert a single user with on conflict correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUserSingle($value: DrizzleUserInsertInput!, $doNothing: DrizzleUserInsertOnConflictDoNothingInput, $doUpdate: DrizzleUserInsertOnConflictDoUpdateInput) {
+        mutation insertIntoUserSingle($value: UserInsertInput!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
           insertIntoUserSingle(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, value: $value) {
             id
             name
@@ -317,7 +317,7 @@ describe("resolver by postgres", () => {
 
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUser($set: DrizzleUserUpdateInput!, $where: DrizzleUserFilters!) {
+        mutation updateUser($set: UserUpdateInput!, $where: UserFilters!) {
           updateUser(set: $set, where: $where) {
             id
             name
@@ -352,7 +352,7 @@ describe("resolver by postgres", () => {
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUser($where: DrizzleUserFilters!) {
+        mutation deleteFromUser($where: UserFilters!) {
           deleteFromUser(where: $where) {
             id
             name
@@ -382,7 +382,7 @@ describe("resolver by postgres", () => {
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPost($values: [DrizzlePostInsertInput!]!) {
+        mutation insertIntoPost($values: [PostInsertInput!]!) {
           insertIntoPost(values: $values) {
             id
             title
@@ -413,7 +413,7 @@ describe("resolver by postgres", () => {
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePost($set: DrizzlePostUpdateInput!, $where: DrizzlePostFilters!) {
+        mutation updatePost($set: PostUpdateInput!, $where: PostFilters!) {
           updatePost(set: $set, where: $where) {
             id
             title
@@ -449,7 +449,7 @@ describe("resolver by postgres", () => {
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPost($where: DrizzlePostFilters!) {
+        mutation deleteFromPost($where: PostFilters!) {
           deleteFromPost(where: $where) {
             id
             title

@@ -8,9 +8,15 @@ export const user = drizzleSilk(
     name: t.text().notNull(),
     age: t.integer(),
     email: t.text(),
-  })
+  }),
+  {
+    name: "User",
+    description: "A user",
+    fields: {
+      name: { description: "The name of the user" },
+    },
+  }
 )
-
 export const usersRelations = relations(user, ({ many }) => ({
   posts: many(post),
 }))
@@ -21,9 +27,15 @@ export const post = drizzleSilk(
     title: t.text().notNull(),
     content: t.text(),
     authorId: t.integer().references(() => user.id, { onDelete: "cascade" }),
-  })
+  }),
+  {
+    name: "Post",
+    description: "A post",
+    fields: {
+      title: { description: "The title of the post" },
+    },
+  }
 )
-
 export const postsRelations = relations(post, ({ one }) => ({
   author: one(user, {
     fields: [post.authorId],

@@ -154,25 +154,43 @@ type StudentToCourseItem {
   studentId: Int
 }
 
+"""A user"""
 input UserFilters {
   OR: [UserFiltersOr!]
+
+  """The age of the user"""
   age: SQLiteIntegerFilters
+
+  """The email of the user"""
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters
+
+  """The name of the user"""
   name: SQLiteTextFilters
 }
 
 input UserFiltersOr {
+  """The age of the user"""
   age: SQLiteIntegerFilters
+
+  """The email of the user"""
   email: SQLiteTextFilters
   id: SQLiteIntegerFilters
+
+  """The name of the user"""
   name: SQLiteTextFilters
 }
 
+"""A user"""
 input UserInsertInput {
+  """The age of the user"""
   age: Int
+
+  """The email of the user"""
   email: String
   id: Int
+
+  """The name of the user"""
   name: String!
 }
 
@@ -188,32 +206,54 @@ input UserInsertOnConflictDoUpdateInput {
   targetWhere: UserFilters
 }
 
+"""A user"""
 type UserItem {
+  """The age of the user"""
   age: Int
   courses: [StudentToCourseItem!]!
+
+  """The email of the user"""
   email: String
   id: Int!
+
+  """The name of the user"""
   name: String!
   posts: [PostItem!]!
 }
 
 input UserOrderBy {
+  """The age of the user"""
   age: OrderDirection
+
+  """The email of the user"""
   email: OrderDirection
   id: OrderDirection
+
+  """The name of the user"""
   name: OrderDirection
 }
 
 enum UserTableColumn {
+  """The age of the user"""
   age
+
+  """The email of the user"""
   email
   id
+
+  """The name of the user"""
   name
 }
 
+"""A user"""
 input UserUpdateInput {
+  """The age of the user"""
   age: Int
+
+  """The email of the user"""
   email: String
   id: Int
+
+  """The name of the user"""
   name: String
 }

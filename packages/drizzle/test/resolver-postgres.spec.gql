@@ -1,138 +1,12 @@
-input DrizzlePostFilters {
-  OR: [DrizzlePostFiltersOr!]
-  authorId: PgIntegerFilters
-  content: PgTextFilters
-  id: PgSerialFilters
-  title: PgTextFilters
-}
-
-input DrizzlePostFiltersOr {
-  authorId: PgIntegerFilters
-  content: PgTextFilters
-  id: PgSerialFilters
-  title: PgTextFilters
-}
-
-input DrizzlePostInsertInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String!
-}
-
-input DrizzlePostInsertOnConflictDoNothingInput {
-  target: [DrizzlePostTableColumn!]
-  where: DrizzlePostFilters
-}
-
-input DrizzlePostInsertOnConflictDoUpdateInput {
-  set: DrizzlePostInsertInput
-  setWhere: DrizzlePostFilters
-  target: [DrizzlePostTableColumn!]!
-  targetWhere: DrizzlePostFilters
-}
-
-type DrizzlePostItem {
-  author: DrizzleUserItem
-  authorId: Int
-  content: String
-  id: Int!
-  title: String!
-}
-
-input DrizzlePostOrderBy {
-  authorId: OrderDirection
-  content: OrderDirection
-  id: OrderDirection
-  title: OrderDirection
-}
-
-enum DrizzlePostTableColumn {
-  authorId
-  content
-  id
-  title
-}
-
-input DrizzlePostUpdateInput {
-  authorId: Int
-  content: String
-  id: Int
-  title: String
-}
-
-input DrizzleUserFilters {
-  OR: [DrizzleUserFiltersOr!]
-  age: PgIntegerFilters
-  email: PgTextFilters
-  id: PgSerialFilters
-  name: PgTextFilters
-}
-
-input DrizzleUserFiltersOr {
-  age: PgIntegerFilters
-  email: PgTextFilters
-  id: PgSerialFilters
-  name: PgTextFilters
-}
-
-input DrizzleUserInsertInput {
-  age: Int
-  email: String
-  id: Int
-  name: String!
-}
-
-input DrizzleUserInsertOnConflictDoNothingInput {
-  target: [DrizzleUserTableColumn!]
-  where: DrizzleUserFilters
-}
-
-input DrizzleUserInsertOnConflictDoUpdateInput {
-  set: DrizzleUserInsertInput
-  setWhere: DrizzleUserFilters
-  target: [DrizzleUserTableColumn!]!
-  targetWhere: DrizzleUserFilters
-}
-
-type DrizzleUserItem {
-  age: Int
-  email: String
-  id: Int!
-  name: String!
-  posts: [DrizzlePostItem!]!
-}
-
-input DrizzleUserOrderBy {
-  age: OrderDirection
-  email: OrderDirection
-  id: OrderDirection
-  name: OrderDirection
-}
-
-enum DrizzleUserTableColumn {
-  age
-  email
-  id
-  name
-}
-
-input DrizzleUserUpdateInput {
-  age: Int
-  email: String
-  id: Int
-  name: String
-}
-
 type Mutation {
-  deleteFromPost(where: DrizzlePostFilters): [DrizzlePostItem!]!
-  deleteFromUser(where: DrizzleUserFilters): [DrizzleUserItem!]!
-  insertIntoPost(onConflictDoNothing: DrizzlePostInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzlePostInsertOnConflictDoUpdateInput, values: [DrizzlePostInsertInput!]!): [DrizzlePostItem!]!
-  insertIntoPostSingle(onConflictDoNothing: DrizzlePostInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzlePostInsertOnConflictDoUpdateInput, value: DrizzlePostInsertInput!): DrizzlePostItem
-  insertIntoUser(onConflictDoNothing: DrizzleUserInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzleUserInsertOnConflictDoUpdateInput, values: [DrizzleUserInsertInput!]!): [DrizzleUserItem!]!
-  insertIntoUserSingle(onConflictDoNothing: DrizzleUserInsertOnConflictDoNothingInput, onConflictDoUpdate: DrizzleUserInsertOnConflictDoUpdateInput, value: DrizzleUserInsertInput!): DrizzleUserItem
-  updatePost(set: DrizzlePostUpdateInput!, where: DrizzlePostFilters): [DrizzlePostItem!]!
-  updateUser(set: DrizzleUserUpdateInput!, where: DrizzleUserFilters): [DrizzleUserItem!]!
+  deleteFromPost(where: PostFilters): [Post!]!
+  deleteFromUser(where: UserFilters): [User!]!
+  insertIntoPost(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, values: [PostInsertInput!]!): [Post!]!
+  insertIntoPostSingle(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, value: PostInsertInput!): Post
+  insertIntoUser(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, values: [UserInsertInput!]!): [User!]!
+  insertIntoUserSingle(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, value: UserInsertInput!): User
+  updatePost(set: PostUpdateInput!, where: PostFilters): [Post!]!
+  updateUser(set: UserUpdateInput!, where: UserFilters): [User!]!
 }
 
 enum OrderDirection {
@@ -229,11 +103,173 @@ input PgTextFiltersOr {
   notLike: String
 }
 
+"""A post"""
+type Post {
+  author: User
+  authorId: Int
+  content: String
+  id: Int!
+
+  """The title of the post"""
+  title: String!
+}
+
+"""A post"""
+input PostFilters {
+  OR: [PostFiltersOr!]
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+
+  """The title of the post"""
+  title: PgTextFilters
+}
+
+input PostFiltersOr {
+  authorId: PgIntegerFilters
+  content: PgTextFilters
+  id: PgSerialFilters
+
+  """The title of the post"""
+  title: PgTextFilters
+}
+
+"""A post"""
+input PostInsertInput {
+  authorId: Int
+  content: String
+  id: Int
+
+  """The title of the post"""
+  title: String!
+}
+
+input PostInsertOnConflictDoNothingInput {
+  target: [PostTableColumn!]
+  where: PostFilters
+}
+
+input PostInsertOnConflictDoUpdateInput {
+  set: PostInsertInput
+  setWhere: PostFilters
+  target: [PostTableColumn!]!
+  targetWhere: PostFilters
+}
+
+input PostOrderBy {
+  authorId: OrderDirection
+  content: OrderDirection
+  id: OrderDirection
+
+  """The title of the post"""
+  title: OrderDirection
+}
+
+enum PostTableColumn {
+  authorId
+  content
+  id
+
+  """The title of the post"""
+  title
+}
+
+"""A post"""
+input PostUpdateInput {
+  authorId: Int
+  content: String
+  id: Int
+
+  """The title of the post"""
+  title: String
+}
+
 type Query {
-  post(limit: Int, offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): [DrizzlePostItem!]!
-  postCount(where: DrizzlePostFilters): Int!
-  postSingle(offset: Int, orderBy: [DrizzlePostOrderBy!], where: DrizzlePostFilters): DrizzlePostItem
-  user(limit: Int, offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): [DrizzleUserItem!]!
-  userCount(where: DrizzleUserFilters): Int!
-  userSingle(offset: Int, orderBy: [DrizzleUserOrderBy!], where: DrizzleUserFilters): DrizzleUserItem
+  post(limit: Int, offset: Int, orderBy: [PostOrderBy!], where: PostFilters): [Post!]!
+  postCount(where: PostFilters): Int!
+  postSingle(offset: Int, orderBy: [PostOrderBy!], where: PostFilters): Post
+  user(limit: Int, offset: Int, orderBy: [UserOrderBy!], where: UserFilters): [User!]!
+  userCount(where: UserFilters): Int!
+  userSingle(offset: Int, orderBy: [UserOrderBy!], where: UserFilters): User
+}
+
+"""A user"""
+type User {
+  age: Int
+  email: String
+  id: Int!
+
+  """The name of the user"""
+  name: String!
+  posts: [Post!]!
+}
+
+"""A user"""
+input UserFilters {
+  OR: [UserFiltersOr!]
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+
+  """The name of the user"""
+  name: PgTextFilters
+}
+
+input UserFiltersOr {
+  age: PgIntegerFilters
+  email: PgTextFilters
+  id: PgSerialFilters
+
+  """The name of the user"""
+  name: PgTextFilters
+}
+
+"""A user"""
+input UserInsertInput {
+  age: Int
+  email: String
+  id: Int
+
+  """The name of the user"""
+  name: String!
+}
+
+input UserInsertOnConflictDoNothingInput {
+  target: [UserTableColumn!]
+  where: UserFilters
+}
+
+input UserInsertOnConflictDoUpdateInput {
+  set: UserInsertInput
+  setWhere: UserFilters
+  target: [UserTableColumn!]!
+  targetWhere: UserFilters
+}
+
+input UserOrderBy {
+  age: OrderDirection
+  email: OrderDirection
+  id: OrderDirection
+
+  """The name of the user"""
+  name: OrderDirection
+}
+
+enum UserTableColumn {
+  age
+  email
+  id
+
+  """The name of the user"""
+  name
+}
+
+"""A user"""
+input UserUpdateInput {
+  age: Int
+  email: String
+  id: Int
+
+  """The name of the user"""
+  name: String
 }

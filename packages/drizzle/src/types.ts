@@ -62,10 +62,13 @@ export interface DrizzleSilkConfig<TTable extends Table>
   fields?: ValueOrGetter<{
     [K in keyof TTable["_"]["columns"]]?:
       | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
+          /**
+           * The type of the field, set to `null` to hide the field
+           */
           type?: GraphQLOutputType | null | undefined
         })
       | undefined
   }>
 }
 
-type ValueOrGetter<T> = T | (() => T)
+export type ValueOrGetter<T> = T | (() => T)
