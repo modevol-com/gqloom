@@ -16,7 +16,9 @@ import type {
   CountArgs,
   DeleteArgs,
   InsertArrayArgs,
+  InsertArrayWithOnConflictArgs,
   InsertSingleArgs,
+  InsertSingleWithOnConflictArgs,
   MutationResult,
   SelectArrayArgs,
   SelectSingleArgs,
@@ -159,11 +161,11 @@ export type InsertArrayMutation<
 
 export interface InsertArrayMutationReturningItems<
   TTable extends Table,
-  TInputI = InsertArrayArgs<TTable>,
+  TInputI = InsertArrayWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertArrayArgs<TTable>,
+    InsertArrayWithOnConflictArgs<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    GraphQLSilk<InsertArrayWithOnConflictArgs<TTable>, TInputI>
   > {}
 
 export interface InsertArrayMutationReturningSuccess<
@@ -184,14 +186,14 @@ export type InsertSingleMutation<
 
 export interface InsertSingleMutationReturningItem<
   TTable extends Table,
-  TInputI = InsertSingleArgs<TTable>,
+  TInputI = InsertSingleWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertSingleArgs<TTable>,
+    InsertSingleWithOnConflictArgs<TTable>,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    GraphQLSilk<InsertSingleWithOnConflictArgs<TTable>, TInputI>
   > {}
 
 export interface InsertSingleMutationReturningSuccess<

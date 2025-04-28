@@ -1,10 +1,10 @@
 type Mutation {
   deleteFromPost(where: PostFilters): [PostItem!]!
   deleteFromUser(where: UserFilters): [UserItem!]!
-  insertIntoPost(values: [PostInsertInput!]!): [PostItem!]!
-  insertIntoPostSingle(value: PostInsertInput!): PostItem
-  insertIntoUser(values: [UserInsertInput!]!): [UserItem!]!
-  insertIntoUserSingle(value: UserInsertInput!): UserItem
+  insertIntoPost(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, values: [PostInsertInput!]!): [PostItem!]!
+  insertIntoPostSingle(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, value: PostInsertInput!): PostItem
+  insertIntoUser(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, values: [UserInsertInput!]!): [UserItem!]!
+  insertIntoUserSingle(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, value: UserInsertInput!): UserItem
   updatePost(set: PostUpdateInput!, where: PostFilters): [PostItem!]!
   updateUser(set: UserUpdateInput!, where: UserFilters): [UserItem!]!
 }
@@ -36,6 +36,18 @@ input PostInsertInput {
   title: String!
 }
 
+input PostInsertOnConflictDoNothingInput {
+  target: [PostTableColumn!]
+  where: PostFilters
+}
+
+input PostInsertOnConflictDoUpdateInput {
+  set: PostInsertInput
+  setWhere: PostFilters
+  target: [PostTableColumn!]!
+  targetWhere: PostFilters
+}
+
 type PostItem {
   author: UserItem
   authorId: Int
@@ -49,6 +61,13 @@ input PostOrderBy {
   content: OrderDirection
   id: OrderDirection
   title: OrderDirection
+}
+
+enum PostTableColumn {
+  authorId
+  content
+  id
+  title
 }
 
 input PostUpdateInput {
@@ -157,6 +176,18 @@ input UserInsertInput {
   name: String!
 }
 
+input UserInsertOnConflictDoNothingInput {
+  target: [UserTableColumn!]
+  where: UserFilters
+}
+
+input UserInsertOnConflictDoUpdateInput {
+  set: UserInsertInput
+  setWhere: UserFilters
+  target: [UserTableColumn!]!
+  targetWhere: UserFilters
+}
+
 type UserItem {
   age: Int
   courses: [StudentToCourseItem!]!
@@ -171,6 +202,13 @@ input UserOrderBy {
   email: OrderDirection
   id: OrderDirection
   name: OrderDirection
+}
+
+enum UserTableColumn {
+  age
+  email
+  id
+  name
 }
 
 input UserUpdateInput {

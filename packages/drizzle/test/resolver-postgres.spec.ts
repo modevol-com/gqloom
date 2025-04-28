@@ -217,6 +217,104 @@ describe("resolver by postgres", () => {
       expect(Tina).toBeDefined()
     })
 
+    it("should insert a user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUser($values: [DrizzleUserInsertInput!]!, $doNothing: DrizzleUserInsertOnConflictDoNothingInput, $doUpdate: DrizzleUserInsertOnConflictDoUpdateInput) {
+          insertIntoUser(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, values: $values) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [{ name: "Tina" }],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "TinaInsert", id: 77 }],
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [{ name: "TinaUpdate" }],
+      })
+    })
+
+    it("should insert a single user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUserSingle($value: DrizzleUserInsertInput!, $doNothing: DrizzleUserInsertOnConflictDoNothingInput, $doUpdate: DrizzleUserInsertOnConflictDoUpdateInput) {
+          insertIntoUserSingle(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, value: $value) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: { name: "Tina" },
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: { name: "TinaUpdate" },
+      })
+    })
+
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
         mutation updateUser($set: DrizzleUserUpdateInput!, $where: DrizzleUserFilters!) {

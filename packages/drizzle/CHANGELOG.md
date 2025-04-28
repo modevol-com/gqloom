@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: add `onConflictDoUpdate` and `onConflictDoNothing` to insert mutation for Postgres and SQLite
+
 ## 0.8.4 (2025-04-21)
 
 - Fix: update resolver factory options type
