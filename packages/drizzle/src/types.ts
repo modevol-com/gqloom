@@ -1,6 +1,10 @@
 import { SYMBOLS, type WeaverConfig } from "@gqloom/core"
 import type { Column, Table } from "drizzle-orm"
-import type { GraphQLOutputType } from "graphql"
+import type {
+  GraphQLFieldConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+} from "graphql"
 
 /**
  * Config options for DrizzleWeaver
@@ -52,3 +56,16 @@ export type DrizzleFactoryInputVisibilityBehaviors<TTable extends Table> = {
    */
   "*"?: VisibilityBehavior | boolean | undefined
 }
+
+export interface DrizzleSilkConfig<TTable extends Table>
+  extends Partial<Omit<GraphQLObjectTypeConfig<any, any>, "fields">> {
+  fields?: ValueOrGetter<{
+    [K in keyof TTable["_"]["columns"]]?:
+      | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
+          type?: GraphQLOutputType | null | undefined
+        })
+      | undefined
+  }>
+}
+
+type ValueOrGetter<T> = T | (() => T)
