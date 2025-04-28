@@ -48,7 +48,7 @@ import {
   DrizzleWeaver,
   type TableSilk,
 } from ".."
-import { inArrayMultiple } from "../helper"
+import { inArrayMultiple, matchQueryBuilder } from "../helper"
 import {
   type ColumnFilters,
   type CountArgs,
@@ -62,7 +62,6 @@ import {
   type UpdateArgs,
 } from "./input"
 import type {
-  AnyQueryBuilder,
   BaseDatabase,
   CountQuery,
   DeleteMutation,
@@ -393,7 +392,8 @@ export abstract class DrizzleResolverFactory<
       relationName
     ] as Relation
     const targetTable = relation?.targetTable
-    if (!relation || !(targetTable instanceof Table)) {
+    const queryBuilder = matchQueryBuilder(this.db.query, targetTable)
+    if (!relation || !(targetTable instanceof Table) || !queryBuilder) {
       throw new Error(
         `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
           relationName
@@ -402,10 +402,6 @@ export abstract class DrizzleResolverFactory<
     }
 
     const output = DrizzleWeaver.unravel(targetTable)
-    const tableName = getTableName(targetTable)
-    const queryBuilder = this.db.query[
-      tableName as keyof typeof this.db.query
-    ] as AnyQueryBuilder
 
     const isList = relation instanceof Many
     const fieldsLength = relation.sourceColumns.length
