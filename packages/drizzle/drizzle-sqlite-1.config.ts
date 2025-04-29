@@ -6,4 +6,11 @@ export default defineConfig({
   dbCredentials: {
     url: "file:./test/schema/sqlite-1.db",
   },
+  tablesFilter: [
+    "users",
+    "posts",
+    "courses",
+    "studentToCourses",
+    "studentCourseGrades",
+  ],
 })

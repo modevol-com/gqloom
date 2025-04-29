@@ -74,9 +74,9 @@ export type DrizzleResolverRelations<
   TTable extends Table,
 > = {
   [TRelationName in keyof InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
+    QueryBuilder<TDatabase, TTable>
   >["relations"]]: InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
+    QueryBuilder<TDatabase, TTable>
   >["relations"][TRelationName] extends Many<any, any>
     ? RelationManyField<
         TTable,
@@ -101,7 +101,7 @@ export interface SelectArrayQuery<
 export type InferSelectArrayOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findMany"]>[0]
+> = Parameters<QueryBuilder<TDatabase, TTable>["findMany"]>[0]
 
 export interface CountQuery<
   TTable extends Table,
@@ -128,7 +128,7 @@ export interface SelectSingleQuery<
 export type InferSelectSingleOptions<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findFirst"]>[0]
+> = Parameters<QueryBuilder<TDatabase, TTable>["findFirst"]>[0]
 
 export interface RelationManyField<
   TTable extends Table,
@@ -251,9 +251,11 @@ export interface DeleteMutationReturningSuccess<
 
 export type QueryBuilder<
   TDatabase extends BaseDatabase,
-  TTableName extends keyof TDatabase["_"]["schema"],
-> = TDatabase["query"] extends { [key in TTableName]: any }
-  ? TDatabase["query"][TTableName]
+  TTable extends Table,
+> = TDatabase["query"] extends {
+  [key in InferTableTsName<TDatabase, TTable>]: any
+}
+  ? TDatabase["query"][InferTableTsName<TDatabase, TTable>]
   : never
 
 export type AnyQueryBuilder =
@@ -286,6 +288,37 @@ export type BaseDatabase =
   | PgDatabase<any, any, AnyRelations, any, any>
   | MySqlDatabase<any, any, any, AnyRelations, any, any>
 
+export type InferTablesConfig<TDatabase extends BaseDatabase> =
+  TDatabase extends BaseSQLiteDatabase<
+    any,
+    any,
+    any,
+    any,
+    infer TTablesConfig,
+    any
+  >
+    ? TTablesConfig
+    : TDatabase extends PgDatabase<any, any, any, infer TTablesConfig, any>
+      ? TTablesConfig
+      : TDatabase extends MySqlDatabase<
+            any,
+            any,
+            any,
+            any,
+            infer TTablesConfig,
+            any
+          >
+        ? TTablesConfig
+        : never
+
+export type InferTableTsName<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+> = Extract<
+  ValueOf<InferTablesConfig<TDatabase>>,
+  { dbName: TTable["_"]["name"] }
+>["tsName"]
+
 export type InferTableName<TTable extends Table> = TTable["_"]["name"]
 
 export type InferRelationTable<
@@ -294,3 +327,5 @@ export type InferRelationTable<
   TTargetTableName extends
     keyof TDatabase["_"]["relations"]["config"][TTable["_"]["name"]],
 > = TDatabase["_"]["relations"]["config"][TTable["_"]["name"]]["relations"][TTargetTableName]["targetTable"]
+
+type ValueOf<T> = T[keyof T]

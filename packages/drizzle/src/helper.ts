@@ -6,7 +6,6 @@ import {
   getTableName,
   sql,
 } from "drizzle-orm"
-import type { AnyQueryBuilder } from "./factory"
 import type {
   DrizzleFactoryInputVisibilityBehaviors,
   ValueOrGetter,
@@ -95,15 +94,4 @@ export function getValue<T>(valueOrGetter: ValueOrGetter<T>): T {
   return typeof valueOrGetter === "function"
     ? (valueOrGetter as () => T)()
     : valueOrGetter
-}
-
-export function matchQueryBuilder(
-  queries: Record<string, any>,
-  targetTable: any
-): AnyQueryBuilder | undefined {
-  for (const qb of Object.values(queries)) {
-    if (qb.table != null && qb.table === targetTable) {
-      return qb
-    }
-  }
 }

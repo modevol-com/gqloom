@@ -7,5 +7,5 @@ export default defineConfig({
   dbCredentials: {
     url: config.mysqlUrl,
   },
-  tablesFilter: ["drizzle_*"],
+  tablesFilter: ["users", "posts"],
 })

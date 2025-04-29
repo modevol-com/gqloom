@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from "drizzle-orm"
+import { defineRelations, eq, inArray, sql } from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
@@ -25,6 +25,7 @@ import {
 import type {
   InferSelectArrayOptions,
   InferSelectSingleOptions,
+  InferTableTsName,
 } from "../src/factory/types"
 import * as mysqlSchemas from "./schema/mysql"
 import { relations as mysqlRelations } from "./schema/mysql-relations"
@@ -528,6 +529,74 @@ describe.concurrent("DrizzleResolverFactory", () => {
         .relationField("author")
         .description("author")
       expect(authorField).toBeDefined()
+    })
+
+    it("should be created with simple naming conventions", () => {
+      const users = sqlite.sqliteTable("users", {
+        id: sqlite.integer("id").primaryKey(),
+        name: sqlite.text("name"),
+      })
+      const posts = sqlite.sqliteTable("posts", {
+        id: sqlite.integer("id").primaryKey(),
+        title: sqlite.text("title"),
+        authorId: sqlite.integer("authorId").references(() => users.id),
+      })
+
+      const relations = defineRelations({ users, posts }, (r) => ({
+        users: {
+          posts: r.many.posts(),
+        },
+        posts: {
+          author: r.one.users({
+            from: r.posts.authorId,
+            to: r.users.id,
+          }),
+        },
+      }))
+      const db0 = sqliteDrizzle({
+        relations,
+        connection: ":memory:",
+      })
+
+      const userFactory = drizzleResolverFactory(db0, users)
+      const postsField = userFactory.relationField("posts")
+      expect(postsField).toBeDefined()
+    })
+
+    it("should be created with complex naming conventions", () => {
+      const User = sqlite.sqliteTable("user", {
+        id: sqlite.integer("id").primaryKey(),
+        name: sqlite.text("name"),
+      })
+      const Post = sqlite.sqliteTable("post", {
+        id: sqlite.integer("id").primaryKey(),
+        title: sqlite.text("title"),
+        authorId: sqlite.integer("authorId").references(() => User.id),
+      })
+
+      const relations = defineRelations({ users: User, posts: Post }, (r) => ({
+        users: {
+          posts: r.many.posts(),
+        },
+        posts: {
+          author: r.one.users({
+            from: r.posts.authorId,
+            to: r.users.id,
+          }),
+        },
+      }))
+      const db0 = sqliteDrizzle({
+        relations,
+        connection: ":memory:",
+      })
+
+      type postTsName = InferTableTsName<typeof db0, typeof Post>
+      expectTypeOf<postTsName>("posts")
+      expectTypeOf<InferTableTsName<typeof db0, typeof User>>("users")
+
+      const userFactory = drizzleResolverFactory(db0, User)
+      const postsField = userFactory.relationField("posts")
+      expect(postsField).toBeDefined()
     })
 
     it("should resolve correctly", async () => {

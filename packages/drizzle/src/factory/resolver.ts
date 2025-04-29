@@ -22,6 +22,8 @@ import {
   type Relation,
   type SQL,
   Table,
+  type TableRelationalConfig,
+  type TablesRelationalConfig,
   and,
   eq,
   getTableColumns,
@@ -48,7 +50,8 @@ import {
   DrizzleWeaver,
   type TableSilk,
 } from ".."
-import { inArrayMultiple, matchQueryBuilder } from "../helper"
+import type { AnyQueryBuilder } from "../../dist/index.d.cts"
+import { inArrayMultiple } from "../helper"
 import {
   type ColumnFilters,
   type CountArgs,
@@ -86,10 +89,7 @@ export abstract class DrizzleResolverFactory<
 > {
   protected readonly inputFactory: DrizzleInputFactory<typeof this.table>
   protected readonly tableName: InferTableName<TTable>
-  protected readonly queryBuilder: QueryBuilder<
-    TDatabase,
-    InferTableName<TTable>
-  >
+  protected readonly queryBuilder: QueryBuilder<TDatabase, TTable>
   public constructor(
     protected readonly db: TDatabase,
     protected readonly table: TTable,
@@ -97,16 +97,14 @@ export abstract class DrizzleResolverFactory<
   ) {
     this.inputFactory = new DrizzleInputFactory(table, options)
     this.tableName = getTableName(table)
-    const queryBuilder = this.db.query[
-      this.tableName as keyof typeof this.db.query
-    ] as QueryBuilder<TDatabase, InferTableName<TTable>>
+    const queryBuilder = matchQueryBuilder(this.db.query, this.table)
 
     if (!queryBuilder) {
       throw new Error(
         `GQLoom-Drizzle Error: Table ${this.tableName} not found in drizzle instance. Did you forget to pass schema to drizzle constructor?`
       )
     }
-    this.queryBuilder = queryBuilder
+    this.queryBuilder = queryBuilder as QueryBuilder<TDatabase, TTable>
   }
 
   private _output?: TableSilk<TTable>
@@ -358,14 +356,14 @@ export abstract class DrizzleResolverFactory<
 
   public relationField<
     TRelationName extends keyof InferTableRelationalConfig<
-      QueryBuilder<TDatabase, InferTableName<TTable>>
+      QueryBuilder<TDatabase, TTable>
     >["relations"],
   >(
     relationName: TRelationName,
     options?: GraphQLFieldOptions & {
       middlewares?: Middleware<
         InferTableRelationalConfig<
-          QueryBuilder<TDatabase, InferTableName<TTable>>
+          QueryBuilder<TDatabase, TTable>
         >["relations"][TRelationName] extends Many<any, any>
           ? RelationManyField<
               TTable,
@@ -378,7 +376,7 @@ export abstract class DrizzleResolverFactory<
       >[]
     }
   ): InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
+    QueryBuilder<TDatabase, TTable>
   >["relations"][TRelationName] extends Many<any, any>
     ? RelationManyField<
         TTable,
@@ -388,12 +386,23 @@ export abstract class DrizzleResolverFactory<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
       > {
-    const relation = this.db._.relations["config"]?.[this.tableName]?.[
-      relationName
-    ] as Relation
-    const targetTable = relation?.targetTable
-    const queryBuilder = matchQueryBuilder(this.db.query, targetTable)
-    if (!relation || !(targetTable instanceof Table) || !queryBuilder) {
+    const [relation, queryBuilder, targetTable] = (() => {
+      const tableKey = matchTableByTablesConfig(
+        this.db._.relations.tablesConfig,
+        this.table
+      )?.tsName
+      if (!tableKey) return [undefined, undefined, undefined]
+      const relation = this.db._.relations["config"]?.[tableKey]?.[
+        relationName
+      ] as Relation
+      const targetTable = relation?.targetTable
+      return [
+        relation,
+        matchQueryBuilder(this.db.query, targetTable),
+        targetTable,
+      ]
+    })()
+    if (!queryBuilder || !relation || !(targetTable instanceof Table)) {
       throw new Error(
         `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
           relationName
@@ -528,4 +537,26 @@ export abstract class DrizzleResolverFactory<
       middlewares?: Middleware[]
     }
   ): DeleteMutation<TTable, TInputI>
+}
+
+function matchTableByTablesConfig(
+  tablesConfig: TablesRelationalConfig,
+  targetTable: Table
+): TableRelationalConfig | undefined {
+  for (const config of Object.values(tablesConfig)) {
+    if (config.table === targetTable) {
+      return config
+    }
+  }
+}
+
+function matchQueryBuilder(
+  queries: Record<string, any>,
+  targetTable: any
+): AnyQueryBuilder | undefined {
+  for (const qb of Object.values(queries)) {
+    if (qb.table != null && qb.table === targetTable) {
+      return qb
+    }
+  }
 }
