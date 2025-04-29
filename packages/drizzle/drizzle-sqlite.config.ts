@@ -12,6 +12,5 @@ export default defineConfig({
     "course",
     "studentToCourse",
     "studentCourseGrade",
-    "studentCourseGrade",
   ],
 })
