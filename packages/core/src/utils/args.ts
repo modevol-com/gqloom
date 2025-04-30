@@ -9,7 +9,7 @@ import type {
 export function getOperationOptions(
   resolveOrOptions:
     | ((...args: any) => any)
-    | FieldOptions<any, any, any>
+    | FieldOptions<any, any, any, any>
     | QueryOptions<any, any>
     | MutationOptions<any, any>
 ) {

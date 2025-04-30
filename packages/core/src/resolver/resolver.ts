@@ -106,7 +106,12 @@ export const createField = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
     | ((parent: unknown) => unknown)
-    | FieldOptions<any, any, any>
+    | FieldOptions<
+        GraphQLSilk,
+        GraphQLSilk,
+        GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+        string[] | undefined
+      >
 ) => {
   if (resolveOrOptions == null) {
     return new FieldChainFactory({ output })
@@ -116,6 +121,7 @@ export const createField = (
   return meta({
     ...getFieldOptions(options),
     input: options.input,
+    dependencies: options.dependencies,
     output,
     resolve: (parent, inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
@@ -127,7 +133,7 @@ export const createField = (
       )
     },
     operation,
-  }) as Loom.Field<any, any, any>
+  }) as Loom.Field<any, any, any, any>
 }
 
 export const field: FieldFactoryWithUtils = Object.assign(
@@ -265,7 +271,7 @@ export interface ResolverFactory {
     TParent extends GraphQLSilk,
     TFields extends Record<
       string,
-      Loom.Field<TParent, any, any> | Loom.Operation | typeof FIELD_HIDDEN
+      Loom.Field<TParent, any, any, any> | Loom.Operation | typeof FIELD_HIDDEN
     >,
   >(
     parent: TParent,
