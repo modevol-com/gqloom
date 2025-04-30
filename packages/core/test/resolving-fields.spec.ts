@@ -2,7 +2,7 @@ import { type GraphQLResolveInfo, GraphQLString, execute, parse } from "graphql"
 import { describe, expect, it } from "vitest"
 import { query, resolver, silk, useResolverPayload, weave } from "../src"
 
-describe("selected fields", () => {
+describe("resolving fields", () => {
   let info: GraphQLResolveInfo
   const simpleResolver = resolver({
     hello: query(silk(GraphQLString)).resolve(() => {
