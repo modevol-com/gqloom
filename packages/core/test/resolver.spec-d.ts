@@ -243,7 +243,7 @@ describe("resolver type", () => {
       }),
 
       age1: field(silk<number>(GraphQLInt))
-        .select("birthday")
+        .derivedFrom("birthday")
         .resolve(async (giraffe) => {
           it("should infer parent type", () => {
             expectTypeOf(giraffe).toEqualTypeOf<

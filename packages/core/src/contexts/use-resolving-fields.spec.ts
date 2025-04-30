@@ -2,7 +2,10 @@ import { GraphQLObjectType, GraphQLString, execute, parse } from "graphql"
 import { describe, expect, it } from "vitest"
 import { field, query, resolver, silk } from "../resolver"
 import { weave } from "../schema"
-import { useResolvingFields } from "./use-resolving-fields"
+import {
+  type ResolvingFields,
+  useResolvingFields,
+} from "./use-resolving-fields"
 
 describe("useResolvingFields", () => {
   const Cat = silk(
@@ -18,13 +21,11 @@ describe("useResolvingFields", () => {
     })
   )
 
-  let resolvingFields: Set<string> | undefined
-  let selectedFields: Set<string> | undefined
+  let resolvingFields: ResolvingFields | undefined
 
   const CatResolver = resolver.of(Cat, {
     cat: query(Cat).resolve(() => {
-      resolvingFields = useResolvingFields()?.resolvingFields
-      selectedFields = useResolvingFields()?.selectedFields
+      resolvingFields = useResolvingFields()
       return {
         firstName: "John",
         lastName: "Doe",
@@ -32,7 +33,7 @@ describe("useResolvingFields", () => {
     }),
 
     fullname: field(silk(GraphQLString))
-      .select("firstName", "lastName")
+      .derivedFrom("firstName", "lastName")
       .resolve((cat) => {
         return `${cat.firstName} ${cat.lastName}`
       }),
@@ -53,8 +54,12 @@ describe("useResolvingFields", () => {
       `),
     })
     expect(result.errors).toBeUndefined()
-    expect(resolvingFields).toEqual(new Set(["firstName", "lastName"]))
-    expect(selectedFields).toEqual(new Set(["firstName", "lastName"]))
+    expect(resolvingFields?.requestedFields).toEqual(
+      new Set(["firstName", "lastName"])
+    )
+    expect(resolvingFields?.selectedFields).toEqual(
+      new Set(["firstName", "lastName"])
+    )
   })
 
   it("should return the derived dependencies", async () => {
@@ -69,7 +74,9 @@ describe("useResolvingFields", () => {
       `),
     })
     expect(result.errors).toBeUndefined()
-    expect(resolvingFields).toEqual(new Set(["fullname"]))
-    expect(selectedFields).toEqual(new Set(["firstName", "lastName"]))
+    expect(resolvingFields?.requestedFields).toEqual(new Set(["fullname"]))
+    expect(resolvingFields?.selectedFields).toEqual(
+      new Set(["firstName", "lastName"])
+    )
   })
 })

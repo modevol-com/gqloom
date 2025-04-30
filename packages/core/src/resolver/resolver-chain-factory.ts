@@ -133,7 +133,7 @@ export class FieldChainFactory<
     return new FieldChainFactory({ ...this.options, input })
   }
 
-  public select<const TDependencies extends string[]>(
+  public derivedFrom<const TDependencies extends string[]>(
     ...dependencies: TDependencies
   ): FieldChainFactory<TOutput, TInput, TDependencies> {
     return this.clone({ dependencies }) as any
