@@ -180,10 +180,10 @@ export interface FieldOptions<
   resolve: (
     parent: TDependencies extends string[]
       ? RequireKeys<
-          StandardSchemaV1.InferOutput<TParent>,
+          NonNullable<StandardSchemaV1.InferOutput<TParent>>,
           TDependencies[number]
         >
-      : StandardSchemaV1.InferOutput<TParent>,
+      : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
     input: InferInputO<TInput>
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }

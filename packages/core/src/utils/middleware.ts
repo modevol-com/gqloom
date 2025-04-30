@@ -22,10 +22,10 @@ type InferFieldParent<TField extends Loom.BaseField> =
   TField extends Loom.Field<infer TParent, any, any, infer TDependencies>
     ? TDependencies extends string[]
       ? RequireKeys<
-          StandardSchemaV1.InferOutput<TParent>,
+          NonNullable<StandardSchemaV1.InferOutput<TParent>>,
           TDependencies[number]
         >
-      : StandardSchemaV1.InferOutput<TParent>
+      : NonNullable<StandardSchemaV1.InferOutput<TParent>>
     : undefined
 
 export interface CallableMiddlewareOptions<

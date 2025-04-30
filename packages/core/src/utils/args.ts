@@ -1,3 +1,4 @@
+import type { GraphQLFieldExtensions } from "graphql"
 import type {
   FieldOptions,
   GraphQLFieldOptions,
@@ -28,14 +29,15 @@ export function getSubscriptionOptions(
   return subscribeOrOptions
 }
 
-export function getFieldOptions({
-  description,
-  deprecationReason,
-  extensions,
-}: GraphQLFieldOptions): GraphQLFieldOptions {
+export function getFieldOptions(
+  { description, deprecationReason, extensions }: GraphQLFieldOptions,
+  extraExtensions?: GraphQLFieldExtensions<any, any, any>
+): GraphQLFieldOptions {
   return {
     description,
     deprecationReason,
-    extensions,
+    extensions: extraExtensions
+      ? { ...extensions, ...extraExtensions }
+      : extensions,
   }
 }

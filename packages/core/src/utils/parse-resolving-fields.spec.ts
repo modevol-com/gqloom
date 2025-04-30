@@ -5,9 +5,9 @@ import {
   type GraphQLResolveInfo,
   GraphQLString,
   GraphQLUnionType,
+  execute,
   parse,
 } from "graphql"
-import { execute } from "graphql"
 import { describe, expect, it } from "vitest"
 import {
   field,

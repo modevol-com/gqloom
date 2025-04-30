@@ -102,6 +102,8 @@ export const mutation: MutationFactoryWithChain = Object.assign(
   MutationChainFactory.methods()
 )
 
+export const DERIVED_DEPENDENCIES = "loom.derived-from-dependencies"
+
 export const createField = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
@@ -119,7 +121,9 @@ export const createField = (
   const options = getOperationOptions(resolveOrOptions)
   const operation = "field"
   return meta({
-    ...getFieldOptions(options),
+    ...getFieldOptions(options, {
+      [DERIVED_DEPENDENCIES]: options.dependencies,
+    }),
     input: options.input,
     dependencies: options.dependencies,
     output,

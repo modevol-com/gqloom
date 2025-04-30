@@ -16,6 +16,7 @@ import {
   createInputParser,
 } from "./input"
 import {
+  DERIVED_DEPENDENCIES,
   createField,
   createMutation,
   createQuery,
@@ -142,10 +143,10 @@ export class FieldChainFactory<
     resolve: (
       parent: TDependencies extends string[]
         ? RequireKeys<
-            StandardSchemaV1.InferOutput<TParent>,
+            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
             TDependencies[number]
           >
-        : StandardSchemaV1.InferOutput<TParent>,
+        : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
       input: InferInputO<TInput>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
@@ -160,12 +161,12 @@ export class FieldChainFactory<
     resolve: (
       parents: (TDependencies extends string[]
         ? RequireKeys<
-            StandardSchemaV1.InferOutput<TParent>,
+            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
             TDependencies[number]
           >
-        : StandardSchemaV1.InferOutput<TParent>)[],
+        : NonNullable<StandardSchemaV1.InferOutput<TParent>>)[],
       input: InferInputO<TInput>
-    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
+    ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
   ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
 
@@ -186,7 +187,9 @@ export class FieldChainFactory<
 
     const operation = "field"
     return meta({
-      ...getFieldOptions(this.options),
+      ...getFieldOptions(this.options, {
+        [DERIVED_DEPENDENCIES]: this.options.dependencies,
+      }),
       operation,
       input: this.options.input as TInput,
       output: this.options.output as TOutput,
