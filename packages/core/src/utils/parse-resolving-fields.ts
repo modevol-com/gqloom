@@ -12,10 +12,14 @@ import {
  * Supports @include, @skip directives, fragments, and variables.
  *
  * @param info - The GraphQL resolve info object containing the query information
+ * @param maxDepth - Maximum depth of nested fields to parse (default: 1)
  * @returns A Set of field paths
  */
-export function parseResolvingFields(info: GraphQLResolveInfo): Set<string> {
-  return new ResolvingFieldsParser(info).parse()
+export function parseResolvingFields(
+  info: GraphQLResolveInfo,
+  maxDepth: number = 1
+): Set<string> {
+  return new ResolvingFieldsParser(info, maxDepth).parse()
 }
 
 /**
@@ -28,9 +32,12 @@ class ResolvingFieldsParser {
   private visitedFragments = new Set<string>()
   /** The GraphQL resolve info object */
   private info: GraphQLResolveInfo
+  /** Maximum depth of nested fields to parse */
+  private maxDepth: number
 
-  public constructor(info: GraphQLResolveInfo) {
+  public constructor(info: GraphQLResolveInfo, maxDepth: number) {
     this.info = info
+    this.maxDepth = maxDepth
   }
 
   /**
@@ -52,12 +59,15 @@ class ResolvingFieldsParser {
    *
    * @param selectionSet - The selection set to process
    * @param parentPath - The path of the parent field (for nested fields)
+   * @param currentDepth - Current depth of recursion
    */
   private collectFields(
     selectionSet?: SelectionSetNode,
-    parentPath: string = ""
+    parentPath: string = "",
+    currentDepth: number = 0
   ): void {
-    if (!selectionSet?.selections.length) return
+    if (!selectionSet?.selections.length || currentDepth >= this.maxDepth)
+      return
 
     for (const selection of selectionSet.selections) {
       // Skip if directives indicate this node should be excluded
@@ -75,7 +85,11 @@ class ResolvingFieldsParser {
           // Process nested fields if they exist
           const hasSelectionSet = selection.selectionSet != null
           if (hasSelectionSet) {
-            this.collectFields(selection.selectionSet, fieldPath)
+            this.collectFields(
+              selection.selectionSet,
+              fieldPath,
+              currentDepth + 1
+            )
           }
           break
         }
@@ -83,7 +97,7 @@ class ResolvingFieldsParser {
         case Kind.INLINE_FRAGMENT: {
           // Handle inline fragments
           if (selection.selectionSet) {
-            this.collectFields(selection.selectionSet, parentPath)
+            this.collectFields(selection.selectionSet, parentPath, currentDepth)
           }
           break
         }
@@ -97,7 +111,7 @@ class ResolvingFieldsParser {
 
           const fragment = this.info.fragments[fragmentName]
           if (fragment) {
-            this.collectFields(fragment.selectionSet, parentPath)
+            this.collectFields(fragment.selectionSet, parentPath, currentDepth)
           }
           break
         }
