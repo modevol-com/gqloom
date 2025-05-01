@@ -21,6 +21,7 @@ export default defineConfig({
   mdxOptions: {
     remarkPlugins: [remarkInstall],
     rehypeCodeOptions: {
+      langs: ["ts", "js", "json", "bash", "graphql", "gql"],
       themes: {
         light: "github-light",
         dark: "github-dark",
