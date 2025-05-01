@@ -4,7 +4,7 @@
   "description": "Create GraphQL schema and resolvers with TypeScript, using Zod, Valibot or Yup!",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run --typecheck -u",
+    "test": "vitest run --typecheck",
     "coverage": "vitest run --coverage",
     "format": "biome format --write .",
     "lint": "biome lint --write .",

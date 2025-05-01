@@ -1,7 +1,7 @@
 import { createServer } from "node:http"
 import { query, resolver, subscription, weave } from "@gqloom/zod"
 import { createPubSub, createYoga } from "graphql-yoga"
-import { z } from "zod"
+import * as z from "zod"
 
 const CountdownResolver = resolver({
   countdown: subscription(z.number())

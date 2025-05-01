@@ -1,6 +1,6 @@
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { cats } from "../schema"
@@ -10,10 +10,9 @@ const catResolverFactory = drizzleResolverFactory(db, "cats")
 export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
-  age: field(z.number().int())
+  age: field(z.int())
     .input({
       currentYear: z
-        .number()
         .int()
         .nullish()
         .transform((x) => x ?? new Date().getFullYear()),

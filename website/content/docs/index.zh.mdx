@@ -49,7 +49,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 ```ts twoslash tab="zod"
 import { resolver, query, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())

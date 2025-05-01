@@ -28,7 +28,7 @@ export const schema = weave(ValibotWeaver, giraffeResolver)
 ```ts twoslash tab="zod"
 import { field, resolver, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 
 const Giraffe = z.object({
   __typename: z.literal("Giraffe").nullish(),
