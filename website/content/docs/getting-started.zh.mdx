@@ -600,6 +600,21 @@ export const userResolver = resolver({
   <Tab>
 ```ts title="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { userResolver } from "./user"  // [!code ++]
+
+const helloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello ${name}!`),
+})
+
+export const resolvers = [helloResolver, userResolver]  // [!code ++]
+```
+  </Tab>
+  <Tab>
+```ts title="src/resolvers/index.ts"
+import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
 import { userResolver } from "./user" // [!code ++]
 
@@ -615,21 +630,6 @@ const helloResolver = resolver({
 })
 
 export const resolvers = [helloResolver, userResolver] // [!code ++]
-```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
-import { userResolver } from "./user"  // [!code ++]
-
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
-
-export const resolvers = [helloResolver, userResolver]  // [!code ++]
 ```
   </Tab>
   </Tabs>
