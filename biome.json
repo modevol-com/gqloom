@@ -5,6 +5,7 @@
     "ignoreUnknown": false,
     "ignore": [
       "**/dist/**/*",
+      ".vercel/",
       "website/.next/",
       "docs/doc_build/",
       "**/generated/**/*",
