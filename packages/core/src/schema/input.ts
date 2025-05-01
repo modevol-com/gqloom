@@ -27,7 +27,7 @@ interface EnsureInputOptions {
 }
 
 export function inputToArgs(
-  input: GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+  input: GraphQLSilk | Record<string, GraphQLSilk> | undefined | void,
   options: EnsureInputOptions | undefined
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined

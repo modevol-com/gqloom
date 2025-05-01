@@ -34,10 +34,7 @@ import type {
 
 export interface IChainFactory<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > {
   description(description: GraphQLFieldOptions["description"]): this
 
@@ -216,10 +213,7 @@ export class FieldChainFactory<
 
 export class QueryChainFactory<
     TOutput extends GraphQLSilk = never,
-    TInput extends
-      | GraphQLSilk
-      | Record<string, GraphQLSilk>
-      | undefined = undefined,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
   >
   extends BaseChainFactory<Loom.Query<TOutput, TInput>>
   implements IChainFactory<TOutput, TInput>
@@ -231,7 +225,7 @@ export class QueryChainFactory<
       input: QueryChainFactory.prototype.input,
       resolve: QueryChainFactory.prototype.resolve,
       clone: QueryChainFactory.prototype.clone,
-    } as any as QueryChainFactory<never, undefined>
+    } as any as QueryChainFactory<never, void>
   }
 
   protected clone(options?: Partial<ChainFactoryOptions>): this {

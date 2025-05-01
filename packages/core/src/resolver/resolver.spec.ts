@@ -7,9 +7,10 @@ import {
   lexicographicSortSchema,
   printSchema,
 } from "graphql"
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { weave } from "../schema"
 import type { Middleware } from "../utils"
+import { createMemoization } from "../utils/context"
 import { field, mutation, query, resolver } from "./resolver"
 import { silk } from "./silk"
 
@@ -335,5 +336,91 @@ describe("resolver", () => {
 
     const g = schema.getType("Giraffe") as GraphQLObjectType<IGiraffe>
     expect(g.extensions).toEqual({ foo: "bar" })
+  })
+})
+
+describe("executor", () => {
+  /** name -> giraffe */
+  const giraffeMap = new Map<string, IGiraffe>()
+
+  const useDefaultName = createMemoization(() => "Giraffe")
+
+  const giraffeResolver = resolver.of(Giraffe, {
+    age: field(silk(GraphQLInt), async (giraffe) => {
+      return new Date().getFullYear() - giraffe.birthday.getFullYear()
+    }),
+
+    giraffe: query(silk.nullable(Giraffe))
+      .input({ name: silk(new GraphQLNonNull(GraphQLString)) })
+      .resolve(({ name }) => {
+        return giraffeMap.get(name)
+      }),
+    allGiraffes: query(silk.list(Giraffe)).resolve(() =>
+      Array.from(giraffeMap.values())
+    ),
+
+    saveGiraffe: mutation(Giraffe)
+      .input(GiraffeInput)
+      .resolve((data) => {
+        const giraffe = {
+          name: data.name ?? useDefaultName(),
+          birthday: new Date(data.birthday ?? new Date()),
+          heightInMeters: data.heightInMeters ?? 5,
+        }
+        giraffeMap.set(giraffe.name, giraffe)
+        return giraffe
+      }),
+  })
+
+  let logs: string[] = []
+  giraffeResolver.use(async (next) => {
+    logs.push("before")
+    const result = await next()
+    logs.push("after")
+    return result
+  })
+
+  beforeEach(() => {
+    giraffeMap.clear()
+    logs = []
+  })
+  afterEach(() => {
+    giraffeMap.clear()
+    logs = []
+  })
+
+  it("should work", async () => {
+    const executor = giraffeResolver.toExecutor()
+
+    const saved = await executor.saveGiraffe({ name: "Skyler" })
+    expect(saved).toEqual({
+      name: "Skyler",
+      birthday: expect.any(Date),
+      heightInMeters: 5,
+    })
+    expect(giraffeMap.get("Skyler")).toEqual(saved)
+
+    const giraffes = await executor.allGiraffes()
+    expect(giraffes).toEqual([saved])
+  })
+
+  it("should work with middlewares", async () => {
+    const executor = giraffeResolver.toExecutor()
+    await executor.saveGiraffe({ name: "Skyler" })
+    expect(logs).toEqual(["before", "after"])
+  })
+
+  it("should work with memoization", async () => {
+    const memoization = new WeakMap()
+    memoization.set(useDefaultName.key, "Skyler")
+
+    const executor = giraffeResolver.toExecutor({ memoization })
+    const saved = await executor.saveGiraffe({})
+
+    expect(saved).toEqual({
+      name: "Skyler",
+      birthday: new Date(),
+      heightInMeters: 5,
+    })
   })
 })

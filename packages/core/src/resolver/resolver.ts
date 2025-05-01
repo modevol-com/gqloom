@@ -10,6 +10,7 @@ import {
   getOperationOptions,
   getSubscriptionOptions,
   meta,
+  resolverPayloadStorage,
 } from "../utils"
 import { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
 import { createInputParser, getStandardValue } from "./input"
@@ -111,7 +112,7 @@ export const createField = (
     | FieldOptions<
         GraphQLSilk,
         GraphQLSilk,
-        GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+        GraphQLSilk | Record<string, GraphQLSilk> | void,
         string[] | undefined
       >
 ) => {
@@ -270,6 +271,10 @@ export const loom = {
   mutation,
 }
 
+export interface ToExecutorProps {
+  memoization?: WeakMap<WeakKey, any>
+}
+
 export interface ResolverFactory {
   of<
     TParent extends GraphQLSilk,
@@ -341,13 +346,25 @@ export class ChainResolver<
     return this
   }
 
-  public toExecutor(): Executor<TFields> {
+  public toExecutor({ memoization }: ToExecutorProps = {}): Executor<TFields> {
     const fields = this["~meta"].fields
     const executor: Record<string, (...args: any) => any> = {}
+    const payload = memoization
+      ? ({ memoization, isMemoization: true } as const)
+      : undefined
 
     Object.entries(fields).forEach(([name, field]) => {
       if (field === FIELD_HIDDEN) return
-      executor[name] = field["~meta"].resolve
+      if (payload != null) {
+        executor[name] = (...args: any[]) =>
+          resolverPayloadStorage.run<any, any[]>(
+            payload,
+            field["~meta"].resolve,
+            ...args
+          )
+      } else {
+        executor[name] = field["~meta"].resolve
+      }
     })
 
     return executor as Executor<TFields>

@@ -5,19 +5,19 @@ import { isSilk } from "./silk"
 import type { GraphQLSilk } from "./types"
 
 export type InferInputI<
-  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
-> = TInput extends undefined
-  ? undefined
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void,
+> = TInput extends void
+  ? void
   : TInput extends GraphQLSilk
     ? StandardSchemaV1.InferInput<TInput>
     : TInput extends Record<string, GraphQLSilk>
       ? {
           [K in keyof TInput]: StandardSchemaV1.InferInput<TInput[K]>
         }
-      : undefined
+      : void
 
 export type InferInputO<
-  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void,
 > = TInput extends undefined
   ? undefined
   : TInput extends GraphQLSilk
@@ -29,7 +29,7 @@ export type InferInputO<
       : never
 
 export interface CallableInputParser<
-  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | void,
 > {
   /**
    * input schema
@@ -58,7 +58,7 @@ export interface CallableInputParser<
 }
 
 export function createInputParser<
-  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | void,
 >(schema: TSchema, value: InferInputI<TSchema>): CallableInputParser<TSchema> {
   let result: StandardSchemaV1.Result<InferInputO<TSchema>> | undefined
 
@@ -81,7 +81,7 @@ export function createInputParser<
 }
 
 export function parseInputValue<
-  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+  TSchema extends GraphQLSilk | Record<string, GraphQLSilk> | void,
 >(
   inputSchema: TSchema,
   input: any
