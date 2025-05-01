@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Refactor(resolver): update input type handling to use 'void' instead of 'undefined'
+- Feat: add `memoization` prop to `Resolver.toExecutor()`
+- Feat: add `useResolvingFields` to get the fields that are being resolved
+
 ## 0.8.4 (2025-04-08)
 
 - Feat: add `screamingSnakeCase` to convert strings to screaming snake case

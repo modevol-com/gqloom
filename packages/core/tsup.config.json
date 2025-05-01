@@ -5,5 +5,6 @@
   "minify": false,
   "dts": true,
   "outDir": "./dist",
-  "clean": true
+  "clean": true,
+  "external": ["node:async_hooks"]
 }

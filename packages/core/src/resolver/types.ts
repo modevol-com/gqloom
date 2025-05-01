@@ -4,7 +4,7 @@ import type {
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
 } from "graphql"
-import type { MayPromise, Middleware } from "../utils"
+import type { MayPromise, Middleware, RequireKeys } from "../utils"
 import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type { InferInputO } from "./input"
 import type {
@@ -43,7 +43,7 @@ export interface ResolverOptionsWithExtensions<
 export interface ResolverOptionsWithParent<
   TField extends Loom.FieldOrOperation = Loom.FieldOrOperation,
 > extends ResolverOptionsWithExtensions<TField> {
-  parent?: TField extends Loom.Field<infer TParent, any, any>
+  parent?: TField extends Loom.Field<infer TParent, any, any, any>
     ? TParent
     : undefined
 }
@@ -72,10 +72,7 @@ export type InferFieldOutput<TField extends Loom.BaseField> =
  */
 export interface QueryOptions<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends ResolverOptions<Loom.Query<TOutput, TInput>>,
     GraphQLFieldOptions {
   input?: TInput
@@ -108,14 +105,11 @@ export interface QueryFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): Loom.Query<TOutput, undefined>
+  ): Loom.Query<TOutput, void>
 
   <
     TOutput extends GraphQLSilk,
-    TInput extends
-      | GraphQLSilk
-      | Record<string, GraphQLSilk>
-      | undefined = undefined,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
   >(
     output: TOutput,
     options: QueryOptions<TOutput, TInput>
@@ -123,12 +117,12 @@ export interface QueryFactory {
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
-  ): QueryChainFactory<TOutput, undefined>
+  ): QueryChainFactory<TOutput, void>
 }
 
 export interface QueryFactoryWithChain
   extends QueryFactory,
-    QueryChainFactory<never, undefined> {}
+    QueryChainFactory<never, void> {}
 
 /**
  * Function to create a GraphQL mutation.
@@ -168,15 +162,19 @@ export interface MutationFactoryWithChain
 export interface FieldOptions<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
-> extends ResolverOptions<Loom.Field<TParent, TOutput, TInput>>,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
+  TDependencies extends string[] | undefined = undefined,
+> extends ResolverOptions<Loom.Field<TParent, TOutput, TInput, TDependencies>>,
     GraphQLFieldOptions {
   input?: TInput
+  dependencies?: TDependencies
   resolve: (
-    parent: StandardSchemaV1.InferOutput<TParent>,
+    parent: TDependencies extends string[]
+      ? RequireKeys<
+          NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+          TDependencies[number]
+        >
+      : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
     input: InferInputO<TInput>
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
@@ -190,28 +188,56 @@ export interface FieldFactory {
     resolve: (
       parent: StandardSchemaV1.InferOutput<TParent>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): Loom.Field<TParent, TOutput, undefined>
+  ): Loom.Field<TParent, TOutput, undefined, undefined>
+
+  <TParent extends GraphQLSilk, TOutput extends GraphQLSilk>(
+    output: TOutput,
+    options: FieldOptions<TParent, TOutput, undefined, undefined>
+  ): Loom.Field<TParent, TOutput, undefined, undefined>
 
   <
     TParent extends GraphQLSilk,
     TOutput extends GraphQLSilk,
-    TInput extends
-      | GraphQLSilk
-      | Record<string, GraphQLSilk>
-      | undefined = undefined,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
   >(
     output: TOutput,
-    options: FieldOptions<TParent, TOutput, TInput>
-  ): Loom.Field<TParent, TOutput, TInput>
+    options: FieldOptions<TParent, TOutput, TInput, undefined> & {
+      input: TInput
+    }
+  ): Loom.Field<TParent, TOutput, TInput, undefined>
+
+  <
+    TParent extends GraphQLSilk,
+    TOutput extends GraphQLSilk,
+    const TDependencies extends string[] | undefined,
+  >(
+    output: TOutput,
+    options: FieldOptions<TParent, TOutput, undefined, TDependencies> & {
+      dependencies: TDependencies
+    }
+  ): Loom.Field<TParent, TOutput, undefined, TDependencies>
+
+  <
+    TParent extends GraphQLSilk,
+    TOutput extends GraphQLSilk,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+    TDependencies extends string[] | undefined,
+  >(
+    output: TOutput,
+    options: FieldOptions<TParent, TOutput, TInput, TDependencies> & {
+      input: TInput
+      dependencies: TDependencies
+    }
+  ): Loom.Field<TParent, TOutput, TInput, TDependencies>
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
-  ): FieldChainFactory<TOutput, undefined>
+  ): FieldChainFactory<TOutput, undefined, undefined>
 }
 
 export interface FieldFactoryWithUtils
   extends FieldFactory,
-    FieldChainFactory<never, undefined> {
+    FieldChainFactory<never, undefined, undefined> {
   /** Set fields to be hidden in GraphQL Schema */
   hidden: typeof FIELD_HIDDEN
 }

@@ -11,6 +11,8 @@
     "---Schema Integration---",
     "...schema",
     "---Advanced Usages---",
-    "...advanced"
+    "...advanced",
+    "---LLM---",
+    "[llms.txt](/en/llms.txt)"
   ]
 }

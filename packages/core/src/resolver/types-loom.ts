@@ -12,7 +12,8 @@ import type {
 export interface FieldMeta extends GraphQLFieldOptions {
   operation: "field" | "query" | "mutation" | "subscription"
   output: GraphQLSilk
-  input: GraphQLSilk | Record<string, GraphQLSilk> | undefined
+  input: GraphQLSilk | Record<string, GraphQLSilk> | void
+  dependencies?: string[]
   resolve: (...args: any) => MayPromise<any>
 }
 
@@ -23,15 +24,14 @@ export interface BaseField {
 export interface Field<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
+  TDependencies extends string[] | undefined = undefined,
 > extends BaseField {
   "~meta": {
     operation: "field"
     output: TOutput
     input: TInput
+    dependencies?: TDependencies
     types?: {
       parent: ReSilk<TParent>
     }
@@ -45,10 +45,7 @@ export interface Field<
 
 export interface Query<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends BaseField {
   "~meta": {
     operation: "query"
@@ -64,10 +61,7 @@ export interface Query<
 
 export interface Mutation<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends BaseField {
   "~meta": {
     operation: "mutation"
@@ -83,10 +77,7 @@ export interface Mutation<
 
 export interface Subscription<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
   TValue = StandardSchemaV1.InferOutput<TOutput>,
 > extends BaseField {
   "~meta": {
@@ -121,11 +112,11 @@ export interface Resolver {
 }
 
 export type Operation =
-  | Query<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | undefined>
-  | Mutation<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | undefined>
+  | Query<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | void>
+  | Mutation<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | void>
   | Subscription<
       GraphQLSilk,
-      GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+      GraphQLSilk | Record<string, GraphQLSilk> | void,
       any
     >
 
@@ -133,7 +124,8 @@ export type FieldOrOperation =
   | Field<
       GraphQLSilk,
       GraphQLSilk,
-      GraphQLSilk | Record<string, GraphQLSilk> | undefined
+      GraphQLSilk | Record<string, GraphQLSilk> | void,
+      string[] | undefined
     >
   | Operation
 

@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from "async_hooks"
+import { AsyncLocalStorage } from "node:async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
 import type { Loom } from "../resolver/types"
 import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
@@ -87,6 +87,9 @@ export function useMemoizationMap(): WeakMap<WeakKey, any> | undefined {
   const payload = resolverPayloadStorage.getStore()
   if (payload == null) return
   if (isOnlyMemoryPayload(payload)) return payload.memoization
+  if (typeof payload.context === "undefined") {
+    Object.defineProperty(payload, "context", { value: {} })
+  }
   return ContextMemoization.assignMemoizationMap(payload.context)
 }
 
@@ -126,7 +129,6 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
     if (!map.has(this.key)) {
       map.set(this.key, this.getter())
     }
-
     return map.get(this.key)
   }
 
@@ -175,7 +177,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
 export interface CallableContextMemoization<T>
   extends Pick<
     ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter"
+    "get" | "set" | "clear" | "exists" | "getter" | "key"
   > {
   (): T
 }
@@ -189,6 +191,7 @@ export function createMemoization<T>(
   const memoization = new ContextMemoization(...args)
   const callable = () => memoization.get()
   return Object.assign(callable, {
+    key: memoization.key,
     get: () => memoization.get(),
     set: (value: T) => memoization.set(value),
     clear: () => memoization.clear(),
@@ -196,6 +199,6 @@ export function createMemoization<T>(
     getter: memoization.getter,
   } as Pick<
     ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter"
+    "get" | "set" | "clear" | "exists" | "getter" | "key"
   >)
 }

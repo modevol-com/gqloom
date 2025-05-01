@@ -1,11 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import type {
-  CallableInputParser,
-  GraphQLSilk,
-  InferFieldOutput,
-  Loom,
-} from "../resolver"
-import type { MayPromise } from "./types"
+import type { CallableInputParser, InferFieldOutput, Loom } from "../resolver"
+import type { MayPromise, RequireKeys } from "./types"
 
 export interface MiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,
@@ -14,15 +9,7 @@ export interface MiddlewareOptions<
   outputSilk: StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
 
   /** The previous object, which for a field on the root Query type is often not used. */
-  parent: TField extends Loom.Field<
-    GraphQLSilk,
-    GraphQLSilk,
-    GraphQLSilk | Record<string, GraphQLSilk> | undefined
-  >
-    ? StandardSchemaV1.InferOutput<
-        NonNullable<TField["~meta"]["types"]>["parent"]
-      >
-    : undefined
+  parent: InferFieldParent<TField>
 
   /** A function to parse the input of the field */
   parseInput: CallableInputParser<TField["~meta"]["input"]>
@@ -30,6 +17,16 @@ export interface MiddlewareOptions<
   /** The operation of the field: `query`, `mutation`, `subscription` or `field` */
   operation: Loom.BaseField["~meta"]["operation"]
 }
+
+type InferFieldParent<TField extends Loom.BaseField> =
+  TField extends Loom.Field<infer TParent, any, any, infer TDependencies>
+    ? TDependencies extends string[]
+      ? RequireKeys<
+          NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+          TDependencies[number]
+        >
+      : NonNullable<StandardSchemaV1.InferOutput<TParent>>
+    : undefined
 
 export interface CallableMiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,
