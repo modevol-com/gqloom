@@ -323,6 +323,10 @@ export class QueryChainFactory<
   extends BaseChainFactory<Loom.Query<TOutput, TInput>>
   implements IChainFactory<TOutput, TInput>
 {
+  /**
+   * Returns the available methods for the query chain factory
+   * @returns An object containing all available methods
+   */
   public static methods() {
     return {
       ...BaseChainFactory.methods(),
@@ -333,22 +337,45 @@ export class QueryChainFactory<
     } as any as QueryChainFactory<never, void>
   }
 
+  /**
+   * Creates a clone of the current factory with new options
+   * @param options - New options to apply to the clone
+   * @returns A new instance of QueryChainFactory with the updated options
+   */
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new QueryChainFactory({ ...this.options, ...options }) as this
   }
 
+  /**
+   * Sets the output type for the query
+   * @template TOutputNew - The new output type
+   * @param output - The output type definition
+   * @returns A new QueryChainFactory instance with the updated output type
+   */
   public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
   ): QueryChainFactory<TOutputNew, TInput> {
     return new QueryChainFactory({ ...this.options, output })
   }
 
+  /**
+   * Sets the input type for the query
+   * @template TInputNew - The new input type
+   * @param input - The input type definition
+   * @returns A new QueryChainFactory instance with the updated input type
+   */
   public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
   ): QueryChainFactory<TOutput, TInputNew> {
     return new QueryChainFactory({ ...this.options, input })
   }
 
+  /**
+   * Sets the resolve function for the query
+   * @param resolve - The resolve function that processes the input and returns the output
+   * @returns A GraphQL query resolver
+   * @throws {Error} If output type is not set
+   */
   public resolve(
     resolve: (
       input: InferInputO<TInput>
@@ -377,6 +404,10 @@ export class MutationChainFactory<
   extends BaseChainFactory<Loom.Mutation<TOutput, TInput>>
   implements IChainFactory<TOutput, TInput>
 {
+  /**
+   * Returns the available methods for the mutation chain factory
+   * @returns An object containing all available methods
+   */
   public static methods() {
     return {
       ...BaseChainFactory.methods(),
@@ -387,22 +418,45 @@ export class MutationChainFactory<
     } as any as MutationChainFactory<never, undefined>
   }
 
+  /**
+   * Creates a clone of the current factory with new options
+   * @param options - New options to apply to the clone
+   * @returns A new instance of MutationChainFactory with the updated options
+   */
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new MutationChainFactory({ ...this.options, ...options }) as this
   }
 
+  /**
+   * Sets the output type for the mutation
+   * @template TOutputNew - The new output type
+   * @param output - The output type definition
+   * @returns A new MutationChainFactory instance with the updated output type
+   */
   public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
   ): MutationChainFactory<TOutputNew, TInput> {
     return new MutationChainFactory({ ...this.options, output })
   }
 
+  /**
+   * Sets the input type for the mutation
+   * @template TInputNew - The new input type
+   * @param input - The input type definition
+   * @returns A new MutationChainFactory instance with the updated input type
+   */
   public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
   ): MutationChainFactory<TOutput, TInputNew> {
     return new MutationChainFactory({ ...this.options, input })
   }
 
+  /**
+   * Sets the resolve function for the mutation
+   * @param resolve - The resolve function that processes the input and returns the output
+   * @returns A GraphQL mutation resolver
+   * @throws {Error} If output type is not set
+   */
   public resolve(
     resolve: (
       input: InferInputO<TInput>
@@ -431,6 +485,10 @@ export class SubscriptionChainFactory<
   extends BaseChainFactory<Loom.Subscription<TOutput, TInput, any>>
   implements IChainFactory<TOutput, TInput>
 {
+  /**
+   * Returns the available methods for the subscription chain factory
+   * @returns An object containing all available methods
+   */
   public static methods() {
     return {
       ...BaseChainFactory.methods(),
@@ -441,22 +499,46 @@ export class SubscriptionChainFactory<
     } as any as SubscriptionChainFactory<never, undefined>
   }
 
+  /**
+   * Creates a clone of the current factory with new options
+   * @param options - New options to apply to the clone
+   * @returns A new instance of SubscriptionChainFactory with the updated options
+   */
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new SubscriptionChainFactory({ ...this.options, ...options }) as this
   }
 
+  /**
+   * Sets the output type for the subscription
+   * @template TOutputNew - The new output type
+   * @param output - The output type definition
+   * @returns A new SubscriptionChainFactory instance with the updated output type
+   */
   public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
   ): SubscriptionChainFactory<TOutputNew, TInput> {
     return new SubscriptionChainFactory({ ...this.options, output })
   }
 
+  /**
+   * Sets the input type for the subscription
+   * @template TInputNew - The new input type
+   * @param input - The input type definition
+   * @returns A new SubscriptionChainFactory instance with the updated input type
+   */
   public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
   ): SubscriptionChainFactory<TOutput, TInputNew> {
     return new SubscriptionChainFactory({ ...this.options, input })
   }
 
+  /**
+   * Sets the subscribe function for the subscription
+   * @template TValue - The value type of the subscription
+   * @param subscribe - The subscribe function that returns an AsyncIterator
+   * @returns A subscription resolver that can be further configured with a resolve function
+   * @throws {Error} If output type is not set
+   */
   public subscribe<TValue = StandardSchemaV1.InferOutput<TOutput>>(
     subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
   ): TValue extends StandardSchemaV1.InferOutput<TOutput>
