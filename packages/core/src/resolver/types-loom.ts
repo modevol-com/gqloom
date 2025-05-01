@@ -13,6 +13,7 @@ export interface FieldMeta extends GraphQLFieldOptions {
   operation: "field" | "query" | "mutation" | "subscription"
   output: GraphQLSilk
   input: GraphQLSilk | Record<string, GraphQLSilk> | undefined
+  dependencies?: string[]
   resolve: (...args: any) => MayPromise<any>
 }
 
@@ -27,11 +28,13 @@ export interface Field<
     | GraphQLSilk
     | Record<string, GraphQLSilk>
     | undefined = undefined,
+  TDependencies extends string[] | undefined = undefined,
 > extends BaseField {
   "~meta": {
     operation: "field"
     output: TOutput
     input: TInput
+    dependencies?: TDependencies
     types?: {
       parent: ReSilk<TParent>
     }
@@ -133,7 +136,8 @@ export type FieldOrOperation =
   | Field<
       GraphQLSilk,
       GraphQLSilk,
-      GraphQLSilk | Record<string, GraphQLSilk> | undefined
+      GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+      string[] | undefined
     >
   | Operation
 

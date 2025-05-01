@@ -3,6 +3,7 @@ import {
   EasyDataLoader,
   type MayPromise,
   type Middleware,
+  type RequireKeys,
   applyMiddlewares,
   compose,
   createMemoization,
@@ -15,6 +16,7 @@ import {
   createInputParser,
 } from "./input"
 import {
+  DERIVED_DEPENDENCIES,
   createField,
   createMutation,
   createQuery,
@@ -100,8 +102,9 @@ export class FieldChainFactory<
       | GraphQLSilk
       | Record<string, GraphQLSilk>
       | undefined = undefined,
+    TDependencies extends string[] | undefined = undefined,
   >
-  extends BaseChainFactory<Loom.Field<any, TOutput, TInput>>
+  extends BaseChainFactory<Loom.Field<any, TOutput, TInput, TDependencies>>
   implements IChainFactory<TOutput, TInput>
 {
   public static methods() {
@@ -120,22 +123,33 @@ export class FieldChainFactory<
 
   public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
-  ): FieldChainFactory<TOutputNew, TInput> {
+  ): FieldChainFactory<TOutputNew, TInput, TDependencies> {
     return new FieldChainFactory({ ...this.options, output })
   }
 
   public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
-  ): FieldChainFactory<TOutput, TInputNew> {
+  ): FieldChainFactory<TOutput, TInputNew, TDependencies> {
     return new FieldChainFactory({ ...this.options, input })
+  }
+
+  public derivedFrom<const TDependencies extends string[]>(
+    ...dependencies: TDependencies
+  ): FieldChainFactory<TOutput, TInput, TDependencies> {
+    return this.clone({ dependencies }) as any
   }
 
   public resolve<TParent extends GraphQLSilk>(
     resolve: (
-      parent: StandardSchemaV1.InferOutput<TParent>,
+      parent: TDependencies extends string[]
+        ? RequireKeys<
+            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+            TDependencies[number]
+          >
+        : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
       input: InferInputO<TInput>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): Loom.Field<TParent, TOutput, TInput> {
+  ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
     return createField(this.options.output, {
       ...this.options,
@@ -145,10 +159,15 @@ export class FieldChainFactory<
 
   public load<TParent extends GraphQLSilk>(
     resolve: (
-      parents: StandardSchemaV1.InferOutput<TParent>[],
+      parents: (TDependencies extends string[]
+        ? RequireKeys<
+            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+            TDependencies[number]
+          >
+        : NonNullable<StandardSchemaV1.InferOutput<TParent>>)[],
       input: InferInputO<TInput>
-    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
-  ): Loom.Field<TParent, TOutput, TInput> {
+    ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
+  ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
 
     const useUnifiedParseInput = createMemoization<{
@@ -168,7 +187,9 @@ export class FieldChainFactory<
 
     const operation = "field"
     return meta({
-      ...getFieldOptions(this.options),
+      ...getFieldOptions(this.options, {
+        [DERIVED_DEPENDENCIES]: this.options.dependencies,
+      }),
       operation,
       input: this.options.input as TInput,
       output: this.options.output as TOutput,
@@ -189,7 +210,7 @@ export class FieldChainFactory<
           { parseInput, parent, outputSilk: this.output, operation }
         )
       },
-    }) as Loom.Field<TParent, TOutput, TInput>
+    }) as Loom.Field<TParent, TOutput, TInput, TDependencies>
   }
 }
 
@@ -464,14 +485,24 @@ export class MutationFactoryWithResolve<
 export class FieldFactoryWithResolve<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
-> extends BaseChainFactory<Loom.Field<TParent, TOutput, undefined>> {
-  public get "~meta"(): Loom.Field<TParent, TOutput, undefined>["~meta"] {
+> extends BaseChainFactory<Loom.Field<TParent, TOutput, undefined, undefined>> {
+  public get "~meta"(): Loom.Field<
+    TParent,
+    TOutput,
+    undefined,
+    undefined
+  >["~meta"] {
     return loom.field(this.output, this.options)["~meta"]
   }
 
   public constructor(
     protected output: TOutput,
-    protected readonly options: FieldOptions<TParent, TOutput, undefined>
+    protected readonly options: FieldOptions<
+      TParent,
+      TOutput,
+      undefined,
+      undefined
+    >
   ) {
     super(options)
   }

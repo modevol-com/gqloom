@@ -87,6 +87,9 @@ export function useMemoizationMap(): WeakMap<WeakKey, any> | undefined {
   const payload = resolverPayloadStorage.getStore()
   if (payload == null) return
   if (isOnlyMemoryPayload(payload)) return payload.memoization
+  if (typeof payload.context === "undefined") {
+    Object.defineProperty(payload, "context", { value: {} })
+  }
   return ContextMemoization.assignMemoizationMap(payload.context)
 }
 

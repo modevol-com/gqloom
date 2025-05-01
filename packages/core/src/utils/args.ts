@@ -1,3 +1,4 @@
+import type { GraphQLFieldExtensions } from "graphql"
 import type {
   FieldOptions,
   GraphQLFieldOptions,
@@ -9,7 +10,7 @@ import type {
 export function getOperationOptions(
   resolveOrOptions:
     | ((...args: any) => any)
-    | FieldOptions<any, any, any>
+    | FieldOptions<any, any, any, any>
     | QueryOptions<any, any>
     | MutationOptions<any, any>
 ) {
@@ -28,14 +29,15 @@ export function getSubscriptionOptions(
   return subscribeOrOptions
 }
 
-export function getFieldOptions({
-  description,
-  deprecationReason,
-  extensions,
-}: GraphQLFieldOptions): GraphQLFieldOptions {
+export function getFieldOptions(
+  { description, deprecationReason, extensions }: GraphQLFieldOptions,
+  extraExtensions?: GraphQLFieldExtensions<any, any, any>
+): GraphQLFieldOptions {
   return {
     description,
     deprecationReason,
-    extensions,
+    extensions: extraExtensions
+      ? { ...extensions, ...extraExtensions }
+      : extensions,
   }
 }

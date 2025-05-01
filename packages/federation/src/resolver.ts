@@ -86,8 +86,13 @@ export class FederatedChainResolver<
       keyof StandardSchemaV1.InferOutput<TParent> = keyof StandardSchemaV1.InferOutput<TParent>,
   >(
     resolve: (
-      source: Pick<StandardSchemaV1.InferOutput<TParent>, TRequiredKey>
-    ) => MayPromise<StandardSchemaV1.InferOutput<TParent> | null | undefined>
+      source: Pick<
+        NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+        TRequiredKey
+      >
+    ) => MayPromise<
+      NonNullable<StandardSchemaV1.InferOutput<TParent>> | null | undefined
+    >
   ) {
     this.meta.options ??= {}
     this.meta.options.extensions ??= {}
