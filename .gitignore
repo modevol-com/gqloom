@@ -6,6 +6,7 @@ dist
 build
 server
 release
+.vercel
 
 doc_build
 
