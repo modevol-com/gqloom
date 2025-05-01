@@ -1,10 +1,6 @@
 import { GraphQLObjectType } from "graphql"
 import { DERIVED_DEPENDENCIES } from "../resolver"
-import {
-  createMemoization,
-  parseResolvingFields,
-  useResolverPayload,
-} from "../utils"
+import { parseResolvingFields, useResolverPayload } from "../utils"
 
 /**
  * Represents the state of field resolution in a GraphQL query.
@@ -40,9 +36,7 @@ export interface ResolvingFields {
  * @returns An object containing sets of different field types,
  * or undefined if no resolver payload is available
  */
-export const useResolvingFields = createMemoization<
-  ResolvingFields | undefined
->(() => {
+export const useResolvingFields = () => {
   const payload = useResolverPayload()
   if (!payload) return
 
@@ -71,4 +65,4 @@ export const useResolvingFields = createMemoization<
   for (const d of derivedDependencies) selectedFields.add(d)
 
   return { requestedFields, derivedFields, derivedDependencies, selectedFields }
-})
+}
