@@ -395,7 +395,7 @@ describe("executor", () => {
     const saved = await executor.saveGiraffe({ name: "Skyler" })
     expect(saved).toEqual({
       name: "Skyler",
-      birthday: new Date(),
+      birthday: expect.any(Date),
       heightInMeters: 5,
     })
     expect(giraffeMap.get("Skyler")).toEqual(saved)
