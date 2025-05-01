@@ -32,32 +32,70 @@ import type {
   QueryOptions,
 } from "./types"
 
+/**
+ * Interface for chain factory that provides methods to configure GraphQL field options
+ * @template TOutput - The output type of the GraphQL field
+ * @template TInput - The input type of the GraphQL field, can be a single type or a record of types
+ */
 export interface IChainFactory<
   TOutput extends GraphQLSilk,
   TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > {
+  /**
+   * Sets the description for the GraphQL field
+   * @param description - The description text for the field
+   */
   description(description: GraphQLFieldOptions["description"]): this
 
+  /**
+   * Sets the deprecation reason for the GraphQL field
+   * @param deprecationReason - The reason why this field is deprecated
+   */
   deprecationReason(
     deprecationReason: GraphQLFieldOptions["deprecationReason"]
   ): this
 
+  /**
+   * Sets custom extensions for the GraphQL field
+   * @param extensions - Custom extensions to be added to the field
+   */
   extensions(extensions: GraphQLFieldOptions["extensions"]): this
 
+  /**
+   * Sets the output type for the GraphQL field
+   * @template TOutputNew - The new output type
+   * @param output - The output type definition
+   */
   output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
   ): IChainFactory<TOutputNew, TInput>
 
+  /**
+   * Sets the input type for the GraphQL field
+   * @template TInputNew - The new input type
+   * @param input - The input type definition
+   */
   input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
   ): IChainFactory<TOutput, TInputNew>
 }
 
+/**
+ * Options for configuring a chain factory
+ */
 export interface ChainFactoryOptions extends Loom.FieldMeta {
+  /** Middleware functions to be applied to the field */
   middlewares?: Middleware[]
 }
 
+/**
+ * Base class for all chain factories
+ * @template TField - The type of field being created
+ */
 export abstract class BaseChainFactory<TField extends Loom.BaseField = any> {
+  /**
+   * Returns the available methods for the chain factory
+   */
   public static methods() {
     return {
       description: BaseChainFactory.prototype.description,
@@ -66,26 +104,50 @@ export abstract class BaseChainFactory<TField extends Loom.BaseField = any> {
     }
   }
 
+  /**
+   * Creates a new instance of the chain factory
+   * @param options - Configuration options for the factory
+   */
   public constructor(
     protected readonly options?: Partial<ChainFactoryOptions>
   ) {}
 
+  /**
+   * Creates a clone of the current factory with new options
+   * @param options - New options to apply to the clone
+   */
   protected abstract clone(options?: Partial<ChainFactoryOptions>): this
 
+  /**
+   * Sets the description for the field
+   * @param description - The description text
+   */
   public description(description: GraphQLFieldOptions["description"]): this {
     return this.clone({ description })
   }
 
+  /**
+   * Sets the deprecation reason for the field
+   * @param deprecationReason - The reason for deprecation
+   */
   public deprecationReason(
     deprecationReason: GraphQLFieldOptions["deprecationReason"]
   ): this {
     return this.clone({ deprecationReason })
   }
 
+  /**
+   * Sets custom extensions for the field
+   * @param extensions - Custom extensions to add
+   */
   public extensions(extensions: GraphQLFieldOptions["extensions"]): this {
     return this.clone({ extensions })
   }
 
+  /**
+   * Adds middleware functions to the field
+   * @param middlewares - Middleware functions to add
+   */
   public use(...middlewares: Middleware<TField>[]): this {
     return this.clone({
       middlewares: [...(this.options?.middlewares ?? []), ...middlewares],
@@ -93,6 +155,12 @@ export abstract class BaseChainFactory<TField extends Loom.BaseField = any> {
   }
 }
 
+/**
+ * Factory for creating field resolvers with chainable configuration
+ * @template TOutput - The output type of the field
+ * @template TInput - The input type of the field
+ * @template TDependencies - The dependencies of the field
+ */
 export class FieldChainFactory<
     TOutput extends GraphQLSilk = never,
     TInput extends
@@ -104,6 +172,9 @@ export class FieldChainFactory<
   extends BaseChainFactory<Loom.Field<any, TOutput, TInput, TDependencies>>
   implements IChainFactory<TOutput, TInput>
 {
+  /**
+   * Returns the available methods for the field chain factory
+   */
   public static methods() {
     return {
       ...BaseChainFactory.methods(),
@@ -114,28 +185,52 @@ export class FieldChainFactory<
     } as any as FieldChainFactory<never, undefined>
   }
 
+  /**
+   * Creates a clone of the current factory with new options
+   * @param options - New options to apply to the clone
+   */
   protected clone(options?: Partial<ChainFactoryOptions>): this {
     return new FieldChainFactory({ ...this.options, ...options }) as this
   }
 
+  /**
+   * Sets the output type for the field
+   * @template TOutputNew - The new output type
+   * @param output - The output type definition
+   */
   public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew
   ): FieldChainFactory<TOutputNew, TInput, TDependencies> {
     return new FieldChainFactory({ ...this.options, output })
   }
 
+  /**
+   * Sets the input type for the field
+   * @template TInputNew - The new input type
+   * @param input - The input type definition
+   */
   public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
     input: TInputNew
   ): FieldChainFactory<TOutput, TInputNew, TDependencies> {
     return new FieldChainFactory({ ...this.options, input })
   }
 
+  /**
+   * Specifies the dependencies for the field
+   * @template TDependencies - The dependencies type
+   * @param dependencies - The dependencies to add
+   */
   public derivedFrom<const TDependencies extends string[]>(
     ...dependencies: TDependencies
   ): FieldChainFactory<TOutput, TInput, TDependencies> {
     return this.clone({ dependencies }) as any
   }
 
+  /**
+   * Sets the resolve function for the field
+   * @template TParent - The parent type
+   * @param resolve - The resolve function
+   */
   public resolve<TParent extends GraphQLSilk>(
     resolve: (
       parent: TDependencies extends string[]
@@ -154,6 +249,11 @@ export class FieldChainFactory<
     }) as any
   }
 
+  /**
+   * Sets up data loading for the field
+   * @template TParent - The parent type
+   * @param resolve - The batch resolve function
+   */
   public load<TParent extends GraphQLSilk>(
     resolve: (
       parents: (TDependencies extends string[]
@@ -211,6 +311,11 @@ export class FieldChainFactory<
   }
 }
 
+/**
+ * Factory for creating query resolvers with chainable configuration
+ * @template TOutput - The output type of the query
+ * @template TInput - The input type of the query
+ */
 export class QueryChainFactory<
     TOutput extends GraphQLSilk = never,
     TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
@@ -257,6 +362,11 @@ export class QueryChainFactory<
   }
 }
 
+/**
+ * Factory for creating mutation resolvers with chainable configuration
+ * @template TOutput - The output type of the mutation
+ * @template TInput - The input type of the mutation
+ */
 export class MutationChainFactory<
     TOutput extends GraphQLSilk = never,
     TInput extends
@@ -306,6 +416,11 @@ export class MutationChainFactory<
   }
 }
 
+/**
+ * Factory for creating subscription resolvers with chainable configuration
+ * @template TOutput - The output type of the subscription
+ * @template TInput - The input type of the subscription
+ */
 export class SubscriptionChainFactory<
     TOutput extends GraphQLSilk = never,
     TInput extends
@@ -372,6 +487,12 @@ export class SubscriptionChainFactory<
   }
 }
 
+/**
+ * Interface for a subscription that can be resolved
+ * @template TOutput - The output type of the subscription
+ * @template TInput - The input type of the subscription
+ * @template TValue - The value type of the subscription
+ */
 export interface ResolvableSubscription<
   TOutput extends GraphQLSilk,
   TInput extends
@@ -380,6 +501,10 @@ export interface ResolvableSubscription<
     | undefined = undefined,
   TValue = StandardSchemaV1.InferOutput<TOutput>,
 > extends Loom.Subscription<TOutput, TInput, TValue> {
+  /**
+   * Sets the resolve function for the subscription
+   * @param resolve - The resolve function
+   */
   resolve(
     resolve: (
       value: TValue,
@@ -388,6 +513,12 @@ export interface ResolvableSubscription<
   ): Loom.Subscription<TOutput, TInput, TValue>
 }
 
+/**
+ * Interface for a subscription that needs to be resolved
+ * @template TOutput - The output type of the subscription
+ * @template TInput - The input type of the subscription
+ * @template TValue - The value type of the subscription
+ */
 export interface SubscriptionNeedResolve<
   TOutput extends GraphQLSilk,
   TInput extends
@@ -396,6 +527,10 @@ export interface SubscriptionNeedResolve<
     | undefined = undefined,
   TValue = StandardSchemaV1.InferOutput<TOutput>,
 > {
+  /**
+   * Sets the resolve function for the subscription
+   * @param resolve - The resolve function
+   */
   resolve(
     resolve: (
       value: TValue,
