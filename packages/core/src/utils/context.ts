@@ -129,7 +129,6 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
     if (!map.has(this.key)) {
       map.set(this.key, this.getter())
     }
-
     return map.get(this.key)
   }
 
@@ -178,7 +177,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
 export interface CallableContextMemoization<T>
   extends Pick<
     ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter"
+    "get" | "set" | "clear" | "exists" | "getter" | "key"
   > {
   (): T
 }
@@ -192,6 +191,7 @@ export function createMemoization<T>(
   const memoization = new ContextMemoization(...args)
   const callable = () => memoization.get()
   return Object.assign(callable, {
+    key: memoization.key,
     get: () => memoization.get(),
     set: (value: T) => memoization.set(value),
     clear: () => memoization.clear(),
@@ -199,6 +199,6 @@ export function createMemoization<T>(
     getter: memoization.getter,
   } as Pick<
     ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter"
+    "get" | "set" | "clear" | "exists" | "getter" | "key"
   >)
 }

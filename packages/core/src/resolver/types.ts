@@ -72,10 +72,7 @@ export type InferFieldOutput<TField extends Loom.BaseField> =
  */
 export interface QueryOptions<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends ResolverOptions<Loom.Query<TOutput, TInput>>,
     GraphQLFieldOptions {
   input?: TInput
@@ -108,14 +105,11 @@ export interface QueryFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): Loom.Query<TOutput, undefined>
+  ): Loom.Query<TOutput, void>
 
   <
     TOutput extends GraphQLSilk,
-    TInput extends
-      | GraphQLSilk
-      | Record<string, GraphQLSilk>
-      | undefined = undefined,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
   >(
     output: TOutput,
     options: QueryOptions<TOutput, TInput>
@@ -123,12 +117,12 @@ export interface QueryFactory {
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
-  ): QueryChainFactory<TOutput, undefined>
+  ): QueryChainFactory<TOutput, void>
 }
 
 export interface QueryFactoryWithChain
   extends QueryFactory,
-    QueryChainFactory<never, undefined> {}
+    QueryChainFactory<never, void> {}
 
 /**
  * Function to create a GraphQL mutation.
@@ -168,10 +162,7 @@ export interface MutationFactoryWithChain
 export interface FieldOptions<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
   TDependencies extends string[] | undefined = undefined,
 > extends ResolverOptions<Loom.Field<TParent, TOutput, TInput, TDependencies>>,
     GraphQLFieldOptions {
