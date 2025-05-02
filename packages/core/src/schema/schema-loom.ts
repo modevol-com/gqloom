@@ -223,6 +223,7 @@ export class GraphQLSchemaLoom {
     let context: WeaverContext | undefined
 
     for (const item of inputs) {
+      if (item == null) continue
       if (isSchemaVendorWeaver(item)) {
         weavers.add(item)
       } else if (typeof item === "function") {
