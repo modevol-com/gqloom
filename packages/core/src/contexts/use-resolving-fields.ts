@@ -1,6 +1,7 @@
 import { GraphQLObjectType } from "graphql"
 import { DERIVED_DEPENDENCIES } from "../resolver"
 import {
+  type ResolverPayload,
   createMemoization,
   parseResolvingFields,
   useResolverPayload,
@@ -29,23 +30,12 @@ export interface ResolvingFields {
 }
 
 /**
- * A hook that analyzes and processes field resolution in a GraphQL query.
- * It handles the following:
- * 1. Identifies fields requested in the query
- * 2. Detects derived fields and their dependencies
- * 3. Computes the final set of fields that need to be resolved
+ * Analyzes and processes field resolution in a GraphQL query.
  *
- * The hook is memoized to prevent unnecessary recalculations.
- *
- * @returns An object containing sets of different field types,
- * or undefined if no resolver payload is available
+ * @param payload - The resolver payload containing the current field resolution context
+ * @returns An object containing sets of different field types
  */
-export const useResolvingFields = createMemoization<
-  ResolvingFields | undefined
->(() => {
-  const payload = useResolverPayload()
-  if (!payload) return
-
+export function getResolvingFields(payload: ResolverPayload): ResolvingFields {
   const requestedFields = parseResolvingFields(payload.info)
   const derivedFields = new Set<string>()
   const derivedDependencies = new Set<string>()
@@ -71,4 +61,21 @@ export const useResolvingFields = createMemoization<
   for (const d of derivedDependencies) selectedFields.add(d)
 
   return { requestedFields, derivedFields, derivedDependencies, selectedFields }
+}
+
+/**
+ * A hook that analyzes and processes field resolution in a GraphQL query.
+ *
+ * The hook is memoized to prevent unnecessary recalculations.
+ *
+ * @returns An object containing sets of different field types,
+ * or undefined if no resolver payload is available
+ */
+export const useResolvingFields = createMemoization<
+  ResolvingFields | undefined
+>(() => {
+  const payload = useResolverPayload()
+  if (!payload) return
+
+  return getResolvingFields(payload)
 })
