@@ -4,8 +4,8 @@ import {
   type MayPromise,
   type Middleware,
   type RequireKeys,
+  type ResolverPayload,
   applyMiddlewares,
-  compose,
   createMemoization,
   getFieldOptions,
   meta,
@@ -144,7 +144,8 @@ export class FieldChainFactory<
             TDependencies[number]
           >
         : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
@@ -202,7 +203,10 @@ export class FieldChainFactory<
         ) as CallableInputParser<TInput>
         const parseInput = unifiedParseInput.current
         return applyMiddlewares(
-          compose(extraOptions?.middlewares, this.options?.middlewares),
+          [
+            ...(extraOptions?.middlewares ?? []),
+            ...(this.options?.middlewares ?? []),
+          ],
           async () => useUserLoader().load(parent),
           { parseInput, parent, outputSilk: this.output, operation }
         )
@@ -246,7 +250,8 @@ export class QueryChainFactory<
 
   public resolve(
     resolve: (
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Query<TOutput, TInput> {
     if (!this.options?.output) throw new Error("Output is required")
@@ -295,7 +300,8 @@ export class MutationChainFactory<
 
   public resolve(
     resolve: (
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Mutation<TOutput, TInput> {
     if (!this.options?.output) throw new Error("Output is required")

@@ -398,7 +398,7 @@ describe("executor", () => {
       birthday: expect.any(Date),
       heightInMeters: 5,
     })
-    expect(giraffeMap.get("Skyler")).toEqual(saved)
+    expect(giraffeMap.get("Skyler")).toBe(saved)
 
     const giraffes = await executor.allGiraffes()
     expect(giraffes).toEqual([saved])

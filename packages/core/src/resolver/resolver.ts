@@ -5,7 +5,6 @@ import {
   type OmitInUnion,
   type ValueOf,
   applyMiddlewares,
-  compose,
   getFieldOptions,
   getOperationOptions,
   getSubscriptionOptions,
@@ -43,13 +42,15 @@ import type {
 
 export const createQuery = (
   output: GraphQLSilk<any, any>,
-  resolveOrOptions?: (() => MayPromise<unknown>) | QueryOptions<any, any>
+  resolveOrOptions?:
+    | ((...args: any) => MayPromise<unknown>)
+    | QueryOptions<any, any>
 ) => {
   if (resolveOrOptions == null) {
     return new QueryChainFactory({ output })
   }
 
-  const options = getOperationOptions(resolveOrOptions)
+  const options: QueryOptions<any, any> = getOperationOptions(resolveOrOptions)
   const operation = "query"
   return meta({
     ...getFieldOptions(options),
@@ -58,8 +59,12 @@ export const createQuery = (
     resolve: (inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(getStandardValue(await parseInput())),
+        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
+        async () =>
+          options.resolve(
+            getStandardValue(await parseInput()),
+            extraOptions?.payload
+          ),
         { parseInput, parent: undefined, outputSilk: output, operation }
       )
     },
@@ -80,7 +85,8 @@ export const createMutation = (
     return new MutationChainFactory({ output })
   }
 
-  const options = getOperationOptions(resolveOrOptions)
+  const options: MutationOptions<any, any> =
+    getOperationOptions(resolveOrOptions)
   const operation = "mutation"
   return meta({
     ...getFieldOptions(options),
@@ -89,8 +95,12 @@ export const createMutation = (
     resolve: (inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        compose(extraOptions?.middlewares, options.middlewares),
-        async () => options.resolve(getStandardValue(await parseInput())),
+        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
+        async () =>
+          options.resolve(
+            getStandardValue(await parseInput()),
+            extraOptions?.payload
+          ),
         { parseInput, parent: undefined, outputSilk: output, operation }
       )
     },
@@ -108,7 +118,7 @@ export const DERIVED_DEPENDENCIES = "loom.derived-from-dependencies"
 export const createField = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
-    | ((parent: unknown) => unknown)
+    | (() => unknown)
     | FieldOptions<
         GraphQLSilk,
         GraphQLSilk,
@@ -131,9 +141,13 @@ export const createField = (
     resolve: (parent, inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        compose(extraOptions?.middlewares, options.middlewares),
+        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
         async () =>
-          options.resolve(parent, getStandardValue(await parseInput())),
+          options.resolve(
+            parent,
+            getStandardValue(await parseInput()),
+            extraOptions?.payload ?? undefined
+          ),
         { parseInput, parent, outputSilk: output, operation }
       )
     },
@@ -172,6 +186,7 @@ export function createSubscription(
 
   const options = getSubscriptionOptions(subscribeOrOptions)
   const operation = "subscription"
+  const resolve = options.resolve ?? defaultSubscriptionResolve
   return meta({
     ...getFieldOptions(options),
     input: options.input,
@@ -179,15 +194,17 @@ export function createSubscription(
     subscribe: (inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        compose<Middleware<any>>(
-          extraOptions?.middlewares,
-          options.middlewares
-        ),
-        async () => options.subscribe(getStandardValue(await parseInput())),
+        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
+        async () =>
+          options.subscribe(
+            getStandardValue(await parseInput()),
+            extraOptions?.payload
+          ),
         { parseInput, parent: undefined, outputSilk: output, operation }
       )
     },
-    resolve: options.resolve ?? defaultSubscriptionResolve,
+    resolve: (value, input, extraOptions) =>
+      resolve(value, input, extraOptions?.payload),
     operation,
   }) as Loom.Subscription<any, any, any>
 }
@@ -203,10 +220,6 @@ function extraOperationOptions<TField extends Loom.FieldOrOperation>(
 ): TField {
   if (typeof field === "symbol") return field
 
-  const composeMiddlewares = (
-    extraOptions: { middlewares?: Middleware[] } | undefined
-  ): Middleware[] => compose(extraOptions?.middlewares, options?.middlewares)
-
   switch (field["~meta"].operation) {
     case "field":
       return {
@@ -216,7 +229,11 @@ function extraOperationOptions<TField extends Loom.FieldOrOperation>(
           resolve: (parent, input, extraOptions) =>
             field["~meta"].resolve(parent, input, {
               ...extraOptions,
-              middlewares: composeMiddlewares(extraOptions),
+              payload: extraOptions?.payload ?? undefined,
+              middlewares: [
+                ...(extraOptions?.middlewares ?? []),
+                ...(options?.middlewares ?? []),
+              ],
             }),
         },
       }
@@ -230,7 +247,11 @@ function extraOperationOptions<TField extends Loom.FieldOrOperation>(
               input,
               {
                 ...extraOptions,
-                middlewares: composeMiddlewares(extraOptions),
+                payload: extraOptions?.payload ?? undefined,
+                middlewares: [
+                  ...(extraOptions?.middlewares ?? []),
+                  ...(options?.middlewares ?? []),
+                ],
               }
             ),
         },
@@ -243,7 +264,11 @@ function extraOperationOptions<TField extends Loom.FieldOrOperation>(
           resolve: (input: any, extraOptions: ResolvingOptions | undefined) =>
             field["~meta"].resolve(input, {
               ...extraOptions,
-              middlewares: composeMiddlewares(extraOptions),
+              payload: extraOptions?.payload ?? undefined,
+              middlewares: [
+                ...(extraOptions?.middlewares ?? []),
+                ...(options?.middlewares ?? []),
+              ],
             }),
         },
       }

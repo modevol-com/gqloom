@@ -18,8 +18,8 @@ export type InferInputI<
 
 export type InferInputO<
   TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void,
-> = TInput extends undefined
-  ? undefined
+> = TInput extends void
+  ? void
   : TInput extends GraphQLSilk
     ? StandardSchemaV1.InferOutput<TInput>
     : TInput extends Record<string, GraphQLSilk>

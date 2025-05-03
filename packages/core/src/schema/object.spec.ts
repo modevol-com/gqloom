@@ -7,7 +7,6 @@ import {
 } from "graphql"
 import { describe, expect, it } from "vitest"
 import {
-  defaultSubscriptionResolve,
   field,
   mutation,
   query,
@@ -159,7 +158,7 @@ describe("toFieldConfig", () => {
     )
     expect(fieldConfig).toHaveProperty("type", GraphQLString)
     expect(fieldConfig).toHaveProperty("subscribe")
-    expect(fieldConfig).toHaveProperty("resolve", defaultSubscriptionResolve)
+    expect(fieldConfig).toHaveProperty("resolve", expect.any(Function))
   })
 
   it("should work with Query", () => {

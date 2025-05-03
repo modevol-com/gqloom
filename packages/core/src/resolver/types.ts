@@ -4,7 +4,12 @@ import type {
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
 } from "graphql"
-import type { MayPromise, Middleware, RequireKeys } from "../utils"
+import type {
+  MayPromise,
+  Middleware,
+  RequireKeys,
+  ResolverPayload,
+} from "../utils"
 import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type { InferInputO } from "./input"
 import type {
@@ -48,8 +53,9 @@ export interface ResolverOptionsWithParent<
     : undefined
 }
 
-export interface ResolvingOptions
-  extends Pick<ResolverOptions, "middlewares"> {}
+export interface ResolvingOptions extends Pick<ResolverOptions, "middlewares"> {
+  payload: ResolverPayload | undefined
+}
 
 export type OperationType = "query" | "mutation" | "subscription"
 
@@ -77,7 +83,8 @@ export interface QueryOptions<
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
-    input: InferInputO<TInput>
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -94,7 +101,8 @@ export interface MutationOptions<
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
-    input: InferInputO<TInput>
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -104,7 +112,9 @@ export interface MutationOptions<
 export interface QueryFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
-    resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+    resolve: (
+      payload: ResolverPayload | undefined
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Query<TOutput, void>
 
   <
@@ -130,7 +140,9 @@ export interface QueryFactoryWithChain
 export interface MutationFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
-    resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+    resolve: (
+      payload: ResolverPayload | undefined
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Mutation<TOutput, undefined>
 
   <
@@ -175,7 +187,8 @@ export interface FieldOptions<
           TDependencies[number]
         >
       : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
-    input: InferInputO<TInput>
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -186,7 +199,9 @@ export interface FieldFactory {
   <TParent extends GraphQLSilk, TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: (
-      parent: StandardSchemaV1.InferOutput<TParent>
+      parent: StandardSchemaV1.InferOutput<TParent>,
+      input: void,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Field<TParent, TOutput, undefined, undefined>
 
@@ -255,10 +270,14 @@ export interface SubscriptionOptions<
 > extends ResolverOptions<Loom.Subscription<TOutput, TInput, TValue>>,
     GraphQLFieldOptions {
   input?: TInput
-  subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
+  subscribe: (
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
+  ) => MayPromise<AsyncIterator<TValue>>
   resolve?: (
     value: TValue,
-    input: InferInputO<TInput>
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -268,9 +287,9 @@ export interface SubscriptionOptions<
 export interface SubscriptionFactory {
   <TOutput extends GraphQLSilk, TValue = StandardSchemaV1.InferOutput<TOutput>>(
     output: TOutput,
-    subscribe: () => MayPromise<
-      AsyncIterator<StandardSchemaV1.InferOutput<TOutput>>
-    >
+    subscribe: (
+      payload: ResolverPayload | undefined
+    ) => MayPromise<AsyncIterator<StandardSchemaV1.InferOutput<TOutput>>>
   ): Loom.Subscription<TOutput, undefined, TValue>
 
   <

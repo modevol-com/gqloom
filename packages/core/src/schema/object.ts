@@ -26,6 +26,7 @@ import {
   getGraphQLType,
 } from "../resolver"
 import {
+  type ResolverPayload,
   deepMerge,
   mapValue,
   markErrorLocation,
@@ -198,22 +199,34 @@ export class LoomObjectType extends GraphQLObjectType {
       return { resolve: defaultSubscriptionResolve }
     const resolve: GraphQLFieldResolver<any, any> =
       field["~meta"].operation === "field"
-        ? (root, args, context, info) =>
-            resolverPayloadStorage.run(
-              { root, args, context, info, field },
-              () => field["~meta"].resolve(root, args, this.resolverOptions)
+        ? (root, args, context, info) => {
+            const payload = { root, args, context, info, field }
+            return resolverPayloadStorage.run(payload, () =>
+              field["~meta"].resolve(root, args, {
+                ...this.resolverOptions,
+                payload,
+              })
             )
+          }
         : field["~meta"].operation === "subscription"
-          ? (root, args, context, info) =>
-              resolverPayloadStorage.run(
-                { root, args, context, info, field },
-                () => field["~meta"].resolve(root, args)
+          ? (root, args, context, info) => {
+              const payload = { root, args, context, info, field }
+              return resolverPayloadStorage.run(payload, () =>
+                field["~meta"].resolve(root, args, {
+                  ...this.resolverOptions,
+                  payload,
+                })
               )
-          : (root, args, context, info) =>
-              resolverPayloadStorage.run(
-                { root, args, context, info, field },
-                () => field["~meta"].resolve(args, this.resolverOptions)
+            }
+          : (root, args, context, info) => {
+              const payload = { root, args, context, info, field }
+              return resolverPayloadStorage.run(payload, () =>
+                field["~meta"].resolve(args, {
+                  ...this.resolverOptions,
+                  payload,
+                })
               )
+            }
 
     return { resolve }
   }
@@ -226,16 +239,15 @@ export class LoomObjectType extends GraphQLObjectType {
     )
       return
     return {
-      subscribe: (root, args, context, info) =>
-        resolverPayloadStorage.run(
-          { root, args, context, info, field },
-          async () => {
-            const generator = await (field as Loom.Subscription<any, any, any>)[
-              "~meta"
-            ].subscribe?.(args, this.resolverOptions)
-            return bindAsyncIterator(resolverPayloadStorage, generator)
-          }
-        ),
+      subscribe: (root, args, context, info) => {
+        const payload: ResolverPayload = { root, args, context, info, field }
+        return resolverPayloadStorage.run(payload, async () => {
+          const generator = await (field as Loom.Subscription<any, any, any>)[
+            "~meta"
+          ].subscribe?.(args, { ...this.resolverOptions, payload })
+          return bindAsyncIterator(resolverPayloadStorage, generator)
+        })
+      },
     }
   }
 

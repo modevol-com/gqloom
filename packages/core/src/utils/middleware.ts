@@ -66,13 +66,3 @@ export function applyMiddlewares<
   }
   return next(0)
 }
-
-export function compose<T>(...lists: (T[] | undefined)[]): T[] {
-  const list: T[] = []
-  for (const item of lists) {
-    if (item != null) {
-      list.push(...item)
-    }
-  }
-  return list
-}
