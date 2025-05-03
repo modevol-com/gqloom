@@ -7,9 +7,9 @@ import {
   type ResolverPayload,
   loom,
   silk,
-  useResolverPayload,
   weave,
 } from "../src"
+import { useResolverPayload } from "../src/context"
 
 const { subscription, resolver, query } = loom
 

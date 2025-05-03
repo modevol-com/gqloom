@@ -11,9 +11,9 @@ import {
   type StandardSchemaV1,
   type ValueOf,
   loom,
-  resolverPayloadStorage,
   silk,
 } from "@gqloom/core"
+import { resolverPayloadStorage } from "@gqloom/core/context"
 import { GraphQLID } from "graphql"
 import type { ResolveReferenceExtension } from "."
 import type { DirectiveList } from "./mock-ast"

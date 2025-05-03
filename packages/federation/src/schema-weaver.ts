@@ -14,8 +14,8 @@ import {
   query,
   resolver,
   silk,
-  useResolverPayload,
 } from "@gqloom/core"
+import { useResolverPayload } from "@gqloom/core/context"
 import {
   GraphQLList,
   type GraphQLNamedType,

@@ -13,11 +13,10 @@ import {
   type Loom,
   type Middleware,
   type ResolverPayload,
-  createMemoization,
   loom,
   silk,
-  useResolverPayload,
 } from "../src"
+import { createMemoization, useResolverPayload } from "../src/context"
 
 const { query, resolver, field } = loom
 

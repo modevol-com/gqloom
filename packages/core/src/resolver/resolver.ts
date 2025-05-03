@@ -1,17 +1,17 @@
 import type { GraphQLObjectTypeConfig } from "graphql"
+import { resolverPayloadStorage } from "../context"
 import {
   type MayPromise,
   type Middleware,
   type OmitInUnion,
-  type ResolverPayload,
   type ValueOf,
   applyMiddlewares,
   getFieldOptions,
   getOperationOptions,
   getSubscriptionOptions,
   meta,
-  resolverPayloadStorage,
 } from "../utils"
+import { DERIVED_DEPENDENCIES } from "../utils/constants"
 import { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
 import { createInputParser, getStandardValue } from "./input"
 import {
@@ -35,6 +35,7 @@ import type {
   ResolverOptions,
   ResolverOptionsWithExtensions,
   ResolverOptionsWithParent,
+  ResolverPayload,
   ResolvingOptions,
   SubscriptionFactory,
   SubscriptionFactoryWithChain,
@@ -113,8 +114,6 @@ export const mutation: MutationFactoryWithChain = Object.assign(
   createMutation as MutationFactory,
   MutationChainFactory.methods()
 )
-
-export const DERIVED_DEPENDENCIES = "loom.derived-from-dependencies"
 
 export const createField = (
   output: GraphQLSilk<any, any>,

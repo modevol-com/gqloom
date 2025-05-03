@@ -10,11 +10,11 @@ import {
   QueryFactoryWithResolve,
   type QueryOptions,
   capitalize,
-  createMemoization,
   loom,
   mapValue,
   silk,
 } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import {
   type Column,
   type InferSelectModel,

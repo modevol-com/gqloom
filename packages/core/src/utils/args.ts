@@ -1,10 +1,10 @@
 import type { GraphQLFieldExtensions } from "graphql"
-import type { ResolverPayload } from "../context/context"
 import type {
   FieldOptions,
   GraphQLFieldOptions,
   MutationOptions,
   QueryOptions,
+  ResolverPayload,
   SubscriptionOptions,
 } from "../resolver/types"
 

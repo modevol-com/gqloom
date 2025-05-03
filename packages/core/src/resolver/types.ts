@@ -3,13 +3,9 @@ import type {
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
+  GraphQLResolveInfo,
 } from "graphql"
-import type {
-  MayPromise,
-  Middleware,
-  RequireKeys,
-  ResolverPayload,
-} from "../utils"
+import type { MayPromise, Middleware, RequireKeys } from "../utils"
 import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type { InferInputO } from "./input"
 import type {
@@ -314,3 +310,33 @@ export interface SubscriptionFactory {
 export interface SubscriptionFactoryWithChain
   extends SubscriptionFactory,
     SubscriptionChainFactory<never, undefined> {}
+
+/**
+ * Detailed payload of the current resolver
+ */
+export interface ResolverPayload<
+  TContext extends object = object,
+  TField extends Loom.BaseField = Loom.BaseField,
+> {
+  /**
+   * The previous object, which for a field on the root Query type is often not used.
+   */
+  readonly root: any
+  /**
+   * The arguments provided to the field in the GraphQL query.
+   */
+  readonly args: Record<string, any>
+  /**
+   * The resolved value of the field, or an error.
+   */
+  readonly context: TContext
+  /**
+   * A custom object each resolver can read from/write to.
+   */
+  readonly info: GraphQLResolveInfo
+
+  /**
+   * The field that is being resolved.
+   */
+  readonly field: TField
+}

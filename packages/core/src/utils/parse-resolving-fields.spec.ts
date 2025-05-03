@@ -9,14 +9,8 @@ import {
   parse,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import {
-  field,
-  query,
-  resolver,
-  silk,
-  useResolverPayload,
-  weave,
-} from "../../src"
+import { field, query, resolver, silk, weave } from "../../src"
+import { useResolverPayload } from "../context"
 import { parseResolvingFields } from "./parse-resolving-fields"
 
 describe("parseResolvingFields", () => {

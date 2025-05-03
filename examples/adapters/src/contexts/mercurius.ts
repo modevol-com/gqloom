@@ -1,4 +1,4 @@
-import { useContext } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import type { MercuriusContext } from "mercurius"
 
 export function useAuthorization() {

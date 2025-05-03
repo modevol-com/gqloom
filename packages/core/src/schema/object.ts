@@ -18,20 +18,20 @@ import {
   isUnionType,
   resolveObjMapThunk,
 } from "graphql"
+import { resolverPayloadStorage } from "../context"
 import { bindAsyncIterator } from "../context/async-iterator"
 import {
   type Loom,
   type ResolverOptions,
+  type ResolverPayload,
   defaultSubscriptionResolve,
   getGraphQLType,
 } from "../resolver"
 import {
-  type ResolverPayload,
   deepMerge,
   mapValue,
   markErrorLocation,
   pascalCase,
-  resolverPayloadStorage,
   toObjMap,
 } from "../utils"
 import { inputToArgs } from "./input"

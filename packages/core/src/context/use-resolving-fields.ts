@@ -1,11 +1,8 @@
 import { GraphQLObjectType } from "graphql"
-import { DERIVED_DEPENDENCIES } from "../resolver"
-import {
-  type ResolverPayload,
-  createMemoization,
-  parseResolvingFields,
-  useResolverPayload,
-} from "../utils"
+import type { ResolverPayload } from "../resolver"
+import { DERIVED_DEPENDENCIES } from "../utils/constants"
+import { parseResolvingFields } from "../utils/parse-resolving-fields"
+import { createMemoization, useResolverPayload } from "./context"
 
 /**
  * Represents the state of field resolution in a GraphQL query.

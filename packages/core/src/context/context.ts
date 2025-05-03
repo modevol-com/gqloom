@@ -1,38 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks"
-import type { GraphQLResolveInfo } from "graphql"
-import type { Loom } from "../resolver/types"
+import type { ResolverPayload } from "../resolver/types"
 import { CONTEXT_MEMORY_MAP_KEY } from "../utils/symbols"
-
-/**
- * Detailed payload of the current resolver
- */
-export interface ResolverPayload<
-  TContext extends object = object,
-  TField extends Loom.BaseField = Loom.BaseField,
-> {
-  /**
-   * The previous object, which for a field on the root Query type is often not used.
-   */
-  readonly root: any
-  /**
-   * The arguments provided to the field in the GraphQL query.
-   */
-  readonly args: Record<string, any>
-  /**
-   * The resolved value of the field, or an error.
-   */
-  readonly context: TContext
-  /**
-   * A custom object each resolver can read from/write to.
-   */
-  readonly info: GraphQLResolveInfo
-
-  /**
-   * The field that is being resolved.
-   */
-  readonly field: TField
-}
-
 /**
  * Empty Resolver Arguments that only store the memoization
  */

@@ -1,4 +1,5 @@
-import { type MayPromise, resolverPayloadStorage } from "@gqloom/core"
+import type { MayPromise } from "@gqloom/core"
+import { resolverPayloadStorage } from "@gqloom/core/context"
 import type { GraphQLResolveInfo } from "graphql"
 import { referenceField } from "./resolver"
 

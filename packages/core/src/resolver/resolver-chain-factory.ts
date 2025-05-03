@@ -1,22 +1,21 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
+import { createMemoization } from "../context"
 import {
   EasyDataLoader,
   type MayPromise,
   type Middleware,
   type RequireKeys,
-  type ResolverPayload,
   applyMiddlewares,
-  createMemoization,
   getFieldOptions,
   meta,
 } from "../utils"
+import { DERIVED_DEPENDENCIES } from "../utils/constants"
 import {
   type CallableInputParser,
   type InferInputO,
   createInputParser,
 } from "./input"
 import {
-  DERIVED_DEPENDENCIES,
   createField,
   createMutation,
   createQuery,
@@ -30,6 +29,7 @@ import type {
   Loom,
   MutationOptions,
   QueryOptions,
+  ResolverPayload,
 } from "./types"
 
 export interface IChainFactory<
