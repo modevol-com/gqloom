@@ -208,7 +208,13 @@ export class FieldChainFactory<
             ...(this.options?.middlewares ?? []),
           ],
           async () => useUserLoader().load(parent),
-          { parseInput, parent, outputSilk: this.output, operation }
+          {
+            parseInput,
+            parent,
+            outputSilk: this.output,
+            operation,
+            payload: extraOptions?.payload,
+          }
         )
       },
     }) as Loom.Field<TParent, TOutput, TInput, TDependencies>
@@ -381,6 +387,9 @@ export class SubscriptionChainFactory<
   }
 }
 
+/**
+ * A subscription that can be resolved.
+ */
 export interface ResolvableSubscription<
   TOutput extends GraphQLSilk,
   TInput extends
@@ -398,6 +407,9 @@ export interface ResolvableSubscription<
   ): Loom.Subscription<TOutput, TInput, TValue>
 }
 
+/**
+ * A subscription that can not be resolved yet, still needs to be resolved.
+ */
 export interface SubscriptionNeedResolve<
   TOutput extends GraphQLSilk,
   TInput extends
@@ -409,7 +421,8 @@ export interface SubscriptionNeedResolve<
   resolve(
     resolve: (
       value: TValue,
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Subscription<TOutput, TInput, TValue>
 }

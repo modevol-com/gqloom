@@ -67,7 +67,13 @@ export const createQuery = (
             getStandardValue(await parseInput()),
             extraOptions?.payload
           ),
-        { parseInput, parent: undefined, outputSilk: output, operation }
+        {
+          parseInput,
+          parent: undefined,
+          outputSilk: output,
+          operation,
+          payload: extraOptions?.payload,
+        }
       )
     },
     operation,
@@ -103,7 +109,13 @@ export const createMutation = (
             getStandardValue(await parseInput()),
             extraOptions?.payload
           ),
-        { parseInput, parent: undefined, outputSilk: output, operation }
+        {
+          parseInput,
+          parent: undefined,
+          outputSilk: output,
+          operation,
+          payload: extraOptions?.payload,
+        }
       )
     },
     operation,
@@ -148,7 +160,13 @@ export const createField = (
             getStandardValue(await parseInput()),
             extraOptions?.payload ?? undefined
           ),
-        { parseInput, parent, outputSilk: output, operation }
+        {
+          parseInput,
+          parent,
+          outputSilk: output,
+          operation,
+          payload: extraOptions?.payload,
+        }
       )
     },
     operation,
@@ -202,7 +220,13 @@ export function createSubscription(
             getStandardValue(await parseInput()),
             extraOptions?.payload
           ),
-        { parseInput, parent: undefined, outputSilk: output, operation }
+        {
+          parseInput,
+          parent: undefined,
+          outputSilk: output,
+          operation,
+          payload: extraOptions?.payload,
+        }
       )
     },
     resolve: (value, input, extraOptions) =>

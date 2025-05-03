@@ -1,5 +1,10 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import type { CallableInputParser, InferFieldOutput, Loom } from "../resolver"
+import type {
+  CallableInputParser,
+  InferFieldOutput,
+  Loom,
+  ResolverPayload,
+} from "../resolver"
 import type { MayPromise, RequireKeys } from "./types"
 
 export interface MiddlewareOptions<
@@ -16,6 +21,9 @@ export interface MiddlewareOptions<
 
   /** The operation of the field: `query`, `mutation`, `subscription` or `field` */
   operation: Loom.BaseField["~meta"]["operation"]
+
+  /** The payload of the resolver */
+  payload: ResolverPayload | undefined
 }
 
 type InferFieldParent<TField extends Loom.BaseField> =
@@ -38,9 +46,11 @@ export interface CallableMiddlewareOptions<
   (): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
 }
 
-export type Middleware<TField extends Loom.BaseField = any> = (
-  options: CallableMiddlewareOptions<TField>
-) => MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
+export interface Middleware<TField extends Loom.BaseField = any> {
+  (
+    options: CallableMiddlewareOptions<TField>
+  ): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
+}
 
 export function applyMiddlewares<
   TField extends Loom.BaseField = Loom.BaseField,

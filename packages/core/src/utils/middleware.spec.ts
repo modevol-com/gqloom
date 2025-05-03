@@ -14,6 +14,7 @@ function initOptions(): MiddlewareOptions {
     parent: undefined,
     parseInput: createInputParser(undefined, undefined),
     operation: "field",
+    payload: undefined,
   }
 }
 
