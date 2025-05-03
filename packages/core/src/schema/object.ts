@@ -197,26 +197,22 @@ export class LoomObjectType extends GraphQLObjectType {
     if (field?.["~meta"]?.resolve == null) return
     if (field["~meta"].resolve === defaultSubscriptionResolve)
       return { resolve: defaultSubscriptionResolve }
-    const resolve: GraphQLFieldResolver<any, any> =
+    const _resolve: GraphQLFieldResolver<any, any> =
       field["~meta"].operation === "field"
         ? (root, args, context, info) => {
             const payload = { root, args, context, info, field }
-            return resolverPayloadStorage.run(payload, () =>
-              field["~meta"].resolve(root, args, {
-                ...this.resolverOptions,
-                payload,
-              })
-            )
+            return field["~meta"].resolve(root, args, {
+              ...this.resolverOptions,
+              payload,
+            })
           }
         : field["~meta"].operation === "subscription"
           ? (root, args, context, info) => {
               const payload = { root, args, context, info, field }
-              return resolverPayloadStorage.run(payload, () =>
-                field["~meta"].resolve(root, args, {
-                  ...this.resolverOptions,
-                  payload,
-                })
-              )
+              return field["~meta"].resolve(root, args, {
+                ...this.resolverOptions,
+                payload,
+              })
             }
           : (root, args, context, info) => {
               const payload = { root, args, context, info, field }
@@ -227,6 +223,27 @@ export class LoomObjectType extends GraphQLObjectType {
                 })
               )
             }
+    const resolve: GraphQLFieldResolver<any, any> = (() => {
+      switch (field["~meta"].operation) {
+        case "field":
+        case "subscription":
+          return (root, args, context, info) => {
+            const payload = { root, args, context, info, field }
+            return field["~meta"].resolve(root, args, {
+              ...this.resolverOptions,
+              payload,
+            })
+          }
+        default:
+          return (root, args, context, info) => {
+            const payload = { root, args, context, info, field }
+            return field["~meta"].resolve(args, {
+              ...this.resolverOptions,
+              payload,
+            })
+          }
+      }
+    })()
 
     return { resolve }
   }

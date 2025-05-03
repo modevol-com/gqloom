@@ -9,14 +9,18 @@ import {
 } from "graphql"
 import { beforeAll, describe, expect, it } from "vitest"
 import {
-  GraphQLSchemaLoom,
   type Loom,
   type Middleware,
   type ResolverPayload,
   loom,
   silk,
+  weave,
 } from "../src"
-import { createMemoization, useResolverPayload } from "../src/context"
+import {
+  asyncContextProvider,
+  createMemoization,
+  useResolverPayload,
+} from "../src/context"
 
 const { query, resolver, field } = loom
 
@@ -75,12 +79,12 @@ describe("context integration", () => {
       return { value: 0 }
     }),
   })
-
-  const schema = new GraphQLSchemaLoom()
-    .use(globalMiddleware)
-    .add(simpleResolver)
-    .add(nodeResolver)
-    .weaveGraphQLSchema()
+  const schema = weave(
+    asyncContextProvider,
+    globalMiddleware,
+    simpleResolver,
+    nodeResolver
+  )
 
   const contextValue = {}
   const rootValue = {}
@@ -221,10 +225,7 @@ describe("memory integration", () => {
     { middlewares: [middleware] }
   )
 
-  const schema = new GraphQLSchemaLoom()
-    .use(middleware)
-    .add(nodeResolver)
-    .weaveGraphQLSchema()
+  const schema = weave(asyncContextProvider, middleware, nodeResolver)
 
   const contextValue = {}
 

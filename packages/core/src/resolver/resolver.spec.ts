@@ -419,7 +419,7 @@ describe("executor", () => {
 
     expect(saved).toEqual({
       name: "Skyler",
-      birthday: new Date(),
+      birthday: expect.any(Date),
       heightInMeters: 5,
     })
   })

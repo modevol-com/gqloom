@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import type { ResolverPayload } from "../resolver/types"
+import type { Middleware } from "../utils"
 import { CONTEXT_MEMORY_MAP_KEY } from "../utils/symbols"
 /**
  * Empty Resolver Arguments that only store the memoization
@@ -169,4 +170,8 @@ export function createMemoization<T>(
     ContextMemoization<T>,
     "get" | "set" | "clear" | "exists" | "getter" | "key"
   >)
+}
+
+export const asyncContextProvider: Middleware = ({ next, payload }) => {
+  return resolverPayloadStorage.run(payload ?? onlyMemoization(), next)
 }
