@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: Updated resolver functions to accept a `payload` parameter
+
 ## 0.8.4 (2025-04-08)
 
 - Feat: add `screamingSnakeCase` to convert strings to screaming snake case
