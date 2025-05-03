@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { CONTEXT_MEMORY_MAP_KEY } from "../utils/symbols"
 import {
   ContextMemoization,
   createMemoization,
@@ -8,7 +9,6 @@ import {
   useMemoizationMap,
   useResolverPayload,
 } from "./context"
-import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 
 describe("context", () => {
   describe("useResolverArgs", () => {

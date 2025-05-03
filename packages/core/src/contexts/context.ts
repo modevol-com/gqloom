@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import type { GraphQLResolveInfo } from "graphql"
 import type { Loom } from "../resolver/types"
-import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
+import { CONTEXT_MEMORY_MAP_KEY } from "../utils/symbols"
 
 /**
  * Detailed payload of the current resolver
