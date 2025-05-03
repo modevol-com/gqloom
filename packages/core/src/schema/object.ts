@@ -21,7 +21,7 @@ import {
 import { bindAsyncIterator } from "../contexts/async-iterator"
 import {
   type Loom,
-  type ResolvingOptions,
+  type ResolverOptions,
   defaultSubscriptionResolve,
   getGraphQLType,
 } from "../resolver"
@@ -48,7 +48,7 @@ export class LoomObjectType extends GraphQLObjectType {
   public static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
-  protected resolverOptions?: ResolvingOptions
+  protected resolverOptions?: ResolverOptions
 
   public constructor(
     objectOrGetter:
@@ -58,7 +58,7 @@ export class LoomObjectType extends GraphQLObjectType {
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
     options: {
       weaverContext?: WeaverContext
-      resolverOptions?: ResolvingOptions
+      resolverOptions?: ResolverOptions
     } = {}
   ) {
     const origin =
@@ -308,7 +308,7 @@ export function getCacheType(
   gqlType: GraphQLOutputType,
   options: {
     weaverContext?: WeaverContext
-    resolverOptions?: ResolvingOptions
+    resolverOptions?: ResolverOptions
     fieldName?: string
     parent?: LoomObjectType
   } = {}

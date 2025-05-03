@@ -10,7 +10,7 @@ import {
 import {
   type GraphQLSilk,
   type Loom,
-  type ResolvingOptions,
+  type ResolverOptions,
   getGraphQLType,
   isSilk,
 } from "../resolver"
@@ -43,7 +43,7 @@ export class GraphQLSchemaLoom {
 
   public context: WeaverContext
 
-  public resolverOptions?: ResolvingOptions
+  public resolverOptions?: ResolverOptions
 
   /**
    * Create a Schema Weaver config object
