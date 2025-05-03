@@ -8,7 +8,7 @@ import {
   printSchema,
 } from "graphql"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { createMemoization } from "../contexts/context"
+import { createMemoization } from "../context/context"
 import { weave } from "../schema"
 import type { Middleware } from "../utils"
 import { field, mutation, query, resolver } from "./resolver"

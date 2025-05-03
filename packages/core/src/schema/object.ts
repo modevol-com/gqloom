@@ -18,7 +18,7 @@ import {
   isUnionType,
   resolveObjMapThunk,
 } from "graphql"
-import { bindAsyncIterator } from "../contexts/async-iterator"
+import { bindAsyncIterator } from "../context/async-iterator"
 import {
   type Loom,
   type ResolverOptions,

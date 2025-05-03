@@ -19,6 +19,20 @@
         "types": "./src/index.ts",
         "default": "./src/index.ts"
       }
+    },
+    "./context": {
+      "import": {
+        "types": "./dist/context.d.ts",
+        "default": "./dist/context.js"
+      },
+      "require": {
+        "types": "./dist/context.d.cts",
+        "default": "./dist/context.cjs"
+      },
+      "source": {
+        "types": "./src/context/index.ts",
+        "default": "./src/context/index.ts"
+      }
     }
   },
   "scripts": {
