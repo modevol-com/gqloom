@@ -268,11 +268,9 @@ describe("resolver", () => {
     let fieldPayload: ResolverPayload | undefined
 
     const chainResolver = resolver.of(silk(Giraffe), {
-      giraffes: query(silk.list(silk(Giraffe)), {
-        resolve: (_input, payload) => {
-          queryPayload = payload
-          return Array.from(giraffes.values())
-        },
+      giraffes: query(silk.list(silk(Giraffe)), (_input, payload) => {
+        queryPayload = payload
+        return Array.from(giraffes.values())
       }),
 
       age: field(silk(new GraphQLNonNull(GraphQLInt)), {

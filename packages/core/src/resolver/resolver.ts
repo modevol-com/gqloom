@@ -3,6 +3,7 @@ import {
   type MayPromise,
   type Middleware,
   type OmitInUnion,
+  type ResolverPayload,
   type ValueOf,
   applyMiddlewares,
   getFieldOptions,
@@ -177,7 +178,9 @@ export function createSubscription(
 export function createSubscription(
   output: GraphQLSilk<any, any>,
   subscribeOrOptions?:
-    | (() => MayPromise<AsyncIterator<unknown>>)
+    | ((
+        payload: ResolverPayload | undefined
+      ) => MayPromise<AsyncIterator<unknown>>)
     | SubscriptionOptions<any, any, any>
 ) {
   if (subscribeOrOptions == null) {

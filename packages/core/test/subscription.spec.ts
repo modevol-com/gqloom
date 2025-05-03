@@ -213,6 +213,10 @@ describe("subscription integration", () => {
       ResolverPayload | undefined
     >
 
+    let subscribePayload: ResolverPayload | undefined
+    let resolvePayload: ResolverPayload | undefined
+    let iteratorPayload: ResolverPayload | undefined
+
     const middleware: Middleware = (next) => {
       payloads.middleware = useResolverPayload()
       return next()
@@ -222,11 +226,13 @@ describe("subscription integration", () => {
       {
         hello,
         foo: subscription(silk(GraphQLString))
-          .subscribe(() => {
+          .subscribe((_input, payload) => {
+            subscribePayload = payload
             payloads.subscribe = useResolverPayload()
             return fooGenerator()
           })
-          .resolve(async (value) => {
+          .resolve(async (value, _input, payload) => {
+            resolvePayload = payload
             payloads.resolve = useResolverPayload()
             return value + " Resolved"
           }),
@@ -247,11 +253,14 @@ describe("subscription integration", () => {
 
     const iteratorResolver = resolver({
       hello,
-      foo: subscription(silk(GraphQLString)).subscribe(async function* () {
-        await new Promise((resolve) => setTimeout(resolve, 6))
-        payloads.iterator = useResolverPayload()
-        yield "FooValue"
-      }),
+      foo: subscription(silk(GraphQLString)).subscribe(
+        async function* (_input, payload) {
+          iteratorPayload = payload
+          await new Promise((resolve) => setTimeout(resolve, 6))
+          payloads.iterator = useResolverPayload()
+          yield "FooValue"
+        }
+      ),
     })
 
     const iteratorSchema = weave(iteratorResolver)
@@ -278,6 +287,13 @@ describe("subscription integration", () => {
         data: { foo: "FooValue" },
       },
     })
+
+    expect(subscribePayload).toBeDefined()
+    expect(subscribePayload?.info.fieldName).toBe("foo")
+    expect(resolvePayload).toBeDefined()
+    expect(resolvePayload?.info.fieldName).toBe("foo")
+    expect(iteratorPayload).toBeDefined()
+    expect(iteratorPayload?.info.fieldName).toBe("foo")
 
     expect(payloads.resolve).toBeDefined()
     expect(payloads.resolve?.context).toBe(contextValue)

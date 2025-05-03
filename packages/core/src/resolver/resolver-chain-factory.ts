@@ -349,7 +349,10 @@ export class SubscriptionChainFactory<
   }
 
   public subscribe<TValue = StandardSchemaV1.InferOutput<TOutput>>(
-    subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
+    subscribe: (
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
+    ) => MayPromise<AsyncIterator<TValue>>
   ): TValue extends StandardSchemaV1.InferOutput<TOutput>
     ? ResolvableSubscription<TOutput, TInput, TValue>
     : SubscriptionNeedResolve<TOutput, TInput, TValue> {
@@ -389,7 +392,8 @@ export interface ResolvableSubscription<
   resolve(
     resolve: (
       value: TValue,
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Subscription<TOutput, TInput, TValue>
 }

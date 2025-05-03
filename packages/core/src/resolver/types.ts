@@ -113,6 +113,7 @@ export interface QueryFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: (
+      input: void,
       payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Query<TOutput, void>
@@ -141,6 +142,7 @@ export interface MutationFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: (
+      input: void,
       payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Mutation<TOutput, undefined>

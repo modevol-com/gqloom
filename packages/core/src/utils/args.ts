@@ -1,4 +1,5 @@
 import type { GraphQLFieldExtensions } from "graphql"
+import type { ResolverPayload } from "../contexts/context"
 import type {
   FieldOptions,
   GraphQLFieldOptions,
@@ -21,7 +22,9 @@ export function getOperationOptions(
 }
 
 export function getSubscriptionOptions(
-  subscribeOrOptions: (() => any) | SubscriptionOptions<any, any, any>
+  subscribeOrOptions:
+    | ((payload: ResolverPayload | undefined) => any)
+    | SubscriptionOptions<any, any, any>
 ): SubscriptionOptions<any, any, any> {
   if (typeof subscribeOrOptions === "function") {
     return { subscribe: subscribeOrOptions }
