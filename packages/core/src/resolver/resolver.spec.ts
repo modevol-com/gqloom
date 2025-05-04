@@ -8,7 +8,7 @@ import {
   printSchema,
 } from "graphql"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { createMemoization } from "../context/context"
+import { asyncContextProvider, createMemoization } from "../context/context"
 import { weave } from "../schema"
 import type { Middleware } from "../utils"
 import { field, mutation, query, resolver } from "./resolver"
@@ -415,15 +415,27 @@ describe("executor", () => {
     expect(logs).toEqual(["before", "after"])
   })
 
-  it.todo("should work with memoization", async () => {
-    const memoization = new WeakMap()
-    memoization.set(useDefaultName.key, "Skyler")
-
-    const executor = giraffeResolver.toExecutor()
+  it("should work with memoization", async () => {
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with(useDefaultName.provide("Name_Only_I_Know"))
+    )
     const saved = await executor.saveGiraffe({}, nil)
 
     expect(saved).toEqual({
-      name: "Skyler",
+      name: "Name_Only_I_Know",
+      birthday: expect.any(Date),
+      heightInMeters: 5,
+    })
+  })
+
+  it("should work with memoization by key", async () => {
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with([useDefaultName, "Name_Only_I_Know"])
+    )
+    const saved = await executor.saveGiraffe({}, nil)
+
+    expect(saved).toEqual({
+      name: "Name_Only_I_Know",
       birthday: expect.any(Date),
       heightInMeters: 5,
     })

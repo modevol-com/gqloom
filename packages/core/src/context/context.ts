@@ -56,6 +56,12 @@ export function useContext<TContextType = object>(): TContextType {
 export function useMemoizationMap(): WeakMap<WeakKey, any> | undefined {
   const payload = resolverPayloadStorage.getStore()
   if (payload == null) return
+  return getMemoizationMap(payload)
+}
+
+export function getMemoizationMap(
+  payload: OnlyMemoizationPayload | ResolverPayload
+) {
   if (isOnlyMemoryPayload(payload)) return payload.memoization
   if (typeof payload.context === "undefined") {
     Object.defineProperty(payload, "context", { value: {} })
@@ -133,6 +139,10 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
     return map.set(this.key, value)
   }
 
+  public provide(value: T): [WeakKey, T] {
+    return [this.key, value]
+  }
+
   public static assignMemoizationMap(
     target: ContextMemoryContainer
   ): WeakMap<WeakKey, any> {
@@ -147,7 +157,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
 export interface CallableContextMemoization<T>
   extends Pick<
     ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter" | "key"
+    "get" | "set" | "clear" | "exists" | "getter" | "key" | "provide"
   > {
   (): T
 }
@@ -160,6 +170,11 @@ export function createMemoization<T>(
 ): CallableContextMemoization<T> {
   const memoization = new ContextMemoization(...args)
   const callable = () => memoization.get()
+  Object.defineProperty(memoization, "key", {
+    value: callable,
+    writable: false,
+    configurable: false,
+  })
   return Object.assign(callable, {
     key: memoization.key,
     get: () => memoization.get(),
@@ -167,36 +182,51 @@ export function createMemoization<T>(
     clear: () => memoization.clear(),
     exists: () => memoization.exists(),
     getter: memoization.getter,
+    provide: (value: T) => memoization.provide(value),
   } as Pick<
     ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter" | "key"
+    "get" | "set" | "clear" | "exists" | "getter" | "key" | "provide"
   >)
 }
 
-export const asyncContextProvider: Middleware = ({
-  next,
-  payload,
-  operation,
-}) => {
-  if (operation === "subscription.subscribe") {
-    return resolverPayloadStorage.run(
-      payload ?? onlyMemoization(),
-      async () => {
+export interface AsyncContextProvider extends Middleware {
+  with: (...keyValues: [WeakKey, any][]) => Middleware
+}
+
+const createProvider = (...keyValues: [WeakKey, any][]): Middleware => {
+  return ({ next, payload, operation }) => {
+    const store = payload ?? onlyMemoization()
+    const map = getMemoizationMap(store)
+    if (map) {
+      for (const [key, value] of keyValues) {
+        map.set(key, value)
+      }
+    }
+    if (operation === "subscription.subscribe") {
+      return resolverPayloadStorage.run(store, async () => {
         let result = await next()
         if (isAsyncIterator(result)) {
           result = bindAsyncIterator(resolverPayloadStorage, result)
         }
         return result
-      }
-    )
+      })
+    }
+    return resolverPayloadStorage.run(store, next)
   }
-  return resolverPayloadStorage.run(payload ?? onlyMemoization(), next)
 }
 
-asyncContextProvider.operations = [
-  "query",
-  "mutation",
-  "field",
-  "subscription.resolve",
-  "subscription.subscribe",
-]
+export const asyncContextProvider: AsyncContextProvider = Object.assign(
+  createProvider(),
+  {
+    operations: [
+      "query",
+      "mutation",
+      "field",
+      "subscription.resolve",
+      "subscription.subscribe",
+    ],
+    with: (...keyValues: [WeakKey, any][]) => {
+      return createProvider(...keyValues)
+    },
+  }
+)
