@@ -18,16 +18,16 @@ export type MiddlewareOperation =
 export interface MiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,
 > {
-  /** The Output Silk of the field */
+  /** The Output Silk */
   outputSilk: StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
 
   /** The previous object, which for a field on the root Query type is often not used. */
   parent: InferFieldParent<TField>
 
-  /** A function to parse the input of the field */
+  /** A function to parse the input */
   parseInput: CallableInputParser<TField["~meta"]["input"]>
 
-  /** The executing operation of the field */
+  /** The executing operation */
   operation: MiddlewareOperation
 
   /** The payload of the resolver */

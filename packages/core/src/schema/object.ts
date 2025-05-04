@@ -275,7 +275,7 @@ export class LoomObjectType extends GraphQLObjectType {
           const parseInput = createInputParser(field["~meta"].input, args)
           return applyMiddlewares(
             {
-              operation: "field",
+              operation: "subscription.resolve",
               outputSilk: field["~meta"].output,
               parent: undefined,
               parseInput,
@@ -316,7 +316,7 @@ export class LoomObjectType extends GraphQLObjectType {
       const parseInput = createInputParser(field["~meta"].input, args)
       return applyMiddlewares(
         {
-          operation: "field",
+          operation: "subscription.subscribe",
           outputSilk: field["~meta"].output,
           parent: undefined,
           parseInput,
