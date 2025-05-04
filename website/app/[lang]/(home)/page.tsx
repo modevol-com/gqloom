@@ -215,10 +215,13 @@ function Features({ lang, className }: LangProps) {
   const title = lang === "zh" ? "全功能 GraphQL" : "Full Featured GraphQL"
   return (
     <section
-      className={clsx("px-6 max-w-5xl flex flex-col items-center", className)}
+      className={clsx(
+        "px-6 max-w-5xl flex flex-col items-center w-full",
+        className
+      )}
     >
       <h2 className="text-3xl font-bold tracking-wider">{title}</h2>
-      <Cards className="mt-12">
+      <Cards className="mt-12 w-full">
         {features.map(({ href, ...props }, i) => (
           <Card
             key={i}

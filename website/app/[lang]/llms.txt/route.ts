@@ -36,13 +36,14 @@ export async function GET(
     return new Response(cached.content)
   }
 
-  // all scanned content
-  const files = await fg(
-    [lang === "zh" ? "./content/docs/**/*.zh.mdx" : "./content/docs/**/*.mdx"],
-    {
-      ignore: lang === "en" ? ["**/*.zh.mdx"] : [],
+  const files = await (() => {
+    if (lang === "zh") {
+      return fg("./content/docs/*.zh.{mdx,md}")
     }
-  )
+    return fg("./content/docs/*.{mdx,md}", {
+      ignore: ["**/*.zh.{mdx,md}"],
+    })
+  })()
 
   const scan = files.map(async (file) => {
     const fileContent = await fs.readFile(file)

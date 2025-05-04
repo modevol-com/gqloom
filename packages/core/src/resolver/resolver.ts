@@ -41,6 +41,13 @@ import type {
   SubscriptionFactoryWithChain,
   SubscriptionOptions,
 } from "./types"
+
+/**
+ * Creates a GraphQL query resolver
+ * @param output - The output type definition for the query
+ * @param resolveOrOptions - Either a resolve function or options object
+ * @returns A GraphQL query resolver
+ */
 export const createQuery = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
@@ -62,11 +69,20 @@ export const createQuery = (
   }) as Loom.Query<any, any>
 }
 
+/**
+ * Factory function for creating GraphQL queries with chainable configuration
+ */
 export const query: QueryFactoryWithChain = Object.assign(
   createQuery as QueryFactory,
   QueryChainFactory.methods()
 )
 
+/**
+ * Creates a GraphQL mutation resolver
+ * @param output - The output type definition for the mutation
+ * @param resolveOrOptions - Either a resolve function or options object
+ * @returns A GraphQL mutation resolver
+ */
 export const createMutation = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?: (() => MayPromise<unknown>) | MutationOptions<any, any>
@@ -87,11 +103,20 @@ export const createMutation = (
   }) as Loom.Mutation<any, any>
 }
 
+/**
+ * Factory function for creating GraphQL mutations with chainable configuration
+ */
 export const mutation: MutationFactoryWithChain = Object.assign(
   createMutation as MutationFactory,
   MutationChainFactory.methods()
 )
 
+/**
+ * Creates a GraphQL field resolver
+ * @param output - The output type definition for the field
+ * @param resolveOrOptions - Either a resolve function or options object
+ * @returns A GraphQL field resolver
+ */
 export const createField = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
@@ -120,18 +145,36 @@ export const createField = (
   }) as Loom.Field<any, any, any, any>
 }
 
+/**
+ * Factory function for creating GraphQL fields with chainable configuration
+ */
 export const field: FieldFactoryWithUtils = Object.assign(
   createField as FieldFactory,
   { hidden: FIELD_HIDDEN as typeof FIELD_HIDDEN },
   FieldChainFactory.methods()
 )
 
+/**
+ * Default subscription resolver that returns the source value
+ * @param source - The source value to resolve
+ */
 export const defaultSubscriptionResolve = (source: any) => source
 
+/**
+ * Creates a GraphQL subscription resolver
+ * @param output - The output type definition for the subscription
+ * @returns A subscription chain factory
+ */
 export function createSubscription(
   output: GraphQLSilk<any, any>
 ): SubscriptionChainFactory
 
+/**
+ * Creates a GraphQL subscription resolver with subscribe function
+ * @param output - The output type definition for the subscription
+ * @param subscribeOrOptions - Either a subscribe function or options object
+ * @returns A GraphQL subscription resolver
+ */
 export function createSubscription(
   output: GraphQLSilk<any, any>,
   subscribeOrOptions:
@@ -139,6 +182,12 @@ export function createSubscription(
     | SubscriptionOptions<any, any, any>
 ): Loom.Subscription<any, any, any>
 
+/**
+ * Creates a GraphQL subscription resolver
+ * @param output - The output type definition for the subscription
+ * @param subscribeOrOptions - Optional subscribe function or options object
+ * @returns A GraphQL subscription resolver or chain factory
+ */
 export function createSubscription(
   output: GraphQLSilk<any, any>,
   subscribeOrOptions?:
@@ -163,6 +212,9 @@ export function createSubscription(
   }) as Loom.Subscription<any, any, any>
 }
 
+/**
+ * Factory function for creating GraphQL subscriptions with chainable configuration
+ */
 export const subscription: SubscriptionFactoryWithChain = Object.assign(
   createSubscription as unknown as SubscriptionFactory,
   SubscriptionChainFactory.methods()
@@ -181,6 +233,9 @@ export const resolver: ResolverFactory = Object.assign(
   }
 )
 
+/**
+ * Collection of factory functions for creating GraphQL operations
+ */
 export const loom = {
   query,
   resolver,
@@ -189,11 +244,26 @@ export const loom = {
   mutation,
 }
 
+/**
+ * Properties for creating an executor
+ */
 export interface ToExecutorProps {
+  /** WeakMap for memoization */
   memoization?: WeakMap<WeakKey, any>
 }
 
+/**
+ * Factory interface for creating GraphQL resolvers
+ */
 export interface ResolverFactory {
+  /**
+   * Creates a resolver for an object type
+   * @template TParent - The parent type
+   * @template TFields - The fields of the object type
+   * @param parent - The parent type definition
+   * @param fields - The fields to resolve
+   * @param options - Optional resolver options
+   */
   of<
     TParent extends GraphQLSilk,
     TFields extends Record<
@@ -208,12 +278,22 @@ export interface ResolverFactory {
     >
   ): ObjectChainResolver<TParent, TFields>
 
+  /**
+   * Creates a resolver for operations
+   * @template TFields - The operations to resolve
+   * @param operations - The operations to resolve
+   * @param options - Optional resolver options
+   */
   <TFields extends Record<string, Loom.Operation>>(
     operations: TFields,
     options?: ResolverOptions<ValueOf<TFields>>
   ): ChainResolver<TFields>
 }
 
+/**
+ * Base class for chain resolvers
+ * @template TFields - The fields or operations to resolve
+ */
 export class ChainResolver<
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
 > implements Loom.Resolver
@@ -224,6 +304,11 @@ export class ChainResolver<
     options?: ResolverOptionsWithExtensions
   }
 
+  /**
+   * Creates a new chain resolver
+   * @param fields - The fields or operations to resolve
+   * @param options - Optional resolver options
+   */
   public constructor(
     fields: TFields,
     options?: ResolverOptionsWithExtensions<any>
@@ -235,10 +320,17 @@ export class ChainResolver<
     }
   }
 
+  /**
+   * Gets the metadata for the resolver
+   */
   public get "~meta"(): typeof this.meta {
     return this.meta
   }
 
+  /**
+   * Adds middleware functions to the resolver
+   * @param middlewares - The middleware functions to add
+   */
   public use(
     ...middlewares: Middleware<
       OmitInUnion<ValueOf<TFields>, typeof FIELD_HIDDEN>
@@ -309,6 +401,11 @@ export class ChainResolver<
     }
   }
 }
+/**
+ * Class for resolving object types
+ * @template TParent - The parent type
+ * @template TFields - The fields to resolve
+ */
 export class ObjectChainResolver<
   TParent extends GraphQLSilk,
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
@@ -320,6 +417,12 @@ export class ObjectChainResolver<
     options?: ResolverOptionsWithExtensions
   }
 
+  /**
+   * Creates a new object chain resolver
+   * @param parent - The parent type definition
+   * @param fields - The fields to resolve
+   * @param options - Optional resolver options
+   */
   public constructor(
     parent: TParent,
     fields: TFields,
@@ -334,10 +437,17 @@ export class ObjectChainResolver<
     }
   }
 
+  /**
+   * Gets the metadata for the resolver
+   */
   public get "~meta"(): typeof this.meta {
     return super["~meta"] as typeof this.meta
   }
 
+  /**
+   * Sets custom extensions for the resolver
+   * @param extensions - The extensions to add
+   */
   public extensions(
     extensions: Pick<
       GraphQLObjectTypeConfig<any, any>,
@@ -354,6 +464,10 @@ export class ObjectChainResolver<
   }
 }
 
+/**
+ * Type for the executor of a resolver
+ * @template TFields - The fields or operations to resolve
+ */
 type Executor<
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
 > = {
