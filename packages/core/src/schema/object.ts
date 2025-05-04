@@ -18,8 +18,6 @@ import {
   isUnionType,
   resolveObjMapThunk,
 } from "graphql"
-import { resolverPayloadStorage } from "../context"
-import { bindAsyncIterator } from "../context/async-iterator"
 import {
   type Loom,
   type ResolverOptions,
@@ -232,12 +230,10 @@ export class LoomObjectType extends GraphQLObjectType {
     return {
       subscribe: (root, args, context, info) => {
         const payload: ResolverPayload = { root, args, context, info, field }
-        return resolverPayloadStorage.run(payload, async () => {
-          const generator = await (field as Loom.Subscription<any, any, any>)[
-            "~meta"
-          ].subscribe?.(args, { ...this.resolverOptions, payload })
-          return bindAsyncIterator(resolverPayloadStorage, generator)
-        })
+        return (field as Loom.Subscription<any, any, any>)["~meta"].subscribe?.(
+          args,
+          { ...this.resolverOptions, payload }
+        )
       },
     }
   }

@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 import type { ResolverPayload } from "../resolver/types"
 import type { Middleware } from "../utils"
 import { CONTEXT_MEMORY_MAP_KEY } from "../utils/symbols"
+import { bindAsyncIterator, isAsyncIterator } from "./async-iterator"
 /**
  * Empty Resolver Arguments that only store the memoization
  */
@@ -172,6 +173,30 @@ export function createMemoization<T>(
   >)
 }
 
-export const asyncContextProvider: Middleware = ({ next, payload }) => {
+export const asyncContextProvider: Middleware = ({
+  next,
+  payload,
+  operation,
+}) => {
+  if (operation === "subscription.subscribe") {
+    return resolverPayloadStorage.run(
+      payload ?? onlyMemoization(),
+      async () => {
+        let result = await next()
+        if (isAsyncIterator(result)) {
+          result = bindAsyncIterator(resolverPayloadStorage, result)
+        }
+        return result
+      }
+    )
+  }
   return resolverPayloadStorage.run(payload ?? onlyMemoization(), next)
 }
+
+asyncContextProvider.operations = [
+  "query",
+  "mutation",
+  "field",
+  "subscription.resolve",
+  "subscription.subscribe",
+]
