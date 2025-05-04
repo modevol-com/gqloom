@@ -8,7 +8,11 @@ import {
   printSchema,
 } from "graphql"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { asyncContextProvider, createMemoization } from "../context/context"
+import {
+  asyncContextProvider,
+  createContext,
+  createMemoization,
+} from "../context/context"
 import { weave } from "../schema"
 import type { Middleware } from "../utils"
 import { field, mutation, query, resolver } from "./resolver"
@@ -348,7 +352,8 @@ describe("executor", () => {
   /** name -> giraffe */
   const giraffeMap = new Map<string, IGiraffe>()
 
-  const useDefaultName = createMemoization(() => "Giraffe")
+  const useDefaultName = createContext(() => "Giraffe")
+  const useGiraffes = createMemoization(() => Array.from(giraffeMap.values()))
 
   const giraffeResolver = resolver.of(Giraffe, {
     age: field(silk(GraphQLInt), async (giraffe) => {
@@ -360,9 +365,7 @@ describe("executor", () => {
       .resolve(({ name }) => {
         return giraffeMap.get(name)
       }),
-    allGiraffes: query(silk.list(Giraffe)).resolve(() =>
-      Array.from(giraffeMap.values())
-    ),
+    allGiraffes: query(silk.list(Giraffe)).resolve(() => useGiraffes()),
 
     saveGiraffe: mutation(Giraffe)
       .input(GiraffeInput)
@@ -415,9 +418,11 @@ describe("executor", () => {
     expect(logs).toEqual(["before", "after"])
   })
 
-  it("should work with memoization", async () => {
+  it("should work with context", async () => {
     const executor = giraffeResolver.toExecutor(
-      asyncContextProvider.with(useDefaultName.provide("Name_Only_I_Know"))
+      asyncContextProvider.with(
+        useDefaultName.provide(() => "Name_Only_I_Know")
+      )
     )
     const saved = await executor.saveGiraffe({}, nil)
 
@@ -428,7 +433,7 @@ describe("executor", () => {
     })
   })
 
-  it("should work with memoization by key", async () => {
+  it("should work with context by key", async () => {
     const executor = giraffeResolver.toExecutor(
       asyncContextProvider.with([useDefaultName, "Name_Only_I_Know"])
     )
@@ -439,5 +444,31 @@ describe("executor", () => {
       birthday: expect.any(Date),
       heightInMeters: 5,
     })
+  })
+
+  it("should work with memoization", async () => {
+    const giraffe = {
+      name: "Name_Only_I_Know",
+      birthday: new Date("2025-01-01"),
+      heightInMeters: 5,
+    }
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with(useGiraffes.provide([giraffe]))
+    )
+    const allGiraffes = await executor.allGiraffes(nil, nil)
+    expect(allGiraffes).toEqual([giraffe])
+  })
+
+  it("should work with memoization by key", async () => {
+    const giraffe = {
+      name: "Name_Only_I_Know",
+      birthday: new Date("2025-01-01"),
+      heightInMeters: 5,
+    }
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with(useGiraffes.provide([giraffe]))
+    )
+    const allGiraffes = await executor.allGiraffes(nil, nil)
+    expect(allGiraffes).toEqual([giraffe])
   })
 })

@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import type { ResolverPayload } from "../resolver/types"
 import type { Middleware } from "../utils"
-import { CONTEXT_MEMORY_MAP_KEY } from "../utils/symbols"
+import { CONTEXT_MAP_KEY } from "../utils/symbols"
 import { bindAsyncIterator, isAsyncIterator } from "./async-iterator"
 /**
  * Empty Resolver Arguments that only store the memoization
@@ -66,32 +66,93 @@ export function getMemoizationMap(
   if (typeof payload.context === "undefined") {
     Object.defineProperty(payload, "context", { value: {} })
   }
-  return ContextMemoization.assignMemoizationMap(payload.context)
+  return assignContextMap(payload.context)
 }
 
 interface ContextMemoryContainer {
-  [CONTEXT_MEMORY_MAP_KEY]?: WeakMap<WeakKey, any>
+  [CONTEXT_MAP_KEY]?: WeakMap<WeakKey, any>
 }
 
-interface ContextMemoryOptions {
-  getMemoizationMap: () => WeakMap<WeakKey, any> | undefined
+interface ContextOptions {
+  getContextMap: () => WeakMap<WeakKey, any> | undefined
   key: WeakKey
+}
+
+/**
+ * A class that provides dependency injection and context sharing capabilities.
+ * It allows you to create injectable dependencies that can be shared across different parts of your application.
+ *
+ * @template T The type of the value that will be injected
+ *
+ */
+export class InjectableContext<T> implements ContextOptions {
+  /**
+   * Creates a new instance of InjectableContext.
+   *
+   * @param getter - A function that returns the default value when no custom implementation is provided
+   * @param options - Optional configuration for the context
+   * @param options.getContextMap - A function that returns the WeakMap used to store context values. Defaults to useMemoizationMap
+   * @param options.key - A unique key used to identify this context in the WeakMap. Defaults to the getter function
+   */
+  public constructor(
+    public readonly getter: () => T,
+    options: Partial<ContextOptions> = {}
+  ) {
+    this.getter = getter
+    this.getContextMap = options.getContextMap ?? useMemoizationMap
+    this.key = options.key ?? this.getter
+  }
+
+  /**
+   * A function that returns the WeakMap used to store context values.
+   * This can be customized to use different storage mechanisms.
+   */
+  public getContextMap: () => WeakMap<WeakKey, any> | undefined
+
+  /**
+   * A unique key used to identify this context in the WeakMap.
+   * This is used to store and retrieve values from the context map.
+   */
+  public readonly key: WeakKey
+
+  /**
+   * Retrieves the value from the context.
+   * If a custom implementation is provided, it will be used.
+   * Otherwise, the default getter function will be called.
+   *
+   * @returns The value of type T
+   */
+  public get(): T {
+    const getter = this.getContextMap()?.get(this.key) ?? this.getter
+    if (typeof getter === "function") return getter()
+    return getter
+  }
+
+  /**
+   * Provides a new implementation for this context.
+   *
+   * @param getter - A function that returns the new value
+   * @returns A tuple containing the key and the new getter function
+   */
+  public provide(getter: () => T): [WeakKey, () => T] {
+    return [this.key, getter]
+  }
 }
 
 /**
  * Create a memoization in context to store the result of a getter function
  */
-export class ContextMemoization<T> implements ContextMemoryOptions {
+export class ContextMemoization<T> implements ContextOptions {
   public constructor(
     public readonly getter: () => T,
-    options: Partial<ContextMemoryOptions> = {}
+    options: Partial<ContextOptions> = {}
   ) {
     this.getter = getter
-    this.getMemoizationMap = options.getMemoizationMap ?? useMemoizationMap
+    this.getContextMap = options.getContextMap ?? useMemoizationMap
     this.key = options.key ?? this.getter
   }
 
-  public getMemoizationMap: () => WeakMap<WeakKey, any> | undefined
+  public getContextMap: () => WeakMap<WeakKey, any> | undefined
   public readonly key: WeakKey
 
   /**
@@ -99,7 +160,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
    * @returns the value of the getter function
    */
   public get(): T {
-    const map = this.getMemoizationMap()
+    const map = this.getContextMap()
     if (!map) return this.getter()
 
     if (!map.has(this.key)) {
@@ -113,7 +174,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
    * @returns true if the memoization is cleared, undefined if the context is not found
    */
   public clear(): boolean | undefined {
-    const map = this.getMemoizationMap()
+    const map = this.getContextMap()
     if (!map) return
     return map.delete(this.key)
   }
@@ -123,7 +184,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
    * @returns true if the memoization exists, undefined if the context is not found
    */
   public exists(): boolean | undefined {
-    const map = this.getMemoizationMap()
+    const map = this.getContextMap()
     if (!map) return
     return map.has(this.key)
   }
@@ -134,7 +195,7 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
    * @returns the memoization map or undefined if the context is not found
    */
   public set(value: T): WeakMap<WeakKey, any> | undefined {
-    const map = this.getMemoizationMap()
+    const map = this.getContextMap()
     if (!map) return
     return map.set(this.key, value)
   }
@@ -142,23 +203,47 @@ export class ContextMemoization<T> implements ContextMemoryOptions {
   public provide(value: T): [WeakKey, T] {
     return [this.key, value]
   }
+}
 
-  public static assignMemoizationMap(
-    target: ContextMemoryContainer
-  ): WeakMap<WeakKey, any> {
-    target[CONTEXT_MEMORY_MAP_KEY] ??= new WeakMap()
-    return target[CONTEXT_MEMORY_MAP_KEY]
-  }
+export function assignContextMap(
+  target: ContextMemoryContainer
+): WeakMap<WeakKey, any> {
+  target[CONTEXT_MAP_KEY] ??= new WeakMap()
+  return target[CONTEXT_MAP_KEY]
+}
+
+export interface CallableContext<T> extends InjectableContext<T> {
+  (): T
+}
+
+/**
+ * Create a callable context
+ * @param args - The arguments to pass to the InjectableContext constructor
+ * @returns A callable context
+ */
+export function createContext<T>(
+  ...args: ConstructorParameters<typeof InjectableContext<T>>
+): CallableContext<T> {
+  const context = new InjectableContext(...args)
+  const callable = () => context.get()
+  Object.defineProperty(context, "key", {
+    value: callable,
+    writable: false,
+    configurable: false,
+  })
+  return Object.assign(callable, {
+    key: context.key,
+    get: () => context.get(),
+    provide: (getter: () => T) => context.provide(getter),
+    getContextMap: () => context.getContextMap(),
+    getter: context.getter,
+  })
 }
 
 /**
  * Async Memoization with a callable function
  */
-export interface CallableContextMemoization<T>
-  extends Pick<
-    ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter" | "key" | "provide"
-  > {
+export interface CallableContextMemoization<T> extends ContextMemoization<T> {
   (): T
 }
 
@@ -183,10 +268,8 @@ export function createMemoization<T>(
     exists: () => memoization.exists(),
     getter: memoization.getter,
     provide: (value: T) => memoization.provide(value),
-  } as Pick<
-    ContextMemoization<T>,
-    "get" | "set" | "clear" | "exists" | "getter" | "key" | "provide"
-  >)
+    getContextMap: () => memoization.getContextMap(),
+  })
 }
 
 export interface AsyncContextProvider extends Middleware {
