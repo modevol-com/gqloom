@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Refactor: move `useContext` to `@gqloom/core/context`
+- Feat: introduce InjectableContext and createContext for enhanced dependency management
 - Feat: Updated resolver functions to accept a `payload` parameter
 
 ## 0.8.4 (2025-04-08)
