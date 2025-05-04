@@ -203,18 +203,16 @@ export class FieldChainFactory<
         ) as CallableInputParser<TInput>
         const parseInput = unifiedParseInput.current
         return applyMiddlewares(
-          [
-            ...(extraOptions?.middlewares ?? []),
-            ...(this.options?.middlewares ?? []),
-          ],
-          async () => useUserLoader().load(parent),
           {
             parseInput,
             parent,
             outputSilk: this.output,
             operation,
             payload: extraOptions?.payload,
-          }
+          },
+          async () => useUserLoader().load(parent),
+          extraOptions?.middlewares,
+          this.options?.middlewares
         )
       },
     }) as Loom.Field<TParent, TOutput, TInput, TDependencies>

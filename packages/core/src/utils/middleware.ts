@@ -7,6 +7,14 @@ import type {
 } from "../resolver"
 import type { MayPromise, RequireKeys } from "./types"
 
+/** The operation of the field: `field`, `query`, `mutation`, `subscription.resolve` or `subscription.subscribe` */
+export type MiddlewareOperation =
+  | "field"
+  | "query"
+  | "mutation"
+  | "subscription.resolve"
+  | "subscription.subscribe"
+
 export interface MiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,
 > {
@@ -19,8 +27,8 @@ export interface MiddlewareOptions<
   /** A function to parse the input of the field */
   parseInput: CallableInputParser<TField["~meta"]["input"]>
 
-  /** The operation of the field: `query`, `mutation`, `subscription` or `field` */
-  operation: Loom.BaseField["~meta"]["operation"]
+  /** The executing operation of the field */
+  operation: MiddlewareOperation
 
   /** The payload of the resolver */
   payload: ResolverPayload | undefined
@@ -46,21 +54,47 @@ export interface CallableMiddlewareOptions<
   (): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
 }
 
-export interface Middleware<TField extends Loom.BaseField = any> {
+export interface MiddlewareConfig {
+  /** The operations to apply the middleware to. */
+  operations?: MiddlewareOperation[]
+}
+
+export interface Middleware<TField extends Loom.BaseField = any>
+  extends Partial<MiddlewareConfig> {
   (
     options: CallableMiddlewareOptions<TField>
   ): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
 }
 
+const defaultOperations: MiddlewareOperation[] = [
+  "field",
+  "mutation",
+  "query",
+  "subscription.subscribe",
+]
+
 export function applyMiddlewares<
   TField extends Loom.BaseField = Loom.BaseField,
 >(
-  middlewares: Middleware[],
+  options: MiddlewareOptions<TField>,
   resolveFunction: () => MayPromise<
     StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
   >,
-  options: MiddlewareOptions<TField>
+  ...middlewareList: (Middleware | Middleware[] | undefined | null)[]
 ): Promise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>> {
+  const middlewares: Middleware[] = middlewareList.reduce<Middleware[]>(
+    (acc, m) => {
+      if (!m) return acc
+      acc.push(
+        ...ensureArray(m).filter((m) => {
+          const ops = m.operations ?? defaultOperations
+          return ops.includes(options.operation)
+        })
+      )
+      return acc
+    },
+    []
+  )
   const next = (
     index: number
   ): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>> => {
@@ -75,4 +109,8 @@ export function applyMiddlewares<
     return middleware(callableOptions)
   }
   return next(0)
+}
+
+function ensureArray<T>(value: T | T[]): T[] {
+  return Array.isArray(value) ? value : [value]
 }

@@ -197,32 +197,6 @@ export class LoomObjectType extends GraphQLObjectType {
     if (field?.["~meta"]?.resolve == null) return
     if (field["~meta"].resolve === defaultSubscriptionResolve)
       return { resolve: defaultSubscriptionResolve }
-    const _resolve: GraphQLFieldResolver<any, any> =
-      field["~meta"].operation === "field"
-        ? (root, args, context, info) => {
-            const payload = { root, args, context, info, field }
-            return field["~meta"].resolve(root, args, {
-              ...this.resolverOptions,
-              payload,
-            })
-          }
-        : field["~meta"].operation === "subscription"
-          ? (root, args, context, info) => {
-              const payload = { root, args, context, info, field }
-              return field["~meta"].resolve(root, args, {
-                ...this.resolverOptions,
-                payload,
-              })
-            }
-          : (root, args, context, info) => {
-              const payload = { root, args, context, info, field }
-              return resolverPayloadStorage.run(payload, () =>
-                field["~meta"].resolve(args, {
-                  ...this.resolverOptions,
-                  payload,
-                })
-              )
-            }
     const resolve: GraphQLFieldResolver<any, any> = (() => {
       switch (field["~meta"].operation) {
         case "field":

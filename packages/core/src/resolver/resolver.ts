@@ -61,19 +61,20 @@ export const createQuery = (
     resolve: (inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
-        async () =>
-          options.resolve(
-            getStandardValue(await parseInput()),
-            extraOptions?.payload
-          ),
         {
           parseInput,
           parent: undefined,
           outputSilk: output,
           operation,
           payload: extraOptions?.payload,
-        }
+        },
+        async () =>
+          options.resolve(
+            getStandardValue(await parseInput()),
+            extraOptions?.payload
+          ),
+        extraOptions?.middlewares,
+        options.middlewares
       )
     },
     operation,
@@ -103,19 +104,20 @@ export const createMutation = (
     resolve: (inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
-        async () =>
-          options.resolve(
-            getStandardValue(await parseInput()),
-            extraOptions?.payload
-          ),
         {
           parseInput,
           parent: undefined,
           outputSilk: output,
           operation,
           payload: extraOptions?.payload,
-        }
+        },
+        async () =>
+          options.resolve(
+            getStandardValue(await parseInput()),
+            extraOptions?.payload
+          ),
+        extraOptions?.middlewares,
+        options.middlewares
       )
     },
     operation,
@@ -153,20 +155,21 @@ export const createField = (
     resolve: (parent, inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
-        async () =>
-          options.resolve(
-            parent,
-            getStandardValue(await parseInput()),
-            extraOptions?.payload ?? undefined
-          ),
         {
           parseInput,
           parent,
           outputSilk: output,
           operation,
           payload: extraOptions?.payload,
-        }
+        },
+        async () =>
+          options.resolve(
+            parent,
+            getStandardValue(await parseInput()),
+            extraOptions?.payload ?? undefined
+          ),
+        extraOptions?.middlewares,
+        options.middlewares
       )
     },
     operation,
@@ -205,7 +208,6 @@ export function createSubscription(
   }
 
   const options = getSubscriptionOptions(subscribeOrOptions)
-  const operation = "subscription"
   const resolve = options.resolve ?? defaultSubscriptionResolve
   return meta({
     ...getFieldOptions(options),
@@ -214,24 +216,43 @@ export function createSubscription(
     subscribe: (inputValue, extraOptions) => {
       const parseInput = createInputParser(options.input, inputValue)
       return applyMiddlewares(
-        [...(extraOptions?.middlewares ?? []), ...(options.middlewares ?? [])],
+        {
+          parseInput,
+          parent: undefined,
+          outputSilk: output,
+          operation: "subscription.subscribe",
+          payload: extraOptions?.payload,
+        },
         async () =>
           options.subscribe(
             getStandardValue(await parseInput()),
             extraOptions?.payload
           ),
+        extraOptions?.middlewares,
+        options.middlewares
+      )
+    },
+    resolve: (value, inputValue, extraOptions) => {
+      const parseInput = createInputParser(options.input, inputValue)
+      return applyMiddlewares(
         {
           parseInput,
           parent: undefined,
           outputSilk: output,
-          operation,
+          operation: "subscription.resolve",
           payload: extraOptions?.payload,
-        }
+        },
+        async () =>
+          resolve(
+            value,
+            getStandardValue(await parseInput()),
+            extraOptions?.payload
+          ),
+        extraOptions?.middlewares,
+        options.middlewares
       )
     },
-    resolve: (value, input, extraOptions) =>
-      resolve(value, input, extraOptions?.payload),
-    operation,
+    operation: "subscription",
   }) as Loom.Subscription<any, any, any>
 }
 
