@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type { MayPromise, Middleware } from "../utils"
 import type { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
-import type { InferInputI, InferInputO } from "./input"
+import type { InferInputO } from "./input"
 import type {
   GraphQLFieldOptions,
   GraphQLSilk,

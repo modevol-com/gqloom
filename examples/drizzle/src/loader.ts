@@ -1,6 +1,6 @@
 import { createServer } from "node:http"
 import { field, query, resolver, weave } from "@gqloom/core"
-import { eq, inArray } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { createYoga } from "graphql-yoga"
 import { config } from "../env.config"
