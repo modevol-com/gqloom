@@ -1,19 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import { createMemoization } from "../context"
-import {
-  EasyDataLoader,
-  type MayPromise,
-  type Middleware,
-  type RequireKeys,
-  getFieldOptions,
-  meta,
-} from "../utils"
-import { DERIVED_DEPENDENCIES } from "../utils/constants"
-import {
-  type CallableInputParser,
-  type InferInputO,
-  createInputParser,
-} from "./input"
+import type { MayPromise, Middleware, RequireKeys } from "../utils"
+import type { InferInputO } from "./input"
 import {
   createField,
   createMutation,
@@ -154,55 +141,56 @@ export class FieldChainFactory<
     }) as any
   }
 
-  public load<TParent extends GraphQLSilk>(
-    resolve: (
-      parents: (TDependencies extends string[]
-        ? RequireKeys<
-            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
-            TDependencies[number]
-          >
-        : NonNullable<StandardSchemaV1.InferOutput<TParent>>)[],
-      input: InferInputO<TInput>
-    ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
-  ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
-    if (!this.options?.output) throw new Error("Output is required")
+  // TODO: Implement load
+  // public load<TParent extends GraphQLSilk>(
+  //   resolve: (
+  //     parents: (TDependencies extends string[]
+  //       ? RequireKeys<
+  //           NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+  //           TDependencies[number]
+  //         >
+  //       : NonNullable<StandardSchemaV1.InferOutput<TParent>>)[],
+  //     input: InferInputO<TInput>
+  //   ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
+  // ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
+  //   if (!this.options?.output) throw new Error("Output is required")
 
-    const useUnifiedParseInput = createMemoization<{
-      current?: CallableInputParser<TInput>
-    }>(() => ({ current: undefined }))
+  //   const useUnifiedParseInput = createMemoization<{
+  //     current?: CallableInputParser<TInput>
+  //   }>(() => ({ current: undefined }))
 
-    const useUserLoader = createMemoization(
-      () =>
-        new EasyDataLoader(
-          async (parents: StandardSchemaV1.InferOutput<TParent>[]) =>
-            resolve(
-              parents,
-              (await useUnifiedParseInput().current?.getResult()) as InferInputO<TInput>
-            )
-        )
-    )
+  //   const useUserLoader = createMemoization(
+  //     () =>
+  //       new EasyDataLoader(
+  //         async (parents: StandardSchemaV1.InferOutput<TParent>[]) =>
+  //           resolve(
+  //             parents,
+  //             (await useUnifiedParseInput().current?.getResult()) as InferInputO<TInput>
+  //           )
+  //       )
+  //   )
 
-    const operation = "field"
-    return meta({
-      ...getFieldOptions(this.options, {
-        [DERIVED_DEPENDENCIES]: this.options.dependencies,
-      }),
-      operation,
-      input: this.options.input as TInput,
-      output: this.options.output as TOutput,
-      resolve: async (
-        parent,
-        inputValue
-      ): Promise<StandardSchemaV1.InferOutput<TOutput>> => {
-        const unifiedParseInput = useUnifiedParseInput()
-        unifiedParseInput.current ??= createInputParser(
-          this.options?.input as TInput,
-          inputValue
-        ) as CallableInputParser<TInput>
-        return useUserLoader().load(parent)
-      },
-    }) as Loom.Field<TParent, TOutput, TInput, TDependencies>
-  }
+  //   const operation = "field"
+  //   return meta({
+  //     ...getFieldOptions(this.options, {
+  //       [DERIVED_DEPENDENCIES]: this.options.dependencies,
+  //     }),
+  //     operation,
+  //     input: this.options.input as TInput,
+  //     output: this.options.output as TOutput,
+  //     resolve: async (
+  //       parent,
+  //       inputValue
+  //     ): Promise<StandardSchemaV1.InferOutput<TOutput>> => {
+  //       const unifiedParseInput = useUnifiedParseInput()
+  //       unifiedParseInput.current ??= createInputParser(
+  //         this.options?.input as TInput,
+  //         inputValue
+  //       ) as CallableInputParser<TInput>
+  //       return useUserLoader().load(parent)
+  //     },
+  //   }) as Loom.Field<TParent, TOutput, TInput, TDependencies>
+  // }
 }
 
 export class QueryChainFactory<

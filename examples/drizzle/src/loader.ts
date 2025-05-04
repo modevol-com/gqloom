@@ -16,19 +16,19 @@ const userResolver = resolver.of(users, {
     db.select().from(posts).where(eq(posts.authorId, user.id))
   ),
 
-  posts: field(posts.$list()).load(async (userList) => {
-    const postList = await db
-      .select()
-      .from(posts)
-      .where(
-        inArray(
-          posts.authorId,
-          userList.map((u) => u.id)
-        )
-      )
-    const postMap = Map.groupBy(postList, (p) => p.authorId)
-    return userList.map((u) => postMap.get(u.id) ?? [])
-  }),
+  // posts: field(posts.$list()).load(async (userList) => {
+  //   const postList = await db
+  //     .select()
+  //     .from(posts)
+  //     .where(
+  //       inArray(
+  //         posts.authorId,
+  //         userList.map((u) => u.id)
+  //       )
+  //     )
+  //   const postMap = Map.groupBy(postList, (p) => p.authorId)
+  //   return userList.map((u) => postMap.get(u.id) ?? [])
+  // }),
 })
 
 const schema = weave(userResolver)
