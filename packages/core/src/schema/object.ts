@@ -28,7 +28,6 @@ import {
   deepMerge,
   filterMiddlewares,
   mapValue,
-  markErrorLocation,
   pascalCase,
   toObjMap,
 } from "../utils"
@@ -179,33 +178,29 @@ export class LoomObjectType extends GraphQLObjectType {
     field: Loom.BaseField,
     fieldName: string
   ): GraphQLFieldConfig<any, any> {
-    try {
-      const outputType = this.getCacheType(
-        getGraphQLType(field["~meta"].output),
-        fieldName
-      )
+    const outputType = this.getCacheType(
+      getGraphQLType(field["~meta"].output),
+      fieldName
+    )
 
-      const resolve = this.provideForResolve(field, fieldName)
-      const subscribe = this.provideForSubscribe(field, fieldName)
+    const resolve = this.provideForResolve(field, fieldName)
+    const subscribe = this.provideForSubscribe(field, fieldName)
 
-      return {
-        ...extract(field),
-        type: outputType,
-        args: inputToArgs(field["~meta"].input, {
-          fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
-        }),
-        ...(resolve ? { resolve } : {}),
-        ...(subscribe ? { subscribe } : {}),
-      }
-    } catch (error) {
-      throw markErrorLocation(error)
+    return {
+      ...extract(field),
+      type: outputType,
+      args: inputToArgs(field["~meta"].input, {
+        fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
+      }),
+      resolve,
+      ...(subscribe ? { subscribe } : {}),
     }
   }
 
   protected provideForResolve(
     field: Loom.BaseField,
     fieldName: string
-  ): GraphQLFieldConfig<any, any>["resolve"] | undefined {
+  ): GraphQLFieldConfig<any, any>["resolve"] {
     const resolverMiddlewares =
       this.resolvers.get(fieldName)?.["~meta"].options?.middlewares
     switch (field["~meta"].operation) {
@@ -249,7 +244,7 @@ export class LoomObjectType extends GraphQLObjectType {
             {
               operation: "field",
               outputSilk: field["~meta"].output,
-              parent: undefined,
+              parent: root,
               parseInput,
               payload,
             },
@@ -277,7 +272,7 @@ export class LoomObjectType extends GraphQLObjectType {
             {
               operation: "subscription.resolve",
               outputSilk: field["~meta"].output,
-              parent: undefined,
+              parent: root,
               parseInput,
               payload,
             },

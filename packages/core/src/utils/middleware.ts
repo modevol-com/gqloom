@@ -21,7 +21,7 @@ export interface MiddlewareOptions<
   /** The Output Silk */
   outputSilk: StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
 
-  /** The previous object, which for a field on the root Query type is often not used. */
+  /** The previous object. */
   parent: InferFieldParent<TField>
 
   /** A function to parse the input */
