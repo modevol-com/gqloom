@@ -286,8 +286,9 @@ describe("valibot resolver", () => {
   })
 
   it("should throw for invalid input", async () => {
+    const executor = simpleGiraffeResolver.toExecutor()
     await expect(
-      simpleGiraffeResolver["~meta"].fields.createGiraffe["~meta"].resolve({
+      executor.createGiraffe({
         name: "2",
         birthday: new Date("2022-2-22"),
       })
@@ -340,7 +341,8 @@ describe("valibot resolver", () => {
     })
 
     it("should infer input type", () => {
-      expectTypeOf(horseResolver["~meta"].fields.createHorse["~meta"].resolve)
+      const executor = resolver({ createHorse }).toExecutor()
+      expectTypeOf(executor.createHorse)
         .parameter(0)
         .toEqualTypeOf<Partial<IHorse>>()
     })

@@ -6,6 +6,7 @@ import {
   type Middleware,
   type MiddlewareOptions,
   applyMiddlewares,
+  filterMiddlewares,
 } from "./middleware"
 
 function initOptions(): MiddlewareOptions {
@@ -22,11 +23,9 @@ describe("middleware", async () => {
   it("should work", async () => {
     const simpleMiddleware: Middleware = (next) => next()
     const answer = Math.random()
-    const result = await applyMiddlewares(
-      initOptions(),
-      () => answer,
-      simpleMiddleware
-    )
+    const result = await applyMiddlewares(initOptions(), () => answer, [
+      simpleMiddleware,
+    ])
     expect(result).toBe(answer)
   })
 
@@ -105,8 +104,7 @@ describe("middleware", async () => {
       () => {
         return asyncLocalStorage.getStore()?.cat
       },
-      provideCat,
-      consumeCat
+      [provideCat, consumeCat]
     )
 
     expect(result).toBe("meow")
@@ -140,9 +138,11 @@ describe("middleware", async () => {
     await applyMiddlewares(
       { ...initOptions(), operation: "query" },
       () => "query result",
-      queryMiddleware,
-      mutationMiddleware,
-      defaultMiddleware
+      filterMiddlewares("query", [
+        queryMiddleware,
+        mutationMiddleware,
+        defaultMiddleware,
+      ])
     )
     expect(results).toEqual(["query middleware", "default middleware"])
 
@@ -151,9 +151,11 @@ describe("middleware", async () => {
     await applyMiddlewares(
       { ...initOptions(), operation: "mutation" },
       () => "mutation result",
-      queryMiddleware,
-      mutationMiddleware,
-      defaultMiddleware
+      filterMiddlewares("mutation", [
+        queryMiddleware,
+        mutationMiddleware,
+        defaultMiddleware,
+      ])
     )
     expect(results).toEqual(["mutation middleware", "default middleware"])
 
@@ -162,9 +164,11 @@ describe("middleware", async () => {
     await applyMiddlewares(
       { ...initOptions(), operation: "field" },
       () => "field result",
-      queryMiddleware,
-      mutationMiddleware,
-      defaultMiddleware
+      filterMiddlewares("field", [
+        queryMiddleware,
+        mutationMiddleware,
+        defaultMiddleware,
+      ])
     )
     expect(results).toEqual(["default middleware"])
   })

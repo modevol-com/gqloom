@@ -162,12 +162,12 @@ export class GraphQLSchemaLoom {
         parentObject.hideField(name)
       } else if (field["~meta"].operation === "field") {
         if (parentObject == null) return
-        parentObject.addField(name, field)
+        parentObject.addField(name, field, resolver)
       } else {
         const operationObject = this.getOperationObject(
           field["~meta"].operation
         )
-        operationObject.addField(name, field)
+        operationObject.addField(name, field, resolver)
       }
     })
     return this
@@ -201,9 +201,11 @@ export class GraphQLSchemaLoom {
     }
   }
 
-  protected get fieldOptions() {
+  protected get fieldOptions(): ConstructorParameters<
+    typeof LoomObjectType
+  >[1] {
     const { resolverOptions, context } = this
-    return { resolverOptions, weaverContext: context }
+    return { globalOptions: resolverOptions, weaverContext: context }
   }
 
   public static optionsFrom(

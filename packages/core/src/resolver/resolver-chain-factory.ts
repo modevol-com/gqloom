@@ -5,7 +5,6 @@ import {
   type MayPromise,
   type Middleware,
   type RequireKeys,
-  applyMiddlewares,
   getFieldOptions,
   meta,
 } from "../utils"
@@ -193,27 +192,14 @@ export class FieldChainFactory<
       output: this.options.output as TOutput,
       resolve: async (
         parent,
-        inputValue,
-        extraOptions
+        inputValue
       ): Promise<StandardSchemaV1.InferOutput<TOutput>> => {
         const unifiedParseInput = useUnifiedParseInput()
         unifiedParseInput.current ??= createInputParser(
-          this.options?.input,
+          this.options?.input as TInput,
           inputValue
         ) as CallableInputParser<TInput>
-        const parseInput = unifiedParseInput.current
-        return applyMiddlewares(
-          {
-            parseInput,
-            parent,
-            outputSilk: this.output,
-            operation,
-            payload: extraOptions?.payload,
-          },
-          async () => useUserLoader().load(parent),
-          extraOptions?.middlewares,
-          this.options?.middlewares
-        )
+        return useUserLoader().load(parent)
       },
     }) as Loom.Field<TParent, TOutput, TInput, TDependencies>
   }

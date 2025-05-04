@@ -1,19 +1,21 @@
+import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type { GraphQLObjectTypeConfig } from "graphql"
-import { resolverPayloadStorage } from "../context"
 import {
   type MayPromise,
   type Middleware,
   type OmitInUnion,
   type ValueOf,
   applyMiddlewares,
+  filterMiddlewares,
   getFieldOptions,
   getOperationOptions,
   getSubscriptionOptions,
+  mapValue,
   meta,
 } from "../utils"
 import { DERIVED_DEPENDENCIES } from "../utils/constants"
 import { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
-import { createInputParser, getStandardValue } from "./input"
+import { type InferInputI, createInputParser } from "./input"
 import {
   FieldChainFactory,
   MutationChainFactory,
@@ -34,14 +36,11 @@ import type {
   QueryOptions,
   ResolverOptions,
   ResolverOptionsWithExtensions,
-  ResolverOptionsWithParent,
   ResolverPayload,
-  ResolvingOptions,
   SubscriptionFactory,
   SubscriptionFactoryWithChain,
   SubscriptionOptions,
 } from "./types"
-
 export const createQuery = (
   output: GraphQLSilk<any, any>,
   resolveOrOptions?:
@@ -53,31 +52,13 @@ export const createQuery = (
   }
 
   const options: QueryOptions<any, any> = getOperationOptions(resolveOrOptions)
-  const operation = "query"
   return meta({
     ...getFieldOptions(options),
     input: options.input,
     output,
-    resolve: (inputValue, extraOptions) => {
-      const parseInput = createInputParser(options.input, inputValue)
-      return applyMiddlewares(
-        {
-          parseInput,
-          parent: undefined,
-          outputSilk: output,
-          operation,
-          payload: extraOptions?.payload,
-        },
-        async () =>
-          options.resolve(
-            getStandardValue(await parseInput()),
-            extraOptions?.payload
-          ),
-        extraOptions?.middlewares,
-        options.middlewares
-      )
-    },
-    operation,
+    resolve: options.resolve,
+    middlewares: options.middlewares,
+    operation: "query",
   }) as Loom.Query<any, any>
 }
 
@@ -96,31 +77,13 @@ export const createMutation = (
 
   const options: MutationOptions<any, any> =
     getOperationOptions(resolveOrOptions)
-  const operation = "mutation"
   return meta({
     ...getFieldOptions(options),
     input: options.input,
     output,
-    resolve: (inputValue, extraOptions) => {
-      const parseInput = createInputParser(options.input, inputValue)
-      return applyMiddlewares(
-        {
-          parseInput,
-          parent: undefined,
-          outputSilk: output,
-          operation,
-          payload: extraOptions?.payload,
-        },
-        async () =>
-          options.resolve(
-            getStandardValue(await parseInput()),
-            extraOptions?.payload
-          ),
-        extraOptions?.middlewares,
-        options.middlewares
-      )
-    },
-    operation,
+    resolve: options.resolve,
+    middlewares: options.middlewares,
+    operation: "mutation",
   }) as Loom.Mutation<any, any>
 }
 
@@ -144,7 +107,6 @@ export const createField = (
     return new FieldChainFactory({ output })
   }
   const options = getOperationOptions(resolveOrOptions)
-  const operation = "field"
   return meta({
     ...getFieldOptions(options, {
       [DERIVED_DEPENDENCIES]: options.dependencies,
@@ -152,27 +114,9 @@ export const createField = (
     input: options.input,
     dependencies: options.dependencies,
     output,
-    resolve: (parent, inputValue, extraOptions) => {
-      const parseInput = createInputParser(options.input, inputValue)
-      return applyMiddlewares(
-        {
-          parseInput,
-          parent,
-          outputSilk: output,
-          operation,
-          payload: extraOptions?.payload,
-        },
-        async () =>
-          options.resolve(
-            parent,
-            getStandardValue(await parseInput()),
-            extraOptions?.payload ?? undefined
-          ),
-        extraOptions?.middlewares,
-        options.middlewares
-      )
-    },
-    operation,
+    resolve: options.resolve,
+    middlewares: options.middlewares,
+    operation: "field",
   }) as Loom.Field<any, any, any, any>
 }
 
@@ -208,50 +152,13 @@ export function createSubscription(
   }
 
   const options = getSubscriptionOptions(subscribeOrOptions)
-  const resolve = options.resolve ?? defaultSubscriptionResolve
   return meta({
     ...getFieldOptions(options),
     input: options.input,
     output,
-    subscribe: (inputValue, extraOptions) => {
-      const parseInput = createInputParser(options.input, inputValue)
-      return applyMiddlewares(
-        {
-          parseInput,
-          parent: undefined,
-          outputSilk: output,
-          operation: "subscription.subscribe",
-          payload: extraOptions?.payload,
-        },
-        async () =>
-          options.subscribe(
-            getStandardValue(await parseInput()),
-            extraOptions?.payload
-          ),
-        extraOptions?.middlewares,
-        options.middlewares
-      )
-    },
-    resolve: (value, inputValue, extraOptions) => {
-      const parseInput = createInputParser(options.input, inputValue)
-      return applyMiddlewares(
-        {
-          parseInput,
-          parent: undefined,
-          outputSilk: output,
-          operation: "subscription.resolve",
-          payload: extraOptions?.payload,
-        },
-        async () =>
-          resolve(
-            value,
-            getStandardValue(await parseInput()),
-            extraOptions?.payload
-          ),
-        extraOptions?.middlewares,
-        options.middlewares
-      )
-    },
+    subscribe: options.subscribe,
+    resolve: options.resolve ?? defaultSubscriptionResolve,
+    middlewares: options.middlewares,
     operation: "subscription",
   }) as Loom.Subscription<any, any, any>
 }
@@ -260,67 +167,6 @@ export const subscription: SubscriptionFactoryWithChain = Object.assign(
   createSubscription as unknown as SubscriptionFactory,
   SubscriptionChainFactory.methods()
 )
-
-function extraOperationOptions<TField extends Loom.FieldOrOperation>(
-  field: TField,
-  options: ResolverOptionsWithParent<any> | undefined
-): TField {
-  if (typeof field === "symbol") return field
-
-  switch (field["~meta"].operation) {
-    case "field":
-      return {
-        ...field,
-        "~meta": {
-          ...field["~meta"],
-          resolve: (parent, input, extraOptions) =>
-            field["~meta"].resolve(parent, input, {
-              ...extraOptions,
-              payload: extraOptions?.payload ?? undefined,
-              middlewares: [
-                ...(extraOptions?.middlewares ?? []),
-                ...(options?.middlewares ?? []),
-              ],
-            }),
-        },
-      }
-    case "subscription":
-      return {
-        ...field,
-        "~meta": {
-          ...field["~meta"],
-          subscribe: (input, extraOptions) =>
-            (field as Loom.Subscription<any, any, any>)["~meta"].subscribe(
-              input,
-              {
-                ...extraOptions,
-                payload: extraOptions?.payload ?? undefined,
-                middlewares: [
-                  ...(extraOptions?.middlewares ?? []),
-                  ...(options?.middlewares ?? []),
-                ],
-              }
-            ),
-        },
-      }
-    default:
-      return {
-        ...field,
-        "~meta": {
-          ...field["~meta"],
-          resolve: (input: any, extraOptions: ResolvingOptions | undefined) =>
-            field["~meta"].resolve(input, {
-              ...extraOptions,
-              payload: extraOptions?.payload ?? undefined,
-              middlewares: [
-                ...(extraOptions?.middlewares ?? []),
-                ...(options?.middlewares ?? []),
-              ],
-            }),
-        },
-      }
-  }
-}
 
 export const resolver: ResolverFactory = Object.assign(
   ((operations, options) =>
@@ -390,21 +236,7 @@ export class ChainResolver<
   }
 
   public get "~meta"(): typeof this.meta {
-    const fields: Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN> =
-      {}
-
-    Object.entries(this.meta.fields).forEach(([name, field]) => {
-      if (field === FIELD_HIDDEN) {
-        fields[name] = field
-      } else {
-        fields[name] = extraOperationOptions(field, this.meta.options)
-      }
-    })
-
-    return {
-      ...this.meta,
-      fields: fields as TFields,
-    }
+    return this.meta
   }
 
   public use(
@@ -418,31 +250,65 @@ export class ChainResolver<
     return this
   }
 
-  public toExecutor({ memoization }: ToExecutorProps = {}): Executor<TFields> {
-    const fields = this["~meta"].fields
-    const executor: Record<string, (...args: any) => any> = {}
-    const payload = memoization
-      ? ({ memoization, isMemoization: true } as const)
-      : undefined
-
-    Object.entries(fields).forEach(([name, field]) => {
-      if (field === FIELD_HIDDEN) return
-      if (payload != null) {
-        executor[name] = (...args: any[]) =>
-          resolverPayloadStorage.run<any, any[]>(
-            payload,
-            field["~meta"].resolve,
-            ...args
-          )
-      } else {
-        executor[name] = field["~meta"].resolve
-      }
-    })
+  public toExecutor(...middlewares: Middleware[]): Executor<TFields> {
+    const executor: Record<string, (...args: any) => any> = mapValue(
+      this["~meta"].fields,
+      (field) => this.toExecutorOperation(field, middlewares) ?? mapValue.SKIP
+    )
 
     return executor as Executor<TFields>
   }
-}
 
+  protected toExecutorOperation(
+    field: Loom.FieldOrOperation | typeof FIELD_HIDDEN,
+    executorMiddlewares: Middleware[]
+  ): ((...args: any) => any) | undefined {
+    if (field === FIELD_HIDDEN || field["~meta"].operation === "subscription") {
+      return undefined
+    }
+
+    const operation = field["~meta"].operation
+    const middlewares = filterMiddlewares(
+      operation,
+      executorMiddlewares,
+      this.meta.options?.middlewares,
+      field["~meta"].middlewares
+    )
+    if (field["~meta"].operation === "field") {
+      const resolve = field["~meta"].resolve
+      return (parent, args, payload) => {
+        const parseInput = createInputParser(field["~meta"].input, args)
+        return applyMiddlewares(
+          {
+            outputSilk: field["~meta"].output,
+            parent,
+            payload,
+            parseInput,
+            operation,
+          },
+          async () => resolve(parent, await parseInput.getResult(), payload),
+          middlewares
+        )
+      }
+    } else {
+      const resolve = field["~meta"].resolve
+      return (args, payload) => {
+        const parseInput = createInputParser(field["~meta"].input, args)
+        return applyMiddlewares(
+          {
+            outputSilk: field["~meta"].output,
+            parent: undefined,
+            payload,
+            parseInput,
+            operation,
+          },
+          async () => resolve(await parseInput.getResult(), payload),
+          middlewares
+        )
+      }
+    }
+  }
+}
 export class ObjectChainResolver<
   TParent extends GraphQLSilk,
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
@@ -491,9 +357,28 @@ export class ObjectChainResolver<
 type Executor<
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
 > = {
-  [K in keyof TFields]: TFields[K] extends Loom.FieldOrOperation
-    ? TFields[K]["~meta"]["resolve"]
-    : never
+  [K in keyof TFields]: TFields[K] extends Loom.Field<
+    infer TParent,
+    infer TOutput,
+    infer TInput,
+    string[] | undefined
+  >
+    ? (
+        parent: StandardSchemaV1.InferOutput<TParent>,
+        args: InferInputI<TInput>,
+        payload: ResolverPayload | void
+      ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
+    : TFields[K] extends Loom.Query<infer TOutput, infer TInput>
+      ? (
+          args: InferInputI<TInput>,
+          payload: ResolverPayload | void
+        ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
+      : TFields[K] extends Loom.Mutation<infer TOutput, infer TInput>
+        ? (
+            args: InferInputI<TInput>,
+            payload: ResolverPayload | void
+          ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
+        : never
 }
 
 export * from "./resolver-chain-factory"

@@ -1,3 +1,4 @@
+import { resolver } from "@gqloom/core"
 import { eq, inArray, sql } from "drizzle-orm"
 import {
   type LibSQLDatabase,
@@ -96,10 +97,11 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should resolve correctly with orderBy", async () => {
-      const query = userFactory.selectArrayQuery()
+      const executor = userFactory.resolver().toExecutor()
 
       let answer
-      answer = await query["~meta"].resolve({ orderBy: [{ age: "asc" }] })
+      answer = await executor.user({ orderBy: [{ age: "asc" }] })
+
       expect(answer).toMatchObject([
         { age: 10 },
         { age: 11 },
@@ -108,7 +110,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         { age: 14 },
       ])
 
-      answer = await query["~meta"].resolve({ orderBy: [{ age: "desc" }] })
+      answer = await executor.user({ orderBy: [{ age: "desc" }] })
       expect(answer).toMatchObject([
         { age: 14 },
         { age: 13 },
@@ -119,66 +121,66 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should resolve correctly with filters", async () => {
-      const query = userFactory.selectArrayQuery()
+      const executor = userFactory.resolver().toExecutor()
       let answer
-      answer = await query["~meta"].resolve({})
+      answer = await executor.user({})
       expect(answer).toHaveLength(5)
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { age: { gte: 12 } },
       })
       expect(answer).toMatchObject([{ age: 12 }, { age: 13 }, { age: 14 }])
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { age: { lt: 12 } },
       })
       expect(answer).toMatchObject([{ age: 10 }, { age: 11 }])
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { age: { gte: 12, lt: 13 } },
       })
       expect(answer).toMatchObject([{ age: 12 }])
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { age: { inArray: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { age: { notInArray: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(
         new Set([{ age: 12 }, { age: 13 }, { age: 14 }])
       )
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { age: { OR: [{ eq: 10 }, { eq: 11 }] } },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { OR: [{ age: { eq: 10 } }, { age: { eq: 11 } }] },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { name: { like: "J%" } },
       })
       expect(answer).toHaveLength(5)
 
       await expect(() =>
-        query["~meta"].resolve({
+        executor.user({
           where: { age: { eq: 10 }, OR: [{ age: { eq: 11 } }] },
         })
       ).rejects.toThrow("Cannot specify both fields and 'OR' in table filters!")
       await expect(() =>
-        query["~meta"].resolve({
+        executor.user({
           where: { age: { eq: 10, OR: [{ eq: 11 }] } },
         })
       ).rejects.toThrow(
         "WHERE age: Cannot specify both fields and 'OR' in column operators!"
       )
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.user({
         where: { age: { isNull: true } },
       })
       expect(answer).toHaveLength(0)
@@ -197,8 +199,10 @@ describe.concurrent("DrizzleResolverFactory", () => {
         ),
       })
 
+      const executor = resolver({ query }).toExecutor()
+
       expect(query).toBeDefined()
-      answer = await query["~meta"].resolve({ age: 10 })
+      answer = await executor.query({ age: 10 })
       expect(answer).toMatchObject([{ age: 10 }])
 
       query = userFactory
@@ -216,7 +220,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         )
 
       expect(query).toBeDefined()
-      answer = await query["~meta"].resolve({ age: 10 })
+      answer = await executor.query({ age: 10 })
       expect(answer).toMatchObject([{ age: 10 }])
     })
 
@@ -258,8 +262,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
           >()
           return answer
         })
-
-      await query["~meta"].resolve({})
+      const executor = resolver({ query }).toExecutor()
+      await executor.query({})
       expect(count).toBe(2)
     })
   })
@@ -272,8 +276,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
     it("should resolve correctly with orderBy", async () => {
       const query = userFactory.selectSingleQuery()
+      const executor = resolver({ query }).toExecutor()
       expect(
-        await query["~meta"].resolve({
+        await executor.query({
           orderBy: [{ age: "asc" }],
         })
       ).toMatchObject({ age: 10 })
@@ -281,8 +286,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
     it("should resolve correctly with filters", async () => {
       const query = userFactory.selectSingleQuery()
+      const executor = resolver({ query }).toExecutor()
       expect(
-        await query["~meta"].resolve({
+        await executor.query({
           where: { age: { eq: 12 } },
         })
       ).toMatchObject({ age: 12 })
@@ -299,9 +305,10 @@ describe.concurrent("DrizzleResolverFactory", () => {
           }))
         ),
       })
+      const executor = resolver({ query }).toExecutor()
 
       expect(query).toBeDefined()
-      expect(await query["~meta"].resolve({ age: 10 })).toMatchObject({
+      expect(await executor.query({ age: 10 })).toMatchObject({
         age: 10,
       })
     })
@@ -330,8 +337,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
           },
         ],
       })
-
-      await query["~meta"].resolve({})
+      const executor = resolver({ query }).toExecutor()
+      await executor.query({})
       expect(count).toBe(1)
     })
 
@@ -382,8 +389,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
         })
 
         expect(query).toBeDefined()
-        expect(await query["~meta"].resolve({ age: 10 })).toBe(1)
-        expect(await query["~meta"].resolve({ age: null })).toBe(5)
+        const executor = resolver({ query }).toExecutor()
+        expect(await executor.query({ age: 10 })).toBe(1)
+        expect(await executor.query({ age: null })).toBe(5)
       })
 
       it("should be created with middlewares", async () => {
@@ -401,7 +409,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
           ],
         })
 
-        await query["~meta"].resolve({})
+        const executor = resolver({ query }).toExecutor()
+        await executor.query({})
         expect(count).toBe(1)
       })
     })
@@ -562,8 +571,9 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
         )
 
       expect(mutation).toBeDefined()
+      const executor = resolver({ mutation }).toExecutor()
       expect(
-        await mutation["~meta"].resolve([
+        await executor.mutation([
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
         ])
@@ -688,8 +698,9 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
         )
 
       expect(mutation).toBeDefined()
+      const executor = resolver({ mutation }).toExecutor()
       expect(
-        await mutation["~meta"].resolve([
+        await executor.mutation([
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
         ])
@@ -837,8 +848,9 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
         )
 
       expect(mutation).toBeDefined()
+      const executor = resolver({ mutation }).toExecutor()
       expect(
-        await mutation["~meta"].resolve([
+        await executor.mutation([
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
         ])

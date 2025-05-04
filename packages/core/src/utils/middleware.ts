@@ -80,21 +80,8 @@ export function applyMiddlewares<
   resolveFunction: () => MayPromise<
     StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
   >,
-  ...middlewareList: (Middleware | Middleware[] | undefined | null)[]
+  middlewares: Middleware[]
 ): Promise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>> {
-  const middlewares: Middleware[] = middlewareList.reduce<Middleware[]>(
-    (acc, m) => {
-      if (!m) return acc
-      acc.push(
-        ...ensureArray(m).filter((m) => {
-          const ops = m.operations ?? defaultOperations
-          return ops.includes(options.operation)
-        })
-      )
-      return acc
-    },
-    []
-  )
   const next = (
     index: number
   ): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>> => {
@@ -109,6 +96,22 @@ export function applyMiddlewares<
     return middleware(callableOptions)
   }
   return next(0)
+}
+
+export function filterMiddlewares(
+  operation: MiddlewareOperation,
+  ...middlewareList: (Middleware | Middleware[] | undefined | null)[]
+): Middleware[] {
+  return middlewareList.reduce<Middleware[]>((acc, m) => {
+    if (!m) return acc
+    acc.push(
+      ...ensureArray(m).filter((m) => {
+        const ops = m.operations ?? defaultOperations
+        return ops.includes(operation)
+      })
+    )
+    return acc
+  }, [])
 }
 
 function ensureArray<T>(value: T | T[]): T[] {

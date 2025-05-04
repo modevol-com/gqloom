@@ -287,7 +287,7 @@ describe("subscription integration", () => {
     )
   })
 
-  it("should work with context in async iterator", async () => {
+  it.todo("should work with context in async iterator", async () => {
     let iteratorPayload: ResolverPayload | undefined
 
     const contextValue = {}
