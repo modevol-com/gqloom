@@ -1,5 +1,11 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import type { MayPromise, Middleware, RequireKeys } from "../utils"
+import {
+  EasyDataLoader,
+  type MayPromise,
+  type Middleware,
+  type RequireKeys,
+} from "../utils"
+import { getMemoizationMap } from "../utils/context"
 import type { InferInputO } from "./input"
 import {
   createField,
@@ -236,57 +242,58 @@ export class FieldChainFactory<
     }) as any
   }
 
-  // TODO: Implement load
-  // public load<TParent extends GraphQLSilk>(
-  //   resolve: (
-  //     parents: (TDependencies extends string[]
-  //       ? RequireKeys<
-  //           NonNullable<StandardSchemaV1.InferOutput<TParent>>,
-  //           TDependencies[number]
-  //         >
-  //       : NonNullable<StandardSchemaV1.InferOutput<TParent>>)[],
-  //     input: InferInputO<TInput>
-  //   ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
-  // ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
-  //   if (!this.options?.output) throw new Error("Output is required")
-
-  //   const useUnifiedParseInput = createMemoization<{
-  //     current?: CallableInputParser<TInput>
-  //   }>(() => ({ current: undefined }))
-
-  //   const useUserLoader = createMemoization(
-  //     () =>
-  //       new EasyDataLoader(
-  //         async (parents: StandardSchemaV1.InferOutput<TParent>[]) =>
-  //           resolve(
-  //             parents,
-  //             (await useUnifiedParseInput().current?.getResult()) as InferInputO<TInput>
-  //           )
-  //       )
-  //   )
-
-  //   const operation = "field"
-  //   return meta({
-  //     ...getFieldOptions(this.options, {
-  //       [DERIVED_DEPENDENCIES]: this.options.dependencies,
-  //     }),
-  //     operation,
-  //     input: this.options.input as TInput,
-  //     output: this.options.output as TOutput,
-  //     resolve: async (
-  //       parent,
-  //       inputValue
-  //     ): Promise<StandardSchemaV1.InferOutput<TOutput>> => {
-  //       const unifiedParseInput = useUnifiedParseInput()
-  //       unifiedParseInput.current ??= createInputParser(
-  //         this.options?.input as TInput,
-  //         inputValue
-  //       ) as CallableInputParser<TInput>
-  //       return useUserLoader().load(parent)
-  //     },
-  //   }) as Loom.Field<TParent, TOutput, TInput, TDependencies>
-  // }
+  public load<TParent extends GraphQLSilk>(
+    resolve: (
+      parents: InferInputO<TInput> extends void | undefined
+        ? InferParent<TParent, TDependencies>[]
+        : [
+            parent: InferParent<TParent, TDependencies>,
+            input: InferInputO<TInput>,
+          ][],
+      payloads: (ResolverPayload | undefined)[]
+    ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
+  ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
+    if (!this.options?.output) throw new Error("Output is required")
+    const hasInput = typeof this.options.input !== "undefined"
+    const initLoader = () =>
+      new EasyDataLoader<
+        [
+          parent: InferParent<TParent, TDependencies>,
+          input: InferInputO<TInput>,
+          payload: ResolverPayload | undefined,
+        ],
+        any
+      >((args) => {
+        const parents = args.map(([parent, input]) =>
+          hasInput ? [parent, input] : parent
+        )
+        const payloads = args.map(([, , payload]) => payload)
+        return resolve(parents as any, payloads) as any
+      })
+    return createField(this.options.output, {
+      ...this.options,
+      resolve: (parent, input, payload) => {
+        const loader = (() => {
+          if (!payload) return initLoader()
+          const memoMap = getMemoizationMap(payload)
+          if (!memoMap.has(resolve)) memoMap.set(resolve, initLoader())
+          return memoMap.get(resolve) as ReturnType<typeof initLoader>
+        })()
+        return loader.load([parent, input, payload])
+      },
+    }) as any
+  }
 }
+
+type InferParent<
+  TParent extends GraphQLSilk,
+  TDependencies extends string[] | undefined = undefined,
+> = TDependencies extends string[]
+  ? RequireKeys<
+      NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+      TDependencies[number]
+    >
+  : NonNullable<StandardSchemaV1.InferOutput<TParent>>
 
 /**
  * Factory for creating query resolvers with chainable configuration

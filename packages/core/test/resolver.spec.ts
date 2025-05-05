@@ -682,3 +682,229 @@ describe("dataLoader", () => {
     ])
   })
 })
+
+describe("dataLoader by field.load", () => {
+  interface IPost {
+    id: number
+    title: string
+  }
+
+  interface IComment {
+    id: number
+    postId: number
+    content: string
+  }
+
+  const Post = new GraphQLNonNull(
+    new GraphQLObjectType<IPost>({
+      name: "Post",
+      fields: {
+        id: { type: new GraphQLNonNull(GraphQLInt) },
+        createdAt: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+      },
+    })
+  )
+
+  const Comment = new GraphQLNonNull(
+    new GraphQLObjectType<IComment>({
+      name: "Comment",
+      fields: {
+        id: { type: new GraphQLNonNull(GraphQLInt) },
+        createdAt: { type: new GraphQLNonNull(GraphQLString) },
+        postId: { type: new GraphQLNonNull(GraphQLInt) },
+        content: { type: new GraphQLNonNull(GraphQLString) },
+      },
+    })
+  )
+
+  /** id -> post */
+  const postMap = new Map<number, IPost>()
+  /** postId -> comments */
+  const postCommentsMap = new Map<number, IComment[]>()
+
+  let logs: any[] = []
+
+  const postResolver = resolver.of(silk(Post), {
+    posts: query(silk.list(silk(Post))).resolve(() => {
+      return Array.from(postMap.values())
+    }),
+
+    post: query(silk.nullable(silk(Post)))
+      .input({
+        id: silk(new GraphQLNonNull(GraphQLInt)),
+      })
+      .resolve(({ id }) => postMap.get(id)),
+
+    comments: field(silk.list(silk(Comment))).load((parents) => {
+      logs.push({ parents })
+      return parents.map((parent) => postCommentsMap.get(parent.id) ?? [])
+    }),
+
+    commentsWithLimit: field(silk.list(silk(Comment)))
+      .input({
+        limit: silk(new GraphQLNonNull(GraphQLInt)),
+      })
+      .load((inputs) => {
+        logs.push({ inputs })
+        return inputs.map(
+          ([post, { limit }]) =>
+            postCommentsMap.get(post.id)?.slice(0, limit) ?? []
+        )
+      }),
+  })
+
+  const commentResolver = resolver.of(silk(Comment), {
+    post: field(silk.nullable(silk(Post))).resolve((comment) => {
+      return postMap.get(comment.postId)
+    }),
+  })
+
+  const schema = weave(postResolver, commentResolver)
+
+  beforeEach(() => {
+    postMap.clear()
+    postCommentsMap.clear()
+    logs = []
+
+    postMap.set(1, {
+      id: 1,
+      title: "Post 1",
+    })
+    postMap.set(2, {
+      id: 2,
+      title: "Post 2",
+    })
+    postCommentsMap.set(1, [
+      {
+        id: 1,
+        postId: 1,
+        content: "Comment 1",
+      },
+      {
+        id: 2,
+        postId: 1,
+        content: "Comment 2",
+      },
+      {
+        id: 3,
+        postId: 1,
+        content: "Comment 3",
+      },
+      { id: 4, postId: 1, content: "Comment 4" },
+    ])
+    postCommentsMap.set(2, [
+      { id: 5, postId: 2, content: "Comment 5" },
+      { id: 6, postId: 2, content: "Comment 6" },
+      { id: 7, postId: 2, content: "Comment 7" },
+      { id: 8, postId: 2, content: "Comment 8" },
+      { id: 9, postId: 2, content: "Comment 9" },
+    ])
+  })
+
+  it("should work", async () => {
+    const query = parse(/* GraphQL */ `
+      query {
+        postA: post(id: 1) {
+          id
+          commentsWithLimit(limit: 2) {
+            id
+          }
+        }
+        postB: post(id: 2) {
+          id
+          commentsWithLimit(limit: 3) {
+            id
+          }
+        }
+      }
+    `)
+
+    const result = await execute({
+      schema,
+      document: query,
+      contextValue: {},
+    })
+
+    expect(result.data?.postA).toEqual({
+      id: 1,
+      commentsWithLimit: [{ id: 1 }, { id: 2 }],
+    })
+    expect(result.data?.postB).toEqual({
+      id: 2,
+      commentsWithLimit: [{ id: 5 }, { id: 6 }, { id: 7 }],
+    })
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        {
+          "inputs": [
+            [
+              {
+                "id": 1,
+                "title": "Post 1",
+              },
+              {
+                "limit": 2,
+              },
+            ],
+            [
+              {
+                "id": 2,
+                "title": "Post 2",
+              },
+              {
+                "limit": 3,
+              },
+            ],
+          ],
+        },
+      ]
+    `)
+  })
+
+  it("should work with args", async () => {
+    const query = parse(/* GraphQL */ `
+      query {
+        posts {
+          id
+          comments {
+            id
+          }
+        }
+      }
+    `)
+
+    const result = await execute({
+      schema,
+      document: query,
+      contextValue: {},
+    })
+
+    expect(result.data?.posts).toEqual([
+      {
+        id: 1,
+        comments: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }],
+      },
+      {
+        id: 2,
+        comments: [{ id: 5 }, { id: 6 }, { id: 7 }, { id: 8 }, { id: 9 }],
+      },
+    ])
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        {
+          "parents": [
+            {
+              "id": 1,
+              "title": "Post 1",
+            },
+            {
+              "id": 2,
+              "title": "Post 2",
+            },
+          ],
+        },
+      ]
+    `)
+  })
+})

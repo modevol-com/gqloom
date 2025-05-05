@@ -1,29 +1,13 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import type { ResolverPayload } from "../resolver/types"
 import type { Middleware } from "../utils"
-import { CONTEXT_MAP_KEY } from "../utils/symbols"
+import {
+  type OnlyMemoizationPayload,
+  getMemoizationMap,
+  isOnlyMemoryPayload,
+  onlyMemoization,
+} from "../utils/context"
 import { bindAsyncIterator, isAsyncIterator } from "./async-iterator"
-/**
- * Empty Resolver Arguments that only store the memoization
- */
-export interface OnlyMemoizationPayload {
-  memoization: WeakMap<WeakKey, any>
-  isMemoization: true
-}
-
-/**
- * Create an empty memoization payload for the resolver
- * @returns the empty memoization payload
- */
-export function onlyMemoization(): OnlyMemoizationPayload {
-  return { memoization: new WeakMap(), isMemoization: true }
-}
-
-export function isOnlyMemoryPayload(
-  payload: ResolverPayload | OnlyMemoizationPayload
-): payload is OnlyMemoizationPayload {
-  return (payload as OnlyMemoizationPayload).isMemoization === true
-}
 
 /**
  * the AsyncLocalStorage instance to store the resolver payload
@@ -57,20 +41,6 @@ export function useMemoizationMap(): WeakMap<WeakKey, any> | undefined {
   const payload = resolverPayloadStorage.getStore()
   if (payload == null) return
   return getMemoizationMap(payload)
-}
-
-export function getMemoizationMap(
-  payload: OnlyMemoizationPayload | ResolverPayload
-) {
-  if (isOnlyMemoryPayload(payload)) return payload.memoization
-  if (typeof payload.context === "undefined") {
-    Object.defineProperty(payload, "context", { value: {} })
-  }
-  return assignContextMap(payload.context)
-}
-
-interface ContextMemoryContainer {
-  [CONTEXT_MAP_KEY]?: WeakMap<WeakKey, any>
 }
 
 interface ContextOptions {
@@ -203,13 +173,6 @@ export class ContextMemoization<T> implements ContextOptions {
   public provide(value: T): [WeakKey, T] {
     return [this.key, value]
   }
-}
-
-export function assignContextMap(
-  target: ContextMemoryContainer
-): WeakMap<WeakKey, any> {
-  target[CONTEXT_MAP_KEY] ??= new WeakMap()
-  return target[CONTEXT_MAP_KEY]
 }
 
 export interface CallableContext<T> extends InjectableContext<T> {
