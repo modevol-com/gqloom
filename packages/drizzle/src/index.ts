@@ -36,6 +36,7 @@ import type {
   DrizzleSilkConfig,
   DrizzleWeaverConfig,
   DrizzleWeaverConfigOptions,
+  SelectiveTable,
 } from "./types"
 
 export class DrizzleWeaver {
@@ -219,16 +220,18 @@ export function drizzleSilk<TTable extends Table>(
 }
 
 export type TableSilk<TTable extends Table> = TTable &
-  GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>> & {
-    $nullable: () => GraphQLSilk<
-      InferSelectModel<TTable> | null | undefined,
-      InferSelectModel<TTable> | null | undefined
-    >
-    $list: () => GraphQLSilk<
-      InferSelectModel<TTable>[],
-      InferSelectModel<TTable>[]
-    >
-  }
+  SilkVariant<GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>>
+
+export type SilkVariant<TSilk extends GraphQLSilk<unknown, unknown>> =
+  TSilk extends GraphQLSilk<infer TOutput, infer TInput>
+    ? GraphQLSilk<TOutput, TInput> & {
+        $nullable: () => GraphQLSilk<
+          TOutput | null | undefined,
+          TInput | null | undefined
+        >
+        $list: () => GraphQLSilk<TOutput[], TInput[]>
+      }
+    : never
 
 export * from "./factory"
 export * from "./types"

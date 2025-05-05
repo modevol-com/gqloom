@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm"
 import type {
   DrizzleFactoryInputVisibilityBehaviors,
+  SelectedTableColumns,
   ValueOrGetter,
   VisibilityBehavior,
 } from "./types"
@@ -99,15 +100,6 @@ export function getValue<T>(valueOrGetter: ValueOrGetter<T>): T {
   return typeof valueOrGetter === "function"
     ? (valueOrGetter as () => T)()
     : valueOrGetter
-}
-
-export type SelectedTableColumns<TTable extends Table> = Partial<
-  TTable["_"]["columns"]
-> & {
-  /**
-   * This is a brand for the selected fields, used to indicate that the fields are selected by GraphQL Query.
-   */
-  [K in `__selective_${TTable["_"]["name"]}_brand__`]: SQL<never>
 }
 
 /**

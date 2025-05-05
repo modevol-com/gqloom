@@ -12,9 +12,11 @@ const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
 const userResolver = resolver.of(users, {
   users: query(users.$list()).resolve(() => db.select().from(users)),
 
-  posts0: field(posts.$list()).resolve((user) =>
-    db.select().from(posts).where(eq(posts.authorId, user.id))
-  ),
+  posts0: field(posts.$list())
+    .derivedFrom("id")
+    .resolve((user) =>
+      db.select().from(posts).where(eq(posts.authorId, user.id))
+    ),
 
   // posts: field(posts.$list()).load(async (userList) => {
   //   const postList = await db

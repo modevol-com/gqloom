@@ -10,13 +10,26 @@ import { user } from "./schema/sqlite"
 
 describe("useSelectedColumns", () => {
   const selectedColumns = new Set<string>()
-  const db = sqliteDrizzle(":memory:")
+  let logs: string[] = []
+  const db = sqliteDrizzle(":memory:", {
+    logger: {
+      logQuery: (message) => {
+        logs.push(message)
+      },
+    },
+  })
   const r = resolver.of(user, {
-    users: query(user.$list()).resolve((_input) => {
+    users: query(user.$list()).resolve(() => {
       for (const column of Object.keys(useSelectedColumns(user))) {
         selectedColumns.add(column)
       }
-      return db.select().from(user)
+      const one = 1
+      const two = 2
+      if (one + two < one) {
+        // it should be able to select all columns without using useSelectedColumns
+        return db.select().from(user)
+      }
+      return db.select(useSelectedColumns(user)).from(user)
     }),
 
     greeting: field(silk(GraphQLString))
@@ -27,50 +40,18 @@ describe("useSelectedColumns", () => {
   const schema = weave(asyncContextProvider, r)
 
   beforeAll(async () => {
-    await db.run(sql`-- 用户表
+    await db.run(sql`
       CREATE TABLE user (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
           age INTEGER,
           email TEXT
-      );
-      
-      -- 帖子表
-      CREATE TABLE post (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          title TEXT NOT NULL,
-          content TEXT,
-          authorId INTEGER,
-          FOREIGN KEY (authorId) REFERENCES user(id) ON DELETE CASCADE
-      );
-      
-      -- 课程表
-      CREATE TABLE course (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL
-      );
-      
-      -- 学生课程关联表
-      CREATE TABLE studentToCourse (
-          studentId INTEGER,
-          courseId INTEGER,
-          createdAt INTEGER DEFAULT (CURRENT_TIMESTAMP),
-          FOREIGN KEY (studentId) REFERENCES user(id),
-          FOREIGN KEY (courseId) REFERENCES course(id)
-      );
-      
-      -- 学生课程成绩表
-      CREATE TABLE studentCourseGrade (
-          studentId INTEGER,
-          courseId INTEGER,
-          grade INTEGER,
-          FOREIGN KEY (studentId) REFERENCES user(id),
-          FOREIGN KEY (courseId) REFERENCES course(id)
       );`)
   })
 
   afterEach(async () => {
     await db.delete(user)
+    logs = []
   })
 
   it("should return the selected columns", async () => {
@@ -83,9 +64,15 @@ describe("useSelectedColumns", () => {
       }
     `)
     await db.insert(user).values({ id: 1, name: "John" })
+    logs = []
     const result = await execute({ schema, document: query })
     expect(selectedColumns).toEqual(new Set(["id", "name"]))
     expect(result.data?.users).toEqual([{ id: 1, name: "John" }])
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        "select "id", "name" from "user"",
+      ]
+    `)
   })
 
   it("should return the selected columns with derived fields", async () => {
@@ -98,7 +85,13 @@ describe("useSelectedColumns", () => {
       }
     `)
     await db.insert(user).values({ id: 1, name: "John" })
+    logs = []
     const result = await execute({ schema, document: query })
     expect(result.data?.users).toEqual([{ id: 1, greeting: "Hello John" }])
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        "select "id", "name" from "user"",
+      ]
+    `)
   })
 })
