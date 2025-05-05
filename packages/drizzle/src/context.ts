@@ -1,6 +1,6 @@
 import { useResolverPayload } from "@gqloom/core/context"
 import type { Table } from "drizzle-orm"
-import { type SelectedTableColumns, getSelectedColumns } from "./helper"
+import { getSelectedColumns } from "./helper"
 
 /**
  * use the selected columns from the resolver payload
@@ -9,6 +9,5 @@ import { type SelectedTableColumns, getSelectedColumns } from "./helper"
  */
 export function useSelectedColumns<TTable extends Table>(table: TTable) {
   const payload = useResolverPayload()
-  if (!payload) return {} as SelectedTableColumns<TTable>
   return getSelectedColumns(table, payload)
 }
