@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Refactor: `field.load()` now accept `input` and `payload` parameters
 - Refactor: move `useContext` to `@gqloom/core/context`
 - Feat: introduce InjectableContext and createContext for enhanced dependency management
 - Feat: Updated resolver functions to accept a `payload` parameter
