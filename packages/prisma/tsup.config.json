@@ -7,5 +7,6 @@
   "minify": false,
   "dts": true,
   "outDir": "./dist",
-  "clean": true
+  "clean": true,
+  "tsconfig": "../../tsconfig.tsup.json"
 }

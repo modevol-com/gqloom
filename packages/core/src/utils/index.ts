@@ -1,7 +1,6 @@
 export * from "./types"
 export * from "./args"
 export * from "./middleware"
-export * from "./context"
 export * from "./object"
 export * from "./parse-resolving-fields"
 export * from "./string"

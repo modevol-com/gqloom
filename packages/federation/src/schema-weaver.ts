@@ -14,7 +14,6 @@ import {
   query,
   resolver,
   silk,
-  useResolverPayload,
 } from "@gqloom/core"
 import {
   GraphQLList,
@@ -56,9 +55,8 @@ export class FederatedSchemaLoom extends GraphQLSchemaLoom {
       ...(hasEntities && {
         _entities: query(EntitiesSilk, {
           input: { representations: RepresentationsSilk },
-          resolve: ({ representations }) => {
-            const { context, info = {} as GraphQLResolveInfo } =
-              useResolverPayload() ?? {}
+          resolve: ({ representations }, payload) => {
+            const { context, info = {} as GraphQLResolveInfo } = payload ?? {}
             return entitiesResolver({ representations, context, info })
           },
         }),

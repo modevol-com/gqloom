@@ -24,15 +24,13 @@ describe("middleware integration", () => {
     logs.push("global End")
     return result
   }
-  const simpleResolver = resolver(
-    {
-      hello: query(silk(GraphQLString), {
-        resolve: () => "hello GQLoom",
-        middlewares: [operationMiddleware],
-      }),
-    },
-    { middlewares: [resolverMiddleware] }
-  )
+  const simpleResolver = resolver({
+    hello: query(silk(GraphQLString), {
+      resolve: () => "hello GQLoom",
+      middlewares: [operationMiddleware],
+    }),
+  })
+  simpleResolver.use(resolverMiddleware)
 
   const schema = new GraphQLSchemaLoom()
     .use(globalMiddleware)

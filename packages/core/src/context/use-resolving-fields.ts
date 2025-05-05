@@ -1,6 +1,8 @@
 import { GraphQLObjectType } from "graphql"
-import { DERIVED_DEPENDENCIES } from "../resolver"
-import { parseResolvingFields, useResolverPayload } from "../utils"
+import type { ResolverPayload } from "../resolver"
+import { DERIVED_DEPENDENCIES } from "../utils/constants"
+import { parseResolvingFields } from "../utils/parse-resolving-fields"
+import { createMemoization, useResolverPayload } from "./context"
 
 /**
  * Represents the state of field resolution in a GraphQL query.
@@ -25,21 +27,12 @@ export interface ResolvingFields {
 }
 
 /**
- * A hook that analyzes and processes field resolution in a GraphQL query.
- * It handles the following:
- * 1. Identifies fields requested in the query
- * 2. Detects derived fields and their dependencies
- * 3. Computes the final set of fields that need to be resolved
+ * Analyzes and processes field resolution in a GraphQL query.
  *
- * The hook is memoized to prevent unnecessary recalculations.
- *
- * @returns An object containing sets of different field types,
- * or undefined if no resolver payload is available
+ * @param payload - The resolver payload containing the current field resolution context
+ * @returns An object containing sets of different field types
  */
-export const useResolvingFields = () => {
-  const payload = useResolverPayload()
-  if (!payload) return
-
+export function getResolvingFields(payload: ResolverPayload): ResolvingFields {
   const requestedFields = parseResolvingFields(payload.info)
   const derivedFields = new Set<string>()
   const derivedDependencies = new Set<string>()
@@ -66,3 +59,20 @@ export const useResolvingFields = () => {
 
   return { requestedFields, derivedFields, derivedDependencies, selectedFields }
 }
+
+/**
+ * A hook that analyzes and processes field resolution in a GraphQL query.
+ *
+ * The hook is memoized to prevent unnecessary recalculations.
+ *
+ * @returns An object containing sets of different field types,
+ * or undefined if no resolver payload is available
+ */
+export const useResolvingFields = createMemoization<
+  ResolvingFields | undefined
+>(() => {
+  const payload = useResolverPayload()
+  if (!payload) return
+
+  return getResolvingFields(payload)
+})

@@ -1,18 +1,19 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import type { MayPromise } from "../utils"
+import type { MayPromise, Middleware } from "../utils"
 import type { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
-import type { InferInputI } from "./input"
+import type { InferInputO } from "./input"
 import type {
   GraphQLFieldOptions,
   GraphQLSilk,
   ResolverOptionsWithExtensions,
-  ResolvingOptions,
+  ResolverPayload,
 } from "./types"
 
 export interface FieldMeta extends GraphQLFieldOptions {
   operation: "field" | "query" | "mutation" | "subscription"
   output: GraphQLSilk
   input: GraphQLSilk | Record<string, GraphQLSilk> | void
+  middlewares?: Middleware[]
   dependencies?: string[]
   resolve: (...args: any) => MayPromise<any>
 }
@@ -31,14 +32,15 @@ export interface Field<
     operation: "field"
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
     dependencies?: TDependencies
     types?: {
       parent: ReSilk<TParent>
     }
     resolve: (
       parent: StandardSchemaV1.InferOutput<NonNullable<TParent>>,
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
   } & GraphQLFieldOptions
 }
@@ -52,9 +54,10 @@ export interface Query<
     parent?: undefined
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
     resolve: (
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
   } & GraphQLFieldOptions
 }
@@ -68,9 +71,10 @@ export interface Mutation<
     parent?: undefined
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
     resolve: (
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
   } & GraphQLFieldOptions
 }
@@ -85,19 +89,20 @@ export interface Subscription<
     parent?: undefined
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
     types?: {
       value: TValue
     } & GraphQLFieldOptions
 
     resolve: (
       value: TValue,
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 
     subscribe: (
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => MayPromise<AsyncIterator<TValue>>
   } & GraphQLFieldOptions
 }

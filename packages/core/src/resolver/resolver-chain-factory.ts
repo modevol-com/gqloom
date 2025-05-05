@@ -4,19 +4,10 @@ import {
   type MayPromise,
   type Middleware,
   type RequireKeys,
-  applyMiddlewares,
-  compose,
-  createMemoization,
-  getFieldOptions,
-  meta,
 } from "../utils"
+import { getMemoizationMap } from "../utils/context"
+import type { InferInputO } from "./input"
 import {
-  type CallableInputParser,
-  type InferInputO,
-  createInputParser,
-} from "./input"
-import {
-  DERIVED_DEPENDENCIES,
   createField,
   createMutation,
   createQuery,
@@ -30,6 +21,7 @@ import type {
   Loom,
   MutationOptions,
   QueryOptions,
+  ResolverPayload,
 } from "./types"
 
 /**
@@ -239,7 +231,8 @@ export class FieldChainFactory<
             TDependencies[number]
           >
         : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
@@ -249,67 +242,58 @@ export class FieldChainFactory<
     }) as any
   }
 
-  /**
-   * Sets up data loading for the field
-   * @template TParent - The parent type
-   * @param resolve - The batch resolve function
-   */
   public load<TParent extends GraphQLSilk>(
     resolve: (
-      parents: (TDependencies extends string[]
-        ? RequireKeys<
-            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
-            TDependencies[number]
-          >
-        : NonNullable<StandardSchemaV1.InferOutput<TParent>>)[],
-      input: InferInputO<TInput>
+      parents: InferInputO<TInput> extends void | undefined
+        ? InferParent<TParent, TDependencies>[]
+        : [
+            parent: InferParent<TParent, TDependencies>,
+            input: InferInputO<TInput>,
+          ][],
+      payloads: (ResolverPayload | undefined)[]
     ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
   ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
-
-    const useUnifiedParseInput = createMemoization<{
-      current?: CallableInputParser<TInput>
-    }>(() => ({ current: undefined }))
-
-    const useUserLoader = createMemoization(
-      () =>
-        new EasyDataLoader(
-          async (parents: StandardSchemaV1.InferOutput<TParent>[]) =>
-            resolve(
-              parents,
-              (await useUnifiedParseInput().current?.getResult()) as InferInputO<TInput>
-            )
+    const hasInput = typeof this.options.input !== "undefined"
+    const initLoader = () =>
+      new EasyDataLoader<
+        [
+          parent: InferParent<TParent, TDependencies>,
+          input: InferInputO<TInput>,
+          payload: ResolverPayload | undefined,
+        ],
+        any
+      >((args) => {
+        const parents = args.map(([parent, input]) =>
+          hasInput ? [parent, input] : parent
         )
-    )
-
-    const operation = "field"
-    return meta({
-      ...getFieldOptions(this.options, {
-        [DERIVED_DEPENDENCIES]: this.options.dependencies,
-      }),
-      operation,
-      input: this.options.input as TInput,
-      output: this.options.output as TOutput,
-      resolve: async (
-        parent,
-        inputValue,
-        extraOptions
-      ): Promise<StandardSchemaV1.InferOutput<TOutput>> => {
-        const unifiedParseInput = useUnifiedParseInput()
-        unifiedParseInput.current ??= createInputParser(
-          this.options?.input,
-          inputValue
-        ) as CallableInputParser<TInput>
-        const parseInput = unifiedParseInput.current
-        return applyMiddlewares(
-          compose(extraOptions?.middlewares, this.options?.middlewares),
-          async () => useUserLoader().load(parent),
-          { parseInput, parent, outputSilk: this.output, operation }
-        )
+        const payloads = args.map(([, , payload]) => payload)
+        return resolve(parents as any, payloads) as any
+      })
+    return createField(this.options.output, {
+      ...this.options,
+      resolve: (parent, input, payload) => {
+        const loader = (() => {
+          if (!payload) return initLoader()
+          const memoMap = getMemoizationMap(payload)
+          if (!memoMap.has(resolve)) memoMap.set(resolve, initLoader())
+          return memoMap.get(resolve) as ReturnType<typeof initLoader>
+        })()
+        return loader.load([parent, input, payload])
       },
-    }) as Loom.Field<TParent, TOutput, TInput, TDependencies>
+    }) as any
   }
 }
+
+type InferParent<
+  TParent extends GraphQLSilk,
+  TDependencies extends string[] | undefined = undefined,
+> = TDependencies extends string[]
+  ? RequireKeys<
+      NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+      TDependencies[number]
+    >
+  : NonNullable<StandardSchemaV1.InferOutput<TParent>>
 
 /**
  * Factory for creating query resolvers with chainable configuration
@@ -378,7 +362,8 @@ export class QueryChainFactory<
    */
   public resolve(
     resolve: (
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Query<TOutput, TInput> {
     if (!this.options?.output) throw new Error("Output is required")
@@ -459,7 +444,8 @@ export class MutationChainFactory<
    */
   public resolve(
     resolve: (
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Mutation<TOutput, TInput> {
     if (!this.options?.output) throw new Error("Output is required")
@@ -540,7 +526,10 @@ export class SubscriptionChainFactory<
    * @throws {Error} If output type is not set
    */
   public subscribe<TValue = StandardSchemaV1.InferOutput<TOutput>>(
-    subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
+    subscribe: (
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
+    ) => MayPromise<AsyncIterator<TValue>>
   ): TValue extends StandardSchemaV1.InferOutput<TOutput>
     ? ResolvableSubscription<TOutput, TInput, TValue>
     : SubscriptionNeedResolve<TOutput, TInput, TValue> {
@@ -590,12 +579,14 @@ export interface ResolvableSubscription<
   resolve(
     resolve: (
       value: TValue,
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Subscription<TOutput, TInput, TValue>
 }
 
 /**
+ * A subscription that can not be resolved yet, still needs to be resolved.
  * Interface for a subscription that needs to be resolved
  * @template TOutput - The output type of the subscription
  * @template TInput - The input type of the subscription
@@ -616,7 +607,8 @@ export interface SubscriptionNeedResolve<
   resolve(
     resolve: (
       value: TValue,
-      input: InferInputO<TInput>
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Subscription<TOutput, TInput, TValue>
 }

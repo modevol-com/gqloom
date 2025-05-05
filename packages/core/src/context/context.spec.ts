@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest"
+import { onlyMemoization } from "../utils/context"
+import { CONTEXT_MAP_KEY } from "../utils/symbols"
 import {
   ContextMemoization,
+  InjectableContext,
+  createContext,
   createMemoization,
-  onlyMemoization,
   resolverPayloadStorage,
   useContext,
   useMemoizationMap,
   useResolverPayload,
 } from "./context"
-import { CONTEXT_MEMORY_MAP_KEY } from "./symbols"
 
 describe("context", () => {
   describe("useResolverArgs", () => {
@@ -180,7 +182,7 @@ describe("memory", () => {
 
     it("should return the memory map", () => {
       const map = new WeakMap()
-      const args = { context: { [CONTEXT_MEMORY_MAP_KEY]: map } } as any
+      const args = { context: { [CONTEXT_MAP_KEY]: map } } as any
 
       resolverPayloadStorage.run(args, () => {
         expect(useMemoizationMap()).toBe(map)
@@ -190,7 +192,7 @@ describe("memory", () => {
     it("should return the memory map from the context", () => {
       const args = { context: {} } as any
       resolverPayloadStorage.run(args, () => {
-        expect(useMemoizationMap()).toBe(args.context[CONTEXT_MEMORY_MAP_KEY])
+        expect(useMemoizationMap()).toBe(args.context[CONTEXT_MAP_KEY])
       })
     })
 
@@ -209,6 +211,77 @@ describe("memory", () => {
         memoization: new WeakMap(),
         isMemoization: true,
       })
+    })
+  })
+})
+
+describe("InjectableContext", () => {
+  it("should use default getter when no context is provided", () => {
+    const context = new InjectableContext(() => "default value")
+    expect(context.get()).toBe("default value")
+  })
+
+  it("should use provided getter in context", () => {
+    const context = new InjectableContext(() => "default value")
+    resolverPayloadStorage.run(onlyMemoization(), () => {
+      const map = useMemoizationMap()
+      if (map) {
+        const [key, getter] = context.provide(() => "custom value")
+        map.set(key, getter)
+        expect(context.get()).toBe("custom value")
+      }
+    })
+  })
+
+  it("should work with custom key", () => {
+    const customKey = {}
+    const context = new InjectableContext(() => "default value", {
+      key: customKey,
+    })
+    expect(context.key).toBe(customKey)
+  })
+
+  it("should work with custom getContextMap", () => {
+    const customMap = new WeakMap()
+    const getContextMap = () => customMap
+    const context = new InjectableContext(() => "default value", {
+      getContextMap,
+    })
+    expect(context.getContextMap()).toBe(customMap)
+  })
+})
+
+describe("createContext", () => {
+  it("should create a callable context", () => {
+    const useValue = createContext(() => "test value")
+    expect(typeof useValue).toBe("function")
+    expect(useValue()).toBe("test value")
+    expect(useValue.get()).toBe("test value")
+  })
+
+  it("should work with provided getter in context", () => {
+    const useValue = createContext(() => "default value")
+    resolverPayloadStorage.run(onlyMemoization(), () => {
+      const map = useMemoizationMap()
+      if (map) {
+        const [key, getter] = useValue.provide(() => "custom value")
+        map.set(key, getter)
+        expect(useValue()).toBe("custom value")
+        expect(useValue.get()).toBe("custom value")
+      }
+    })
+  })
+
+  it("should maintain context across async operations", async () => {
+    const useValue = createContext(() => "default value")
+    await resolverPayloadStorage.run(onlyMemoization(), async () => {
+      const map = useMemoizationMap()
+      if (map) {
+        const [key, getter] = useValue.provide(() => "async value")
+        map.set(key, getter)
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        expect(useValue()).toBe("async value")
+      }
     })
   })
 })

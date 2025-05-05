@@ -7,9 +7,9 @@ import {
   type ResolverPayload,
   loom,
   silk,
-  useResolverPayload,
   weave,
 } from "../src"
+import { asyncContextProvider, useResolverPayload } from "../src/context"
 
 const { subscription, resolver, query } = loom
 
@@ -213,6 +213,9 @@ describe("subscription integration", () => {
       ResolverPayload | undefined
     >
 
+    let subscribePayload: ResolverPayload | undefined
+    let resolvePayload: ResolverPayload | undefined
+
     const middleware: Middleware = (next) => {
       payloads.middleware = useResolverPayload()
       return next()
@@ -222,11 +225,13 @@ describe("subscription integration", () => {
       {
         hello,
         foo: subscription(silk(GraphQLString))
-          .subscribe(() => {
+          .subscribe((_input, payload) => {
+            subscribePayload = payload
             payloads.subscribe = useResolverPayload()
             return fooGenerator()
           })
-          .resolve(async (value) => {
+          .resolve(async (value, _input, payload) => {
+            resolvePayload = payload
             payloads.resolve = useResolverPayload()
             return value + " Resolved"
           }),
@@ -234,9 +239,7 @@ describe("subscription integration", () => {
       { middlewares: [middleware] }
     )
 
-    const schema = new GraphQLSchemaLoom()
-      .add(simpleResolver)
-      .weaveGraphQLSchema()
+    const schema = weave(asyncContextProvider, simpleResolver)
 
     const contextValue = {}
     const subscriber = await subscribe({
@@ -245,25 +248,7 @@ describe("subscription integration", () => {
       contextValue,
     })
 
-    const iteratorResolver = resolver({
-      hello,
-      foo: subscription(silk(GraphQLString)).subscribe(async function* () {
-        await new Promise((resolve) => setTimeout(resolve, 6))
-        payloads.iterator = useResolverPayload()
-        yield "FooValue"
-      }),
-    })
-
-    const iteratorSchema = weave(iteratorResolver)
-
-    const iteratorSubscriber = await subscribe({
-      schema: iteratorSchema,
-      document,
-      contextValue,
-    })
-
     assert(isAsyncIterable(subscriber))
-    assert(isAsyncIterable(iteratorSubscriber))
 
     expect(await subscriber.next()).toMatchObject({
       done: false,
@@ -272,12 +257,10 @@ describe("subscription integration", () => {
       },
     })
 
-    expect(await iteratorSubscriber.next()).toMatchObject({
-      done: false,
-      value: {
-        data: { foo: "FooValue" },
-      },
-    })
+    expect(subscribePayload).toBeDefined()
+    expect(subscribePayload?.info.fieldName).toBe("foo")
+    expect(resolvePayload).toBeDefined()
+    expect(resolvePayload?.info.fieldName).toBe("foo")
 
     expect(payloads.resolve).toBeDefined()
     expect(payloads.resolve?.context).toBe(contextValue)
@@ -302,6 +285,49 @@ describe("subscription integration", () => {
     expect(payloads.middleware?.field["~meta"]).toMatchObject(
       reField(simpleResolver["~meta"].fields.foo["~meta"])
     )
+  })
+
+  it("should work with context in async iterator", async () => {
+    let iteratorPayload: ResolverPayload | undefined
+
+    const contextValue = {}
+
+    const payloads = {} as Record<
+      "subscribe" | "resolve" | "middleware" | "iterator",
+      ResolverPayload | undefined
+    >
+
+    const iteratorResolver = resolver({
+      hello,
+      foo: subscription(silk(GraphQLString)).subscribe(
+        async function* (_input, payload) {
+          await new Promise((resolve) => setTimeout(resolve, 6))
+          iteratorPayload = payload
+          payloads.iterator = useResolverPayload()
+          yield "FooValue"
+        }
+      ),
+    })
+
+    const iteratorSchema = weave(asyncContextProvider, iteratorResolver)
+
+    const iteratorSubscriber = await subscribe({
+      schema: iteratorSchema,
+      document,
+      contextValue,
+    })
+
+    assert(isAsyncIterable(iteratorSubscriber))
+
+    expect(await iteratorSubscriber.next()).toMatchObject({
+      done: false,
+      value: {
+        data: { foo: "FooValue" },
+      },
+    })
+
+    expect(iteratorPayload).toBeDefined()
+    expect(iteratorPayload?.info.fieldName).toBe("foo")
 
     expect(payloads.iterator).toBeDefined()
     expect(payloads.iterator?.context).toBe(contextValue)

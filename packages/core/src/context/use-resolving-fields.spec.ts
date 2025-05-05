@@ -2,6 +2,7 @@ import { GraphQLObjectType, GraphQLString, execute, parse } from "graphql"
 import { describe, expect, it } from "vitest"
 import { field, query, resolver, silk } from "../resolver"
 import { weave } from "../schema"
+import { asyncContextProvider } from "./context"
 import {
   type ResolvingFields,
   useResolvingFields,
@@ -39,7 +40,7 @@ describe("useResolvingFields", () => {
       }),
   })
 
-  const schema = weave(CatResolver)
+  const schema = weave(asyncContextProvider, CatResolver)
 
   it("should return the resolving fields", async () => {
     const result = await execute({

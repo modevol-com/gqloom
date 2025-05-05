@@ -4,6 +4,7 @@ import type {
   GraphQLFieldOptions,
   MutationOptions,
   QueryOptions,
+  ResolverPayload,
   SubscriptionOptions,
 } from "../resolver/types"
 
@@ -21,7 +22,9 @@ export function getOperationOptions(
 }
 
 export function getSubscriptionOptions(
-  subscribeOrOptions: (() => any) | SubscriptionOptions<any, any, any>
+  subscribeOrOptions:
+    | ((payload: ResolverPayload | undefined) => any)
+    | SubscriptionOptions<any, any, any>
 ): SubscriptionOptions<any, any, any> {
   if (typeof subscribeOrOptions === "function") {
     return { subscribe: subscribeOrOptions }

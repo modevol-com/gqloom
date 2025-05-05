@@ -1,6 +1,6 @@
 import { createServer } from "node:http"
 import { field, query, resolver, weave } from "@gqloom/core"
-import { eq, inArray } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { createYoga } from "graphql-yoga"
 import { config } from "../env.config"
@@ -16,19 +16,19 @@ const userResolver = resolver.of(users, {
     db.select().from(posts).where(eq(posts.authorId, user.id))
   ),
 
-  posts: field(posts.$list()).load(async (userList) => {
-    const postList = await db
-      .select()
-      .from(posts)
-      .where(
-        inArray(
-          posts.authorId,
-          userList.map((u) => u.id)
-        )
-      )
-    const postMap = Map.groupBy(postList, (p) => p.authorId)
-    return userList.map((u) => postMap.get(u.id) ?? [])
-  }),
+  // posts: field(posts.$list()).load(async (userList) => {
+  //   const postList = await db
+  //     .select()
+  //     .from(posts)
+  //     .where(
+  //       inArray(
+  //         posts.authorId,
+  //         userList.map((u) => u.id)
+  //       )
+  //     )
+  //   const postMap = Map.groupBy(postList, (p) => p.authorId)
+  //   return userList.map((u) => postMap.get(u.id) ?? [])
+  // }),
 })
 
 const schema = weave(userResolver)
