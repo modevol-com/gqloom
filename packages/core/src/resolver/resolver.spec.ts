@@ -261,10 +261,6 @@ describe("resolver", () => {
       )
     })
 
-    it.todo("should load related field", async () => {
-      // expect(await giraffeExecutor.self(Skyler, nil, nil)).toEqual(Skyler)
-    })
-
     it("should hidden fields", () => {
       const r1 = resolver.of(Giraffe, {
         hello: query(Giraffe, () => 0 as any),
