@@ -2,12 +2,13 @@ import type { GraphQLResolveInfo, SelectionSetNode } from "graphql"
 import {
   type ArgumentNode,
   type DirectiveNode,
-  GraphQLObjectType,
   Kind,
   type SelectionNode,
+  isObjectType,
 } from "graphql"
 import type { ResolverPayload } from "../resolver"
 import { DERIVED_DEPENDENCIES } from "./constants"
+import { unwrapType } from "./type"
 
 /**
  * Represents the state of field resolution in a GraphQL query.
@@ -41,9 +42,9 @@ export function getResolvingFields(payload: ResolverPayload): ResolvingFields {
   const requestedFields = parseResolvingFields(payload.info)
   const derivedFields = new Set<string>()
   const derivedDependencies = new Set<string>()
-  const resolvingObject = payload.info.returnType
+  const resolvingObject = unwrapType(payload.info.returnType)
 
-  if (resolvingObject instanceof GraphQLObjectType) {
+  if (isObjectType(resolvingObject)) {
     const objectFields = resolvingObject.getFields()
     for (const requestedFieldName of requestedFields) {
       const field = objectFields[requestedFieldName]

@@ -47,7 +47,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     userFactory = drizzleResolverFactory(db, sqliteSchemas.user)
-
     await db.insert(sqliteSchemas.user).values([
       {
         name: "John",

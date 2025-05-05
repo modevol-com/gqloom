@@ -1,8 +1,14 @@
-import { pascalCase } from "@gqloom/core"
+import {
+  type ResolverPayload,
+  getResolvingFields,
+  mapValue,
+  pascalCase,
+} from "@gqloom/core"
 import {
   type Column,
   type SQL,
   type Table,
+  getTableColumns,
   getTableName,
   sql,
 } from "drizzle-orm"
@@ -93,4 +99,31 @@ export function getValue<T>(valueOrGetter: ValueOrGetter<T>): T {
   return typeof valueOrGetter === "function"
     ? (valueOrGetter as () => T)()
     : valueOrGetter
+}
+
+export type SelectedTableColumns<TTable extends Table> = Partial<
+  TTable["_"]["columns"]
+> & {
+  /**
+   * This is a brand for the selected fields, used to indicate that the fields are selected by GraphQL Query.
+   */
+  [K in `__selective_${TTable["_"]["name"]}_brand__`]: SQL<never>
+}
+
+/**
+ * Get the selected columns from the resolver payload
+ * @param table - The table to get the selected columns from
+ * @param payload - The resolver payload
+ * @returns The selected columns
+ */
+export function getSelectedColumns<TTable extends Table>(
+  table: TTable,
+  payload: ResolverPayload | undefined
+): SelectedTableColumns<TTable> {
+  if (!payload) return {} as SelectedTableColumns<TTable>
+  const resolvingFields = getResolvingFields(payload)
+  return mapValue(getTableColumns(table), (column, columnName) => {
+    if (resolvingFields.selectedFields.has(columnName)) return column
+    return mapValue.SKIP
+  }) as SelectedTableColumns<TTable>
 }
