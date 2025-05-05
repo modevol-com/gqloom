@@ -242,9 +242,21 @@ export class FieldChainFactory<
     }) as any
   }
 
+  /**
+   * Creates a field resolver that uses DataLoader for batch loading data.
+   * This method is particularly useful for optimizing performance when dealing with multiple data requests
+   * by batching them together and handling caching automatically.
+   *
+   * @template TParent - The parent type that extends GraphQLSilk
+   * @param resolve - A function that handles batch loading of data. The function receives:
+   *   - When no input type is defined: An array of parent objects
+   *   - When input type is defined: An array of tuples containing [parent, input]
+   *   - An array of resolver payloads
+   * @returns A GraphQL field resolver that implements batch loading
+   */
   public load<TParent extends GraphQLSilk>(
     resolve: (
-      parents: InferInputO<TInput> extends void | undefined
+      parameters: InferInputO<TInput> extends void | undefined
         ? InferParent<TParent, TDependencies>[]
         : [
             parent: InferParent<TParent, TDependencies>,
