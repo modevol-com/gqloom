@@ -1,16 +1,5 @@
 import { resolver } from "@gqloom/core"
-import {
-  and,
-  defineRelations,
-  eq,
-  gt,
-  gte,
-  inArray,
-  lte,
-  not,
-  or,
-  sql,
-} from "drizzle-orm"
+import { defineRelations, eq, inArray, sql } from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
