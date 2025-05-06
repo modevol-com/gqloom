@@ -166,8 +166,10 @@ export abstract class DrizzleResolverFactory<
     return new QueryFactoryWithResolve(this.output.$nullable(), {
       input,
       ...options,
-      resolve: (opts) => {
-        let query: any = (this.db as any).select().from(this.table)
+      resolve: (opts, payload) => {
+        let query: any = (this.db as any)
+          .select(getSelectedColumns(this.table, payload))
+          .from(this.table)
         if (opts.where) query = query.where(opts.where)
         if (opts.orderBy?.length) query = query.orderBy(...opts.orderBy)
         query = query.limit(1)

@@ -144,6 +144,7 @@ describe("resolver by postgres", () => {
     })
 
     it("should query user single correctly", async () => {
+      logs = []
       await expect(
         execute(
           /* GraphQL */ `
@@ -161,6 +162,11 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         userSingle: { name: "Taylor" },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
     })
 
     it("should query user with posts correctly", async () => {

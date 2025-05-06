@@ -133,6 +133,7 @@ describe("resolver by sqlite", () => {
     })
 
     it("should query user single correctly", async () => {
+      logs = []
       await expect(
         execute(
           /* GraphQL */ `
@@ -150,6 +151,11 @@ describe("resolver by sqlite", () => {
       ).resolves.toMatchObject({
         userSingle: { name: "Taylor" },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "user" where "user"."name" = ? limit ?
+        "
+      `)
     })
 
     it("should query user with posts correctly", async () => {
