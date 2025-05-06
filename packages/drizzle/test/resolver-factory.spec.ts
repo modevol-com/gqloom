@@ -272,88 +272,86 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
     it("should work with AND operators", async () => {
       const query = userFactory.selectArrayQuery()
+      const executor = resolver({ query }).toExecutor()
       let answer
-      answer = await query["~meta"].resolve({
-        where: and(
-          eq(sqliteSchemas.users.name, "John"),
-          gt(sqliteSchemas.users.age, 10)
-        ),
+      answer = await executor.query({
+        where: {
+          AND: [{ name: { eq: "John" } }, { age: { gt: 10 } }],
+        },
       })
       expect(answer).toHaveLength(0)
 
-      answer = await query["~meta"].resolve({
-        where: and(
-          eq(sqliteSchemas.users.name, "John"),
-          gte(sqliteSchemas.users.age, 10)
-        ),
+      answer = await executor.query({
+        where: {
+          AND: [{ name: { eq: "John" } }, { age: { gte: 10 } }],
+        },
       })
       expect(answer).toHaveLength(1)
     })
 
     it("should work with OR operators", async () => {
       const query = userFactory.selectArrayQuery()
+      const executor = resolver({ query }).toExecutor()
       let answer
-      answer = await query["~meta"].resolve({
-        where: or(
-          eq(sqliteSchemas.users.name, "John"),
-          gt(sqliteSchemas.users.age, 12)
-        ),
+      answer = await executor.query({
+        where: {
+          OR: [{ name: { eq: "John" } }, { age: { gt: 12 } }],
+        },
       })
       expect(answer).toHaveLength(3)
 
-      answer = await query["~meta"].resolve({
-        where: or(
-          gte(sqliteSchemas.users.age, 14),
-          lte(sqliteSchemas.users.age, 10)
-        ),
+      answer = await executor.query({
+        where: {
+          OR: [{ age: { gte: 14 } }, { age: { lte: 10 } }],
+        },
       })
       expect(answer).toHaveLength(2)
     })
 
     it("should work with NOT operators", async () => {
       const query = userFactory.selectArrayQuery()
+      const executor = resolver({ query }).toExecutor()
       let answer
-      answer = await query["~meta"].resolve({
-        where: not(eq(sqliteSchemas.users.name, "John")),
+      answer = await executor.query({
+        where: { NOT: { name: { eq: "John" } } },
       })
       expect(answer).toHaveLength(4)
 
-      answer = await query["~meta"].resolve({
-        where: not(lte(sqliteSchemas.users.age, 10)),
+      answer = await executor.query({
+        where: { NOT: { age: { lte: 10 } } },
       })
       expect(answer).toHaveLength(4)
     })
 
     it("should work with complex NOT conditions", async () => {
       const query = userFactory.selectArrayQuery()
+      const executor = resolver({ query }).toExecutor()
       let answer
 
       // Test NOT with OR condition
-      answer = await query["~meta"].resolve({
-        where: not(
-          or(
-            eq(sqliteSchemas.users.name, "John"),
-            eq(sqliteSchemas.users.name, "Jane")
-          ) as any
-        ),
+      answer = await executor.query({
+        where: {
+          NOT: {
+            OR: [{ name: { eq: "John" } }, { name: { eq: "Jane" } }],
+          } as any,
+        },
       })
       expect(answer).toHaveLength(3) // Should exclude both John and Jane
 
       // Test NOT with AND condition
-      answer = await query["~meta"].resolve({
-        where: not(
-          and(
-            gte(sqliteSchemas.users.age, 10),
-            lte(sqliteSchemas.users.age, 12)
-          ) as any
-        ),
+      answer = await executor.query({
+        where: {
+          NOT: {
+            AND: [{ age: { gte: 10 } }, { age: { lte: 12 } }],
+          } as any,
+        },
       })
       // Should exclude ages 10, 11, 12
       expect(answer.map((user) => user.age).sort()).toEqual([13, 14])
 
       // Test nested NOT conditions
-      answer = await query["~meta"].resolve({
-        where: not(lte(sqliteSchemas.users.age, 12)),
+      answer = await executor.query({
+        where: { NOT: { age: { lte: 12 } } },
       })
       // Double negation: NOT(NOT(age > 12)) = age > 12
       expect(answer.map((user) => user.age).sort()).toEqual([13, 14])
@@ -361,10 +359,10 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
     it("should work with column-level NOT operator", async () => {
       const query = userFactory.selectArrayQuery()
-
+      const executor = resolver({ query }).toExecutor()
       // Test NOT applied to a column filter
-      const answer = await query["~meta"].resolve({
-        where: not(lte(sqliteSchemas.users.age, 12)),
+      const answer = await executor.query({
+        where: { age: { NOT: { lte: 12 } } },
       })
 
       // Should only include ages > 12
@@ -373,23 +371,26 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
     it("should work with column-level operators (OR, AND)", async () => {
       const query = userFactory.selectArrayQuery()
+      const executor = resolver({ query }).toExecutor()
       let answer
 
       // Test column-level OR operator
-      answer = await query["~meta"].resolve({
-        where: or(
-          eq(sqliteSchemas.users.age, 10),
-          eq(sqliteSchemas.users.age, 11)
-        ),
+      answer = await executor.query({
+        where: {
+          age: {
+            OR: [{ eq: 10 }, { eq: 11 }],
+          },
+        },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
       // Test column-level AND operator
-      answer = await query["~meta"].resolve({
-        where: and(
-          gte(sqliteSchemas.users.age, 10),
-          lte(sqliteSchemas.users.age, 11)
-        ),
+      answer = await executor.query({
+        where: {
+          age: {
+            AND: [{ gte: 10 }, { lte: 11 }],
+          },
+        },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
     })
