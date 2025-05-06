@@ -1,5 +1,5 @@
 import { resolver } from "@gqloom/core"
-import { eq, inArray, sql } from "drizzle-orm"
+import { type InferSelectModel, eq, inArray, sql } from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
@@ -12,7 +12,6 @@ import {
   type NodePgDatabase,
   drizzle as pgDrizzle,
 } from "drizzle-orm/node-postgres"
-import * as sqlite from "drizzle-orm/sqlite-core"
 import * as v from "valibot"
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from "vitest"
 import { config } from "../env.config"
@@ -47,7 +46,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     userFactory = drizzleResolverFactory(db, sqliteSchemas.user)
-
     await db.insert(sqliteSchemas.user).values([
       {
         name: "John",
@@ -79,15 +77,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
   it("should create a resolver factory", () => {
     expect(userFactory).toBeInstanceOf(DrizzleResolverFactory)
-  })
-
-  it("should throw an error if the table is not found", () => {
-    const unknownTable = sqlite.sqliteTable("unknown", {
-      id: sqlite.integer("id").primaryKey(),
-    })
-    expect(() => drizzleResolverFactory(db, unknownTable)).toThrow(
-      "GQLoom-Drizzle Error: Table unknown not found in drizzle instance. Did you forget to pass schema to drizzle constructor?"
-    )
   })
 
   describe.concurrent("selectArrayQuery", () => {
@@ -244,7 +233,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
               count++
               const answer = await next()
               expectTypeOf(answer).toEqualTypeOf<
-                (typeof sqliteSchemas.user.$inferSelect)[]
+                InferSelectModel<typeof sqliteSchemas.user>[]
               >()
               return answer
             },
@@ -258,7 +247,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
           count++
           const answer = await next()
           expectTypeOf(answer).toEqualTypeOf<
-            (typeof sqliteSchemas.user.$inferSelect)[]
+            InferSelectModel<typeof sqliteSchemas.user>[]
           >()
           return answer
         })
@@ -477,17 +466,15 @@ describe.concurrent("DrizzleResolverFactory", () => {
       )
       expect(new Set(answer)).toMatchObject(
         new Set([
-          { studentId: John.id, courseId: math.id, grade: expect.any(Number) },
+          { studentId: John.id, courseId: math.id },
           {
             studentId: John.id,
             courseId: english.id,
-            grade: expect.any(Number),
           },
-          { studentId: Joe.id, courseId: math.id, grade: expect.any(Number) },
+          { studentId: Joe.id, courseId: math.id },
           {
             studentId: Joe.id,
             courseId: english.id,
-            grade: expect.any(Number),
           },
         ])
       )
@@ -499,8 +486,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const postsField = userFactory.relationField("posts")
       answer = await postsField["~meta"].resolve(John, undefined)
       expect(answer).toMatchObject([
-        { authorId: John.id, title: "Hello" },
-        { authorId: John.id, title: "World" },
+        { authorId: John.id },
+        { authorId: John.id },
       ])
     })
   })

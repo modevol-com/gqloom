@@ -8,7 +8,7 @@ import {
   printSchema,
 } from "graphql"
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
 import { post, postsRelations, user, usersRelations } from "./schema/mysql"
@@ -22,6 +22,7 @@ const schema = {
 
 describe("resolver by mysql", () => {
   let db: MySql2Database<typeof schema>
+  let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
 
@@ -48,7 +49,11 @@ describe("resolver by mysql", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.mysqlUrl, { schema, mode: "default" })
+      db = drizzle(config.mysqlUrl, {
+        schema,
+        mode: "default",
+        logger: { logQuery: (query) => logs.push(query) },
+      })
       const userFactory = drizzleResolverFactory(db, "drizzle_user")
       const postFactory = drizzleResolverFactory(db, "drizzle_post")
       gqlSchema = weave(
@@ -82,6 +87,10 @@ describe("resolver by mysql", () => {
     }
   })
 
+  beforeEach(() => {
+    logs = []
+  })
+
   afterAll(async () => {
     await db.delete(post)
     await db.delete(user)
@@ -93,7 +102,7 @@ describe("resolver by mysql", () => {
     ).toMatchFileSnapshot("./resolver-mysql.spec.gql")
   })
 
-  describe.concurrent("query", () => {
+  describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
       query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
@@ -132,6 +141,13 @@ describe("resolver by mysql", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Tom" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc limit ?
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc limit ? offset ?
+        "
+      `)
     })
 
     it("should query user single correctly", async () => {
@@ -152,6 +168,11 @@ describe("resolver by mysql", () => {
       ).resolves.toMatchObject({
         userSingle: { name: "Taylor" },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should query user with posts correctly", async () => {
@@ -189,6 +210,13 @@ describe("resolver by mysql", () => {
           },
         ],
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc
+        select \`id\`, \`title\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`authorId\` in (?, ?, ?)
+        "
+      `)
     })
   })
 
@@ -215,6 +243,12 @@ describe("resolver by mysql", () => {
         where: eq(user.name, "Tina"),
       })
       expect(Tina).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`drizzle_user\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should update user information correctly", async () => {
@@ -249,6 +283,14 @@ describe("resolver by mysql", () => {
         where: eq(user.name, "Tiffany"),
       })
       expect(updatedUser).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`drizzle_user\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`id\` = ? limit ?
+        update \`drizzle_user\` set \`name\` = ? where \`drizzle_user\`.\`id\` = ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should delete a user correctly", async () => {
@@ -280,6 +322,13 @@ describe("resolver by mysql", () => {
         where: eq(user.name, "Tony"),
       })
       expect(deletedUser).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        delete from \`drizzle_user\` where \`drizzle_user\`.\`id\` = ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should insert a new post correctly", async () => {
@@ -311,6 +360,13 @@ describe("resolver by mysql", () => {
         where: eq(post.title, "Post 5"),
       })
       expect(p).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, ?)
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
+        "
+      `)
     })
 
     it("should update post information correctly", async () => {
@@ -346,6 +402,14 @@ describe("resolver by mysql", () => {
         where: eq(post.title, "Updated Post U"),
       })
       expect(updatedPost).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
+        update \`drizzle_post\` set \`title\` = ? where \`drizzle_post\`.\`id\` = ?
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
+        "
+      `)
     })
 
     it("should delete a post correctly", async () => {
@@ -380,6 +444,14 @@ describe("resolver by mysql", () => {
         where: eq(post.id, PostD.id),
       })
       expect(deletedPost).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
+        delete from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ?
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
+        "
+      `)
     })
   })
 })

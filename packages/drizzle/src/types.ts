@@ -1,5 +1,5 @@
 import { SYMBOLS, type WeaverConfig } from "@gqloom/core"
-import type { Column, Table } from "drizzle-orm"
+import type { Column, InferSelectModel, SQL, Table } from "drizzle-orm"
 import type {
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
@@ -72,3 +72,21 @@ export interface DrizzleSilkConfig<TTable extends Table>
 }
 
 export type ValueOrGetter<T> = T | (() => T)
+
+export type SelectedTableColumns<TTable extends Table> = Partial<
+  TTable["_"]["columns"]
+> & {
+  /**
+   * This is a brand for the selected fields, used to indicate that the fields are selected by GraphQL Query.
+   */
+  [K in `__selective_${TTable["_"]["name"]}_brand__`]: SQL<never>
+}
+
+export type SelectiveTable<TTable extends Table> =
+  | InferSelectModel<TTable>
+  | (Partial<InferSelectModel<TTable>> & {
+      /**
+       * This is a brand for the selected fields, used to indicate that the fields are selected by GraphQL Query.
+       */
+      [K in `__selective_${TTable["_"]["name"]}_brand__`]: never
+    })

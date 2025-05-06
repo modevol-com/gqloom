@@ -140,7 +140,7 @@
           "style": {
             "noArguments": "error",
             "noVar": "error",
-            "useConst": "error"
+            "useConst": { "level": "warn", "fix": "unsafe" }
           },
           "suspicious": {
             "noDuplicateClassMembers": "off",

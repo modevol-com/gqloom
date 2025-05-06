@@ -2,11 +2,9 @@ import { GraphQLObjectType, GraphQLString, execute, parse } from "graphql"
 import { describe, expect, it } from "vitest"
 import { field, query, resolver, silk } from "../resolver"
 import { weave } from "../schema"
+import type { ResolvingFields } from "../utils"
 import { asyncContextProvider } from "./context"
-import {
-  type ResolvingFields,
-  useResolvingFields,
-} from "./use-resolving-fields"
+import { useResolvingFields } from "./use-resolving-fields"
 
 describe("useResolvingFields", () => {
   const Cat = silk(

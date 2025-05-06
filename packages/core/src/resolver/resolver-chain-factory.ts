@@ -700,14 +700,16 @@ export class MutationFactoryWithResolve<
 export class FieldFactoryWithResolve<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
-> extends BaseChainFactory<Loom.Field<TParent, TOutput, undefined, undefined>> {
+> extends BaseChainFactory<
+  Loom.Field<TParent, TOutput, undefined, string[] | undefined>
+> {
   public get "~meta"(): Loom.Field<
     TParent,
     TOutput,
     undefined,
-    undefined
+    string[] | undefined
   >["~meta"] {
-    return loom.field(this.output, this.options)["~meta"]
+    return loom.field(this.output, this.options as any)["~meta"]
   }
 
   public constructor(
@@ -716,7 +718,7 @@ export class FieldFactoryWithResolve<
       TParent,
       TOutput,
       undefined,
-      undefined
+      string[] | undefined
     >
   ) {
     super(options)
