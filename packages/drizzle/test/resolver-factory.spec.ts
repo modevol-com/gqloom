@@ -12,7 +12,6 @@ import {
   type NodePgDatabase,
   drizzle as pgDrizzle,
 } from "drizzle-orm/node-postgres"
-import * as sqlite from "drizzle-orm/sqlite-core"
 import * as v from "valibot"
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from "vitest"
 import { config } from "../env.config"
@@ -78,15 +77,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
   it("should create a resolver factory", () => {
     expect(userFactory).toBeInstanceOf(DrizzleResolverFactory)
-  })
-
-  it("should throw an error if the table is not found", () => {
-    const unknownTable = sqlite.sqliteTable("unknown", {
-      id: sqlite.integer("id").primaryKey(),
-    })
-    expect(() => drizzleResolverFactory(db, unknownTable)).toThrow(
-      "GQLoom-Drizzle Error: Table unknown not found in drizzle instance. Did you forget to pass schema to drizzle constructor?"
-    )
   })
 
   describe.concurrent("selectArrayQuery", () => {

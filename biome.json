@@ -68,7 +68,8 @@
         "noNamespace": "error",
         "useAsConstAssertion": "error",
         "useBlockStatements": "off",
-        "useImportType": "warn"
+        "useImportType": "warn",
+        "useConst": "warn"
       },
       "suspicious": {
         "noAsyncPromiseExecutor": "error",

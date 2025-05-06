@@ -89,10 +89,6 @@ export abstract class DrizzleResolverFactory<
 > {
   protected readonly inputFactory: DrizzleInputFactory<typeof this.table>
   protected readonly tableName: InferTableName<TTable>
-  protected readonly queryBuilder: QueryBuilder<
-    TDatabase,
-    InferTableName<TTable>
-  >
   public constructor(
     protected readonly db: TDatabase,
     protected readonly table: TTable,
@@ -100,16 +96,6 @@ export abstract class DrizzleResolverFactory<
   ) {
     this.inputFactory = new DrizzleInputFactory(table, options)
     this.tableName = getTableName(table)
-    const queryBuilder = this.db.query[
-      this.tableName as keyof typeof this.db.query
-    ] as QueryBuilder<TDatabase, InferTableName<TTable>>
-
-    if (!queryBuilder) {
-      throw new Error(
-        `GQLoom-Drizzle Error: Table ${this.tableName} not found in drizzle instance. Did you forget to pass schema to drizzle constructor?`
-      )
-    }
-    this.queryBuilder = queryBuilder
   }
 
   private _output?: TableSilk<TTable>
@@ -125,7 +111,6 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectArrayQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectArrayQuery<TDatabase, TTable, TInputI> {
-    const queryBase = this.queryBuilder
     input ??= silk<
       InferSelectArrayOptions<TDatabase, TTable>,
       SelectArrayArgs<TTable>
@@ -145,7 +130,12 @@ export abstract class DrizzleResolverFactory<
       input,
       ...options,
       resolve: (opts) => {
-        return queryBase.findMany(opts)
+        let query: any = (this.db as any).select().from(this.table)
+        if (opts.where) query = query.where(opts.where)
+        if (opts.orderBy?.length) query = query.orderBy(...opts.orderBy)
+        if (opts.limit) query = query.limit(opts.limit)
+        if (opts.offset) query = query.offset(opts.offset)
+        return query
       },
     } as QueryOptions<any, any>)
   }
@@ -157,7 +147,6 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectSingleQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectSingleQuery<TDatabase, TTable, TInputI> {
-    const queryBase = this.queryBuilder
     input ??= silk<
       InferSelectSingleOptions<TDatabase, TTable>,
       SelectSingleArgs<TTable>
@@ -176,7 +165,12 @@ export abstract class DrizzleResolverFactory<
       input,
       ...options,
       resolve: (opts) => {
-        return queryBase.findFirst(opts) as any
+        let query: any = (this.db as any).select().from(this.table)
+        if (opts.where) query = query.where(opts.where)
+        if (opts.orderBy?.length) query = query.orderBy(...opts.orderBy)
+        query = query.limit(1)
+        if (opts.offset) query = query.offset(opts.offset)
+        return query.then((res: any) => res[0])
       },
     } as QueryOptions<any, any>)
   }
