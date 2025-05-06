@@ -53,7 +53,6 @@ import {
   DrizzleWeaver,
   type TableSilk,
 } from ".."
-import type { AnyQueryBuilder } from "../../dist/index.d.cts"
 import { getSelectedColumns, inArrayMultiple } from "../helper"
 import {
   type ColumnFilters,
@@ -68,6 +67,7 @@ import {
   type UpdateArgs,
 } from "./input"
 import type {
+  AnyQueryBuilder,
   BaseDatabase,
   CountQuery,
   DeleteMutation,
