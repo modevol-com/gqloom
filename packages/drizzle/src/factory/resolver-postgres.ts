@@ -10,6 +10,7 @@ import {
 import type { InferSelectModel } from "drizzle-orm"
 import type { PgDatabase, PgTable } from "drizzle-orm/pg-core"
 import type { GraphQLOutputType } from "graphql"
+import { getSelectedColumns } from "../helper"
 import type {
   DeleteArgs,
   InsertArrayWithOnConflictArgs,
@@ -46,7 +47,7 @@ export class DrizzlePostgresResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args: InsertArrayWithOnConflictArgs<TTable>) => {
+      resolve: async (args: InsertArrayWithOnConflictArgs<TTable>, payload) => {
         let query: any = this.db.insert(this.table).values(args.values)
         if (args.onConflictDoUpdate) {
           query = query.onConflictDoUpdate({
@@ -66,7 +67,7 @@ export class DrizzlePostgresResolverFactory<
             where: this.extractFilters(args.onConflictDoNothing.where),
           })
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
@@ -90,7 +91,10 @@ export class DrizzlePostgresResolverFactory<
     return new MutationFactoryWithResolve(this.output.$nullable(), {
       ...options,
       input,
-      resolve: async (args: InsertSingleWithOnConflictArgs<TTable>) => {
+      resolve: async (
+        args: InsertSingleWithOnConflictArgs<TTable>,
+        payload
+      ) => {
         let query: any = this.db.insert(this.table).values(args.value)
         if (args.onConflictDoUpdate) {
           query = query.onConflictDoUpdate({
@@ -110,7 +114,9 @@ export class DrizzlePostgresResolverFactory<
             where: this.extractFilters(args.onConflictDoNothing.where),
           })
         }
-        const result = await query.returning()
+        const result = await query.returning(
+          getSelectedColumns(this.table, payload)
+        )
         return result[0] as any
       },
     } as MutationOptions<any, any>)
@@ -128,12 +134,12 @@ export class DrizzlePostgresResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args) => {
+      resolve: async (args, payload) => {
         const query = this.db.update(this.table).set(args.set)
         if (args.where) {
           query.where(this.extractFilters(args.where))
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
@@ -150,12 +156,12 @@ export class DrizzlePostgresResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args) => {
+      resolve: async (args, payload) => {
         const query = this.db.delete(this.table)
         if (args.where) {
           query.where(this.extractFilters(args.where))
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }

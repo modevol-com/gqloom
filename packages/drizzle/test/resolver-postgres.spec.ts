@@ -7,7 +7,7 @@ import {
   printSchema,
 } from "graphql"
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
 import { post, postsRelations, user, usersRelations } from "./schema/postgres"
@@ -85,6 +85,9 @@ describe("resolver by postgres", () => {
     }
   })
 
+  beforeEach(() => {
+    logs = []
+  })
   afterAll(async () => {
     await db.delete(post)
     await db.delete(user)
@@ -106,7 +109,6 @@ describe("resolver by postgres", () => {
         }
       }
     `
-      logs = []
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -144,7 +146,6 @@ describe("resolver by postgres", () => {
     })
 
     it("should query user single correctly", async () => {
-      logs = []
       await expect(
         execute(
           /* GraphQL */ `
@@ -170,7 +171,6 @@ describe("resolver by postgres", () => {
     })
 
     it("should query user with posts correctly", async () => {
-      logs = []
       const q = /* GraphQL */ `
         query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
           user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
@@ -238,6 +238,12 @@ describe("resolver by postgres", () => {
         where: eq(user.name, "Tina"),
       })
       expect(Tina).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values (default, $1, default, default) returning "id", "name"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
     })
 
     it("should insert a user with on conflict correctly", async () => {
@@ -287,6 +293,14 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         insertIntoUser: [{ name: "TinaUpdate" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do update set "name" = $3 returning "id", "name"
+        "
+      `)
     })
 
     it("should insert a single user with on conflict correctly", async () => {
@@ -336,6 +350,14 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         insertIntoUserSingle: { name: "TinaUpdate" },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do update set "name" = $3 returning "id", "name"
+        "
+      `)
     })
 
     it("should update user information correctly", async () => {
@@ -371,6 +393,14 @@ describe("resolver by postgres", () => {
         where: eq(user.name, "Tiffany"),
       })
       expect(updatedUser).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values (default, $1, default, default) returning "id", "name", "age", "email"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."id" = $1 limit $2
+        update "drizzle_user" set "name" = $1 where "drizzle_user"."id" = $2 returning "id", "name"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
     })
 
     it("should delete a user correctly", async () => {
@@ -401,6 +431,13 @@ describe("resolver by postgres", () => {
         where: eq(user.name, "Tony"),
       })
       expect(deletedUser).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        delete from "drizzle_user" where "drizzle_user"."id" = $1 returning "id", "name"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
     })
 
     it("should insert a new post correctly", async () => {
@@ -432,6 +469,13 @@ describe("resolver by postgres", () => {
         where: eq(post.title, "Post 5"),
       })
       expect(p).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, $2) returning "id", "title", "authorId"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."title" = $1 limit $2
+        "
+      `)
     })
 
     it("should update post information correctly", async () => {
@@ -468,6 +512,14 @@ describe("resolver by postgres", () => {
         where: eq(post.title, "Updated Post U"),
       })
       expect(updatedPost).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, default) returning "id", "title", "content", "authorId"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        update "drizzle_post" set "title" = $1 where "drizzle_post"."id" = $2 returning "id", "title"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."title" = $1 limit $2
+        "
+      `)
     })
 
     it("should delete a post correctly", async () => {
@@ -503,6 +555,14 @@ describe("resolver by postgres", () => {
         where: eq(post.id, PostD.id),
       })
       expect(deletedPost).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, default) returning "id", "title", "content", "authorId"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        delete from "drizzle_post" where "drizzle_post"."id" = $1 returning "id", "title"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        "
+      `)
     })
   })
 })
