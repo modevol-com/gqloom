@@ -140,8 +140,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       expect(["", ...log, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name", "age", "email" from "users" order by "users"."name" asc, "users"."age" asc
-        select "id", "name", "age", "email" from "users" order by "users"."age" desc, "users"."name" asc
         "
       `)
     })
