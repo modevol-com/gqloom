@@ -35,9 +35,9 @@ import {
   drizzleResolverFactory,
 } from "../src"
 import type {
-  InferSelectArrayOptions,
-  InferSelectSingleOptions,
   InferTableTsName,
+  SelectArrayOptions,
+  SelectSingleOptions,
 } from "../src/factory/types"
 import * as mysqlSchemas from "./schema/mysql"
 import { relations as mysqlRelations } from "./schema/mysql-relations"
@@ -218,11 +218,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should be created with middlewares", async () => {
-      type SelectArrayOptions = InferSelectArrayOptions<
-        typeof db,
-        typeof sqliteSchemas.users
-      >
-
       let count = 0
 
       const query = userFactory
@@ -428,10 +423,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should be created with middlewares", async () => {
-      type SelectSingleOptions = InferSelectSingleOptions<
-        typeof db,
-        typeof sqliteSchemas.users
-      >
       let count = 0
       const query = userFactory.selectSingleQuery({
         middlewares: [
@@ -439,9 +430,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
             const opts = await parseInput()
             if (opts.issues) throw new Error("Invalid input")
 
-            expectTypeOf(opts.value).toEqualTypeOf<
-              SelectSingleOptions | undefined
-            >()
+            expectTypeOf(opts.value).toEqualTypeOf<SelectSingleOptions>()
             count++
             const answer = await next()
             expectTypeOf(answer).toEqualTypeOf<

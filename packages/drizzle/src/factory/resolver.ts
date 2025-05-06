@@ -72,8 +72,6 @@ import type {
   CountQuery,
   DeleteMutation,
   InferRelationTable,
-  InferSelectArrayOptions,
-  InferSelectSingleOptions,
   InferTableName,
   InferTableRelationalConfig,
   InsertArrayMutation,
@@ -81,7 +79,9 @@ import type {
   QueryBuilder,
   RelationManyField,
   RelationOneField,
+  SelectArrayOptions,
   SelectArrayQuery,
+  SelectSingleOptions,
   SelectSingleQuery,
   UpdateMutation,
 } from "./types"
@@ -111,13 +111,10 @@ export abstract class DrizzleResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
-    middlewares?: Middleware<SelectArrayQuery<TDatabase, TTable, TInputI>>[]
-  } = {}): SelectArrayQuery<TDatabase, TTable, TInputI> {
-    input ??= silk<
-      InferSelectArrayOptions<TDatabase, TTable>,
-      SelectArrayArgs<TTable>
-    >(
+    input?: GraphQLSilk<SelectArrayOptions | undefined, TInputI>
+    middlewares?: Middleware<SelectArrayQuery<TTable, TInputI>>[]
+  } = {}): SelectArrayQuery<TTable, TInputI> {
+    input ??= silk<SelectArrayOptions | undefined, SelectArrayArgs<TTable>>(
       () => this.inputFactory.selectArrayArgs(),
       (args) => ({
         value: {
@@ -127,15 +124,12 @@ export abstract class DrizzleResolverFactory<
           offset: args.offset,
         },
       })
-    ) as GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
+    ) as GraphQLSilk<SelectArrayOptions, TInputI>
 
     return new QueryFactoryWithResolve(this.output.$list(), {
       input,
       ...options,
-      resolve: (
-        opts: InferSelectArrayOptions<TDatabase, TTable> | undefined,
-        payload
-      ) => {
+      resolve: (opts: SelectArrayOptions | undefined, payload) => {
         let query: any = (this.db as any)
           .select(getSelectedColumns(this.table, payload))
           .from(this.table)
@@ -152,13 +146,10 @@ export abstract class DrizzleResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
-    middlewares?: Middleware<SelectSingleQuery<TDatabase, TTable, TInputI>>[]
-  } = {}): SelectSingleQuery<TDatabase, TTable, TInputI> {
-    input ??= silk<
-      InferSelectSingleOptions<TDatabase, TTable>,
-      SelectSingleArgs<TTable>
-    >(
+    input?: GraphQLSilk<SelectSingleOptions | undefined, TInputI>
+    middlewares?: Middleware<SelectSingleQuery<TTable, TInputI>>[]
+  } = {}): SelectSingleQuery<TTable, TInputI> {
+    input ??= silk<SelectSingleOptions | undefined, SelectSingleArgs<TTable>>(
       () => this.inputFactory.selectSingleArgs(),
       (args) => ({
         value: {
@@ -167,15 +158,12 @@ export abstract class DrizzleResolverFactory<
           offset: args.offset,
         },
       })
-    ) as GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+    ) as GraphQLSilk<SelectSingleOptions, TInputI>
 
     return new QueryFactoryWithResolve(this.output.$nullable(), {
       input,
       ...options,
-      resolve: (
-        opts: InferSelectSingleOptions<TDatabase, TTable> | undefined,
-        payload
-      ) => {
+      resolve: (opts: SelectSingleOptions | undefined, payload) => {
         let query: any = (this.db as any)
           .select(getSelectedColumns(this.table, payload))
           .from(this.table)

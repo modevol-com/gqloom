@@ -44,9 +44,9 @@ export type DrizzleResolverReturningItems<
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
 > = {
-  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
+  [key in TTableName]: SelectArrayQuery<TTable>
 } & {
-  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
+  [key in `${TTableName}Single`]: SelectSingleQuery<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningItems<TTable>
 } & {
@@ -62,9 +62,9 @@ export type DrizzleResolverReturningSuccess<
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
 > = {
-  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
+  [key in TTableName]: SelectArrayQuery<TTable>
 } & {
-  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
+  [key in `${TTableName}Single`]: SelectSingleQuery<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningSuccess<TTable>
 } & {
@@ -95,26 +95,20 @@ export type DrizzleResolverRelations<
 }
 
 export interface SelectArrayQuery<
-  TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectArrayArgs<TTable>,
 > extends QueryFactoryWithResolve<
-    InferSelectArrayOptions<TDatabase, TTable>,
+    SelectArrayOptions | undefined,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
+    GraphQLSilk<SelectArrayOptions, TInputI>
   > {}
 
-export type InferSelectArrayOptions<
-  _TDatabase extends BaseDatabase,
-  _TTable extends Table,
-> =
-  | {
-      where?: SQL
-      orderBy?: (Column | SQL | SQL.Aliased)[]
-      limit?: number
-      offset?: number
-    }
-  | undefined
+export type SelectArrayOptions = {
+  where?: SQL
+  orderBy?: (Column | SQL | SQL.Aliased)[]
+  limit?: number
+  offset?: number
+}
 
 export interface CountQuery<
   TTable extends Table,
@@ -126,28 +120,22 @@ export interface CountQuery<
   > {}
 
 export interface SelectSingleQuery<
-  TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectSingleArgs<TTable>,
 > extends QueryFactoryWithResolve<
-    InferSelectSingleOptions<TDatabase, TTable>,
+    SelectSingleOptions | undefined,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+    GraphQLSilk<SelectSingleOptions, TInputI>
   > {}
 
-export type InferSelectSingleOptions<
-  _TDatabase extends BaseDatabase,
-  _TTable extends Table,
-> =
-  | {
-      where?: SQL
-      orderBy?: (Column | SQL | SQL.Aliased)[]
-      offset?: number
-    }
-  | undefined
+export type SelectSingleOptions = {
+  where?: SQL
+  orderBy?: (Column | SQL | SQL.Aliased)[]
+  offset?: number
+}
 
 export interface RelationManyField<
   TTable extends Table,
