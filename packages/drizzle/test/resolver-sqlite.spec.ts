@@ -16,6 +16,7 @@ const pathToDB = new URL("./schema/sqlite-1.db", import.meta.url)
 
 describe("resolver by sqlite", () => {
   let db: LibSQLDatabase<typeof schema>
+  let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
 
@@ -44,6 +45,7 @@ describe("resolver by sqlite", () => {
     db = drizzle({
       schema,
       connection: { url: `file:${pathToDB.pathname}` },
+      logger: { logQuery: (query) => logs.push(query) },
     })
     const userFactory = drizzleResolverFactory(db, "user")
     const postFactory = drizzleResolverFactory(db, "post")
@@ -83,7 +85,7 @@ describe("resolver by sqlite", () => {
     ).toMatchFileSnapshot("./resolver-sqlite.spec.gql")
   })
 
-  describe.concurrent("query", () => {
+  describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
       query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
@@ -93,6 +95,7 @@ describe("resolver by sqlite", () => {
         }
       }
     `
+      logs = []
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -101,7 +104,6 @@ describe("resolver by sqlite", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
       })
-
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -111,7 +113,6 @@ describe("resolver by sqlite", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Taylor" }, { name: "Tom" }],
       })
-
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -122,6 +123,13 @@ describe("resolver by sqlite", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Tom" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc
+        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc limit ?
+        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc limit ? offset ?
+        "
+      `)
     })
 
     it("should query user single correctly", async () => {

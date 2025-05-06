@@ -22,6 +22,7 @@ const schema = {
 
 describe("resolver by mysql", () => {
   let db: MySql2Database<typeof schema>
+  let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
 
@@ -48,7 +49,11 @@ describe("resolver by mysql", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.mysqlUrl, { schema, mode: "default" })
+      db = drizzle(config.mysqlUrl, {
+        schema,
+        mode: "default",
+        logger: { logQuery: (query) => logs.push(query) },
+      })
       const userFactory = drizzleResolverFactory(db, "drizzle_user")
       const postFactory = drizzleResolverFactory(db, "drizzle_post")
       gqlSchema = weave(
@@ -93,7 +98,7 @@ describe("resolver by mysql", () => {
     ).toMatchFileSnapshot("./resolver-mysql.spec.gql")
   })
 
-  describe.concurrent("query", () => {
+  describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
       query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
@@ -103,6 +108,7 @@ describe("resolver by mysql", () => {
         }
       }
     `
+      logs = []
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -132,6 +138,13 @@ describe("resolver by mysql", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Tom" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc limit ?
+        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc limit ? offset ?
+        "
+      `)
     })
 
     it("should query user single correctly", async () => {

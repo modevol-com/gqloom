@@ -50,7 +50,7 @@ import {
   DrizzleWeaver,
   type TableSilk,
 } from ".."
-import { inArrayMultiple } from "../helper"
+import { getSelectedColumns, inArrayMultiple } from "../helper"
 import {
   type ColumnFilters,
   type CountArgs,
@@ -129,8 +129,10 @@ export abstract class DrizzleResolverFactory<
     return new QueryFactoryWithResolve(this.output.$list(), {
       input,
       ...options,
-      resolve: (opts) => {
-        let query: any = (this.db as any).select().from(this.table)
+      resolve: (opts, payload) => {
+        let query: any = (this.db as any)
+          .select(getSelectedColumns(this.table, payload))
+          .from(this.table)
         if (opts.where) query = query.where(opts.where)
         if (opts.orderBy?.length) query = query.orderBy(...opts.orderBy)
         if (opts.limit) query = query.limit(opts.limit)

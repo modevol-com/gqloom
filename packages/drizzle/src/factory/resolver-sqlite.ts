@@ -7,9 +7,9 @@ import {
   type ObjectChainResolver,
   silk,
 } from "@gqloom/core"
-import type { InferSelectModel } from "drizzle-orm"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { GraphQLOutputType } from "graphql"
+import type { SelectiveTable } from "../types"
 import type {
   DeleteArgs,
   InsertArrayWithOnConflictArgs,
@@ -164,7 +164,7 @@ export class DrizzleSQLiteResolverFactory<
       middlewares?: Middleware[]
     } = {}
   ): ObjectChainResolver<
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     DrizzleResolverReturningItems<TDatabase, TTable, TTableName>
   > {
     return super.resolver(options) as any

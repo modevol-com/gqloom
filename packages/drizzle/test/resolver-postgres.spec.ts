@@ -21,6 +21,7 @@ const schema = {
 
 describe("resolver by postgres", () => {
   let db: NodePgDatabase<typeof schema>
+  let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
 
@@ -47,7 +48,10 @@ describe("resolver by postgres", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.postgresUrl, { schema })
+      db = drizzle(config.postgresUrl, {
+        schema,
+        logger: { logQuery: (query) => logs.push(query) },
+      })
       const userFactory = drizzleResolverFactory(db, "drizzle_user")
       const postFactory = drizzleResolverFactory(db, "drizzle_post")
       gqlSchema = weave(
@@ -92,7 +96,7 @@ describe("resolver by postgres", () => {
     ).toMatchFileSnapshot("./resolver-postgres.spec.gql")
   })
 
-  describe.concurrent("query", () => {
+  describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
       query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
@@ -102,6 +106,7 @@ describe("resolver by postgres", () => {
         }
       }
     `
+      logs = []
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -110,7 +115,6 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
       })
-
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -120,7 +124,6 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Taylor" }, { name: "Tom" }],
       })
-
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -131,6 +134,13 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Tom" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc limit $2
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc limit $2 offset $3
+        "
+      `)
     })
 
     it("should query user single correctly", async () => {

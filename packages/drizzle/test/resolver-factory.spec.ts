@@ -1,5 +1,5 @@
 import { resolver } from "@gqloom/core"
-import { eq, inArray, sql } from "drizzle-orm"
+import { type InferSelectModel, eq, inArray, sql } from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
@@ -233,7 +233,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
               count++
               const answer = await next()
               expectTypeOf(answer).toEqualTypeOf<
-                (typeof sqliteSchemas.user.$inferSelect)[]
+                InferSelectModel<typeof sqliteSchemas.user>[]
               >()
               return answer
             },
@@ -247,7 +247,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
           count++
           const answer = await next()
           expectTypeOf(answer).toEqualTypeOf<
-            (typeof sqliteSchemas.user.$inferSelect)[]
+            InferSelectModel<typeof sqliteSchemas.user>[]
           >()
           return answer
         })

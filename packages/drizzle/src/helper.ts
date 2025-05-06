@@ -112,7 +112,9 @@ export function getSelectedColumns<TTable extends Table>(
   table: TTable,
   payload: ResolverPayload | undefined
 ): SelectedTableColumns<TTable> {
-  if (!payload) return {} as SelectedTableColumns<TTable>
+  if (!payload) {
+    return getTableColumns(table) as SelectedTableColumns<TTable>
+  }
   const resolvingFields = getResolvingFields(payload)
   return mapValue(getTableColumns(table), (column, columnName) => {
     if (resolvingFields.selectedFields.has(columnName)) return column
