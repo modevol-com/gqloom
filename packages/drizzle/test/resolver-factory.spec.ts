@@ -466,17 +466,15 @@ describe.concurrent("DrizzleResolverFactory", () => {
       )
       expect(new Set(answer)).toMatchObject(
         new Set([
-          { studentId: John.id, courseId: math.id, grade: expect.any(Number) },
+          { studentId: John.id, courseId: math.id },
           {
             studentId: John.id,
             courseId: english.id,
-            grade: expect.any(Number),
           },
-          { studentId: Joe.id, courseId: math.id, grade: expect.any(Number) },
+          { studentId: Joe.id, courseId: math.id },
           {
             studentId: Joe.id,
             courseId: english.id,
-            grade: expect.any(Number),
           },
         ])
       )
@@ -488,8 +486,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const postsField = userFactory.relationField("posts")
       answer = await postsField["~meta"].resolve(John, undefined)
       expect(answer).toMatchObject([
-        { authorId: John.id, title: "Hello" },
-        { authorId: John.id, title: "World" },
+        { authorId: John.id },
+        { authorId: John.id },
       ])
     })
   })

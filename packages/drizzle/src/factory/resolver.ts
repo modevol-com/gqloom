@@ -9,12 +9,13 @@ import {
   type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
+  type ResolverPayload,
   capitalize,
+  getMemoizationMap,
   loom,
   mapValue,
   silk,
 } from "@gqloom/core"
-import { createMemoization } from "@gqloom/core/context"
 import {
   type Column,
   type InferSelectModel,
@@ -64,7 +65,6 @@ import {
   type UpdateArgs,
 } from "./input"
 import type {
-  AnyQueryBuilder,
   BaseDatabase,
   CountQuery,
   DeleteMutation,
@@ -365,10 +365,7 @@ export abstract class DrizzleResolverFactory<
       )
     }
     const output = DrizzleWeaver.unravel(relation.referencedTable)
-    const tableName = getTableName(relation.referencedTable)
-    const queryBuilder = this.db.query[
-      tableName as keyof typeof this.db.query
-    ] as AnyQueryBuilder
+    const table = relation.referencedTable
 
     const normalizedRelation = normalizeRelation(
       this.db._.schema,
@@ -387,6 +384,10 @@ export abstract class DrizzleResolverFactory<
         .join("-")
     }
 
+    const referenceColumns = Object.fromEntries(
+      normalizedRelation.references.map((col) => [col.name, col])
+    )
+
     const getKeyByReference = (item: any) => {
       if (fieldsLength === 1) {
         return item[normalizedRelation.references[0].name]
@@ -396,46 +397,61 @@ export abstract class DrizzleResolverFactory<
         .join("-")
     }
 
-    const useLoader = createMemoization(() => {
-      return new EasyDataLoader(async (parents: any[]) => {
-        const where = (() => {
-          if (fieldsLength === 1) {
-            const values = parents.map(
-              (parent) => parent[normalizedRelation.fields[0].name]
+    const initLoader = () => {
+      return new EasyDataLoader(
+        async (inputs: [any, payload: ResolverPayload | undefined][]) => {
+          const where = (() => {
+            if (fieldsLength === 1) {
+              const values = inputs.map(
+                (input) => input[0][normalizedRelation.fields[0].name]
+              )
+              return inArray(normalizedRelation.references[0], values)
+            }
+            const values = inputs.map((input) =>
+              normalizedRelation.fields.map((field) => input[0][field.name])
             )
-            return inArray(normalizedRelation.references[0], values)
-          }
-          const values = parents.map((parent) =>
-            normalizedRelation.fields.map((field) => parent[field.name])
+            return inArrayMultiple(normalizedRelation.references, values)
+          })()
+          const selectedColumns = getSelectedColumns(
+            table,
+            inputs.map((input) => input[1])
           )
-          return inArrayMultiple(normalizedRelation.references, values)
-        })()
 
-        const list = await queryBuilder.findMany({ where })
+          const list = await (this.db as any)
+            .select({ ...selectedColumns, ...referenceColumns })
+            .from(table)
+            .where(where)
 
-        const groups = new Map<string, any>()
-        for (const item of list) {
-          const key = getKeyByReference(item)
-          isList
-            ? groups.set(key, [...(groups.get(key) ?? []), item])
-            : groups.set(key, item)
+          const groups = new Map<string, any>()
+          for (const item of list) {
+            const key = getKeyByReference(item)
+            isList
+              ? groups.set(key, [...(groups.get(key) ?? []), item])
+              : groups.set(key, item)
+          }
+          return inputs.map(([parent]) => {
+            const key = getKeyByField(parent)
+            return groups.get(key) ?? (isList ? [] : null)
+          })
         }
-        return parents.map((parent) => {
-          const key = getKeyByField(parent)
-          return groups.get(key) ?? (isList ? [] : null)
-        })
-      })
-    })
+      )
+    }
 
     return new FieldFactoryWithResolve(
       isList ? output.$list() : output.$nullable(),
       {
         ...options,
-        resolve: (parent) => {
-          const loader = useLoader()
-          return loader.load(parent)
+        dependencies: ["tableName"],
+        resolve: (parent, _input, payload) => {
+          const loader = (() => {
+            if (!payload) return initLoader()
+            const memoMap = getMemoizationMap(payload)
+            if (!memoMap.has(initLoader)) memoMap.set(initLoader, initLoader())
+            return memoMap.get(initLoader) as ReturnType<typeof initLoader>
+          })()
+          return loader.load([parent, payload])
         },
-      } as FieldOptions<any, any, any>
+      } as FieldOptions<any, any, any, any>
     )
   }
 
@@ -448,7 +464,7 @@ export abstract class DrizzleResolverFactory<
   > {
     const name = options?.name ?? this.tableName
 
-    const fields: Record<string, Loom.Field<any, any, any>> = mapValue(
+    const fields: Record<string, Loom.Field<any, any, any, any>> = mapValue(
       this.db._.schema?.[this.tableName]?.relations ?? {},
       (_, key) => this.relationField(key)
     )

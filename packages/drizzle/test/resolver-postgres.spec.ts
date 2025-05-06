@@ -170,6 +170,7 @@ describe("resolver by postgres", () => {
     })
 
     it("should query user with posts correctly", async () => {
+      logs = []
       const q = /* GraphQL */ `
         query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
           user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
@@ -204,6 +205,12 @@ describe("resolver by postgres", () => {
           },
         ],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc
+        select "id", "title", "authorId" from "drizzle_post" where "drizzle_post"."authorId" in ($1, $2, $3)
+        "
+      `)
     })
   })
 

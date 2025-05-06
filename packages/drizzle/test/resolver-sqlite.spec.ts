@@ -159,6 +159,7 @@ describe("resolver by sqlite", () => {
     })
 
     it("should query user with posts correctly", async () => {
+      logs = []
       const q = /* GraphQL */ `
         query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
           user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
@@ -193,6 +194,12 @@ describe("resolver by sqlite", () => {
           },
         ],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc
+        select "id", "title", "authorId" from "post" where "post"."authorId" in (?, ?, ?)
+        "
+      `)
     })
   })
 

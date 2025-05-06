@@ -110,14 +110,26 @@ export function getValue<T>(valueOrGetter: ValueOrGetter<T>): T {
  */
 export function getSelectedColumns<TTable extends Table>(
   table: TTable,
-  payload: ResolverPayload | undefined
+  payload: ResolverPayload | (ResolverPayload | undefined)[] | undefined
 ): SelectedTableColumns<TTable> {
   if (!payload) {
     return getTableColumns(table) as SelectedTableColumns<TTable>
   }
-  const resolvingFields = getResolvingFields(payload)
+  let selectedFields = new Set<string>()
+  if (Array.isArray(payload)) {
+    for (const p of payload) {
+      if (p) {
+        const resolvingFields = getResolvingFields(p)
+        for (const field of resolvingFields.selectedFields)
+          selectedFields.add(field)
+      }
+    }
+  } else {
+    const resolvingFields = getResolvingFields(payload)
+    selectedFields = resolvingFields.selectedFields
+  }
   return mapValue(getTableColumns(table), (column, columnName) => {
-    if (resolvingFields.selectedFields.has(columnName)) return column
+    if (selectedFields.has(columnName)) return column
     return mapValue.SKIP
   }) as SelectedTableColumns<TTable>
 }
