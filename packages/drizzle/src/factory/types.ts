@@ -4,7 +4,14 @@ import type {
   MutationFactoryWithResolve,
   QueryFactoryWithResolve,
 } from "@gqloom/core"
-import type { InferSelectModel, Many, Table } from "drizzle-orm"
+import type {
+  AnyRelations,
+  Column,
+  InferSelectModel,
+  Many,
+  SQL,
+  Table,
+} from "drizzle-orm"
 import type { MySqlDatabase } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
 import type { PgDatabase } from "drizzle-orm/pg-core"
@@ -37,9 +44,9 @@ export type DrizzleResolverReturningItems<
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
 > = {
-  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
+  [key in TTableName]: SelectArrayQuery<TTable>
 } & {
-  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
+  [key in `${TTableName}Single`]: SelectSingleQuery<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningItems<TTable>
 } & {
@@ -55,9 +62,9 @@ export type DrizzleResolverReturningSuccess<
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
 > = {
-  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
+  [key in TTableName]: SelectArrayQuery<TTable>
 } & {
-  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
+  [key in `${TTableName}Single`]: SelectSingleQuery<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningSuccess<TTable>
 } & {
@@ -73,10 +80,10 @@ export type DrizzleResolverRelations<
   TTable extends Table,
 > = {
   [TRelationName in keyof InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
+    QueryBuilder<TDatabase, TTable>
   >["relations"]]: InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"][TRelationName] extends Many<any>
+    QueryBuilder<TDatabase, TTable>
+  >["relations"][TRelationName] extends Many<any, any>
     ? RelationManyField<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
@@ -88,19 +95,20 @@ export type DrizzleResolverRelations<
 }
 
 export interface SelectArrayQuery<
-  TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectArrayArgs<TTable>,
 > extends QueryFactoryWithResolve<
-    InferSelectArrayOptions<TDatabase, TTable>,
+    SelectArrayOptions | undefined,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
+    GraphQLSilk<SelectArrayOptions, TInputI>
   > {}
 
-export type InferSelectArrayOptions<
-  TDatabase extends BaseDatabase,
-  TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findMany"]>[0]
+export type SelectArrayOptions = {
+  where?: SQL
+  orderBy?: (Column | SQL | SQL.Aliased)[]
+  limit?: number
+  offset?: number
+}
 
 export interface CountQuery<
   TTable extends Table,
@@ -112,22 +120,22 @@ export interface CountQuery<
   > {}
 
 export interface SelectSingleQuery<
-  TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectSingleArgs<TTable>,
 > extends QueryFactoryWithResolve<
-    InferSelectSingleOptions<TDatabase, TTable>,
+    SelectSingleOptions | undefined,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+    GraphQLSilk<SelectSingleOptions, TInputI>
   > {}
 
-export type InferSelectSingleOptions<
-  TDatabase extends BaseDatabase,
-  TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findFirst"]>[0]
+export type SelectSingleOptions = {
+  where?: SQL
+  orderBy?: (Column | SQL | SQL.Aliased)[]
+  offset?: number
+}
 
 export interface RelationManyField<
   TTable extends Table,
@@ -250,15 +258,17 @@ export interface DeleteMutationReturningSuccess<
 
 export type QueryBuilder<
   TDatabase extends BaseDatabase,
-  TTableName extends keyof TDatabase["_"]["schema"],
-> = TDatabase["query"] extends { [key in TTableName]: any }
-  ? TDatabase["query"][TTableName]
+  TTable extends Table,
+> = TDatabase["query"] extends {
+  [key in InferTableTsName<TDatabase, TTable>]: any
+}
+  ? TDatabase["query"][InferTableTsName<TDatabase, TTable>]
   : never
 
 export type AnyQueryBuilder =
   | MySqlRelationalQueryBuilder<any, any, any>
   | PgRelationalQueryBuilder<any, any>
-  | SQLiteRelationalQueryBuilder<any, any, any, any>
+  | SQLiteRelationalQueryBuilder<any, any, any>
 
 export type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
   TQueryBuilder extends MySqlRelationalQueryBuilder<
@@ -275,25 +285,54 @@ export type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
       : TQueryBuilder extends SQLiteRelationalQueryBuilder<
             any,
             any,
-            any,
             infer TTableRelationalConfig
           >
         ? TTableRelationalConfig
         : never
 
 export type BaseDatabase =
-  | BaseSQLiteDatabase<any, any, any, any>
-  | PgDatabase<any, any, any>
-  | MySqlDatabase<any, any, any, any>
+  | BaseSQLiteDatabase<any, any, any, AnyRelations, any, any>
+  | PgDatabase<any, any, AnyRelations, any, any>
+  | MySqlDatabase<any, any, any, AnyRelations, any, any>
+
+export type InferTablesConfig<TDatabase extends BaseDatabase> =
+  TDatabase extends BaseSQLiteDatabase<
+    any,
+    any,
+    any,
+    any,
+    infer TTablesConfig,
+    any
+  >
+    ? TTablesConfig
+    : TDatabase extends PgDatabase<any, any, any, infer TTablesConfig, any>
+      ? TTablesConfig
+      : TDatabase extends MySqlDatabase<
+            any,
+            any,
+            any,
+            any,
+            infer TTablesConfig,
+            any
+          >
+        ? TTablesConfig
+        : never
+
+export type InferTableTsName<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+> = Extract<
+  ValueOf<InferTablesConfig<TDatabase>>,
+  { dbName: TTable["_"]["name"] }
+>["tsName"]
 
 export type InferTableName<TTable extends Table> = TTable["_"]["name"]
 
 export type InferRelationTable<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-  TRelationName extends keyof InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"],
-> = TDatabase["_"]["fullSchema"][InferTableRelationalConfig<
-  QueryBuilder<TDatabase, InferTableName<TTable>>
->["relations"][TRelationName]["referencedTableName"]]
+  TTargetTableName extends
+    keyof TDatabase["_"]["relations"]["config"][TTable["_"]["name"]],
+> = TDatabase["_"]["relations"]["config"][TTable["_"]["name"]]["relations"][TTargetTableName]["targetTable"]
+
+type ValueOf<T> = T[keyof T]

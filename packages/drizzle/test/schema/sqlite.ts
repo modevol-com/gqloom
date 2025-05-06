@@ -1,15 +1,16 @@
-import { relations, sql } from "drizzle-orm"
+import { sql } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
 import { drizzleSilk } from "../../src"
 
-export const user = drizzleSilk(
-  t.sqliteTable("user", {
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
     id: t.int().primaryKey({ autoIncrement: true }),
     name: t.text().notNull(),
     age: t.int(),
     email: t.text(),
   }),
   {
+    name: "User",
     description: "A user",
     fields: {
       name: { description: "The name of the user" },
@@ -19,68 +20,35 @@ export const user = drizzleSilk(
   }
 )
 
-export const usersRelations = relations(user, ({ many }) => ({
-  posts: many(post),
-  courses: many(studentToCourse),
-}))
-
-export const post = drizzleSilk(
-  t.sqliteTable("post", {
+export const posts = drizzleSilk(
+  t.sqliteTable("posts", {
     id: t.int().primaryKey({ autoIncrement: true }),
     title: t.text().notNull(),
     content: t.text(),
-    authorId: t.int().references(() => user.id, { onDelete: "cascade" }),
-  })
+    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
+  }),
+  { name: "Post" }
 )
 
-export const postsRelations = relations(post, ({ one }) => ({
-  author: one(user, {
-    fields: [post.authorId],
-    references: [user.id],
-  }),
-}))
-
-export const course = drizzleSilk(
-  t.sqliteTable("course", {
+export const courses = drizzleSilk(
+  t.sqliteTable("courses", {
     id: t.int().primaryKey({ autoIncrement: true }),
     name: t.text().notNull(),
   })
 )
 
-export const coursesRelations = relations(course, ({ many }) => ({
-  students: many(studentToCourse),
-}))
-
-export const studentToCourse = drizzleSilk(
-  t.sqliteTable("studentToCourse", {
-    studentId: t.int().references(() => user.id),
-    courseId: t.int().references(() => course.id),
+export const studentToCourses = drizzleSilk(
+  t.sqliteTable("studentToCourses", {
+    studentId: t.int().references(() => users.id),
+    courseId: t.int().references(() => courses.id),
     createdAt: t.int({ mode: "timestamp" }).default(sql`(CURRENT_TIMESTAMP)`),
   })
 )
 
-export const studentToCourseRelations = relations(
-  studentToCourse,
-  ({ one }) => ({
-    student: one(user, {
-      fields: [studentToCourse.studentId],
-      references: [user.id],
-    }),
-    course: one(course, {
-      fields: [studentToCourse.courseId],
-      references: [course.id],
-    }),
-    grade: one(studentCourseGrade, {
-      fields: [studentToCourse.studentId, studentToCourse.courseId],
-      references: [studentCourseGrade.studentId, studentCourseGrade.courseId],
-    }),
-  })
-)
-
-export const studentCourseGrade = drizzleSilk(
-  t.sqliteTable("studentCourseGrade", {
-    studentId: t.int().references(() => user.id),
-    courseId: t.int().references(() => course.id),
+export const studentCourseGrades = drizzleSilk(
+  t.sqliteTable("studentCourseGrades", {
+    studentId: t.int().references(() => users.id),
+    courseId: t.int().references(() => courses.id),
     grade: t.int(),
   })
 )
