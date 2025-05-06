@@ -7,7 +7,7 @@ import {
   printSchema,
 } from "graphql"
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { drizzleResolverFactory } from "../src"
 import * as schema from "./schema/sqlite"
 import { post, user } from "./schema/sqlite"
@@ -74,6 +74,10 @@ describe("resolver by sqlite", () => {
     ])
   })
 
+  beforeEach(() => {
+    logs = []
+  })
+
   afterAll(async () => {
     await db.delete(post)
     await db.delete(user)
@@ -95,7 +99,6 @@ describe("resolver by sqlite", () => {
         }
       }
     `
-      logs = []
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -133,7 +136,6 @@ describe("resolver by sqlite", () => {
     })
 
     it("should query user single correctly", async () => {
-      logs = []
       await expect(
         execute(
           /* GraphQL */ `
@@ -159,7 +161,6 @@ describe("resolver by sqlite", () => {
     })
 
     it("should query user with posts correctly", async () => {
-      logs = []
       const q = /* GraphQL */ `
         query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
           user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
@@ -227,6 +228,12 @@ describe("resolver by sqlite", () => {
         where: eq(user.name, "Tina"),
       })
       expect(Tina).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "user" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name"
+        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        "
+      `)
     })
 
     it("should insert a user with on conflict correctly", async () => {
@@ -276,6 +283,14 @@ describe("resolver by sqlite", () => {
       ).resolves.toMatchObject({
         insertIntoUser: [{ name: "TinaUpdate" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) returning "id", "name"
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict do nothing returning "id", "name"
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do nothing returning "id", "name"
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do update set "name" = ? returning "id", "name"
+        "
+      `)
     })
 
     it("should insert a single user with on conflict correctly", async () => {
@@ -325,6 +340,14 @@ describe("resolver by sqlite", () => {
       ).resolves.toMatchObject({
         insertIntoUserSingle: { name: "TinaUpdate" },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) returning "id", "name"
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict do nothing returning "id", "name"
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do nothing returning "id", "name"
+        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do update set "name" = ? returning "id", "name"
+        "
+      `)
     })
 
     it("should update user information correctly", async () => {
@@ -354,6 +377,13 @@ describe("resolver by sqlite", () => {
         where: eq(user.name, "Tiffany"),
       })
       expect(updatedUser).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "user" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name", "age", "email"
+        update "user" set "name" = ? where "user"."id" = ? returning "id", "name"
+        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        "
+      `)
     })
 
     it("should delete a user correctly", async () => {
@@ -384,6 +414,13 @@ describe("resolver by sqlite", () => {
         where: eq(user.name, "Tony"),
       })
       expect(deletedUser).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        delete from "user" where "user"."id" = ? returning "id", "name"
+        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        "
+      `)
     })
 
     it("should insert a new post correctly", async () => {
@@ -415,6 +452,13 @@ describe("resolver by sqlite", () => {
         where: eq(post.title, "Post 5"),
       })
       expect(p).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, ?) returning "id", "title", "authorId"
+        select "id", "title", "content", "authorId" from "post" where "post"."title" = ? limit ?
+        "
+      `)
     })
 
     it("should update post information correctly", async () => {
@@ -447,6 +491,13 @@ describe("resolver by sqlite", () => {
         where: eq(post.title, "Updated Post U"),
       })
       expect(updatedPost).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
+        update "post" set "title" = ? where "post"."id" = ? returning "id", "title"
+        select "id", "title", "content", "authorId" from "post" where "post"."title" = ? limit ?
+        "
+      `)
     })
 
     it("should delete a post correctly", async () => {
@@ -478,6 +529,13 @@ describe("resolver by sqlite", () => {
         where: eq(post.id, PostD.id),
       })
       expect(deletedPost).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
+        delete from "post" where "post"."id" = ? returning "id", "title"
+        select "id", "title", "content", "authorId" from "post" where "post"."id" = ? limit ?
+        "
+      `)
     })
   })
 })
