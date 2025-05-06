@@ -25,7 +25,15 @@ import {
 } from "drizzle-orm/node-postgres"
 import * as sqlite from "drizzle-orm/sqlite-core"
 import * as v from "valibot"
-import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from "vitest"
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+} from "vitest"
 import { config } from "../env.config"
 import {
   type DrizzleMySQLResolverFactory,
@@ -54,11 +62,13 @@ describe.concurrent("DrizzleResolverFactory", () => {
     typeof db,
     typeof sqliteSchemas.users
   >
+  let log: string[] = []
 
   beforeAll(async () => {
     db = sqliteDrizzle({
       relations: sqliteRelations,
       connection: { url: `file:${pathToDB.pathname}` },
+      logger: { logQuery: (query) => log.push(query) },
     })
 
     userFactory = drizzleResolverFactory(db, sqliteSchemas.users)
@@ -87,6 +97,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
       },
     ] satisfies (typeof sqliteSchemas.users.$inferInsert)[])
   })
+  beforeEach(() => {
+    log = []
+  })
 
   afterAll(async () => {
     await db.delete(sqliteSchemas.users)
@@ -96,7 +109,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     expect(userFactory).toBeInstanceOf(DrizzleResolverFactory)
   })
 
-  describe.concurrent("selectArrayQuery", () => {
+  describe("selectArrayQuery", () => {
     it("should be created without error", async () => {
       const query = userFactory.selectArrayQuery()
       expect(query).toBeDefined()
@@ -106,17 +119,17 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const executor = userFactory.resolver().toExecutor()
 
       let answer
-      answer = await executor.users({ orderBy: { age: "asc" } })
+      answer = await executor.users({ orderBy: { name: "asc", age: "asc" } })
 
       expect(answer).toMatchObject([
-        { age: 10 },
-        { age: 11 },
-        { age: 12 },
-        { age: 13 },
-        { age: 14 },
+        { name: "Jane", age: 11 },
+        { name: "Jill", age: 14 },
+        { name: "Jim", age: 12 },
+        { name: "Joe", age: 13 },
+        { name: "John", age: 10 },
       ])
 
-      answer = await executor.users({ orderBy: { age: "desc" } })
+      answer = await executor.users({ orderBy: { age: "desc", name: "asc" } })
       expect(answer).toMatchObject([
         { age: 14 },
         { age: 13 },
@@ -124,6 +137,13 @@ describe.concurrent("DrizzleResolverFactory", () => {
         { age: 11 },
         { age: 10 },
       ])
+
+      expect(["", ...log, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name", "age", "email" from "users" order by "users"."name" asc, "users"."age" asc
+        select "id", "name", "age", "email" from "users" order by "users"."age" desc, "users"."name" asc
+        "
+      `)
     })
 
     it("should resolve correctly with filters", async () => {
