@@ -9,14 +9,8 @@ import {
   parse,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import {
-  field,
-  query,
-  resolver,
-  silk,
-  useResolverPayload,
-  weave,
-} from "../../src"
+import { field, query, resolver, silk, weave } from "../../src"
+import { asyncContextProvider, useResolverPayload } from "../context"
 import { parseResolvingFields } from "./parse-resolving-fields"
 
 describe("parseResolvingFields", () => {
@@ -107,7 +101,7 @@ describe("parseResolvingFields", () => {
     }),
   })
 
-  const schema = weave(testResolver)
+  const schema = weave(asyncContextProvider, testResolver)
 
   it("should parse simple fields", async () => {
     await execute({
@@ -767,7 +761,7 @@ describe("parseResolvingFields for nested field", () => {
     }),
   })
 
-  const schema = weave(userResolver, profileResolver)
+  const schema = weave(asyncContextProvider, userResolver, profileResolver)
 
   it("should parse fields at user level", async () => {
     await execute({
@@ -989,7 +983,7 @@ describe("parseResolvingFields with maxDepth", () => {
     }),
   })
 
-  const schema = weave(testResolver)
+  const schema = weave(asyncContextProvider, testResolver)
 
   it("should parse only first level fields with default maxDepth", async () => {
     await execute({

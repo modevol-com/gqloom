@@ -1,4 +1,4 @@
-import { useContext } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import type { Context } from "hono"
 
 export function useAuthorization() {

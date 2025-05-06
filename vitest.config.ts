@@ -25,6 +25,7 @@ export default defineConfig({
   test: {
     coverage: {
       exclude: [
+        ".vercel/",
         "coverage/",
         "**/test/**",
         "**/dist/**",

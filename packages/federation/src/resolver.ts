@@ -7,14 +7,11 @@ import {
   type OmitInUnion,
   type ResolverOptions,
   type ResolverOptionsWithExtensions,
+  type ResolverPayload,
   type SYMBOLS,
   type StandardSchemaV1,
   type ValueOf,
-  loom,
-  resolverPayloadStorage,
-  silk,
 } from "@gqloom/core"
-import { GraphQLID } from "graphql"
 import type { ResolveReferenceExtension } from "."
 import type { DirectiveList } from "./mock-ast"
 
@@ -89,7 +86,8 @@ export class FederatedChainResolver<
       source: Pick<
         NonNullable<StandardSchemaV1.InferOutput<TParent>>,
         TRequiredKey
-      >
+      >,
+      payload: Pick<ResolverPayload, "root" | "context" | "info">
     ) => MayPromise<
       NonNullable<StandardSchemaV1.InferOutput<TParent>> | null | undefined
     >
@@ -102,17 +100,9 @@ export class FederatedChainResolver<
       TRequiredKey
     >["apollo"]
     ;(apollo.subgraph as {}) ??= {}
+
     apollo.subgraph.resolveReference = (root, context, info) =>
-      resolverPayloadStorage.run(
-        {
-          root,
-          args: {},
-          context,
-          info,
-          field: referenceField,
-        },
-        () => resolve(root)
-      )
+      resolve(root, { root, context, info })
 
     this.meta.options.extensions = {
       ...this.meta.options.extensions,
@@ -121,8 +111,3 @@ export class FederatedChainResolver<
     return this
   }
 }
-
-export const referenceField: Loom.Field<any, any, any> = loom.field(
-  silk(GraphQLID),
-  () => undefined
-)

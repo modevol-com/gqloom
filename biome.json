@@ -5,6 +5,7 @@
     "ignoreUnknown": false,
     "ignore": [
       "**/dist/**/*",
+      ".vercel/",
       "website/.next/",
       "docs/doc_build/",
       "**/generated/**/*",
@@ -139,7 +140,7 @@
           "style": {
             "noArguments": "error",
             "noVar": "error",
-            "useConst": "error"
+            "useConst": { "level": "warn", "fix": "unsafe" }
           },
           "suspicious": {
             "noDuplicateClassMembers": "off",

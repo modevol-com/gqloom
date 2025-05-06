@@ -7,7 +7,7 @@ import {
   printSchema,
 } from "graphql"
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
 import { posts, users } from "./schema/mysql"
@@ -20,6 +20,7 @@ const schema = {
 
 describe("resolver by mysql", () => {
   let db: MySql2Database<typeof schema, typeof relations>
+  let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
 
@@ -46,7 +47,11 @@ describe("resolver by mysql", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.mysqlUrl, { relations, mode: "default" })
+      db = drizzle(config.mysqlUrl, {
+        relations,
+        mode: "default",
+        logger: { logQuery: (query) => logs.push(query) },
+      })
       const userFactory = drizzleResolverFactory(db, users)
       const postFactory = drizzleResolverFactory(db, posts)
       gqlSchema = weave(
@@ -80,6 +85,10 @@ describe("resolver by mysql", () => {
     }
   })
 
+  beforeEach(() => {
+    logs = []
+  })
+
   afterAll(async () => {
     await db.delete(posts)
     await db.delete(users)
@@ -91,7 +100,7 @@ describe("resolver by mysql", () => {
     ).toMatchFileSnapshot("./resolver-mysql.spec.gql")
   })
 
-  describe.concurrent("query", () => {
+  describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
       query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
@@ -130,6 +139,13 @@ describe("resolver by mysql", () => {
       ).resolves.toMatchObject({
         users: [{ name: "Tom" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc limit ?
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc limit ? offset ?
+        "
+      `)
     })
 
     it("should query user single correctly", async () => {
@@ -150,6 +166,11 @@ describe("resolver by mysql", () => {
       ).resolves.toMatchObject({
         usersSingle: { name: "Taylor" },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should query user with posts correctly", async () => {
@@ -187,6 +208,13 @@ describe("resolver by mysql", () => {
           },
         ],
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc
+        select \`id\`, \`title\`, \`authorId\` from \`posts\` where \`posts\`.\`authorId\` in (?, ?, ?)
+        "
+      `)
     })
   })
 
@@ -213,6 +241,12 @@ describe("resolver by mysql", () => {
         where: { name: "Tina" },
       })
       expect(Tina).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`users\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should update user information correctly", async () => {
@@ -247,6 +281,14 @@ describe("resolver by mysql", () => {
         where: { name: "Tiffany" },
       })
       expect(updatedUser).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`users\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
+        update \`users\` set \`name\` = ? where \`users\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should delete a user correctly", async () => {
@@ -278,6 +320,13 @@ describe("resolver by mysql", () => {
         where: { name: "Tony" },
       })
       expect(deletedUser).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
+        delete from \`users\` where \`users\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
+        "
+      `)
     })
 
     it("should insert a new post correctly", async () => {
@@ -309,6 +358,13 @@ describe("resolver by mysql", () => {
         where: { title: "Post 5" },
       })
       expect(p).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
+        insert into \`posts\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, ?)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`title\` = ? limit ?
+        "
+      `)
     })
 
     it("should update post information correctly", async () => {
@@ -344,6 +400,14 @@ describe("resolver by mysql", () => {
         where: { title: "Updated Post U" },
       })
       expect(updatedPost).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`posts\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
+        update \`posts\` set \`title\` = ? where \`posts\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`title\` = ? limit ?
+        "
+      `)
     })
 
     it("should delete a post correctly", async () => {
@@ -378,6 +442,14 @@ describe("resolver by mysql", () => {
         where: { id: PostD.id },
       })
       expect(deletedPost).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into \`posts\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
+        delete from \`posts\` where \`posts\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
+        "
+      `)
     })
   })
 })

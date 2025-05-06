@@ -9,8 +9,9 @@ import {
   type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
+  type ResolverPayload,
   capitalize,
-  createMemoization,
+  getMemoizationMap,
   loom,
   mapValue,
   silk,
@@ -25,6 +26,8 @@ import {
   type TableRelationalConfig,
   type TablesRelationalConfig,
   and,
+  asc,
+  desc,
   eq,
   getTableColumns,
   getTableName,
@@ -51,7 +54,7 @@ import {
   type TableSilk,
 } from ".."
 import type { AnyQueryBuilder } from "../../dist/index.d.cts"
-import { inArrayMultiple } from "../helper"
+import { getSelectedColumns, inArrayMultiple } from "../helper"
 import {
   type ColumnFilters,
   type CountArgs,
@@ -89,7 +92,6 @@ export abstract class DrizzleResolverFactory<
 > {
   protected readonly inputFactory: DrizzleInputFactory<typeof this.table>
   protected readonly tableName: InferTableName<TTable>
-  protected readonly queryBuilder: QueryBuilder<TDatabase, TTable>
   public constructor(
     protected readonly db: TDatabase,
     protected readonly table: TTable,
@@ -97,14 +99,6 @@ export abstract class DrizzleResolverFactory<
   ) {
     this.inputFactory = new DrizzleInputFactory(table, options)
     this.tableName = getTableName(table)
-    const queryBuilder = matchQueryBuilder(this.db.query, this.table)
-
-    if (!queryBuilder) {
-      throw new Error(
-        `GQLoom-Drizzle Error: Table ${this.tableName} not found in drizzle instance. Did you forget to pass schema to drizzle constructor?`
-      )
-    }
-    this.queryBuilder = queryBuilder as QueryBuilder<TDatabase, TTable>
   }
 
   private _output?: TableSilk<TTable>
@@ -120,7 +114,6 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectArrayQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectArrayQuery<TDatabase, TTable, TInputI> {
-    const queryBase = this.queryBuilder
     input ??= silk<
       InferSelectArrayOptions<TDatabase, TTable>,
       SelectArrayArgs<TTable>
@@ -128,10 +121,8 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectArrayArgs(),
       (args) => ({
         value: {
-          where: {
-            RAW: (table: Table) => this.extractFilters(args.where, table),
-          },
-          orderBy: args.orderBy,
+          where: this.extractFilters(args.where, this.table),
+          orderBy: this.extractOrderBy(args.orderBy),
           limit: args.limit,
           offset: args.offset,
         },
@@ -141,8 +132,18 @@ export abstract class DrizzleResolverFactory<
     return new QueryFactoryWithResolve(this.output.$list(), {
       input,
       ...options,
-      resolve: (opts) => {
-        return queryBase.findMany(opts)
+      resolve: (
+        opts: InferSelectArrayOptions<TDatabase, TTable> | undefined,
+        payload
+      ) => {
+        let query: any = (this.db as any)
+          .select(getSelectedColumns(this.table, payload))
+          .from(this.table)
+        if (opts?.where) query = query.where(opts.where)
+        if (opts?.orderBy?.length) query = query.orderBy(...opts.orderBy)
+        if (opts?.limit) query = query.limit(opts.limit)
+        if (opts?.offset) query = query.offset(opts.offset)
+        return query
       },
     } as QueryOptions<any, any>)
   }
@@ -154,7 +155,6 @@ export abstract class DrizzleResolverFactory<
     input?: GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
     middlewares?: Middleware<SelectSingleQuery<TDatabase, TTable, TInputI>>[]
   } = {}): SelectSingleQuery<TDatabase, TTable, TInputI> {
-    const queryBase = this.queryBuilder
     input ??= silk<
       InferSelectSingleOptions<TDatabase, TTable>,
       SelectSingleArgs<TTable>
@@ -162,10 +162,8 @@ export abstract class DrizzleResolverFactory<
       () => this.inputFactory.selectSingleArgs(),
       (args) => ({
         value: {
-          where: {
-            RAW: (table: Table) => this.extractFilters(args.where, table),
-          },
-          orderBy: args.orderBy,
+          where: this.extractFilters(args.where, this.table),
+          orderBy: this.extractOrderBy(args.orderBy),
           offset: args.offset,
         },
       })
@@ -174,8 +172,18 @@ export abstract class DrizzleResolverFactory<
     return new QueryFactoryWithResolve(this.output.$nullable(), {
       input,
       ...options,
-      resolve: (opts) => {
-        return queryBase.findFirst(opts) as any
+      resolve: (
+        opts: InferSelectSingleOptions<TDatabase, TTable> | undefined,
+        payload
+      ) => {
+        let query: any = (this.db as any)
+          .select(getSelectedColumns(this.table, payload))
+          .from(this.table)
+        if (opts?.where) query = query.where(opts.where)
+        if (opts?.orderBy?.length) query = query.orderBy(...opts.orderBy)
+        query = query.limit(1)
+        if (opts?.offset) query = query.offset(opts.offset)
+        return query.then((res: any) => res[0])
       },
     } as QueryOptions<any, any>)
   }
@@ -198,6 +206,23 @@ export abstract class DrizzleResolverFactory<
         return this.db.$count(this.table, this.extractFilters(args.where))
       },
     } as QueryOptions<any, any>)
+  }
+
+  protected extractOrderBy(
+    orders?: SelectArrayArgs<TTable>["orderBy"]
+  ): SQL[] | undefined {
+    if (orders == null) return
+    const answer: SQL[] = []
+    const columns = getTableColumns(this.table)
+    for (const [column, direction] of Object.entries(orders)) {
+      if (!direction) continue
+      if (column in columns) {
+        answer.push(
+          direction === "asc" ? asc(columns[column]) : desc(columns[column])
+        )
+      }
+    }
+    return answer
   }
 
   protected extractFilters(
@@ -409,7 +434,6 @@ export abstract class DrizzleResolverFactory<
         )} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
       )
     }
-
     const output = DrizzleWeaver.unravel(targetTable)
 
     const isList = relation instanceof Many
@@ -422,6 +446,10 @@ export abstract class DrizzleResolverFactory<
       return relation.sourceColumns.map((field) => parent[field.name]).join("-")
     }
 
+    const referenceColumns = Object.fromEntries(
+      relation.targetColumns.map((col) => [col.name, col])
+    )
+
     const getKeyByReference = (item: any) => {
       if (fieldsLength === 1) {
         return item[relation.targetColumns[0].name]
@@ -431,52 +459,61 @@ export abstract class DrizzleResolverFactory<
         .join("-")
     }
 
-    const useLoader = createMemoization(() => {
-      return new EasyDataLoader(async (parents: any[]) => {
-        const where = (() => {
-          if (fieldsLength === 1) {
-            const values = parents.map(
-              (parent) => parent[relation.sourceColumns[0].name]
-            )
-            // return inArray(relation.targetColumns[0], values)
-            return {
-              [relation.targetColumns[0].name]: { in: values },
+    const initLoader = () => {
+      return new EasyDataLoader(
+        async (inputs: [any, payload: ResolverPayload | undefined][]) => {
+          const where = (() => {
+            if (fieldsLength === 1) {
+              const values = inputs.map(
+                ([parent]) => parent[relation.sourceColumns[0].name]
+              )
+              return inArray(relation.targetColumns[0], values)
             }
-          }
-          const values = parents.map((parent) =>
-            relation.sourceColumns.map((field) => parent[field.name])
+            const values = inputs.map((input) =>
+              relation.sourceColumns.map((field) => input[0][field.name])
+            )
+            return inArrayMultiple(relation.targetColumns, values, targetTable)
+          })()
+          const selectedColumns = getSelectedColumns(
+            targetTable,
+            inputs.map((input) => input[1])
           )
-          return {
-            RAW: (table: Table) =>
-              inArrayMultiple(relation.targetColumns, values, table),
+
+          const list = await (this.db as any)
+            .select({ ...selectedColumns, ...referenceColumns })
+            .from(targetTable)
+            .where(where)
+
+          const groups = new Map<string, any>()
+          for (const item of list) {
+            const key = getKeyByReference(item)
+            isList
+              ? groups.set(key, [...(groups.get(key) ?? []), item])
+              : groups.set(key, item)
           }
-        })()
-
-        const list = await queryBuilder.findMany({ where })
-
-        const groups = new Map<string, any>()
-        for (const item of list) {
-          const key = getKeyByReference(item)
-          isList
-            ? groups.set(key, [...(groups.get(key) ?? []), item])
-            : groups.set(key, item)
+          return inputs.map(([parent]) => {
+            const key = getKeyByField(parent)
+            return groups.get(key) ?? (isList ? [] : null)
+          })
         }
-        return parents.map((parent) => {
-          const key = getKeyByField(parent)
-          return groups.get(key) ?? (isList ? [] : null)
-        })
-      })
-    })
+      )
+    }
 
     return new FieldFactoryWithResolve(
       isList ? output.$list() : output.$nullable(),
       {
         ...options,
-        resolve: (parent) => {
-          const loader = useLoader()
-          return loader.load(parent)
+        dependencies: ["tableName"],
+        resolve: (parent, _input, payload) => {
+          const loader = (() => {
+            if (!payload) return initLoader()
+            const memoMap = getMemoizationMap(payload)
+            if (!memoMap.has(initLoader)) memoMap.set(initLoader, initLoader())
+            return memoMap.get(initLoader) as ReturnType<typeof initLoader>
+          })()
+          return loader.load([parent, payload])
         },
-      } as FieldOptions<any, any, any>
+      } as FieldOptions<any, any, any, any>
     )
   }
 
@@ -489,7 +526,7 @@ export abstract class DrizzleResolverFactory<
   > {
     const name = options?.name ?? this.tableName
 
-    const fields: Record<string, Loom.Field<any, any, any>> = mapValue(
+    const fields: Record<string, Loom.Field<any, any, any, any>> = mapValue(
       this.db._.relations.config[this.tableName] ?? {},
       (_, key) => this.relationField(key)
     )

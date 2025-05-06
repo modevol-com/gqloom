@@ -21,7 +21,7 @@ export const IS_RESOLVER = Symbol.for("gqloom.is-resolver")
 /**
  * The symbol to assign a WeakMap to an object
  */
-export const CONTEXT_MEMORY_MAP_KEY = Symbol.for("gqloom.context-memory")
+export const CONTEXT_MAP_KEY = Symbol.for("gqloom.context-map")
 
 /**
  * The symbol to set fields to be hidden

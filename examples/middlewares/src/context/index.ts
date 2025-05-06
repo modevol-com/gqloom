@@ -1,4 +1,4 @@
-import { createMemoization } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 
 const users: User[] = [
   {

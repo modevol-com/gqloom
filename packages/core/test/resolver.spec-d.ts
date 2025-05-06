@@ -172,9 +172,9 @@ describe("resolver type", () => {
 
             const input = getStandardValue(await parseInput())
             it("should infer input type", () => {
-              expectTypeOf(input).toEqualTypeOf<
-                { myName: string | null | undefined } | undefined
-              >()
+              expectTypeOf(input).toEqualTypeOf<{
+                myName: string | null | undefined
+              } | void>()
             })
 
             it("should infer output type", () => {

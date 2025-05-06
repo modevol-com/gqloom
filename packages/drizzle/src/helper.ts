@@ -1,13 +1,20 @@
-import { pascalCase } from "@gqloom/core"
+import {
+  type ResolverPayload,
+  getResolvingFields,
+  mapValue,
+  pascalCase,
+} from "@gqloom/core"
 import {
   type Column,
   type SQL,
   type Table,
+  getTableColumns,
   getTableName,
   sql,
 } from "drizzle-orm"
 import type {
   DrizzleFactoryInputVisibilityBehaviors,
+  SelectedTableColumns,
   ValueOrGetter,
   VisibilityBehavior,
 } from "./types"
@@ -94,4 +101,39 @@ export function getValue<T>(valueOrGetter: ValueOrGetter<T>): T {
   return typeof valueOrGetter === "function"
     ? (valueOrGetter as () => T)()
     : valueOrGetter
+}
+
+/**
+ * Get the selected columns from the resolver payload
+ * @param table - The table to get the selected columns from
+ * @param payload - The resolver payload
+ * @returns The selected columns
+ */
+export function getSelectedColumns<TTable extends Table>(
+  table: TTable,
+  payload: ResolverPayload | (ResolverPayload | undefined)[] | undefined
+): SelectedTableColumns<TTable> {
+  if (
+    !payload ||
+    (Array.isArray(payload) && payload.filter(Boolean).length === 0)
+  ) {
+    return getTableColumns(table) as SelectedTableColumns<TTable>
+  }
+  let selectedFields = new Set<string>()
+  if (Array.isArray(payload)) {
+    for (const p of payload) {
+      if (p) {
+        const resolvingFields = getResolvingFields(p)
+        for (const field of resolvingFields.selectedFields)
+          selectedFields.add(field)
+      }
+    }
+  } else {
+    const resolvingFields = getResolvingFields(payload)
+    selectedFields = resolvingFields.selectedFields
+  }
+  return mapValue(getTableColumns(table), (column, columnName) => {
+    if (selectedFields.has(columnName)) return column
+    return mapValue.SKIP
+  }) as SelectedTableColumns<TTable>
 }

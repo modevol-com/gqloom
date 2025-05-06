@@ -10,7 +10,7 @@ import {
 import {
   type GraphQLSilk,
   type Loom,
-  type ResolvingOptions,
+  type ResolverOptions,
   getGraphQLType,
   isSilk,
 } from "../resolver"
@@ -43,7 +43,7 @@ export class GraphQLSchemaLoom {
 
   public context: WeaverContext
 
-  public resolverOptions?: ResolvingOptions
+  public resolverOptions?: ResolverOptions
 
   /**
    * Create a Schema Weaver config object
@@ -162,12 +162,12 @@ export class GraphQLSchemaLoom {
         parentObject.hideField(name)
       } else if (field["~meta"].operation === "field") {
         if (parentObject == null) return
-        parentObject.addField(name, field)
+        parentObject.addField(name, field, resolver)
       } else {
         const operationObject = this.getOperationObject(
           field["~meta"].operation
         )
-        operationObject.addField(name, field)
+        operationObject.addField(name, field, resolver)
       }
     })
     return this
@@ -201,9 +201,11 @@ export class GraphQLSchemaLoom {
     }
   }
 
-  protected get fieldOptions() {
+  protected get fieldOptions(): ConstructorParameters<
+    typeof LoomObjectType
+  >[1] {
     const { resolverOptions, context } = this
-    return { resolverOptions, weaverContext: context }
+    return { globalOptions: resolverOptions, weaverContext: context }
   }
 
   public static optionsFrom(
@@ -223,6 +225,7 @@ export class GraphQLSchemaLoom {
     let context: WeaverContext | undefined
 
     for (const item of inputs) {
+      if (item == null) continue
       if (isSchemaVendorWeaver(item)) {
         weavers.add(item)
       } else if (typeof item === "function") {

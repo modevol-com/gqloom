@@ -1,4 +1,16 @@
-import { defineRelations, eq, inArray, sql } from "drizzle-orm"
+import { resolver } from "@gqloom/core"
+import {
+  and,
+  defineRelations,
+  eq,
+  gt,
+  gte,
+  inArray,
+  lte,
+  not,
+  or,
+  sql,
+} from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
@@ -84,15 +96,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
     expect(userFactory).toBeInstanceOf(DrizzleResolverFactory)
   })
 
-  it("should throw an error if the table is not found", () => {
-    const unknownTable = sqlite.sqliteTable("unknown", {
-      id: sqlite.integer("id").primaryKey(),
-    })
-    expect(() => drizzleResolverFactory(db, unknownTable)).toThrow(
-      "GQLoom-Drizzle Error: Table unknown not found in drizzle instance. Did you forget to pass schema to drizzle constructor?"
-    )
-  })
-
   describe.concurrent("selectArrayQuery", () => {
     it("should be created without error", async () => {
       const query = userFactory.selectArrayQuery()
@@ -100,10 +103,11 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should resolve correctly with orderBy", async () => {
-      const query = userFactory.selectArrayQuery()
+      const executor = userFactory.resolver().toExecutor()
 
       let answer
-      answer = await query["~meta"].resolve({ orderBy: { age: "asc" } })
+      answer = await executor.users({ orderBy: { age: "asc" } })
+
       expect(answer).toMatchObject([
         { age: 10 },
         { age: 11 },
@@ -112,7 +116,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         { age: 14 },
       ])
 
-      answer = await query["~meta"].resolve({ orderBy: { age: "desc" } })
+      answer = await executor.users({ orderBy: { age: "desc" } })
       expect(answer).toMatchObject([
         { age: 14 },
         { age: 13 },
@@ -123,53 +127,53 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
 
     it("should resolve correctly with filters", async () => {
-      const query = userFactory.selectArrayQuery()
+      const executor = userFactory.resolver().toExecutor()
       let answer
-      answer = await query["~meta"].resolve({})
+      answer = await executor.users({})
       expect(answer).toHaveLength(5)
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { age: { gte: 12 } },
       })
       expect(answer).toMatchObject([{ age: 12 }, { age: 13 }, { age: 14 }])
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { age: { lt: 12 } },
       })
       expect(answer).toMatchObject([{ age: 10 }, { age: 11 }])
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { age: { gte: 12, lt: 13 } },
       })
       expect(answer).toMatchObject([{ age: 12 }])
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { age: { in: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { age: { notIn: [10, 11] } },
       })
       expect(new Set(answer)).toMatchObject(
         new Set([{ age: 12 }, { age: 13 }, { age: 14 }])
       )
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { age: { OR: [{ eq: 10 }, { eq: 11 }] } },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { OR: [{ age: { eq: 10 } }, { age: { eq: 11 } }] },
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { name: { like: "J%" } },
       })
       expect(answer).toHaveLength(5)
 
-      answer = await query["~meta"].resolve({
+      answer = await executor.users({
         where: { age: { isNull: true } },
       })
       expect(answer).toHaveLength(0)
@@ -183,13 +187,15 @@ describe.concurrent("DrizzleResolverFactory", () => {
             age: v.nullish(v.number()),
           }),
           v.transform(({ age }) => ({
-            where: age != null ? { age } : undefined,
+            where: age != null ? eq(sqliteSchemas.users.age, age) : undefined,
           }))
         ),
       })
 
+      const executor = resolver({ query }).toExecutor()
+
       expect(query).toBeDefined()
-      answer = await query["~meta"].resolve({ age: 10 })
+      answer = await executor.query({ age: 10 })
       expect(answer).toMatchObject([{ age: 10 }])
 
       query = userFactory
@@ -201,13 +207,13 @@ describe.concurrent("DrizzleResolverFactory", () => {
               age: v.nullish(v.number()),
             }),
             v.transform(({ age }) => ({
-              where: age != null ? { age } : undefined,
+              where: age != null ? eq(sqliteSchemas.users.age, age) : undefined,
             }))
           )
         )
 
       expect(query).toBeDefined()
-      answer = await query["~meta"].resolve({ age: 10 })
+      answer = await executor.query({ age: 10 })
       expect(answer).toMatchObject([{ age: 10 }])
     })
 
@@ -225,9 +231,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
             async ({ parseInput, next }) => {
               const opts = await parseInput()
               if (opts.issues) throw new Error("Invalid input")
-              expectTypeOf(opts.value).toEqualTypeOf<
-                NonNullable<SelectArrayOptions> | undefined
-              >()
+
+              expectTypeOf(opts.value).toEqualTypeOf<SelectArrayOptions>()
               count++
               const answer = await next()
               expectTypeOf(answer).toEqualTypeOf<
@@ -239,9 +244,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
         })
         .use(async ({ parseInput, next }) => {
           const value = await parseInput.getResult()
-          expectTypeOf(value).toEqualTypeOf<
-            NonNullable<SelectArrayOptions> | undefined
-          >()
+          expectTypeOf(value).toEqualTypeOf<SelectArrayOptions>()
           count++
           const answer = await next()
           expectTypeOf(answer).toEqualTypeOf<
@@ -249,8 +252,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
           >()
           return answer
         })
-
-      await query["~meta"].resolve({})
+      const executor = resolver({ query }).toExecutor()
+      await executor.query({})
       expect(count).toBe(2)
     })
 
@@ -258,12 +261,18 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const query = userFactory.selectArrayQuery()
       let answer
       answer = await query["~meta"].resolve({
-        where: { AND: [{ name: { eq: "John" } }, { age: { gt: 10 } }] },
+        where: and(
+          eq(sqliteSchemas.users.name, "John"),
+          gt(sqliteSchemas.users.age, 10)
+        ),
       })
       expect(answer).toHaveLength(0)
 
       answer = await query["~meta"].resolve({
-        where: { AND: [{ name: { eq: "John" } }, { age: { gte: 10 } }] },
+        where: and(
+          eq(sqliteSchemas.users.name, "John"),
+          gte(sqliteSchemas.users.age, 10)
+        ),
       })
       expect(answer).toHaveLength(1)
     })
@@ -272,12 +281,18 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const query = userFactory.selectArrayQuery()
       let answer
       answer = await query["~meta"].resolve({
-        where: { OR: [{ name: { eq: "John" } }, { age: { gt: 12 } }] },
+        where: or(
+          eq(sqliteSchemas.users.name, "John"),
+          gt(sqliteSchemas.users.age, 12)
+        ),
       })
       expect(answer).toHaveLength(3)
 
       answer = await query["~meta"].resolve({
-        where: { OR: [{ age: { gte: 14 } }, { age: { lte: 10 } }] },
+        where: or(
+          gte(sqliteSchemas.users.age, 14),
+          lte(sqliteSchemas.users.age, 10)
+        ),
       })
       expect(answer).toHaveLength(2)
     })
@@ -286,12 +301,12 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const query = userFactory.selectArrayQuery()
       let answer
       answer = await query["~meta"].resolve({
-        where: { NOT: { name: { eq: "John" } } },
+        where: not(eq(sqliteSchemas.users.name, "John")),
       })
       expect(answer).toHaveLength(4)
 
       answer = await query["~meta"].resolve({
-        where: { NOT: { age: { lte: 10 } } },
+        where: not(lte(sqliteSchemas.users.age, 10)),
       })
       expect(answer).toHaveLength(4)
     })
@@ -302,34 +317,30 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       // Test NOT with OR condition
       answer = await query["~meta"].resolve({
-        where: {
-          NOT: {
-            OR: [{ name: { eq: "John" } }, { name: { eq: "Jane" } }],
-          } as any,
-        },
+        where: not(
+          or(
+            eq(sqliteSchemas.users.name, "John"),
+            eq(sqliteSchemas.users.name, "Jane")
+          ) as any
+        ),
       })
       expect(answer).toHaveLength(3) // Should exclude both John and Jane
 
       // Test NOT with AND condition
       answer = await query["~meta"].resolve({
-        where: {
-          NOT: {
-            AND: [{ age: { gte: 10 } }, { age: { lte: 12 } }],
-          } as any,
-        },
+        where: not(
+          and(
+            gte(sqliteSchemas.users.age, 10),
+            lte(sqliteSchemas.users.age, 12)
+          ) as any
+        ),
       })
       // Should exclude ages 10, 11, 12
       expect(answer.map((user) => user.age).sort()).toEqual([13, 14])
 
       // Test nested NOT conditions
       answer = await query["~meta"].resolve({
-        where: {
-          age: {
-            NOT: {
-              lte: 12,
-            },
-          },
-        },
+        where: not(lte(sqliteSchemas.users.age, 12)),
       })
       // Double negation: NOT(NOT(age > 12)) = age > 12
       expect(answer.map((user) => user.age).sort()).toEqual([13, 14])
@@ -340,11 +351,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       // Test NOT applied to a column filter
       const answer = await query["~meta"].resolve({
-        where: {
-          age: {
-            NOT: { lte: 12 } as any,
-          },
-        },
+        where: not(lte(sqliteSchemas.users.age, 12)),
       })
 
       // Should only include ages > 12
@@ -357,13 +364,19 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       // Test column-level OR operator
       answer = await query["~meta"].resolve({
-        where: { age: { OR: [{ eq: 10 }, { eq: 11 }] } },
+        where: or(
+          eq(sqliteSchemas.users.age, 10),
+          eq(sqliteSchemas.users.age, 11)
+        ),
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
 
       // Test column-level AND operator
       answer = await query["~meta"].resolve({
-        where: { age: { AND: [{ gte: 10 }, { lte: 11 }] } },
+        where: and(
+          gte(sqliteSchemas.users.age, 10),
+          lte(sqliteSchemas.users.age, 11)
+        ),
       })
       expect(new Set(answer)).toMatchObject(new Set([{ age: 10 }, { age: 11 }]))
     })
@@ -377,8 +390,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
     it("should resolve correctly with orderBy", async () => {
       const query = userFactory.selectSingleQuery()
+      const executor = resolver({ query }).toExecutor()
       expect(
-        await query["~meta"].resolve({
+        await executor.query({
           orderBy: { age: "asc" },
         })
       ).toMatchObject({ age: 10 })
@@ -386,8 +400,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
     it("should resolve correctly with filters", async () => {
       const query = userFactory.selectSingleQuery()
+      const executor = resolver({ query }).toExecutor()
       expect(
-        await query["~meta"].resolve({
+        await executor.query({
           where: { age: { eq: 12 } },
         })
       ).toMatchObject({ age: 12 })
@@ -400,13 +415,14 @@ describe.concurrent("DrizzleResolverFactory", () => {
             age: v.nullish(v.number()),
           }),
           v.transform(({ age }) => ({
-            where: age != null ? { age } : undefined,
+            where: age != null ? eq(sqliteSchemas.users.age, age) : undefined,
           }))
         ),
       })
+      const executor = resolver({ query }).toExecutor()
 
       expect(query).toBeDefined()
-      expect(await query["~meta"].resolve({ age: 10 })).toMatchObject({
+      expect(await executor.query({ age: 10 })).toMatchObject({
         age: 10,
       })
     })
@@ -424,7 +440,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
             if (opts.issues) throw new Error("Invalid input")
 
             expectTypeOf(opts.value).toEqualTypeOf<
-              NonNullable<SelectSingleOptions> | undefined
+              SelectSingleOptions | undefined
             >()
             count++
             const answer = await next()
@@ -435,8 +451,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
           },
         ],
       })
-
-      await query["~meta"].resolve({})
+      const executor = resolver({ query }).toExecutor()
+      await executor.query({})
       expect(count).toBe(1)
     })
 
@@ -487,8 +503,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
         })
 
         expect(query).toBeDefined()
-        expect(await query["~meta"].resolve({ age: 10 })).toBe(1)
-        expect(await query["~meta"].resolve({ age: null })).toBe(5)
+        const executor = resolver({ query }).toExecutor()
+        expect(await executor.query({ age: 10 })).toBe(1)
+        expect(await executor.query({ age: null })).toBe(5)
       })
 
       it("should be created with middlewares", async () => {
@@ -506,7 +523,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
           ],
         })
 
-        await query["~meta"].resolve({})
+        const executor = resolver({ query }).toExecutor()
+        await executor.query({})
         expect(count).toBe(1)
       })
     })
@@ -645,17 +663,15 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       expect(new Set(answer)).toMatchObject(
         new Set([
-          { studentId: John.id, courseId: math.id, grade: expect.any(Number) },
+          { studentId: John.id, courseId: math.id },
           {
             studentId: John.id,
             courseId: english.id,
-            grade: expect.any(Number),
           },
-          { studentId: Joe.id, courseId: math.id, grade: expect.any(Number) },
+          { studentId: Joe.id, courseId: math.id },
           {
             studentId: Joe.id,
             courseId: english.id,
-            grade: expect.any(Number),
           },
         ])
       )
@@ -667,8 +683,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
       const postsField = userFactory.relationField("posts")
       answer = await postsField["~meta"].resolve(John, undefined)
       expect(answer).toMatchObject([
-        { authorId: John.id, title: "Hello" },
-        { authorId: John.id, title: "World" },
+        { authorId: John.id },
+        { authorId: John.id },
       ])
     })
 
@@ -772,11 +788,11 @@ describe.concurrent("DrizzleResolverFactory", () => {
         .returning()
 
       // Use the loader to fetch multiple course relations at once
-      const courseField = studentCourseFactory.relationField("course")
+      const executor = studentCourseFactory.resolver().toExecutor()
 
       // Load all courses for all student-course relationships at once
       const allResults = await Promise.all(
-        studentCourses.map((sc) => courseField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => executor.course(sc))
       )
 
       // Verify results include both Math and English courses
@@ -988,8 +1004,9 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
         )
 
       expect(mutation).toBeDefined()
+      const executor = resolver({ mutation }).toExecutor()
       expect(
-        await mutation["~meta"].resolve([
+        await executor.mutation([
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
         ])
@@ -1118,8 +1135,9 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
         )
 
       expect(mutation).toBeDefined()
+      const executor = resolver({ mutation }).toExecutor()
       expect(
-        await mutation["~meta"].resolve([
+        await executor.mutation([
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
         ])
@@ -1269,8 +1287,9 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
         )
 
       expect(mutation).toBeDefined()
+      const executor = resolver({ mutation }).toExecutor()
       expect(
-        await mutation["~meta"].resolve([
+        await executor.mutation([
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
         ])

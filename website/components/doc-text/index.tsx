@@ -1,9 +1,14 @@
 "use client"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 
 export default function DocText() {
   const params = useParams<{ lang: string }>()
+  const pathname = usePathname()
+  const pathDepth = pathname.split("/").filter(Boolean).length
+  if (pathDepth > 1) {
+    return null
+  }
 
   const text = params.lang === "zh" ? "文档" : "Documentation"
   return (

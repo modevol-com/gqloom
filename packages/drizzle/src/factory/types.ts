@@ -4,14 +4,20 @@ import type {
   MutationFactoryWithResolve,
   QueryFactoryWithResolve,
 } from "@gqloom/core"
-import type { AnyRelations, InferSelectModel, Many, Table } from "drizzle-orm"
+import type {
+  AnyRelations,
+  Column,
+  InferSelectModel,
+  Many,
+  SQL,
+  Table,
+} from "drizzle-orm"
 import type { MySqlDatabase } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
 import type { PgDatabase } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
-
 import type {
   CountArgs,
   DeleteArgs,
@@ -99,9 +105,16 @@ export interface SelectArrayQuery<
   > {}
 
 export type InferSelectArrayOptions<
-  TDatabase extends BaseDatabase,
-  TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable>["findMany"]>[0]
+  _TDatabase extends BaseDatabase,
+  _TTable extends Table,
+> =
+  | {
+      where?: SQL
+      orderBy?: (Column | SQL | SQL.Aliased)[]
+      limit?: number
+      offset?: number
+    }
+  | undefined
 
 export interface CountQuery<
   TTable extends Table,
@@ -126,9 +139,15 @@ export interface SelectSingleQuery<
   > {}
 
 export type InferSelectSingleOptions<
-  TDatabase extends BaseDatabase,
-  TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable>["findFirst"]>[0]
+  _TDatabase extends BaseDatabase,
+  _TTable extends Table,
+> =
+  | {
+      where?: SQL
+      orderBy?: (Column | SQL | SQL.Aliased)[]
+      offset?: number
+    }
+  | undefined
 
 export interface RelationManyField<
   TTable extends Table,

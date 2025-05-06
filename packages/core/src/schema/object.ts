@@ -3,7 +3,6 @@ import {
   type GraphQLFieldConfig,
   type GraphQLFieldConfigArgumentMap,
   type GraphQLFieldMap,
-  type GraphQLFieldResolver,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -20,19 +19,18 @@ import {
 } from "graphql"
 import {
   type Loom,
-  type ResolvingOptions,
-  defaultSubscriptionResolve,
+  type ResolverOptions,
+  createInputParser,
   getGraphQLType,
 } from "../resolver"
 import {
+  applyMiddlewares,
   deepMerge,
+  filterMiddlewares,
   mapValue,
-  markErrorLocation,
   pascalCase,
-  resolverPayloadStorage,
   toObjMap,
 } from "../utils"
-import { bindAsyncIterator } from "../utils/async-iterator"
 import { inputToArgs } from "./input"
 import {
   type WeaverContext,
@@ -48,7 +46,11 @@ export class LoomObjectType extends GraphQLObjectType {
   public static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
-  protected resolverOptions?: ResolvingOptions
+  protected globalOptions?: ResolverOptions
+  /**
+   * field name -> resolver
+   */
+  protected resolvers: Map<string, Loom.Resolver>
 
   public constructor(
     objectOrGetter:
@@ -58,7 +60,7 @@ export class LoomObjectType extends GraphQLObjectType {
       | (() => GraphQLObjectType | GraphQLObjectTypeConfig<any, any>),
     options: {
       weaverContext?: WeaverContext
-      resolverOptions?: ResolvingOptions
+      globalOptions?: ResolverOptions
     } = {}
   ) {
     const origin =
@@ -75,8 +77,9 @@ export class LoomObjectType extends GraphQLObjectType {
     })()
 
     super(config)
-    this.resolverOptions = options.resolverOptions
+    this.globalOptions = options.globalOptions
     this.weaverContext = options.weaverContext ?? initWeaverContext()
+    this.resolvers = new Map()
 
     if (this.name !== LoomObjectType.AUTO_ALIASING) {
       this.hasExplicitName = true
@@ -109,12 +112,17 @@ export class LoomObjectType extends GraphQLObjectType {
     this.hiddenFields.add(name)
   }
 
-  public addField(name: string, resolver: Loom.BaseField) {
+  public addField(
+    name: string,
+    field: Loom.BaseField,
+    resolver: Loom.Resolver | undefined
+  ) {
     const existing = this.extraFields.get(name)
-    if (existing && existing !== resolver) {
+    if (existing && existing !== field) {
       throw new Error(`Field ${name} already exists in ${this.name}`)
     }
-    this.extraFields.set(name, resolver)
+    this.extraFields.set(name, field)
+    if (resolver) this.resolvers.set(name, resolver)
   }
 
   public mergeExtensions(
@@ -168,74 +176,154 @@ export class LoomObjectType extends GraphQLObjectType {
 
   public toFieldConfig(
     field: Loom.BaseField,
-    fieldName?: string
+    fieldName: string
   ): GraphQLFieldConfig<any, any> {
-    try {
-      const outputType = this.getCacheType(
-        getGraphQLType(field["~meta"].output),
-        fieldName
-      )
+    const outputType = this.getCacheType(
+      getGraphQLType(field["~meta"].output),
+      fieldName
+    )
 
-      return {
-        ...extract(field),
-        type: outputType,
-        args: inputToArgs(field["~meta"].input, {
-          fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
-        }),
-        ...this.provideForResolve(field),
-        ...this.provideForSubscribe(field),
-      }
-    } catch (error) {
-      throw markErrorLocation(error)
+    const resolve = this.provideForResolve(field, fieldName)
+    const subscribe = this.provideForSubscribe(field, fieldName)
+
+    return {
+      ...extract(field),
+      type: outputType,
+      args: inputToArgs(field["~meta"].input, {
+        fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
+      }),
+      resolve,
+      ...(subscribe ? { subscribe } : {}),
     }
   }
 
   protected provideForResolve(
-    field: Loom.BaseField
-  ): Pick<GraphQLFieldConfig<any, any>, "resolve"> | undefined {
-    if (field?.["~meta"]?.resolve == null) return
-    if (field["~meta"].resolve === defaultSubscriptionResolve)
-      return { resolve: defaultSubscriptionResolve }
-    const resolve: GraphQLFieldResolver<any, any> =
-      field["~meta"].operation === "field"
-        ? (root, args, context, info) =>
-            resolverPayloadStorage.run(
-              { root, args, context, info, field },
-              () => field["~meta"].resolve(root, args, this.resolverOptions)
-            )
-        : field["~meta"].operation === "subscription"
-          ? (root, args, context, info) =>
-              resolverPayloadStorage.run(
-                { root, args, context, info, field },
-                () => field["~meta"].resolve(root, args)
-              )
-          : (root, args, context, info) =>
-              resolverPayloadStorage.run(
-                { root, args, context, info, field },
-                () => field["~meta"].resolve(args, this.resolverOptions)
-              )
-
-    return { resolve }
+    field: Loom.BaseField,
+    fieldName: string
+  ): GraphQLFieldConfig<any, any>["resolve"] {
+    const resolverMiddlewares =
+      this.resolvers.get(fieldName)?.["~meta"].options?.middlewares
+    switch (field["~meta"].operation) {
+      case "query":
+      case "mutation": {
+        const operation = field["~meta"].operation
+        const middlewares = filterMiddlewares(
+          operation,
+          this.globalOptions?.middlewares,
+          resolverMiddlewares,
+          field["~meta"].middlewares
+        )
+        return (root, args, context, info) => {
+          const payload = { root, args, context, info, field }
+          const parseInput = createInputParser(field["~meta"].input, args)
+          return applyMiddlewares(
+            {
+              operation,
+              outputSilk: field["~meta"].output,
+              parent: undefined,
+              parseInput,
+              payload,
+            },
+            async () =>
+              field["~meta"].resolve(await parseInput.getResult(), payload),
+            middlewares
+          )
+        }
+      }
+      case "field": {
+        const middlewares = filterMiddlewares(
+          "field",
+          this.globalOptions?.middlewares,
+          resolverMiddlewares,
+          field["~meta"].middlewares
+        )
+        return (root, args, context, info) => {
+          const payload = { root, args, context, info, field }
+          const parseInput = createInputParser(field["~meta"].input, args)
+          return applyMiddlewares(
+            {
+              operation: "field",
+              outputSilk: field["~meta"].output,
+              parent: root,
+              parseInput,
+              payload,
+            },
+            async () =>
+              field["~meta"].resolve(
+                root,
+                await parseInput.getResult(),
+                payload
+              ),
+            middlewares
+          )
+        }
+      }
+      case "subscription": {
+        const middlewares = filterMiddlewares(
+          "subscription.resolve",
+          this.globalOptions?.middlewares,
+          resolverMiddlewares,
+          field["~meta"].middlewares
+        )
+        return (root, args, context, info) => {
+          const payload = { root, args, context, info, field }
+          const parseInput = createInputParser(field["~meta"].input, args)
+          return applyMiddlewares(
+            {
+              operation: "subscription.resolve",
+              outputSilk: field["~meta"].output,
+              parent: root,
+              parseInput,
+              payload,
+            },
+            async () =>
+              field["~meta"].resolve(
+                root,
+                await parseInput.getResult(),
+                payload
+              ),
+            middlewares
+          )
+        }
+      }
+    }
   }
 
   protected provideForSubscribe(
-    field: Loom.BaseField | Loom.Subscription<any, any, any>
-  ): Pick<GraphQLFieldConfig<any, any>, "subscribe"> | undefined {
+    field: Loom.BaseField | Loom.Subscription<any, any, any>,
+    fieldName: string
+  ): GraphQLFieldConfig<any, any>["subscribe"] | undefined {
     if (
       (field as Loom.Subscription<any, any, any>)?.["~meta"]?.subscribe == null
     )
       return
-    return {
-      subscribe: (root, args, context, info) =>
-        resolverPayloadStorage.run(
-          { root, args, context, info, field },
-          async () => {
-            const generator = await (field as Loom.Subscription<any, any, any>)[
-              "~meta"
-            ].subscribe?.(args, this.resolverOptions)
-            return bindAsyncIterator(resolverPayloadStorage, generator)
-          }
-        ),
+
+    const resolverMiddlewares =
+      this.resolvers.get(fieldName)?.["~meta"].options?.middlewares
+    const middlewares = filterMiddlewares(
+      "subscription.subscribe",
+      this.globalOptions?.middlewares,
+      resolverMiddlewares,
+      field["~meta"].middlewares
+    )
+    return (source, args, context, info) => {
+      const payload = { root: source, args, context, info, field }
+      const parseInput = createInputParser(field["~meta"].input, args)
+      return applyMiddlewares(
+        {
+          operation: "subscription.subscribe",
+          outputSilk: field["~meta"].output,
+          parent: undefined,
+          parseInput,
+          payload,
+        },
+        async () =>
+          (field as Loom.Subscription<any, any, any>)["~meta"].subscribe(
+            await parseInput.getResult(),
+            payload
+          ),
+        middlewares
+      )
     }
   }
 
@@ -247,7 +335,7 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   public get options() {
-    const { resolverOptions, weaverContext } = this
+    const { globalOptions: resolverOptions, weaverContext } = this
     return { resolverOptions, weaverContext }
   }
 }
@@ -308,7 +396,7 @@ export function getCacheType(
   gqlType: GraphQLOutputType,
   options: {
     weaverContext?: WeaverContext
-    resolverOptions?: ResolvingOptions
+    resolverOptions?: ResolverOptions
     fieldName?: string
     parent?: LoomObjectType
   } = {}

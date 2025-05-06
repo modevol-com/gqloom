@@ -30,6 +30,7 @@ export const baseOptions: BaseLayoutProps = {
     {
       type: "custom",
       children: <DocText />,
+      on: "nav",
     },
   ],
 }

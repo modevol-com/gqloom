@@ -71,7 +71,8 @@ describe("MikroResolverFactory", async () => {
           new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
         ),
       })
-      expectTypeOf(create["~meta"].resolve)
+      const executor = resolver({ create }).toExecutor()
+      expectTypeOf(executor.create)
         .parameter(0)
         .toEqualTypeOf<{ data: RequiredEntityData<IGiraffe> }>()
     })
@@ -107,8 +108,9 @@ describe("MikroResolverFactory", async () => {
     })
 
     it("should do create", async () => {
+      const executor = resolver({ create }).toExecutor()
       const one = await RequestContext.create(orm.em, () =>
-        create["~meta"].resolve({
+        executor.create({
           data: {
             name: "Foo",
             birthday: new Date(),
@@ -173,8 +175,8 @@ describe("MikroResolverFactory", async () => {
           new GraphQLObjectType({ name: "UpdateGiraffeInput", fields: {} })
         ),
       })
-
-      expectTypeOf(update["~meta"].resolve)
+      const executor = resolver({ update }).toExecutor()
+      expectTypeOf(executor.update)
         .parameter(0)
         .toEqualTypeOf<{ data: UpdateInput<IGiraffe> }>()
     })
@@ -210,8 +212,9 @@ describe("MikroResolverFactory", async () => {
     })
 
     it("should do update", async () => {
+      const executor = resolver({ update }).toExecutor()
       await RequestContext.create(orm.em, () =>
-        update["~meta"].resolve({
+        executor.update({
           data: {
             id: giraffe.id,
             height: 2,
@@ -354,8 +357,9 @@ describe("MikroResolverFactory", async () => {
     })
 
     it("should do delete one", async () => {
+      const executor = resolver({ deleteOne }).toExecutor()
       const g1 = await RequestContext.create(orm.em, () =>
-        deleteOne["~meta"].resolve({
+        executor.deleteOne({
           id: giraffe.id,
         })
       )
@@ -368,7 +372,7 @@ describe("MikroResolverFactory", async () => {
       })
 
       const g2 = await RequestContext.create(orm.em, () =>
-        deleteOne["~meta"].resolve({
+        executor.deleteOne({
           id: giraffe.id,
         })
       )

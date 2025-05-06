@@ -83,7 +83,7 @@ export class PrismaResolverFactory<
           return promise[key]()
         return null
       },
-    } as FieldOptions<any, any, any>)
+    } as FieldOptions<any, any, any, any>)
   }
 
   protected relationFieldOutput(field: DMMF.Field): GraphQLSilk<any> {

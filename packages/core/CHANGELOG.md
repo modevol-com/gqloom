@@ -4,8 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Refactor: `field.load()` now accept `input` and `payload` parameters
+- Refactor: move `useContext` to `@gqloom/core/context`
+- Feat: introduce InjectableContext and createContext for enhanced dependency management
+- Feat: Updated resolver functions to accept a `payload` parameter
+- Fix: handle null and undefined inputs in GraphQLSchemaLoom.optionsFrom method
 - Refactor(resolver): update input type handling to use 'void' instead of 'undefined'
-- Feat: add `memoization` prop to `Resolver.toExecutor()`
 - Feat: add `useResolvingFields` to get the fields that are being resolved
 
 ## 0.8.4 (2025-04-08)

@@ -7,9 +7,10 @@ import {
   type ObjectChainResolver,
   silk,
 } from "@gqloom/core"
-import type { InferSelectModel } from "drizzle-orm"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { GraphQLOutputType } from "graphql"
+import { getSelectedColumns } from "../helper"
+import type { SelectiveTable } from "../types"
 import type {
   DeleteArgs,
   InsertArrayWithOnConflictArgs,
@@ -46,7 +47,7 @@ export class DrizzleSQLiteResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args: InsertArrayWithOnConflictArgs<TTable>) => {
+      resolve: async (args: InsertArrayWithOnConflictArgs<TTable>, payload) => {
         let query: any = this.db.insert(this.table).values(args.values)
         if (args.onConflictDoUpdate) {
           query = query.onConflictDoUpdate({
@@ -66,7 +67,7 @@ export class DrizzleSQLiteResolverFactory<
             where: this.extractFilters(args.onConflictDoNothing.where),
           })
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
@@ -89,7 +90,10 @@ export class DrizzleSQLiteResolverFactory<
     return new MutationFactoryWithResolve(this.output.$nullable(), {
       ...options,
       input,
-      resolve: async (args: InsertSingleWithOnConflictArgs<TTable>) => {
+      resolve: async (
+        args: InsertSingleWithOnConflictArgs<TTable>,
+        payload
+      ) => {
         let query: any = this.db.insert(this.table).values(args.value)
         if (args.onConflictDoUpdate) {
           query = query.onConflictDoUpdate({
@@ -109,7 +113,9 @@ export class DrizzleSQLiteResolverFactory<
             where: this.extractFilters(args.onConflictDoNothing.where),
           })
         }
-        return (await query.returning())[0] as any
+        return (
+          await query.returning(getSelectedColumns(this.table, payload))
+        )[0] as any
       },
     } as MutationOptions<any, any>)
   }
@@ -126,12 +132,12 @@ export class DrizzleSQLiteResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args) => {
+      resolve: async (args, payload) => {
         const query = this.db.update(this.table).set(args.set)
         if (args.where) {
           query.where(this.extractFilters(args.where))
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
@@ -148,12 +154,12 @@ export class DrizzleSQLiteResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args) => {
+      resolve: async (args, payload) => {
         const query = this.db.delete(this.table)
         if (args.where) {
           query.where(this.extractFilters(args.where))
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
@@ -164,7 +170,7 @@ export class DrizzleSQLiteResolverFactory<
       middlewares?: Middleware[]
     } = {}
   ): ObjectChainResolver<
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     DrizzleResolverReturningItems<TDatabase, TTable, TTableName>
   > {
     return super.resolver(options) as any
