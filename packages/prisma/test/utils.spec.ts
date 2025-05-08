@@ -3,15 +3,19 @@ import { resolver } from "@gqloom/core"
 import { GraphQLString, execute, parse } from "graphql"
 import { beforeEach, describe, expect, it } from "vitest"
 import { getSelectedFields } from "../src/utils"
+import { PrismaClient } from "./client"
 import * as silks from "./generated"
 
 describe("getSelectedFields", () => {
-  let selectedFields: Record<string, boolean>
+  const db = new PrismaClient()
+  let selectedFields: Record<string, boolean | undefined>
   const r = resolver.of(silks.User, {
-    users: query(silks.User.list()).resolve((_input, payload) => {
+    users: query(silks.User.list()).resolve(async (_input, payload) => {
       selectedFields = getSelectedFields(silks.User, payload)
-
-      return []
+      const users = await db.user.findMany({
+        select: getSelectedFields(silks.User, payload),
+      })
+      return users
     }),
 
     greeting: field(silk(GraphQLString))

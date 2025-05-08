@@ -9,7 +9,7 @@ import {
   type GraphQLOutputType,
   GraphQLString,
 } from "graphql"
-import type { PrismaModelSilk } from "./types"
+import type { PrismaModelSilk, SelectedModelFields } from "./types"
 
 export function capitalize<T extends string>(str: T): Capitalize<T> {
   return (str.slice(0, 1).toUpperCase() + str.slice(1)) as Capitalize<T>
@@ -36,11 +36,11 @@ export function getSelectedFields<
 >(
   silk: TSilk,
   payload: ResolverPayload | (ResolverPayload | undefined)[] | undefined
-) {
+): SelectedModelFields<TSilk> {
   if (!payload) {
     return Object.fromEntries(
       silk.model.fields.map((field) => [field.name, true])
-    )
+    ) as SelectedModelFields<TSilk>
   }
   let selectedFields = new Set<string>()
   if (Array.isArray(payload)) {
@@ -58,5 +58,5 @@ export function getSelectedFields<
     silk.model.fields
       .filter((field) => selectedFields.has(field.name))
       .map((field) => [field.name, true])
-  )
+  ) as SelectedModelFields<TSilk>
 }

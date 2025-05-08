@@ -13,6 +13,7 @@ import {
   type InferPrismaDelegate,
   type PrismaModelSilk,
   PrismaResolverFactory,
+  type SelectiveModel,
 } from "../src"
 import { PrismaClient } from "./client"
 import * as g from "./generated"
@@ -245,7 +246,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
             expectTypeOf(input).toEqualTypeOf<
               Parameters<typeof db.user.findFirst>[0]
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<SelectiveModel<
+              g.IUser,
+              "user"
+            > | null>()
             return next()
           },
         ],
@@ -301,7 +305,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
             expectTypeOf(input).toEqualTypeOf<
               Parameters<typeof db.user.findMany>[0]
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser[]>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<
+              SelectiveModel<g.IUser, "user">[]
+            >()
             return next()
           },
         ],
@@ -359,7 +365,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
                 NonNullable<Parameters<typeof db.user.findUnique>[0]>
               >
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<SelectiveModel<
+              g.IUser,
+              "user"
+            > | null>()
             return next()
           },
         ],
@@ -417,7 +426,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
                 NonNullable<Parameters<typeof db.user.create>[0]>
               >
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<
+              SelectiveModel<g.IUser, "user">
+            >()
             return next()
           },
         ],
