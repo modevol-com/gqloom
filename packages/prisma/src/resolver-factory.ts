@@ -121,10 +121,7 @@ export class PrismaResolverFactory<
 
   public resolver(
     options?: ResolverOptionsWithExtensions
-  ): ObjectChainResolver<
-    TModelSilk,
-    PrismaResolverResolver<TModelSilk, TClient>
-  > {
+  ): ObjectChainResolver<TModelSilk, PrismaResolver<TModelSilk, TClient>> {
     const name = capitalize(this.silk.name)
     return loom.resolver.of(
       this.silk,
@@ -140,6 +137,30 @@ export class PrismaResolverFactory<
         [`update${name}`]: this.updateMutation(),
         [`updateMany${name}`]: this.updateManyMutation(),
         [`upsert${name}`]: this.upsertMutation(),
+        ...Object.fromEntries(
+          this.silk.model.fields
+            .filter((it) => it.kind === "object")
+            .map((field) => [field.name, this.relationField(field.name)])
+        ),
+      },
+      options as ResolverOptionsWithExtensions<any>
+    ) as any
+  }
+
+  public queriesResolver(
+    options?: ResolverOptionsWithExtensions
+  ): ObjectChainResolver<
+    TModelSilk,
+    PrismaQueriesResolver<TModelSilk, TClient>
+  > {
+    const name = capitalize(this.silk.name)
+    return loom.resolver.of(
+      this.silk,
+      {
+        [`count${name}`]: this.countQuery(),
+        [`findFirst${name}`]: this.findFirstQuery(),
+        [`findMany${name}`]: this.findManyQuery(),
+        [`findUnique${name}`]: this.findUniqueQuery(),
         ...Object.fromEntries(
           this.silk.model.fields
             .filter((it) => it.kind === "object")
@@ -686,7 +707,7 @@ export interface PrismaResolverUpsertMutation<
     >
   > {}
 
-export type PrismaResolverResolver<
+export type PrismaQueriesResolver<
   TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > = {
@@ -713,7 +734,12 @@ export type PrismaResolverResolver<
     TModelSilk,
     TClient
   >
-} & {
+}
+
+export type PrismaResolver<
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TClient extends PrismaClient,
+> = PrismaQueriesResolver<TModelSilk, TClient> & {
   [key in `create${Capitalize<TModelSilk["name"]>}`]: PrismaResolverCreateMutation<
     TModelSilk,
     TClient
