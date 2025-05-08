@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: add `PrismaResolverFactory.queriesResolver` to create a read-only resolver
+
 ## 0.8.0 (2025-03-11)
 
 - Feat: Use the chain method to add custom inputs and middleware to `PrismaResolverFactory`

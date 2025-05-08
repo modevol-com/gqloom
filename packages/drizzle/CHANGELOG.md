@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Feat: add `DrizzleResolverFactory.queriesResolver` to create a read-only resolver
+
 ## 0.8.6 (2025-04-28)
 
 - Fix: update input types for onConflictDoUpdate operations
