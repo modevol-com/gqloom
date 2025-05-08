@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## next (YYYY-MM-DD)
 
 - Feat: add `DrizzleResolverFactory.queriesResolver` to create a read-only resolver
+- Feat: add `getSelectedColumns` to get the selected columns from the resolver payload
 
 ## 0.8.6 (2025-04-28)
 
