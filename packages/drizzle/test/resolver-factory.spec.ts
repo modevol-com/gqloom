@@ -506,6 +506,72 @@ describe.concurrent("DrizzleResolverFactory", () => {
       expect(userExecutor.posts).toBeDefined()
     })
   })
+
+  describe.concurrent("queriesResolver", () => {
+    it("should be created without error", async () => {
+      const resolver = userFactory.queriesResolver()
+      expect(resolver).toBeDefined()
+    })
+
+    it("should resolve queries correctly", async () => {
+      const executor = userFactory.queriesResolver().toExecutor()
+
+      // Test array query
+      const arrayAnswer = await executor.user({ orderBy: [{ age: "asc" }] })
+      expect(arrayAnswer).toMatchObject([
+        { age: 10 },
+        { age: 11 },
+        { age: 12 },
+        { age: 13 },
+        { age: 14 },
+      ])
+
+      // Test single query
+      const singleAnswer = await executor.userSingle({
+        where: { age: { eq: 12 } },
+      })
+      expect(singleAnswer).toMatchObject({ age: 12 })
+
+      // Test count query
+      const countAnswer = await executor.userCount({
+        where: { age: { gte: 12 } },
+      })
+      expect(countAnswer).toBe(3)
+    })
+
+    it("should be created with custom name", async () => {
+      const resolver = userFactory.queriesResolver({ name: "customUser" })
+      const executor = resolver.toExecutor()
+
+      const answer = await executor.customUser({ orderBy: [{ age: "asc" }] })
+      expect(answer).toMatchObject([
+        { age: 10 },
+        { age: 11 },
+        { age: 12 },
+        { age: 13 },
+        { age: 14 },
+      ])
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const resolver = userFactory.queriesResolver({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            return answer
+          },
+        ],
+      })
+      const executor = resolver.toExecutor()
+
+      await executor.user({ orderBy: [{ age: "asc" }] })
+      expect(count).toBe(1)
+    })
+  })
 })
 
 describe.concurrent("DrizzleMySQLResolverFactory", () => {

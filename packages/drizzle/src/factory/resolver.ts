@@ -49,6 +49,7 @@ import { GraphQLError, GraphQLInt, GraphQLNonNull } from "graphql"
 import {
   type DrizzleResolverFactoryOptions,
   DrizzleWeaver,
+  type SelectiveTable,
   type TableSilk,
 } from ".."
 import { getSelectedColumns, inArrayMultiple } from "../helper"
@@ -68,6 +69,7 @@ import type {
   BaseDatabase,
   CountQuery,
   DeleteMutation,
+  DrizzleQueriesResolver,
   InferRelationTable,
   InferSelectArrayOptions,
   InferSelectSingleOptions,
@@ -480,6 +482,34 @@ export abstract class DrizzleResolverFactory<
         [`insertInto${capitalize(name)}Single`]: this.insertSingleMutation(),
         [`update${capitalize(name)}`]: this.updateMutation(),
         [`deleteFrom${capitalize(name)}`]: this.deleteMutation(),
+      },
+      options
+    ) as any
+  }
+
+  public queriesResolver<
+    TTableName extends string = TTable["_"]["name"],
+  >(options?: {
+    name?: TTableName
+    middlewares?: Middleware[]
+  }): ObjectChainResolver<
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
+    DrizzleQueriesResolver<TDatabase, TTable, TTableName>
+  > {
+    const name = options?.name ?? this.tableName
+
+    const fields: Record<string, Loom.Field<any, any, any, any>> = mapValue(
+      this.db._.schema?.[this.tableName]?.relations ?? {},
+      (_, key) => this.relationField(key)
+    )
+
+    return loom.resolver.of(
+      this.output,
+      {
+        ...fields,
+        [name]: this.selectArrayQuery(),
+        [`${name}Single`]: this.selectSingleQuery(),
+        [`${name}Count`]: this.countQuery(),
       },
       options
     ) as any
