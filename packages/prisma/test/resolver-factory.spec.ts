@@ -839,4 +839,97 @@ describe("PrismaModelPrismaResolverFactory", () => {
       `)
     })
   })
+
+  describe("queriesResolver", () => {
+    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+
+    beforeEach(async () => {
+      await db.user.deleteMany()
+      await db.post.deleteMany()
+      await db.user.create({
+        data: {
+          name: "John",
+          email: "john@example.com",
+          posts: {
+            create: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
+          },
+        },
+      })
+    })
+
+    it("should be created without error", () => {
+      const resolver = UserBobbin.queriesResolver()
+      expect(resolver).toBeDefined()
+    })
+
+    it("should resolve queries correctly", async () => {
+      const resolver = UserBobbin.queriesResolver()
+      const schema = weave(resolver)
+      const yoga = createYoga({ schema })
+
+      const response = await yoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              countUser
+              findFirstUser {
+                name
+                email
+              }
+              findManyUser {
+                name
+                email
+                posts {
+                  title
+                }
+              }
+            }
+          `,
+        }),
+      })
+
+      if (response.status !== 200) throw new Error("unexpected")
+      const json = await response.json()
+      expect(new Set(Object.keys(json.data))).toEqual(
+        new Set(["countUser", "findFirstUser", "findManyUser"])
+      )
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const resolver = UserBobbin.queriesResolver({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const input = await parseInput()
+            if (input.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            return answer
+          },
+        ],
+      })
+      const schema = weave(resolver)
+      const yoga = createYoga({ schema })
+
+      await yoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              countUser
+            }
+          `,
+        }),
+      })
+
+      expect(count).toBe(1)
+    })
+  })
 })

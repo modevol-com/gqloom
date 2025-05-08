@@ -149,7 +149,10 @@ export class PrismaResolverFactory<
 
   public queriesResolver(
     options?: ResolverOptionsWithExtensions
-  ): PrismaQueriesResolver<TModelSilk, TClient> {
+  ): ObjectChainResolver<
+    TModelSilk,
+    PrismaQueriesResolver<TModelSilk, TClient>
+  > {
     const name = capitalize(this.silk.name)
     return loom.resolver.of(
       this.silk,
