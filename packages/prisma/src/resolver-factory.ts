@@ -35,7 +35,6 @@ import type {
   PrismaDelegate,
   PrismaModelMeta,
   PrismaModelSilk,
-  SelectiveModel,
 } from "./types"
 import { capitalize, getSelectedFields, gqlType as gt } from "./utils"
 
@@ -553,10 +552,9 @@ export interface PrismaResolverRelationField<
 > extends FieldFactoryWithResolve<
     TModelSilk,
     GraphQLSilk<
-      SelectiveModel<
-        NonNullable<TModelSilk["relations"]>[TKey],
-        TModelSilk["name"]
-      >
+      NonNullable<TModelSilk["relations"]>[TKey] extends Array<infer T>
+        ? Partial<T>[]
+        : Partial<NonNullable<TModelSilk["relations"]>[TKey]>
     >
   > {}
 

@@ -186,18 +186,24 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
     })
 
-    it("should be able to create a relationField", () => {
+    it("should be able to create a relationField", async () => {
       const postsField = UserBobbin.relationField("posts")
       expect(postsField).toBeDefined()
       expect(postsField["~meta"].output).toBeTypeOf("object")
       expect(postsField["~meta"].operation).toEqual("field")
       expect(postsField["~meta"].resolve).toBeTypeOf("function")
+      expectTypeOf(postsField["~meta"].resolve).returns.resolves.toEqualTypeOf<
+        Partial<g.IPost>[]
+      >()
 
       const userField = PostBobbin.relationField("author")
       expect(userField).toBeDefined()
       expect(userField["~meta"].output).toBeTypeOf("object")
       expect(userField["~meta"].operation).toEqual("field")
       expect(userField["~meta"].resolve).toBeTypeOf("function")
+      expectTypeOf(userField["~meta"].resolve).returns.resolves.toEqualTypeOf<
+        Partial<g.IUser>
+      >()
     })
 
     it("should be able to weave user schema", () => {
