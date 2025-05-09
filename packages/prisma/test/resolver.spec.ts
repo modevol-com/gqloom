@@ -805,13 +805,13 @@ function weaveSchema(log?: (query: Prisma.QueryEvent) => void) {
   const userResolver = new PrismaResolverFactory(p.User, db).resolver()
   const postResolver = new PrismaResolverFactory(p.Post, db).resolver()
   const profileResolver = new PrismaResolverFactory(p.Profile, db).resolver()
-  const catResolver = new PrismaResolverFactory(p.Cat, db).resolver()
+  const sheepResolver = new PrismaResolverFactory(p.Sheep, db).resolver()
   const dogResolver = new PrismaResolverFactory(p.Dog, db).resolver()
   const schema = weave(
     userResolver,
     postResolver,
     profileResolver,
-    catResolver,
+    sheepResolver,
     dogResolver
   )
   return schema

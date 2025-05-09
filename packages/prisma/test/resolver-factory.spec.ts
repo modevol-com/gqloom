@@ -29,18 +29,21 @@ import * as g from "./generated"
 const { resolver, query } = loom
 
 class TestablePrismaModelResolverFactory<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
-> extends PrismaResolverFactory<TModalSilk, TClient> {
+> extends PrismaResolverFactory<TModelSilk, TClient> {
   public uniqueWhere(
-    instance: StandardSchemaV1.InferOutput<NonNullable<TModalSilk>>
+    instance: Omit<
+      StandardSchemaV1.InferOutput<NonNullable<TModelSilk>>,
+      `__selective_${typeof this.silk.name}_brand__`
+    >
   ): any {
     return super.uniqueWhere(instance)
   }
 
-  public name?: TModalSilk["name"]
+  public name?: TModelSilk["name"]
 
-  public get modelDelegate(): InferPrismaDelegate<TClient, TModalSilk["name"]> {
+  public get modelDelegate(): InferPrismaDelegate<TClient, TModelSilk["name"]> {
     return this.delegate
   }
 }
@@ -86,12 +89,12 @@ describe("PrismaModelPrismaResolverFactory", () => {
     })
     expect(userCondition).toEqual({ id: 4 })
 
-    const CatBobbin = new TestablePrismaModelResolverFactory(g.Cat, db)
-    const catCondition = CatBobbin.uniqueWhere({
+    const SheepBobbin = new TestablePrismaModelResolverFactory(g.Sheep, db)
+    const sheepCondition = SheepBobbin.uniqueWhere({
       firstName: "foo",
       lastName: "bar",
     })
-    expect(catCondition).toEqual({
+    expect(sheepCondition).toEqual({
       firstName_lastName: { firstName: "foo", lastName: "bar" },
     })
 

@@ -107,7 +107,10 @@ export class PrismaResolverFactory<
 
   protected idKey?: string
   protected uniqueWhere(
-    instance: StandardSchemaV1.InferOutput<NonNullable<TModelSilk>>
+    instance: Omit<
+      StandardSchemaV1.InferOutput<NonNullable<TModelSilk>>,
+      `__selective_${typeof this.silk.name}_brand__`
+    >
   ): any {
     if (this.silk.model.primaryKey == null) {
       this.idKey ??= (() => {
