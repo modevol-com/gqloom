@@ -74,3 +74,8 @@ model Dog {
 
   @@id(name: "fullName", fields: [firstName, lastName])
 }
+
+model KeyValue {
+  id String @id
+  value String
+}

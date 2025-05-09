@@ -35,8 +35,9 @@ import type {
   PrismaDelegate,
   PrismaModelMeta,
   PrismaModelSilk,
+  SelectiveModel,
 } from "./types"
-import { capitalize, gqlType as gt } from "./utils"
+import { capitalize, getSelectedFields, gqlType as gt } from "./utils"
 
 export class PrismaResolverFactory<
   TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
@@ -73,15 +74,21 @@ export class PrismaResolverFactory<
     if (field.kind !== "object" || field.relationName == null)
       throw new Error(`Field ${String(key)} is not a relation`)
 
-    return new FieldFactoryWithResolve(this.relationFieldOutput(field), {
+    const output = this.relationFieldOutput(field)
+    return new FieldFactoryWithResolve(output, {
       ...options,
-      resolve: (parent) => {
+      resolve: (parent, _input, payload) => {
+        const where = this.uniqueWhere(parent)
+        if (Object.values(where).every((it) => it === undefined)) {
+          return field.isList ? [] : null
+        }
         const promise = this.delegate.findUnique({
-          where: this.uniqueWhere(parent),
+          where,
+          select: getSelectedFields(this.silk, payload),
         })
         if (key in promise && typeof promise[key] === "function")
           return promise[key]()
-        return null
+        return field.isList ? [] : null
       },
     } as FieldOptions<any, any, any, any>)
   }
@@ -227,7 +234,11 @@ export class PrismaResolverFactory<
     return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input) => this.delegate.findFirst(input),
+      resolve: (input, payload) =>
+        this.delegate.findFirst({
+          select: getSelectedFields(this.silk, payload),
+          ...input,
+        }),
     } as QueryOptions<any, any>)
   }
 
@@ -256,7 +267,11 @@ export class PrismaResolverFactory<
     return new QueryFactoryWithResolve(output.list(), {
       ...options,
       input,
-      resolve: (input) => this.delegate.findMany(input),
+      resolve: (input, payload) =>
+        this.delegate.findMany({
+          select: getSelectedFields(this.silk, payload),
+          ...input,
+        }),
     } as QueryOptions<any, any>)
   }
 
@@ -285,7 +300,11 @@ export class PrismaResolverFactory<
     return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input) => this.delegate.findUnique(input),
+      resolve: (input, payload) =>
+        this.delegate.findUnique({
+          select: getSelectedFields(this.silk, payload),
+          ...input,
+        }),
     } as QueryOptions<any, any>)
   }
 
@@ -312,7 +331,11 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input) => this.delegate.create(input),
+      resolve: (input, payload) =>
+        this.delegate.create({
+          select: getSelectedFields(this.silk, payload),
+          ...input,
+        }),
     } as MutationOptions<any, any>)
   }
 
@@ -368,11 +391,14 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: async (input) => {
+      resolve: async (input, payload) => {
         // we should return null if the row is not found
         // https://github.com/prisma/prisma/issues/4072
         try {
-          return await this.delegate.delete(input)
+          return await this.delegate.delete({
+            select: getSelectedFields(this.silk, payload),
+            ...input,
+          })
         } catch (_err) {
           return null
         }
@@ -430,7 +456,11 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input) => this.delegate.update(input),
+      resolve: (input, payload) =>
+        this.delegate.update({
+          select: getSelectedFields(this.silk, payload),
+          ...input,
+        }),
     } as MutationOptions<any, any>)
   }
 
@@ -518,7 +548,12 @@ export interface PrismaResolverRelationField<
   TKey extends keyof NonNullable<TModelSilk["relations"]>,
 > extends FieldFactoryWithResolve<
     TModelSilk,
-    GraphQLSilk<NonNullable<TModelSilk["relations"]>[TKey]>
+    GraphQLSilk<
+      SelectiveModel<
+        NonNullable<TModelSilk["relations"]>[TKey],
+        TModelSilk["name"]
+      >
+    >
   > {}
 
 export interface PrismaResolverCountQuery<

@@ -1,9 +1,17 @@
 import { weave } from "@gqloom/core"
 import { lexicographicSortSchema, printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { beforeAll, beforeEach, describe, expect, it } from "vitest"
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest"
 import { PrismaResolverFactory } from "../src"
-import { PrismaClient } from "./client"
+import { type Prisma, PrismaClient } from "./client"
 import * as p from "./generated"
 
 describe("Bobbin Resolver", () => {
@@ -143,7 +151,34 @@ describe("Bobbin Resolver", () => {
   })
 
   describe("mutations", () => {
-    const schema = weaveSchema()
+    beforeAll(async () => {
+      let times = 0
+      while (true) {
+        try {
+          await db.keyValue.create({
+            data: { id: "testing-lock", value: "test" },
+          })
+          break
+        } catch (err) {
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          times++
+          if (times > 66) {
+            throw err
+          }
+        }
+      }
+    })
+
+    afterAll(async () => {
+      await db.keyValue.delete({
+        where: { id: "testing-lock" },
+      })
+    })
+
+    let logs: string[] = []
+    const schema = weaveSchema((e) => {
+      logs.push(e.query)
+    })
     const yoga = createYoga({ schema })
     const execute = async (query: string, variables?: Record<string, any>) => {
       const response = await yoga.fetch("http://localhost/graphql", {
@@ -167,6 +202,7 @@ describe("Bobbin Resolver", () => {
     beforeEach(async () => {
       await db.post.deleteMany()
       await db.user.deleteMany()
+      logs = []
     })
 
     it("should be able to create a user", async () => {
@@ -191,6 +227,12 @@ describe("Bobbin Resolver", () => {
           email: "bob@bob.com",
         },
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`
+        "
+      `)
     })
 
     it("should be able to create many users", async () => {
@@ -226,7 +268,6 @@ describe("Bobbin Resolver", () => {
             title
             author {
               id
-              name
               email
             }
           }
@@ -256,11 +297,24 @@ describe("Bobbin Resolver", () => {
             title: "Hello World",
             author: {
               id: expect.any(String),
-              name: "Bob",
               email: "bob@bob.com",
             },
           },
         })
+
+        expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+          "
+          BEGIN IMMEDIATE
+          SELECT \`main\`.\`User\`.\`id\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) LIMIT ? OFFSET ?
+          INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) RETURNING \`id\` AS \`id\`
+          INSERT INTO \`main\`.\`Post\` (\`title\`, \`published\`, \`authorId\`) VALUES (?,?,?) RETURNING \`id\` AS \`id\`
+          SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`title\`, \`main\`.\`Post\`.\`authorId\` FROM \`main\`.\`Post\` WHERE \`main\`.\`Post\`.\`id\` = ? LIMIT ? OFFSET ?
+          SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE \`main\`.\`User\`.\`id\` IN (?) LIMIT ? OFFSET ?
+          COMMIT
+          SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`authorId\` FROM \`main\`.\`Post\` WHERE (\`main\`.\`Post\`.\`id\` = ? AND 1=1) LIMIT ? OFFSET ?
+          SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE \`main\`.\`User\`.\`id\` IN (?) LIMIT ? OFFSET ?
+          "
+        `)
       }
     )
 
@@ -287,6 +341,11 @@ describe("Bobbin Resolver", () => {
           email: "bob@bob.com",
         },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        DELETE FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`
+        "
+      `)
     })
 
     it("should be able to delete many posts", { retry: 6 }, async () => {
@@ -347,6 +406,11 @@ describe("Bobbin Resolver", () => {
           title: "Hello World",
         },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        UPDATE \`main\`.\`Post\` SET \`title\` = ? WHERE (\`main\`.\`Post\`.\`id\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`title\` AS \`title\`
+        "
+      `)
     })
 
     it("should be able to update many posts", async () => {
@@ -424,12 +488,46 @@ describe("Bobbin Resolver", () => {
           name: "Bob Smith",
         },
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) ON CONFLICT  (\`email\`) DO UPDATE SET \`name\` = ? WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`, \`name\` AS \`name\`
+        INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) ON CONFLICT  (\`email\`) DO UPDATE SET \`name\` = ? WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`, \`name\` AS \`name\`
+        "
+      `)
     })
   })
 
   describe("queries", () => {
-    const db = new PrismaClient()
-    const schema = weaveSchema()
+    beforeAll(async () => {
+      let times = 0
+      while (true) {
+        try {
+          await db.keyValue.create({
+            data: { id: "testing-lock", value: "test" },
+          })
+          break
+        } catch (err) {
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          times++
+          if (times > 66) {
+            throw err
+          }
+        }
+      }
+    })
+
+    afterAll(async () => {
+      await db.keyValue.delete({
+        where: { id: "testing-lock" },
+      })
+    })
+    let logs: string[] = []
+    const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
+
+    const schema = weaveSchema((query) => {
+      logs.push(query.query)
+    })
     const yoga = createYoga({ schema })
     const execute = async (query: string, variables?: Record<string, any>) => {
       const response = await yoga.fetch("http://localhost/graphql", {
@@ -450,6 +548,8 @@ describe("Bobbin Resolver", () => {
       }
       return data
     }
+
+    afterEach(() => (logs = []))
 
     beforeAll(async () => {
       await db.post.deleteMany()
@@ -490,7 +590,6 @@ describe("Bobbin Resolver", () => {
       const res = await execute(/* GraphQL */ `
         query users {
           findManyUser {
-            name
             email
           }
         }
@@ -500,12 +599,18 @@ describe("Bobbin Resolver", () => {
 
       expect(new Set(res.findManyUser)).toMatchObject(
         new Set([
-          { name: "Bob", email: "bob@bob.com" },
-          { name: "Alice", email: "alice@alice.com" },
-          { name: "Dave", email: "dave@qq.com" },
-          { name: "Charlie", email: "charlie@qq.com" },
+          { email: "bob@bob.com" },
+          { email: "alice@alice.com" },
+          { email: "dave@qq.com" },
+          { email: "charlie@qq.com" },
         ])
       )
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\` FROM \`main\`.\`User\` WHERE 1=1 LIMIT ? OFFSET ?
+        "
+      `)
     })
 
     it("should query users with pagination", async () => {
@@ -522,6 +627,12 @@ describe("Bobbin Resolver", () => {
         { name: "Bob" },
         { name: "Charlie" },
       ])
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE 1=1 ORDER BY \`main\`.\`User\`.\`name\` ASC LIMIT ? OFFSET ?
+        "
+      `)
     })
 
     it("should query users with posts", async () => {
@@ -540,6 +651,15 @@ describe("Bobbin Resolver", () => {
       expect(new Set(res.findFirstUser.posts)).toEqual(
         new Set([{ title: "Hello Bob" }, { title: "Goodbye" }])
       )
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE \`main\`.\`User\`.\`email\` LIKE ? LIMIT ? OFFSET ?
+        SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`title\`, \`main\`.\`Post\`.\`content\`, \`main\`.\`Post\`.\`published\`, \`main\`.\`Post\`.\`authorId\`, \`main\`.\`Post\`.\`publishedById\` FROM \`main\`.\`Post\` WHERE \`main\`.\`Post\`.\`authorId\` IN (?) LIMIT ? OFFSET ?
+        SELECT \`main\`.\`User\`.\`id\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`id\` = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`title\`, \`main\`.\`Post\`.\`content\`, \`main\`.\`Post\`.\`published\`, \`main\`.\`Post\`.\`authorId\`, \`main\`.\`Post\`.\`publishedById\` FROM \`main\`.\`Post\` WHERE \`main\`.\`Post\`.\`authorId\` IN (?) LIMIT ? OFFSET ?
+        "
+      `)
     })
 
     it("should query users with profile", async () => {
@@ -558,12 +678,24 @@ describe("Bobbin Resolver", () => {
       expect(res.findUniqueUser.profile).toMatchObject({
         introduction: "I am Bob",
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT \`main\`.\`Profile\`.\`id\`, \`main\`.\`Profile\`.\`userId\`, \`main\`.\`Profile\`.\`introduction\` FROM \`main\`.\`Profile\` WHERE \`main\`.\`Profile\`.\`userId\` IN (?) LIMIT ? OFFSET ?
+        SELECT \`main\`.\`User\`.\`id\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`id\` = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT \`main\`.\`Profile\`.\`id\`, \`main\`.\`Profile\`.\`userId\`, \`main\`.\`Profile\`.\`introduction\` FROM \`main\`.\`Profile\` WHERE \`main\`.\`Profile\`.\`userId\` IN (?) LIMIT ? OFFSET ?
+        "
+      `)
     })
   })
 })
 
-function weaveSchema() {
-  const db = new PrismaClient()
+function weaveSchema(log?: (query: Prisma.QueryEvent) => void) {
+  const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
+  db.$on("query", (e) => {
+    log?.(e)
+  })
   const userResolver = new PrismaResolverFactory(p.User, db).resolver()
   const postResolver = new PrismaResolverFactory(p.Post, db).resolver()
   const profileResolver = new PrismaResolverFactory(p.Profile, db).resolver()

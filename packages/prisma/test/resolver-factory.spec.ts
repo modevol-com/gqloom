@@ -7,7 +7,15 @@ import {
 import { ZodWeaver } from "@gqloom/zod"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { beforeEach, describe, expect, expectTypeOf, it } from "vitest"
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+} from "vitest"
 import { z } from "zod"
 import {
   type InferPrismaDelegate,
@@ -39,6 +47,30 @@ class TestablePrismaModelResolverFactory<
 
 describe("PrismaModelPrismaResolverFactory", () => {
   const db = new PrismaClient()
+
+  beforeAll(async () => {
+    let times = 0
+    while (true) {
+      try {
+        await db.keyValue.create({
+          data: { id: "testing-lock", value: "test" },
+        })
+        break
+      } catch (err) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        times++
+        if (times > 66) {
+          throw err
+        }
+      }
+    }
+  })
+
+  afterAll(async () => {
+    await db.keyValue.delete({
+      where: { id: "testing-lock" },
+    })
+  })
 
   it("should be able to create a bobbin", () => {
     const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)

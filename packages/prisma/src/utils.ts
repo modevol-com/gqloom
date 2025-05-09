@@ -56,7 +56,7 @@ export function getSelectedFields<
   }
   return Object.fromEntries(
     silk.model.fields
-      .filter((field) => selectedFields.has(field.name))
+      .filter((field) => selectedFields.has(field.name) || field.isId)
       .map((field) => [field.name, true])
   ) as SelectedModelFields<TSilk>
 }
