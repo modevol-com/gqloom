@@ -71,23 +71,27 @@ export class PrismaResolverFactory<
         `Field ${String(key)} not found in ${this.silk.model.name}`
       )
 
-    if (field.kind !== "object" || field.relationName == null)
+    const targetSilk = this.modelData.models[field.type]
+    if (
+      field.kind !== "object" ||
+      field.relationName == null ||
+      targetSilk == null
+    )
       throw new Error(`Field ${String(key)} is not a relation`)
 
     const output = this.relationFieldOutput(field)
     return new FieldFactoryWithResolve(output, {
       ...options,
+      dependencies: field.relationFromFields,
       resolve: (parent, _input, payload) => {
         const where = this.uniqueWhere(parent)
+        const select = getSelectedFields(targetSilk, payload)
         if (Object.values(where).every((it) => it === undefined)) {
           return field.isList ? [] : null
         }
-        const promise = this.delegate.findUnique({
-          where,
-          select: getSelectedFields(this.silk, payload),
-        })
+        const promise = this.delegate.findUnique({ where })
         if (key in promise && typeof promise[key] === "function")
-          return promise[key]()
+          return promise[key]({ select })
         return field.isList ? [] : null
       },
     } as FieldOptions<any, any, any, any>)

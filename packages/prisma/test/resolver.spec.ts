@@ -14,7 +14,7 @@ import { PrismaResolverFactory } from "../src"
 import { type Prisma, PrismaClient } from "./client"
 import * as p from "./generated"
 
-describe("Bobbin Resolver", () => {
+describe("Resolver", () => {
   const db = new PrismaClient()
   const userBobbin = new PrismaResolverFactory(p.User, db)
   const userResolver = userBobbin.resolver()
@@ -39,6 +39,24 @@ describe("Bobbin Resolver", () => {
     expect(userResolver["~meta"].fields.profile["~meta"].resolve).toBeTypeOf(
       "function"
     )
+  })
+
+  it("should be able to create with dependencies", () => {
+    const postBobbin = new PrismaResolverFactory(p.Post, db)
+    const postResolver = postBobbin.resolver()
+
+    expect(postResolver["~meta"].fields.author).toBeDefined()
+    expect(postResolver["~meta"].fields.author["~meta"].dependencies).toEqual([
+      "authorId",
+    ])
+
+    const profileBobbin = new PrismaResolverFactory(p.Profile, db)
+    const profileResolver = profileBobbin.resolver()
+
+    expect(profileResolver["~meta"].fields.user).toBeDefined()
+    expect(profileResolver["~meta"].fields.user["~meta"].dependencies).toEqual([
+      "userId",
+    ])
   })
 
   it("should be able to create countQuery", async () => {
@@ -177,7 +195,7 @@ describe("Bobbin Resolver", () => {
 
     let logs: string[] = []
     const schema = weaveSchema((e) => {
-      logs.push(e.query)
+      logs.push(e.query.replaceAll("`", ""))
     })
     const yoga = createYoga({ schema })
     const execute = async (query: string, variables?: Record<string, any>) => {
@@ -230,7 +248,7 @@ describe("Bobbin Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`
+        INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id, email AS email
         "
       `)
     })
@@ -305,14 +323,13 @@ describe("Bobbin Resolver", () => {
         expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
           "
           BEGIN IMMEDIATE
-          SELECT \`main\`.\`User\`.\`id\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) LIMIT ? OFFSET ?
-          INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) RETURNING \`id\` AS \`id\`
-          INSERT INTO \`main\`.\`Post\` (\`title\`, \`published\`, \`authorId\`) VALUES (?,?,?) RETURNING \`id\` AS \`id\`
-          SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`title\`, \`main\`.\`Post\`.\`authorId\` FROM \`main\`.\`Post\` WHERE \`main\`.\`Post\`.\`id\` = ? LIMIT ? OFFSET ?
-          SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE \`main\`.\`User\`.\`id\` IN (?) LIMIT ? OFFSET ?
+          SELECT main.User.id FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
+          INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id
+          INSERT INTO main.Post (title, published, authorId) VALUES (?,?,?) RETURNING id AS id
+          SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.id = ? LIMIT ? OFFSET ?
           COMMIT
-          SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`authorId\` FROM \`main\`.\`Post\` WHERE (\`main\`.\`Post\`.\`id\` = ? AND 1=1) LIMIT ? OFFSET ?
-          SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE \`main\`.\`User\`.\`id\` IN (?) LIMIT ? OFFSET ?
+          SELECT main.Post.id, main.Post.authorId FROM main.Post WHERE (main.Post.id = ? AND 1=1) LIMIT ? OFFSET ?
+          SELECT main.User.id, main.User.email FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
           "
         `)
       }
@@ -343,7 +360,7 @@ describe("Bobbin Resolver", () => {
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        DELETE FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`
+        DELETE FROM main.User WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email
         "
       `)
     })
@@ -408,7 +425,7 @@ describe("Bobbin Resolver", () => {
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        UPDATE \`main\`.\`Post\` SET \`title\` = ? WHERE (\`main\`.\`Post\`.\`id\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`title\` AS \`title\`
+        UPDATE main.Post SET title = ? WHERE (main.Post.id = ? AND 1=1) RETURNING id AS id, title AS title
         "
       `)
     })
@@ -491,8 +508,8 @@ describe("Bobbin Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) ON CONFLICT  (\`email\`) DO UPDATE SET \`name\` = ? WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`, \`name\` AS \`name\`
-        INSERT INTO \`main\`.\`User\` (\`email\`, \`name\`) VALUES (?,?) ON CONFLICT  (\`email\`) DO UPDATE SET \`name\` = ? WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) RETURNING \`id\` AS \`id\`, \`email\` AS \`email\`, \`name\` AS \`name\`
+        INSERT INTO main.User (email, name) VALUES (?,?) ON CONFLICT  (email) DO UPDATE SET name = ? WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email, name AS name
+        INSERT INTO main.User (email, name) VALUES (?,?) ON CONFLICT  (email) DO UPDATE SET name = ? WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email, name AS name
         "
       `)
     })
@@ -525,8 +542,8 @@ describe("Bobbin Resolver", () => {
     let logs: string[] = []
     const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
 
-    const schema = weaveSchema((query) => {
-      logs.push(query.query)
+    const schema = weaveSchema((e) => {
+      logs.push(e.query.replaceAll("`", ""))
     })
     const yoga = createYoga({ schema })
     const execute = async (query: string, variables?: Record<string, any>) => {
@@ -608,7 +625,7 @@ describe("Bobbin Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\` FROM \`main\`.\`User\` WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.email FROM main.User WHERE 1=1 LIMIT ? OFFSET ?
         "
       `)
     })
@@ -630,7 +647,7 @@ describe("Bobbin Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE 1=1 ORDER BY \`main\`.\`User\`.\`name\` ASC LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.name FROM main.User WHERE 1=1 ORDER BY main.User.name ASC LIMIT ? OFFSET ?
         "
       `)
     })
@@ -654,10 +671,10 @@ describe("Bobbin Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE \`main\`.\`User\`.\`email\` LIKE ? LIMIT ? OFFSET ?
-        SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`title\`, \`main\`.\`Post\`.\`content\`, \`main\`.\`Post\`.\`published\`, \`main\`.\`Post\`.\`authorId\`, \`main\`.\`Post\`.\`publishedById\` FROM \`main\`.\`Post\` WHERE \`main\`.\`Post\`.\`authorId\` IN (?) LIMIT ? OFFSET ?
-        SELECT \`main\`.\`User\`.\`id\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`id\` = ? AND 1=1) LIMIT ? OFFSET ?
-        SELECT \`main\`.\`Post\`.\`id\`, \`main\`.\`Post\`.\`title\`, \`main\`.\`Post\`.\`content\`, \`main\`.\`Post\`.\`published\`, \`main\`.\`Post\`.\`authorId\`, \`main\`.\`Post\`.\`publishedById\` FROM \`main\`.\`Post\` WHERE \`main\`.\`Post\`.\`authorId\` IN (?) LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE main.User.email LIKE ? LIMIT ? OFFSET ?
+        SELECT main.Post.id, main.Post.title, main.Post.content, main.Post.published, main.Post.authorId, main.Post.publishedById FROM main.Post WHERE main.Post.authorId IN (?) LIMIT ? OFFSET ?
+        SELECT main.User.id FROM main.User WHERE (main.User.id = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.authorId IN (?) LIMIT ? OFFSET ?
         "
       `)
     })
@@ -681,10 +698,99 @@ describe("Bobbin Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        SELECT \`main\`.\`User\`.\`id\`, \`main\`.\`User\`.\`email\`, \`main\`.\`User\`.\`name\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`email\` = ? AND 1=1) LIMIT ? OFFSET ?
-        SELECT \`main\`.\`Profile\`.\`id\`, \`main\`.\`Profile\`.\`userId\`, \`main\`.\`Profile\`.\`introduction\` FROM \`main\`.\`Profile\` WHERE \`main\`.\`Profile\`.\`userId\` IN (?) LIMIT ? OFFSET ?
-        SELECT \`main\`.\`User\`.\`id\` FROM \`main\`.\`User\` WHERE (\`main\`.\`User\`.\`id\` = ? AND 1=1) LIMIT ? OFFSET ?
-        SELECT \`main\`.\`Profile\`.\`id\`, \`main\`.\`Profile\`.\`userId\`, \`main\`.\`Profile\`.\`introduction\` FROM \`main\`.\`Profile\` WHERE \`main\`.\`Profile\`.\`userId\` IN (?) LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT main.Profile.id, main.Profile.userId, main.Profile.introduction FROM main.Profile WHERE main.Profile.userId IN (?) LIMIT ? OFFSET ?
+        SELECT main.User.id FROM main.User WHERE (main.User.id = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT main.Profile.id, main.Profile.introduction, main.Profile.userId FROM main.Profile WHERE main.Profile.userId IN (?) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query posts with content", async () => {
+      const res = await execute(/* GraphQL */ `
+        query posts {
+          findManyPost {
+            content
+          }
+        }
+      `)
+
+      expect(res.findManyPost).toHaveLength(3)
+      expect(res.findManyPost).toMatchObject([
+        { content: "Hello world" },
+        { content: "Goodbye world" },
+        { content: "Hello world" },
+      ])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Post.id, main.Post.content FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query posts with author", async () => {
+      const res = await execute(/* GraphQL */ `
+        query posts {
+          findManyPost {
+            title
+            author {
+              name
+            }
+          }
+        }
+      `)
+
+      expect(res.findManyPost).toHaveLength(3)
+      expect(res.findManyPost).toMatchObject([
+        { title: "Hello Bob", author: { name: "Bob" } },
+        { title: "Goodbye", author: { name: "Bob" } },
+        { title: "Hello Alice", author: { name: "Alice" } },
+      ])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.Post.id, main.Post.authorId FROM main.Post WHERE main.Post.id IN (?,?,?) LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?,?) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query profile with introduction", async () => {
+      const res = await execute(/* GraphQL */ `
+        query profiles {
+          findManyProfile {
+            introduction
+          }
+        }
+      `)
+
+      expect(res.findManyProfile).toHaveLength(1)
+      expect(res.findManyProfile).toMatchObject([{ introduction: "I am Bob" }])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Profile.id, main.Profile.introduction FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query profile with user", async () => {
+      const res = await execute(/* GraphQL */ `
+        query profiles {
+          findManyProfile {
+            user {
+              name
+            }
+          }
+        }
+      `)
+
+      expect(res.findManyProfile).toHaveLength(1)
+      expect(res.findManyProfile).toMatchObject([{ user: { name: "Bob" } }])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Profile.id, main.Profile.userId FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.Profile.id, main.Profile.userId FROM main.Profile WHERE (main.Profile.id = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
         "
       `)
     })
