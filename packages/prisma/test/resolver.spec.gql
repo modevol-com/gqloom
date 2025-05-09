@@ -807,29 +807,29 @@ type Query {
 }
 
 type Sheep {
-  firstName: String!
-  lastName: String!
+  firstCode: String!
+  lastCode: String!
   shepherd: Dog!
   shepherdFirstName: String!
   shepherdLastName: String!
 }
 
 input SheepCreateInput {
-  firstName: String!
-  lastName: String!
+  firstCode: String!
+  lastCode: String!
   shepherd: DogCreateNestedOneWithoutSheepsInput!
 }
 
 input SheepCreateManyInput {
-  firstName: String!
-  lastName: String!
+  firstCode: String!
+  lastCode: String!
   shepherdFirstName: String!
   shepherdLastName: String!
 }
 
 input SheepCreateManyShepherdInput {
-  firstName: String!
-  lastName: String!
+  firstCode: String!
+  lastCode: String!
 }
 
 input SheepCreateManyShepherdInputEnvelope {
@@ -849,13 +849,13 @@ input SheepCreateOrConnectWithoutShepherdInput {
 }
 
 input SheepCreateWithoutShepherdInput {
-  firstName: String!
-  lastName: String!
+  firstCode: String!
+  lastCode: String!
 }
 
-input SheepFirstNameLastNameCompoundUniqueInput {
-  firstName: String!
-  lastName: String!
+input SheepFirstCodeLastCodeCompoundUniqueInput {
+  firstCode: String!
+  lastCode: String!
 }
 
 input SheepListRelationFilter {
@@ -869,16 +869,16 @@ input SheepOrderByRelationAggregateInput {
 }
 
 input SheepOrderByWithRelationInput {
-  firstName: SortOrder
-  lastName: SortOrder
+  firstCode: SortOrder
+  lastCode: SortOrder
   shepherd: DogOrderByWithRelationInput
   shepherdFirstName: SortOrder
   shepherdLastName: SortOrder
 }
 
 enum SheepScalarFieldEnum {
-  firstName
-  lastName
+  firstCode
+  lastCode
   shepherdFirstName
   shepherdLastName
 }
@@ -887,21 +887,21 @@ input SheepScalarWhereInput {
   AND: [SheepScalarWhereInput!]
   NOT: [SheepScalarWhereInput!]
   OR: [SheepScalarWhereInput!]
-  firstName: StringFilter
-  lastName: StringFilter
+  firstCode: StringFilter
+  lastCode: StringFilter
   shepherdFirstName: StringFilter
   shepherdLastName: StringFilter
 }
 
 input SheepUpdateInput {
-  firstName: StringFieldUpdateOperationsInput
-  lastName: StringFieldUpdateOperationsInput
+  firstCode: StringFieldUpdateOperationsInput
+  lastCode: StringFieldUpdateOperationsInput
   shepherd: DogUpdateOneRequiredWithoutSheepsNestedInput
 }
 
 input SheepUpdateManyMutationInput {
-  firstName: StringFieldUpdateOperationsInput
-  lastName: StringFieldUpdateOperationsInput
+  firstCode: StringFieldUpdateOperationsInput
+  lastCode: StringFieldUpdateOperationsInput
 }
 
 input SheepUpdateManyWithWhereWithoutShepherdInput {
@@ -929,8 +929,8 @@ input SheepUpdateWithWhereUniqueWithoutShepherdInput {
 }
 
 input SheepUpdateWithoutShepherdInput {
-  firstName: StringFieldUpdateOperationsInput
-  lastName: StringFieldUpdateOperationsInput
+  firstCode: StringFieldUpdateOperationsInput
+  lastCode: StringFieldUpdateOperationsInput
 }
 
 input SheepUpsertWithWhereUniqueWithoutShepherdInput {
@@ -943,8 +943,8 @@ input SheepWhereInput {
   AND: [SheepWhereInput!]
   NOT: [SheepWhereInput!]
   OR: [SheepWhereInput!]
-  firstName: StringFilter
-  lastName: StringFilter
+  firstCode: StringFilter
+  lastCode: StringFilter
   shepherd: DogScalarRelationFilter
   shepherdFirstName: StringFilter
   shepherdLastName: StringFilter
@@ -954,9 +954,9 @@ input SheepWhereUniqueInput {
   AND: [SheepWhereInput!]
   NOT: [SheepWhereInput!]
   OR: [SheepWhereInput!]
-  firstName: StringFilter
-  firstName_lastName: SheepFirstNameLastNameCompoundUniqueInput
-  lastName: StringFilter
+  firstCode: StringFilter
+  firstCode_lastCode: SheepFirstCodeLastCodeCompoundUniqueInput
+  lastCode: StringFilter
   shepherd: DogScalarRelationFilter
   shepherdFirstName: StringFilter
   shepherdLastName: StringFilter

@@ -71,14 +71,14 @@ model Dog {
 }
 
 model Sheep {
-  firstName String
-  lastName  String
+  firstCode String
+  lastCode  String
 
   shepherdFirstName String
   shepherdLastName  String
   shepherd         Dog    @relation(fields: [shepherdFirstName, shepherdLastName], references: [firstName, lastName])
 
-  @@id([firstName, lastName])
+  @@id([firstCode, lastCode])
 }
 
 model KeyValue {

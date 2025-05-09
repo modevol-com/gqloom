@@ -328,7 +328,6 @@ describe("Resolver", () => {
           INSERT INTO main.Post (title, published, authorId) VALUES (?,?,?) RETURNING id AS id
           SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.id = ? LIMIT ? OFFSET ?
           COMMIT
-          SELECT main.Post.id, main.Post.authorId FROM main.Post WHERE (main.Post.id = ? AND 1=1) LIMIT ? OFFSET ?
           SELECT main.User.id, main.User.email FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
           "
         `)
@@ -560,7 +559,7 @@ describe("Resolver", () => {
 
       const { data, errors } = await response.json()
 
-      if (response.status !== 200) {
+      if (response.status !== 200 || errors != null) {
         throw new Error(JSON.stringify(errors))
       }
       return data
@@ -572,6 +571,8 @@ describe("Resolver", () => {
       await db.post.deleteMany()
       await db.profile.deleteMany()
       await db.user.deleteMany()
+      await db.sheep.deleteMany()
+      await db.dog.deleteMany()
       const Bob = await db.user.create({
         data: { email: "bob@bob.com", name: "Bob" },
       })
@@ -600,6 +601,65 @@ describe("Resolver", () => {
 
       await db.profile.create({
         data: { introduction: "I am Bob", userId: Bob.id },
+      })
+
+      const dog1 = await db.dog.create({
+        data: {
+          firstName: "1",
+          lastName: "D",
+          height: 100,
+          weight: 100,
+          birthDate: new Date(),
+        },
+      })
+      await db.sheep.createMany({
+        data: [
+          {
+            firstCode: "1",
+            lastCode: "S",
+            shepherdFirstName: dog1.firstName,
+            shepherdLastName: dog1.lastName,
+          },
+          {
+            firstCode: "2",
+            lastCode: "S",
+            shepherdFirstName: dog1.firstName,
+            shepherdLastName: dog1.lastName,
+          },
+          {
+            firstCode: "3",
+            lastCode: "S",
+            shepherdFirstName: dog1.firstName,
+            shepherdLastName: dog1.lastName,
+          },
+        ],
+      })
+
+      const dog2 = await db.dog.create({
+        data: {
+          firstName: "2",
+          lastName: "D",
+          height: 100,
+          weight: 100,
+          birthDate: new Date(),
+        },
+      })
+
+      await db.sheep.createMany({
+        data: [
+          {
+            firstCode: "4",
+            lastCode: "S",
+            shepherdFirstName: dog2.firstName,
+            shepherdLastName: dog2.lastName,
+          },
+          {
+            firstCode: "5",
+            lastCode: "S",
+            shepherdFirstName: dog2.firstName,
+            shepherdLastName: dog2.lastName,
+          },
+        ],
       })
     })
 
@@ -672,8 +732,6 @@ describe("Resolver", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE main.User.email LIKE ? LIMIT ? OFFSET ?
-        SELECT main.Post.id, main.Post.title, main.Post.content, main.Post.published, main.Post.authorId, main.Post.publishedById FROM main.Post WHERE main.Post.authorId IN (?) LIMIT ? OFFSET ?
-        SELECT main.User.id FROM main.User WHERE (main.User.id = ? AND 1=1) LIMIT ? OFFSET ?
         SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.authorId IN (?) LIMIT ? OFFSET ?
         "
       `)
@@ -699,8 +757,6 @@ describe("Resolver", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
-        SELECT main.Profile.id, main.Profile.userId, main.Profile.introduction FROM main.Profile WHERE main.Profile.userId IN (?) LIMIT ? OFFSET ?
-        SELECT main.User.id FROM main.User WHERE (main.User.id = ? AND 1=1) LIMIT ? OFFSET ?
         SELECT main.Profile.id, main.Profile.introduction, main.Profile.userId FROM main.Profile WHERE main.Profile.userId IN (?) LIMIT ? OFFSET ?
         "
       `)
@@ -749,8 +805,7 @@ describe("Resolver", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?
-        SELECT main.Post.id, main.Post.authorId FROM main.Post WHERE main.Post.id IN (?,?,?) LIMIT ? OFFSET ?
-        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?,?) LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?,?,?) LIMIT ? OFFSET ?
         "
       `)
     })
@@ -789,8 +844,73 @@ describe("Resolver", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         SELECT main.Profile.id, main.Profile.userId FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
-        SELECT main.Profile.id, main.Profile.userId FROM main.Profile WHERE (main.Profile.id = ? AND 1=1) LIMIT ? OFFSET ?
         SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query sheep with shepherd", async () => {
+      const res = await execute(/* GraphQL */ `
+        query sheep {
+          findManySheep {
+            lastCode
+            shepherd {
+              firstName
+              lastName
+            }
+          }
+        }
+      `)
+
+      expect(res.findManySheep).toHaveLength(5)
+      expect(res.findManySheep).toMatchObject([
+        { shepherd: { firstName: "1", lastName: "D" } },
+        { shepherd: { firstName: "1", lastName: "D" } },
+        { shepherd: { firstName: "1", lastName: "D" } },
+        { shepherd: { firstName: "2", lastName: "D" } },
+        { shepherd: { firstName: "2", lastName: "D" } },
+      ])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Sheep.firstCode, main.Sheep.lastCode, main.Sheep.shepherdFirstName, main.Sheep.shepherdLastName FROM main.Sheep WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.Dog.firstName, main.Dog.lastName FROM main.Dog WHERE ((main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?)) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query dogs with sheep", async () => {
+      const res = await execute(/* GraphQL */ `
+        query dogs {
+          findManyDog {
+            sheeps {
+              firstCode
+              lastCode
+            }
+          }
+        }
+      `)
+
+      expect(res.findManyDog).toHaveLength(2)
+      expect(res.findManyDog).toMatchObject([
+        {
+          sheeps: [
+            { firstCode: "1", lastCode: "S" },
+            { firstCode: "2", lastCode: "S" },
+            { firstCode: "3", lastCode: "S" },
+          ],
+        },
+        {
+          sheeps: [
+            { firstCode: "4", lastCode: "S" },
+            { firstCode: "5", lastCode: "S" },
+          ],
+        },
+      ])
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Dog.firstName, main.Dog.lastName FROM main.Dog WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.Sheep.firstCode, main.Sheep.lastCode, main.Sheep.shepherdFirstName, main.Sheep.shepherdLastName FROM main.Sheep WHERE ((main.Sheep.shepherdFirstName = ? AND main.Sheep.shepherdLastName = ?) OR (main.Sheep.shepherdFirstName = ? AND main.Sheep.shepherdLastName = ?)) LIMIT ? OFFSET ?
         "
       `)
     })

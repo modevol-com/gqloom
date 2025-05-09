@@ -11,9 +11,12 @@ import {
   type QueryOptions,
   type ResolverOptionsWithExtensions,
   type StandardSchemaV1,
+  getMemoizationMap,
   loom,
   silk,
 } from "@gqloom/core"
+import { EasyDataLoader } from "@gqloom/core"
+import type { ResolverPayload } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
 import { PrismaActionArgsWeaver } from "./type-weaver"
@@ -70,28 +73,112 @@ export class PrismaResolverFactory<
         `Field ${String(key)} not found in ${this.silk.model.name}`
       )
 
-    const targetSilk = this.modelData.models[field.type]
+    const targetModel = this.modelData.models[field.type]
+    const delegate = PrismaResolverFactory.getDelegate(
+      targetModel.name,
+      this.client
+    )
+    let relationFromFields = field.relationFromFields
+    let relationToFields = field.relationToFields
+    if (relationFromFields?.length === 0) {
+      const targetField = this.modelData.models[field.type].fields.find(
+        (f) => f.relationName === field.relationName
+      )
+      if (targetField == null)
+        throw new Error(`Field ${String(key)} is not a relation`)
+      relationFromFields = targetField.relationToFields
+      relationToFields = targetField.relationFromFields
+    }
     if (
       field.kind !== "object" ||
       field.relationName == null ||
-      targetSilk == null
+      relationFromFields == null ||
+      relationToFields == null ||
+      targetModel == null ||
+      delegate == null
     )
       throw new Error(`Field ${String(key)} is not a relation`)
+    const getKeyByReference = (item: any) => {
+      if (relationToFields.length === 1) {
+        return item[relationToFields[0]]
+      }
+      return relationToFields.map((reference) => item[reference]).join("-")
+    }
+
+    const getKeyByField = (parent: any) => {
+      if (relationFromFields.length === 1) {
+        return parent[relationFromFields[0]]
+      }
+      return relationFromFields.map((field) => parent[field]).join("-")
+    }
+
+    const initLoader = () =>
+      new EasyDataLoader(
+        async (
+          inputs: [parent: any, payload: ResolverPayload | undefined][]
+        ) => {
+          const length = Math.min(
+            relationFromFields.length,
+            relationToFields.length
+          )
+          const where = (() => {
+            if (length === 1) {
+              const field = relationToFields[0]
+              const values = inputs.map(
+                ([parent]) => parent[relationFromFields[0]]
+              )
+              return { [field]: { in: values } }
+            }
+            const OR: any[] = []
+            for (const [parent] of inputs) {
+              const item = {} as any
+              for (let i = 0; i < length; i++) {
+                item[relationToFields[i]] = parent[relationFromFields[i]]
+              }
+              OR.push(item)
+            }
+            return { OR }
+          })()
+          const select = getSelectedFields(
+            targetModel,
+            inputs.map((input) => input[1])
+          )
+
+          const relationTo = Object.fromEntries(
+            relationToFields.map((f) => [f, true])
+          )
+
+          const list = await (delegate as any).findMany({
+            select: { ...select, ...relationTo },
+            where,
+          })
+
+          const groups = new Map<string, any>()
+          for (const item of list) {
+            const key = getKeyByReference(item)
+            field.isList
+              ? groups.set(key, [...(groups.get(key) ?? []), item])
+              : groups.set(key, item)
+          }
+          return inputs.map(([parent]) => {
+            const key = getKeyByField(parent)
+            return groups.get(key) ?? (field.isList ? [] : null)
+          })
+        }
+      )
 
     const output = this.relationFieldOutput(field)
     return new FieldFactoryWithResolve(output, {
       ...options,
-      dependencies: field.relationFromFields,
+      dependencies: relationFromFields,
       resolve: (parent, _input, payload) => {
-        const where = this.uniqueWhere(parent)
-        const select = getSelectedFields(targetSilk, payload)
-        if (Object.values(where).every((it) => it === undefined)) {
-          return field.isList ? [] : null
-        }
-        const promise = this.delegate.findUnique({ where })
-        if (key in promise && typeof promise[key] === "function")
-          return promise[key]({ select })
-        return field.isList ? [] : null
+        const loader = (() => {
+          if (!payload) return initLoader()
+          const memoMap = getMemoizationMap(payload)
+          if (!memoMap.has(initLoader)) memoMap.set(initLoader, initLoader())
+          return memoMap.get(initLoader) as ReturnType<typeof initLoader>
+        })()
+        return loader.load([parent, payload])
       },
     } as FieldOptions<any, any, any, any>)
   }

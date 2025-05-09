@@ -91,11 +91,11 @@ describe("PrismaModelPrismaResolverFactory", () => {
 
     const SheepBobbin = new TestablePrismaModelResolverFactory(g.Sheep, db)
     const sheepCondition = SheepBobbin.uniqueWhere({
-      firstName: "foo",
-      lastName: "bar",
+      firstCode: "foo",
+      lastCode: "bar",
     })
     expect(sheepCondition).toEqual({
-      firstName_lastName: { firstName: "foo", lastName: "bar" },
+      firstCode_lastCode: { firstCode: "foo", lastCode: "bar" },
     })
 
     const DogBobbin = new TestablePrismaModelResolverFactory(g.Dog, db)
