@@ -7,12 +7,21 @@ import {
 import { ZodWeaver } from "@gqloom/zod"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { beforeEach, describe, expect, expectTypeOf, it } from "vitest"
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+} from "vitest"
 import { z } from "zod"
 import {
   type InferPrismaDelegate,
   type PrismaModelSilk,
   PrismaResolverFactory,
+  type SelectiveModel,
 } from "../src"
 import { PrismaClient } from "./client"
 import * as g from "./generated"
@@ -20,24 +29,51 @@ import * as g from "./generated"
 const { resolver, query } = loom
 
 class TestablePrismaModelResolverFactory<
-  TModalSilk extends PrismaModelSilk<any, string, Record<string, any>>,
+  TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
-> extends PrismaResolverFactory<TModalSilk, TClient> {
+> extends PrismaResolverFactory<TModelSilk, TClient> {
   public uniqueWhere(
-    instance: StandardSchemaV1.InferOutput<NonNullable<TModalSilk>>
+    instance: Omit<
+      StandardSchemaV1.InferOutput<NonNullable<TModelSilk>>,
+      `__selective_${typeof this.silk.name}_brand__`
+    >
   ): any {
     return super.uniqueWhere(instance)
   }
 
-  public name?: TModalSilk["name"]
+  public name?: TModelSilk["name"]
 
-  public get modelDelegate(): InferPrismaDelegate<TClient, TModalSilk["name"]> {
+  public get modelDelegate(): InferPrismaDelegate<TClient, TModelSilk["name"]> {
     return this.delegate
   }
 }
 
 describe("PrismaModelPrismaResolverFactory", () => {
   const db = new PrismaClient()
+
+  beforeAll(async () => {
+    let times = 0
+    while (true) {
+      try {
+        await db.keyValue.create({
+          data: { id: "testing-lock", value: "test" },
+        })
+        break
+      } catch (err) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        times++
+        if (times > 66) {
+          throw err
+        }
+      }
+    }
+  })
+
+  afterAll(async () => {
+    await db.keyValue.delete({
+      where: { id: "testing-lock" },
+    })
+  })
 
   it("should be able to create a bobbin", () => {
     const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
@@ -53,13 +89,13 @@ describe("PrismaModelPrismaResolverFactory", () => {
     })
     expect(userCondition).toEqual({ id: 4 })
 
-    const CatBobbin = new TestablePrismaModelResolverFactory(g.Cat, db)
-    const catCondition = CatBobbin.uniqueWhere({
-      firstName: "foo",
-      lastName: "bar",
+    const SheepBobbin = new TestablePrismaModelResolverFactory(g.Sheep, db)
+    const sheepCondition = SheepBobbin.uniqueWhere({
+      firstCode: "foo",
+      lastCode: "bar",
     })
-    expect(catCondition).toEqual({
-      firstName_lastName: { firstName: "foo", lastName: "bar" },
+    expect(sheepCondition).toEqual({
+      firstCode_lastCode: { firstCode: "foo", lastCode: "bar" },
     })
 
     const DogBobbin = new TestablePrismaModelResolverFactory(g.Dog, db)
@@ -153,18 +189,24 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
     })
 
-    it("should be able to create a relationField", () => {
+    it("should be able to create a relationField", async () => {
       const postsField = UserBobbin.relationField("posts")
       expect(postsField).toBeDefined()
       expect(postsField["~meta"].output).toBeTypeOf("object")
       expect(postsField["~meta"].operation).toEqual("field")
       expect(postsField["~meta"].resolve).toBeTypeOf("function")
+      expectTypeOf(postsField["~meta"].resolve).returns.resolves.toEqualTypeOf<
+        Partial<g.IPost>[]
+      >()
 
       const userField = PostBobbin.relationField("author")
       expect(userField).toBeDefined()
       expect(userField["~meta"].output).toBeTypeOf("object")
       expect(userField["~meta"].operation).toEqual("field")
       expect(userField["~meta"].resolve).toBeTypeOf("function")
+      expectTypeOf(userField["~meta"].resolve).returns.resolves.toEqualTypeOf<
+        Partial<g.IUser>
+      >()
     })
 
     it("should be able to weave user schema", () => {
@@ -245,7 +287,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
             expectTypeOf(input).toEqualTypeOf<
               Parameters<typeof db.user.findFirst>[0]
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<SelectiveModel<
+              g.IUser,
+              "user"
+            > | null>()
             return next()
           },
         ],
@@ -301,7 +346,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
             expectTypeOf(input).toEqualTypeOf<
               Parameters<typeof db.user.findMany>[0]
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser[]>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<
+              SelectiveModel<g.IUser, "user">[]
+            >()
             return next()
           },
         ],
@@ -359,7 +406,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
                 NonNullable<Parameters<typeof db.user.findUnique>[0]>
               >
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser | null>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<SelectiveModel<
+              g.IUser,
+              "user"
+            > | null>()
             return next()
           },
         ],
@@ -417,7 +467,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
                 NonNullable<Parameters<typeof db.user.create>[0]>
               >
             >()
-            expectTypeOf(next).returns.resolves.toEqualTypeOf<g.IUser>()
+            expectTypeOf(next).returns.resolves.toEqualTypeOf<
+              SelectiveModel<g.IUser, "user">
+            >()
             return next()
           },
         ],

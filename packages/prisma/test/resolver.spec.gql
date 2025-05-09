@@ -11,63 +11,6 @@ input BoolFilter {
   not: NestedBoolFilter
 }
 
-type Cat {
-  firstName: String!
-  lastName: String!
-}
-
-input CatCreateInput {
-  firstName: String!
-  lastName: String!
-}
-
-input CatCreateManyInput {
-  firstName: String!
-  lastName: String!
-}
-
-input CatFirstNameLastNameCompoundUniqueInput {
-  firstName: String!
-  lastName: String!
-}
-
-input CatOrderByWithRelationInput {
-  firstName: SortOrder
-  lastName: SortOrder
-}
-
-enum CatScalarFieldEnum {
-  firstName
-  lastName
-}
-
-input CatUpdateInput {
-  firstName: StringFieldUpdateOperationsInput
-  lastName: StringFieldUpdateOperationsInput
-}
-
-input CatUpdateManyMutationInput {
-  firstName: StringFieldUpdateOperationsInput
-  lastName: StringFieldUpdateOperationsInput
-}
-
-input CatWhereInput {
-  AND: [CatWhereInput!]
-  NOT: [CatWhereInput!]
-  OR: [CatWhereInput!]
-  firstName: StringFilter
-  lastName: StringFilter
-}
-
-input CatWhereUniqueInput {
-  AND: [CatWhereInput!]
-  NOT: [CatWhereInput!]
-  OR: [CatWhereInput!]
-  firstName: StringFilter
-  firstName_lastName: CatFirstNameLastNameCompoundUniqueInput
-  lastName: StringFilter
-}
-
 type Category {
   id: ID!
 }
@@ -165,6 +108,7 @@ type Dog {
   firstName: String!
   height: Float!
   lastName: String!
+  sheeps: [Sheep!]!
   weight: Int!
 }
 
@@ -173,10 +117,30 @@ input DogCreateInput {
   firstName: String!
   height: Float!
   lastName: String!
+  sheeps: SheepCreateNestedManyWithoutShepherdInput
   weight: Int!
 }
 
 input DogCreateManyInput {
+  birthDate: String!
+  firstName: String!
+  height: Float!
+  lastName: String!
+  weight: Int!
+}
+
+input DogCreateNestedOneWithoutSheepsInput {
+  connect: DogWhereUniqueInput
+  connectOrCreate: DogCreateOrConnectWithoutSheepsInput
+  create: DogCreateWithoutSheepsInput
+}
+
+input DogCreateOrConnectWithoutSheepsInput {
+  create: DogCreateWithoutSheepsInput!
+  where: DogWhereUniqueInput!
+}
+
+input DogCreateWithoutSheepsInput {
   birthDate: String!
   firstName: String!
   height: Float!
@@ -194,6 +158,7 @@ input DogOrderByWithRelationInput {
   firstName: SortOrder
   height: SortOrder
   lastName: SortOrder
+  sheeps: SheepOrderByRelationAggregateInput
   weight: SortOrder
 }
 
@@ -205,11 +170,17 @@ enum DogScalarFieldEnum {
   weight
 }
 
+input DogScalarRelationFilter {
+  is: DogWhereInput
+  isNot: DogWhereInput
+}
+
 input DogUpdateInput {
   birthDate: DateTimeFieldUpdateOperationsInput
   firstName: StringFieldUpdateOperationsInput
   height: FloatFieldUpdateOperationsInput
   lastName: StringFieldUpdateOperationsInput
+  sheeps: SheepUpdateManyWithoutShepherdNestedInput
   weight: IntFieldUpdateOperationsInput
 }
 
@@ -221,6 +192,33 @@ input DogUpdateManyMutationInput {
   weight: IntFieldUpdateOperationsInput
 }
 
+input DogUpdateOneRequiredWithoutSheepsNestedInput {
+  connect: DogWhereUniqueInput
+  connectOrCreate: DogCreateOrConnectWithoutSheepsInput
+  create: DogCreateWithoutSheepsInput
+  update: DogUpdateToOneWithWhereWithoutSheepsInput
+  upsert: DogUpsertWithoutSheepsInput
+}
+
+input DogUpdateToOneWithWhereWithoutSheepsInput {
+  data: DogUpdateWithoutSheepsInput!
+  where: DogWhereInput
+}
+
+input DogUpdateWithoutSheepsInput {
+  birthDate: DateTimeFieldUpdateOperationsInput
+  firstName: StringFieldUpdateOperationsInput
+  height: FloatFieldUpdateOperationsInput
+  lastName: StringFieldUpdateOperationsInput
+  weight: IntFieldUpdateOperationsInput
+}
+
+input DogUpsertWithoutSheepsInput {
+  create: DogCreateWithoutSheepsInput!
+  update: DogUpdateWithoutSheepsInput!
+  where: DogWhereInput
+}
+
 input DogWhereInput {
   AND: [DogWhereInput!]
   NOT: [DogWhereInput!]
@@ -229,6 +227,7 @@ input DogWhereInput {
   firstName: StringFilter
   height: FloatFilter
   lastName: StringFilter
+  sheeps: SheepListRelationFilter
   weight: IntFilter
 }
 
@@ -241,6 +240,7 @@ input DogWhereUniqueInput {
   fullName: DogFullNameCompoundUniqueInput
   height: FloatFilter
   lastName: StringFilter
+  sheeps: SheepListRelationFilter
   weight: IntFilter
 }
 
@@ -297,40 +297,40 @@ input IntNullableFilter {
 }
 
 type Mutation {
-  createCat(data: CatCreateInput!): Cat
   createDog(data: DogCreateInput!): Dog
-  createManyCat(data: [CatCreateManyInput!]!): BatchPayload
   createManyDog(data: [DogCreateManyInput!]!): BatchPayload
   createManyPost(data: [PostCreateManyInput!]!): BatchPayload
   createManyProfile(data: [ProfileCreateManyInput!]!): BatchPayload
+  createManySheep(data: [SheepCreateManyInput!]!): BatchPayload
   createManyUser(data: [UserCreateManyInput!]!): BatchPayload
   createPost(data: PostCreateInput!): Post
   createProfile(data: ProfileCreateInput!): Profile
+  createSheep(data: SheepCreateInput!): Sheep
   createUser(data: UserCreateInput!): User
-  deleteCat(where: CatWhereUniqueInput!): Cat
   deleteDog(where: DogWhereUniqueInput!): Dog
-  deleteManyCat(where: CatWhereInput): BatchPayload
   deleteManyDog(where: DogWhereInput): BatchPayload
   deleteManyPost(where: PostWhereInput): BatchPayload
   deleteManyProfile(where: ProfileWhereInput): BatchPayload
+  deleteManySheep(where: SheepWhereInput): BatchPayload
   deleteManyUser(where: UserWhereInput): BatchPayload
   deletePost(where: PostWhereUniqueInput!): Post
   deleteProfile(where: ProfileWhereUniqueInput!): Profile
+  deleteSheep(where: SheepWhereUniqueInput!): Sheep
   deleteUser(where: UserWhereUniqueInput!): User
-  updateCat(data: CatUpdateInput!, where: CatWhereUniqueInput!): Cat!
   updateDog(data: DogUpdateInput!, where: DogWhereUniqueInput!): Dog!
-  updateManyCat(data: CatUpdateManyMutationInput!, where: CatWhereInput): BatchPayload
   updateManyDog(data: DogUpdateManyMutationInput!, where: DogWhereInput): BatchPayload
   updateManyPost(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload
   updateManyProfile(data: ProfileUpdateManyMutationInput!, where: ProfileWhereInput): BatchPayload
+  updateManySheep(data: SheepUpdateManyMutationInput!, where: SheepWhereInput): BatchPayload
   updateManyUser(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post!
   updateProfile(data: ProfileUpdateInput!, where: ProfileWhereUniqueInput!): Profile!
+  updateSheep(data: SheepUpdateInput!, where: SheepWhereUniqueInput!): Sheep!
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User!
-  upsertCat(create: CatCreateInput!, update: CatUpdateInput!, where: CatWhereUniqueInput!): Cat!
   upsertDog(create: DogCreateInput!, update: DogUpdateInput!, where: DogWhereUniqueInput!): Dog!
   upsertPost(create: PostCreateInput!, update: PostUpdateInput!, where: PostWhereUniqueInput!): Post!
   upsertProfile(create: ProfileCreateInput!, update: ProfileUpdateInput!, where: ProfileWhereUniqueInput!): Profile!
+  upsertSheep(create: SheepCreateInput!, update: SheepUpdateInput!, where: SheepWhereUniqueInput!): Sheep!
   upsertUser(create: UserCreateInput!, update: UserUpdateInput!, where: UserWhereUniqueInput!): User!
 }
 
@@ -784,26 +784,182 @@ input ProfileWhereUniqueInput {
 }
 
 type Query {
-  countCat(cursor: CatWhereUniqueInput, orderBy: [CatOrderByWithRelationInput!], skip: Int, take: Int, where: CatWhereInput): Int!
   countDog(cursor: DogWhereUniqueInput, orderBy: [DogOrderByWithRelationInput!], skip: Int, take: Int, where: DogWhereInput): Int!
   countPost(cursor: PostWhereUniqueInput, orderBy: [PostOrderByWithRelationInput!], skip: Int, take: Int, where: PostWhereInput): Int!
   countProfile(cursor: ProfileWhereUniqueInput, orderBy: [ProfileOrderByWithRelationInput!], skip: Int, take: Int, where: ProfileWhereInput): Int!
+  countSheep(cursor: SheepWhereUniqueInput, orderBy: [SheepOrderByWithRelationInput!], skip: Int, take: Int, where: SheepWhereInput): Int!
   countUser(cursor: UserWhereUniqueInput, orderBy: [UserOrderByWithRelationInput!], skip: Int, take: Int, where: UserWhereInput): Int!
-  findFirstCat(cursor: CatWhereUniqueInput, distinct: [CatScalarFieldEnum!], orderBy: [CatOrderByWithRelationInput!], skip: Int, take: Int, where: CatWhereInput): Cat
   findFirstDog(cursor: DogWhereUniqueInput, distinct: [DogScalarFieldEnum!], orderBy: [DogOrderByWithRelationInput!], skip: Int, take: Int, where: DogWhereInput): Dog
   findFirstPost(cursor: PostWhereUniqueInput, distinct: [PostScalarFieldEnum!], orderBy: [PostOrderByWithRelationInput!], skip: Int, take: Int, where: PostWhereInput): Post
   findFirstProfile(cursor: ProfileWhereUniqueInput, distinct: [ProfileScalarFieldEnum!], orderBy: [ProfileOrderByWithRelationInput!], skip: Int, take: Int, where: ProfileWhereInput): Profile
+  findFirstSheep(cursor: SheepWhereUniqueInput, distinct: [SheepScalarFieldEnum!], orderBy: [SheepOrderByWithRelationInput!], skip: Int, take: Int, where: SheepWhereInput): Sheep
   findFirstUser(cursor: UserWhereUniqueInput, distinct: [UserScalarFieldEnum!], orderBy: [UserOrderByWithRelationInput!], skip: Int, take: Int, where: UserWhereInput): User
-  findManyCat(cursor: CatWhereUniqueInput, distinct: [CatScalarFieldEnum!], orderBy: [CatOrderByWithRelationInput!], skip: Int, take: Int, where: CatWhereInput): [Cat!]!
   findManyDog(cursor: DogWhereUniqueInput, distinct: [DogScalarFieldEnum!], orderBy: [DogOrderByWithRelationInput!], skip: Int, take: Int, where: DogWhereInput): [Dog!]!
   findManyPost(cursor: PostWhereUniqueInput, distinct: [PostScalarFieldEnum!], orderBy: [PostOrderByWithRelationInput!], skip: Int, take: Int, where: PostWhereInput): [Post!]!
   findManyProfile(cursor: ProfileWhereUniqueInput, distinct: [ProfileScalarFieldEnum!], orderBy: [ProfileOrderByWithRelationInput!], skip: Int, take: Int, where: ProfileWhereInput): [Profile!]!
+  findManySheep(cursor: SheepWhereUniqueInput, distinct: [SheepScalarFieldEnum!], orderBy: [SheepOrderByWithRelationInput!], skip: Int, take: Int, where: SheepWhereInput): [Sheep!]!
   findManyUser(cursor: UserWhereUniqueInput, distinct: [UserScalarFieldEnum!], orderBy: [UserOrderByWithRelationInput!], skip: Int, take: Int, where: UserWhereInput): [User!]!
-  findUniqueCat(where: CatWhereUniqueInput): Cat
   findUniqueDog(where: DogWhereUniqueInput): Dog
   findUniquePost(where: PostWhereUniqueInput): Post
   findUniqueProfile(where: ProfileWhereUniqueInput): Profile
+  findUniqueSheep(where: SheepWhereUniqueInput): Sheep
   findUniqueUser(where: UserWhereUniqueInput): User
+}
+
+type Sheep {
+  firstCode: String!
+  lastCode: String!
+  shepherd: Dog!
+  shepherdFirstName: String!
+  shepherdLastName: String!
+}
+
+input SheepCreateInput {
+  firstCode: String!
+  lastCode: String!
+  shepherd: DogCreateNestedOneWithoutSheepsInput!
+}
+
+input SheepCreateManyInput {
+  firstCode: String!
+  lastCode: String!
+  shepherdFirstName: String!
+  shepherdLastName: String!
+}
+
+input SheepCreateManyShepherdInput {
+  firstCode: String!
+  lastCode: String!
+}
+
+input SheepCreateManyShepherdInputEnvelope {
+  data: [SheepCreateManyShepherdInput!]!
+}
+
+input SheepCreateNestedManyWithoutShepherdInput {
+  connect: [SheepWhereUniqueInput!]
+  connectOrCreate: [SheepCreateOrConnectWithoutShepherdInput!]
+  create: [SheepCreateWithoutShepherdInput!]
+  createMany: SheepCreateManyShepherdInputEnvelope
+}
+
+input SheepCreateOrConnectWithoutShepherdInput {
+  create: SheepCreateWithoutShepherdInput!
+  where: SheepWhereUniqueInput!
+}
+
+input SheepCreateWithoutShepherdInput {
+  firstCode: String!
+  lastCode: String!
+}
+
+input SheepFirstCodeLastCodeCompoundUniqueInput {
+  firstCode: String!
+  lastCode: String!
+}
+
+input SheepListRelationFilter {
+  every: SheepWhereInput
+  none: SheepWhereInput
+  some: SheepWhereInput
+}
+
+input SheepOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input SheepOrderByWithRelationInput {
+  firstCode: SortOrder
+  lastCode: SortOrder
+  shepherd: DogOrderByWithRelationInput
+  shepherdFirstName: SortOrder
+  shepherdLastName: SortOrder
+}
+
+enum SheepScalarFieldEnum {
+  firstCode
+  lastCode
+  shepherdFirstName
+  shepherdLastName
+}
+
+input SheepScalarWhereInput {
+  AND: [SheepScalarWhereInput!]
+  NOT: [SheepScalarWhereInput!]
+  OR: [SheepScalarWhereInput!]
+  firstCode: StringFilter
+  lastCode: StringFilter
+  shepherdFirstName: StringFilter
+  shepherdLastName: StringFilter
+}
+
+input SheepUpdateInput {
+  firstCode: StringFieldUpdateOperationsInput
+  lastCode: StringFieldUpdateOperationsInput
+  shepherd: DogUpdateOneRequiredWithoutSheepsNestedInput
+}
+
+input SheepUpdateManyMutationInput {
+  firstCode: StringFieldUpdateOperationsInput
+  lastCode: StringFieldUpdateOperationsInput
+}
+
+input SheepUpdateManyWithWhereWithoutShepherdInput {
+  data: SheepUpdateManyMutationInput!
+  where: SheepScalarWhereInput!
+}
+
+input SheepUpdateManyWithoutShepherdNestedInput {
+  connect: [SheepWhereUniqueInput!]
+  connectOrCreate: [SheepCreateOrConnectWithoutShepherdInput!]
+  create: [SheepCreateWithoutShepherdInput!]
+  createMany: SheepCreateManyShepherdInputEnvelope
+  delete: [SheepWhereUniqueInput!]
+  deleteMany: [SheepScalarWhereInput!]
+  disconnect: [SheepWhereUniqueInput!]
+  set: [SheepWhereUniqueInput!]
+  update: [SheepUpdateWithWhereUniqueWithoutShepherdInput!]
+  updateMany: [SheepUpdateManyWithWhereWithoutShepherdInput!]
+  upsert: [SheepUpsertWithWhereUniqueWithoutShepherdInput!]
+}
+
+input SheepUpdateWithWhereUniqueWithoutShepherdInput {
+  data: SheepUpdateWithoutShepherdInput!
+  where: SheepWhereUniqueInput!
+}
+
+input SheepUpdateWithoutShepherdInput {
+  firstCode: StringFieldUpdateOperationsInput
+  lastCode: StringFieldUpdateOperationsInput
+}
+
+input SheepUpsertWithWhereUniqueWithoutShepherdInput {
+  create: SheepCreateWithoutShepherdInput!
+  update: SheepUpdateWithoutShepherdInput!
+  where: SheepWhereUniqueInput!
+}
+
+input SheepWhereInput {
+  AND: [SheepWhereInput!]
+  NOT: [SheepWhereInput!]
+  OR: [SheepWhereInput!]
+  firstCode: StringFilter
+  lastCode: StringFilter
+  shepherd: DogScalarRelationFilter
+  shepherdFirstName: StringFilter
+  shepherdLastName: StringFilter
+}
+
+input SheepWhereUniqueInput {
+  AND: [SheepWhereInput!]
+  NOT: [SheepWhereInput!]
+  OR: [SheepWhereInput!]
+  firstCode: StringFilter
+  firstCode_lastCode: SheepFirstCodeLastCodeCompoundUniqueInput
+  lastCode: StringFilter
+  shepherd: DogScalarRelationFilter
+  shepherdFirstName: StringFilter
+  shepherdLastName: StringFilter
 }
 
 enum SortOrder {

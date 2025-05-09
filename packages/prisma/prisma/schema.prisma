@@ -56,13 +56,6 @@ model Category {
   posts Post[]
 }
 
-model Cat {
-  firstName String
-  lastName  String
-
-  @@id([firstName, lastName])
-}
-
 model Dog {
   firstName String
   lastName  String
@@ -72,5 +65,23 @@ model Dog {
 
   birthDate DateTime
 
+  sheeps Sheep[]
+
   @@id(name: "fullName", fields: [firstName, lastName])
+}
+
+model Sheep {
+  firstCode String
+  lastCode  String
+
+  shepherdFirstName String
+  shepherdLastName  String
+  shepherd         Dog    @relation(fields: [shepherdFirstName, shepherdLastName], references: [firstName, lastName])
+
+  @@id([firstCode, lastCode])
+}
+
+model KeyValue {
+  id String @id
+  value String
 }
