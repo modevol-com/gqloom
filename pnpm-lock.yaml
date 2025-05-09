@@ -133,7 +133,7 @@ importers:
         version: 0.8.6(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/zod':
         specifier: latest
-        version: 0.8.1(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@3.24.3)
+        version: 0.8.1(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@3.24.4)
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0
@@ -151,7 +151,7 @@ importers:
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       zod:
         specifier: ^3.24.2
-        version: 3.24.3
+        version: 3.24.4
     devDependencies:
       '@types/node':
         specifier: ^22.13.4
@@ -231,7 +231,7 @@ importers:
         version: 1.0.0-beta.7(typescript@5.7.3)
       zod:
         specifier: ^3.24.0
-        version: 3.24.3
+        version: 3.24.4
 
   examples/mikro-orm:
     dependencies:
@@ -311,7 +311,7 @@ importers:
         version: 1.0.0-beta.7(typescript@5.7.3)
       zod:
         specifier: ^3.24.0
-        version: 3.24.3
+        version: 3.24.4
 
   packages/core:
     dependencies:
@@ -440,7 +440,7 @@ importers:
         version: 6.1.0
       zod:
         specifier: ^3.24.1
-        version: 3.24.3
+        version: 3.24.4
 
   packages/valibot:
     dependencies:
@@ -479,7 +479,7 @@ importers:
         version: link:../core
       zod:
         specifier: ^3.24.1
-        version: 3.24.3
+        version: 3.24.4
 
   website:
     dependencies:
@@ -639,7 +639,7 @@ importers:
         version: 1.4.0
       zod:
         specifier: ^3.24.0
-        version: 3.24.3
+        version: 3.24.4
 
 packages:
 
@@ -6049,9 +6049,6 @@ packages:
   yup@1.4.0:
     resolution: {integrity: sha512-wPbgkJRCqIf+OHyiTBQoJiP5PFuAXaWiJK6AmYkzQAh5/c2K9hzSApBZG5wV9KoKSePF7sAxmNSvh/13YHkFDg==}
 
-  zod@3.24.3:
-    resolution: {integrity: sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==}
-
   zod@3.24.4:
     resolution: {integrity: sha512-OdqJE9UDRPwWsrHjLN2F8bPxvwJBK22EHLWtanu0LSYr5YqzsaaW3RMgmjwr8Rypg5k+meEJdSPXJZXE/yqOMg==}
 
@@ -6684,11 +6681,11 @@ snapshots:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
       valibot: 1.0.0-rc.1(typescript@5.7.3)
 
-  '@gqloom/zod@0.8.1(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@3.24.3)':
+  '@gqloom/zod@0.8.1(@gqloom/core@0.8.4(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@3.24.4)':
     dependencies:
       '@gqloom/core': 0.8.4(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-      zod: 3.24.3
+      zod: 3.24.4
 
   '@graphql-tools/executor@1.2.8(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
@@ -8997,7 +8994,7 @@ snapshots:
       npm-to-yarn: 3.0.1
       oxc-transform: 0.53.0
       unist-util-visit: 5.0.0
-      zod: 3.24.3
+      zod: 3.24.4
 
   fumadocs-mdx@11.6.3(acorn@8.12.1)(fumadocs-core@15.3.0(@types/react@19.0.8)(next@15.3.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(next@15.3.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)):
     dependencies:
@@ -11803,8 +11800,6 @@ snapshots:
       tiny-case: 1.0.3
       toposort: 2.0.2
       type-fest: 2.19.0
-
-  zod@3.24.3: {}
 
   zod@3.24.4: {}
 
