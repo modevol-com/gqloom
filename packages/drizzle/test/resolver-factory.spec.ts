@@ -85,6 +85,14 @@ describe.concurrent("DrizzleResolverFactory", () => {
       expect(query).toBeDefined()
     })
 
+    it("should be used without error", () => {
+      const userResolver = resolver.of(sqliteSchemas.user, {
+        users: userFactory.selectArrayQuery(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should resolve correctly with orderBy", async () => {
       const executor = userFactory.resolver().toExecutor()
 
@@ -258,6 +266,14 @@ describe.concurrent("DrizzleResolverFactory", () => {
   })
 
   describe.concurrent("selectSingleQuery", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(sqliteSchemas.user, {
+        user: userFactory.selectSingleQuery(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should be created without error", () => {
       const query = userFactory.selectSingleQuery()
       expect(query).toBeDefined()
@@ -411,6 +427,19 @@ describe.concurrent("DrizzleResolverFactory", () => {
       await db.delete(sqliteSchemas.studentToCourse)
       await db.delete(sqliteSchemas.course)
       await db.delete(sqliteSchemas.post)
+    })
+
+    it("should be used without error", () => {
+      const userResolver = resolver.of(sqliteSchemas.user, {
+        posts: userFactory.relationField("posts"),
+      })
+
+      const postFactory = drizzleResolverFactory(db, sqliteSchemas.post)
+      const postResolver = resolver.of(sqliteSchemas.post, {
+        author: postFactory.relationField("author"),
+      })
+      expect(userResolver).toBeDefined()
+      expect(postResolver).toBeDefined()
     })
 
     it("should be created without error", () => {
@@ -591,6 +620,13 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
   })
 
   describe("insertArrayMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(mysqlSchemas.user, {
+        insertArrayMutation: userFactory.insertArrayMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
     it("should be created without error", async () => {
       const mutation = userFactory.insertArrayMutation()
       expect(mutation).toBeDefined()
@@ -641,6 +677,14 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
   })
 
   describe("insertSingleMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(mysqlSchemas.user, {
+        insertSingleMutation: userFactory.insertSingleMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should be created without error", async () => {
       const mutation = userFactory.insertSingleMutation()
       expect(mutation).toBeDefined()
@@ -658,6 +702,13 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
   })
 
   describe("updateMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(mysqlSchemas.user, {
+        updateMutation: userFactory.updateMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
     it("should be created without error", async () => {
       const mutation = userFactory.updateMutation()
       expect(mutation).toBeDefined()
@@ -679,6 +730,13 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
   })
 
   describe("deleteMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(mysqlSchemas.user, {
+        deleteMutation: userFactory.deleteMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
     it("should be created without error", async () => {
       const mutation = userFactory.deleteMutation()
       expect(mutation).toBeDefined()
@@ -718,6 +776,13 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
   })
 
   describe("insertArrayMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(pgSchemas.user, {
+        insertArrayMutation: userFactory.insertArrayMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
     it("should be created without error", async () => {
       const mutation = userFactory.insertArrayMutation()
       expect(mutation).toBeDefined()
@@ -769,6 +834,13 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
   })
 
   describe("insertSingleMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(pgSchemas.user, {
+        insertSingleMutation: userFactory.insertSingleMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
     it("should be created without error", async () => {
       const mutation = userFactory.insertSingleMutation()
       expect(mutation).toBeDefined()
@@ -787,6 +859,13 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
   })
 
   describe("updateMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(pgSchemas.user, {
+        updateMutation: userFactory.updateMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
     it("should be created without error", async () => {
       const mutation = userFactory.updateMutation()
       expect(mutation).toBeDefined()
@@ -808,6 +887,14 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
   })
 
   describe("deleteMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(pgSchemas.user, {
+        deleteMutation: userFactory.deleteMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should be created without error", async () => {
       const mutation = userFactory.deleteMutation()
       expect(mutation).toBeDefined()
@@ -845,6 +932,14 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
   })
 
   describe("insertArrayMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(sqliteSchemas.user, {
+        insertArrayMutation: userFactory.insertArrayMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should be created without error", async () => {
       const mutation = userFactory.insertArrayMutation()
       expect(mutation).toBeDefined()
@@ -872,6 +967,14 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
   })
 
   describe("insertSingleMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(sqliteSchemas.user, {
+        insertSingleMutation: userFactory.insertSingleMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should be created without error", async () => {
       const mutation = userFactory.insertSingleMutation()
       expect(mutation).toBeDefined()
@@ -919,6 +1022,14 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
   })
 
   describe("updateMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(sqliteSchemas.user, {
+        updateMutation: userFactory.updateMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should be created without error", async () => {
       const mutation = userFactory.updateMutation()
       expect(mutation).toBeDefined()
@@ -942,6 +1053,14 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
   })
 
   describe("deleteMutation", () => {
+    it("should be used without error", () => {
+      const userResolver = resolver.of(sqliteSchemas.user, {
+        deleteMutation: userFactory.deleteMutation(),
+      })
+
+      expect(userResolver).toBeDefined()
+    })
+
     it("should be created without error", async () => {
       const mutation = userFactory.deleteMutation()
       expect(mutation).toBeDefined()
