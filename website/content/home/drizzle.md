@@ -106,8 +106,13 @@ type UsersItem {
   createdAt: String
   email: String!
   name: String
-  role: String
+  role: Role
   posts: [PostsItem!]!
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 type PostsItem {
@@ -123,8 +128,10 @@ type PostsItem {
 type Query {
   users(offset: Int, limit: Int, orderBy: [UsersOrderBy!], where: UsersFilters): [UsersItem!]!
   usersSingle(offset: Int, orderBy: [UsersOrderBy!], where: UsersFilters): UsersItem
+  usersCount(where: UsersFilters): Int!
   posts(offset: Int, limit: Int, orderBy: [PostsOrderBy!], where: PostsFilters): [PostsItem!]!
   postsSingle(offset: Int, orderBy: [PostsOrderBy!], where: PostsFilters): PostsItem
+  postsCount(where: PostsFilters): Int!
 }
 
 input UsersOrderBy {
@@ -247,36 +254,28 @@ input PgTextFiltersOr {
 }
 
 input PgEnumColumnFilters {
-  eq: String
-  ne: String
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  like: String
-  notLike: String
-  ilike: String
-  notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+  eq: Role
+  ne: Role
+  lt: Role
+  lte: Role
+  gt: Role
+  gte: Role
+  inArray: [Role!]
+  notInArray: [Role!]
   isNull: Boolean
   isNotNull: Boolean
   OR: [PgEnumColumnFiltersOr!]
 }
 
 input PgEnumColumnFiltersOr {
-  eq: String
-  ne: String
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  like: String
-  notLike: String
-  ilike: String
-  notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+  eq: Role
+  ne: Role
+  lt: Role
+  lte: Role
+  gt: Role
+  gte: Role
+  inArray: [Role!]
+  notInArray: [Role!]
   isNull: Boolean
   isNotNull: Boolean
 }
@@ -407,12 +406,12 @@ input PostsFiltersOr {
 }
 
 type Mutation {
-  insertIntoUsers(values: [UsersInsertInput!]!): [UsersItem!]!
-  insertIntoUsersSingle(value: UsersInsertInput!): UsersItem
+  insertIntoUsers(values: [UsersInsertInput!]!, onConflictDoUpdate: UsersInsertOnConflictDoUpdateInput, onConflictDoNothing: UsersInsertOnConflictDoNothingInput): [UsersItem!]!
+  insertIntoUsersSingle(value: UsersInsertInput!, onConflictDoUpdate: UsersInsertOnConflictDoUpdateInput, onConflictDoNothing: UsersInsertOnConflictDoNothingInput): UsersItem
   updateUsers(where: UsersFilters, set: UsersUpdateInput!): [UsersItem!]!
   deleteFromUsers(where: UsersFilters): [UsersItem!]!
-  insertIntoPosts(values: [PostsInsertInput!]!): [PostsItem!]!
-  insertIntoPostsSingle(value: PostsInsertInput!): PostsItem
+  insertIntoPosts(values: [PostsInsertInput!]!, onConflictDoUpdate: PostsInsertOnConflictDoUpdateInput, onConflictDoNothing: PostsInsertOnConflictDoNothingInput): [PostsItem!]!
+  insertIntoPostsSingle(value: PostsInsertInput!, onConflictDoUpdate: PostsInsertOnConflictDoUpdateInput, onConflictDoNothing: PostsInsertOnConflictDoNothingInput): PostsItem
   updatePosts(where: PostsFilters, set: PostsUpdateInput!): [PostsItem!]!
   deleteFromPosts(where: PostsFilters): [PostsItem!]!
 }
@@ -422,7 +421,22 @@ input UsersInsertInput {
   createdAt: String
   email: String!
   name: String
-  role: String
+  role: Role
+}
+
+input UsersInsertOnConflictDoUpdateInput {
+  target: [UsersTableColumn!]!
+  set: UsersUpdateInput
+  targetWhere: UsersFilters
+  setWhere: UsersFilters
+}
+
+enum UsersTableColumn {
+  id
+  createdAt
+  email
+  name
+  role
 }
 
 input UsersUpdateInput {
@@ -430,7 +444,12 @@ input UsersUpdateInput {
   createdAt: String
   email: String
   name: String
-  role: String
+  role: Role
+}
+
+input UsersInsertOnConflictDoNothingInput {
+  target: [UsersTableColumn!]
+  where: UsersFilters
 }
 
 input PostsInsertInput {
@@ -442,6 +461,22 @@ input PostsInsertInput {
   authorId: Int
 }
 
+input PostsInsertOnConflictDoUpdateInput {
+  target: [PostsTableColumn!]!
+  set: PostsUpdateInput
+  targetWhere: PostsFilters
+  setWhere: PostsFilters
+}
+
+enum PostsTableColumn {
+  id
+  createdAt
+  updatedAt
+  published
+  title
+  authorId
+}
+
 input PostsUpdateInput {
   id: Int
   createdAt: String
@@ -449,5 +484,10 @@ input PostsUpdateInput {
   published: Boolean
   title: String
   authorId: Int
+}
+
+input PostsInsertOnConflictDoNothingInput {
+  target: [PostsTableColumn!]
+  where: PostsFilters
 }
 ```
