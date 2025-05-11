@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/mikro-orm",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "GQLoom integration with Mikro ORM",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,7 +25,7 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.8.0",
+    "@gqloom/core": ">= 0.9.0",
     "@mikro-orm/core": ">= 6.0.0",
     "graphql": ">= 16.8.0"
   },
