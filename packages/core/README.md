@@ -18,14 +18,14 @@ import * as v from "valibot"
 
 const helloResolver = resolver({
   hello: query(v.string())
-  .input({ name: v.nullish(v.string(), "World") })
-  .resolve(({ name }) => `Hello, ${name}!`),
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello, ${name}!`),
 })
 
 export const schema = ValibotWeaver.weave(helloResolver)
 ```
 
-## Highlights you should not miss
+## Highlights
 
 - 🧑‍💻 **Development Experience**: Fewer boilerplate codes, semantic API design, and extensive ecosystem integration make development enjoyable.
 - 🔒 **Type Safety**: Automatically infer types from the Schema, enjoy intelligent code completion during development, and detect potential problems during compilation.
@@ -33,6 +33,19 @@ export const schema = ValibotWeaver.weave(helloResolver)
 - 🔋 **Fully Prepared**: Middleware, context, subscriptions, and federated graphs are ready.
 - 🔮 **No Magic**: Without decorators, metadata, reflection, or code generation, it can run anywhere with just JavaScript/TypeScript.
 - 🧩 **Rich Integration**: Use your most familiar validation libraries and ORMs to build your next GraphQL application.
+
+## Installation
+
+```bash
+# use npm
+npm install graphql @gqloom/core
+
+# use pnpm
+pnpm add graphql @gqloom/core
+
+# use yarn
+yarn add graphql @gqloom/core
+```
 
 ## Getting Started
 

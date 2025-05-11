@@ -18,4 +18,17 @@ This package provides GQLoom integration with [Mikro ORM](https://mikro-orm.io/)
 - Weaving the silk into MikroORM's Entity Schema;
 - Generating GraphQL operations from MikroORM's Entity Schema;
 
+## Installation
+
+```bash
+# use npm
+npm i @gqloom/core @gqloom/mikro-orm @mikro-orm/core
+
+# use pnpm
+pnpm add @gqloom/core @gqloom/mikro-orm @mikro-orm/core
+
+# use yarn
+yarn add @gqloom/core @gqloom/mikro-orm @mikro-orm/core
+```
+
 Read more at [GQLoom Document](https://gqloom.dev/docs/schema/mikro-orm).
