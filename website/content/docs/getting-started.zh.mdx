@@ -760,7 +760,7 @@ export async function findUserByPhone(phone: string) {
 export * as userService from "./user"
 // @filename: contexts/index.ts
 // ---cut---
-import { createMemoization, useContext } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
 import { userService } from "../services"
@@ -975,6 +975,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(v.pipe(v.number()))
+    .derivedFrom("birthday")
     .input({
       currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
         new Date().getFullYear()
@@ -1044,6 +1045,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(z.number().int())
+    .derivedFrom("birthday")
     .input({
       currentYear: z
         .number()
@@ -1178,7 +1180,7 @@ export async function findUserByPhone(phone: string) {
 // @filename: services/index.ts
 export * as userService from "./user"
 // @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
 import { userService } from "../services"
@@ -1207,6 +1209,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(v.pipe(v.number()))
+    .derivedFrom("birthday")
     .input({
       currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
         new Date().getFullYear()
@@ -1309,7 +1312,7 @@ export async function findUserByPhone(phone: string) {
 // @filename: services/index.ts
 export * as userService from "./user"
 // @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
 import { userService } from "../services"
@@ -1338,6 +1341,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(z.number().int())
+    .derivedFrom("birthday")
     .input({
       currentYear: z
         .number()
@@ -1465,6 +1469,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(v.pipe(v.number()))
+    .derivedFrom("birthday")
     .input({
       currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
         new Date().getFullYear()
@@ -1516,6 +1521,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(z.number().int())
+    .derivedFrom("birthday")
     .input({
       currentYear: z
         .number()
