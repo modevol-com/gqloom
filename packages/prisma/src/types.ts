@@ -8,9 +8,9 @@ export interface PrismaModelSilk<
   TModel,
   TName extends string = string,
   TRelation extends Record<string, any> = {},
-> extends GraphQLSilk<TModel> {
-  nullable(): GraphQLSilk<TModel | null>
-  list(): GraphQLSilk<TModel[]>
+> extends GraphQLSilk<SelectiveModel<TModel, TName>> {
+  nullable(): GraphQLSilk<SelectiveModel<TModel, TName> | null>
+  list(): GraphQLSilk<SelectiveModel<TModel, TName>[]>
 
   model: DMMF.Model
   meta: PrismaModelMeta
@@ -134,3 +134,23 @@ export type InferDelegateUpsertArgs<TDelegate> = TDelegate extends {
 export interface IBatchPayload {
   count: number
 }
+
+export type SelectedModelFields<
+  TSilk extends PrismaModelSilk<unknown, string, Record<string, unknown>>,
+> = TSilk extends PrismaModelSilk<
+  infer TModel,
+  infer TName,
+  Record<string, unknown>
+>
+  ? {
+      [K in `__selective_${TName}_brand__`]: true
+    } & {
+      [K in keyof TModel]?: false | undefined
+    }
+  : never
+
+export type SelectiveModel<TModel, TName extends string> =
+  | TModel
+  | (Partial<TModel> & {
+      [K in `__selective_${TName}_brand__`]: never
+    })

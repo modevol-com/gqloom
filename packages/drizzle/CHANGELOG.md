@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 ## next (YYYY-MM-DD)
 
 - Refactor: Migrating to Relational Queries version 2
-  
+- Feat: add `DrizzleResolverFactory.queriesResolver` to create a read-only resolver
+- Feat: add `getSelectedColumns` to get the selected columns from the resolver payload
+
 ## 0.8.6 (2025-04-28)
 
 - Fix: update input types for onConflictDoUpdate operations

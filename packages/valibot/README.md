@@ -14,6 +14,20 @@ In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `
 
 This package provides GQLoom integration with [Valibot](https://valibot.dev/) to weave Valibot Schema to GraphQL Schema.
 
+## Installation
+
+```bash
+# use npm
+npm i @gqloom/core valibot @gqloom/valibot
+
+# use pnpm
+pnpm add @gqloom/core valibot @gqloom/valibot
+
+# use yarn
+yarn add @gqloom/core valibot @gqloom/valibot
+```
+
+
 ## Hello World
 
 ```ts

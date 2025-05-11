@@ -39,8 +39,7 @@ export type DrizzleResolver<
   | DrizzleResolverReturningItems<TDatabase, TTable, TTableName>
   | DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName>
 
-export type DrizzleResolverReturningItems<
-  TDatabase extends BaseDatabase,
+export type DrizzleQueriesResolver<
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
 > = {
@@ -48,6 +47,14 @@ export type DrizzleResolverReturningItems<
 } & {
   [key in `${TTableName}Single`]: SelectSingleQuery<TTable>
 } & {
+  [key in `${TTableName}Count`]: CountQuery<TTable>
+}
+
+export type DrizzleResolverReturningItems<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TTableName extends string = TTable["_"]["name"],
+> = DrizzleQueriesResolver<TTable, TTableName> & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningItems<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningItem<TTable>
@@ -61,11 +68,7 @@ export type DrizzleResolverReturningSuccess<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
-> = {
-  [key in TTableName]: SelectArrayQuery<TTable>
-} & {
-  [key in `${TTableName}Single`]: SelectSingleQuery<TTable>
-} & {
+> = DrizzleQueriesResolver<TTable, TTableName> & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningSuccess<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningSuccess<TTable>

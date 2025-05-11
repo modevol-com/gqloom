@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## next (YYYY-MM-DD)
 
+- Refactor: use `prisma.delegate.findMany` in `PrismaResolverFactory.relationField` for better performance
+- Feat: add `getSelectedFields` to get the selected fields from the resolver payload
+- Feat: add `PrismaResolverFactory.queriesResolver` to create a read-only resolver
+
 ## 0.8.0 (2025-03-11)
 
 - Feat: Use the chain method to add custom inputs and middleware to `PrismaResolverFactory`
