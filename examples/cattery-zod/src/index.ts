@@ -1,10 +1,11 @@
 import { createServer } from "node:http"
 import { weave } from "@gqloom/core"
+import { asyncContextProvider } from "@gqloom/core/context"
 import { ZodWeaver } from "@gqloom/zod"
 import { createYoga } from "graphql-yoga"
 import { resolvers } from "./resolvers"
 
-const schema = weave(ZodWeaver, ...resolvers)
+const schema = weave(asyncContextProvider, ZodWeaver, ...resolvers)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {

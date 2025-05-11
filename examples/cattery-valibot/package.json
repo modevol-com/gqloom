@@ -18,7 +18,7 @@
   "dependencies": {
     "@gqloom/core": "latest",
     "@gqloom/drizzle": "latest",
-    "@gqloom/valibot": "^0.7.1",
+    "@gqloom/valibot": "latest",
     "@libsql/client": "^0.14.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.3",
