@@ -7,8 +7,6 @@ import { createContext, useResolverPayload } from "./context"
 /**
  * A hook that analyzes and processes field resolution in a GraphQL query.
  *
- * The hook is memoized to prevent unnecessary recalculations.
- *
  * @returns An object containing sets of different field types,
  * or undefined if no resolver payload is available
  */
