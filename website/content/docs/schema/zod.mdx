@@ -10,6 +10,25 @@ Zod is designed to be as developer-friendly as possible. The goal is to eliminat
 
 ## Installation
 
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```sh tab="npm"
+npm i @gqloom/core zod@next @gqloom/zod@next
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core zod@next @gqloom/zod@next
+```
+```sh tab="yarn"
+yarn add @gqloom/core zod@next @gqloom/zod@next
+```
+```sh tab="bun"
+bun add @gqloom/core zod@next @gqloom/zod@next
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```sh tab="npm"
 npm i @gqloom/core zod @gqloom/zod
 ```
@@ -22,6 +41,9 @@ yarn add @gqloom/core zod @gqloom/zod
 ```sh tab="bun"
 bun add @gqloom/core zod @gqloom/zod
 ```
+
+</Tab>
+</Tabs>
 
 ## Defining simple scalars
 
@@ -133,6 +155,26 @@ export const { Cat } = collectNames({
 In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
 
 #### Using `asObjectType`
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z.number().int(),
+    loveFish: z.boolean().nullish(),
+  })
+  .register(asObjectType, { name: "Cat" })
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
@@ -146,11 +188,36 @@ export const Cat = z
   .superRefine(asObjectType({ name: "Cat" }))
 ```
 
+</Tab>
+</Tabs>
+
 In the code above, we used the `asObjectType` function to create a metadata and pass it into `superRefine()` to define a name for the object. The `asObjectType` function takes the complete GraphQL object type definition and returns a metadata.
 
 ### Add more metadata
 
 With the `asObjectType` function, we can add more data to the object, such as `description`, `deprecationReason`, `extensions` and so on.
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z.number().int(),
+    loveFish: z.boolean().nullish(),
+  })
+  .register(asObjectType, {
+    name: "Cat",
+    description: "A cute cat",
+  })
+```
+
+</Tab>
+<Tab value='zod-v3'>
 
 ```ts twoslash
 import { z } from "zod"
@@ -170,6 +237,9 @@ export const Cat = z
   )
 ```
 
+</Tab>
+</Tabs>
+
 In the above code, we have added a `description` metadata to the `Cat` object which will be presented in the GraphQL Schema:
 ```graphql title="GraphQL Schema"
 """A cute cat"""
@@ -181,6 +251,34 @@ type Cat {
 ```
 
 We can also use the asField function to add metadata to a field, such as description, type, and so on.
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import { z } from "zod"
+import { asField, asObjectType } from "@gqloom/zod"
+import { GraphQLInt } from "graphql"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z
+      .number()
+      .superRefine(
+        asField({ type: GraphQLInt, description: "How old is the cat" })
+      ),
+    loveFish: z.boolean().nullish(),
+  })
+  .register(asObjectType, {
+    name: "Cat",
+    description: "A cute cat",
+  })
+```
+
+</Tab>
+<Tab>
+
 ```ts twoslash
 import { z } from "zod"
 import { asField, asObjectType } from "@gqloom/zod"
@@ -204,6 +302,9 @@ export const Cat = z
   )
 ```
 
+</Tab>
+</Tabs>
+
 In the above code, we added `type` and `description` metadata to the `age` field and ended up with the following GraphQL Schema:
 
 ```graphql title="GraphQL Schema"
@@ -220,9 +321,38 @@ type Cat {
 #### Declaring Interfaces
 
 We can also use the `asObjectType` function to declare interfaces, for example:
-```ts twoslash
-import { z } from "zod"
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * z from "zod"
 import { asObjectType } from "@gqloom/zod"
+
+const Fruit = z
+  .object({
+    __typename: z.literal("Fruit").nullish(),
+    name: z.string(),
+    color: z.string(),
+    prize: z.number(),
+  })
+  .describe("Some fruits you might like")
+
+const Orange = z
+  .object({
+    name: z.string(),
+    color: z.string(),
+    prize: z.number(),
+  })
+  .register(asObjectType, { name: "Orange", interfaces: [Fruit] })
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
+```ts twoslash
+import { asObjectType } from "@gqloom/zod"
+import { z } from "zod"
 
 const Fruit = z
   .object({
@@ -241,11 +371,36 @@ const Orange = z
   })
   .superRefine(asObjectType({ name: "Orange", interfaces: [Fruit] }))
 ```
+
+</Tab>
+</Tabs>
+
 In the above code, we created an interface `Fruit` using the `asObjectType` function and declared the `Orange` object as an implementation of the `Fruit` interface using the `interfaces` option.
 
 #### Omitting Fields
 
 We can also omit fields by setting `type` to `null` using the `asField` function, for example:
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asField } from "@gqloom/zod"
+
+const Dog = z.object({
+  __typename: z.literal("Dog").nullish(),
+  name: z.string().nullish(),
+  birthday: z
+    .date()
+    .nullish()
+    .register(asField, { type: null }),
+})
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asField } from "@gqloom/zod"
@@ -259,6 +414,10 @@ const Dog = z.object({
     .superRefine(asField({ type: null })),
 })
 ```
+
+</Tab>
+</Tabs>
+
 The following GraphQL Schema will be generated:
 ```graphql title="GraphQL Schema"
 type Dog {
@@ -271,6 +430,36 @@ type Dog {
 #### Using z.discriminatedUnion
 
 We recommend using `z.discriminatedUnion` to define union types, for example:
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import { z } from "zod"
+import { asUnionType } from "@gqloom/zod"
+
+const Cat = z.object({
+  __typename: z.literal("Cat"),
+  name: z.string(),
+  age: z.number(),
+  loveFish: z.boolean().optional(),
+})
+
+const Dog = z.object({
+  __typename: z.literal("Dog"),
+  name: z.string(),
+  age: z.number(),
+  loveBone: z.boolean().optional(),
+})
+
+const Animal = z
+  .discriminatedUnion("__typename", [Cat, Dog])
+  .register(asUnionType, { name: "Animal" })
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asUnionType } from "@gqloom/zod"
@@ -292,13 +481,46 @@ const Dog = z.object({
 const Animal = z
   .discriminatedUnion("__typename", [Cat, Dog])
   .superRefine(asUnionType("Animal"))
-
 ```
+
+</Tab>
+</Tabs>
+
 In the above code, we have created a union type using the `z.discriminatedUnion` function. In the case of `Animal`, it distinguishes the specific type by the `__typename` field.
 
 #### Using z.union
 
 We can also use `z.union` to define union types:
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import { z } from "zod"
+import { asUnionType, collectNames } from "@gqloom/zod"
+
+const Cat = z.object({
+  name: z.string(),
+  age: z.number(),
+  loveFish: z.boolean().optional(),
+})
+
+const Dog = z.object({
+  name: z.string(),
+  age: z.number(),
+  loveBone: z.boolean().optional(),
+})
+
+const Animal = z.union([Cat, Dog]).register(asUnionType, {
+  name: "Animal",
+  resolveType: (it) => (it.loveFish ? "Cat" : "Dog"),
+})
+
+collectNames({ Cat, Dog, Animal })
+```
+
+</Tab>
+<Tab value='zod-v3' >
 
 ```ts twoslash
 import { z } from "zod"
@@ -325,6 +547,10 @@ const Animal = z.union([Cat, Dog]).superRefine(
 
 collectNames({ Cat, Dog, Animal })
 ```
+
+</Tab>
+</Tabs>
+
 In the above code, we have created a union type using the `z.union` function. For `Animal`, we use the `resolveType` function to differentiate between specific types.
 Here, if an animal likes fish, then it is a cat, otherwise it is a dog.
 
@@ -335,6 +561,31 @@ We can define enum types using `z.enum` or `z.nativeEnum`.
 #### Using z.enum
 
 In general, we prefer to use `z.enum` to define enumeration types, for example:
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asEnumType } from "@gqloom/zod"
+
+export const Fruit = z
+  .enum(["apple", "banana", "orange"])
+  .register(asEnumType, {
+    name: "Fruit",
+    valuesConfig: {
+      apple: { description: "red" },
+      banana: { description: "yellow" },
+      orange: { description: "orange" },
+    },
+  })
+
+export type IFruit = z.infer<typeof Fruit>
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
@@ -353,9 +604,13 @@ export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
 export type IFruit = z.infer<typeof Fruit>
 ```
 
+</Tab>
+</Tabs>
+
 #### Using z.nativeEnum
 
 We can also use `z.nativeEnum` to define enumeration types, for example:
+
 ```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
@@ -392,7 +647,7 @@ import {
   GraphQLJSON,
   GraphQLJSONObject,
 } from "graphql-scalars"
-import { z } from "zod"
+import * as z from "zod"
 import { ZodWeaver } from "@gqloom/zod"
 
 export const zodWeaverConfig = ZodWeaver.config({
@@ -414,7 +669,7 @@ import {
   GraphQLJSON,
   GraphQLJSONObject,
 } from "graphql-scalars"
-import { z } from "zod"
+import * as z from "zod"
 import { resolver } from '@gqloom/core'
 import { ZodWeaver } from "@gqloom/zod"
 
@@ -449,9 +704,9 @@ The following table lists the default mappings between Zod types and GraphQL typ
 | `z.string().uuid()`      | `GraphQLID`         |
 | `z.literal("")`          | `GraphQLString`     |
 | `z.literal(false)`       | `GraphQLBoolean`    |
-| `z.literal(0)`           | `GraphQLInt`        |
+| `z.literal(0)`           | `GraphQLFloat`        |
 | `z.number()`             | `GraphQLFloat`      |
-| `z.number().int()`       | `GraphQLFloat`      |
+| `z.number().int()`       | `GraphQLInt`      |
 | `z.boolean()`            | `GraphQLBoolean`    |
 | `z.object()`             | `GraphQLObjectType` |
 | `z.enum()`               | `GraphQLEnumType`   |
