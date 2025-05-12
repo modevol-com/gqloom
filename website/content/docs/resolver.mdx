@@ -583,3 +583,70 @@ type Query {
   books: [Book!]!
 }
 ```
+
+### Define Derived Fields
+
+When writing resolvers for database tables or other persistent data, we often need to calculate new fields based on the data in the table, which are derived fields.
+Derived fields require selecting the data they depend on when retrieving data. We can use `field().derivedFrom()` to declare the dependent data.
+The derived dependencies will be used by `useResolvingFields()`, and this function is used to accurately obtain the fields required for the current query. 
+
+<Tabs groupId='schema-builder' items={['resolver.ts', 'schema.ts']}>
+<Tab>
+  <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+  <Tab>
+
+```ts
+import { field, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { giraffes } from "./table"
+
+export const giraffeResolver = resolver.of(giraffes, {
+  age: field(v.number())
+    .derivedFrom("birthDate")
+    .resolve((giraffe) => {
+      const today = new Date()
+      const age = today.getFullYear() - giraffe.birthDate.getFullYear()
+      return age
+    }),
+})
+```
+
+  </Tab>
+  <Tab>
+
+```ts
+import { field, resolver } from "@gqloom/core"
+import * as z from "zod"
+import { giraffes } from "./table"
+
+export const giraffeResolver = resolver.of(giraffes, {
+  age: field(z.number())
+    .derivedFrom("birthDate")
+    .resolve((giraffe) => {
+      const today = new Date()
+      const age = today.getFullYear() - giraffe.birthDate.getFullYear()
+      return age
+    }),
+})
+```
+
+  </Tab>
+  </Tabs>
+</Tab>
+<Tab>
+
+```ts
+import * as sqlite from "drizzle-orm/sqlite-core"
+import { drizzleSilk } from "@gqloom/drizzle"
+
+export const giraffes = drizzleSilk(
+  sqlite.sqliteTable("giraffes", {
+    id: sqlite.integer("id").primaryKey(),
+    name: sqlite.text("name").notNull(),
+    birthDate: sqlite.integer({ mode: "timestamp" }).notNull(),
+  })
+)
+```
+
+</Tab>
+</Tabs>

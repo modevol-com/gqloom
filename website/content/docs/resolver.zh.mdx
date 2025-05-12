@@ -583,3 +583,70 @@ type Query {
   books: [Book!]!
 }
 ```
+
+### 定义派生属性
+
+在为数据库表或其他持久化数据定义编写解析器时，我们通常需要根据表中的数据计算出新的属性，也就是派生属性。  
+派生属性要求在获取数据时选取其依赖的数据，我们可以使用 `field().derivedFrom()` 来声明所依赖的数据。
+派生依赖将被 `useResolvingFields()` 使用，这个函数用于精确获取当前查询所需要的字段。
+
+<Tabs groupId='schema-builder' items={['resolver.ts', 'schema.ts']}>
+<Tab>
+  <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+  <Tab>
+
+```ts
+import { field, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { giraffes } from "./table"
+
+export const giraffeResolver = resolver.of(giraffes, {
+  age: field(v.number())
+    .derivedFrom("birthDate")
+    .resolve((giraffe) => {
+      const today = new Date()
+      const age = today.getFullYear() - giraffe.birthDate.getFullYear()
+      return age
+    }),
+})
+```
+
+  </Tab>
+  <Tab>
+
+```ts
+import { field, resolver } from "@gqloom/core"
+import * as z from "zod"
+import { giraffes } from "./table"
+
+export const giraffeResolver = resolver.of(giraffes, {
+  age: field(z.number())
+    .derivedFrom("birthDate")
+    .resolve((giraffe) => {
+      const today = new Date()
+      const age = today.getFullYear() - giraffe.birthDate.getFullYear()
+      return age
+    }),
+})
+```
+
+  </Tab>
+  </Tabs>
+</Tab>
+<Tab>
+
+```ts
+import * as sqlite from "drizzle-orm/sqlite-core"
+import { drizzleSilk } from "@gqloom/drizzle"
+
+export const giraffes = drizzleSilk(
+  sqlite.sqliteTable("giraffes", {
+    id: sqlite.integer("id").primaryKey(),
+    name: sqlite.text("name").notNull(),
+    birthDate: sqlite.integer({ mode: "timestamp" }).notNull(),
+  })
+)
+```
+
+</Tab>
+</Tabs>
