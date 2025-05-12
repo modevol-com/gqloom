@@ -418,6 +418,111 @@ export const cache = (options: CacheOptions = {}): Middleware => {
 }
 ```
 
+### Modifying Input
+
+We can modify the request input through middleware:
+
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab>
+
+```ts twoslash
+const useUser = async () => ({ id: 1 })
+// ---cut---
+import { mutation, resolver } from "@gqloom/core"
+import * as v from "valibot"
+
+const Post = v.object({
+  __typename: v.nullish(v.literal("Post")),
+  id: v.number(),
+  title: v.string(),
+  content: v.string(),
+  authorId: v.number(),
+})
+
+interface IPost extends v.InferOutput<typeof Post> {}
+
+const posts: IPost[] = []
+
+export const postsResolver = resolver({
+  createPost: mutation(Post)
+    .input(
+      v.object({
+        title: v.string(),
+        content: v.string(),
+        authorId: v.number(),
+      })
+    )
+    .use(async ({ next, parseInput }) => { // [!code hl]
+      const inputResult = await parseInput.getResult() // [!code hl]
+      inputResult.authorId = (await useUser()).id // [!code hl]
+      parseInput.result = { value: inputResult } // [!code hl]
+      return next() // [!code hl]
+    })
+    .resolve(({ title, content, authorId }) => {
+      const post = {
+        id: Math.random(),
+        title,
+        content,
+        authorId,
+      }
+      posts.push(post)
+      return post
+    }),
+})
+```
+
+</Tab>
+<Tab>
+
+```ts twoslash
+const useUser = async () => ({ id: 1 })
+// ---cut---
+import { mutation, resolver } from "@gqloom/core"
+import { z } from "zod"
+
+const Post = z.object({
+  __typename: z.literal("Post").nullish(),
+  id: z.number(),
+  title: z.string(),
+  content: z.string(),
+  authorId: z.number(),
+})
+
+interface IPost extends z.output<typeof Post> {}
+
+const posts: IPost[] = []
+
+export const postsResolver = resolver({
+  createPost: mutation(Post)
+    .input(
+      z.object({
+        title: z.string(),
+        content: z.string(),
+        authorId: z.number(),
+      })
+    )
+    .use(async ({ next, parseInput }) => { // [!code hl]
+      const inputResult = await parseInput.getResult() // [!code hl]
+      inputResult.authorId = (await useUser()).id // [!code hl]
+      parseInput.result = { value: inputResult } // [!code hl]
+      return next() // [!code hl]
+    })
+    .resolve(({ title, content, authorId }) => {
+      const post = {
+        id: Math.random(),
+        title,
+        content,
+        authorId,
+      }
+      posts.push(post)
+      return post
+    }),
+})
+```
+
+</Tab>
+</Tabs>
+
 ## Using middleware
 
 GQLoom is able to apply middleware in a variety of scopes, including resolver functions, resolver local middleware, and global middleware.
