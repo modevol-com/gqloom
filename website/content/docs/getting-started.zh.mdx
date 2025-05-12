@@ -643,6 +643,47 @@ mutation {
 
 ### 当前用户上下文
 
+首先让我们为应用添加 `asyncContextProvider` 中间件来启用异步上下文：
+
+<Tabs groupId="async-context-provider" items={["Valibot", "Zod"]}>
+<Tab>
+
+```ts title="src/index.ts"
+import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot" // [!code ++]
+import { createYoga } from "graphql-yoga"
+import { resolvers } from "./resolvers"
+
+const schema = weave(asyncContextProvider, ValibotWeaver, ...resolvers) // [!code ++]
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+<Tab>
+
+```ts title="src/index.ts"
+import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod" // [!code ++]
+import { createYoga } from "graphql-yoga"
+import { resolvers } from "./resolvers"
+
+const schema = weave(asyncContextProvider, ZodWeaver, ...resolvers) // [!code ++]
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+</Tabs>
+
 接下来，让我们尝试添加一个简单的登录功能，再为用户解析器添加一个查询操作：
 
 - `mine`: 返回当前用户信息

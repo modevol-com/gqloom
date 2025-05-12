@@ -643,6 +643,47 @@ Let's continue to try to retrieve the user we just created:
 
 ### Current User Context
 
+First, let's add the `asyncContextProvider` middleware to enable asynchronous context: 
+
+<Tabs groupId="async-context-provider" items={["Valibot", "Zod"]}>
+<Tab>
+
+```ts title="src/index.ts"
+import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot" // [!code ++]
+import { createYoga } from "graphql-yoga"
+import { resolvers } from "./resolvers"
+
+const schema = weave(asyncContextProvider, ValibotWeaver, ...resolvers) // [!code ++]
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+<Tab>
+
+```ts title="src/index.ts"
+import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod" // [!code ++]
+import { createYoga } from "graphql-yoga"
+import { resolvers } from "./resolvers"
+
+const schema = weave(asyncContextProvider, ZodWeaver, ...resolvers) // [!code ++]
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+</Tabs>
+
 Next, let's try to add a simple login function and add a query operation to the user resolver:
 
 - `mine`: Return the current user information
