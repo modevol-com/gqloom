@@ -483,3 +483,49 @@ import { exceptionFilter } from "./middlewares"
 
 export const schema = weave(helloResolver, exceptionFilter) // [!code hl]
 ```
+
+### 根据操作类型应用中间件
+
+我们可以为中间件指定在哪些操作类型上生效。
+
+```ts twoslash
+const db = {} as {
+  beginTransaction: () => Promise<void>
+  commit: () => Promise<void>
+  rollback: () => Promise<void>
+}
+
+// ---cut---
+import type { Middleware } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+
+export const transaction: Middleware = async ({ next }) => {
+  try {
+    await db.beginTransaction()
+
+    const result = await next()
+
+    await db.commit()
+
+    return result
+  } catch (error) {
+    await db.rollback()
+    throw new GraphQLError("Transaction failed", {
+      extensions: { originalError: error },
+    })
+  }
+}
+
+transaction.operations = ["mutation"]
+```
+
+`Middleware.operations` 是一个字符串数组，用于指定中间件在哪些操作类型上生效，可选值为：
+
+- `"query"`；
+- `"mutation"`；
+- `"subscription"`；
+- `"field"`；
+- `"subscription.resolve"`；
+- `"subscription.subscribe"`；
+
+`Middleware.operations` 的默认值为 `["field", "query", "mutation", "subscription.subscribe"]`。

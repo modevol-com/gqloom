@@ -483,3 +483,49 @@ import { exceptionFilter } from "./middlewares"
 
 export const schema = weave(helloResolver, exceptionFilter) // [!code hl]
 ```
+
+### Applying Middleware Based on Operation Type
+
+We can specify for which operation types a middleware should take effect.
+
+```ts twoslash
+const db = {} as {
+  beginTransaction: () => Promise<void>
+  commit: () => Promise<void>
+  rollback: () => Promise<void>
+}
+
+// ---cut---
+import type { Middleware } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+
+export const transaction: Middleware = async ({ next }) => {
+  try {
+    await db.beginTransaction()
+
+    const result = await next()
+
+    await db.commit()
+
+    return result
+  } catch (error) {
+    await db.rollback()
+    throw new GraphQLError("Transaction failed", {
+      extensions: { originalError: error },
+    })
+  }
+}
+
+transaction.operations = ["mutation"]
+```
+
+`Middleware.operations` is an array of strings used to specify on which operation types the middleware should take effect. The available values are:
+
+- `"query"`;
+- `"mutation"`;
+- `"subscription"`;
+- `"field"`;
+- `"subscription.resolve"`;
+- `"subscription.subscribe"`;
+
+The default value for `Middleware.operations` is `["field", "query", "mutation", "subscription.subscribe"]`.
