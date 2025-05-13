@@ -92,7 +92,7 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 ```
 
-让我们在解析器中使用它们：
+让我们在解析器中使用它们，同时我们使用 `useSelectedColumns()` 函数以得知当前 GraphQL 查询需要选取哪些列：
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -131,8 +131,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 // @filename: resolver.ts
 // ---cut---
-import { EasyDataLoader, field, query, resolver } from "@gqloom/core"
-import { createMemoization } from "@gqloom/core/context"
+import { field, query, resolver } from "@gqloom/core"
+import { useSelectedColumns } from "@gqloom/drizzle/context"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
@@ -144,12 +144,26 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usePostsLoader = createMemoization(
-  () =>
-    new EasyDataLoader<
-      { id: number },
-      (typeof posts.$inferSelect)[]
-    >(async (userList) => {
+export const usersResolver = resolver.of(users, {
+  user: query
+    .output(users.$nullable())
+    .input({ id: v.number() })
+    .resolve(({ id }) => {
+      return db
+        .select(useSelectedColumns(users))
+        .from(users)
+        .where(eq(users.id, id))
+        .get()
+    }),
+
+  users: query.output(users.$list()).resolve(() => {
+    return db.select(useSelectedColumns(users)).from(users).all()
+  }),
+
+  posts: field
+    .output(posts.$list())
+    .derivedFrom("id")
+    .load(async (userList) => {
       const postList = await db
         .select()
         .from(posts)
@@ -167,36 +181,55 @@ const usePostsLoader = createMemoization(
         groups.set(key, [...(groups.get(key) ?? []), post])
       }
       return userList.map((user) => groups.get(user.id) ?? [])
-    })
-)
-
-export const usersResolver = resolver.of(users, {
-  user: query
-    .output(users.$nullable())
-    .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return db.select().from(users).where(eq(users.id, id)).get()
-    }),
-
-  users: query.output(users.$list()).resolve(() => {
-    return db.select().from(users).all()
-  }),
-
-  posts: field.output(posts.$list())
-    .derivedFrom('id')
-    .resolve((user) => {
-      return usePostsLoader().load(user)
     }),
 })
 ```
 
 如上面的代码所示，我们可以直接在 `resolver` 里使用 `drizzleSilk` 包裹的 Drizzle Table。  
-在这里我们使用了 `users` 作为 `resolver.of` 的父类型，并在 resolver 中定义了 `user`、`users` 两个查询和一个名为 `posts` 的字段。其中 `user` 的返回类型是 `users.$nullable()`，表示 `user` 可能为空；`users` 的返回类型是 `users.$list()`，表示 `users` 将返回一个 `users` 的列表；`posts` 字段的返回类型是 `posts.$list()`，在 `posts` 字段中，我们使用了 `user` 参数，TypeScript 将帮助我们推断其类型，我们将 `user` 传递给 `usePostsLoader().load()` 来批量获取 `posts`。
+在这里我们使用了 `users` 作为 `resolver.of` 的父类型，并在 resolver 中定义了 `user`、`users` 两个查询和一个名为 `posts` 的字段。其中：  
+- `user` 的返回类型是 `users.$nullable()`，表示 `user` 可能为空；
+- `users` 的返回类型是 `users.$list()`，表示 `users` 将返回一个 `users` 的列表；
+- `posts` 字段的返回类型是 `posts.$list()`，在 `posts` 字段中，我们在 `load` 方法中使用了 `userList` 参数，TypeScript 将帮助我们推断其类型，`load` 方法是对 `DataLoader` 的封装，允许我们快速定义一个 `DataLoader` 方法，并使用它来批量获取 `posts`。
 
-### 隐藏字段
+我们还使用 `useSelectedColumns()` 函数来知道当前 GraphQL 查询需要选取哪些列。这个函数需要[启用上下文](../context)。  
+对于无法使用 `useSelectedColumns()` 函数的运行时，我们也可以使用 `getSelectedColumns()` 函数来获取当前查询需要选取的列。
 
-有时候我们并不想把数据库表格的所有字段都暴露给客户端。  
-考虑我们有一张包含密码字段的 `users` 表，其中 `password` 字段是加密后的密码，我们不希望把它暴露给客户端：
+### 计算属性
+
+为数据库表添加计算属性非常简单，但需要注意使用 `field().derivedFrom()` 方法声明所依赖的列，以便 `useSelectedColumns` 方法能正确地选取这些列：
+
+```ts twoslash title="schema.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const posts = drizzleSilk(
+  t.sqliteTable("posts", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    title: t.text().notNull(),
+    content: t.text(),
+    authorId: t.int(),
+  })
+)
+// @filename: resolver.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { posts } from "./schema"
+
+export const postsResolver = resolver.of(posts, {
+  abstract: field(v.string())
+    .derivedFrom("title", "content")
+    .resolve((post) => {
+      return `${post.title} ${post.content?.slice(0, 60)}...`
+    }),
+})
+```
+
+### 隐藏属性
+
+有时候我们并不想把数据库表格的所有属性都暴露给客户端。  
+考虑我们有一张包含密码字段的 `users` 表，其中 `password` 属性是加密后的密码，我们不希望把它暴露给客户端：
 
 ```ts twoslash title="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -213,7 +246,7 @@ export const users = drizzleSilk(
 )
 ```
 
-我们可以在解析器中使用 `field.hidden` 来隐藏 `password` 字段：
+我们可以在解析器中使用 `field.hidden` 来隐藏 `password` 属性：
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts

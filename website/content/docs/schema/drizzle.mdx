@@ -92,7 +92,7 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 ```
 
-Let's use them in the resolver:
+Let's use them in the resolver. At the same time, we use the `useSelectedColumns()` function to know which columns are needed for the current GraphQL query: 
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -131,8 +131,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 // @filename: resolver.ts
 // ---cut---
-import { EasyDataLoader, field, query, resolver } from "@gqloom/core"
-import { createMemoization } from "@gqloom/core/context"
+import { field, query, resolver } from "@gqloom/core"
+import { useSelectedColumns } from "@gqloom/drizzle/context"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
@@ -144,12 +144,26 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usePostsLoader = createMemoization(
-  () =>
-    new EasyDataLoader<
-      { id: number },
-      (typeof posts.$inferSelect)[]
-    >(async (userList) => {
+export const usersResolver = resolver.of(users, {
+  user: query
+    .output(users.$nullable())
+    .input({ id: v.number() })
+    .resolve(({ id }) => {
+      return db
+        .select(useSelectedColumns(users))
+        .from(users)
+        .where(eq(users.id, id))
+        .get()
+    }),
+
+  users: query.output(users.$list()).resolve(() => {
+    return db.select(useSelectedColumns(users)).from(users).all()
+  }),
+
+  posts: field
+    .output(posts.$list())
+    .derivedFrom("id")
+    .load(async (userList) => {
       const postList = await db
         .select()
         .from(posts)
@@ -167,31 +181,50 @@ const usePostsLoader = createMemoization(
         groups.set(key, [...(groups.get(key) ?? []), post])
       }
       return userList.map((user) => groups.get(user.id) ?? [])
-    })
-)
-
-export const usersResolver = resolver.of(users, {
-  user: query
-    .output(users.$nullable())
-    .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return db.select().from(users).where(eq(users.id, id)).get()
-    }),
-
-  users: query.output(users.$list()).resolve(() => {
-    return db.select().from(users).all()
-  }),
-
-  posts: field.output(posts.$list())
-    .derivedFrom('id')
-    .resolve((user) => {
-      return usePostsLoader().load(user)
     }),
 })
 ```
 
-As shown in the above code, we can directly use the Drizzle Schemas wrapped by `drizzleSilk` in the `resolver`.
-Here we use `users` as the parent type of `resolver.of`, and define two queries `user` and `users` and a field named `posts` in the resolver. The return type of `user` is `users.$nullable()`, indicating that `user` may be empty; the return type of `users` is `users.$list()`, indicating that `users` will return a list of `users`; the return type of the `posts` field is `posts.$list()`. In the `posts` field, we use the `user` parameter, and TypeScript will help us infer its type. We pass `user` to `usePostsLoader().load()` to batch fetch `posts`.
+As shown in the code above, we can directly use the Drizzle Table wrapped by `drizzleSilk` in the `resolver`. 
+Here, we use `users` as the parent type of `resolver.of`, and define two queries named `user` and `users` and a field named `posts` in the resolver. Among them:
+- The return type of `user` is `users.$nullable()`, indicating that `user` may be null;
+- The return type of `users` is `users.$list()`, indicating that `users` will return a list of `users`;
+- The return type of the `posts` field is `posts.$list()`. In the `posts` field, we use the `userList` parameter in the `load` method. TypeScript will help us infer its type. The `load` method is a wrapper of `DataLoader`, allowing us to quickly define a `DataLoader` method and use it to batch fetch `posts`. 
+
+We also use the `useSelectedColumns()` function to determine which columns need to be selected for the current GraphQL query. This function requires [enabling context](../context).  
+For runtimes where the `useSelectedColumns()` function cannot be used, we can also use the `getSelectedColumns()` function to obtain the columns that need to be selected for the current query.
+
+### Computed Properties
+
+Adding computed properties to a database table is quite simple. However, it's important to use the `field().derivedFrom()` method to declare the columns on which the computed property depends, so that the `useSelectedColumns` method can correctly select these columns: 
+
+```ts twoslash title="schema.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const posts = drizzleSilk(
+  t.sqliteTable("posts", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    title: t.text().notNull(),
+    content: t.text(),
+    authorId: t.int(),
+  })
+)
+// @filename: resolver.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { posts } from "./schema"
+
+export const postsResolver = resolver.of(posts, {
+  abstract: field(v.string())
+    .derivedFrom("title", "content")
+    .resolve((post) => {
+      return `${post.title} ${post.content?.slice(0, 60)}...`
+    }),
+})
+```
 
 ### Hiding Fields
 
