@@ -248,6 +248,7 @@ describe("Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id, email AS email
         "
       `)
     })
@@ -423,6 +424,7 @@ describe("Resolver", () => {
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        UPDATE main.Post SET title = ? WHERE (main.Post.id = ? AND 1=1) RETURNING id AS id, title AS title
         "
       `)
     })
