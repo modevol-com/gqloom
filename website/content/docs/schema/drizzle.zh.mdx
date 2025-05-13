@@ -194,9 +194,9 @@ export const usersResolver = resolver.of(users, {
 我们还使用 `useSelectedColumns()` 函数来知道当前 GraphQL 查询需要选取哪些列。这个函数需要[启用上下文](../context)。  
 对于无法使用 `useSelectedColumns()` 函数的运行时，我们也可以使用 `getSelectedColumns()` 函数来获取当前查询需要选取的列。
 
-### 计算属性
+### 派生字段
 
-为数据库表添加计算属性非常简单，但需要注意使用 `field().derivedFrom()` 方法声明所依赖的列，以便 `useSelectedColumns` 方法能正确地选取这些列：
+为数据库表添加派生字段非常简单，但需要注意使用 `field().derivedFrom()` 方法声明所依赖的列，以便 `useSelectedColumns` 方法能正确地选取这些列：
 
 ```ts twoslash title="schema.ts"
 // @filename: schema.ts
@@ -226,10 +226,10 @@ export const postsResolver = resolver.of(posts, {
 })
 ```
 
-### 隐藏属性
+### 隐藏字段
 
-有时候我们并不想把数据库表格的所有属性都暴露给客户端。  
-考虑我们有一张包含密码字段的 `users` 表，其中 `password` 属性是加密后的密码，我们不希望把它暴露给客户端：
+有时候我们并不想把数据库表格的所有字段都暴露给客户端。  
+考虑我们有一张包含密码字段的 `users` 表，其中 `password` 字段是加密后的密码，我们不希望把它暴露给客户端：
 
 ```ts twoslash title="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -246,7 +246,7 @@ export const users = drizzleSilk(
 )
 ```
 
-我们可以在解析器中使用 `field.hidden` 来隐藏 `password` 属性：
+我们可以在解析器中使用 `field.hidden` 来隐藏 `password` 字段：
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -807,12 +807,19 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 // ---cut---
+// Readonly Resolver
+const usersQueriesResolver = usersResolverFactory.queriesResolver()
+
+// Full Resolver
 const usersResolver = usersResolverFactory.resolver()
 ```
 
-在上面的代码中，我们使用 `usersResolverFactory.resolver()` 来创建一个 Resolver。这个Resolver 将包含工厂中所有的查询、变更和字段。
+有两个用于创建 Resolver 的函数：
+
+- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的 Resolver。
+- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的 Resolver。
 
 ## 自定义类型映射
 

@@ -194,9 +194,9 @@ Here, we use `users` as the parent type of `resolver.of`, and define two queries
 We also use the `useSelectedColumns()` function to determine which columns need to be selected for the current GraphQL query. This function requires [enabling context](../context).  
 For runtimes where the `useSelectedColumns()` function cannot be used, we can also use the `getSelectedColumns()` function to obtain the columns that need to be selected for the current query.
 
-### Computed Properties
+### Derived Fields
 
-Adding computed properties to a database table is quite simple. However, it's important to use the `field().derivedFrom()` method to declare the columns on which the computed property depends, so that the `useSelectedColumns` method can correctly select these columns: 
+Adding derived Fields to a database table is quite simple. However, it's important to use the `field().derivedFrom()` method to declare the columns on which the computed property depends, so that the `useSelectedColumns` method can correctly select these columns: 
 
 ```ts twoslash title="schema.ts"
 // @filename: schema.ts
@@ -809,10 +809,17 @@ const db = drizzle({
 
 const usersResolverFactory = drizzleResolverFactory(db, "users")
 // ---cut---
+// Readonly Resolver
+const usersQueriesResolver = usersResolverFactory.queriesResolver()
+
+// Full Resolver
 const usersResolver = usersResolverFactory.resolver()
 ```
 
-In the above code, we use `usersResolverFactory.resolver()` to create a Resolver. This Resolver will include all queries, mutations, and fields in the factory.
+There are two functions for creating Resolvers:
+
+- `usersResolverFactory.queriesResolver()`: Creates a Resolver that only includes queries and relational fields.
+- `usersResolverFactory.resolver()`: Creates a Resolver that includes all queries, mutations, and relational fields.
 
 ## Custom Type Mapping
 
