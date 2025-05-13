@@ -2,18 +2,39 @@
 title: Drizzle
 ---
 
-[Drizzle](https://orm.drizzle.team/) is a modern, type-safe TypeScript ORM designed for Node.js. It offers a concise and easy-to-use API, supports databases such as PostgreSQL, MySQL, and SQLite, and has powerful query builders, transaction processing, and database migration capabilities. At the same time, it remains lightweight and has no external dependencies, making it very suitable for database operation scenarios that require high performance and type safety.
+[Drizzle](https://orm.drizzle.team/) 是一个现代化的、类型安全的 TypeScript ORM，专为 Node.js 设计。它提供了简洁易用的 API，支持 PostgreSQL、MySQL 和 SQLite 等数据库，具备强大的查询构建器、事务处理和数据库迁移功能，同时保持轻量级和无外部依赖的特点，非常适合需要高性能和类型安全的数据库操作场景。
 
-`@gqloom/drizzle` provides the integration of GQLoom and Drizzle:
+`@gqloom/drizzle` 提供了 GQLoom 与 Drizzle 的集成：
 
-- Use Drizzle Table as [Silk](../silk);
-- Use the resolver factory to quickly create CRUD operations from Drizzle.
+- 使用 Drizzle Table 作为[丝线](../silk)使用；
+- 使用解析器工厂从 Drizzle 快速生成 CRUD 操作。
 
-## Installation
+## 安装
 
-Please refer to Drizzle's [Getting Started Guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration.
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+请参考 Drizzle 的[入门指南](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started)安装 Drizzle 与对应的数据库集成。
 
-After completing the installation of Drizzle, install `@gqloom/drizzle`:
+在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
+
+```sh tab="npm"
+npm i @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="yarn"
+yarn add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="bun"
+bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+
+</Tab>
+<Tab>
+请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。
+
+在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
 
 ```sh tab="npm"
 npm i @gqloom/core @gqloom/drizzle
@@ -28,9 +49,12 @@ yarn add @gqloom/core @gqloom/drizzle
 bun add @gqloom/core @gqloom/drizzle
 ```
 
-## Using Silk
+</Tab>
+</Tabs>
 
-We can easily use Drizzle Schemas as [Silk](../silk) by simply wrapping them with `drizzleSilk`.
+## 使用丝线
+
+只需要使用 `drizzleSilk` 包裹 Drizzle Table，我们就可以轻松地将它们作为[丝线](../silk)使用。
 
 ```ts twoslash title="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -68,7 +92,7 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 ```
 
-Let's use them in the resolver:
+让我们在解析器中使用它们，同时我们使用 `useSelectedColumns()` 函数以得知当前 GraphQL 查询需要选取哪些列：
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -107,13 +131,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 // @filename: resolver.ts
 // ---cut---
-import {
-  EasyDataLoader,
-  createMemoization,
-  field,
-  query,
-  resolver,
-} from "@gqloom/core"
+import { field, query, resolver } from "@gqloom/core"
+import { useSelectedColumns } from "@gqloom/drizzle/context"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
@@ -125,12 +144,26 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usePostsLoader = createMemoization(
-  () =>
-    new EasyDataLoader<
-      typeof users.$inferSelect,
-      (typeof posts.$inferSelect)[]
-    >(async (userList) => {
+export const usersResolver = resolver.of(users, {
+  user: query
+    .output(users.$nullable())
+    .input({ id: v.number() })
+    .resolve(({ id }) => {
+      return db
+        .select(useSelectedColumns(users))
+        .from(users)
+        .where(eq(users.id, id))
+        .get()
+    }),
+
+  users: query.output(users.$list()).resolve(() => {
+    return db.select(useSelectedColumns(users)).from(users).all()
+  }),
+
+  posts: field
+    .output(posts.$list())
+    .derivedFrom("id")
+    .load(async (userList) => {
       const postList = await db
         .select()
         .from(posts)
@@ -148,34 +181,55 @@ const usePostsLoader = createMemoization(
         groups.set(key, [...(groups.get(key) ?? []), post])
       }
       return userList.map((user) => groups.get(user.id) ?? [])
-    })
-)
-
-export const usersResolver = resolver.of(users, {
-  user: query
-    .output(users.$nullable())
-    .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return db.select().from(users).where(eq(users.id, id)).get()
     }),
-
-  users: query.output(users.$list()).resolve(() => {
-    return db.select().from(users).all()
-  }),
-
-  posts: field.output(posts.$list()).resolve((user) => {
-    return usePostsLoader().load(user)
-  }),
 })
 ```
 
-As shown in the above code, we can directly use the Drizzle Schemas wrapped by `drizzleSilk` in the `resolver`.
-Here we use `users` as the parent type of `resolver.of`, and define two queries `user` and `users` and a field named `posts` in the resolver. The return type of `user` is `users.$nullable()`, indicating that `user` may be empty; the return type of `users` is `users.$list()`, indicating that `users` will return a list of `users`; the return type of the `posts` field is `posts.$list()`. In the `posts` field, we use the `user` parameter, and TypeScript will help us infer its type. We pass `user` to `usePostsLoader().load()` to batch fetch `posts`.
+如上面的代码所示，我们可以直接在 `resolver` 里使用 `drizzleSilk` 包裹的 Drizzle Table。  
+在这里我们使用了 `users` 作为 `resolver.of` 的父类型，并在 resolver 中定义了 `user`、`users` 两个查询和一个名为 `posts` 的字段。其中：  
+- `user` 的返回类型是 `users.$nullable()`，表示 `user` 可能为空；
+- `users` 的返回类型是 `users.$list()`，表示 `users` 将返回一个 `users` 的列表；
+- `posts` 字段的返回类型是 `posts.$list()`，在 `posts` 字段中，我们在 `load` 方法中使用了 `userList` 参数，TypeScript 将帮助我们推断其类型，`load` 方法是对 `DataLoader` 的封装，允许我们快速定义一个 `DataLoader` 方法，并使用它来批量获取 `posts`。
 
-### Hiding Fields
+我们还使用 `useSelectedColumns()` 函数来知道当前 GraphQL 查询需要选取哪些列。这个函数需要[启用上下文](../context)。  
+对于无法使用 `useSelectedColumns()` 函数的运行时，我们也可以使用 `getSelectedColumns()` 函数来获取当前查询需要选取的列。
 
-Sometimes we don't want to expose all fields of the database table to the client.
-Consider that we have a `users` table containing a password field, where the `password` field is an encrypted password, and we don't want to expose it to the client:
+### 派生字段
+
+为数据库表添加派生字段非常简单，但需要注意使用 `field().derivedFrom()` 方法声明所依赖的列，以便 `useSelectedColumns` 方法能正确地选取这些列：
+
+```ts twoslash title="schema.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const posts = drizzleSilk(
+  t.sqliteTable("posts", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    title: t.text().notNull(),
+    content: t.text(),
+    authorId: t.int(),
+  })
+)
+// @filename: resolver.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { posts } from "./schema"
+
+export const postsResolver = resolver.of(posts, {
+  abstract: field(v.string())
+    .derivedFrom("title", "content")
+    .resolve((post) => {
+      return `${post.title} ${post.content?.slice(0, 60)}...`
+    }),
+})
+```
+
+### 隐藏字段
+
+有时候我们并不想把数据库表格的所有字段都暴露给客户端。  
+考虑我们有一张包含密码字段的 `users` 表，其中 `password` 字段是加密后的密码，我们不希望把它暴露给客户端：
 
 ```ts twoslash title="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -192,7 +246,7 @@ export const users = drizzleSilk(
 )
 ```
 
-We can use `field.hidden` in the resolver to hide the `password` field:
+我们可以在解析器中使用 `field.hidden` 来隐藏 `password` 字段：
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -218,10 +272,25 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-## Resolver Factory
+## 解析器工厂
 
-`gqloom/drizzle` provides a resolver factory `DrizzleResolverFactory` to easily create CRUD resolvers from Drizzle, and it also supports custom parameters and adding middleware.
+`gqloom/drizzle` 提供了解析器工厂 `DrizzleResolverFactory`，用于从 Drizzle 轻松地生成 CRUD 解析器，同时支持自定参数和添加中间件。
 
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+```ts title="resolver.ts"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { drizzle } from "drizzle-orm/libsql"
+import { users } from "./schema"
+
+const db = drizzle({
+  connection: { url: process.env.DB_FILE_NAME! },
+})
+
+const usersResolverFactory = drizzleResolverFactory(db, users)
+```
+</Tab>
+<Tab>
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -262,18 +331,21 @@ export const postsRelations = relations(posts, ({ one }) => ({
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import * as schema from "./schema"
+import { users } from "./schema"
 
 const db = drizzle({
   schema,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
+</Tab>
+</Tabs>
 
-### Relationship Fields
+### 关系字段
 
-In Drizzle Table, we can easily create [relationships](https://orm.drizzle.team/docs/relations). We can use the `relationField` method of the resolver factory to create corresponding GraphQL fields for relationships.
+在 Drizzle Table 中，我们可以轻松地创建[关系](https://orm.drizzle.team/docs/relations)，使用解析器工厂的 `relationField` 方法可以为关系创建对应的 GraphQL 字段。
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -311,7 +383,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
   }),
 }))
 // @filename: resolver.ts
-import { field, EasyDataLoader, createMemoization } from "@gqloom/core"
+import { field, EasyDataLoader } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { posts } from "schema"
 // ---cut---
 import { query, resolver } from "@gqloom/core"
@@ -327,12 +400,12 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 
 const usePostsLoader = createMemoization( // [!code --]
   () => // [!code --]
     new EasyDataLoader< // [!code --]
-      typeof users.$inferSelect, // [!code --]
+      { id: number }, // [!code --]
       (typeof posts.$inferSelect)[] // [!code --]
     >(async (userList) => { // [!code --]
       const postList = await db // [!code --]
@@ -367,22 +440,25 @@ export const usersResolver = resolver.of(users, {
     return db.select().from(users).all()
   }),
 
-  posts_: field.output(posts.$list()).resolve((user) => { // [!code --]
-    return usePostsLoader().load(user) // [!code --]
-  }), // [!code --]
+  posts_: field.output(posts.$list()) // [!code --]
+    .derivedFrom('id') // [!code --]
+    .resolve((user) => { // [!code --]
+      return usePostsLoader().load(user) // [!code --]
+    }), // [!code --]
 
   posts: usersResolverFactory.relationField("posts"), // [!code ++]
 })
 ```
 
-### Queries
+### 查询
 
-The Drizzle resolver factory predefines some commonly used queries:
+Drizzle 解析器工厂预置了一些常用的查询：
 
-- `selectArrayQuery`: Find multiple records in the corresponding table according to the conditions.
-- `selectSingleQuery`: Find a single record in the corresponding table according to the conditions.
+- `selectArrayQuery`: 根据条件查找对应表的多条记录
+- `selectSingleQuery`: 根据条件查找对应表的一条记录
+- `countQuery`: 根据条件统计对应表的记录数量
 
-We can use the queries from the resolver factory in the resolver:
+我们可以在解析器内使用来自解析器工厂的查询：
 
 ```ts twoslash
 // @filename: schema.ts
@@ -455,16 +531,16 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-### Mutations
+### 变更
 
-The Drizzle resolver factory predefines some commonly used mutations:
+Drizzle 解析器工厂预置了一些常用的变更：
 
-- `insertArrayMutation`: Insert multiple records.
-- `insertSingleMutation`: Insert a single record.
-- `updateMutation`: Update records.
-- `deleteMutation`: Delete records.
+- `insertArrayMutation`: 插入多条记录
+- `insertSingleMutation`: 插入一条记录
+- `updateMutation`: 更新记录
+- `deleteMutation`: 删除记录
 
-We can use the mutations from the resolver factory in the resolver:
+我们可以在解析器内使用来自解析器工厂的变更：
 
 ```ts twoslash
 // @filename: schema.ts
@@ -529,9 +605,9 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-### Custom Input
+### 自定义输入
 
-The pre-defined queries and mutations of the resolver factory support custom input. You can define the input type through the `input` option:
+解析器工厂预置的查询和变更支持自定义输入，你可以通过 `input` 选项来定义输入类型：
 
 ```ts twoslash
 // @filename: schema.ts
@@ -598,11 +674,11 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-In the above code, we use `valibot` to define the input type. `v.object({ id: v.number() })` defines the type of the input object, and `v.transform(({ id }) => ({ where: eq(users.id, id) }))` converts the input parameters into Drizzle query parameters.
+在上面的代码中，我们使用 `valibot` 来定义输入类型， `v.object({ id: v.number() })` 定义了输入对象的类型，`v.transform(({ id }) => ({ where: eq(users.id, id) }))` 将输入参数转换为 Drizzle 的查询参数。
 
-### Adding Middleware
+### 添加中间件
 
-The pre-defined queries, mutations, and fields of the resolver factory support adding middleware. You can define middleware through the `middlewares` option:
+解析器工厂预置的查询、变更和字段支持添加中间件，你可以通过 `middlewares` 选项来定义中间件：
 
 ```ts twoslash
 // @filename: schema.ts
@@ -640,7 +716,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
   }),
 }))
 // @filename: resolver.ts
-import { query, field, resolver, createMemoization } from "@gqloom/core"
+import { query, field, resolver } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
@@ -675,11 +752,11 @@ const postResolver = resolver.of(posts, {
 })
 ```
 
-In the above code, we use the `middlewares` option to define middleware. `async (next) => { ... }` defines a middleware. `useAuthedUser()` is a custom function used to get the currently logged-in user. If the user is not logged in, an error is thrown; otherwise, `next()` is called to continue execution.
+在上面的代码中，我们使用 `middlewares` 选项来定义中间件，`async (next) => { ... }` 定义了一个中间件，`useAuthedUser()` 是一个自定义的函数，用于获取当前登录的用户，如果用户未登录，则抛出一个错误，否则调用 `next()` 继续执行。
 
-### Complete Resolver
+### 完整解析器
 
-We can directly create a complete Resolver with the resolver factory:
+我们可以用解析器工厂直接创建一个完整的 Resolver：
 
 ```ts twoslash
 // @filename: schema.ts
@@ -730,18 +807,25 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 // ---cut---
+// Readonly Resolver
+const usersQueriesResolver = usersResolverFactory.queriesResolver()
+
+// Full Resolver
 const usersResolver = usersResolverFactory.resolver()
 ```
 
-In the above code, we use `usersResolverFactory.resolver()` to create a Resolver. This Resolver will include all queries, mutations, and fields in the factory.
+有两个用于创建 Resolver 的函数：
 
-## Custom Type Mapping
+- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的 Resolver。
+- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的 Resolver。
 
-To adapt to more Drizzle types, we can extend GQLoom to add more type mappings.
+## 自定义类型映射
 
-First, we use `DrizzleWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSONObject` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering `date` and `json` types, we map them to the corresponding GraphQL scalars.
+为了适应更多的 Drizzle 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
+
+首先我们使用 `DrizzleWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime` 和  `GraphQLJSONObject` ，当遇到 `date` 和 `json` 类型时，我们将其映射到对应的 GraphQL 标量。
 
 ```ts twoslash
 import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
@@ -759,7 +843,7 @@ const drizzleWeaverConfig = DrizzleWeaver.config({
 })
 ```
 
-Pass the configuration to the `weave` function when weaving the GraphQL Schema:
+在编织 GraphQL Schema 时传入配置到 weave 函数中：
 
 ```ts
 import { weave } from "@gqloom/core"
@@ -767,11 +851,11 @@ import { weave } from "@gqloom/core"
 export const schema = weave(drizzleWeaverConfig, usersResolver, postsResolver)
 ```
 
-## Default Type Mapping
+## 默认类型映射
 
-The following table lists the default mapping relationships between Drizzle `dataType` and GraphQL types in GQLoom:
+下表列出了 GQLoom 中 Drizzle `dataType` 与 GraphQL 类型之间的默认映射关系：
 
-| Drizzle `dataType` | GraphQL Type     |
+| Drizzle `dataType` | GraphQL 类型     |
 | ------------------ | ---------------- |
 | boolean            | `GraphQLBoolean` |
 | number             | `GraphQLFloat`   |
