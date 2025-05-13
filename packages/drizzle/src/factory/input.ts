@@ -226,7 +226,8 @@ export class DrizzleInputFactory<TTable extends Table> {
             return mapValue.SKIP
           }
           const type = (() => {
-            const t = DrizzleWeaver.getColumnType(column)
+            const fieldConfig = fieldsConfig[columnName]
+            const t = fieldConfig?.type ?? DrizzleWeaver.getColumnType(column)
             if (column.hasDefault) return t
             if (column.notNull && !isNonNullType(t))
               return new GraphQLNonNull(t)
@@ -305,7 +306,9 @@ export class DrizzleInputFactory<TTable extends Table> {
           ) {
             return mapValue.SKIP
           }
-          const type = DrizzleWeaver.getColumnType(column)
+          const type =
+            fieldsConfig[columnName]?.type ??
+            DrizzleWeaver.getColumnType(column)
           const columnConfig = fieldsConfig[columnName]
           return { type, description: columnConfig?.description }
         }),
