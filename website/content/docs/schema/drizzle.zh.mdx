@@ -11,6 +11,27 @@ title: Drizzle
 
 ## 安装
 
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+请参考 Drizzle 的[入门指南](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started)安装 Drizzle 与对应的数据库集成。
+
+在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
+
+```sh tab="npm"
+npm i @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="yarn"
+yarn add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="bun"
+bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+
+</Tab>
+<Tab>
 请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。
 
 在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
@@ -27,6 +48,9 @@ yarn add @gqloom/core @gqloom/drizzle
 ```sh tab="bun"
 bun add @gqloom/core @gqloom/drizzle
 ```
+
+</Tab>
+</Tabs>
 
 ## 使用丝线
 
@@ -107,13 +131,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 // @filename: resolver.ts
 // ---cut---
-import {
-  EasyDataLoader,
-  createMemoization,
-  field,
-  query,
-  resolver,
-} from "@gqloom/core"
+import { EasyDataLoader, field, query, resolver } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
@@ -128,7 +147,7 @@ const db = drizzle({
 const usePostsLoader = createMemoization(
   () =>
     new EasyDataLoader<
-      typeof users.$inferSelect,
+      { id: number },
       (typeof posts.$inferSelect)[]
     >(async (userList) => {
       const postList = await db
@@ -163,9 +182,11 @@ export const usersResolver = resolver.of(users, {
     return db.select().from(users).all()
   }),
 
-  posts: field.output(posts.$list()).resolve((user) => {
-    return usePostsLoader().load(user)
-  }),
+  posts: field.output(posts.$list())
+    .derivedFrom('id')
+    .resolve((user) => {
+      return usePostsLoader().load(user)
+    }),
 })
 ```
 
@@ -222,6 +243,21 @@ export const usersResolver = resolver.of(users, {
 
 `gqloom/drizzle` 提供了解析器工厂 `DrizzleResolverFactory`，用于从 Drizzle 轻松地生成 CRUD 解析器，同时支持自定参数和添加中间件。
 
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+```ts title="resolver.ts"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { drizzle } from "drizzle-orm/libsql"
+import { users } from "./schema"
+
+const db = drizzle({
+  connection: { url: process.env.DB_FILE_NAME! },
+})
+
+const usersResolverFactory = drizzleResolverFactory(db, users)
+```
+</Tab>
+<Tab>
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -262,14 +298,17 @@ export const postsRelations = relations(posts, ({ one }) => ({
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import * as schema from "./schema"
+import { users } from "./schema"
 
 const db = drizzle({
   schema,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
+</Tab>
+</Tabs>
 
 ### 关系字段
 
@@ -311,7 +350,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
   }),
 }))
 // @filename: resolver.ts
-import { field, EasyDataLoader, createMemoization } from "@gqloom/core"
+import { field, EasyDataLoader } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { posts } from "schema"
 // ---cut---
 import { query, resolver } from "@gqloom/core"
@@ -327,12 +367,12 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 
 const usePostsLoader = createMemoization( // [!code --]
   () => // [!code --]
     new EasyDataLoader< // [!code --]
-      typeof users.$inferSelect, // [!code --]
+      { id: number }, // [!code --]
       (typeof posts.$inferSelect)[] // [!code --]
     >(async (userList) => { // [!code --]
       const postList = await db // [!code --]
@@ -367,9 +407,11 @@ export const usersResolver = resolver.of(users, {
     return db.select().from(users).all()
   }),
 
-  posts_: field.output(posts.$list()).resolve((user) => { // [!code --]
-    return usePostsLoader().load(user) // [!code --]
-  }), // [!code --]
+  posts_: field.output(posts.$list()) // [!code --]
+    .derivedFrom('id') // [!code --]
+    .resolve((user) => { // [!code --]
+      return usePostsLoader().load(user) // [!code --]
+    }), // [!code --]
 
   posts: usersResolverFactory.relationField("posts"), // [!code ++]
 })
@@ -381,6 +423,7 @@ Drizzle 解析器工厂预置了一些常用的查询：
 
 - `selectArrayQuery`: 根据条件查找对应表的多条记录
 - `selectSingleQuery`: 根据条件查找对应表的一条记录
+- `countQuery`: 根据条件统计对应表的记录数量
 
 我们可以在解析器内使用来自解析器工厂的查询：
 
@@ -640,7 +683,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
   }),
 }))
 // @filename: resolver.ts
-import { query, field, resolver, createMemoization } from "@gqloom/core"
+import { query, field, resolver } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"

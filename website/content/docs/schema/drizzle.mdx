@@ -11,9 +11,30 @@ title: Drizzle
 
 ## Installation
 
-Please refer to Drizzle's [Getting Started Guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration.
+<Tabs items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
 
-After completing the installation of Drizzle, install `@gqloom/drizzle`:
+After installing Drizzle, install `@gqloom/drizzle`:
+
+```sh tab="npm"
+npm i @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="yarn"
+yarn add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="bun"
+bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+
+</Tab>
+<Tab>
+Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
+
+After installing Drizzle, install `@gqloom/drizzle`:
 
 ```sh tab="npm"
 npm i @gqloom/core @gqloom/drizzle
@@ -27,6 +48,9 @@ yarn add @gqloom/core @gqloom/drizzle
 ```sh tab="bun"
 bun add @gqloom/core @gqloom/drizzle
 ```
+
+</Tab>
+</Tabs>
 
 ## Using Silk
 
@@ -107,13 +131,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
 }))
 // @filename: resolver.ts
 // ---cut---
-import {
-  EasyDataLoader,
-  createMemoization,
-  field,
-  query,
-  resolver,
-} from "@gqloom/core"
+import { EasyDataLoader, field, query, resolver } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
@@ -128,7 +147,7 @@ const db = drizzle({
 const usePostsLoader = createMemoization(
   () =>
     new EasyDataLoader<
-      typeof users.$inferSelect,
+      { id: number },
       (typeof posts.$inferSelect)[]
     >(async (userList) => {
       const postList = await db
@@ -163,9 +182,11 @@ export const usersResolver = resolver.of(users, {
     return db.select().from(users).all()
   }),
 
-  posts: field.output(posts.$list()).resolve((user) => {
-    return usePostsLoader().load(user)
-  }),
+  posts: field.output(posts.$list())
+    .derivedFrom('id')
+    .resolve((user) => {
+      return usePostsLoader().load(user)
+    }),
 })
 ```
 
@@ -222,6 +243,21 @@ export const usersResolver = resolver.of(users, {
 
 `gqloom/drizzle` provides a resolver factory `DrizzleResolverFactory` to easily create CRUD resolvers from Drizzle, and it also supports custom parameters and adding middleware.
 
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+```ts title="resolver.ts"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { drizzle } from "drizzle-orm/libsql"
+import { users } from "./schema"
+
+const db = drizzle({
+  connection: { url: process.env.DB_FILE_NAME! },
+})
+
+const usersResolverFactory = drizzleResolverFactory(db, users)
+```
+</Tab>
+<Tab>
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -262,14 +298,17 @@ export const postsRelations = relations(posts, ({ one }) => ({
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import * as schema from "./schema"
+import { users } from "./schema"
 
 const db = drizzle({
   schema,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
+</Tab>
+</Tabs>
 
 ### Relationship Fields
 
@@ -311,7 +350,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
   }),
 }))
 // @filename: resolver.ts
-import { field, EasyDataLoader, createMemoization } from "@gqloom/core"
+import { field, EasyDataLoader } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { posts } from "schema"
 // ---cut---
 import { query, resolver } from "@gqloom/core"
@@ -327,12 +367,12 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 
 const usePostsLoader = createMemoization( // [!code --]
   () => // [!code --]
     new EasyDataLoader< // [!code --]
-      typeof users.$inferSelect, // [!code --]
+      { id: number }, // [!code --]
       (typeof posts.$inferSelect)[] // [!code --]
     >(async (userList) => { // [!code --]
       const postList = await db // [!code --]
@@ -367,9 +407,11 @@ export const usersResolver = resolver.of(users, {
     return db.select().from(users).all()
   }),
 
-  posts_: field.output(posts.$list()).resolve((user) => { // [!code --]
-    return usePostsLoader().load(user) // [!code --]
-  }), // [!code --]
+  posts_: field.output(posts.$list()) // [!code --]
+    .derivedFrom('id') // [!code --]
+    .resolve((user) => { // [!code --]
+      return usePostsLoader().load(user) // [!code --]
+    }), // [!code --]
 
   posts: usersResolverFactory.relationField("posts"), // [!code ++]
 })
@@ -377,10 +419,11 @@ export const usersResolver = resolver.of(users, {
 
 ### Queries
 
-The Drizzle resolver factory predefines some commonly used queries:
+The Drizzle resolver factory pre-defines some commonly used queries:
 
 - `selectArrayQuery`: Find multiple records in the corresponding table according to the conditions.
 - `selectSingleQuery`: Find a single record in the corresponding table according to the conditions.
+- `countQuery`: Count the number of records in the corresponding table according to the conditions.
 
 We can use the queries from the resolver factory in the resolver:
 
@@ -640,7 +683,8 @@ export const postsRelations = relations(posts, ({ one }) => ({
   }),
 }))
 // @filename: resolver.ts
-import { query, field, resolver, createMemoization } from "@gqloom/core"
+import { query, field, resolver } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
