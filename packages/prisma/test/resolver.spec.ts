@@ -215,6 +215,7 @@ describe("Resolver", () => {
       if (response.status !== 200) {
         throw new Error(JSON.stringify(errors))
       }
+      await new Promise((resolve) => setTimeout(resolve, 6))
       return data
     }
     beforeEach(async () => {
@@ -357,6 +358,7 @@ describe("Resolver", () => {
           email: "bob@bob.com",
         },
       })
+
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         DELETE FROM main.User WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email
@@ -422,6 +424,7 @@ describe("Resolver", () => {
           title: "Hello World",
         },
       })
+
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         UPDATE main.Post SET title = ? WHERE (main.Post.id = ? AND 1=1) RETURNING id AS id, title AS title
@@ -562,6 +565,7 @@ describe("Resolver", () => {
       if (response.status !== 200 || errors != null) {
         throw new Error(JSON.stringify(errors))
       }
+      await new Promise((resolve) => setTimeout(resolve, 6))
       return data
     }
 
@@ -777,6 +781,7 @@ describe("Resolver", () => {
         { content: "Goodbye world" },
         { content: "Hello world" },
       ])
+
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         SELECT main.Post.id, main.Post.content FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?
@@ -802,6 +807,7 @@ describe("Resolver", () => {
         { title: "Goodbye", author: { name: "Bob" } },
         { title: "Hello Alice", author: { name: "Alice" } },
       ])
+
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?

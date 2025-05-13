@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## next (YYYY-MM-DD)
+## 0.9.2 (2025-05-13)
+
+- Fix: DrizzleInputFactory to support custom column types
+
+## 0.9.0 (2025-05-11)
 
 - Feat: add `DrizzleResolverFactory.queriesResolver` to create a read-only resolver
 - Feat: add `getSelectedColumns` to get the selected columns from the resolver payload

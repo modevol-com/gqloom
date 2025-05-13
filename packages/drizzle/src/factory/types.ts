@@ -11,6 +11,7 @@ import type { PgDatabase } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
+import type { SelectiveTable } from "../types"
 import type {
   CountArgs,
   DeleteArgs,
@@ -137,7 +138,7 @@ export interface RelationManyField<
   TTable extends Table,
   TRelationTable extends Table,
 > extends FieldFactoryWithResolve<
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable>[],
       InferSelectModel<TRelationTable>[]
@@ -148,7 +149,7 @@ export interface RelationOneField<
   TTable extends Table,
   TRelationTable extends Table,
 > extends FieldFactoryWithResolve<
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable> | null | undefined,
       InferSelectModel<TRelationTable> | null | undefined

@@ -1,7 +1,7 @@
 import * as pg from "drizzle-orm/pg-core"
-import { printType } from "graphql"
+import { GraphQLScalarType, printType } from "graphql"
 import { describe, expect, it } from "vitest"
-import { DrizzleInputFactory } from "../src"
+import { DrizzleInputFactory, drizzleSilk } from "../src"
 import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
 
 describe("DrizzleInputFactory", () => {
@@ -188,6 +188,47 @@ describe("DrizzleInputFactory", () => {
           password: OrderDirection
           createdAt: OrderDirection
           updatedAt: OrderDirection
+        }"
+      `)
+    })
+  })
+
+  describe("custom column types", () => {
+    const EmailAddress = new GraphQLScalarType<string>({
+      name: "EmailAddress",
+      description: "A valid email address",
+      parseValue: (value) => String(value),
+      serialize: (value) => String(value),
+    })
+
+    const userTags = drizzleSilk(
+      pg.pgTable("userTags", {
+        id: pg.serial("id").primaryKey(),
+        email: pg.text("email").notNull(),
+      }),
+      {
+        fields: {
+          email: { type: EmailAddress },
+        },
+      }
+    )
+
+    const inputFactory = new DrizzleInputFactory(userTags)
+
+    it("should respect column types in InsertInput", () => {
+      expect(printType(inputFactory.insertInput())).toMatchInlineSnapshot(`
+        "type UserTagsInsertInput {
+          id: Int
+          email: EmailAddress!
+        }"
+      `)
+    })
+
+    it("should respect column types in UpdateInput", () => {
+      expect(printType(inputFactory.updateInput())).toMatchInlineSnapshot(`
+        "type UserTagsUpdateInput {
+          id: Int
+          email: EmailAddress
         }"
       `)
     })
