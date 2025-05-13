@@ -3,7 +3,9 @@
   "compilerOptions": {
     "paths": {
       "@gqloom/*": ["../../packages/*/src/index.ts"]
-    }
+    },
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   },
   "include": ["src", "test"]
 }
