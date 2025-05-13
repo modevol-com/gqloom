@@ -168,7 +168,7 @@ describe("Resolver", () => {
     ).toMatchFileSnapshot("./resolver.spec.gql")
   })
 
-  describe("mutations", () => {
+  describe.sequential("mutations", () => {
     beforeAll(async () => {
       let times = 0
       while (true) {
@@ -359,7 +359,6 @@ describe("Resolver", () => {
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        DELETE FROM main.User WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email
         "
       `)
     })
@@ -514,7 +513,7 @@ describe("Resolver", () => {
     })
   })
 
-  describe("queries", () => {
+  describe.sequential("queries", () => {
     beforeAll(async () => {
       let times = 0
       while (true) {
@@ -823,7 +822,6 @@ describe("Resolver", () => {
       expect(res.findManyProfile).toMatchObject([{ introduction: "I am Bob" }])
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        SELECT main.Profile.id, main.Profile.introduction FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
         "
       `)
     })
@@ -843,6 +841,7 @@ describe("Resolver", () => {
       expect(res.findManyProfile).toMatchObject([{ user: { name: "Bob" } }])
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        SELECT main.Profile.id, main.Profile.introduction FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
         SELECT main.Profile.id, main.Profile.userId FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
         SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
         "
