@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/prisma",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "GQLoom integration with Prisma",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,6 +14,16 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      }
+    },
+    "./context": {
+      "import": {
+        "types": "./dist/context.d.ts",
+        "default": "./dist/context.js"
+      },
+      "require": {
+        "types": "./dist/context.d.cts",
+        "default": "./dist/context.cjs"
       }
     },
     "./generated": {
