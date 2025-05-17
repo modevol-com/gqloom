@@ -29,11 +29,19 @@ export const resolver = Object.assign(
 ) as FederatedResolverFactory
 
 export interface FederatedResolverFactory {
+  /**
+   * Creates a resolver for an object type
+   * @template TParent - The parent type
+   * @template TFields - The fields of the object type
+   * @param parent - The parent type definition
+   * @param fields - The fields to resolve
+   * @param options - Optional resolver options
+   */
   of<
     TParent extends GraphQLSilk,
     TFields extends Record<
       string,
-      | Loom.Field<TParent, any, any>
+      | Loom.Field<TParent, any, any, any>
       | Loom.Operation
       | typeof SYMBOLS.FIELD_HIDDEN
     >,
@@ -45,6 +53,12 @@ export interface FederatedResolverFactory {
     >
   ): FederatedChainResolver<TParent, TFields>
 
+  /**
+   * Creates a resolver for operations
+   * @template TFields - The operations to resolve
+   * @param operations - The operations to resolve
+   * @param options - Optional resolver options
+   */
   <TFields extends Record<string, Loom.Operation>>(
     operations: TFields,
     options?: ResolverOptions<ValueOf<TFields>>
