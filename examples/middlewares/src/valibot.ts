@@ -4,7 +4,7 @@ import { createYoga } from "graphql-yoga"
 import * as v from "valibot"
 import { ValibotExceptionFilter, outputValidator } from "./middlewares"
 
-const HelloResolver = resolver({
+const helloResolver = resolver({
   hello: query(v.pipe(v.string(), v.minLength(10)), {
     input: { name: v.string() },
     resolve: ({ name }) => `Hello, ${name}`,
@@ -14,7 +14,7 @@ const HelloResolver = resolver({
 
 export const schema = weave(
   ValibotWeaver,
-  HelloResolver,
+  helloResolver,
   ValibotExceptionFilter
 )
 

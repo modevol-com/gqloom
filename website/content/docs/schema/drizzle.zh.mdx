@@ -11,6 +11,27 @@ title: Drizzle
 
 ## 安装
 
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+请参考 Drizzle 的[入门指南](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started)安装 Drizzle 与对应的数据库集成。
+
+在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
+
+```sh tab="npm"
+npm i @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="yarn"
+yarn add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="bun"
+bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+
+</Tab>
+<Tab>
 请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。
 
 在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
@@ -27,6 +48,9 @@ yarn add @gqloom/core @gqloom/drizzle
 ```sh tab="bun"
 bun add @gqloom/core @gqloom/drizzle
 ```
+
+</Tab>
+</Tabs>
 
 ## 使用丝线
 
@@ -76,7 +100,7 @@ export const relations = defineRelations(tables, (r) => ({
 }))
 ```
 
-让我们在解析器中使用它们：
+让我们在解析器中使用它们，同时我们使用 `useSelectedColumns()` 函数以得知当前 GraphQL 查询需要选取哪些列：
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -122,6 +146,7 @@ export const relations = defineRelations(tables, (r) => ({
 // @filename: resolver.ts
 // ---cut---
 import { field, query, resolver } from "@gqloom/core"
+import { useSelectedColumns } from "@gqloom/drizzle/context"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
@@ -136,34 +161,86 @@ const db = drizzle({
 })
 
 export const usersResolver = resolver.of(users, {
-  user: query(users.$nullable())
+  user: query
+    .output(users.$nullable())
     .input({ id: v.number() })
     .resolve(({ id }) => {
-      return db.select().from(users).where(eq(users.id, id)).get()
+      return db
+        .select(useSelectedColumns(users))
+        .from(users)
+        .where(eq(users.id, id))
+        .get()
     }),
 
-  users: query(users.$list()).resolve(() => {
-    return db.select().from(users).all()
+  users: query.output(users.$list()).resolve(() => {
+    return db.select(useSelectedColumns(users)).from(users).all()
   }),
 
-  posts: field(posts.$list()).load(async (userList) => {
-    const postList = await db
-      .select()
-      .from(posts)
-      .where(
-        inArray(
-          posts.authorId,
-          userList.map((user) => user.id)
+  posts: field
+    .output(posts.$list())
+    .derivedFrom("id")
+    .load(async (userList) => {
+      const postList = await db
+        .select()
+        .from(posts)
+        .where(
+          inArray(
+            users.id,
+            userList.map((user) => user.id)
+          )
         )
-      )
-    const postMap = Map.groupBy(postList, (p) => p.authorId)
-    return userList.map((u) => postMap.get(u.id) ?? [])
-  }),
+      const groups = new Map<number, (typeof posts.$inferSelect)[]>()
+
+      for (const post of postList) {
+        const key = post.authorId
+        if (key == null) continue
+        groups.set(key, [...(groups.get(key) ?? []), post])
+      }
+      return userList.map((user) => groups.get(user.id) ?? [])
+    }),
 })
 ```
 
 如上面的代码所示，我们可以直接在 `resolver` 里使用 `drizzleSilk` 包裹的 Drizzle Table。  
-在这里我们使用了 `users` 作为 `resolver.of` 的父类型，并在 resolver 中定义了 `user`、`users` 两个查询和一个名为 `posts` 的字段。其中 `user` 的返回类型是 `users.$nullable()`，表示 `user` 可能为空；`users` 的返回类型是 `users.$list()`，表示 `users` 将返回一个 `users` 的列表；`posts` 字段的返回类型是 `posts.$list()`，在 `posts` 字段中，我们使用了 `user` 参数，TypeScript 将帮助我们推断其类型，我们将 `user` 传递给 `usePostsLoader().load()` 来批量获取 `posts`。
+在这里我们使用了 `users` 作为 `resolver.of` 的父类型，并在 resolver 中定义了 `user`、`users` 两个查询和一个名为 `posts` 的字段。其中：  
+- `user` 的返回类型是 `users.$nullable()`，表示 `user` 可能为空；
+- `users` 的返回类型是 `users.$list()`，表示 `users` 将返回一个 `users` 的列表；
+- `posts` 字段的返回类型是 `posts.$list()`，在 `posts` 字段中，我们在 `load` 方法中使用了 `userList` 参数，TypeScript 将帮助我们推断其类型，`load` 方法是对 `DataLoader` 的封装，允许我们快速定义一个 `DataLoader` 方法，并使用它来批量获取 `posts`。
+
+我们还使用 `useSelectedColumns()` 函数来知道当前 GraphQL 查询需要选取哪些列。这个函数需要[启用上下文](../context)。  
+对于无法使用 `useSelectedColumns()` 函数的运行时，我们也可以使用 `getSelectedColumns()` 函数来获取当前查询需要选取的列。
+
+### 派生字段
+
+为数据库表添加派生字段非常简单，但需要注意使用 `field().derivedFrom()` 方法声明所依赖的列，以便 `useSelectedColumns` 方法能正确地选取这些列：
+
+```ts twoslash title="schema.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const posts = drizzleSilk(
+  t.sqliteTable("posts", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    title: t.text().notNull(),
+    content: t.text(),
+    authorId: t.int(),
+  })
+)
+// @filename: resolver.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { posts } from "./schema"
+
+export const postsResolver = resolver.of(posts, {
+  abstract: field(v.string())
+    .derivedFrom("title", "content")
+    .resolve((post) => {
+      return `${post.title} ${post.content?.slice(0, 60)}...`
+    }),
+})
+```
 
 ### 隐藏字段
 
@@ -215,6 +292,21 @@ export const usersResolver = resolver.of(users, {
 
 `gqloom/drizzle` 提供了解析器工厂 `DrizzleResolverFactory`，用于从 Drizzle 轻松地生成 CRUD 解析器，同时支持自定参数和添加中间件。
 
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+```ts title="resolver.ts"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { drizzle } from "drizzle-orm/libsql"
+import { users } from "./schema"
+
+const db = drizzle({
+  connection: { url: process.env.DB_FILE_NAME! },
+})
+
+const usersResolverFactory = drizzleResolverFactory(db, users)
+```
+</Tab>
+<Tab>
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -262,6 +354,7 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import { relations } from "./relations"
 import * as schema from "./schema"
+import { users } from "./schema"
 
 const db = drizzle({
   schema,
@@ -269,8 +362,10 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
+</Tab>
+</Tabs>
 
 ### 关系字段
 
@@ -318,7 +413,8 @@ export const relations = defineRelations(tables, (r) => ({
   },
 }))
 // @filename: resolver.ts
-import { field, EasyDataLoader, createMemoization } from "@gqloom/core"
+import { field, EasyDataLoader } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { posts } from "schema"
 // ---cut---
 import { query, resolver } from "@gqloom/core"
@@ -336,12 +432,12 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 
 const usePostsLoader = createMemoization( // [!code --]
   () => // [!code --]
     new EasyDataLoader< // [!code --]
-      typeof users.$inferSelect, // [!code --]
+      { id: number }, // [!code --]
       (typeof posts.$inferSelect)[] // [!code --]
     >(async (userList) => { // [!code --]
       const postList = await db // [!code --]
@@ -376,9 +472,11 @@ export const usersResolver = resolver.of(users, {
     return db.select().from(users).all()
   }),
 
-  posts_: field.output(posts.$list()).resolve((user) => { // [!code --]
-    return usePostsLoader().load(user) // [!code --]
-  }), // [!code --]
+  posts_: field.output(posts.$list()) // [!code --]
+    .derivedFrom('id') // [!code --]
+    .resolve((user) => { // [!code --]
+      return usePostsLoader().load(user) // [!code --]
+    }), // [!code --]
 
   posts: usersResolverFactory.relationField("posts"), // [!code ++]
 })
@@ -390,6 +488,7 @@ Drizzle 解析器工厂预置了一些常用的查询：
 
 - `selectArrayQuery`: 根据条件查找对应表的多条记录
 - `selectSingleQuery`: 根据条件查找对应表的一条记录
+- `countQuery`: 根据条件统计对应表的记录数量
 
 我们可以在解析器内使用来自解析器工厂的查询：
 
@@ -678,7 +777,8 @@ export const relations = defineRelations(tables, (r) => ({
   },
 }))
 // @filename: resolver.ts
-import { query, field, resolver, createMemoization } from "@gqloom/core"
+import { query, field, resolver } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
@@ -778,12 +878,19 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 // ---cut---
+// Readonly Resolver
+const usersQueriesResolver = usersResolverFactory.queriesResolver()
+
+// Full Resolver
 const usersResolver = usersResolverFactory.resolver()
 ```
 
-在上面的代码中，我们使用 `usersResolverFactory.resolver()` 来创建一个 Resolver。这个Resolver 将包含工厂中所有的查询、变更和字段。
+有两个用于创建 Resolver 的函数：
+
+- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的 Resolver。
+- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的 Resolver。
 
 ## 自定义类型映射
 

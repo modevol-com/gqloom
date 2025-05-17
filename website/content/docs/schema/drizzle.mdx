@@ -11,9 +11,30 @@ title: Drizzle
 
 ## Installation
 
-Please refer to Drizzle's [Getting Started Guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration.
+<Tabs items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
 
-After completing the installation of Drizzle, install `@gqloom/drizzle`:
+After installing Drizzle, install `@gqloom/drizzle`:
+
+```sh tab="npm"
+npm i @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="yarn"
+yarn add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+```sh tab="bun"
+bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+```
+
+</Tab>
+<Tab>
+Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
+
+After installing Drizzle, install `@gqloom/drizzle`:
 
 ```sh tab="npm"
 npm i @gqloom/core @gqloom/drizzle
@@ -27,6 +48,9 @@ yarn add @gqloom/core @gqloom/drizzle
 ```sh tab="bun"
 bun add @gqloom/core @gqloom/drizzle
 ```
+
+</Tab>
+</Tabs>
 
 ## Using Silk
 
@@ -76,7 +100,7 @@ export const relations = defineRelations(tables, (r) => ({
 }))
 ```
 
-Let's use them in the resolver:
+Let's use them in the resolver. At the same time, we use the `useSelectedColumns()` function to know which columns are needed for the current GraphQL query: 
 
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
@@ -122,6 +146,7 @@ export const relations = defineRelations(tables, (r) => ({
 // @filename: resolver.ts
 // ---cut---
 import { field, query, resolver } from "@gqloom/core"
+import { useSelectedColumns } from "@gqloom/drizzle/context"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
@@ -136,34 +161,86 @@ const db = drizzle({
 })
 
 export const usersResolver = resolver.of(users, {
-  user: query(users.$nullable())
+  user: query
+    .output(users.$nullable())
     .input({ id: v.number() })
     .resolve(({ id }) => {
-      return db.select().from(users).where(eq(users.id, id)).get()
+      return db
+        .select(useSelectedColumns(users))
+        .from(users)
+        .where(eq(users.id, id))
+        .get()
     }),
 
-  users: query(users.$list()).resolve(() => {
-    return db.select().from(users).all()
+  users: query.output(users.$list()).resolve(() => {
+    return db.select(useSelectedColumns(users)).from(users).all()
   }),
 
-  posts: field(posts.$list()).load(async (userList) => {
-    const postList = await db
-      .select()
-      .from(posts)
-      .where(
-        inArray(
-          posts.authorId,
-          userList.map((user) => user.id)
+  posts: field
+    .output(posts.$list())
+    .derivedFrom("id")
+    .load(async (userList) => {
+      const postList = await db
+        .select()
+        .from(posts)
+        .where(
+          inArray(
+            users.id,
+            userList.map((user) => user.id)
+          )
         )
-      )
-    const postMap = Map.groupBy(postList, (p) => p.authorId)
-    return userList.map((u) => postMap.get(u.id) ?? [])
-  }),
+      const groups = new Map<number, (typeof posts.$inferSelect)[]>()
+
+      for (const post of postList) {
+        const key = post.authorId
+        if (key == null) continue
+        groups.set(key, [...(groups.get(key) ?? []), post])
+      }
+      return userList.map((user) => groups.get(user.id) ?? [])
+    }),
 })
 ```
 
-As shown in the above code, we can directly use the Drizzle Schemas wrapped by `drizzleSilk` in the `resolver`.
-Here we use `users` as the parent type of `resolver.of`, and define two queries `user` and `users` and a field named `posts` in the resolver. The return type of `user` is `users.$nullable()`, indicating that `user` may be empty; the return type of `users` is `users.$list()`, indicating that `users` will return a list of `users`; the return type of the `posts` field is `posts.$list()`. In the `posts` field, we use the `user` parameter, and TypeScript will help us infer its type. We pass `user` to `usePostsLoader().load()` to batch fetch `posts`.
+As shown in the code above, we can directly use the Drizzle Table wrapped by `drizzleSilk` in the `resolver`. 
+Here, we use `users` as the parent type of `resolver.of`, and define two queries named `user` and `users` and a field named `posts` in the resolver. Among them:
+- The return type of `user` is `users.$nullable()`, indicating that `user` may be null;
+- The return type of `users` is `users.$list()`, indicating that `users` will return a list of `users`;
+- The return type of the `posts` field is `posts.$list()`. In the `posts` field, we use the `userList` parameter in the `load` method. TypeScript will help us infer its type. The `load` method is a wrapper of `DataLoader`, allowing us to quickly define a `DataLoader` method and use it to batch fetch `posts`. 
+
+We also use the `useSelectedColumns()` function to determine which columns need to be selected for the current GraphQL query. This function requires [enabling context](../context).  
+For runtimes where the `useSelectedColumns()` function cannot be used, we can also use the `getSelectedColumns()` function to obtain the columns that need to be selected for the current query.
+
+### Derived Fields
+
+Adding derived Fields to a database table is quite simple. However, it's important to use the `field().derivedFrom()` method to declare the columns on which the computed property depends, so that the `useSelectedColumns` method can correctly select these columns: 
+
+```ts twoslash title="schema.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const posts = drizzleSilk(
+  t.sqliteTable("posts", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    title: t.text().notNull(),
+    content: t.text(),
+    authorId: t.int(),
+  })
+)
+// @filename: resolver.ts
+// ---cut---
+import { field, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { posts } from "./schema"
+
+export const postsResolver = resolver.of(posts, {
+  abstract: field(v.string())
+    .derivedFrom("title", "content")
+    .resolve((post) => {
+      return `${post.title} ${post.content?.slice(0, 60)}...`
+    }),
+})
+```
 
 ### Hiding Fields
 
@@ -215,6 +292,21 @@ export const usersResolver = resolver.of(users, {
 
 `gqloom/drizzle` provides a resolver factory `DrizzleResolverFactory` to easily create CRUD resolvers from Drizzle, and it also supports custom parameters and adding middleware.
 
+<Tabs groupId="drizzle-version" items={["Relational API v2", "Relational API v1"]}>
+<Tab>
+```ts title="resolver.ts"
+import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { drizzle } from "drizzle-orm/libsql"
+import { users } from "./schema"
+
+const db = drizzle({
+  connection: { url: process.env.DB_FILE_NAME! },
+})
+
+const usersResolverFactory = drizzleResolverFactory(db, users)
+```
+</Tab>
+<Tab>
 ```ts twoslash title="resolver.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -262,6 +354,7 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import { relations } from "./relations"
 import * as schema from "./schema"
+import { users } from "./schema"
 
 const db = drizzle({
   schema,
@@ -269,8 +362,10 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
+</Tab>
+</Tabs>
 
 ### Relationship Fields
 
@@ -318,7 +413,8 @@ export const relations = defineRelations(tables, (r) => ({
   },
 }))
 // @filename: resolver.ts
-import { field, EasyDataLoader, createMemoization } from "@gqloom/core"
+import { field, EasyDataLoader } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { posts } from "schema"
 // ---cut---
 import { query, resolver } from "@gqloom/core"
@@ -336,12 +432,12 @@ const db = drizzle({
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
-const usersResolverFactory = drizzleResolverFactory(db, "users")
+const usersResolverFactory = drizzleResolverFactory(db, users)
 
 const usePostsLoader = createMemoization( // [!code --]
   () => // [!code --]
     new EasyDataLoader< // [!code --]
-      typeof users.$inferSelect, // [!code --]
+      { id: number }, // [!code --]
       (typeof posts.$inferSelect)[] // [!code --]
     >(async (userList) => { // [!code --]
       const postList = await db // [!code --]
@@ -376,9 +472,11 @@ export const usersResolver = resolver.of(users, {
     return db.select().from(users).all()
   }),
 
-  posts_: field.output(posts.$list()).resolve((user) => { // [!code --]
-    return usePostsLoader().load(user) // [!code --]
-  }), // [!code --]
+  posts_: field.output(posts.$list()) // [!code --]
+    .derivedFrom('id') // [!code --]
+    .resolve((user) => { // [!code --]
+      return usePostsLoader().load(user) // [!code --]
+    }), // [!code --]
 
   posts: usersResolverFactory.relationField("posts"), // [!code ++]
 })
@@ -386,10 +484,11 @@ export const usersResolver = resolver.of(users, {
 
 ### Queries
 
-The Drizzle resolver factory predefines some commonly used queries:
+The Drizzle resolver factory pre-defines some commonly used queries:
 
 - `selectArrayQuery`: Find multiple records in the corresponding table according to the conditions.
 - `selectSingleQuery`: Find a single record in the corresponding table according to the conditions.
+- `countQuery`: Count the number of records in the corresponding table according to the conditions.
 
 We can use the queries from the resolver factory in the resolver:
 
@@ -678,7 +777,8 @@ export const relations = defineRelations(tables, (r) => ({
   },
 }))
 // @filename: resolver.ts
-import { query, field, resolver, createMemoization } from "@gqloom/core"
+import { query, field, resolver } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
@@ -780,10 +880,17 @@ const db = drizzle({
 
 const usersResolverFactory = drizzleResolverFactory(db, "users")
 // ---cut---
+// Readonly Resolver
+const usersQueriesResolver = usersResolverFactory.queriesResolver()
+
+// Full Resolver
 const usersResolver = usersResolverFactory.resolver()
 ```
 
-In the above code, we use `usersResolverFactory.resolver()` to create a Resolver. This Resolver will include all queries, mutations, and fields in the factory.
+There are two functions for creating Resolvers:
+
+- `usersResolverFactory.queriesResolver()`: Creates a Resolver that only includes queries and relational fields.
+- `usersResolverFactory.resolver()`: Creates a Resolver that includes all queries, mutations, and relational fields.
 
 ## Custom Type Mapping
 

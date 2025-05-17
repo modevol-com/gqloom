@@ -11,6 +11,7 @@ import {
   type Loom,
   type Middleware,
   type WeaverConfig,
+  filterMiddlewares,
   query,
   resolver,
   silk,
@@ -26,6 +27,7 @@ import {
   lexicographicSortSchema,
 } from "graphql"
 import { mockAst } from "./mock-ast"
+import { FederatedChainResolver } from "./resolver"
 
 export class FederatedSchemaLoom extends GraphQLSchemaLoom {
   public override weaveGraphQLSchema(): GraphQLSchema {
@@ -109,7 +111,18 @@ export class FederatedSchemaLoom extends GraphQLSchemaLoom {
     weavers.forEach((it) => weaver.addVendor(it))
     configs.forEach((it) => weaver.setConfig(it))
     middlewares.forEach((it) => weaver.use(it))
-    resolvers.forEach((it) => weaver.add(it))
+    resolvers.forEach((it) =>
+      weaver.add(
+        it,
+        FederatedChainResolver.addResolveReference(
+          filterMiddlewares(
+            "resolveReference",
+            it["~meta"].options?.middlewares,
+            middlewares
+          )
+        )
+      )
+    )
     silks.forEach((it) => weaver.addType(it))
 
     return weaver.weaveGraphQLSchema()

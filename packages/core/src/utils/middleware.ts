@@ -7,13 +7,22 @@ import type {
 } from "../resolver"
 import type { MayPromise, RequireKeys } from "./types"
 
-/** The operation of the field: `field`, `query`, `mutation`, `subscription.resolve` or `subscription.subscribe` */
+/**
+ * The operation of the field:
+ * - `field`
+ * - `query`
+ * - `mutation`
+ * - `subscription.resolve`
+ * - `subscription.subscribe`
+ * - `resolveReference`
+ */
 export type MiddlewareOperation =
   | "field"
   | "query"
   | "mutation"
   | "subscription.resolve"
   | "subscription.subscribe"
+  | "resolveReference"
 
 export interface MiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,
@@ -100,7 +109,7 @@ export function applyMiddlewares<
 
 export function filterMiddlewares(
   operation: MiddlewareOperation,
-  ...middlewareList: (Middleware | Middleware[] | undefined | null)[]
+  ...middlewareList: (Middleware | Iterable<Middleware> | undefined | null)[]
 ): Middleware[] {
   return middlewareList.reduce<Middleware[]>((acc, m) => {
     if (!m) return acc
@@ -114,6 +123,9 @@ export function filterMiddlewares(
   }, [])
 }
 
-function ensureArray<T>(value: T | T[]): T[] {
-  return Array.isArray(value) ? value : [value]
+function ensureArray<T>(value: T | Iterable<T>): T[] {
+  if (value != null && typeof value === "object" && Symbol.iterator in value) {
+    return Array.from(value)
+  }
+  return [value]
 }

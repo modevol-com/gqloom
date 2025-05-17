@@ -163,5 +163,5 @@ input CreateUserDataInput {
 
 input CreateCatsValuesInput {
   name: String!
-  birthday: String
+  birthday: String!
 }

@@ -18,6 +18,8 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
+  execute,
+  parse,
   printSchema,
   printType,
 } from "graphql"
@@ -284,6 +286,19 @@ describe("ValibotWeaver", () => {
         },
       })
     )
+
+    const FruitPL2 = v.pipe(
+      v.picklist(["apple", "banana", "orange"]),
+      asEnumType({
+        name: "Fruit",
+        values: {
+          APPLE: { description: "red", value: "apple" },
+          BANANA: { description: "yellow", value: "banana" },
+          ORANGE: { description: "orange", value: "orange" },
+        },
+      })
+    )
+
     enum Fruit {
       apple = "apple",
       banana = "banana",
@@ -326,6 +341,78 @@ describe("ValibotWeaver", () => {
         orange
       }"
     `)
+
+    expect(print(FruitPL2)).toMatchInlineSnapshot(`
+      "enum Fruit {
+        """red"""
+        APPLE
+
+        """yellow"""
+        BANANA
+
+        """orange"""
+        ORANGE
+      }"
+    `)
+  })
+
+  it("should resolve enum value", async () => {
+    const Fruit = v.pipe(
+      v.picklist(["apple", "banana", "orange"]),
+      asEnumType({
+        name: "Fruit",
+        values: {
+          APPLE: { description: "red", value: "apple" },
+          BANANA: { description: "yellow", value: "banana" },
+          ORANGE: { description: "orange", value: "orange" },
+        },
+      })
+    )
+    const logs: string[] = []
+
+    const r = resolver({
+      fruit: query(Fruit)
+        .input({ value: v.nullish(Fruit, "apple") })
+        .resolve(({ value }) => {
+          logs.push(value)
+          return value
+        }),
+    })
+
+    const schema = weave(ValibotWeaver, r)
+
+    let result
+    result = await execute({
+      schema,
+      document: parse(/* GraphQL */ `{ fruit }`),
+    })
+    expect(result.data?.fruit).toEqual("APPLE")
+
+    result = await execute({
+      schema,
+      document: parse(/* GraphQL */ `{ 
+        fruit(value: APPLE)
+      }`),
+    })
+    expect(result.data?.fruit).toEqual("APPLE")
+
+    result = await execute({
+      schema,
+      document: parse(/* GraphQL */ `{ 
+        fruit(value: BANANA)
+      }`),
+    })
+    expect(result.data?.fruit).toEqual("BANANA")
+
+    result = await execute({
+      schema,
+      document: parse(/* GraphQL */ `{ 
+        fruit(value: ORANGE)
+      }`),
+    })
+    expect(result.data?.fruit).toEqual("ORANGE")
+
+    expect(logs).toEqual(["apple", "apple", "banana", "orange"])
   })
 
   it("should handle interfere", () => {

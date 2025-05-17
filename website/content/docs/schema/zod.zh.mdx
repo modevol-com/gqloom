@@ -10,6 +10,25 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 ## 安装
 
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```sh tab="npm"
+npm i @gqloom/core zod@next @gqloom/zod@next
+```
+```sh tab="pnpm"
+pnpm add @gqloom/core zod@next @gqloom/zod@next
+```
+```sh tab="yarn"
+yarn add @gqloom/core zod@next @gqloom/zod@next
+```
+```sh tab="bun"
+bun add @gqloom/core zod@next @gqloom/zod@next
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```sh tab="npm"
 npm i @gqloom/core zod @gqloom/zod
 ```
@@ -22,6 +41,9 @@ yarn add @gqloom/core zod @gqloom/zod
 ```sh tab="bun"
 bun add @gqloom/core zod @gqloom/zod
 ```
+
+</Tab>
+</Tabs>
 
 ## 定义简单标量
 
@@ -133,6 +155,26 @@ export const { Cat } = collectNames({
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
 
 #### 使用 `asObjectType`
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z.number().int(),
+    loveFish: z.boolean().nullish(),
+  })
+  .register(asObjectType, { name: "Cat" })
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asObjectType } from "@gqloom/zod"
@@ -146,11 +188,36 @@ export const Cat = z
   .superRefine(asObjectType({ name: "Cat" }))
 ```
 
+</Tab>
+</Tabs>
+
 在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `superRefine()` 中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
 
 ### 添加更多元数据
 
 通过 `asObjectType` 函数，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z.number().int(),
+    loveFish: z.boolean().nullish(),
+  })
+  .register(asObjectType, {
+    name: "Cat",
+    description: "A cute cat",
+  })
+```
+
+</Tab>
+<Tab value='zod-v3'>
 
 ```ts twoslash
 import { z } from "zod"
@@ -170,6 +237,9 @@ export const Cat = z
   )
 ```
 
+</Tab>
+</Tabs>
+
 在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元数据，该元数据将在 GraphQL Schema 中呈现：
 ```graphql title="GraphQL Schema"
 """A cute cat"""
@@ -181,6 +251,34 @@ type Cat {
 ```
 
 我们还可以使用 asField 函数为字段添加元数据，例如 description、type 等。
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import { z } from "zod"
+import { asField, asObjectType } from "@gqloom/zod"
+import { GraphQLInt } from "graphql"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z
+      .number()
+      .superRefine(
+        asField({ type: GraphQLInt, description: "How old is the cat" })
+      ),
+    loveFish: z.boolean().nullish(),
+  })
+  .register(asObjectType, {
+    name: "Cat",
+    description: "A cute cat",
+  })
+```
+
+</Tab>
+<Tab>
+
 ```ts twoslash
 import { z } from "zod"
 import { asField, asObjectType } from "@gqloom/zod"
@@ -204,6 +302,9 @@ export const Cat = z
   )
 ```
 
+</Tab>
+</Tabs>
+
 在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
 ```graphql title="GraphQL Schema"
@@ -220,6 +321,35 @@ type Cat {
 #### 声明接口
 
 我们还可以使用 `asObjectType` 函数来声明接口，例如：
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * z from "zod"
+import { asObjectType } from "@gqloom/zod"
+
+const Fruit = z
+  .object({
+    __typename: z.literal("Fruit").nullish(),
+    name: z.string(),
+    color: z.string(),
+    prize: z.number(),
+  })
+  .describe("Some fruits you might like")
+
+const Orange = z
+  .object({
+    name: z.string(),
+    color: z.string(),
+    prize: z.number(),
+  })
+  .register(asObjectType, { name: "Orange", interfaces: [Fruit] })
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { asObjectType } from "@gqloom/zod"
 import { z } from "zod"
@@ -241,11 +371,36 @@ const Orange = z
   })
   .superRefine(asObjectType({ name: "Orange", interfaces: [Fruit] }))
 ```
+
+</Tab>
+</Tabs>
+
 在上面的代码中，我们使用 `asObjectType` 函数创建了一个接口 `Fruit`，并使用 `interfaces` 选项将 `Orange` 对象声明为 `Fruit` 接口的实现。
 
 #### 省略字段
 
 我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asField } from "@gqloom/zod"
+
+const Dog = z.object({
+  __typename: z.literal("Dog").nullish(),
+  name: z.string().nullish(),
+  birthday: z
+    .date()
+    .nullish()
+    .register(asField, { type: null }),
+})
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asField } from "@gqloom/zod"
@@ -259,6 +414,10 @@ const Dog = z.object({
     .superRefine(asField({ type: null })),
 })
 ```
+
+</Tab>
+</Tabs>
+
 将得到如下 GraphQL Schema：
 ```graphql title="GraphQL Schema"
 type Dog {
@@ -271,6 +430,36 @@ type Dog {
 #### 使用 z.discriminatedUnion
 
 我们推荐使用 `z.discriminatedUnion` 来定义联合类型，例如：
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import { z } from "zod"
+import { asUnionType } from "@gqloom/zod"
+
+const Cat = z.object({
+  __typename: z.literal("Cat"),
+  name: z.string(),
+  age: z.number(),
+  loveFish: z.boolean().optional(),
+})
+
+const Dog = z.object({
+  __typename: z.literal("Dog"),
+  name: z.string(),
+  age: z.number(),
+  loveBone: z.boolean().optional(),
+})
+
+const Animal = z
+  .discriminatedUnion("__typename", [Cat, Dog])
+  .register(asUnionType, { name: "Animal" })
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asUnionType } from "@gqloom/zod"
@@ -292,13 +481,46 @@ const Dog = z.object({
 const Animal = z
   .discriminatedUnion("__typename", [Cat, Dog])
   .superRefine(asUnionType("Animal"))
-
 ```
+
+</Tab>
+</Tabs>
+
 在上面的代码中，我们使用 `z.discriminatedUnion` 函数创建了一个联合类型。对于 `Animal` 来说，它通过 `__typename` 字段来区分具体的类型。
 
 #### 使用 z.union
 
 我们还可以使用 `z.union` 来定义联合类型：
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import { z } from "zod"
+import { asUnionType, collectNames } from "@gqloom/zod"
+
+const Cat = z.object({
+  name: z.string(),
+  age: z.number(),
+  loveFish: z.boolean().optional(),
+})
+
+const Dog = z.object({
+  name: z.string(),
+  age: z.number(),
+  loveBone: z.boolean().optional(),
+})
+
+const Animal = z.union([Cat, Dog]).register(asUnionType, {
+  name: "Animal",
+  resolveType: (it) => (it.loveFish ? "Cat" : "Dog"),
+})
+
+collectNames({ Cat, Dog, Animal })
+```
+
+</Tab>
+<Tab value='zod-v3' >
 
 ```ts twoslash
 import { z } from "zod"
@@ -325,6 +547,10 @@ const Animal = z.union([Cat, Dog]).superRefine(
 
 collectNames({ Cat, Dog, Animal })
 ```
+
+</Tab>
+</Tabs>
+
 在上面的代码中，我们使用 `z.union` 函数创建了一个联合类型。对于 `Animal` 来说，我们通过 `resolveType` 函数来区分具体的类型。
 在这里，如果一个动物它喜欢鱼，那么它就是一只猫，否则就是一只狗。
 
@@ -335,6 +561,31 @@ collectNames({ Cat, Dog, Animal })
 #### 使用 z.enum
 
 通常，我们更推荐使用 `z.enum` 来定义枚举类型，例如：
+
+<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
+<Tab value='zod-v4'>
+
+```ts
+import * as z from "zod"
+import { asEnumType } from "@gqloom/zod"
+
+export const Fruit = z
+  .enum(["apple", "banana", "orange"])
+  .register(asEnumType, {
+    name: "Fruit",
+    valuesConfig: {
+      apple: { description: "red" },
+      banana: { description: "yellow" },
+      orange: { description: "orange" },
+    },
+  })
+
+export type IFruit = z.infer<typeof Fruit>
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
 ```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
@@ -353,9 +604,13 @@ export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
 export type IFruit = z.infer<typeof Fruit>
 ```
 
+</Tab>
+</Tabs>
+
 #### 使用 z.nativeEnum
 
 我们还可以使用 `z.nativeEnum` 来定义枚举类型，例如：
+
 ```ts twoslash
 import { z } from "zod"
 import { asEnumType } from "@gqloom/zod"
@@ -392,7 +647,7 @@ import {
   GraphQLJSON,
   GraphQLJSONObject,
 } from "graphql-scalars"
-import { z } from "zod"
+import * as z from "zod"
 import { ZodWeaver } from "@gqloom/zod"
 
 export const zodWeaverConfig = ZodWeaver.config({
@@ -414,7 +669,7 @@ import {
   GraphQLJSON,
   GraphQLJSONObject,
 } from "graphql-scalars"
-import { z } from "zod"
+import * as z from "zod"
 import { resolver } from '@gqloom/core'
 import { ZodWeaver } from "@gqloom/zod"
 
@@ -449,9 +704,9 @@ export const schema = weave(zodWeaverConfig, helloResolver)
 | `z.string().uuid()`      | `GraphQLID`         |
 | `z.literal("")`          | `GraphQLString`     |
 | `z.literal(false)`       | `GraphQLBoolean`    |
-| `z.literal(0)`           | `GraphQLInt`        |
+| `z.literal(0)`           | `GraphQLFloat`      |
 | `z.number()`             | `GraphQLFloat`      |
-| `z.number().int()`       | `GraphQLFloat`      |
+| `z.number().int()`       | `GraphQLInt`        |
 | `z.boolean()`            | `GraphQLBoolean`    |
 | `z.object()`             | `GraphQLObjectType` |
 | `z.enum()`               | `GraphQLEnumType`   |

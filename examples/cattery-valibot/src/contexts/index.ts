@@ -1,4 +1,4 @@
-import { createMemoization, useContext } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
 import { db } from "../providers"

@@ -371,6 +371,158 @@ export const logger: Middleware = async (next) => {
 }
 ```
 
+### Caching
+
+We can implement caching functionality through middleware. For example, we can create a `cache` middleware to cache the resolution results of each query:
+
+```ts twoslash
+import type { Middleware } from "@gqloom/core"
+
+/** Simple in-memory cache implementation */
+const cacheStore = new Map<string, { data: unknown; timestamp: number }>()
+
+export interface CacheOptions {
+  /**
+   * Time to live in milliseconds
+   * @default 60000
+   */
+  ttl?: number
+}
+
+export const cache = (options: CacheOptions = {}): Middleware => {
+  const { ttl = 60000 } = options
+
+  const middleware: Middleware = async ({ next, payload }) => {
+    if (!payload?.info) {
+      return next()
+    }
+
+    const { fieldName, parentType } = payload.info
+    const args = payload.args || {}
+    const cacheKey = `${parentType.name}.${fieldName}:${JSON.stringify(args)}`
+
+    const cached = cacheStore.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < ttl) {
+      return cached.data
+    }
+
+    const result = await next()
+    cacheStore.set(cacheKey, { data: result, timestamp: Date.now() })
+    return result
+  }
+
+  // Only apply cache to queries by default
+  middleware.operations = ["query"]
+
+  return middleware
+}
+```
+
+### Modifying Input
+
+We can modify the request input through middleware:
+
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab>
+
+```ts twoslash
+const useUser = async () => ({ id: 1 })
+// ---cut---
+import { mutation, resolver } from "@gqloom/core"
+import * as v from "valibot"
+
+const Post = v.object({
+  __typename: v.nullish(v.literal("Post")),
+  id: v.number(),
+  title: v.string(),
+  content: v.string(),
+  authorId: v.number(),
+})
+
+interface IPost extends v.InferOutput<typeof Post> {}
+
+const posts: IPost[] = []
+
+export const postsResolver = resolver({
+  createPost: mutation(Post)
+    .input(
+      v.object({
+        title: v.string(),
+        content: v.string(),
+        authorId: v.number(),
+      })
+    )
+    .use(async ({ next, parseInput }) => { // [!code hl]
+      const inputResult = await parseInput.getResult() // [!code hl]
+      inputResult.authorId = (await useUser()).id // [!code hl]
+      parseInput.result = { value: inputResult } // [!code hl]
+      return next() // [!code hl]
+    })
+    .resolve(({ title, content, authorId }) => {
+      const post = {
+        id: Math.random(),
+        title,
+        content,
+        authorId,
+      }
+      posts.push(post)
+      return post
+    }),
+})
+```
+
+</Tab>
+<Tab>
+
+```ts twoslash
+const useUser = async () => ({ id: 1 })
+// ---cut---
+import { mutation, resolver } from "@gqloom/core"
+import { z } from "zod"
+
+const Post = z.object({
+  __typename: z.literal("Post").nullish(),
+  id: z.number(),
+  title: z.string(),
+  content: z.string(),
+  authorId: z.number(),
+})
+
+interface IPost extends z.output<typeof Post> {}
+
+const posts: IPost[] = []
+
+export const postsResolver = resolver({
+  createPost: mutation(Post)
+    .input(
+      z.object({
+        title: z.string(),
+        content: z.string(),
+        authorId: z.number(),
+      })
+    )
+    .use(async ({ next, parseInput }) => { // [!code hl]
+      const inputResult = await parseInput.getResult() // [!code hl]
+      inputResult.authorId = (await useUser()).id // [!code hl]
+      parseInput.result = { value: inputResult } // [!code hl]
+      return next() // [!code hl]
+    })
+    .resolve(({ title, content, authorId }) => {
+      const post = {
+        id: Math.random(),
+        title,
+        content,
+        authorId,
+      }
+      posts.push(post)
+      return post
+    }),
+})
+```
+
+</Tab>
+</Tabs>
+
 ## Using middleware
 
 GQLoom is able to apply middleware in a variety of scopes, including resolver functions, resolver local middleware, and global middleware.
@@ -483,3 +635,49 @@ import { exceptionFilter } from "./middlewares"
 
 export const schema = weave(helloResolver, exceptionFilter) // [!code hl]
 ```
+
+### Applying Middleware Based on Operation Type
+
+We can specify for which operation types a middleware should take effect.
+
+```ts twoslash
+const db = {} as {
+  beginTransaction: () => Promise<void>
+  commit: () => Promise<void>
+  rollback: () => Promise<void>
+}
+
+// ---cut---
+import type { Middleware } from "@gqloom/core"
+import { GraphQLError } from "graphql"
+
+export const transaction: Middleware = async ({ next }) => {
+  try {
+    await db.beginTransaction()
+
+    const result = await next()
+
+    await db.commit()
+
+    return result
+  } catch (error) {
+    await db.rollback()
+    throw new GraphQLError("Transaction failed", {
+      extensions: { originalError: error },
+    })
+  }
+}
+
+transaction.operations = ["mutation"]
+```
+
+`Middleware.operations` is an array of strings used to specify on which operation types the middleware should take effect. The available values are:
+
+- `"query"`;
+- `"mutation"`;
+- `"subscription"`;
+- `"field"`;
+- `"subscription.resolve"`;
+- `"subscription.subscribe"`;
+
+The default value for `Middleware.operations` is `["field", "query", "mutation", "subscription.subscribe"]`.

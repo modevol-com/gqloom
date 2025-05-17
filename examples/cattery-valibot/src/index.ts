@@ -1,5 +1,6 @@
 import { createServer } from "node:http"
 import { type Middleware, weave } from "@gqloom/core"
+import { asyncContextProvider } from "@gqloom/core/context"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
 import { createYoga } from "graphql-yoga"
@@ -19,6 +20,7 @@ const exceptionFilter: Middleware = async (next) => {
 }
 
 const schema = weave(
+  asyncContextProvider,
   ValibotWeaver,
   ...resolvers,
   exceptionFilter,

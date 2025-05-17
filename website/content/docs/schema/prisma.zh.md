@@ -78,14 +78,19 @@ model Post {
 | `typesFiles`   | TypeScript 声明文件的文件名。使用 `[]` 将跳过 TypeScript 声明文件的生成。 | `["index.d.ts"]`                        |
 
 ### 生成丝线
+
 ```sh
 npx prisma generate
 ```
 
 ## 使用丝线
-在生成丝线后，我们可以在 `resolver` 中使用：
+
+在生成丝线后，我们可以在 `resolver` 中使用，同时我们使用 `useSelectedFields` 以确保只选择 GraphQL 查询所需要的字段：
+
 ```ts
 import { resolver, query, field, weave } from '@gqloom/core'
+import { asyncContextProvider } from '@gqloom/core/context'
+import { useSelectedFields } from "@gqloom/prisma/context"
 import { ValibotWeaver } from '@gqloom/valibot'
 import { Post, User } from '@gqloom/prisma/generated'
 import * as v from 'valibot'
@@ -97,27 +102,60 @@ const userResolver = resolver.of(User, {
   user: query(User.nullable(), {
     input: { id: v.number() },
     resolve: ({ id }) => {
-      return db.user.findUnique({ where: { id } })
+      return db.user.findUnique({
+        select: useSelectedFields(User),
+        where: { id },
+      })
     },
   }),
 
   posts: field(Post.list(), async (user) => {
-    const posts = await db.user.findUnique({ where: { id: user.id } }).posts()
+    const posts = await db.user
+      .findUnique({ where: { id: user.id } })
+      .posts({ select: useSelectedFields(Post) })
     return posts ?? []
   }),
 })
 
 const postResolver = resolver.of(Post, {
-  author: field(User, async (post) => {
-    const author = await db.post.findUnique({ where: { id: post.id } }).author()
-    return author!
-  }),
+  author: field(User.nullable())
+    .derivedFrom("authorId")
+    .resolve((post) => {
+      if (!post.authorId) return null
+      return db.user.findUnique({ where: { id: post.authorId } })
+    }),
 })
 
-export const schema = weave(ValibotWeaver, userResolver, postResolver)
+export const schema = weave(asyncContextProvider, ValibotWeaver, userResolver, postResolver)
+```
+
+如上面的代码所示，我们可以直接在 `resolver` 里使用 Prisma 生成的类型。在这里我们定义了两个解析器：`userResolver` 和 `postResolver`。
+
+在 `userResolver` 中，我们使用 `User` 作为 `resolver.of` 的父类型，并定义了两个字段：
+- `user` 查询：返回类型是 `User.nullable()`，表示可能返回单个用户或 null。它接受一个 `id` 参数，并使用 Prisma 的 `findUnique` 方法查询数据库。
+- `posts` 字段：返回类型是 `Post.list()`，表示返回该用户的所有文章列表。它通过 Prisma 的关系查询来获取用户的文章。
+
+在 `postResolver` 中，我们使用 `Post` 作为父类型，定义了一个字段：
+- `author` 字段：返回类型是 `User`，表示返回文章的作者。它通过 Prisma 的关系查询来获取文章的作者信息。
+
+所有查询都使用了 `useSelectedFields()` 函数来确保只选择 GraphQL 查询中请求的字段，这有助于优化数据库查询性能。此函数需要[启用上下文](../context)。对于无法使用 `useSelectedFields()` 函数的运行时，我们也可以使用 `getSelectedFields()` 函数来获取当前查询需要选取的列。
+
+### 派生字段
+
+为模型添加派生字段非常简单，但需要注意使用 `field().derivedFrom()` 方法声明所依赖的列，以便 `useSelectedFields` 方法能正确地选取这些列：
+
+```ts
+export const postResolver = resolver.of(Post, {
+  abstract: field(v.string())
+    .derivedFrom("title", "content")
+    .resolve((post) => {
+      return `${post.title} ${post.content?.slice(0, 60)}...`
+    }),
+})
 ```
 
 ### 隐藏字段
+
 `@gqloom/prisma` 默认将暴露所有字段。如果你希望隐藏某些字段，你可以使用 `field.hidden`：
 
 ```ts
@@ -281,10 +319,17 @@ const postResolver = resolver.of(Post, {
 你可以从解析器工厂中直接创建一个 Resolver：
 
 ```ts
+// Readonly Resolver
+const userQueriesResolver = userResolverFactory.queriesResolver()
+
+// Full Resolver
 const userResolver = userResolverFactory.resolver()
 ```
-在上面的代码中，我们使用 `userResolverFactory.resolver()` 来创建一个 Resolver。
-这个Resolver 将包含解析器工厂中所有的查询、变更和字段。
+
+有两个用于创建 Resolver 的函数：
+
+- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的 Resolver。
+- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的 Resolver。
 
 ## 自定义类型映射
 

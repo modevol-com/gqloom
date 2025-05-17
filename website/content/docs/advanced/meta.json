@@ -1,3 +1,9 @@
 {
-  "pages": ["adapters", "printing-schema", "subscription", "federation"]
+  "pages": [
+    "adapters",
+    "printing-schema",
+    "executor",
+    "subscription",
+    "federation"
+  ]
 }

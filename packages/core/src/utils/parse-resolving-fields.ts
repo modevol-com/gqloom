@@ -38,7 +38,9 @@ export interface ResolvingFields {
  * @param payload - The resolver payload containing the current field resolution context
  * @returns An object containing sets of different field types
  */
-export function getResolvingFields(payload: ResolverPayload): ResolvingFields {
+export function getResolvingFields(
+  payload: Pick<ResolverPayload, "info">
+): ResolvingFields {
   const requestedFields = parseResolvingFields(payload.info)
   const derivedFields = new Set<string>()
   const derivedDependencies = new Set<string>()
