@@ -118,9 +118,10 @@ export class DrizzleWeaver {
           ...config,
           fields: mapValue(columns, (column, columnName) => {
             const fieldConfig = fieldsConfig[columnName]
-            let type = fieldConfig?.type ?? DrizzleWeaver.getColumnType(column)
+            const fieldType = getValue(fieldConfig?.type)
+            let type = fieldType ?? DrizzleWeaver.getColumnType(column)
 
-            if (fieldConfig?.type === null) return mapValue.SKIP
+            if (fieldType === null) return mapValue.SKIP
 
             if (column.notNull && !isNonNullType(type)) {
               type = new GraphQLNonNull(type)
