@@ -7,13 +7,22 @@ import type {
 } from "../resolver"
 import type { MayPromise, RequireKeys } from "./types"
 
-/** The operation of the field: `field`, `query`, `mutation`, `subscription.resolve` or `subscription.subscribe` */
+/**
+ * The operation of the field:
+ * - `field`
+ * - `query`
+ * - `mutation`
+ * - `subscription.resolve`
+ * - `subscription.subscribe`
+ * - `resolveReference`
+ */
 export type MiddlewareOperation =
   | "field"
   | "query"
   | "mutation"
   | "subscription.resolve"
   | "subscription.subscribe"
+  | "resolveReference"
 
 export interface MiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,

@@ -270,6 +270,7 @@ export const asyncContextProvider: AsyncContextProvider = Object.assign(
       "field",
       "subscription.resolve",
       "subscription.subscribe",
+      "resolveReference",
     ],
     with: (...keyValues: [WeakKey, any][]) => {
       return createProvider(...keyValues)

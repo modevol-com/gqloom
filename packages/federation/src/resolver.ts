@@ -11,7 +11,13 @@ import {
   type SYMBOLS,
   type StandardSchemaV1,
   type ValueOf,
+  applyMiddlewares,
+  createInputParser,
+  filterMiddlewares,
+  loom,
+  silk,
 } from "@gqloom/core"
+import { GraphQLID } from "graphql"
 import type { ResolveReferenceExtension } from "."
 import type { DirectiveList } from "./mock-ast"
 
@@ -115,8 +121,32 @@ export class FederatedChainResolver<
     >["apollo"]
     ;(apollo.subgraph as {}) ??= {}
 
-    apollo.subgraph.resolveReference = (root, context, info) =>
-      resolve(root, { root, context, info })
+    const middlewares = filterMiddlewares(
+      "resolveReference",
+      this.meta.options?.middlewares
+    )
+    const field = FederatedChainResolver.referenceField
+
+    apollo.subgraph.resolveReference = (root, context, info) => {
+      const payload: ResolverPayload = {
+        args: {},
+        root,
+        context,
+        info,
+        field,
+      }
+      return applyMiddlewares(
+        {
+          operation: "resolveReference",
+          outputSilk: field["~meta"].output,
+          parent: undefined,
+          payload,
+          parseInput: createInputParser(field["~meta"].input, undefined),
+        },
+        () => resolve(root, payload),
+        middlewares
+      )
+    }
 
     this.meta.options.extensions = {
       ...this.meta.options.extensions,
@@ -124,4 +154,9 @@ export class FederatedChainResolver<
     }
     return this
   }
+
+  protected static referenceField: Loom.Field<any, any, any, any> = loom.field(
+    silk(GraphQLID),
+    () => undefined
+  )
 }
