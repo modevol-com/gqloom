@@ -1,5 +1,6 @@
 import {
   ChainResolver,
+  EasyDataLoader,
   type GraphQLSilk,
   type Loom,
   type LoomObjectType,
@@ -7,6 +8,7 @@ import {
   type Middleware,
   ObjectChainResolver,
   type OmitInUnion,
+  type RequireKeys,
   type ResolverOptions,
   type ResolverOptionsWithExtensions,
   type ResolverPayload,
@@ -15,6 +17,7 @@ import {
   type ValueOf,
   applyMiddlewares,
   createInputParser,
+  getMemoizationMap,
   loom,
   silk,
 } from "@gqloom/core"
@@ -104,11 +107,11 @@ export class FederatedChainResolver<
       keyof StandardSchemaV1.InferOutput<TParent> = keyof StandardSchemaV1.InferOutput<TParent>,
   >(
     resolve: (
-      source: Pick<
+      source: RequireKeys<
         NonNullable<StandardSchemaV1.InferOutput<TParent>>,
         TRequiredKey
       >,
-      payload: Pick<ResolverPayload, "root" | "context" | "info">
+      payload: Pick<ResolverPayload, "root" | "context" | "info"> | undefined
     ) => MayPromise<
       NonNullable<StandardSchemaV1.InferOutput<TParent>> | null | undefined
     >
@@ -120,6 +123,73 @@ export class FederatedChainResolver<
       [FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE]: resolve,
     }
     return this
+  }
+
+  /**
+   * Loads and caches references in batch using DataLoader pattern.
+   * This method is particularly useful in Federation mode when other services need to reference data from this service.
+   *
+   * @template TRequiredKey - The key type that must be present in the parent type
+   * @param load - A function that loads multiple references in batch
+   * @returns A resolver that uses DataLoader to batch and cache reference loading
+   *
+   * @example
+   * ```ts
+   * resolver.of(UserType, {
+   *   id: field(silk(GraphQLID)),
+   * }).loadReference(async (sources, payloads) => {
+   *   // sources will be an array of objects with required keys
+   *   // payloads will be an array of resolver payloads
+   *   return await db.users.findMany({
+   *     where: { id: { in: sources.map(s => s.id) } }
+   *   });
+   * });
+   * ```
+   */
+  public loadReference<
+    TRequiredKey extends
+      keyof StandardSchemaV1.InferOutput<TParent> = keyof StandardSchemaV1.InferOutput<TParent>,
+  >(
+    load: (
+      sources: RequireKeys<
+        NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+        TRequiredKey
+      >[],
+      payloads: (
+        | Pick<ResolverPayload, "root" | "context" | "info">
+        | undefined
+      )[]
+    ) => MayPromise<
+      (NonNullable<StandardSchemaV1.InferOutput<TParent>> | null | undefined)[]
+    >
+  ) {
+    const initLoader = () =>
+      new EasyDataLoader<
+        [
+          source: RequireKeys<
+            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+            TRequiredKey
+          >,
+          payload:
+            | Pick<ResolverPayload, "root" | "context" | "info">
+            | undefined,
+        ],
+        any
+      >((args) => {
+        const sources = args.map(([source]) => source)
+        const payloads = args.map(([, payload]) => payload)
+        return load(sources, payloads) as any
+      })
+
+    return this.resolveReference<TRequiredKey>((source, payload) => {
+      const loader = (() => {
+        if (!payload) return initLoader()
+        const memoMap = getMemoizationMap(payload)
+        if (!memoMap.has(load)) memoMap.set(load, initLoader())
+        return memoMap.get(load) as ReturnType<typeof initLoader>
+      })()
+      return loader.load([source, payload])
+    })
   }
 
   /** The extension name for the resolveReference function */

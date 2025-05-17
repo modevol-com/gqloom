@@ -41,4 +41,4 @@ export function resolveReference<
 }
 
 export * from "./resolver"
-export * from "./schema-weaver"
+export * from "./schema-loom"

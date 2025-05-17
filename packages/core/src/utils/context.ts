@@ -18,13 +18,13 @@ export function onlyMemoization(): OnlyMemoizationPayload {
 }
 
 export function isOnlyMemoryPayload(
-  payload: ResolverPayload | OnlyMemoizationPayload
+  payload: OnlyMemoizationPayload | Pick<ResolverPayload, "context">
 ): payload is OnlyMemoizationPayload {
   return (payload as OnlyMemoizationPayload).isMemoization === true
 }
 
 export function getMemoizationMap(
-  payload: OnlyMemoizationPayload | ResolverPayload
+  payload: OnlyMemoizationPayload | Pick<ResolverPayload, "context">
 ) {
   if (isOnlyMemoryPayload(payload)) return payload.memoization
   if (typeof payload.context === "undefined") {
