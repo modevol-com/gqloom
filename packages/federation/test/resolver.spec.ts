@@ -1,5 +1,11 @@
 import { ApolloServer } from "@apollo/server"
-import { type RequireKeys, field, query, silk } from "@gqloom/core"
+import {
+  type RequireKeys,
+  type ResolvingFields,
+  field,
+  query,
+  silk,
+} from "@gqloom/core"
 import { asyncContextProvider, useResolvingFields } from "@gqloom/core/context"
 import {
   GraphQLInt,
@@ -225,7 +231,7 @@ describe("FederatedChainResolver", () => {
     })
 
     it("should work with useResolvingFields", async () => {
-      let resolvingFields: any
+      let resolvingFields: ResolvingFields | undefined
 
       const userResolver = resolver
         .of(User, {
