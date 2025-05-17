@@ -259,7 +259,7 @@ First, we implement an `authGuard` middleware that checks the user's role:
 
 ```ts twoslash
 // @filename: context.ts
-import { createMemoization } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 export const useUser = createMemoization(()=> ({ 
   name:"", 
   id: 0, 
@@ -357,7 +357,8 @@ In the code above, we have applied the `authGuard` middleware to `AdminResolver`
 
 We can also implement logging functionality through middleware. For example, we can create a `logger` middleware to log the execution time of each field parsing function:
 ```ts twoslash
-import { type Middleware, useResolverPayload } from "@gqloom/core"
+import { type Middleware } from "@gqloom/core"
+import { useResolverPayload } from "@gqloom/core/context"
 
 export const logger: Middleware = async (next) => {
   const info = useResolverPayload()!.info

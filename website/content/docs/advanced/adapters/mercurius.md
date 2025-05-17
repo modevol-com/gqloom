@@ -54,7 +54,7 @@ app.listen({ port: 4000 }, () => {
 When using GQLoom together with `Mercurius`, you can use `MercuriusContext` to label the type of context:
 
 ```ts twoslash
-import { useContext } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { type MercuriusContext } from "mercurius"
 
 export function useAuthorization() {

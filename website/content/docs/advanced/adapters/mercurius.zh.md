@@ -54,7 +54,7 @@ app.listen({ port: 4000 }, () => {
 在与 `Mercurius` 同时使用 GQLoom 时，你可以使用 `MercuriusContext` 来标注上下的类型：
 
 ```ts twoslash
-import { useContext } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { type MercuriusContext } from "mercurius"
 
 export function useAuthorization() {

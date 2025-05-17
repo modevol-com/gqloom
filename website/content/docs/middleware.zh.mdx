@@ -259,7 +259,7 @@ createServer(yoga).listen(4000, () => {
 
 ```ts twoslash
 // @filename: context.ts
-import { createMemoization } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 export const useUser = createMemoization(()=> ({ 
   name:"", 
   id: 0, 
@@ -357,7 +357,8 @@ const editorResolver = resolver(
 
 我们也可以通过中间件来实现日志记录功能。例如，我们可以创建一个 `logger` 中间件，用于记录每个字段解析函数的执行时间：
 ```ts twoslash
-import { type Middleware, useResolverPayload } from "@gqloom/core"
+import { type Middleware } from "@gqloom/core"
+import { useResolverPayload } from "@gqloom/core/context"
 
 export const logger: Middleware = async (next) => {
   const info = useResolverPayload()!.info

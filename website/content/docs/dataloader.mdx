@@ -143,9 +143,9 @@ const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
 const userResolver = resolver.of(users, {
   users: query(users.$list()).resolve(() => db.select().from(users)),
 
-  posts: field(posts.$list()).resolve((user) =>
-    db.select().from(posts).where(eq(posts.authorId, user.id))
-  ),
+  posts: field(posts.$list())
+    .derivedFrom("id")
+    .resolve((user) => db.select().from(posts).where(eq(posts.authorId, user.id))),
 })
 
 export const schema = weave(userResolver)
@@ -231,23 +231,25 @@ const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
 const userResolver = resolver.of(users, {
   users: query(users.$list()).resolve(() => db.select().from(users)),
 
-  posts_: field(posts.$list()).resolve((user) => // [!code --]
-    db.select().from(posts).where(eq(posts.authorId, user.id)) // [!code --]
-  ), // [!code --]
+  posts_: field(posts.$list()) // [!code --]
+    .derivedFrom("id") // [!code --]
+    .resolve((user) => db.select().from(posts).where(eq(posts.authorId, user.id))), // [!code --]
 
-  posts: field(posts.$list()).load(async (userList) => { // [!code ++]
-    const postList = await db // [!code ++]
-      .select() // [!code ++]
-      .from(posts) // [!code ++]
-      .where( // [!code ++]
-        inArray( // [!code ++]
-          posts.authorId, // [!code ++]
-          userList.map((u) => u.id) // [!code ++]
+  posts: field(posts.$list()) // [!code ++]
+    .derivedFrom("id") // [!code ++]
+    .load(async (userList) => { // [!code ++]
+      const postList = await db // [!code ++]
+        .select() // [!code ++]
+        .from(posts) // [!code ++]
+        .where( // [!code ++]
+          inArray( // [!code ++]
+            posts.authorId, // [!code ++]
+            userList.map((u) => u.id) // [!code ++]
+          ) // [!code ++]
         ) // [!code ++]
-      ) // [!code ++]
-    const postMap = Map.groupBy(postList, (p) => p.authorId) // [!code ++]
-    return userList.map((u) => postMap.get(u.id) ?? []) // [!code ++]
-  }), // [!code ++]
+      const postMap = Map.groupBy(postList, (p) => p.authorId) // [!code ++]
+      return userList.map((u) => postMap.get(u.id) ?? []) // [!code ++]
+    }), // [!code ++]
 })
 
 export const schema = weave(userResolver)
