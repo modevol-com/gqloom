@@ -81,6 +81,30 @@ export const posts = drizzleSilk(
 ```
 
 ```ts twoslash title="relations.ts" tab="relations.ts"
+// @filename: schema.ts
+import { drizzleSilk } from "@gqloom/drizzle"
+import * as t from "drizzle-orm/sqlite-core"
+
+export const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    name: t.text().notNull(),
+    age: t.int(),
+    email: t.text(),
+    password: t.text(),
+  })
+)
+
+export const posts = drizzleSilk(
+  t.sqliteTable("posts", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    title: t.text().notNull(),
+    content: t.text(),
+    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
+  })
+)
+// @filename: relations.ts
+// ---cut---
 import { defineRelations } from "drizzle-orm"
 import * as tables from "./schema"
 
@@ -701,6 +725,7 @@ export const relations = defineRelations(tables, (r) => ({
 // @filename: resolver.ts
 import { query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
+import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
 import { relations } from "./relations"
@@ -719,7 +744,7 @@ export const usersResolver = resolver.of(users, {
   user: usersResolverFactory.selectSingleQuery().input(
     v.pipe( // [!code hl]
       v.object({ id: v.number() }), // [!code hl]
-      v.transform(({ id }) => ({ where: { id } })) // [!code hl]
+      v.transform(({ id }) => ({ where: eq(users.id, id) })) // [!code hl]
     ) // [!code hl]
   ),
 
