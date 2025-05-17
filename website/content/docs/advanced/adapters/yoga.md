@@ -57,7 +57,7 @@ createServer(yoga).listen(4000, () => {
 When using GQLoom together with `Yoga`, you can use `YogaInitialContext` to label the type of context:
 
 ```ts twoslash
-import { useContext } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { type YogaInitialContext } from "graphql-yoga"
 
 export function useAuthorization() {
