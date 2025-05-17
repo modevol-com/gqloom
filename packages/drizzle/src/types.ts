@@ -65,7 +65,11 @@ export interface DrizzleSilkConfig<TTable extends Table>
           /**
            * The type of the field, set to `null` to hide the field
            */
-          type?: GraphQLOutputType | null | undefined
+          type?:
+            | GraphQLOutputType
+            | null
+            | (() => GraphQLOutputType | null)
+            | undefined
         })
       | undefined
   }>

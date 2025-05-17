@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
+    "@gqloom/valibot": "workspace:*",
     "@libsql/client": "^0.14.0",
     "@types/pg": "^8.11.10",
     "dotenv": "^16.4.7",

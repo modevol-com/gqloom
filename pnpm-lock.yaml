@@ -331,6 +331,9 @@ importers:
       '@gqloom/core':
         specifier: workspace:*
         version: link:../core
+      '@gqloom/valibot':
+        specifier: workspace:*
+        version: link:../valibot
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0

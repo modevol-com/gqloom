@@ -924,7 +924,7 @@ const usersResolver = usersResolverFactory.resolver()
 首先我们使用 `DrizzleWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime` 和  `GraphQLJSONObject` ，当遇到 `date` 和 `json` 类型时，我们将其映射到对应的 GraphQL 标量。
 
 ```ts twoslash
-import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
+import { GraphQLDateTime, GraphQLJSON } from "graphql-scalars"
 import { DrizzleWeaver } from "@gqloom/drizzle"
 
 const drizzleWeaverConfig = DrizzleWeaver.config({
@@ -933,7 +933,7 @@ const drizzleWeaverConfig = DrizzleWeaver.config({
       return GraphQLDateTime
     }
     if (column.dataType === "json") {
-      return GraphQLJSONObject
+      return GraphQLJSON
     }
   },
 })
