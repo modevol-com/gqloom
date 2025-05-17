@@ -1,5 +1,6 @@
 import { ApolloServer } from "@apollo/server"
 import { type RequireKeys, field, query, silk } from "@gqloom/core"
+import { asyncContextProvider, useResolvingFields } from "@gqloom/core/context"
 import {
   GraphQLInt,
   GraphQLNonNull,
@@ -115,6 +116,8 @@ describe("FederatedChainResolver", () => {
     interface IUser {
       id: string
       name: string
+      email?: string
+      phone?: string
     }
     const User = silk<IUser>(
       new GraphQLObjectType({
@@ -122,6 +125,8 @@ describe("FederatedChainResolver", () => {
         fields: {
           id: { type: new GraphQLNonNull(GraphQLString) },
           name: { type: new GraphQLNonNull(GraphQLString) },
+          email: { type: GraphQLString },
+          phone: { type: GraphQLString },
         },
         extensions: {
           directives: { key: { fields: "id", resolvable: true } },
@@ -217,6 +222,109 @@ describe("FederatedChainResolver", () => {
       expect(response.body.singleResult.data?._entities).toEqual([
         { id: "1", name: "User 1" },
       ])
+    })
+
+    it("should work with useResolvingFields", async () => {
+      let resolvingFields: any
+
+      const userResolver = resolver
+        .of(User, {
+          query: query(silk(GraphQLString), () => "foo"),
+        })
+        .loadReference<"id">(async (sources) => {
+          // Get current resolving fields using useResolvingFields
+          resolvingFields = useResolvingFields()
+
+          // Return data based on requested fields
+          return sources.map((source) => {
+            const user: IUser = {
+              id: source.id,
+              name: `User ${source.id}`,
+            }
+
+            // Add email if requested
+            if (resolvingFields?.requestedFields.has("email")) {
+              user.email = `user${source.id}@example.com`
+            }
+
+            // Add phone if requested
+            if (resolvingFields?.requestedFields.has("phone")) {
+              user.phone = `123-${source.id}`
+            }
+
+            return user
+          })
+        })
+
+      // Apollo Server + FederatedSchemaLoom
+      const schema = FederatedSchemaLoom.weave(
+        asyncContextProvider,
+        userResolver
+      )
+      const server = new ApolloServer({ schema })
+
+      // Test basic fields only
+      const basicQuery = /* GraphQL */ `
+        query Entities($reps: [_Any!]!) {
+          _entities(representations: $reps) {
+            ... on User {
+              id
+              name
+            }
+          }
+        }
+      `
+      const basicResponse = await server.executeOperation({
+        query: basicQuery,
+        variables: {
+          reps: [{ __typename: "User", id: "1" }],
+        },
+      })
+      if (basicResponse.body.kind !== "single") throw new Error("unexpected")
+      expect(basicResponse.body.singleResult.data?._entities).toEqual([
+        { id: "1", name: "User 1" },
+      ])
+      expect(resolvingFields).toMatchObject({
+        requestedFields: new Set(["id", "name"]),
+        derivedFields: new Set([]),
+        derivedDependencies: new Set([]),
+        selectedFields: new Set(["id", "name"]),
+      })
+
+      // Test with additional fields
+      const extendedQuery = /* GraphQL */ `
+        query Entities($reps: [_Any!]!) {
+          _entities(representations: $reps) {
+            ... on User {
+              id
+              name
+              email
+              phone
+            }
+          }
+        }
+      `
+      const extendedResponse = await server.executeOperation({
+        query: extendedQuery,
+        variables: {
+          reps: [{ __typename: "User", id: "1" }],
+        },
+      })
+      if (extendedResponse.body.kind !== "single") throw new Error("unexpected")
+      expect(extendedResponse.body.singleResult.data?._entities).toEqual([
+        {
+          id: "1",
+          name: "User 1",
+          email: "user1@example.com",
+          phone: "123-1",
+        },
+      ])
+      expect(resolvingFields).toMatchObject({
+        requestedFields: new Set(["id", "name", "email", "phone"]),
+        derivedFields: new Set([]),
+        derivedDependencies: new Set([]),
+        selectedFields: new Set(["id", "name", "email", "phone"]),
+      })
     })
   })
 })
