@@ -25,14 +25,15 @@ import type {
  */
 export function inArrayMultiple(
   columns: Column[],
-  values: readonly unknown[][]
+  values: readonly unknown[][],
+  table: any
 ): SQL<unknown> {
   // Early return for empty values
   if (values.length === 0) return sql`FALSE`
 
   // Create (col1, col2, ...) part
   const columnsPart = sql`(${sql.join(
-    columns.map((c) => sql`${c}`),
+    columns.map((c) => sql`${table[c.name]}`),
     sql`, `
   )})`
 
@@ -112,7 +113,10 @@ export function getSelectedColumns<TTable extends Table>(
   table: TTable,
   payload: ResolverPayload | (ResolverPayload | undefined)[] | undefined
 ): SelectedTableColumns<TTable> {
-  if (!payload) {
+  if (
+    !payload ||
+    (Array.isArray(payload) && payload.filter(Boolean).length === 0)
+  ) {
     return getTableColumns(table) as SelectedTableColumns<TTable>
   }
   let selectedFields = new Set<string>()
