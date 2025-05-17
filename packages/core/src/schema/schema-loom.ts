@@ -77,8 +77,14 @@ export class GraphQLSchemaLoom {
     return this
   }
 
-  public add(resolver: Loom.Resolver) {
-    provideWeaverContext(() => this.addResolver(resolver), this.context)
+  public add(
+    resolver: Loom.Resolver,
+    modifyParent?: (parent: LoomObjectType) => LoomObjectType
+  ) {
+    provideWeaverContext(
+      () => this.addResolver(resolver, modifyParent),
+      this.context
+    )
     return this
   }
 
@@ -130,10 +136,13 @@ export class GraphQLSchemaLoom {
     return schema
   }
 
-  protected addResolver(resolver: Loom.Resolver) {
+  protected addResolver(
+    resolver: Loom.Resolver,
+    modifyParent?: (parent: LoomObjectType) => LoomObjectType
+  ) {
     const resolverOptions = resolver["~meta"].options
     const parent = resolver["~meta"].parent
-    const parentObject = (() => {
+    let parentObject = (() => {
       if (parent == null) return undefined
       let gqlType = getGraphQLType(parent)
 
@@ -155,6 +164,8 @@ export class GraphQLSchemaLoom {
 
     if (resolverOptions?.extensions && parentObject)
       parentObject.mergeExtensions(resolverOptions.extensions)
+    if (modifyParent != null && parentObject)
+      parentObject = modifyParent(parentObject)
 
     Object.entries(resolver["~meta"].fields).forEach(([name, field]) => {
       if (field === FIELD_HIDDEN) {

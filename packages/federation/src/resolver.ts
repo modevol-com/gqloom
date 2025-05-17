@@ -2,7 +2,9 @@ import {
   ChainResolver,
   type GraphQLSilk,
   type Loom,
+  type LoomObjectType,
   type MayPromise,
+  type Middleware,
   ObjectChainResolver,
   type OmitInUnion,
   type ResolverOptions,
@@ -13,7 +15,6 @@ import {
   type ValueOf,
   applyMiddlewares,
   createInputParser,
-  filterMiddlewares,
   loom,
   silk,
 } from "@gqloom/core"
@@ -114,45 +115,62 @@ export class FederatedChainResolver<
   ) {
     this.meta.options ??= {}
     this.meta.options.extensions ??= {}
-    const apollo = (this.meta.options.extensions.apollo ??
-      {}) as ResolveReferenceExtension<
-      StandardSchemaV1.InferOutput<TParent>,
-      TRequiredKey
-    >["apollo"]
-    ;(apollo.subgraph as {}) ??= {}
-
-    const middlewares = filterMiddlewares(
-      "resolveReference",
-      this.meta.options?.middlewares
-    )
-    const field = FederatedChainResolver.referenceField
-
-    apollo.subgraph.resolveReference = (root, context, info) => {
-      const payload: ResolverPayload = {
-        args: {},
-        root,
-        context,
-        info,
-        field,
-      }
-      return applyMiddlewares(
-        {
-          operation: "resolveReference",
-          outputSilk: field["~meta"].output,
-          parent: undefined,
-          payload,
-          parseInput: createInputParser(field["~meta"].input, undefined),
-        },
-        () => resolve(root, payload),
-        middlewares
-      )
-    }
-
     this.meta.options.extensions = {
       ...this.meta.options.extensions,
-      apollo,
+      [FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE]: resolve,
     }
     return this
+  }
+
+  /** The extension name for the resolveReference function */
+  public static EXTENSION_RESOLVE_REFERENCE =
+    "gqloom.federation.resolveReference"
+
+  /**
+   * Add the resolveReference function to the parent object
+   * @param middlewares - The middlewares to apply to the resolveReference function
+   * @returns A function that adds the resolveReference function to the parent object
+   */
+  public static addResolveReference(middlewares: Middleware[]) {
+    const field = FederatedChainResolver.referenceField
+    return (parent: LoomObjectType): LoomObjectType => {
+      if (
+        FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE in parent.extensions
+      ) {
+        const resolve = parent.extensions[
+          FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE
+        ] as (source: any, payload: ResolverPayload) => MayPromise<any>
+        const apollo: ResolveReferenceExtension<any, any>["apollo"] = {
+          subgraph: {
+            resolveReference: (root, context, info) => {
+              const payload: ResolverPayload = {
+                args: {},
+                root,
+                context,
+                info,
+                field,
+              }
+              return applyMiddlewares(
+                {
+                  operation: "resolveReference",
+                  outputSilk: field["~meta"].output,
+                  parent: undefined,
+                  payload,
+                  parseInput: createInputParser(
+                    field["~meta"].input,
+                    undefined
+                  ),
+                },
+                () => resolve(root, payload),
+                middlewares
+              )
+            },
+          },
+        }
+        parent.mergeExtensions({ apollo })
+      }
+      return parent
+    }
   }
 
   protected static referenceField: Loom.Field<any, any, any, any> = loom.field(
