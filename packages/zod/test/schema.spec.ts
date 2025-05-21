@@ -20,8 +20,8 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
+import * as z3 from "zod/v3"
 import * as z from "zod/v4"
-import type { $ZodType } from "zod/v4/core"
 import {
   ZodWeaver,
   asEnumType,
@@ -381,6 +381,21 @@ describe("ZodWeaver", () => {
     expect(resolveType({ __typename: "Dog", name: "", age: 6 })).toEqual("Dog")
   })
 
+  it("should handle v3", () => {
+    const z3Dog = z3.object({
+      __typename: z3.literal("Dog"),
+      name: z3.string(),
+      birthday: z3.string(),
+    })
+
+    expect(printZodSilk(z3Dog)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String!
+        birthday: String!
+      }"
+    `)
+  })
+
   describe("should avoid duplicate", () => {
     it("should merge field from multiple resolver", () => {
       const Dog = z.object({
@@ -663,7 +678,7 @@ describe("ZodWeaver", () => {
   })
 })
 
-function printZodSilk(schema: $ZodType): string {
+function printZodSilk(schema: Parameters<typeof getGraphQLType>[0]): string {
   let gqlType = getGraphQLType(schema)
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)

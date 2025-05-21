@@ -24,6 +24,7 @@ import {
   isNonNullType,
   isObjectType,
 } from "graphql"
+import type { ZodTypeAny } from "zod/v3"
 import type { $ZodObject, $ZodShape, $ZodType, $ZodTypeDef } from "zod/v4/core"
 import { asField } from "./metadata"
 import type {
@@ -52,6 +53,7 @@ import {
   isZodUnion,
   resolveTypeByDiscriminatedUnion,
 } from "./utils"
+import { ZodWeaver as ZodWeaverV3 } from "./v3"
 
 export class ZodWeaver {
   public static vendor = "zod"
@@ -280,8 +282,14 @@ export class ZodWeaver {
       )
   }
 
-  public static getGraphQLType(schema: $ZodType): GraphQLOutputType {
-    return ZodWeaver.toNullableGraphQLType(schema)
+  public static getGraphQLType(
+    schema: $ZodType | ZodTypeAny
+  ): GraphQLOutputType {
+    if ("_zod" in schema) {
+      return ZodWeaver.toNullableGraphQLType(schema)
+    } else {
+      return ZodWeaverV3.getGraphQLType(schema)
+    }
   }
 
   protected static getGraphQLTypeBySelf(this: $ZodType): GraphQLOutputType {
