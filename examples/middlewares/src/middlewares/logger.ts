@@ -1,4 +1,5 @@
-import { type Middleware, useResolverPayload } from "@gqloom/core"
+import type { Middleware } from "@gqloom/core"
+import { useResolverPayload } from "@gqloom/core/context"
 
 export const logger: Middleware = async (next) => {
   const info = useResolverPayload()!.info

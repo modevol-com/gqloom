@@ -37,7 +37,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 - 🧑‍💻 **开发体验**：更少的样板代码、语义化的 API 设计、广泛的生态集成使开发愉快；
 - 🔒 **类型安全**：从 Schema 自动推导类型，在开发时享受智能提示，在编译时发现潜在问题；
-- 🎯 **接口工厂**：寻常的 CRUD 接口太简单又太繁琐了，交给解析器工厂来快速创建；
+- 🎯 **接口工厂**：寻常的 CRUD 接口简单又繁琐，交给解析器工厂来快速创建；
 - 🔋 **整装待发**：中间件、上下文、订阅、联邦图已经准备就绪；
 - 🔮 **抛却魔法**：没有装饰器、没有元数据和反射、没有代码生成，只需要 JavaScript/TypeScript 就可以在任何地方运行；
 - 🧩 **丰富集成**：使用你最熟悉的验证库和 ORM 来建构你的下一个 GraphQL 应用；
@@ -48,21 +48,16 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 ## 仓库导航
 
-- [GQLoom Core](./packages/core/README.md): GraphQL 织布机核心功能；
-
-- [GQLoom Drizzle](./packages/drizzle/README.md): GQLoom 与 Drizzle 的集成，能够将用 Drizzle定义的数据库表格编织为 GraphQL Schema，支持使用解析器工厂从 Drizzle 快速创建 CRUD 接口；
-
-- [GQLoom Federation](./packages/federation/README.md): 提供 GQLoom 对 Apollo Federation 的支持；
-
-- [GQLoom Mikro ORM](./packages/mikro-orm/README.md): GQLoom 与 Mikro ORM 的集成，能够将 Mikro Entity 编织为 GraphQL Schema，支持使用解析器工厂从 Mikro ORM 快速创建 CRUD 接口；
-
-- [GQLoom Prisma](./packages/prisma/README.md): GQLoom 与 Prisma 的集成，能够将 Prisma model 编织为 GraphQL Schema，支持使用解析器工厂从 Prisma 快速创建 CRUD 接口；
-
-- [GQLoom Valibot](./packages/valibot/README.md): GQLoom 与 Valibot 的集成，能够将 Valibot Schema 编织为 GraphQL Schema；
-
-- [GQLoom Yup](./packages/yup/README.md): GQLoom 与 Yup 的集成，能够将 Yup Schema 编织为 GraphQL Schema；
-
-- [GQLoom Zod](./packages/zod/README.md): GQLoom 与 Zod 的集成，能够将 Zod Schema 编织为 GraphQL Schema；
+| 包                                                   | 描述                                                                                                                             |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| [GQLoom Core](./packages/core/README.md)             | GraphQL 织布机核心功能                                                                                                           |
+| [GQLoom Drizzle](./packages/drizzle/README.md)       | GQLoom 与 Drizzle 的集成，能够将用 Drizzle定义的数据库表格编织为 GraphQL Schema，支持使用解析器工厂从 Drizzle 快速创建 CRUD 接口 |
+| [GQLoom Federation](./packages/federation/README.md) | 提供 GQLoom 对 Apollo Federation 的支持                                                                                          |
+| [GQLoom Mikro ORM](./packages/mikro-orm/README.md)   | GQLoom 与 Mikro ORM 的集成，能够将 Mikro Entity 编织为 GraphQL Schema，支持使用解析器工厂从 Mikro ORM 快速创建 CRUD 接口         |
+| [GQLoom Prisma](./packages/prisma/README.md)         | GQLoom 与 Prisma 的集成，能够将 Prisma model 编织为 GraphQL Schema，支持使用解析器工厂从 Prisma 快速创建 CRUD 接口               |
+| [GQLoom Valibot](./packages/valibot/README.md)       | GQLoom 与 Valibot 的集成，能够将 Valibot Schema 编织为 GraphQL Schema                                                            |
+| [GQLoom Yup](./packages/yup/README.md)               | GQLoom 与 Yup 的集成，能够将 Yup Schema 编织为 GraphQL Schema                                                                    |
+| [GQLoom Zod](./packages/zod/README.md)               | GQLoom 与 Zod 的集成，能够将 Zod Schema 编织为 GraphQL Schema                                                                    |
 
 [license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT

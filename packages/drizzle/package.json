@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/drizzle",
-  "version": "0.8.3",
+  "version": "0.9.3",
   "description": "GQLoom integration with Drizzle ORM",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,6 +14,16 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      }
+    },
+    "./context": {
+      "import": {
+        "types": "./dist/context.d.ts",
+        "default": "./dist/context.js"
+      },
+      "require": {
+        "types": "./dist/context.d.cts",
+        "default": "./dist/context.cjs"
       }
     }
   },
@@ -33,12 +43,13 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.8.0",
+    "@gqloom/core": ">= 0.9.0",
     "drizzle-orm": ">= 0.38.0",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
+    "@gqloom/valibot": "workspace:*",
     "@libsql/client": "^0.14.0",
     "@types/pg": "^8.11.10",
     "dotenv": "^16.4.7",

@@ -2,7 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
-## next (YYYY-MM-DD)
+## 0.9.2 (2025-05-13)
+
+- Fix: DrizzleInputFactory to support custom column types
+
+## 0.9.0 (2025-05-11)
+
+- Feat: add `DrizzleResolverFactory.queriesResolver` to create a read-only resolver
+- Feat: add `getSelectedColumns` to get the selected columns from the resolver payload
+
+## 0.8.6 (2025-04-28)
+
+- Fix: update input types for onConflictDoUpdate operations
+
+## 0.8.5 (2025-04-28)
+
+- Feat: Enhanced the drizzleSilk function to accept configuration options, improving flexibility in schema generation.
+- Feat: add `onConflictDoUpdate` and `onConflictDoNothing` to insert mutation for Postgres and SQLite
+
+## 0.8.4 (2025-04-21)
+
+- Fix: update resolver factory options type
 
 ## 0.8.3 (2025-04-16)
 

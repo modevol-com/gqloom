@@ -11,6 +11,8 @@
     "---Schema 集成---",
     "...schema",
     "---进阶功能---",
-    "...advanced"
+    "...advanced",
+    "---LLM---",
+    "[llms.txt](/zh/llms.txt)"
   ]
 }

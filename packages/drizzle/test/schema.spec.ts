@@ -1,4 +1,5 @@
-import { getGraphQLType, query, resolver, weave } from "@gqloom/core"
+import { getGraphQLType, query, resolver, silk, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import { pgTable } from "drizzle-orm/pg-core"
 import * as pg from "drizzle-orm/pg-core"
 import { sqliteTable } from "drizzle-orm/sqlite-core"
@@ -11,6 +12,7 @@ import {
   printSchema,
   printType,
 } from "graphql"
+import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import { DrizzleWeaver, drizzleSilk } from "../src"
 
@@ -278,6 +280,54 @@ describe("drizzleSilk", () => {
     expect(() => getGraphQLType(notImplemented2)).toThrow(
       "Type: PgCustomColumn is not implemented!"
     )
+  })
+
+  it("should handle config", () => {
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        id: pg.serial().primaryKey(),
+        name: pg.text(),
+        hidden: pg.text(),
+        getter: pg.text(),
+      }),
+      {
+        description: "some description of the foo",
+        fields: {
+          name: { description: "name of the foo" },
+          hidden: { type: null },
+          getter: { type: () => silk.getType(v.date()) },
+        },
+      }
+    )
+
+    const GraphQLDateTime = new GraphQLScalarType<Date, string>({
+      name: "DateTime",
+    })
+
+    const schema = weave(
+      Foo,
+      ValibotWeaver,
+      ValibotWeaver.config({
+        presetGraphQLType: (schema) => {
+          switch (schema.type) {
+            case "date":
+              return GraphQLDateTime
+          }
+        },
+      })
+    )
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      """"some description of the foo"""
+      type FooItem {
+        id: Int!
+
+        """name of the foo"""
+        name: String
+        getter: DateTime!
+      }
+
+      scalar DateTime"
+    `)
   })
 })
 

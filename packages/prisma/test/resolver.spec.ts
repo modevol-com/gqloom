@@ -1,12 +1,20 @@
 import { weave } from "@gqloom/core"
 import { lexicographicSortSchema, printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { beforeAll, beforeEach, describe, expect, it } from "vitest"
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest"
 import { PrismaResolverFactory } from "../src"
-import { PrismaClient } from "./client"
+import { type Prisma, PrismaClient } from "./client"
 import * as p from "./generated"
 
-describe("Bobbin Resolver", () => {
+describe("Resolver", () => {
   const db = new PrismaClient()
   const userBobbin = new PrismaResolverFactory(p.User, db)
   const userResolver = userBobbin.resolver()
@@ -31,6 +39,24 @@ describe("Bobbin Resolver", () => {
     expect(userResolver["~meta"].fields.profile["~meta"].resolve).toBeTypeOf(
       "function"
     )
+  })
+
+  it("should be able to create with dependencies", () => {
+    const postBobbin = new PrismaResolverFactory(p.Post, db)
+    const postResolver = postBobbin.resolver()
+
+    expect(postResolver["~meta"].fields.author).toBeDefined()
+    expect(postResolver["~meta"].fields.author["~meta"].dependencies).toEqual([
+      "authorId",
+    ])
+
+    const profileBobbin = new PrismaResolverFactory(p.Profile, db)
+    const profileResolver = profileBobbin.resolver()
+
+    expect(profileResolver["~meta"].fields.user).toBeDefined()
+    expect(profileResolver["~meta"].fields.user["~meta"].dependencies).toEqual([
+      "userId",
+    ])
   })
 
   it("should be able to create countQuery", async () => {
@@ -143,7 +169,34 @@ describe("Bobbin Resolver", () => {
   })
 
   describe("mutations", () => {
-    const schema = weaveSchema()
+    beforeAll(async () => {
+      let times = 0
+      while (true) {
+        try {
+          await db.keyValue.create({
+            data: { id: "testing-lock", value: "test" },
+          })
+          break
+        } catch (err) {
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          times++
+          if (times > 66) {
+            throw err
+          }
+        }
+      }
+    })
+
+    afterAll(async () => {
+      await db.keyValue.delete({
+        where: { id: "testing-lock" },
+      })
+    })
+
+    let logs: string[] = []
+    const schema = weaveSchema((e) => {
+      logs.push(e.query.replaceAll("`", ""))
+    })
     const yoga = createYoga({ schema })
     const execute = async (query: string, variables?: Record<string, any>) => {
       const response = await yoga.fetch("http://localhost/graphql", {
@@ -162,11 +215,13 @@ describe("Bobbin Resolver", () => {
       if (response.status !== 200) {
         throw new Error(JSON.stringify(errors))
       }
+      await new Promise((resolve) => setTimeout(resolve, 6))
       return data
     }
     beforeEach(async () => {
       await db.post.deleteMany()
       await db.user.deleteMany()
+      logs = []
     })
 
     it("should be able to create a user", async () => {
@@ -191,6 +246,12 @@ describe("Bobbin Resolver", () => {
           email: "bob@bob.com",
         },
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id, email AS email
+        "
+      `)
     })
 
     it("should be able to create many users", async () => {
@@ -226,7 +287,6 @@ describe("Bobbin Resolver", () => {
             title
             author {
               id
-              name
               email
             }
           }
@@ -256,11 +316,22 @@ describe("Bobbin Resolver", () => {
             title: "Hello World",
             author: {
               id: expect.any(String),
-              name: "Bob",
               email: "bob@bob.com",
             },
           },
         })
+
+        expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+          "
+          BEGIN IMMEDIATE
+          SELECT main.User.id FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
+          INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id
+          INSERT INTO main.Post (title, published, authorId) VALUES (?,?,?) RETURNING id AS id
+          SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.id = ? LIMIT ? OFFSET ?
+          COMMIT
+          SELECT main.User.id, main.User.email FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
+          "
+        `)
       }
     )
 
@@ -287,6 +358,12 @@ describe("Bobbin Resolver", () => {
           email: "bob@bob.com",
         },
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        DELETE FROM main.User WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email
+        "
+      `)
     })
 
     it("should be able to delete many posts", { retry: 6 }, async () => {
@@ -347,6 +424,12 @@ describe("Bobbin Resolver", () => {
           title: "Hello World",
         },
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        UPDATE main.Post SET title = ? WHERE (main.Post.id = ? AND 1=1) RETURNING id AS id, title AS title
+        "
+      `)
     })
 
     it("should be able to update many posts", async () => {
@@ -424,12 +507,46 @@ describe("Bobbin Resolver", () => {
           name: "Bob Smith",
         },
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        INSERT INTO main.User (email, name) VALUES (?,?) ON CONFLICT  (email) DO UPDATE SET name = ? WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email, name AS name
+        INSERT INTO main.User (email, name) VALUES (?,?) ON CONFLICT  (email) DO UPDATE SET name = ? WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email, name AS name
+        "
+      `)
     })
   })
 
   describe("queries", () => {
-    const db = new PrismaClient()
-    const schema = weaveSchema()
+    beforeAll(async () => {
+      let times = 0
+      while (true) {
+        try {
+          await db.keyValue.create({
+            data: { id: "testing-lock", value: "test" },
+          })
+          break
+        } catch (err) {
+          await new Promise((resolve) => setTimeout(resolve, 100))
+          times++
+          if (times > 66) {
+            throw err
+          }
+        }
+      }
+    })
+
+    afterAll(async () => {
+      await db.keyValue.delete({
+        where: { id: "testing-lock" },
+      })
+    })
+    let logs: string[] = []
+    const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
+
+    const schema = weaveSchema((e) => {
+      logs.push(e.query.replaceAll("`", ""))
+    })
     const yoga = createYoga({ schema })
     const execute = async (query: string, variables?: Record<string, any>) => {
       const response = await yoga.fetch("http://localhost/graphql", {
@@ -445,16 +562,21 @@ describe("Bobbin Resolver", () => {
 
       const { data, errors } = await response.json()
 
-      if (response.status !== 200) {
+      if (response.status !== 200 || errors != null) {
         throw new Error(JSON.stringify(errors))
       }
+      await new Promise((resolve) => setTimeout(resolve, 6))
       return data
     }
+
+    afterEach(() => (logs = []))
 
     beforeAll(async () => {
       await db.post.deleteMany()
       await db.profile.deleteMany()
       await db.user.deleteMany()
+      await db.sheep.deleteMany()
+      await db.dog.deleteMany()
       const Bob = await db.user.create({
         data: { email: "bob@bob.com", name: "Bob" },
       })
@@ -484,13 +606,71 @@ describe("Bobbin Resolver", () => {
       await db.profile.create({
         data: { introduction: "I am Bob", userId: Bob.id },
       })
+
+      const dog1 = await db.dog.create({
+        data: {
+          firstName: "1",
+          lastName: "D",
+          height: 100,
+          weight: 100,
+          birthDate: new Date(),
+        },
+      })
+      await db.sheep.createMany({
+        data: [
+          {
+            firstCode: "1",
+            lastCode: "S",
+            shepherdFirstName: dog1.firstName,
+            shepherdLastName: dog1.lastName,
+          },
+          {
+            firstCode: "2",
+            lastCode: "S",
+            shepherdFirstName: dog1.firstName,
+            shepherdLastName: dog1.lastName,
+          },
+          {
+            firstCode: "3",
+            lastCode: "S",
+            shepherdFirstName: dog1.firstName,
+            shepherdLastName: dog1.lastName,
+          },
+        ],
+      })
+
+      const dog2 = await db.dog.create({
+        data: {
+          firstName: "2",
+          lastName: "D",
+          height: 100,
+          weight: 100,
+          birthDate: new Date(),
+        },
+      })
+
+      await db.sheep.createMany({
+        data: [
+          {
+            firstCode: "4",
+            lastCode: "S",
+            shepherdFirstName: dog2.firstName,
+            shepherdLastName: dog2.lastName,
+          },
+          {
+            firstCode: "5",
+            lastCode: "S",
+            shepherdFirstName: dog2.firstName,
+            shepherdLastName: dog2.lastName,
+          },
+        ],
+      })
     })
 
     it("should query users", async () => {
       const res = await execute(/* GraphQL */ `
         query users {
           findManyUser {
-            name
             email
           }
         }
@@ -500,12 +680,18 @@ describe("Bobbin Resolver", () => {
 
       expect(new Set(res.findManyUser)).toMatchObject(
         new Set([
-          { name: "Bob", email: "bob@bob.com" },
-          { name: "Alice", email: "alice@alice.com" },
-          { name: "Dave", email: "dave@qq.com" },
-          { name: "Charlie", email: "charlie@qq.com" },
+          { email: "bob@bob.com" },
+          { email: "alice@alice.com" },
+          { email: "dave@qq.com" },
+          { email: "charlie@qq.com" },
         ])
       )
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.User.id, main.User.email FROM main.User WHERE 1=1 LIMIT ? OFFSET ?
+        "
+      `)
     })
 
     it("should query users with pagination", async () => {
@@ -522,6 +708,12 @@ describe("Bobbin Resolver", () => {
         { name: "Bob" },
         { name: "Charlie" },
       ])
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.User.id, main.User.name FROM main.User WHERE 1=1 ORDER BY main.User.name ASC LIMIT ? OFFSET ?
+        "
+      `)
     })
 
     it("should query users with posts", async () => {
@@ -540,6 +732,13 @@ describe("Bobbin Resolver", () => {
       expect(new Set(res.findFirstUser.posts)).toEqual(
         new Set([{ title: "Hello Bob" }, { title: "Goodbye" }])
       )
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE main.User.email LIKE ? LIMIT ? OFFSET ?
+        SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.authorId IN (?) LIMIT ? OFFSET ?
+        "
+      `)
     })
 
     it("should query users with profile", async () => {
@@ -558,22 +757,187 @@ describe("Bobbin Resolver", () => {
       expect(res.findUniqueUser.profile).toMatchObject({
         introduction: "I am Bob",
       })
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT main.Profile.id, main.Profile.introduction, main.Profile.userId FROM main.Profile WHERE main.Profile.userId IN (?) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query posts with content", async () => {
+      const res = await execute(/* GraphQL */ `
+        query posts {
+          findManyPost {
+            content
+          }
+        }
+      `)
+
+      expect(res.findManyPost).toHaveLength(3)
+      expect(res.findManyPost).toMatchObject([
+        { content: "Hello world" },
+        { content: "Goodbye world" },
+        { content: "Hello world" },
+      ])
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Post.id, main.Post.content FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query posts with author", async () => {
+      const res = await execute(/* GraphQL */ `
+        query posts {
+          findManyPost {
+            title
+            author {
+              name
+            }
+          }
+        }
+      `)
+
+      expect(res.findManyPost).toHaveLength(3)
+      expect(res.findManyPost).toMatchObject([
+        { title: "Hello Bob", author: { name: "Bob" } },
+        { title: "Goodbye", author: { name: "Bob" } },
+        { title: "Hello Alice", author: { name: "Alice" } },
+      ])
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?,?,?) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query profile with introduction", async () => {
+      const res = await execute(/* GraphQL */ `
+        query profiles {
+          findManyProfile {
+            introduction
+          }
+        }
+      `)
+
+      expect(res.findManyProfile).toHaveLength(1)
+      expect(res.findManyProfile).toMatchObject([{ introduction: "I am Bob" }])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Profile.id, main.Profile.introduction FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query profile with user", async () => {
+      const res = await execute(/* GraphQL */ `
+        query profiles {
+          findManyProfile {
+            user {
+              name
+            }
+          }
+        }
+      `)
+
+      expect(res.findManyProfile).toHaveLength(1)
+      expect(res.findManyProfile).toMatchObject([{ user: { name: "Bob" } }])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Profile.id, main.Profile.userId FROM main.Profile WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query sheep with shepherd", async () => {
+      const res = await execute(/* GraphQL */ `
+        query sheep {
+          findManySheep {
+            lastCode
+            shepherd {
+              firstName
+              lastName
+            }
+          }
+        }
+      `)
+
+      expect(res.findManySheep).toHaveLength(5)
+      expect(res.findManySheep).toMatchObject([
+        { shepherd: { firstName: "1", lastName: "D" } },
+        { shepherd: { firstName: "1", lastName: "D" } },
+        { shepherd: { firstName: "1", lastName: "D" } },
+        { shepherd: { firstName: "2", lastName: "D" } },
+        { shepherd: { firstName: "2", lastName: "D" } },
+      ])
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Sheep.firstCode, main.Sheep.lastCode, main.Sheep.shepherdFirstName, main.Sheep.shepherdLastName FROM main.Sheep WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.Dog.firstName, main.Dog.lastName FROM main.Dog WHERE ((main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?) OR (main.Dog.firstName = ? AND main.Dog.lastName = ?)) LIMIT ? OFFSET ?
+        "
+      `)
+    })
+
+    it("should query dogs with sheep", async () => {
+      const res = await execute(/* GraphQL */ `
+        query dogs {
+          findManyDog {
+            sheeps {
+              firstCode
+              lastCode
+            }
+          }
+        }
+      `)
+
+      expect(res.findManyDog).toHaveLength(2)
+      expect(res.findManyDog).toMatchObject([
+        {
+          sheeps: [
+            { firstCode: "1", lastCode: "S" },
+            { firstCode: "2", lastCode: "S" },
+            { firstCode: "3", lastCode: "S" },
+          ],
+        },
+        {
+          sheeps: [
+            { firstCode: "4", lastCode: "S" },
+            { firstCode: "5", lastCode: "S" },
+          ],
+        },
+      ])
+
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        SELECT main.Dog.firstName, main.Dog.lastName FROM main.Dog WHERE 1=1 LIMIT ? OFFSET ?
+        SELECT main.Sheep.firstCode, main.Sheep.lastCode, main.Sheep.shepherdFirstName, main.Sheep.shepherdLastName FROM main.Sheep WHERE ((main.Sheep.shepherdFirstName = ? AND main.Sheep.shepherdLastName = ?) OR (main.Sheep.shepherdFirstName = ? AND main.Sheep.shepherdLastName = ?)) LIMIT ? OFFSET ?
+        "
+      `)
     })
   })
 })
 
-function weaveSchema() {
-  const db = new PrismaClient()
+function weaveSchema(log?: (query: Prisma.QueryEvent) => void) {
+  const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
+  db.$on("query", (e) => {
+    log?.(e)
+  })
   const userResolver = new PrismaResolverFactory(p.User, db).resolver()
   const postResolver = new PrismaResolverFactory(p.Post, db).resolver()
   const profileResolver = new PrismaResolverFactory(p.Profile, db).resolver()
-  const catResolver = new PrismaResolverFactory(p.Cat, db).resolver()
+  const sheepResolver = new PrismaResolverFactory(p.Sheep, db).resolver()
   const dogResolver = new PrismaResolverFactory(p.Dog, db).resolver()
   const schema = weave(
     userResolver,
     postResolver,
     profileResolver,
-    catResolver,
+    sheepResolver,
     dogResolver
   )
   return schema

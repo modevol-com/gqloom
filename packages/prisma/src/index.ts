@@ -24,6 +24,7 @@ import type {
   PrismaModelSilk,
   PrismaWeaverConfig,
   PrismaWeaverConfigOptions,
+  SelectiveModel,
 } from "./types"
 
 export class PrismaWeaver {
@@ -37,7 +38,9 @@ export class PrismaWeaver {
       "~standard": {
         version: 1,
         vendor: PrismaWeaver.vendor,
-        validate: (value) => ({ value: value as TModal }),
+        validate: (value) => ({
+          value: value as SelectiveModel<TModal, typeof model.name>,
+        }),
       },
       model,
       meta,
@@ -48,7 +51,9 @@ export class PrismaWeaver {
         return silk.nullable(this as GraphQLSilk)
       },
       list() {
-        return silk.list(this) as GraphQLSilk<TModal[]>
+        return silk.list(this) as GraphQLSilk<
+          SelectiveModel<TModal, typeof model.name>[]
+        >
       },
     }
   }

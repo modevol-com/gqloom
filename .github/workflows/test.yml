@@ -38,6 +38,8 @@ jobs:
         uses: ./.github/actions/pnpm
       - name: Build
         run: pnpm run build
+      - name: Generate
+        run: pnpm -r run generate
       - name: Type check
         run: pnpm run check:type
 

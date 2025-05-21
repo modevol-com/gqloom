@@ -1,18 +1,20 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
-import type { MayPromise } from "../utils"
+import type { MayPromise, Middleware } from "../utils"
 import type { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
-import type { InferInputI } from "./input"
+import type { InferInputO } from "./input"
 import type {
   GraphQLFieldOptions,
   GraphQLSilk,
   ResolverOptionsWithExtensions,
-  ResolvingOptions,
+  ResolverPayload,
 } from "./types"
 
 export interface FieldMeta extends GraphQLFieldOptions {
   operation: "field" | "query" | "mutation" | "subscription"
   output: GraphQLSilk
-  input: GraphQLSilk | Record<string, GraphQLSilk> | undefined
+  input: GraphQLSilk | Record<string, GraphQLSilk> | void
+  middlewares?: Middleware[]
+  dependencies?: string[]
   resolve: (...args: any) => MayPromise<any>
 }
 
@@ -23,70 +25,63 @@ export interface BaseField {
 export interface Field<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
+  TDependencies extends string[] | undefined = undefined,
 > extends BaseField {
   "~meta": {
     operation: "field"
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
+    dependencies?: TDependencies
     types?: {
       parent: ReSilk<TParent>
     }
     resolve: (
       parent: StandardSchemaV1.InferOutput<NonNullable<TParent>>,
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
   } & GraphQLFieldOptions
 }
 
 export interface Query<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends BaseField {
   "~meta": {
     operation: "query"
     parent?: undefined
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
     resolve: (
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
   } & GraphQLFieldOptions
 }
 
 export interface Mutation<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends BaseField {
   "~meta": {
     operation: "mutation"
     parent?: undefined
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
     resolve: (
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => Promise<StandardSchemaV1.InferOutput<TOutput>>
   } & GraphQLFieldOptions
 }
 
 export interface Subscription<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
   TValue = StandardSchemaV1.InferOutput<TOutput>,
 > extends BaseField {
   "~meta": {
@@ -94,19 +89,20 @@ export interface Subscription<
     parent?: undefined
     output: TOutput
     input: TInput
+    middlewares?: Middleware[]
     types?: {
       value: TValue
     } & GraphQLFieldOptions
 
     resolve: (
       value: TValue,
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 
     subscribe: (
-      input: InferInputI<TInput>,
-      options?: ResolvingOptions
+      input: InferInputO<TInput>,
+      payload: ResolverPayload | void
     ) => MayPromise<AsyncIterator<TValue>>
   } & GraphQLFieldOptions
 }
@@ -121,11 +117,11 @@ export interface Resolver {
 }
 
 export type Operation =
-  | Query<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | undefined>
-  | Mutation<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | undefined>
+  | Query<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | void>
+  | Mutation<GraphQLSilk, GraphQLSilk | Record<string, GraphQLSilk> | void>
   | Subscription<
       GraphQLSilk,
-      GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+      GraphQLSilk | Record<string, GraphQLSilk> | void,
       any
     >
 
@@ -133,7 +129,8 @@ export type FieldOrOperation =
   | Field<
       GraphQLSilk,
       GraphQLSilk,
-      GraphQLSilk | Record<string, GraphQLSilk> | undefined
+      GraphQLSilk | Record<string, GraphQLSilk> | void,
+      string[] | undefined
     >
   | Operation
 

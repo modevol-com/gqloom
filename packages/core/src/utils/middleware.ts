@@ -1,35 +1,57 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type {
   CallableInputParser,
-  GraphQLSilk,
   InferFieldOutput,
   Loom,
+  ResolverPayload,
 } from "../resolver"
-import type { MayPromise } from "./types"
+import type { MayPromise, RequireKeys } from "./types"
+
+/**
+ * The operation of the field:
+ * - `field`
+ * - `query`
+ * - `mutation`
+ * - `subscription.resolve`
+ * - `subscription.subscribe`
+ * - `resolveReference`
+ */
+export type MiddlewareOperation =
+  | "field"
+  | "query"
+  | "mutation"
+  | "subscription.resolve"
+  | "subscription.subscribe"
+  | "resolveReference"
 
 export interface MiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,
 > {
-  /** The Output Silk of the field */
+  /** The Output Silk */
   outputSilk: StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
 
-  /** The previous object, which for a field on the root Query type is often not used. */
-  parent: TField extends Loom.Field<
-    GraphQLSilk,
-    GraphQLSilk,
-    GraphQLSilk | Record<string, GraphQLSilk> | undefined
-  >
-    ? StandardSchemaV1.InferOutput<
-        NonNullable<TField["~meta"]["types"]>["parent"]
-      >
-    : undefined
+  /** The previous object. */
+  parent: InferFieldParent<TField>
 
-  /** A function to parse the input of the field */
+  /** A function to parse the input */
   parseInput: CallableInputParser<TField["~meta"]["input"]>
 
-  /** The operation of the field: `query`, `mutation`, `subscription` or `field` */
-  operation: Loom.BaseField["~meta"]["operation"]
+  /** The executing operation */
+  operation: MiddlewareOperation
+
+  /** The payload of the resolver */
+  payload: ResolverPayload | undefined
 }
+
+type InferFieldParent<TField extends Loom.BaseField> =
+  TField extends Loom.Field<infer TParent, any, any, infer TDependencies>
+    ? TDependencies extends string[]
+      ? RequireKeys<
+          NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+          TDependencies[number]
+        >
+      : NonNullable<StandardSchemaV1.InferOutput<TParent>>
+    : undefined
 
 export interface CallableMiddlewareOptions<
   TField extends Loom.BaseField = Loom.BaseField,
@@ -41,18 +63,33 @@ export interface CallableMiddlewareOptions<
   (): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
 }
 
-export type Middleware<TField extends Loom.BaseField = any> = (
-  options: CallableMiddlewareOptions<TField>
-) => MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
+export interface MiddlewareConfig {
+  /** The operations to apply the middleware to. */
+  operations?: MiddlewareOperation[]
+}
+
+export interface Middleware<TField extends Loom.BaseField = any>
+  extends Partial<MiddlewareConfig> {
+  (
+    options: CallableMiddlewareOptions<TField>
+  ): MayPromise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>>
+}
+
+const defaultOperations: MiddlewareOperation[] = [
+  "field",
+  "mutation",
+  "query",
+  "subscription.subscribe",
+]
 
 export function applyMiddlewares<
   TField extends Loom.BaseField = Loom.BaseField,
 >(
-  middlewares: Middleware[],
+  options: MiddlewareOptions<TField>,
   resolveFunction: () => MayPromise<
     StandardSchemaV1.InferOutput<InferFieldOutput<TField>>
   >,
-  options: MiddlewareOptions<TField>
+  middlewares: Middleware[]
 ): Promise<StandardSchemaV1.InferOutput<InferFieldOutput<TField>>> {
   const next = (
     index: number
@@ -70,12 +107,25 @@ export function applyMiddlewares<
   return next(0)
 }
 
-export function compose<T>(...lists: (T[] | undefined)[]): T[] {
-  const list: T[] = []
-  for (const item of lists) {
-    if (item != null) {
-      list.push(...item)
-    }
+export function filterMiddlewares(
+  operation: MiddlewareOperation,
+  ...middlewareList: (Middleware | Iterable<Middleware> | undefined | null)[]
+): Middleware[] {
+  return middlewareList.reduce<Middleware[]>((acc, m) => {
+    if (!m) return acc
+    acc.push(
+      ...ensureArray(m).filter((m) => {
+        const ops = m.operations ?? defaultOperations
+        return ops.includes(operation)
+      })
+    )
+    return acc
+  }, [])
+}
+
+function ensureArray<T>(value: T | Iterable<T>): T[] {
+  if (value != null && typeof value === "object" && Symbol.iterator in value) {
+    return Array.from(value)
   }
-  return list
+  return [value]
 }

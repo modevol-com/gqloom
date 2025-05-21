@@ -168,7 +168,7 @@ const schema = FederatedSchemaLoom.weave(
 
 ## 解析引用 | Resolve Reference
 
-`@gqloom/apollo` 提供了 `resolveReference` 函数来帮助您解析引用。
+`@gqloom/federation` 提供了 `resolveReference` 函数来帮助您解析引用。
 
 ```ts twoslash
 import { silk } from "@gqloom/core"
@@ -209,7 +209,7 @@ export const userResolver = resolver
 
 ## 编织
 
-从 `@gqloom/federation` 引入的 `FederatedSchemaWeaver.weave` 函数用于编织 Federation Schema。与 `@gqloom/core` 相比，`@gqloom/apollo` 中的 `FederatedSchemaWeaver.weave` 函数将输出携带指令（Directives）的 Schema。
+从 `@gqloom/federation` 引入的 `FederatedSchemaWeaver.weave` 函数用于编织 Federation Schema。与 `@gqloom/core` 相比，`@gqloom/federation` 中的 `FederatedSchemaWeaver.weave` 函数将输出携带指令（Directives）的 Schema。
 
 另外值得注意的是，我们需要使用从 `@apollo/subgraph` 引入的 `printSubgraphSchema` 函数将 Schema 转换为文本格式以保留指令（Directives）。
 

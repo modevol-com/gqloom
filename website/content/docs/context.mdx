@@ -15,6 +15,17 @@ GQLoom's `useContext` function is designed to reference [React](https://zh-hans.
 You can call the `useContext` function from anywhere within the [resolver](./resolver) to access the context of the current request without explicitly passing the `context` function.
 Behind the scenes, `useContext` uses Node.js' [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to pass the context implicitly.
 
+### Enabling Context
+
+We enable context by passing `asyncContextProvider` to the `weave` function. `asyncContextProvider` is essentially a global middleware.
+
+```ts
+import { weave } from "@gqloom/core"
+import { asyncContextProvider } from "@gqloom/core/context" // [!code hl]
+
+const schema = weave(ValibotWeaver, asyncContextProvider, ...resolvers)
+```
+
 Next, let's try to access the context in various places.
 We will use [graphql-yoga](https://the-guild.dev/graphql/yoga-server) as an adapter.
 
@@ -23,7 +34,8 @@ We will use [graphql-yoga](https://the-guild.dev/graphql/yoga-server) as an adap
 <Tabs groupId='schema-builder' items={['valibot', 'zod']}>
 <Tab value="valibot">
 ```ts twoslash
-import { query, resolver, useContext, weave } from "@gqloom/core"
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
@@ -45,7 +57,8 @@ createServer(yoga).listen(4000, () => {
 </Tab>
 <Tab value="zod">
 ```ts twoslash
-import { query, resolver, useContext, weave } from "@gqloom/core"
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { ZodWeaver } from "@gqloom/zod"
 import * as z from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
@@ -82,7 +95,8 @@ You should get the following response:
 ### Accessing contexts in middleware
 
 ```ts twoslash
-import { useContext, Middleware } from "@gqloom/core"
+import { Middleware } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { type YogaInitialContext } from "graphql-yoga"
 
 function useUser() {
@@ -97,6 +111,7 @@ const authGuard: Middleware = (next) => {
   return next()
 }
 ```
+
 In the code above, we created a custom hook called `useUser` that uses the `useContext` function to get the `Authorization` header of the current request from the context.
 We then created a middleware called `authGuard` which uses the `useUser` hook to fetch the user and throw an error if the user is not logged in.
 
@@ -114,7 +129,8 @@ const UserService = {
   },
 }
 // ---cut---
-import { query, resolver, useContext, weave } from "@gqloom/core"
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { ValibotWeaver } from "@gqloom/valibot"
 import * as v from "valibot"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
@@ -161,7 +177,8 @@ const UserService = {
   },
 }
 // ---cut---
-import { query, resolver, useContext, weave } from "@gqloom/core"
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { ZodWeaver } from "@gqloom/zod"
 import * as z from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
@@ -210,7 +227,7 @@ const UserService = {
   },
 }
 // ---cut---
-import { useContext } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
 import { type YogaInitialContext } from "graphql-yoga"
 
 async function useUser() {
@@ -236,10 +253,9 @@ const UserService = {
     return { name: "World" }
   },
 }
-import { useContext } from "@gqloom/core"
 import { type YogaInitialContext } from "graphql-yoga"
 // ---cut---
-import { createMemoization } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
 
 const useUser = createMemoization(async () => {
   const authorization =
@@ -251,6 +267,16 @@ const useUser = createMemoization(async () => {
 As you can see, we simply wrap the function in the `createMemoization` function.
 We can then call `useUser()` from anywhere within the resolver without worrying about the overhead of multiple calls.
 
+## Injecting Context
+
+`asyncContextProvider` also allows us to inject context. This is typically used in conjunction with [Executors](./advanced/executor).
+
+```ts
+const giraffeExecutor = giraffeResolver.toExecutor(
+  asyncContextProvider.with(useCurrentUser.provide({ id: 9, roles: ["admin"] }))
+)
+```
+
 ## Accessing Resolver Payload
 
 In addition to the `useContext` function, GQLoom provides the `useResolverPayload` function for accessing all parameters in the resolver:
@@ -259,11 +285,68 @@ In addition to the `useContext` function, GQLoom provides the `useResolverPayloa
 
 - args: the arguments provided for the field in the GraphQL query;
 
-- context: the context object shared across parser functions and middleware;
+- context: the context object shared across parser functions and middleware, which is the return value of `useContext`;
 
 - info: contains information about the current resolver call, such as the path to the GraphQL query, field names, etc;
 
 - field: the definition of the field being resolved by the current resolver;
+
+### Direct Access to Resolver Payload
+
+For environments that do not provide `AsyncLocalStorage`, such as browsers or Cloudflare Workers, we can directly access the resolver payload within resolver functions and middleware.
+
+#### Resolver Functions
+
+In resolver functions, `payload` is always the last parameter.
+
+<Tabs groupId='schema-builder' items={['valibot', 'zod']}>
+<Tab value="valibot">
+
+```ts
+const helloResolver = resolver({
+  hello: query(v.string()).resolve((_input, payload) => {
+    const user = // [!code hl]
+      (payload!.context as YogaInitialContext).request.headers.get("Authorization") // [!code hl]
+    return `Hello, ${user ?? "World"}`
+  }),
+})
+```
+
+</Tab>
+<Tab value="zod">
+
+```ts
+const helloResolver = resolver({
+  hello: query(z.string()).resolve((_input, payload) => {
+    const user = // [!code hl]
+      (payload!.context as YogaInitialContext).request.headers.get("Authorization") // [!code hl]
+    return `Hello, ${user ?? "World"}`
+  }),
+})
+```
+
+</Tab>
+</Tabs>
+
+#### Middleware
+
+```ts twoslash
+import { Middleware, ResolverPayload } from "@gqloom/core"
+import { type YogaInitialContext } from "graphql-yoga"
+
+function getUser(payload: ResolverPayload) {
+  const user = (payload.context as YogaInitialContext).request.headers.get(
+    "Authorization"
+  )
+  return user
+}
+
+const authGuard: Middleware = ({ next, payload }) => {
+  const user = getUser(payload!)
+  if (!user) throw new Error("Please login first")
+  return next()
+}
+```
 
 ## Using Contexts across Adapters
 

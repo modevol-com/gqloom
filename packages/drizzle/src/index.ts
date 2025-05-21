@@ -22,7 +22,6 @@ import { SQLiteInteger } from "drizzle-orm/sqlite-core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
-  type GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLInt,
   GraphQLList,
@@ -32,8 +31,13 @@ import {
   GraphQLString,
   isNonNullType,
 } from "graphql"
-import { getEnumNameByColumn } from "./helper"
-import type { DrizzleWeaverConfig, DrizzleWeaverConfigOptions } from "./types"
+import { getEnumNameByColumn, getValue } from "./helper"
+import type {
+  DrizzleSilkConfig,
+  DrizzleWeaverConfig,
+  DrizzleWeaverConfigOptions,
+  SelectiveTable,
+} from "./types"
 
 export class DrizzleWeaver {
   public static vendor = "gqloom.drizzle"
@@ -96,32 +100,37 @@ export class DrizzleWeaver {
   public static getGraphQLType(
     table: Table
   ): GraphQLNonNull<GraphQLObjectType> {
-    const name = `${pascalCase(getTableName(table))}Item`
+    const config = DrizzleWeaver.silkConfigs.get(table)
+    const name = config?.name ?? `${pascalCase(getTableName(table))}Item`
 
     const existing = weaverContext.getNamedType(name)
-    if (existing != null)
+    if (existing != null) {
       return new GraphQLNonNull(existing as GraphQLObjectType)
+    }
+
+    const fieldsConfig = getValue(config?.fields) ?? {}
 
     const columns = getTableColumns(table)
     return new GraphQLNonNull(
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
-          fields: mapValue(columns, (value) => {
-            return DrizzleWeaver.getFieldConfig(value)
+          ...config,
+          fields: mapValue(columns, (column, columnName) => {
+            const fieldConfig = fieldsConfig[columnName]
+            const fieldType = getValue(fieldConfig?.type)
+            let type = fieldType ?? DrizzleWeaver.getColumnType(column)
+
+            if (fieldType === null) return mapValue.SKIP
+
+            if (column.notNull && !isNonNullType(type)) {
+              type = new GraphQLNonNull(type)
+            }
+            return { ...fieldConfig, type }
           }),
         })
       )
     )
-  }
-
-  public static getFieldConfig(column: Column): GraphQLFieldConfig<any, any> {
-    let type = DrizzleWeaver.getColumnType(column)
-
-    if (column.notNull && !isNonNullType(type)) {
-      type = new GraphQLNonNull(type)
-    }
-    return { type }
   }
 
   public static getColumnType(column: Column): GraphQLOutputType {
@@ -194,6 +203,8 @@ export class DrizzleWeaver {
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.drizzle",
     }
   }
+
+  public static silkConfigs = new WeakMap<Table, DrizzleSilkConfig<Table>>()
 }
 
 /**
@@ -202,22 +213,26 @@ export class DrizzleWeaver {
  * @returns GraphQL Silk Like drizzle table
  */
 export function drizzleSilk<TTable extends Table>(
-  table: TTable
+  table: TTable,
+  config?: DrizzleSilkConfig<TTable>
 ): TableSilk<TTable> {
+  if (config) DrizzleWeaver.silkConfigs.set(table, config)
   return DrizzleWeaver.unravel(table)
 }
 
 export type TableSilk<TTable extends Table> = TTable &
-  GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>> & {
-    $nullable: () => GraphQLSilk<
-      InferSelectModel<TTable> | null | undefined,
-      InferSelectModel<TTable> | null | undefined
-    >
-    $list: () => GraphQLSilk<
-      InferSelectModel<TTable>[],
-      InferSelectModel<TTable>[]
-    >
-  }
+  SilkVariant<GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>>
+
+export type SilkVariant<TSilk extends GraphQLSilk<unknown, unknown>> =
+  TSilk extends GraphQLSilk<infer TOutput, infer TInput>
+    ? GraphQLSilk<TOutput, TInput> & {
+        $nullable: () => GraphQLSilk<
+          TOutput | null | undefined,
+          TInput | null | undefined
+        >
+        $list: () => GraphQLSilk<TOutput[], TInput[]>
+      }
+    : never
 
 export * from "./factory"
 export * from "./types"

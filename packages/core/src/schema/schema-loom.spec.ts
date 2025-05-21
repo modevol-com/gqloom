@@ -206,6 +206,8 @@ describe("GraphQLSchemaLoom", () => {
     const silk2 = silk(GraphQLString)
 
     const result = GraphQLSchemaLoom.optionsFrom(
+      null as any,
+      undefined as any,
       middleware1,
       resolver1,
       weaver1,

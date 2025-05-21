@@ -1,9 +1,14 @@
 {
   "$schema": "https://cdn.jsdelivr.net/npm/tsup/schema.json",
-  "entry": ["./src/index.ts"],
+  "entry": {
+    "index": "./src/index.ts",
+    "context": "./src/context/index.ts"
+  },
   "format": ["esm", "cjs"],
   "minify": false,
   "dts": true,
   "outDir": "./dist",
-  "clean": true
+  "clean": true,
+  "external": ["node:async_hooks"],
+  "tsconfig": "../../tsconfig.tsup.json"
 }

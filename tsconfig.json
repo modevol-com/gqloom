@@ -8,8 +8,17 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
+      "@gqloom/core/context": ["./packages/core/src/context/index.ts"],
       "@gqloom/*": ["./packages/*/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "dist", "draft", "website", "docs"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "draft",
+    "website",
+    "docs",
+    "examples/cattery-zod",
+    "examples/cattery-valibot"
+  ]
 }

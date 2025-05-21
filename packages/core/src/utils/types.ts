@@ -9,3 +9,9 @@ export type OmitInUnion<TUnion, TOmit> = TUnion extends infer T
     ? never
     : T
   : never
+
+export type RequireKeys<T, TKey extends string | number | symbol> = {
+  [P in keyof T as P extends TKey ? P : never]-?: T[P]
+} & {
+  [P in keyof T as P extends TKey ? never : P]: T[P]
+}

@@ -254,7 +254,8 @@ describe("yup resolver", () => {
     })
 
     it("should infer input type", () => {
-      expectTypeOf(horseResolver["~meta"].fields.createHorse["~meta"].resolve)
+      const executor = resolver({ createHorse }).toExecutor()
+      expectTypeOf(executor.createHorse)
         .parameter(0)
         .toEqualTypeOf<Partial<IHorse>>()
     })

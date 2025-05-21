@@ -8,7 +8,6 @@ import {
   type MutationOptions,
   type QueryOptions,
   type StandardSchemaV1,
-  compose,
   getFieldOptions,
   loom,
   mapValue,
@@ -269,7 +268,7 @@ export class MikroResolverFactory<
   }): Middleware<TField>[] {
     return middlewares?.includes(this.flushMiddleware)
       ? middlewares
-      : compose(middlewares, [this.flushMiddleware])
+      : [...(middlewares ?? []), this.flushMiddleware]
   }
 }
 

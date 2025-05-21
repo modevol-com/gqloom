@@ -1,15 +1,17 @@
+import type { GraphQLFieldExtensions } from "graphql"
 import type {
   FieldOptions,
   GraphQLFieldOptions,
   MutationOptions,
   QueryOptions,
+  ResolverPayload,
   SubscriptionOptions,
 } from "../resolver/types"
 
 export function getOperationOptions(
   resolveOrOptions:
     | ((...args: any) => any)
-    | FieldOptions<any, any, any>
+    | FieldOptions<any, any, any, any>
     | QueryOptions<any, any>
     | MutationOptions<any, any>
 ) {
@@ -20,7 +22,9 @@ export function getOperationOptions(
 }
 
 export function getSubscriptionOptions(
-  subscribeOrOptions: (() => any) | SubscriptionOptions<any, any, any>
+  subscribeOrOptions:
+    | ((payload: ResolverPayload | undefined) => any)
+    | SubscriptionOptions<any, any, any>
 ): SubscriptionOptions<any, any, any> {
   if (typeof subscribeOrOptions === "function") {
     return { subscribe: subscribeOrOptions }
@@ -28,14 +32,15 @@ export function getSubscriptionOptions(
   return subscribeOrOptions
 }
 
-export function getFieldOptions({
-  description,
-  deprecationReason,
-  extensions,
-}: GraphQLFieldOptions): GraphQLFieldOptions {
+export function getFieldOptions(
+  { description, deprecationReason, extensions }: GraphQLFieldOptions,
+  extraExtensions?: GraphQLFieldExtensions<any, any, any>
+): GraphQLFieldOptions {
   return {
     description,
     deprecationReason,
-    extensions,
+    extensions: extraExtensions
+      ? { ...extensions, ...extraExtensions }
+      : extensions,
   }
 }

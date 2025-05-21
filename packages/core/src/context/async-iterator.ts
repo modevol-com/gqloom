@@ -13,3 +13,14 @@ export function bindAsyncIterator<
   })
   return generator as TAsyncIterator
 }
+
+export function isAsyncIterator(
+  value: unknown
+): value is AsyncIterator<unknown, unknown, unknown> {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "next" in value &&
+    typeof value.next === "function"
+  )
+}

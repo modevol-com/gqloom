@@ -7,7 +7,12 @@ import {
   lexicographicSortSchema,
   printSchema,
 } from "graphql"
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import {
+  asyncContextProvider,
+  createContext,
+  createMemoization,
+} from "../context/context"
 import { weave } from "../schema"
 import type { Middleware } from "../utils"
 import { field, mutation, query, resolver } from "./resolver"
@@ -42,6 +47,8 @@ const GiraffeInput = silk<Partial<IGiraffe>>(
     },
   })
 )
+
+const nil = undefined
 
 describe("resolver", () => {
   const Skyler: IGiraffe = {
@@ -85,12 +92,12 @@ describe("resolver", () => {
   describe("query and mutation", () => {
     it("should work", async () => {
       const queryGiraffe = query(Giraffe, () => Skyler)
-      expect(await queryGiraffe["~meta"].resolve(undefined)).toEqual(Skyler)
+      expect(await queryGiraffe["~meta"].resolve(nil, nil)).toEqual(Skyler)
       const queryGiraffe2 = query
         .output(Giraffe)
         .description("a simple query")
         .resolve(() => Skyler)
-      expect(await queryGiraffe2["~meta"].resolve(undefined)).toEqual(Skyler)
+      expect(await queryGiraffe2["~meta"].resolve(nil, nil)).toEqual(Skyler)
     })
 
     it("should work using chian", async () => {
@@ -152,7 +159,10 @@ describe("resolver", () => {
       })
       const birthday = new Date()
       expect(
-        await createGiraffe["~meta"].resolve({ name: "Skyler", birthday })
+        await createGiraffe["~meta"].resolve(
+          { name: "Skyler", birthday },
+          undefined
+        )
       ).toEqual({
         name: "Skyler",
         birthday,
@@ -175,27 +185,27 @@ describe("resolver", () => {
         resolve: ({ n }) => n,
       })
 
-      expect(await queryNumber["~meta"].resolve({ n: 1 })).toEqual(2)
+      expect(queryNumber["~meta"].middlewares).toEqual([middleware])
 
       queryNumber = query(numberSchema)
         .input({ n: numberSchema })
         .use(middleware)
         .resolve(({ n }) => n)
 
-      expect(await queryNumber["~meta"].resolve({ n: 1 })).toEqual(2)
+      expect(queryNumber["~meta"].middlewares).toEqual([middleware])
 
       const mutationNumber = mutation(numberSchema)
         .input({ n: numberSchema })
         .use(middleware)
         .resolve(({ n }) => n)
 
-      expect(await mutationNumber["~meta"].resolve({ n: 1 })).toEqual(2)
+      expect(await mutationNumber["~meta"].middlewares).toEqual([middleware])
     })
   })
 
   describe("field", () => {
     it("should work", async () => {
-      expect(await giraffeExecutor.age(Skyler, undefined)).toEqual(
+      expect(await giraffeExecutor.age(Skyler, nil, nil)).toEqual(
         new Date().getFullYear() - Skyler.birthday.getFullYear()
       )
     })
@@ -241,18 +251,18 @@ describe("resolver", () => {
 
     it("should accept input", async () => {
       expect(
-        await giraffeExecutor.greeting(Skyler, { myName: "Hilun" })
+        await giraffeExecutor.greeting(Skyler, { myName: "Hilun" }, nil)
       ).toEqual(`Hello, Hilun! My name is Skyler.`)
     })
 
     it("should work with middlewares", async () => {
-      expect(await giraffeExecutor.nominalAge(Skyler, undefined)).toEqual(
+      expect(await giraffeExecutor.nominalAge(Skyler, nil, nil)).toEqual(
         new Date().getFullYear() - Skyler.birthday.getFullYear() + 1
       )
     })
 
     it("should load related field", async () => {
-      expect(await giraffeExecutor.self(Skyler, undefined)).toEqual(Skyler)
+      expect(await giraffeExecutor.self(Skyler, nil, nil)).toEqual(Skyler)
     })
 
     it("should hidden fields", () => {
@@ -278,7 +288,7 @@ describe("resolver", () => {
   })
 
   it("should call middlewares", async () => {
-    await giraffeExecutor.age(Skyler, undefined)
+    await giraffeExecutor.age(Skyler, nil, nil)
     expect(callCount).toBeGreaterThanOrEqual(1)
   })
 
@@ -316,7 +326,7 @@ describe("resolver", () => {
 
     const e1 = r1.toExecutor()
 
-    await e1.hello(undefined)
+    await e1.hello(nil, nil)
 
     expect(logs).toEqual([
       "resolve middleware",
@@ -335,5 +345,130 @@ describe("resolver", () => {
 
     const g = schema.getType("Giraffe") as GraphQLObjectType<IGiraffe>
     expect(g.extensions).toEqual({ foo: "bar" })
+  })
+})
+
+describe("executor", () => {
+  /** name -> giraffe */
+  const giraffeMap = new Map<string, IGiraffe>()
+
+  const useDefaultName = createContext(() => "Giraffe")
+  const useGiraffes = createMemoization(() => Array.from(giraffeMap.values()))
+
+  const giraffeResolver = resolver.of(Giraffe, {
+    age: field(silk(GraphQLInt), async (giraffe) => {
+      return new Date().getFullYear() - giraffe.birthday.getFullYear()
+    }),
+
+    giraffe: query(silk.nullable(Giraffe))
+      .input({ name: silk(new GraphQLNonNull(GraphQLString)) })
+      .resolve(({ name }) => {
+        return giraffeMap.get(name)
+      }),
+    allGiraffes: query(silk.list(Giraffe)).resolve(() => useGiraffes()),
+
+    saveGiraffe: mutation(Giraffe)
+      .input(GiraffeInput)
+      .resolve((data) => {
+        const giraffe = {
+          name: data.name ?? useDefaultName(),
+          birthday: new Date(data.birthday ?? new Date()),
+          heightInMeters: data.heightInMeters ?? 5,
+        }
+        giraffeMap.set(giraffe.name, giraffe)
+        return giraffe
+      }),
+  })
+
+  let logs: string[] = []
+  giraffeResolver.use(async (next) => {
+    logs.push("before")
+    const result = await next()
+    logs.push("after")
+    return result
+  })
+
+  beforeEach(() => {
+    giraffeMap.clear()
+    logs = []
+  })
+  afterEach(() => {
+    giraffeMap.clear()
+    logs = []
+  })
+
+  it("should work", async () => {
+    const executor = giraffeResolver.toExecutor()
+
+    const saved = await executor.saveGiraffe({ name: "Skyler" }, nil)
+    expect(saved).toEqual({
+      name: "Skyler",
+      birthday: expect.any(Date),
+      heightInMeters: 5,
+    })
+    expect(giraffeMap.get("Skyler")).toBe(saved)
+
+    const giraffes = await executor.allGiraffes(nil, nil)
+    expect(giraffes).toEqual([saved])
+  })
+
+  it("should work with middlewares", async () => {
+    const executor = giraffeResolver.toExecutor()
+    await executor.saveGiraffe({ name: "Skyler" }, nil)
+    expect(logs).toEqual(["before", "after"])
+  })
+
+  it("should work with context", async () => {
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with(
+        useDefaultName.provide(() => "Name_Only_I_Know")
+      )
+    )
+    const saved = await executor.saveGiraffe({}, nil)
+
+    expect(saved).toEqual({
+      name: "Name_Only_I_Know",
+      birthday: expect.any(Date),
+      heightInMeters: 5,
+    })
+  })
+
+  it("should work with context by key", async () => {
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with([useDefaultName, "Name_Only_I_Know"])
+    )
+    const saved = await executor.saveGiraffe({}, nil)
+
+    expect(saved).toEqual({
+      name: "Name_Only_I_Know",
+      birthday: expect.any(Date),
+      heightInMeters: 5,
+    })
+  })
+
+  it("should work with memoization", async () => {
+    const giraffe = {
+      name: "Name_Only_I_Know",
+      birthday: new Date("2025-01-01"),
+      heightInMeters: 5,
+    }
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with(useGiraffes.provide([giraffe]))
+    )
+    const allGiraffes = await executor.allGiraffes(nil, nil)
+    expect(allGiraffes).toEqual([giraffe])
+  })
+
+  it("should work with memoization by key", async () => {
+    const giraffe = {
+      name: "Name_Only_I_Know",
+      birthday: new Date("2025-01-01"),
+      heightInMeters: 5,
+    }
+    const executor = giraffeResolver.toExecutor(
+      asyncContextProvider.with(useGiraffes.provide([giraffe]))
+    )
+    const allGiraffes = await executor.allGiraffes(nil, nil)
+    expect(allGiraffes).toEqual([giraffe])
   })
 })

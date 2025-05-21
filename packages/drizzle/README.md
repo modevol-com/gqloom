@@ -21,4 +21,17 @@ This package provides GQLoom integration with [Drizzle](https://orm.drizzle.team
 - Weave database tables defined by Drizzle into a GraphQL Schema;
 - Support quickly creating CRUD interfaces from Drizzle using the resolver factory;
 
+### Installation
+
+```bash
+# use npm
+npm install @gqloom/core @gqloom/drizzle
+
+# use pnpm
+pnpm add @gqloom/core @gqloom/drizzle
+
+# use yarn
+yarn add @gqloom/core @gqloom/drizzle
+```
+
 Read more at [GQLoom Document](https://gqloom.dev/docs/schema/drizzle).

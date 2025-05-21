@@ -10,6 +10,7 @@ import { describe, expectTypeOf, it } from "vitest"
 import { type InferInputI, getStandardValue } from "../src/resolver"
 import { loom } from "../src/resolver/resolver"
 import { silk } from "../src/resolver/silk"
+import type { RequireKeys } from "../src/utils"
 
 const { resolver, query, mutation, field, subscription } = loom
 
@@ -129,6 +130,7 @@ describe("resolver type", () => {
         }),
         greeting: field(silk<string>(new GraphQLNonNull(GraphQLString)), {
           input: { myName: silk(GraphQLString) },
+          // dependencies: undefined as undefined,
           middlewares: [
             async ({ parent, next, parseInput }) => {
               it("should infer parent type", () => {
@@ -170,9 +172,9 @@ describe("resolver type", () => {
 
             const input = getStandardValue(await parseInput())
             it("should infer input type", () => {
-              expectTypeOf(input).toEqualTypeOf<
-                { myName: string | null | undefined } | undefined
-              >()
+              expectTypeOf(input).toEqualTypeOf<{
+                myName: string | null | undefined
+              } | void>()
             })
 
             it("should infer output type", () => {
@@ -194,6 +196,73 @@ describe("resolver type", () => {
     it("should infer output type", () => {
       expectTypeOf(
         simpleResolver["~meta"].fields.age["~meta"].resolve
+      ).returns.resolves.toEqualTypeOf<number>()
+    })
+  })
+
+  describe("field with dependencies", () => {
+    type ISelectiveGiraffe = {
+      name?: string
+      birthday?: Date
+    }
+    const SelectiveGiraffe = silk<ISelectiveGiraffe>(
+      new GraphQLObjectType<ISelectiveGiraffe>({
+        name: "SelectiveGiraffe",
+        fields: {
+          name: { type: GraphQLString },
+          birthday: { type: GraphQLString },
+        },
+      })
+    )
+    const selectiveResolver = resolver.of(SelectiveGiraffe, {
+      age: field(silk<number>(GraphQLInt), {
+        dependencies: ["birthday"] as ["birthday"],
+        resolve: async (giraffe) => {
+          it("should infer parent type", () => {
+            expectTypeOf(giraffe).toEqualTypeOf<
+              RequireKeys<ISelectiveGiraffe, "birthday">
+            >()
+            expectTypeOf<
+              RequireKeys<ISelectiveGiraffe, "birthday">
+            >().toEqualTypeOf<
+              { birthday: Date } & { name?: string | undefined }
+            >()
+          })
+          return new Date().getFullYear() - giraffe.birthday.getFullYear()
+        },
+        middlewares: [
+          async ({ parent, next }) => {
+            it("should infer parent type", () => {
+              expectTypeOf(parent).toEqualTypeOf<
+                RequireKeys<ISelectiveGiraffe, "birthday">
+              >()
+            })
+            return next()
+          },
+        ],
+      }),
+
+      age1: field(silk<number>(GraphQLInt))
+        .derivedFrom("birthday")
+        .resolve(async (giraffe) => {
+          it("should infer parent type", () => {
+            expectTypeOf(giraffe).toEqualTypeOf<
+              RequireKeys<ISelectiveGiraffe, "birthday">
+            >()
+          })
+          return new Date().getFullYear() - giraffe.birthday.getFullYear()
+        }),
+    })
+
+    it("should infer input type", () => {
+      expectTypeOf(selectiveResolver["~meta"].fields.age["~meta"].resolve)
+        .parameter(0)
+        .toEqualTypeOf<ISelectiveGiraffe>()
+    })
+
+    it("should infer output type", () => {
+      expectTypeOf(
+        selectiveResolver["~meta"].fields.age["~meta"].resolve
       ).returns.resolves.toEqualTypeOf<number>()
     })
   })

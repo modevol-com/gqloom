@@ -11,6 +11,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(z.int())
+    .derivedFrom("birthday")
     .input({
       currentYear: z
         .int()

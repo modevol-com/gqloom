@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/federation",
-  "version": "0.8.0",
+  "version": "0.9.1",
   "description": "Building subGraphs with GQLoom",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
   "files": ["dist"],
   "peerDependencies": {
     "@apollo/subgraph": ">= 2.0.0",
-    "@gqloom/core": ">= 0.8.0",
+    "@gqloom/core": ">= 0.9.1",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {

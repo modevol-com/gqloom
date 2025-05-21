@@ -7,7 +7,7 @@ import {
   printSchema,
 } from "graphql"
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
 import { post, postsRelations, user, usersRelations } from "./schema/postgres"
@@ -21,6 +21,7 @@ const schema = {
 
 describe("resolver by postgres", () => {
   let db: NodePgDatabase<typeof schema>
+  let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
 
@@ -47,7 +48,10 @@ describe("resolver by postgres", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.postgresUrl, { schema })
+      db = drizzle(config.postgresUrl, {
+        schema,
+        logger: { logQuery: (query) => logs.push(query) },
+      })
       const userFactory = drizzleResolverFactory(db, "drizzle_user")
       const postFactory = drizzleResolverFactory(db, "drizzle_post")
       gqlSchema = weave(
@@ -81,6 +85,9 @@ describe("resolver by postgres", () => {
     }
   })
 
+  beforeEach(() => {
+    logs = []
+  })
   afterAll(async () => {
     await db.delete(post)
     await db.delete(user)
@@ -92,10 +99,10 @@ describe("resolver by postgres", () => {
     ).toMatchFileSnapshot("./resolver-postgres.spec.gql")
   })
 
-  describe.concurrent("query", () => {
+  describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-      query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
+      query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
         user(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
           id
           name
@@ -110,7 +117,6 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
       })
-
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -120,7 +126,6 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Taylor" }, { name: "Tom" }],
       })
-
       await expect(
         execute(q, {
           orderBy: [{ name: "asc" }],
@@ -131,13 +136,20 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         user: [{ name: "Tom" }],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc limit $2
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc limit $2 offset $3
+        "
+      `)
     })
 
     it("should query user single correctly", async () => {
       await expect(
         execute(
           /* GraphQL */ `
-          query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $offset: Int) {
+          query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $offset: Int) {
             userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
               id
               name
@@ -151,11 +163,16 @@ describe("resolver by postgres", () => {
       ).resolves.toMatchObject({
         userSingle: { name: "Taylor" },
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
     })
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query user ($orderBy: [DrizzleUserOrderBy!], $where: DrizzleUserFilters!, $limit: Int, $offset: Int) {
+        query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
           user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
             id
             name
@@ -188,13 +205,19 @@ describe("resolver by postgres", () => {
           },
         ],
       })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name" from "drizzle_user" where "drizzle_user"."name" like $1 order by "drizzle_user"."name" asc
+        select "id", "title", "authorId" from "drizzle_post" where "drizzle_post"."authorId" in ($1, $2, $3)
+        "
+      `)
     })
   })
 
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUser($values: [DrizzleUserInsertInput!]!) {
+        mutation insertIntoUser($values: [UserInsertInput!]!) {
           insertIntoUser(values: $values) {
             id
             name
@@ -215,11 +238,131 @@ describe("resolver by postgres", () => {
         where: eq(user.name, "Tina"),
       })
       expect(Tina).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values (default, $1, default, default) returning "id", "name"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
+    })
+
+    it("should insert a user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUser($values: [UserInsertInput!]!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUser(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, values: $values) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [{ name: "Tina" }],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "Tina", id: 77 }],
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [],
+      })
+
+      await expect(
+        execute(q, {
+          values: [{ name: "TinaInsert", id: 77 }],
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUser: [{ name: "TinaUpdate" }],
+      })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do update set "name" = $3 returning "id", "name"
+        "
+      `)
+    })
+
+    it("should insert a single user with on conflict correctly", async () => {
+      const q = /* GraphQL */ `
+        mutation insertIntoUserSingle($value: UserInsertInput!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUserSingle(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, value: $value) {
+            id
+            name
+          }
+        }
+      `
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: { name: "Tina" },
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: {},
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doNothing: { target: ["id"] },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: null,
+      })
+
+      await expect(
+        execute(q, {
+          value: { name: "Tina", id: 78 },
+          doUpdate: {
+            target: ["id"],
+            set: { name: "TinaUpdate" },
+          },
+        })
+      ).resolves.toMatchObject({
+        insertIntoUserSingle: { name: "TinaUpdate" },
+      })
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do nothing returning "id", "name"
+        insert into "drizzle_user" ("id", "name", "age", "email") values ($1, $2, default, default) on conflict ("id") do update set "name" = $3 returning "id", "name"
+        "
+      `)
     })
 
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUser($set: DrizzleUserUpdateInput!, $where: DrizzleUserFilters!) {
+        mutation updateUser($set: UserUpdateInput!, $where: UserFilters!) {
           updateUser(set: $set, where: $where) {
             id
             name
@@ -250,11 +393,19 @@ describe("resolver by postgres", () => {
         where: eq(user.name, "Tiffany"),
       })
       expect(updatedUser).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_user" ("id", "name", "age", "email") values (default, $1, default, default) returning "id", "name", "age", "email"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."id" = $1 limit $2
+        update "drizzle_user" set "name" = $1 where "drizzle_user"."id" = $2 returning "id", "name"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
     })
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUser($where: DrizzleUserFilters!) {
+        mutation deleteFromUser($where: UserFilters!) {
           deleteFromUser(where: $where) {
             id
             name
@@ -280,11 +431,18 @@ describe("resolver by postgres", () => {
         where: eq(user.name, "Tony"),
       })
       expect(deletedUser).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        delete from "drizzle_user" where "drizzle_user"."id" = $1 returning "id", "name"
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        "
+      `)
     })
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPost($values: [DrizzlePostInsertInput!]!) {
+        mutation insertIntoPost($values: [PostInsertInput!]!) {
           insertIntoPost(values: $values) {
             id
             title
@@ -311,11 +469,18 @@ describe("resolver by postgres", () => {
         where: eq(post.title, "Post 5"),
       })
       expect(p).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, $2) returning "id", "title", "authorId"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."title" = $1 limit $2
+        "
+      `)
     })
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePost($set: DrizzlePostUpdateInput!, $where: DrizzlePostFilters!) {
+        mutation updatePost($set: PostUpdateInput!, $where: PostFilters!) {
           updatePost(set: $set, where: $where) {
             id
             title
@@ -347,11 +512,19 @@ describe("resolver by postgres", () => {
         where: eq(post.title, "Updated Post U"),
       })
       expect(updatedPost).toBeDefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, default) returning "id", "title", "content", "authorId"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        update "drizzle_post" set "title" = $1 where "drizzle_post"."id" = $2 returning "id", "title"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."title" = $1 limit $2
+        "
+      `)
     })
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPost($where: DrizzlePostFilters!) {
+        mutation deleteFromPost($where: PostFilters!) {
           deleteFromPost(where: $where) {
             id
             title
@@ -382,6 +555,14 @@ describe("resolver by postgres", () => {
         where: eq(post.id, PostD.id),
       })
       expect(deletedPost).toBeUndefined()
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+        "
+        insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, default) returning "id", "title", "content", "authorId"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        delete from "drizzle_post" where "drizzle_post"."id" = $1 returning "id", "title"
+        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        "
+      `)
     })
   })
 })

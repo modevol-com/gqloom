@@ -14,6 +14,20 @@ In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `
 
 This package provides GQLoom integration with [Yup](https://github.com/jquense/yup) to weave Yup Schema to GraphQL Schema.
 
+## Installation
+
+```bash
+# use npm
+npm i @gqloom/core yup @gqloom/yup
+
+# use pnpm
+pnpm add @gqloom/core yup @gqloom/yup
+
+# use yarn
+yarn add @gqloom/core yup @gqloom/yup
+```
+
+
 ## Hello World
 
 ```ts

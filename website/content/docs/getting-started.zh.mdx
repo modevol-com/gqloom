@@ -45,10 +45,6 @@ import { File, Folder, Files } from 'fumadocs-ui/components/files';
     <Folder name="schema">
       <File name="index.ts" />
     </Folder>
-    <Folder name="services">
-      <File name="index.ts" />
-      <File name="user.ts" />
-    </Folder>
     <File name="index.ts" />
   </Folder>
   <File name="drizzle.config.ts" />
@@ -62,7 +58,6 @@ import { File, Folder, Files } from 'fumadocs-ui/components/files';
 - `providers`: 存放需要与外部服务交互的功能，如数据库连接、Redis 连接；
 - `resolvers`: 存放 GraphQL 解析器；
 - `schema`: 存放 schema，主要是数据库表结构；
-- `services`: 存放业务逻辑，如用户登录、用户注册等；
 - `index.ts`: 用于以 HTTP 服务的形式运行 GraphQL 应用；
 
 <Callout>
@@ -156,27 +151,31 @@ yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 
 让我们编写第一个[解析器](./resolver):
 
-<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
+
+<Tabs items={["src/resolvers/hello.ts", "src/resolvers/index.ts"]}>
 <Tab>
+  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
+  <Tab>
+
 ```ts twoslash title="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
 import * as v from "valibot"
 
-const helloResolver = resolver({
+export const helloResolver = resolver({
   hello: query(v.string())
     .input({ name: v.nullish(v.string(), "World") })
     .resolve(({ name }) => `Hello ${name}!`),
 })
-
-export const resolvers = [helloResolver]
 ```
-</Tab>
-<Tab>
+
+  </Tab>
+  <Tab>
+
 ```ts twoslash title="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
 import * as z from "zod"
 
-const helloResolver = resolver({
+export const helloResolver = resolver({
   hello: query(z.string())
     .input({
       name: z
@@ -186,13 +185,44 @@ const helloResolver = resolver({
     })
     .resolve(({ name }) => `Hello ${name}!`),
 })
-
-export const resolvers = [helloResolver]
 ```
+
+  </Tab>
+  </Tabs>
+</Tab>
+<Tab>
+
+```ts title="src/resolvers/index.ts"
+import { helloResolver } from "./hello"
+
+export const resolvers = [helloResolver, userResolver, catResolver]
+```
+
 </Tab>
 </Tabs>
 
 我们需要将这个解析器编织成 GraphQL Schema，并以 HTTP 服务器的形式运行它：
+
+<Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
+<Tab>
+
+```ts title="src/index.ts"
+import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+import { createYoga } from "graphql-yoga"
+import { resolvers } from "./resolvers"
+
+const schema = weave(ValibotWeaver, ...resolvers)
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+<Tab>
 
 ```ts title="src/index.ts"
 import { createServer } from "node:http"
@@ -208,6 +238,9 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 ```
+
+</Tab>
+</Tabs>
 
 很好，我们已经创建了一个简单的 GraphQL 应用。  
 接下来我们尝试运行这个应用，在 `package.json` 里添加 `dev` 脚本：
@@ -362,39 +395,9 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 })
 ```
 
-让我们先创建一个用户服务，其中将包含一系列对用户表的操作。
-我们将在 `src/services/user.ts` 文件中实现用户服务，并在 `src/resolvers/index.ts` 文件中将整个 `user.ts` 作为 `userService` 导出：
-
-```ts title="src/services/user.ts" tab="src/services/user.ts"
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-```
-
-```ts title="src/services/index.ts" tab="src/services/index.ts"
-export * as userService from "./user"
-```
-
 ## 解析器
 
-现在，我们可以在解析器中使用用户服务，我们将创建一个用户解析器添加以下操作：
+现在，我们可以在解析器中使用数据库，我们将创建一个用户解析器添加以下操作：
 
 - `usersByName`: 通过名称查找用户
 - `userByPhone`: 通过手机号码查找用户
@@ -406,6 +409,7 @@ export * as userService from "./user"
 <Tab>
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
+
 ```ts twoslash title="src/resolvers/user.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -449,44 +453,31 @@ import * as schema from "../schema"
 export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
-// @filename: services/user.ts
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
 
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
 // @filename: resolvers/user.ts
 // ---cut---
 import { mutation, query, resolver } from "@gqloom/core"
+import { eq } from "drizzle-orm"
 import * as v from "valibot"
+import { db } from "../providers"
 import { users } from "../schema"
-import { userService } from "../services"
 
 export const userResolver = resolver.of(users, {
   usersByName: query(users.$list())
     .input({ name: v.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
+    .resolve(({ name }) => {
+      return db.query.users.findMany({
+        where: eq(users.name, name),
+      })
+    }),
 
   userByPhone: query(users.$nullable())
     .input({ phone: v.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+    .resolve(({ phone }) => {
+      return db.query.users.findFirst({
+        where: eq(users.phone, phone),
+      })
+    }),
 
   createUser: mutation(users)
     .input({
@@ -495,11 +486,16 @@ export const userResolver = resolver.of(users, {
         phone: v.string(),
       }),
     })
-    .resolve(async ({ data }) => userService.createUser(data)),
+    .resolve(async ({ data }) => {
+      const [user] = await db.insert(users).values(data).returning()
+      return user
+    }),
 })
 ```
+
   </Tab>
   <Tab>
+
 ```ts twoslash title="src/resolvers/index.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -543,44 +539,30 @@ import * as schema from "../schema"
 export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
-// @filename: services/user.ts
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
 // ---cut---
 // @filename: resolvers/user.ts
 import { mutation, query, resolver } from "@gqloom/core"
+import { eq } from "drizzle-orm"
 import * as z from "zod"
+import { db } from "../providers"
 import { users } from "../schema"
-import { userService } from "../services"
 
-export const userResolver = resolver({
+export const userResolver = resolver.of(users, {
   usersByName: query(users.$list())
     .input({ name: z.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
+    .resolve(({ name }) => {
+      return db.query.users.findMany({
+        where: eq(users.name, name),
+      })
+    }),
 
   userByPhone: query(users.$nullable())
     .input({ phone: z.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+    .resolve(({ phone }) => {
+      return db.query.users.findFirst({
+        where: eq(users.phone, phone),
+      })
+    }),
 
   createUser: mutation(users)
     .input({
@@ -589,50 +571,25 @@ export const userResolver = resolver({
         phone: z.string(),
       }),
     })
-    .resolve(async ({ data }) => userService.createUser(data)),
+    .resolve(async ({ data }) => {
+      const [user] = await db.insert(users).values(data).returning()
+      return user
+    }),
 })
 ```
+
   </Tab>
   </Tabs>
 </Tab>
 <Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as z from "zod"
-import { userResolver } from "./user" // [!code ++]
 
-const helloResolver = resolver({
-  hello: query(z.string())
-    .input({
-      name: z
-        .string()
-        .nullish()
-        .transform((x) => x ?? "World"),
-    })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
-
-export const resolvers = [helloResolver, userResolver] // [!code ++]
-```
-  </Tab>
-  <Tab>
 ```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
+import { helloResolver } from "./hello"
 import { userResolver } from "./user"  // [!code ++]
-
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
 
 export const resolvers = [helloResolver, userResolver]  // [!code ++]
 ```
-  </Tab>
-  </Tabs>
+
 </Tab>
 </Tabs>
 
@@ -686,6 +643,47 @@ mutation {
 
 ### 当前用户上下文
 
+首先让我们为应用添加 `asyncContextProvider` 中间件来启用异步上下文：
+
+<Tabs groupId="async-context-provider" items={["Valibot", "Zod"]}>
+<Tab>
+
+```ts title="src/index.ts"
+import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot" // [!code ++]
+import { createYoga } from "graphql-yoga"
+import { resolvers } from "./resolvers"
+
+const schema = weave(asyncContextProvider, ValibotWeaver, ...resolvers) // [!code ++]
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+<Tab>
+
+```ts title="src/index.ts"
+import { createServer } from "node:http"
+import { weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod" // [!code ++]
+import { createYoga } from "graphql-yoga"
+import { resolvers } from "./resolvers"
+
+const schema = weave(asyncContextProvider, ZodWeaver, ...resolvers) // [!code ++]
+
+const yoga = createYoga({ schema })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+</Tabs>
+
 接下来，让我们尝试添加一个简单的登录功能，再为用户解析器添加一个查询操作：
 
 - `mine`: 返回当前用户信息
@@ -735,42 +733,21 @@ import * as schema from "../schema"
 export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
-// @filename: services/user.ts
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
 // @filename: contexts/index.ts
 // ---cut---
-import { createMemoization, useContext } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
+import { eq } from "drizzle-orm"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
+import { db } from "../providers"
+import { users } from "../schema"
 
 export const useCurrentUser = createMemoization(async () => {
   const phone =
     useContext<YogaInitialContext>().request.headers.get("authorization")
   if (phone == null) throw new GraphQLError("Unauthorized")
 
-  const user = await userService.findUserByPhone(phone)
+  const user = await db.query.users.findFirst({ where: eq(users.phone, phone) })
   if (user == null) throw new GraphQLError("Unauthorized")
   return user
 })
@@ -788,23 +765,33 @@ export const useCurrentUser = createMemoization(async () => {
 
 <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
 <Tab>
+
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
+import { eq } from "drizzle-orm"
 import * as v from "valibot"
 import { useCurrentUser } from "../contexts" // [!code ++]
+import { db } from "../providers"
 import { users } from "../schema"
-import { userService } from "../services"
 
-export const userResolver = resolver({
+export const userResolver = resolver.of(users, {
   mine: query(users).resolve(() => useCurrentUser()), // [!code ++]
 
   usersByName: query(users.$list())
     .input({ name: v.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
+    .resolve(({ name }) => {
+      return db.query.users.findMany({
+        where: eq(users.name, name),
+      })
+    }),
 
   userByPhone: query(users.$nullable())
     .input({ phone: v.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+    .resolve(({ phone }) => {
+      return db.query.users.findFirst({
+        where: eq(users.phone, phone),
+      })
+    }),
 
   createUser: mutation(users)
     .input({
@@ -813,28 +800,42 @@ export const userResolver = resolver({
         phone: v.string(),
       }),
     })
-    .resolve(async ({ data }) => userService.createUser(data)),
+    .resolve(async ({ data }) => {
+      const [user] = await db.insert(users).values(data).returning()
+      return user
+    }),
 })
 ```
+
 </Tab>
 <Tab>
+
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
+import { eq } from "drizzle-orm"
 import * as z from "zod"
 import { useCurrentUser } from "../contexts" // [!code ++]
+import { db } from "../providers"
 import { users } from "../schema"
-import { userService } from "../services"
 
-export const userResolver = resolver({
+export const userResolver = resolver.of(users, {
   mine: query(users).resolve(() => useCurrentUser()), // [!code ++]
 
   usersByName: query(users.$list())
     .input({ name: z.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
+    .resolve(({ name }) => {
+      return db.query.users.findMany({
+        where: eq(users.name, name),
+      })
+    }),
 
   userByPhone: query(users.$nullable())
     .input({ phone: z.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+    .resolve(({ phone }) => {
+      return db.query.users.findFirst({
+        where: eq(users.phone, phone),
+      })
+    }),
 
   createUser: mutation(users)
     .input({
@@ -843,9 +844,13 @@ export const userResolver = resolver({
         phone: z.string(),
       }),
     })
-    .resolve(async ({ data }) => userService.createUser(data)),
+    .resolve(async ({ data }) => {
+      const [user] = await db.insert(users).values(data).returning()
+      return user
+    }),
 })
 ```
+
 </Tab>
 </Tabs>
 
@@ -919,6 +924,7 @@ export const userResolver = resolver({
 <Tab>
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
+
 ```ts twoslash title="src/resolvers/cat.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -975,6 +981,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(v.pipe(v.number()))
+    .derivedFrom("birthday")
     .input({
       currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
         new Date().getFullYear()
@@ -985,8 +992,10 @@ export const catResolver = resolver.of(cats, {
     }),
 })
 ```
+  
   </Tab>
   <Tab>
+
 ```ts twoslash title="src/resolvers/cat.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -1044,6 +1053,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(z.number().int())
+    .derivedFrom("birthday")
     .input({
       currentYear: z
         .number()
@@ -1056,49 +1066,20 @@ export const catResolver = resolver.of(cats, {
     }),
 })
 ```
+  
   </Tab>
   </Tabs>
 </Tab>
 <Tab>
-  <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as v from "valibot"
-import { catResolver } from "./cat" // [!code ++]
-import { userResolver } from "./user"
 
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
+```ts title="src/resolvers/index.ts"
+import { catResolver } from "./cat" // [!code ++]
+import { helloResolver } from "./hello"
+import { userResolver } from "./user"
 
 export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
 ```
-  </Tab>
-  <Tab>
-```ts title="src/resolvers/index.ts"
-import { query, resolver } from "@gqloom/core"
-import * as z from "zod"
-import { catResolver } from "./cat" // [!code ++]
-import { userResolver } from "./user"
 
-const helloResolver = resolver({
-  hello: query(z.string())
-    .input({
-      name: z
-        .string()
-        .nullish()
-        .transform((x) => x ?? "World"),
-    })
-    .resolve(({ name }) => `Hello ${name}!`),
-})
-
-export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++]
-```
-  </Tab>
-  </Tabs>
 </Tab>
 </Tabs>
 
@@ -1111,6 +1092,7 @@ export const resolvers = [helloResolver, userResolver, catResolver] // [!code ++
 
 <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
 <Tab>
+
 ```ts twoslash title="src/resolvers/cat.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -1154,41 +1136,20 @@ import * as schema from "../schema"
 export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
-// @filename: services/user.ts
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
 // @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
+import { eq } from "drizzle-orm"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
+import { db } from "../providers"
+import { users } from "../schema"
 
 export const useCurrentUser = createMemoization(async () => {
   const phone =
     useContext<YogaInitialContext>().request.headers.get("authorization")
   if (phone == null) throw new GraphQLError("Unauthorized")
 
-  const user = await userService.findUserByPhone(phone)
+  const user = await db.query.users.findFirst({ where: eq(users.phone, phone) })
   if (user == null) throw new GraphQLError("Unauthorized")
   return user
 })
@@ -1207,6 +1168,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(v.pipe(v.number()))
+    .derivedFrom("birthday")
     .input({
       currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
         new Date().getFullYear()
@@ -1240,8 +1202,10 @@ export const catResolver = resolver.of(cats, {
   }), // [!code ++]
 })
 ```
+
 </Tab>
 <Tab>
+
 ```ts twoslash title="src/resolvers/cat.ts"
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
@@ -1285,41 +1249,20 @@ import * as schema from "../schema"
 export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
   schema,
 })
-// @filename: services/user.ts
-import { eq } from "drizzle-orm"
-import { db } from "../providers"
-import { users } from "../schema"
-
-export async function createUser(input: typeof users.$inferInsert) {
-  const [user] = await db.insert(users).values(input).returning()
-  return user
-}
-
-export async function findUsersByName(name: string) {
-  return await db.query.users.findMany({
-    where: eq(users.name, name),
-  })
-}
-
-export async function findUserByPhone(phone: string) {
-  return await db.query.users.findFirst({
-    where: eq(users.phone, phone),
-  })
-}
-// @filename: services/index.ts
-export * as userService from "./user"
 // @filename: contexts/index.ts
-import { createMemoization, useContext } from "@gqloom/core"
+import { createMemoization, useContext } from "@gqloom/core/context"
+import { eq } from "drizzle-orm"
 import { GraphQLError } from "graphql"
 import type { YogaInitialContext } from "graphql-yoga"
-import { userService } from "../services"
+import { db } from "../providers"
+import { users } from "../schema"
 
 export const useCurrentUser = createMemoization(async () => {
   const phone =
     useContext<YogaInitialContext>().request.headers.get("authorization")
   if (phone == null) throw new GraphQLError("Unauthorized")
 
-  const user = await userService.findUserByPhone(phone)
+  const user = await db.query.users.findFirst({ where: eq(users.phone, phone) })
   if (user == null) throw new GraphQLError("Unauthorized")
   return user
 })
@@ -1338,6 +1281,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(z.number().int())
+    .derivedFrom("birthday")
     .input({
       currentYear: z
         .number()
@@ -1366,6 +1310,7 @@ export const catResolver = resolver.of(cats, {
   }), // [!code ++]
 })
 ```
+
 </Tab>
 </Tabs>
 
@@ -1451,6 +1396,7 @@ mutation {
 <Tab>
   <Tabs groupId="input-schema" items={["Valibot", "Zod"]}>
   <Tab>
+
 ```ts title="src/resolvers/cat.ts"
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
@@ -1465,6 +1411,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(v.pipe(v.number()))
+    .derivedFrom("birthday")
     .input({
       currentYear: v.nullish(v.pipe(v.number(), v.integer()), () =>
         new Date().getFullYear()
@@ -1500,8 +1447,10 @@ export const catResolver = resolver.of(cats, {
   }),
 })
 ```
+  
   </Tab>
   <Tab>
+
 ```ts title="src/resolvers/cat.ts"
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
@@ -1516,6 +1465,7 @@ export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
 
   age: field(z.number().int())
+    .derivedFrom("birthday")
     .input({
       currentYear: z
         .number()
@@ -1546,6 +1496,7 @@ export const catResolver = resolver.of(cats, {
   }),
 })
 ```
+  
   </Tab>
   </Tabs>
 </Tab>
@@ -1555,11 +1506,11 @@ export const catResolver = resolver.of(cats, {
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
+import { eq } from "drizzle-orm"
 import * as v from "valibot"
 import { useCurrentUser } from "../contexts"
-import { db } from "../providers" // [!code ++]
+import { db } from "../providers"
 import { users } from "../schema"
-import { userService } from "../services"
 
 const userResolverFactory = drizzleResolverFactory(db, "users") // [!code ++]
 
@@ -1570,11 +1521,19 @@ export const userResolver = resolver.of(users, {
 
   usersByName: query(users.$list())
     .input({ name: v.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
+    .resolve(({ name }) => {
+      return db.query.users.findMany({
+        where: eq(users.name, name),
+      })
+    }),
 
   userByPhone: query(users.$nullable())
     .input({ phone: v.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+    .resolve(({ phone }) => {
+      return db.query.users.findFirst({
+        where: eq(users.phone, phone),
+      })
+    }),
 
   createUser: mutation(users)
     .input({
@@ -1583,7 +1542,10 @@ export const userResolver = resolver.of(users, {
         phone: v.string(),
       }),
     })
-    .resolve(async ({ data }) => userService.createUser(data)),
+    .resolve(async ({ data }) => {
+      const [user] = await db.insert(users).values(data).returning()
+      return user
+    }),
 })
 ```
   </Tab>
@@ -1591,26 +1553,34 @@ export const userResolver = resolver.of(users, {
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
+import { eq } from "drizzle-orm"
 import * as z from "zod"
 import { useCurrentUser } from "../contexts"
-import { db } from "../providers" // [!code ++]
+import { db } from "../providers"
 import { users } from "../schema"
-import { userService } from "../services"
 
 const userResolverFactory = drizzleResolverFactory(db, "users") // [!code ++]
 
 export const userResolver = resolver.of(users, {
-  cats: userResolverFactory.relationField("cats"),  // [!code ++]
+  cats: userResolverFactory.relationField("cats"), // [!code ++]
 
   mine: query(users).resolve(() => useCurrentUser()),
 
   usersByName: query(users.$list())
     .input({ name: z.string() })
-    .resolve(({ name }) => userService.findUsersByName(name)),
+    .resolve(({ name }) => {
+      return db.query.users.findMany({
+        where: eq(users.name, name),
+      })
+    }),
 
   userByPhone: query(users.$nullable())
     .input({ phone: z.string() })
-    .resolve(({ phone }) => userService.findUserByPhone(phone)),
+    .resolve(({ phone }) => {
+      return db.query.users.findFirst({
+        where: eq(users.phone, phone),
+      })
+    }),
 
   createUser: mutation(users)
     .input({
@@ -1619,7 +1589,10 @@ export const userResolver = resolver.of(users, {
         phone: z.string(),
       }),
     })
-    .resolve(async ({ data }) => userService.createUser(data)),
+    .resolve(async ({ data }) => {
+      const [user] = await db.insert(users).values(data).returning()
+      return user
+    }),
 })
 ```
   </Tab>

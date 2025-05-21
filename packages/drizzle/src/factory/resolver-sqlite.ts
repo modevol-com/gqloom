@@ -7,13 +7,14 @@ import {
   type ObjectChainResolver,
   silk,
 } from "@gqloom/core"
-import type { InferSelectModel } from "drizzle-orm"
 import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { GraphQLOutputType } from "graphql"
+import { getSelectedColumns } from "../helper"
+import type { SelectiveTable } from "../types"
 import type {
   DeleteArgs,
-  InsertArrayArgs,
-  InsertSingleArgs,
+  InsertArrayWithOnConflictArgs,
+  InsertSingleWithOnConflictArgs,
   UpdateArgs,
 } from "./input"
 import { DrizzleResolverFactory } from "./resolver"
@@ -29,56 +30,92 @@ export class DrizzleSQLiteResolverFactory<
   TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
   TTable extends SQLiteTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
-  public insertArrayMutation<TInputI = InsertArrayArgs<TTable>>({
+  public insertArrayMutation<TInputI = InsertArrayWithOnConflictArgs<TTable>>({
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    input?: GraphQLSilk<InsertArrayWithOnConflictArgs<TTable>, TInputI>
     middlewares?: Middleware<
       InsertArrayMutationReturningItems<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
     input ??= silk(
-      () => this.inputFactory.insertArrayArgs() as GraphQLOutputType
+      () =>
+        this.inputFactory.insertArrayWithOnConflictArgs() as GraphQLOutputType
     )
 
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args) => {
-        const result = await this.db
-          .insert(this.table)
-          .values(args.values)
-          .returning()
-          .onConflictDoNothing()
-        return result
+      resolve: async (args: InsertArrayWithOnConflictArgs<TTable>, payload) => {
+        let query: any = this.db.insert(this.table).values(args.values)
+        if (args.onConflictDoUpdate) {
+          query = query.onConflictDoUpdate({
+            target: args.onConflictDoUpdate.target.map((t) => this.toColumn(t)),
+            set: args.onConflictDoUpdate.set,
+            targetWhere: this.extractFilters(
+              args.onConflictDoUpdate.targetWhere
+            ),
+            setWhere: this.extractFilters(args.onConflictDoUpdate.setWhere),
+          })
+        }
+        if (args.onConflictDoNothing) {
+          query = query.onConflictDoNothing({
+            target: args.onConflictDoNothing.target?.map((t) =>
+              this.toColumn(t)
+            ),
+            where: this.extractFilters(args.onConflictDoNothing.where),
+          })
+        }
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
 
-  public insertSingleMutation<TInputI = InsertSingleArgs<TTable>>({
+  public insertSingleMutation<
+    TInputI = InsertSingleWithOnConflictArgs<TTable>,
+  >({
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    input?: GraphQLSilk<InsertSingleWithOnConflictArgs<TTable>, TInputI>
     middlewares?: Middleware<
       InsertSingleMutationReturningItem<TTable, TInputI>
     >[]
   } = {}): InsertSingleMutationReturningItem<TTable, TInputI> {
     input ??= silk(
-      () => this.inputFactory.insertSingleArgs() as GraphQLOutputType
+      () =>
+        this.inputFactory.insertSingleWithOnConflictArgs() as GraphQLOutputType
     )
     return new MutationFactoryWithResolve(this.output.$nullable(), {
       ...options,
       input,
-      resolve: async (args) => {
-        const result = await this.db
-          .insert(this.table)
-          .values(args.value)
-          .returning()
-          .onConflictDoNothing()
-
-        return result[0] as any
+      resolve: async (
+        args: InsertSingleWithOnConflictArgs<TTable>,
+        payload
+      ) => {
+        let query: any = this.db.insert(this.table).values(args.value)
+        if (args.onConflictDoUpdate) {
+          query = query.onConflictDoUpdate({
+            target: args.onConflictDoUpdate.target.map((t) => this.toColumn(t)),
+            set: args.onConflictDoUpdate.set,
+            targetWhere: this.extractFilters(
+              args.onConflictDoUpdate.targetWhere
+            ),
+            setWhere: this.extractFilters(args.onConflictDoUpdate.setWhere),
+          })
+        }
+        if (args.onConflictDoNothing) {
+          query = query.onConflictDoNothing({
+            target: args.onConflictDoNothing.target?.map((t) =>
+              this.toColumn(t)
+            ),
+            where: this.extractFilters(args.onConflictDoNothing.where),
+          })
+        }
+        return (
+          await query.returning(getSelectedColumns(this.table, payload))
+        )[0] as any
       },
     } as MutationOptions<any, any>)
   }
@@ -95,12 +132,12 @@ export class DrizzleSQLiteResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args) => {
+      resolve: async (args, payload) => {
         const query = this.db.update(this.table).set(args.set)
         if (args.where) {
           query.where(this.extractFilters(args.where))
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
@@ -117,12 +154,12 @@ export class DrizzleSQLiteResolverFactory<
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args) => {
+      resolve: async (args, payload) => {
         const query = this.db.delete(this.table)
         if (args.where) {
           query.where(this.extractFilters(args.where))
         }
-        return await query.returning()
+        return await query.returning(getSelectedColumns(this.table, payload))
       },
     } as MutationOptions<any, any>)
   }
@@ -133,7 +170,7 @@ export class DrizzleSQLiteResolverFactory<
       middlewares?: Middleware[]
     } = {}
   ): ObjectChainResolver<
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     DrizzleResolverReturningItems<TDatabase, TTable, TTableName>
   > {
     return super.resolver(options) as any

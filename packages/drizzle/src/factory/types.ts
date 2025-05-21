@@ -11,12 +11,14 @@ import type { PgDatabase } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
-
+import type { SelectiveTable } from "../types"
 import type {
   CountArgs,
   DeleteArgs,
   InsertArrayArgs,
+  InsertArrayWithOnConflictArgs,
   InsertSingleArgs,
+  InsertSingleWithOnConflictArgs,
   MutationResult,
   SelectArrayArgs,
   SelectSingleArgs,
@@ -31,7 +33,7 @@ export type DrizzleResolver<
   | DrizzleResolverReturningItems<TDatabase, TTable, TTableName>
   | DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName>
 
-export type DrizzleResolverReturningItems<
+export type DrizzleQueriesResolver<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
@@ -40,6 +42,14 @@ export type DrizzleResolverReturningItems<
 } & {
   [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
 } & {
+  [key in `${TTableName}Count`]: CountQuery<TTable>
+}
+
+export type DrizzleResolverReturningItems<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TTableName extends string = TTable["_"]["name"],
+> = DrizzleQueriesResolver<TDatabase, TTable, TTableName> & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningItems<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningItem<TTable>
@@ -53,11 +63,7 @@ export type DrizzleResolverReturningSuccess<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
-> = {
-  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
-} & {
-  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
-} & {
+> = DrizzleQueriesResolver<TDatabase, TTable, TTableName> & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningSuccess<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningSuccess<TTable>
@@ -132,7 +138,7 @@ export interface RelationManyField<
   TTable extends Table,
   TRelationTable extends Table,
 > extends FieldFactoryWithResolve<
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable>[],
       InferSelectModel<TRelationTable>[]
@@ -143,7 +149,7 @@ export interface RelationOneField<
   TTable extends Table,
   TRelationTable extends Table,
 > extends FieldFactoryWithResolve<
-    GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
+    GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable> | null | undefined,
       InferSelectModel<TRelationTable> | null | undefined
@@ -159,11 +165,11 @@ export type InsertArrayMutation<
 
 export interface InsertArrayMutationReturningItems<
   TTable extends Table,
-  TInputI = InsertArrayArgs<TTable>,
+  TInputI = InsertArrayWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertArrayArgs<TTable>,
+    InsertArrayWithOnConflictArgs<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    GraphQLSilk<InsertArrayWithOnConflictArgs<TTable>, TInputI>
   > {}
 
 export interface InsertArrayMutationReturningSuccess<
@@ -184,14 +190,14 @@ export type InsertSingleMutation<
 
 export interface InsertSingleMutationReturningItem<
   TTable extends Table,
-  TInputI = InsertSingleArgs<TTable>,
+  TInputI = InsertSingleWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertSingleArgs<TTable>,
+    InsertSingleWithOnConflictArgs<TTable>,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    GraphQLSilk<InsertSingleWithOnConflictArgs<TTable>, TInputI>
   > {}
 
 export interface InsertSingleMutationReturningSuccess<

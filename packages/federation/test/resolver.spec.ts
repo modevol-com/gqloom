@@ -1,7 +1,20 @@
-import { query, silk } from "@gqloom/core"
-import { GraphQLNonNull, GraphQLObjectType, GraphQLString } from "graphql"
-import { describe, expect, it } from "vitest"
-import { resolveReference, resolver } from "../src"
+import { ApolloServer } from "@apollo/server"
+import {
+  type RequireKeys,
+  type ResolvingFields,
+  field,
+  query,
+  silk,
+} from "@gqloom/core"
+import { asyncContextProvider, useResolvingFields } from "@gqloom/core/context"
+import {
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
+} from "graphql"
+import { describe, expect, expectTypeOf, it } from "vitest"
+import { FederatedSchemaLoom, resolveReference, resolver } from "../src"
 
 describe("FederatedChainResolver", () => {
   it("should define a resolver", () => {
@@ -36,5 +49,288 @@ describe("FederatedChainResolver", () => {
     expect(r1).toBeDefined()
     expect(r1["~meta"].fields.query).toBeDefined()
     expect(r1["~meta"].parent).toBe(User)
+  })
+
+  describe("field with dependencies", () => {
+    type ISelectiveGiraffe = {
+      name?: string
+      birthday?: Date
+    }
+    const SelectiveGiraffe = silk<ISelectiveGiraffe>(
+      new GraphQLObjectType<ISelectiveGiraffe>({
+        name: "SelectiveGiraffe",
+        fields: {
+          name: { type: GraphQLString },
+          birthday: { type: GraphQLString },
+        },
+      })
+    )
+    const selectiveResolver = resolver.of(SelectiveGiraffe, {
+      age: field(silk<number>(GraphQLInt), {
+        dependencies: ["birthday"] as ["birthday"],
+        resolve: async (giraffe) => {
+          it("should infer parent type", () => {
+            expectTypeOf(giraffe).toEqualTypeOf<
+              RequireKeys<ISelectiveGiraffe, "birthday">
+            >()
+            expectTypeOf<
+              RequireKeys<ISelectiveGiraffe, "birthday">
+            >().toEqualTypeOf<
+              { birthday: Date } & { name?: string | undefined }
+            >()
+          })
+          return new Date().getFullYear() - giraffe.birthday.getFullYear()
+        },
+        middlewares: [
+          async ({ parent, next }) => {
+            it("should infer parent type", () => {
+              expectTypeOf(parent).toEqualTypeOf<
+                RequireKeys<ISelectiveGiraffe, "birthday">
+              >()
+            })
+            return next()
+          },
+        ],
+      }),
+
+      age1: field(silk<number>(GraphQLInt))
+        .derivedFrom("birthday")
+        .resolve(async (giraffe) => {
+          it("should infer parent type", () => {
+            expectTypeOf(giraffe).toEqualTypeOf<
+              RequireKeys<ISelectiveGiraffe, "birthday">
+            >()
+          })
+          return new Date().getFullYear() - giraffe.birthday.getFullYear()
+        }),
+    })
+
+    it("should infer input type", () => {
+      expectTypeOf(selectiveResolver["~meta"].fields.age["~meta"].resolve)
+        .parameter(0)
+        .toEqualTypeOf<ISelectiveGiraffe>()
+    })
+
+    it("should infer output type", () => {
+      expectTypeOf(
+        selectiveResolver["~meta"].fields.age["~meta"].resolve
+      ).returns.resolves.toEqualTypeOf<number>()
+    })
+  })
+
+  describe("loadReference", () => {
+    interface IUser {
+      id: string
+      name: string
+      email?: string
+      phone?: string
+    }
+    const User = silk<IUser>(
+      new GraphQLObjectType({
+        name: "User",
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          name: { type: new GraphQLNonNull(GraphQLString) },
+          email: { type: GraphQLString },
+          phone: { type: GraphQLString },
+        },
+        extensions: {
+          directives: { key: { fields: "id", resolvable: true } },
+        },
+      })
+    )
+
+    it("should load references in batch", async () => {
+      const userResolver = resolver
+        .of(User, {
+          query: query(silk(GraphQLString), () => "foo"),
+        })
+        .loadReference<"id">(async (sources) => {
+          // Verify the types of sources
+          expectTypeOf(sources).toEqualTypeOf<RequireKeys<IUser, "id">[]>()
+
+          // Return mock data for the sources
+          return sources.map((source) => ({
+            id: source.id,
+            name: `User ${source.id}`,
+          }))
+        })
+
+      // Apollo Server + FederatedSchemaLoom
+      const schema = FederatedSchemaLoom.weave(userResolver)
+      const server = new ApolloServer({ schema })
+
+      // _entities 查询
+      const entitiesQuery = `
+        query Entities($reps: [_Any!]!) {
+          _entities(representations: $reps) {
+            ... on User {
+              id
+              name
+            }
+          }
+        }
+      `
+      const variables = {
+        reps: [
+          { __typename: "User", id: "1" },
+          { __typename: "User", id: "2" },
+        ],
+      }
+      const response = await server.executeOperation({
+        query: entitiesQuery,
+        variables,
+      })
+      if (response.body.kind !== "single") throw new Error("unexpected")
+      expect(response.body.singleResult.data?._entities).toEqual([
+        { id: "1", name: "User 1" },
+        { id: "2", name: "User 2" },
+      ])
+    })
+
+    it("should handle single reference", async () => {
+      const userResolver = resolver
+        .of(User, {
+          query: query(silk(GraphQLString), () => "foo"),
+        })
+        .loadReference<"id">(async (sources) => {
+          // 兼容 sources 里带 __typename 字段的情况
+          expect(sources).toEqual([expect.objectContaining({ id: "1" })])
+          return sources.map((source) => ({
+            id: source.id,
+            name: `User ${source.id}`,
+          }))
+        })
+
+      // Apollo Server + FederatedSchemaLoom
+      const schema = FederatedSchemaLoom.weave(userResolver)
+      const server = new ApolloServer({ schema })
+
+      // _entities 查询
+      const entitiesQuery = /* GraphQL */ `
+        query Entities($reps: [_Any!]!) {
+          _entities(representations: $reps) {
+            ... on User {
+              id
+              name
+            }
+          }
+        }
+      `
+      const variables = {
+        reps: [{ __typename: "User", id: "1" }],
+      }
+      const response = await server.executeOperation({
+        query: entitiesQuery,
+        variables,
+      })
+      if (response.body.kind !== "single") throw new Error("unexpected")
+      expect(response.body.singleResult.data?._entities).toEqual([
+        { id: "1", name: "User 1" },
+      ])
+    })
+
+    it("should work with useResolvingFields", async () => {
+      let resolvingFields: ResolvingFields | undefined
+
+      const userResolver = resolver
+        .of(User, {
+          query: query(silk(GraphQLString), () => "foo"),
+        })
+        .loadReference<"id">(async (sources) => {
+          // Get current resolving fields using useResolvingFields
+          resolvingFields = useResolvingFields()
+
+          // Return data based on requested fields
+          return sources.map((source) => {
+            const user: IUser = {
+              id: source.id,
+              name: `User ${source.id}`,
+            }
+
+            // Add email if requested
+            if (resolvingFields?.requestedFields.has("email")) {
+              user.email = `user${source.id}@example.com`
+            }
+
+            // Add phone if requested
+            if (resolvingFields?.requestedFields.has("phone")) {
+              user.phone = `123-${source.id}`
+            }
+
+            return user
+          })
+        })
+
+      // Apollo Server + FederatedSchemaLoom
+      const schema = FederatedSchemaLoom.weave(
+        asyncContextProvider,
+        userResolver
+      )
+      const server = new ApolloServer({ schema })
+
+      // Test basic fields only
+      const basicQuery = /* GraphQL */ `
+        query Entities($reps: [_Any!]!) {
+          _entities(representations: $reps) {
+            ... on User {
+              id
+              name
+            }
+          }
+        }
+      `
+      const basicResponse = await server.executeOperation({
+        query: basicQuery,
+        variables: {
+          reps: [{ __typename: "User", id: "1" }],
+        },
+      })
+      if (basicResponse.body.kind !== "single") throw new Error("unexpected")
+      expect(basicResponse.body.singleResult.data?._entities).toEqual([
+        { id: "1", name: "User 1" },
+      ])
+      expect(resolvingFields).toMatchObject({
+        requestedFields: new Set(["id", "name"]),
+        derivedFields: new Set([]),
+        derivedDependencies: new Set([]),
+        selectedFields: new Set(["id", "name"]),
+      })
+
+      // Test with additional fields
+      const extendedQuery = /* GraphQL */ `
+        query Entities($reps: [_Any!]!) {
+          _entities(representations: $reps) {
+            ... on User {
+              id
+              name
+              email
+              phone
+            }
+          }
+        }
+      `
+      const extendedResponse = await server.executeOperation({
+        query: extendedQuery,
+        variables: {
+          reps: [{ __typename: "User", id: "1" }],
+        },
+      })
+      if (extendedResponse.body.kind !== "single") throw new Error("unexpected")
+      expect(extendedResponse.body.singleResult.data?._entities).toEqual([
+        {
+          id: "1",
+          name: "User 1",
+          email: "user1@example.com",
+          phone: "123-1",
+        },
+      ])
+      expect(resolvingFields).toMatchObject({
+        requestedFields: new Set(["id", "name", "email", "phone"]),
+        derivedFields: new Set([]),
+        derivedDependencies: new Set([]),
+        selectedFields: new Set(["id", "name", "email", "phone"]),
+      })
+    })
   })
 })

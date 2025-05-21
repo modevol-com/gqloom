@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/core",
-  "version": "0.8.4",
+  "version": "0.9.1",
   "description": "Create GraphQL schema and resolvers with TypeScript.",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,6 +18,20 @@
       "source": {
         "types": "./src/index.ts",
         "default": "./src/index.ts"
+      }
+    },
+    "./context": {
+      "import": {
+        "types": "./dist/context.d.ts",
+        "default": "./dist/context.js"
+      },
+      "require": {
+        "types": "./dist/context.d.cts",
+        "default": "./dist/context.cjs"
+      },
+      "source": {
+        "types": "./src/context/index.ts",
+        "default": "./src/context/index.ts"
       }
     }
   },

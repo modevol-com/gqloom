@@ -12,7 +12,7 @@ English | [简体中文](./README.zh-CN.md)
 GQLoom is a **Code-First** GraphQL Schema Loom used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into GraphQL Schema, helping you build GraphQL server enjoyably and efficiently.
 
 Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://valibot.dev/), and [Yup](https://github.com/jquense/yup) have been widely used in backend application development. Meanwhile, when using ORM libraries like [Prisma](https://www.prisma.io/), [MikroORM](https://mikro-orm.io/), and [Drizzle](https://orm.drizzle.team/), we also pre-define database table structures or entity models that contain runtime types.
-The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
+The responsibility of GQLoom is to weave these runtime types into GraphQL Schema.
 
 When developing backend applications with GQLoom, you only need to write types using the Schema libraries you're familiar with. Modern Schema libraries will infer TypeScript types for you, and GQLoom will weave GraphQL types for you.
 In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `Prisma`, `MikroORM`, and `Drizzle`, and supports custom input and adding middleware.
@@ -48,21 +48,16 @@ See [Getting Started](https://gqloom.dev/en/docs/getting-started) to learn how t
 
 ## In this Repository
 
-- [GQLoom Core](./packages/core/README.md): Core functions of the GraphQL loom;
-
-- [GQLoom Drizzle](./packages/drizzle/README.md): Integration of GQLoom and Drizzle, capable of weaving database tables defined by Drizzle into a GraphQL Schema, and supports quickly creating CRUD interfaces from Drizzle using the resolver factory;
-
-- [GQLoom Federation](./packages/federation/README.md): Provides GQLoom's support for Apollo Federation;
-
-- [GQLoom Mikro ORM](./packages/mikro-orm/README.md): Integration of GQLoom and Mikro ORM, capable of weaving Mikro Entity into a GraphQL Schema, and supports quickly creating CRUD interfaces from Mikro ORM using the resolver factory;
-
-- [GQLoom Prisma](./packages/prisma/README.md): Integration of GQLoom and Prisma, capable of weaving Prisma model into a GraphQL Schema, and supports quickly creating CRUD interfaces from Prisma using the resolver factory;
-
-- [GQLoom Valibot](./packages/valibot/README.md): Integration of GQLoom and Valibot, capable of weaving Valibot Schema into a GraphQL Schema;
-
-- [GQLoom Yup](./packages/yup/README.md): Integration of GQLoom and Yup, capable of weaving Yup Schema into a GraphQL Schema;
-
-- [GQLoom Zod](./packages/zod/README.md): Integration of GQLoom and Zod, capable of weaving Zod Schema into a GraphQL Schema;
+| Package                                              | Description                                                                                                                                                                                           |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [GQLoom Core](./packages/core/README.md)             | Core functions of the GraphQL loom                                                                                                                                                                    |
+| [GQLoom Drizzle](./packages/drizzle/README.md)       | Integration of GQLoom and Drizzle, capable of weaving database tables defined by Drizzle into a GraphQL Schema, and supports quickly creating CRUD interfaces from Drizzle using the resolver factory |
+| [GQLoom Federation](./packages/federation/README.md) | Provides GQLoom's support for Apollo Federation                                                                                                                                                       |
+| [GQLoom Mikro ORM](./packages/mikro-orm/README.md)   | Integration of GQLoom and Mikro ORM, capable of weaving Mikro Entity into a GraphQL Schema, and supports quickly creating CRUD interfaces from Mikro ORM using the resolver factory                   |
+| [GQLoom Prisma](./packages/prisma/README.md)         | Integration of GQLoom and Prisma, capable of weaving Prisma model into a GraphQL Schema, and supports quickly creating CRUD interfaces from Prisma using the resolver factory                         |
+| [GQLoom Valibot](./packages/valibot/README.md)       | Integration of GQLoom and Valibot, capable of weaving Valibot Schema into a GraphQL Schema                                                                                                            |
+| [GQLoom Yup](./packages/yup/README.md)               | Integration of GQLoom and Yup, capable of weaving Yup Schema into a GraphQL Schema                                                                                                                    |
+| [GQLoom Zod](./packages/zod/README.md)               | Integration of GQLoom and Zod, capable of weaving Zod Schema into a GraphQL Schema                                                                                                                    |
 
 [license-image]: https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square
 [license-url]: https://opensource.org/licenses/MIT

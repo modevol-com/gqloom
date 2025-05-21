@@ -3,8 +3,9 @@ import type {
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
+  GraphQLResolveInfo,
 } from "graphql"
-import type { MayPromise, Middleware } from "../utils"
+import type { MayPromise, Middleware, RequireKeys } from "../utils"
 import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type { InferInputO } from "./input"
 import type {
@@ -43,13 +44,14 @@ export interface ResolverOptionsWithExtensions<
 export interface ResolverOptionsWithParent<
   TField extends Loom.FieldOrOperation = Loom.FieldOrOperation,
 > extends ResolverOptionsWithExtensions<TField> {
-  parent?: TField extends Loom.Field<infer TParent, any, any>
+  parent?: TField extends Loom.Field<infer TParent, any, any, any>
     ? TParent
     : undefined
 }
 
-export interface ResolvingOptions
-  extends Pick<ResolverOptions, "middlewares"> {}
+export interface ResolvingOptions extends Pick<ResolverOptions, "middlewares"> {
+  payload: ResolverPayload | undefined
+}
 
 export type OperationType = "query" | "mutation" | "subscription"
 
@@ -72,15 +74,13 @@ export type InferFieldOutput<TField extends Loom.BaseField> =
  */
 export interface QueryOptions<
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends ResolverOptions<Loom.Query<TOutput, TInput>>,
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
-    input: InferInputO<TInput>
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -97,7 +97,8 @@ export interface MutationOptions<
     GraphQLFieldOptions {
   input?: TInput
   resolve: (
-    input: InferInputO<TInput>
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -107,15 +108,15 @@ export interface MutationOptions<
 export interface QueryFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
-    resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): Loom.Query<TOutput, undefined>
+    resolve: (
+      input: void,
+      payload: ResolverPayload | undefined
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+  ): Loom.Query<TOutput, void>
 
   <
     TOutput extends GraphQLSilk,
-    TInput extends
-      | GraphQLSilk
-      | Record<string, GraphQLSilk>
-      | undefined = undefined,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
   >(
     output: TOutput,
     options: QueryOptions<TOutput, TInput>
@@ -123,12 +124,12 @@ export interface QueryFactory {
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
-  ): QueryChainFactory<TOutput, undefined>
+  ): QueryChainFactory<TOutput, void>
 }
 
 export interface QueryFactoryWithChain
   extends QueryFactory,
-    QueryChainFactory<never, undefined> {}
+    QueryChainFactory<never, void> {}
 
 /**
  * Function to create a GraphQL mutation.
@@ -136,7 +137,10 @@ export interface QueryFactoryWithChain
 export interface MutationFactory {
   <TOutput extends GraphQLSilk>(
     output: TOutput,
-    resolve: () => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+    resolve: (
+      input: void,
+      payload: ResolverPayload | undefined
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
   ): Loom.Mutation<TOutput, undefined>
 
   <
@@ -168,16 +172,21 @@ export interface MutationFactoryWithChain
 export interface FieldOptions<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
-  TInput extends
-    | GraphQLSilk
-    | Record<string, GraphQLSilk>
-    | undefined = undefined,
-> extends ResolverOptions<Loom.Field<TParent, TOutput, TInput>>,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
+  TDependencies extends string[] | undefined = undefined,
+> extends ResolverOptions<Loom.Field<TParent, TOutput, TInput, TDependencies>>,
     GraphQLFieldOptions {
   input?: TInput
+  dependencies?: TDependencies
   resolve: (
-    parent: StandardSchemaV1.InferOutput<TParent>,
-    input: InferInputO<TInput>
+    parent: TDependencies extends string[]
+      ? RequireKeys<
+          NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+          TDependencies[number]
+        >
+      : NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -188,30 +197,60 @@ export interface FieldFactory {
   <TParent extends GraphQLSilk, TOutput extends GraphQLSilk>(
     output: TOutput,
     resolve: (
-      parent: StandardSchemaV1.InferOutput<TParent>
+      parent: StandardSchemaV1.InferOutput<TParent>,
+      input: void,
+      payload: ResolverPayload | undefined
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
-  ): Loom.Field<TParent, TOutput, undefined>
+  ): Loom.Field<TParent, TOutput, undefined, undefined>
+
+  <TParent extends GraphQLSilk, TOutput extends GraphQLSilk>(
+    output: TOutput,
+    options: FieldOptions<TParent, TOutput, undefined, undefined>
+  ): Loom.Field<TParent, TOutput, undefined, undefined>
 
   <
     TParent extends GraphQLSilk,
     TOutput extends GraphQLSilk,
-    TInput extends
-      | GraphQLSilk
-      | Record<string, GraphQLSilk>
-      | undefined = undefined,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
   >(
     output: TOutput,
-    options: FieldOptions<TParent, TOutput, TInput>
-  ): Loom.Field<TParent, TOutput, TInput>
+    options: FieldOptions<TParent, TOutput, TInput, undefined> & {
+      input: TInput
+    }
+  ): Loom.Field<TParent, TOutput, TInput, undefined>
+
+  <
+    TParent extends GraphQLSilk,
+    TOutput extends GraphQLSilk,
+    const TDependencies extends string[] | undefined,
+  >(
+    output: TOutput,
+    options: FieldOptions<TParent, TOutput, undefined, TDependencies> & {
+      dependencies: TDependencies
+    }
+  ): Loom.Field<TParent, TOutput, undefined, TDependencies>
+
+  <
+    TParent extends GraphQLSilk,
+    TOutput extends GraphQLSilk,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | undefined,
+    TDependencies extends string[] | undefined,
+  >(
+    output: TOutput,
+    options: FieldOptions<TParent, TOutput, TInput, TDependencies> & {
+      input: TInput
+      dependencies: TDependencies
+    }
+  ): Loom.Field<TParent, TOutput, TInput, TDependencies>
 
   <TOutput extends GraphQLSilk>(
     output: TOutput
-  ): FieldChainFactory<TOutput, undefined>
+  ): FieldChainFactory<TOutput, undefined, undefined>
 }
 
 export interface FieldFactoryWithUtils
   extends FieldFactory,
-    FieldChainFactory<never, undefined> {
+    FieldChainFactory<never, undefined, undefined> {
   /** Set fields to be hidden in GraphQL Schema */
   hidden: typeof FIELD_HIDDEN
 }
@@ -229,10 +268,14 @@ export interface SubscriptionOptions<
 > extends ResolverOptions<Loom.Subscription<TOutput, TInput, TValue>>,
     GraphQLFieldOptions {
   input?: TInput
-  subscribe: (input: InferInputO<TInput>) => MayPromise<AsyncIterator<TValue>>
+  subscribe: (
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
+  ) => MayPromise<AsyncIterator<TValue>>
   resolve?: (
     value: TValue,
-    input: InferInputO<TInput>
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined
   ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
 }
 
@@ -242,9 +285,9 @@ export interface SubscriptionOptions<
 export interface SubscriptionFactory {
   <TOutput extends GraphQLSilk, TValue = StandardSchemaV1.InferOutput<TOutput>>(
     output: TOutput,
-    subscribe: () => MayPromise<
-      AsyncIterator<StandardSchemaV1.InferOutput<TOutput>>
-    >
+    subscribe: (
+      payload: ResolverPayload | undefined
+    ) => MayPromise<AsyncIterator<StandardSchemaV1.InferOutput<TOutput>>>
   ): Loom.Subscription<TOutput, undefined, TValue>
 
   <
@@ -267,3 +310,33 @@ export interface SubscriptionFactory {
 export interface SubscriptionFactoryWithChain
   extends SubscriptionFactory,
     SubscriptionChainFactory<never, undefined> {}
+
+/**
+ * Detailed payload of the current resolver
+ */
+export interface ResolverPayload<
+  TContext extends object = object,
+  TField extends Loom.BaseField = Loom.BaseField,
+> {
+  /**
+   * The previous object, which for a field on the root Query type is often not used.
+   */
+  readonly root: any
+  /**
+   * The arguments provided to the field in the GraphQL query.
+   */
+  readonly args: Record<string, any>
+  /**
+   * The resolved value of the field, or an error.
+   */
+  readonly context: TContext
+  /**
+   * A custom object each resolver can read from/write to.
+   */
+  readonly info: GraphQLResolveInfo
+
+  /**
+   * The field that is being resolved.
+   */
+  readonly field: TField
+}
