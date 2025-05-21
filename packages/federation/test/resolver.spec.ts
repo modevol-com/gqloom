@@ -1,4 +1,5 @@
 import { ApolloServer } from "@apollo/server"
+import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
 import {
   type RequireKeys,
   type ResolvingFields,
@@ -158,7 +159,10 @@ describe("FederatedChainResolver", () => {
 
       // Apollo Server + FederatedSchemaLoom
       const schema = FederatedSchemaLoom.weave(userResolver)
-      const server = new ApolloServer({ schema })
+      const server = new ApolloServer({
+        schema,
+        plugins: [ApolloServerPluginInlineTraceDisabled()],
+      })
 
       // _entities 查询
       const entitiesQuery = `
@@ -204,7 +208,10 @@ describe("FederatedChainResolver", () => {
 
       // Apollo Server + FederatedSchemaLoom
       const schema = FederatedSchemaLoom.weave(userResolver)
-      const server = new ApolloServer({ schema })
+      const server = new ApolloServer({
+        schema,
+        plugins: [ApolloServerPluginInlineTraceDisabled()],
+      })
 
       // _entities 查询
       const entitiesQuery = /* GraphQL */ `
@@ -267,7 +274,10 @@ describe("FederatedChainResolver", () => {
         asyncContextProvider,
         userResolver
       )
-      const server = new ApolloServer({ schema })
+      const server = new ApolloServer({
+        schema,
+        plugins: [ApolloServerPluginInlineTraceDisabled()],
+      })
 
       // Test basic fields only
       const basicQuery = /* GraphQL */ `
