@@ -16,7 +16,7 @@ import {
   expectTypeOf,
   it,
 } from "vitest"
-import { z } from "zod"
+import * as z from "zod"
 import {
   type InferPrismaDelegate,
   type PrismaModelSilk,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { parseFieldConfig, parseObjectConfig } from "../src/utils"
+import { parseFieldConfig, parseObjectConfig } from "../../src/v3/utils"
 
 describe("parseObjectConfig", () => {
   it("should parse name", () => {

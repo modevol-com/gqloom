@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "check:type": "tsc --noEmit",
     "push": "drizzle-kit push --config=drizzle-mysql.config.ts && drizzle-kit push --config=drizzle-postgres.config.ts && drizzle-kit push --config=drizzle-sqlite.config.ts && drizzle-kit push --config=drizzle-sqlite-1.config.ts"
   },
   "files": ["dist"],

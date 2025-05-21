@@ -50,7 +50,7 @@ export interface IUser extends v.InferOutput<typeof User> {}
 ```
 
 ```ts twoslash tab="zod"
-import { z } from "zod"
+import * as z from "zod"
 import { asObjectType } from "@gqloom/zod"
 
 export const User = z
@@ -58,14 +58,12 @@ export const User = z
     id: z.string(),
     name: z.string(),
   })
-  .superRefine(
-    asObjectType({
-      name: "User",
-      extensions: {
-        directives: { key: { fields: "id", resolvable: true } },
-      },
-    })
-  )
+  .register(asObjectType, {
+    name: "User",
+    extensions: {
+      directives: { key: { fields: "id", resolvable: true } },
+    },
+  })
 
 export interface IUser extends z.infer<typeof User> {}
 ```

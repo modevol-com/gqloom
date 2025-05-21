@@ -60,7 +60,7 @@ createServer(yoga).listen(4000, () => {
 import { query, resolver, weave } from "@gqloom/core"
 import { useContext } from "@gqloom/core/context"
 import { ZodWeaver } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
 
@@ -180,7 +180,7 @@ const UserService = {
 import { query, resolver, weave } from "@gqloom/core"
 import { useContext } from "@gqloom/core/context"
 import { ZodWeaver } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 import { type YogaInitialContext, createYoga } from "graphql-yoga"
 import { createServer } from "http"
 
