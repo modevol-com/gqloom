@@ -10,25 +10,6 @@ Zod is designed to be as developer-friendly as possible. The goal is to eliminat
 
 ## Installation
 
-<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
-<Tab value='zod-v4'>
-
-```sh tab="npm"
-npm i @gqloom/core zod@next @gqloom/zod@next
-```
-```sh tab="pnpm"
-pnpm add @gqloom/core zod@next @gqloom/zod@next
-```
-```sh tab="yarn"
-yarn add @gqloom/core zod@next @gqloom/zod@next
-```
-```sh tab="bun"
-bun add @gqloom/core zod@next @gqloom/zod@next
-```
-
-</Tab>
-<Tab value='zod-v3'>
-
 ```sh tab="npm"
 npm i @gqloom/core zod @gqloom/zod
 ```
@@ -42,14 +23,12 @@ yarn add @gqloom/core zod @gqloom/zod
 bun add @gqloom/core zod @gqloom/zod
 ```
 
-</Tab>
-</Tabs>
-
 ## Defining simple scalars
 
 In GQLoom, you can directly use Zod Schema as [silk](../silk).
 
 ```ts twoslash
+// @filename: 30.ts
 import * as z from "zod"
 
 const StringScalar = z.string() // GraphQLString
@@ -66,6 +45,7 @@ const IntScalar = z.number().int() // GraphQLInt
 To ensure that `GQLoom` correctly weaves the Zod Schema into the GraphQL Schema, we need to add the `ZodWeaver` from `@gqloom/zod` when using the `weave` function.
 
 ```ts twoslash
+// @filename: 47.ts
 import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import * as z from "zod"
 
@@ -79,27 +59,9 @@ export const schema = weave(ZodWeaver, helloResolver)
 ## Defining Objects
 
 We can define objects using Zod and use them as [silk](../silk) to use:
+
 ```ts twoslash
-import * as z from "zod"
-import { collectNames } from "@gqloom/zod"
-
-export const Cat = z.object({
-  name: z.string(),
-  age: z.number().int(),
-  loveFish: z.boolean().nullish(),
-})
-
-collectNames({ Cat })
-```
-
-## Names and more data
-
-### Defining names for objects
-
-In `GQLoom` we have multiple ways to define names for objects.
-
-#### Using `__typename` literal
-```ts twoslash
+// @filename: 63.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -109,9 +71,31 @@ export const Cat = z.object({
   loveFish: z.boolean().nullish(),
 })
 ```
+
+## Names and more data
+
+### Defining names for objects
+
+In `GQLoom` we have multiple ways to define names for objects.
+
+#### Using `__typename` literal
+
+```ts twoslash
+// @filename: 84.ts
+import * as z from "zod"
+
+export const Cat = z.object({
+  __typename: z.literal("Cat").nullish(),
+  name: z.string(),
+  age: z.number().int(),
+  loveFish: z.boolean().nullish(),
+})
+```
+
 In the code above, we used the `__typename` literal to define the name for the object. We also set the `__typename` literal to `nullish`, which means that the `__typename` field is optional, and if it exists, it must be “Cat”.
 
 ```ts twoslash
+// @filename: 97.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -121,11 +105,13 @@ export const Cat = z.object({
   loveFish: z.boolean().nullish(),
 })
 ```
+
 In the code above we are still using the `__typename` literal to define the name for the object, but this time we are setting the `__typename` literal to “Cat”, which means that the `__typename` field is mandatory and must be “Cat”, which will be very useful when using the GraphQL `interface` and `union` The required `__typename` will be very useful when using GraphQL `interface` and `union`.
 
 #### Using `collectNames`
 
 ```ts twoslash
+// @filename: 112.ts
 import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -141,6 +127,7 @@ collectNames({ Cat })
 In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
 ```ts twoslash
+// @filename: 128.ts
 import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -152,6 +139,7 @@ export const { Cat } = collectNames({
   }),
 })
 ```
+
 In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
 
 #### Using `asObjectType`
@@ -159,9 +147,10 @@ In the code above, we use the `collectNames` function to define the names for th
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
+// @filename: 148.ts
 import { asObjectType } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 export const Cat = z
   .object({
@@ -176,8 +165,9 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import * as z from "zod"
-import { asObjectType } from "@gqloom/zod"
+// @filename: 165.ts
+import { asObjectType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 export const Cat = z
   .object({
@@ -185,7 +175,7 @@ export const Cat = z
     age: z.number().int(),
     loveFish: z.boolean().nullish(),
   })
-  .register(asObjectType, { name: "Cat" })
+  .superRefine(asObjectType({ name: "Cat" }))
 ```
 
 </Tab>
@@ -200,9 +190,10 @@ With the `asObjectType` register, we can add more data to the object, such as `d
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
+// @filename: 181.ts
 import { asObjectType } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 export const Cat = z
   .object({
@@ -220,8 +211,9 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import * as z from "zod"
-import { asObjectType } from "@gqloom/zod"
+// @filename: 211.ts
+import { asObjectType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 export const Cat = z
   .object({
@@ -229,16 +221,19 @@ export const Cat = z
     age: z.number().int(),
     loveFish: z.boolean().nullish(),
   })
-  .register(asObjectType, {
-    name: "Cat",
-    description: "A cute cat",
-  })
+  .superRefine(
+    asObjectType({
+      name: "Cat",
+      description: "A cute cat",
+    })
+  )
 ```
 
 </Tab>
 </Tabs>
 
 In the above code, we have added a `description` metadata to the `Cat` object which will be presented in the GraphQL Schema:
+
 ```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
@@ -253,10 +248,35 @@ We can also use the asField function to add metadata to a field, such as descrip
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import { z } from "zod"
+```ts twoslash
+// @filename: 250.ts
 import { asField, asObjectType } from "@gqloom/zod"
 import { GraphQLInt } from "graphql"
+import * as z from "zod/v4"
+
+export const Cat = z
+  .object({
+    name: z.string(),
+    age: z.number().register(asField, {
+      type: GraphQLInt,
+      description: "How old is the cat",
+    }),
+    loveFish: z.boolean().nullish(),
+  })
+  .register(asObjectType, {
+    name: "Cat",
+    description: "A cute cat",
+  })
+```
+
+</Tab>
+<Tab value='zod-v3'>
+
+```ts twoslash
+// @filename: 273.ts
+import { asField, asObjectType } from "@gqloom/zod/v3"
+import { GraphQLInt } from "graphql"
+import * as z from "zod/v3"
 
 export const Cat = z
   .object({
@@ -268,32 +288,12 @@ export const Cat = z
       ),
     loveFish: z.boolean().nullish(),
   })
-  .register(asObjectType, {
-    name: "Cat",
-    description: "A cute cat",
-  })
-```
-
-</Tab>
-<Tab>
-
-```ts twoslash
-import * as z from "zod"
-import { asField, asObjectType } from "@gqloom/zod"
-import { GraphQLInt } from "graphql"
-
-export const Cat = z
-  .object({
-    name: z.string(),
-    age: z
-      .number()
-      .register(asField, { type: GraphQLInt, description: "How old is the cat" }),
-    loveFish: z.boolean().nullish(),
-  })
-  .register(asObjectType, {
-    name: "Cat",
-    description: "A cute cat",
-  })
+  .superRefine(
+    asObjectType({
+      name: "Cat",
+      description: "A cute cat",
+    })
+  )
 ```
 
 </Tab>
@@ -319,8 +319,9 @@ We can also use the `asObjectType` function to declare interfaces, for example:
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * z from "zod"
+```ts twoslash
+// @filename: 321.ts
+import * as z from "zod/v4"
 import { asObjectType } from "@gqloom/zod"
 
 const Fruit = z
@@ -345,8 +346,9 @@ const Orange = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import { asObjectType } from "@gqloom/zod"
-import { z } from "zod"
+// @filename: 346.ts
+import { asObjectType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Fruit = z
   .object({
@@ -378,17 +380,15 @@ We can also omit fields by setting `type` to `null` using the `asField` function
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
+// @filename: 381.ts
 import { asField } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 const Dog = z.object({
   __typename: z.literal("Dog").nullish(),
   name: z.string().nullish(),
-  birthday: z
-    .date()
-    .nullish()
-    .register(asField, { type: null }),
+  birthday: z.date().nullish().register(asField, { type: null }),
 })
 ```
 
@@ -396,8 +396,9 @@ const Dog = z.object({
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import * as z from "zod"
-import { asField } from "@gqloom/zod"
+// @filename: 396.ts
+import { asField } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Dog = z.object({
   __typename: z.literal("Dog").nullish(),
@@ -405,7 +406,7 @@ const Dog = z.object({
   birthday: z
     .date()
     .nullish()
-    .register(asField, { type: null }),
+    .superRefine(asField({ type: null })),
 })
 ```
 
@@ -413,6 +414,7 @@ const Dog = z.object({
 </Tabs>
 
 The following GraphQL Schema will be generated:
+
 ```graphql title="GraphQL Schema"
 type Dog {
   name: String
@@ -428,9 +430,10 @@ We recommend using `z.discriminatedUnion` to define union types, for example:
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import { z } from "zod"
+```ts twoslash
+// @filename: 431.ts
 import { asUnionType } from "@gqloom/zod"
+import { z } from "zod/v4"
 
 const Cat = z.object({
   __typename: z.literal("Cat"),
@@ -455,8 +458,9 @@ const Animal = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import * as z from "zod"
-import { asUnionType } from "@gqloom/zod"
+// @filename: 459.ts
+import { asUnionType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Cat = z.object({
   __typename: z.literal("Cat"),
@@ -489,8 +493,9 @@ We can also use `z.union` to define union types:
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import { z } from "zod"
+```ts twoslash
+// @filename: 495.ts
+import { z } from "zod/v4"
 import { asUnionType, collectNames } from "@gqloom/zod"
 
 const Cat = z.object({
@@ -517,8 +522,10 @@ collectNames({ Cat, Dog, Animal })
 <Tab value='zod-v3' >
 
 ```ts twoslash
-import * as z from "zod"
-import { asUnionType, collectNames } from "@gqloom/zod"
+// @filename: 523.ts
+import { collectNames } from "@gqloom/core"
+import { asUnionType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Cat = z.object({
   name: z.string(),
@@ -532,10 +539,12 @@ const Dog = z.object({
   loveBone: z.boolean().optional(),
 })
 
-const Animal = z.union([Cat, Dog]).register(asUnionType, {
-  name: "Animal",
-  resolveType: (it) => (it.loveFish ? "Cat" : "Dog"),
-})
+const Animal = z.union([Cat, Dog]).superRefine(
+  asUnionType({
+    name: "Animal",
+    resolveType: (it) => (it.loveFish ? "Cat" : "Dog"),
+  })
+)
 
 collectNames({ Cat, Dog, Animal })
 ```
@@ -557,9 +566,10 @@ In general, we prefer to use `z.enum` to define enumeration types, for example:
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
+// @filename: 568.ts
 import { asEnumType } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 export const Fruit = z
   .enum(["apple", "banana", "orange"])
@@ -579,12 +589,12 @@ export type IFruit = z.infer<typeof Fruit>
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import * as z from "zod"
-import { asEnumType } from "@gqloom/zod"
+// @filename: 590.ts
+import { asEnumType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
-export const Fruit = z
-  .enum(["apple", "banana", "orange"])
-  .register(asEnumType, {
+export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
+  asEnumType({
     name: "Fruit",
     valuesConfig: {
       apple: { description: "red" },
@@ -600,34 +610,6 @@ export type IFruit = z.infer<typeof Fruit>
 </Tab>
 </Tabs>
 
-#### Using z.nativeEnum
-
-We can also use `z.nativeEnum` to define enumeration types, for example:
-
-```ts twoslash
-import { z } from "zod"
-import { asEnumType } from "@gqloom/zod"
-
-enum FruitEnum {
-  apple,
-  banana,
-  orange,
-}
-
-export const Fruit = z.nativeEnum(FruitEnum).superRefine(
-  asEnumType({
-    name: "Fruit",
-    valuesConfig: {
-      apple: { description: "red" },
-      banana: { description: "yellow" },
-      orange: { description: "orange" },
-    },
-  })
-)
-
-export type IFruit = z.infer<typeof Fruit>
-```
-
 ## Customize Type Mappings
 
 To accommodate more Zod types, we can extend GQLoom to add more type mappings to it.
@@ -635,6 +617,7 @@ To accommodate more Zod types, we can extend GQLoom to add more type mappings to
 First we use `ZodWeaver.config` to define the type mapping configuration. Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars](https://the-guild.dev/graphql/scalars) and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
 
 ```ts twoslash
+// @filename: 618.ts
 import {
   GraphQLDateTime,
   GraphQLJSON,
@@ -657,6 +640,7 @@ export const zodWeaverConfig = ZodWeaver.config({
 Configurations are passed into the `weave` function when weaving the GraphQL Schema:
 
 ```ts twoslash
+// @filename: 641.ts
 import {
   GraphQLDateTime,
   GraphQLJSON,
