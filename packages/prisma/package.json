@@ -39,6 +39,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "check:type": "tsc --noEmit",
     "init": "exec prisma migrate dev --name init",
     "generate": "pnpm build && prisma generate",
     "push": "pnpm build && pnpm generate && pnpm run init"

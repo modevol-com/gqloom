@@ -3,7 +3,7 @@
     "strict": true,
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true,
@@ -11,14 +11,5 @@
       "@gqloom/core/context": ["./packages/core/src/context/index.ts"],
       "@gqloom/*": ["./packages/*/src/index.ts"]
     }
-  },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "draft",
-    "website",
-    "docs",
-    "examples/cattery-zod",
-    "examples/cattery-valibot"
-  ]
+  }
 }

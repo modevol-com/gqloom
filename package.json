@@ -10,7 +10,7 @@
     "lint": "biome lint --write .",
     "fix": "biome check --write .",
     "check": "biome check --write . && pnpm run check:type",
-    "check:type": "tsc --noEmit",
+    "check:type": "pnpm -r check:type",
     "build": "pnpm -F '@gqloom/core' run build && pnpm -F '@gqloom/drizzle' run build && pnpm -F '@gqloom/federation' run build && pnpm -F '@gqloom/mikro-orm' run build && pnpm -F '@gqloom/prisma' run build && pnpm -F '@gqloom/valibot' -F '@gqloom/yup' -F '@gqloom/zod' run build",
     "prepare": "husky",
     "compose-up": "docker compose up -d",

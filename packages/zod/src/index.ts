@@ -6,14 +6,6 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import { LoomObjectType } from "@gqloom/core"
-import type {
-  $ZodInterface,
-  $ZodLooseShape,
-  $ZodObject,
-  $ZodShape,
-  $ZodType,
-  $ZodTypeDef,
-} from "@zod/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -32,6 +24,7 @@ import {
   isNonNullType,
   isObjectType,
 } from "graphql"
+import type { $ZodObject, $ZodShape, $ZodType, $ZodTypeDef } from "zod/v4/core"
 import { asField } from "./metadata"
 import type {
   FieldConfig,
@@ -247,10 +240,7 @@ export class ZodWeaver {
   }
 
   public static ensureInterfaceType(
-    item:
-      | GraphQLInterfaceType
-      | $ZodObject<$ZodShape>
-      | $ZodInterface<$ZodLooseShape>
+    item: GraphQLInterfaceType | $ZodObject<$ZodShape>
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
     const gqlType = ZodWeaver.toMemoriedGraphQLType(item)

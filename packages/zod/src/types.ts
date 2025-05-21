@@ -2,13 +2,6 @@ import type { WeaverConfig } from "@gqloom/core"
 // biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
 import type { SYMBOLS } from "@gqloom/core"
 import type {
-  $ZodInterface,
-  $ZodLooseShape,
-  $ZodObject,
-  $ZodShape,
-  $ZodType,
-} from "@zod/core"
-import type {
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfig,
   GraphQLFieldConfig,
@@ -17,6 +10,7 @@ import type {
   GraphQLOutputType,
   GraphQLUnionTypeConfig,
 } from "graphql"
+import type { $ZodObject, $ZodShape, $ZodType } from "zod/v4/core"
 
 export interface ObjectConfig
   extends Omit<
@@ -24,11 +18,7 @@ export interface ObjectConfig
       "fields" | "name" | "interfaces"
     >,
     Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields" | "name">> {
-  interfaces?: (
-    | $ZodInterface<$ZodLooseShape>
-    | $ZodObject<$ZodShape>
-    | GraphQLInterfaceType
-  )[]
+  interfaces?: ($ZodObject<$ZodShape> | GraphQLInterfaceType)[]
   [k: string]: unknown
 }
 

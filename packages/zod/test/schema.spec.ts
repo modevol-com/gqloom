@@ -5,7 +5,6 @@ import {
   type SchemaWeaver,
   collectNames,
 } from "@gqloom/core"
-import type { $ZodType } from "@zod/core"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -21,7 +20,8 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
-import * as z from "zod"
+import * as z from "zod/v4"
+import type { $ZodType } from "zod/v4/core"
 import {
   ZodWeaver,
   asEnumType,
@@ -74,22 +74,6 @@ describe("ZodWeaver", () => {
     expect(getGraphQLType(z.literal("").nullable())).toEqual(GraphQLString)
     expect(getGraphQLType(z.literal(0).nullable())).toEqual(GraphQLFloat)
     expect(getGraphQLType(z.literal(false).nullable())).toEqual(GraphQLBoolean)
-  })
-
-  it("should keep default value in extensions", () => {
-    const objectType = z
-      .object({
-        __typename: z.literal("ObjectType").nullish(),
-        foo: z.string().default("foo"),
-      })
-      .optional()
-
-    const objectGqlType = getGraphQLType(objectType) as GraphQLObjectType
-
-    const extensions = objectGqlType.getFields().foo.extensions
-
-    expect(extensions.defaultValue).toEqual(expect.any(Function))
-    expect(extensions.defaultValue?.()).toEqual("foo")
   })
 
   it("should handle custom type", () => {

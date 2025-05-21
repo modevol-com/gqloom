@@ -1,4 +1,10 @@
-import { type GQLoomExtensions, deepMerge, weaverContext } from "@gqloom/core"
+import { deepMerge, weaverContext } from "@gqloom/core"
+import type {
+  GraphQLObjectTypeConfig,
+  GraphQLObjectTypeExtensions,
+  GraphQLTypeResolver,
+  GraphQLUnionTypeConfig,
+} from "graphql"
 import type {
   util,
   $ZodArray,
@@ -7,9 +13,7 @@ import type {
   $ZodDefault,
   $ZodDiscriminatedUnion,
   $ZodEnum,
-  $ZodInterface,
   $ZodLiteral,
-  $ZodLooseShape,
   $ZodNullable,
   $ZodNumber,
   $ZodObject,
@@ -18,13 +22,7 @@ import type {
   $ZodString,
   $ZodType,
   $ZodUnion,
-} from "@zod/core"
-import type {
-  GraphQLObjectTypeConfig,
-  GraphQLObjectTypeExtensions,
-  GraphQLTypeResolver,
-  GraphQLUnionTypeConfig,
-} from "graphql"
+} from "zod/v4/core"
 import { ZodWeaver } from "."
 import { asEnumType, asField, asObjectType, asUnionType } from "./metadata"
 import type {
@@ -173,7 +171,7 @@ export function isZodDiscriminatedUnion(
 }
 
 export function getObjectConfig(
-  schema: $ZodObject<$ZodShape> | $ZodInterface<$ZodLooseShape>
+  schema: $ZodObject<$ZodShape>
 ): Partial<GraphQLObjectTypeConfig<any, any>> {
   const objectConfig = asObjectType.get(schema) as ObjectConfig | undefined
   const interfaces = objectConfig?.interfaces?.map(
@@ -228,20 +226,9 @@ export function getUnionConfig(
 }
 
 export function getFieldConfig(schema: $ZodType): FieldConfig {
-  const fromDefault = (() => {
-    if (isZodDefault(schema)) {
-      return {
-        defaultValue: schema._zod.def.defaultValue,
-      } as GQLoomExtensions
-    }
-  })()
   const config = asField.get(schema) as FieldConfig | undefined
   return {
     description: getDescription(schema),
     ...config,
-    extensions: deepMerge(
-      fromDefault,
-      config?.extensions
-    ) as GraphQLObjectTypeExtensions,
   }
 }

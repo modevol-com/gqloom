@@ -18,7 +18,8 @@
     }
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "check:type": "tsc --noEmit"
   },
   "keywords": [
     "gqloom",
@@ -34,13 +35,12 @@
   "peerDependencies": {
     "@gqloom/core": ">= 0.9.0",
     "graphql": ">= 16.8.0",
-    "zod": ">= 3.24.0"
+    "zod": ">= 3.25.0"
   },
   "files": ["dist"],
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "@zod/core": "^0.5.1",
-    "zod": "4.0.0-beta.20250415T232143"
+    "zod": "3.25.17"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

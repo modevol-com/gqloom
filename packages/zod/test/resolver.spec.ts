@@ -7,7 +7,7 @@ import {
   printSchema,
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
-import { z } from "zod"
+import * as z from "zod/v4"
 import {
   ZodWeaver,
   asUnionType,
