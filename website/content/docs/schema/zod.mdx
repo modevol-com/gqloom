@@ -28,7 +28,6 @@ bun add @gqloom/core zod @gqloom/zod
 In GQLoom, you can directly use Zod Schema as [silk](../silk).
 
 ```ts twoslash
-// @filename: 30.ts
 import * as z from "zod"
 
 const StringScalar = z.string() // GraphQLString
@@ -45,7 +44,6 @@ const IntScalar = z.number().int() // GraphQLInt
 To ensure that `GQLoom` correctly weaves the Zod Schema into the GraphQL Schema, we need to add the `ZodWeaver` from `@gqloom/zod` when using the `weave` function.
 
 ```ts twoslash
-// @filename: 47.ts
 import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import * as z from "zod"
 
@@ -61,7 +59,6 @@ export const schema = weave(ZodWeaver, helloResolver)
 We can define objects using Zod and use them as [silk](../silk) to use:
 
 ```ts twoslash
-// @filename: 63.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -81,7 +78,6 @@ In `GQLoom` we have multiple ways to define names for objects.
 #### Using `__typename` literal
 
 ```ts twoslash
-// @filename: 84.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -95,7 +91,6 @@ export const Cat = z.object({
 In the code above, we used the `__typename` literal to define the name for the object. We also set the `__typename` literal to `nullish`, which means that the `__typename` field is optional, and if it exists, it must be “Cat”.
 
 ```ts twoslash
-// @filename: 97.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -111,7 +106,6 @@ In the code above we are still using the `__typename` literal to define the name
 #### Using `collectNames`
 
 ```ts twoslash
-// @filename: 112.ts
 import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -127,7 +121,6 @@ collectNames({ Cat })
 In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
 ```ts twoslash
-// @filename: 128.ts
 import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -148,7 +141,6 @@ In the code above, we use the `collectNames` function to define the names for th
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 148.ts
 import { asObjectType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -165,7 +157,6 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 165.ts
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -191,7 +182,6 @@ With the `asObjectType` register, we can add more data to the object, such as `d
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 181.ts
 import { asObjectType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -211,7 +201,6 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 211.ts
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -249,7 +238,6 @@ We can also use the asField function to add metadata to a field, such as descrip
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 250.ts
 import { asField, asObjectType } from "@gqloom/zod"
 import { GraphQLInt } from "graphql"
 import * as z from "zod/v4"
@@ -273,7 +261,6 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 273.ts
 import { asField, asObjectType } from "@gqloom/zod/v3"
 import { GraphQLInt } from "graphql"
 import * as z from "zod/v3"
@@ -320,7 +307,6 @@ We can also use the `asObjectType` function to declare interfaces, for example:
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 321.ts
 import * as z from "zod/v4"
 import { asObjectType } from "@gqloom/zod"
 
@@ -346,7 +332,6 @@ const Orange = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 346.ts
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -381,7 +366,6 @@ We can also omit fields by setting `type` to `null` using the `asField` function
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 381.ts
 import { asField } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -396,7 +380,6 @@ const Dog = z.object({
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 396.ts
 import { asField } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -431,7 +414,6 @@ We recommend using `z.discriminatedUnion` to define union types, for example:
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 431.ts
 import { asUnionType } from "@gqloom/zod"
 import { z } from "zod/v4"
 
@@ -458,7 +440,6 @@ const Animal = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 459.ts
 import { asUnionType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -494,7 +475,6 @@ We can also use `z.union` to define union types:
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 495.ts
 import { z } from "zod/v4"
 import { asUnionType, collectNames } from "@gqloom/zod"
 
@@ -522,7 +502,6 @@ collectNames({ Cat, Dog, Animal })
 <Tab value='zod-v3' >
 
 ```ts twoslash
-// @filename: 523.ts
 import { collectNames } from "@gqloom/core"
 import { asUnionType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
@@ -567,7 +546,6 @@ In general, we prefer to use `z.enum` to define enumeration types, for example:
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 568.ts
 import { asEnumType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -589,7 +567,6 @@ export type IFruit = z.infer<typeof Fruit>
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 590.ts
 import { asEnumType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -617,7 +594,6 @@ To accommodate more Zod types, we can extend GQLoom to add more type mappings to
 First we use `ZodWeaver.config` to define the type mapping configuration. Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars](https://the-guild.dev/graphql/scalars) and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
 
 ```ts twoslash
-// @filename: 618.ts
 import {
   GraphQLDateTime,
   GraphQLJSON,
@@ -640,7 +616,6 @@ export const zodWeaverConfig = ZodWeaver.config({
 Configurations are passed into the `weave` function when weaving the GraphQL Schema:
 
 ```ts twoslash
-// @filename: 641.ts
 import {
   GraphQLDateTime,
   GraphQLJSON,

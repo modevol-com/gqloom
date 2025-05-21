@@ -28,7 +28,6 @@ bun add @gqloom/core zod @gqloom/zod
 在 GQLoom 中，可以直接使用 Zod Schema 作为[丝线](../silk)使用：
 
 ```ts twoslash
-// @filename: 30.ts
 import * as z from "zod"
 
 const StringScalar = z.string() // GraphQLString
@@ -45,7 +44,6 @@ const IntScalar = z.number().int() // GraphQLInt
 为了让 `GQLoom` 能正确地将 Zod Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/zod` 的 `ZodWeaver`。
 
 ```ts twoslash
-// @filename: 47.ts
 import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
 import * as z from "zod"
 
@@ -61,7 +59,6 @@ export const schema = weave(ZodWeaver, helloResolver)
 我们可以使用 Zod 定义对象，并将其作为[丝线](../silk)使用：
 
 ```ts twoslash
-// @filename: 63.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -81,7 +78,6 @@ export const Cat = z.object({
 #### 使用 `__typename` 字面量
 
 ```ts twoslash
-// @filename: 84.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -95,7 +91,6 @@ export const Cat = z.object({
 在上面的代码中，我们使用 `__typename` 字面量来为对象定义名称。我们还将 `__typename` 字面量设置为 `nullish`，这意味着 `__typename` 字段是可选的，如果存在，则必须为 "Cat"。
 
 ```ts twoslash
-// @filename: 97.ts
 import * as z from "zod"
 
 export const Cat = z.object({
@@ -111,7 +106,6 @@ export const Cat = z.object({
 #### 使用 `collectNames`
 
 ```ts twoslash
-// @filename: 112.ts
 import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -127,7 +121,6 @@ collectNames({ Cat })
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
 ```ts twoslash
-// @filename: 128.ts
 import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
@@ -148,7 +141,6 @@ export const { Cat } = collectNames({
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 148.ts
 import { asObjectType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -165,7 +157,6 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 165.ts
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -191,7 +182,6 @@ export const Cat = z
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 181.ts
 import { asObjectType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -211,7 +201,6 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 211.ts
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -249,7 +238,6 @@ type Cat {
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 250.ts
 import { asField, asObjectType } from "@gqloom/zod"
 import { GraphQLInt } from "graphql"
 import * as z from "zod/v4"
@@ -273,7 +261,6 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 273.ts
 import { asField, asObjectType } from "@gqloom/zod/v3"
 import { GraphQLInt } from "graphql"
 import * as z from "zod/v3"
@@ -320,7 +307,6 @@ type Cat {
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 321.ts
 import * as z from "zod/v4"
 import { asObjectType } from "@gqloom/zod"
 
@@ -346,7 +332,6 @@ const Orange = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 346.ts
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -381,7 +366,6 @@ const Orange = z
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 381.ts
 import { asField } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -396,7 +380,6 @@ const Dog = z.object({
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 396.ts
 import { asField } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -431,7 +414,6 @@ type Dog {
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 431.ts
 import { asUnionType } from "@gqloom/zod"
 import { z } from "zod/v4"
 
@@ -458,7 +440,6 @@ const Animal = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 459.ts
 import { asUnionType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -494,7 +475,6 @@ const Animal = z
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 495.ts
 import { z } from "zod/v4"
 import { asUnionType, collectNames } from "@gqloom/zod"
 
@@ -522,7 +502,6 @@ collectNames({ Cat, Dog, Animal })
 <Tab value='zod-v3' >
 
 ```ts twoslash
-// @filename: 523.ts
 import { collectNames } from "@gqloom/core"
 import { asUnionType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
@@ -567,7 +546,6 @@ collectNames({ Cat, Dog, Animal })
 <Tab value='zod-v4'>
 
 ```ts twoslash
-// @filename: 568.ts
 import { asEnumType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -589,7 +567,6 @@ export type IFruit = z.infer<typeof Fruit>
 <Tab value='zod-v3'>
 
 ```ts twoslash
-// @filename: 590.ts
 import { asEnumType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -617,7 +594,6 @@ export type IFruit = z.infer<typeof Fruit>
 首先我们使用 `ZodWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
 
 ```ts twoslash
-// @filename: 618.ts
 import {
   GraphQLDateTime,
   GraphQLJSON,
@@ -640,7 +616,6 @@ export const zodWeaverConfig = ZodWeaver.config({
 在编织 GraphQL Schema 时传入配置到 `weave` 函数中：
 
 ```ts twoslash
-// @filename: 641.ts
 import {
   GraphQLDateTime,
   GraphQLJSON,
