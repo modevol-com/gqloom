@@ -376,7 +376,7 @@ describe("FederatedChainResolver.toExecutor", () => {
     })
 
     const executor = userResolver.toExecutor()
-    const result = await executor.query(undefined, undefined)
+    const result = await executor.query()
     expect(result).toBe("foo")
   })
 
@@ -414,7 +414,7 @@ describe("FederatedChainResolver.toExecutor", () => {
       })
 
     const executor = userResolver.toExecutor()
-    await executor.query(undefined, undefined)
+    await executor.query()
     expect(logs).toEqual(["before", "after"])
   })
 
@@ -427,7 +427,7 @@ describe("FederatedChainResolver.toExecutor", () => {
     const executor = userResolver.toExecutor(
       asyncContextProvider.with(useDefaultName.provide(() => "Custom User"))
     )
-    const result = await executor.query(undefined, undefined)
+    const result = await executor.query()
     expect(result).toBe("Custom User")
   })
 })
