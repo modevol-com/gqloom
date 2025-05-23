@@ -471,4 +471,79 @@ describe("executor", () => {
     const allGiraffes = await executor.allGiraffes(nil, nil)
     expect(allGiraffes).toEqual([giraffe])
   })
+
+  describe("AsyncContextProvider.run", () => {
+    it("should execute async function with injected context", async () => {
+      const result = await asyncContextProvider.run(
+        async () => {
+          const name = useDefaultName()
+          return `Hello, ${name}!`
+        },
+        useDefaultName.provide(() => "John")
+      )
+
+      expect(result).toBe("Hello, John!")
+    })
+
+    it("should handle multiple context values", async () => {
+      const useAge = createContext(() => 25)
+
+      const result = await asyncContextProvider.run(
+        async () => {
+          const name = useDefaultName()
+          const age = useAge()
+          return `${name} is ${age} years old`
+        },
+        useDefaultName.provide(() => "Alice"),
+        useAge.provide(() => 30)
+      )
+
+      expect(result).toBe("Alice is 30 years old")
+    })
+
+    it("should handle nested context values", async () => {
+      const usePrefix = createContext(() => "Mr.")
+
+      const result = await asyncContextProvider.run(
+        async () => {
+          const name = useDefaultName()
+          const prefix = usePrefix()
+          return `${prefix} ${name}`
+        },
+        useDefaultName.provide(() => "Smith"),
+        usePrefix.provide(() => "Dr.")
+      )
+
+      expect(result).toBe("Dr. Smith")
+    })
+
+    it("should maintain context isolation between different runs", async () => {
+      const result1 = await asyncContextProvider.run(
+        async () => useDefaultName(),
+        useDefaultName.provide(() => "First")
+      )
+
+      const result2 = await asyncContextProvider.run(
+        async () => useDefaultName(),
+        useDefaultName.provide(() => "Second")
+      )
+
+      expect(result1).toBe("First")
+      expect(result2).toBe("Second")
+    })
+
+    it("should handle async operations in the context", async () => {
+      const useAsyncValue = createContext(async () => "Async Value")
+
+      const result = await asyncContextProvider.run(
+        async () => {
+          const value = await useAsyncValue()
+          return `Got: ${value}`
+        },
+        useAsyncValue.provide(async () => "Custom Async Value")
+      )
+
+      expect(result).toBe("Got: Custom Async Value")
+    })
+  })
 })

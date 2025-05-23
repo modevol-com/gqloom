@@ -236,7 +236,48 @@ export function createMemoization<T>(
 }
 
 export interface AsyncContextProvider extends Middleware {
+  /**
+   * Creates a middleware that injects key-value pairs into the context during resolver execution.
+   * The injected values will be available throughout the entire resolver execution chain.
+   *
+   * @param keyValues - An array of tuples containing a WeakKey and its corresponding value
+   * @returns A middleware function that injects the provided key-value pairs into the context
+   *
+   * @example
+   * ```ts
+   * const executor = resolver.toExecutor(
+   *   asyncContextProvider.with(
+   *     useDefaultName.provide(() => "Default Name")
+   *   )
+   * )
+   * ```
+   */
   with: (...keyValues: [WeakKey, any][]) => Middleware
+
+  /**
+   * Executes an async function with injected context values.
+   * The provided key-value pairs will be available in the context during the function execution.
+   *
+   * @template T - The return type of the async function
+   * @param resolve - The async function to execute
+   * @param keyValues - An array of tuples containing a WeakKey and its corresponding value
+   * @returns A Promise that resolves to the result of the async function
+   *
+   * @example
+   * ```ts
+   * const result = await asyncContextProvider.run(
+   *   async () => {
+   *     const name = useDefaultName()
+   *     return `Hello, ${name}!`
+   *   },
+   *   useDefaultName.provide(() => "John")
+   * )
+   * ```
+   */
+  run: <T>(
+    resolve: () => Promise<T>,
+    ...keyValues: [WeakKey, any][]
+  ) => Promise<T>
 }
 
 const createProvider = (...keyValues: [WeakKey, any][]): Middleware => {
@@ -274,6 +315,19 @@ export const asyncContextProvider: AsyncContextProvider = Object.assign(
     ],
     with: (...keyValues: [WeakKey, any][]) => {
       return createProvider(...keyValues)
+    },
+    run: async <T>(
+      resolve: () => Promise<T>,
+      ...keyValues: [WeakKey, any][]
+    ) => {
+      const store = onlyMemoization()
+      const map = getMemoizationMap(store)
+
+      for (const [key, value] of keyValues) {
+        map.set(key, value)
+      }
+
+      return resolverPayloadStorage.run(store, resolve)
     },
   }
 )
