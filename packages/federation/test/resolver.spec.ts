@@ -7,7 +7,11 @@ import {
   query,
   silk,
 } from "@gqloom/core"
-import { asyncContextProvider, useResolvingFields } from "@gqloom/core/context"
+import {
+  asyncContextProvider,
+  createContext,
+  useResolvingFields,
+} from "@gqloom/core/context"
 import {
   GraphQLInt,
   GraphQLNonNull,
@@ -342,5 +346,88 @@ describe("FederatedChainResolver", () => {
         selectedFields: new Set(["id", "name", "email", "phone"]),
       })
     })
+  })
+})
+
+describe("FederatedChainResolver.toExecutor", () => {
+  interface IUser {
+    id: string
+    name: string
+    email?: string
+  }
+
+  const User = silk<IUser>(
+    new GraphQLObjectType({
+      name: "User",
+      fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        email: { type: GraphQLString },
+      },
+      extensions: {
+        directives: { key: { fields: "id", resolvable: true } },
+      },
+    })
+  )
+
+  it("should work with basic resolver", async () => {
+    const userResolver = resolver.of(User, {
+      query: query(silk(GraphQLString), () => "foo"),
+    })
+
+    const executor = userResolver.toExecutor()
+    const result = await executor.query()
+    expect(result).toBe("foo")
+  })
+
+  it("should work with resolveReference", async () => {
+    const userResolver = resolver
+      .of(User, {
+        query: query(silk(GraphQLString), () => "foo"),
+      })
+      .resolveReference<"id">(({ id }) => ({
+        id,
+        name: `User ${id}`,
+        email: undefined,
+      }))
+
+    const executor = userResolver.toExecutor()
+    const result = await executor.$resolveReference({ id: "1" })
+    expect(result).toEqual({
+      id: "1",
+      name: "User 1",
+      email: undefined,
+    })
+  })
+
+  it("should work with middlewares", async () => {
+    const logs: string[] = []
+    const userResolver = resolver
+      .of(User, {
+        query: query(silk(GraphQLString), () => "foo"),
+      })
+      .use(async (next) => {
+        logs.push("before")
+        const result = await next()
+        logs.push("after")
+        return result
+      })
+
+    const executor = userResolver.toExecutor()
+    await executor.query()
+    expect(logs).toEqual(["before", "after"])
+  })
+
+  it("should work with context", async () => {
+    const useDefaultName = createContext(() => "Default User")
+    const userResolver = resolver.of(User, {
+      query: query(silk(GraphQLString), () => useDefaultName()),
+    })
+
+    const executor = userResolver.toExecutor(
+      asyncContextProvider.with(useDefaultName.provide(() => "Custom User"))
+    )
+    const result = await executor.query()
+    expect(result).toBe("Custom User")
   })
 })
