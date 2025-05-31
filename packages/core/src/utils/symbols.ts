@@ -24,6 +24,6 @@ export const IS_RESOLVER = Symbol.for("gqloom.is-resolver")
 export const CONTEXT_MAP_KEY = Symbol.for("gqloom.context-map")
 
 /**
- * The symbol to set fields to be hidden
+ * Set fields to be hidden
  */
-export const FIELD_HIDDEN = Symbol.for("gqloom.field-hidden")
+export const FIELD_HIDDEN = false
