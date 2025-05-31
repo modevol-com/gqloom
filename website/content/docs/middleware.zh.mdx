@@ -133,7 +133,7 @@ export const zodExceptionFilter: Middleware = (next) => next()
 // @filename: main.ts
 // ---cut---
 import { weave, resolver, query } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 import { outputValidator, zodExceptionFilter } from "./middlewares"
@@ -327,7 +327,7 @@ export function authGuard(role: "admin" | "editor"): Middleware {
 // @filename: main.ts
 // ---cut---
 import { resolver, mutation } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 import { authGuard } from "./middlewares"
 
 const adminResolver = resolver(
@@ -559,7 +559,7 @@ export const outputValidator: Middleware = (next) => next()
 // @filename: main.ts
 // ---cut---
 import { resolver, query } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 import { outputValidator } from "./middlewares"
 
 const helloResolver = resolver({
@@ -611,7 +611,7 @@ export function authGuard(role: "admin" | "editor"): Middleware {
 // @filename: main.ts
 // ---cut---
 import { resolver, mutation } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 import { authGuard } from "./middlewares"
 
 const adminResolver = resolver({

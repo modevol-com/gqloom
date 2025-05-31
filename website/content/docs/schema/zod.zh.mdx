@@ -10,25 +10,6 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 ## 安装
 
-<Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
-<Tab value='zod-v4'>
-
-```sh tab="npm"
-npm i @gqloom/core zod@next @gqloom/zod@next
-```
-```sh tab="pnpm"
-pnpm add @gqloom/core zod@next @gqloom/zod@next
-```
-```sh tab="yarn"
-yarn add @gqloom/core zod@next @gqloom/zod@next
-```
-```sh tab="bun"
-bun add @gqloom/core zod@next @gqloom/zod@next
-```
-
-</Tab>
-<Tab value='zod-v3'>
-
 ```sh tab="npm"
 npm i @gqloom/core zod @gqloom/zod
 ```
@@ -42,15 +23,12 @@ yarn add @gqloom/core zod @gqloom/zod
 bun add @gqloom/core zod @gqloom/zod
 ```
 
-</Tab>
-</Tabs>
-
 ## 定义简单标量
 
 在 GQLoom 中，可以直接使用 Zod Schema 作为[丝线](../silk)使用：
 
 ```ts twoslash
-import { z } from "zod"
+import * as z from "zod"
 
 const StringScalar = z.string() // GraphQLString
 
@@ -67,7 +45,7 @@ const IntScalar = z.number().int() // GraphQLInt
 
 ```ts twoslash
 import { ZodWeaver, weave, resolver, query } from "@gqloom/zod"
-import { z } from "zod"
+import * as z from "zod"
 
 export const helloResolver = resolver({
   hello: query(z.string(), () => "Hello, World!"),
@@ -79,17 +57,16 @@ export const schema = weave(ZodWeaver, helloResolver)
 ## 定义对象
 
 我们可以使用 Zod 定义对象，并将其作为[丝线](../silk)使用：
+
 ```ts twoslash
-import { z } from "zod"
-import { collectNames } from "@gqloom/zod"
+import * as z from "zod"
 
 export const Cat = z.object({
+  __typename: z.literal("Cat").nullish(),
   name: z.string(),
   age: z.number().int(),
   loveFish: z.boolean().nullish(),
 })
-
-collectNames({ Cat })
 ```
 
 ## 名称和更多元数据
@@ -99,8 +76,9 @@ collectNames({ Cat })
 在 `GQLoom` 中，我们有多种方法来为对象定义名称。
 
 #### 使用 `__typename` 字面量
-```ts
-import { z } from "zod"
+
+```ts twoslash
+import * as z from "zod"
 
 export const Cat = z.object({
   __typename: z.literal("Cat").nullish(),
@@ -109,10 +87,11 @@ export const Cat = z.object({
   loveFish: z.boolean().nullish(),
 })
 ```
+
 在上面的代码中，我们使用 `__typename` 字面量来为对象定义名称。我们还将 `__typename` 字面量设置为 `nullish`，这意味着 `__typename` 字段是可选的，如果存在，则必须为 "Cat"。
 
 ```ts twoslash
-import { z } from "zod"
+import * as z from "zod"
 
 export const Cat = z.object({
   __typename: z.literal("Cat"),
@@ -121,12 +100,13 @@ export const Cat = z.object({
   loveFish: z.boolean().nullish(),
 })
 ```
+
 在上面的代码中，我们仍旧使用 `__typename` 字面量来为对象定义名称，但这次我们将 `__typename` 字面量设置为 "Cat"，这意味着 `__typename` 字段是必须的，且必须为 "Cat"，当使用 GraphQL `interface` 和 `union` 时，必填的 `__typename` 将非常有用。
 
 #### 使用 `collectNames`
 
 ```ts twoslash
-import { z } from "zod"
+import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
 export const Cat = z.object({
@@ -141,7 +121,7 @@ collectNames({ Cat })
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
 ```ts twoslash
-import { z } from "zod"
+import * as z from "zod"
 import { collectNames } from "@gqloom/zod"
 
 export const { Cat } = collectNames({
@@ -152,6 +132,7 @@ export const { Cat } = collectNames({
   }),
 })
 ```
+
 在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
 
 #### 使用 `asObjectType`
@@ -159,9 +140,9 @@ export const { Cat } = collectNames({
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
 import { asObjectType } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 export const Cat = z
   .object({
@@ -176,8 +157,8 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import { z } from "zod"
-import { asObjectType } from "@gqloom/zod"
+import { asObjectType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 export const Cat = z
   .object({
@@ -195,14 +176,14 @@ export const Cat = z
 
 ### 添加更多元数据
 
-通过 `asObjectType` 函数，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
+通过 `asObjectType` 注册器，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
 
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
 import { asObjectType } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 export const Cat = z
   .object({
@@ -220,8 +201,8 @@ export const Cat = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import { z } from "zod"
-import { asObjectType } from "@gqloom/zod"
+import { asObjectType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 export const Cat = z
   .object({
@@ -241,6 +222,7 @@ export const Cat = z
 </Tabs>
 
 在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元数据，该元数据将在 GraphQL Schema 中呈现：
+
 ```graphql title="GraphQL Schema"
 """A cute cat"""
 type Cat {
@@ -255,19 +237,18 @@ type Cat {
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import { z } from "zod"
+```ts twoslash
 import { asField, asObjectType } from "@gqloom/zod"
 import { GraphQLInt } from "graphql"
+import * as z from "zod/v4"
 
 export const Cat = z
   .object({
     name: z.string(),
-    age: z
-      .number()
-      .superRefine(
-        asField({ type: GraphQLInt, description: "How old is the cat" })
-      ),
+    age: z.number().register(asField, {
+      type: GraphQLInt,
+      description: "How old is the cat",
+    }),
     loveFish: z.boolean().nullish(),
   })
   .register(asObjectType, {
@@ -277,12 +258,12 @@ export const Cat = z
 ```
 
 </Tab>
-<Tab>
+<Tab value='zod-v3'>
 
 ```ts twoslash
-import { z } from "zod"
-import { asField, asObjectType } from "@gqloom/zod"
+import { asField, asObjectType } from "@gqloom/zod/v3"
 import { GraphQLInt } from "graphql"
+import * as z from "zod/v3"
 
 export const Cat = z
   .object({
@@ -325,8 +306,8 @@ type Cat {
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * z from "zod"
+```ts twoslash
+import * as z from "zod/v4"
 import { asObjectType } from "@gqloom/zod"
 
 const Fruit = z
@@ -351,8 +332,8 @@ const Orange = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import { asObjectType } from "@gqloom/zod"
-import { z } from "zod"
+import { asObjectType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Fruit = z
   .object({
@@ -384,17 +365,14 @@ const Orange = z
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
 import { asField } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 const Dog = z.object({
   __typename: z.literal("Dog").nullish(),
   name: z.string().nullish(),
-  birthday: z
-    .date()
-    .nullish()
-    .register(asField, { type: null }),
+  birthday: z.date().nullish().register(asField, { type: null }),
 })
 ```
 
@@ -402,8 +380,8 @@ const Dog = z.object({
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import { z } from "zod"
-import { asField } from "@gqloom/zod"
+import { asField } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Dog = z.object({
   __typename: z.literal("Dog").nullish(),
@@ -419,6 +397,7 @@ const Dog = z.object({
 </Tabs>
 
 将得到如下 GraphQL Schema：
+
 ```graphql title="GraphQL Schema"
 type Dog {
   name: String
@@ -434,9 +413,9 @@ type Dog {
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import { z } from "zod"
+```ts twoslash
 import { asUnionType } from "@gqloom/zod"
+import { z } from "zod/v4"
 
 const Cat = z.object({
   __typename: z.literal("Cat"),
@@ -461,8 +440,8 @@ const Animal = z
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import { z } from "zod"
-import { asUnionType } from "@gqloom/zod"
+import { asUnionType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Cat = z.object({
   __typename: z.literal("Cat"),
@@ -495,8 +474,8 @@ const Animal = z
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import { z } from "zod"
+```ts twoslash
+import { z } from "zod/v4"
 import { asUnionType, collectNames } from "@gqloom/zod"
 
 const Cat = z.object({
@@ -523,8 +502,9 @@ collectNames({ Cat, Dog, Animal })
 <Tab value='zod-v3' >
 
 ```ts twoslash
-import { z } from "zod"
-import { asUnionType, collectNames } from "@gqloom/zod"
+import { collectNames } from "@gqloom/core"
+import { asUnionType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 const Cat = z.object({
   name: z.string(),
@@ -565,9 +545,9 @@ collectNames({ Cat, Dog, Animal })
 <Tabs groupId='zod-version' items={['zod-v4', 'zod-v3']}>
 <Tab value='zod-v4'>
 
-```ts
-import * as z from "zod"
+```ts twoslash
 import { asEnumType } from "@gqloom/zod"
+import * as z from "zod/v4"
 
 export const Fruit = z
   .enum(["apple", "banana", "orange"])
@@ -587,8 +567,8 @@ export type IFruit = z.infer<typeof Fruit>
 <Tab value='zod-v3'>
 
 ```ts twoslash
-import { z } from "zod"
-import { asEnumType } from "@gqloom/zod"
+import { asEnumType } from "@gqloom/zod/v3"
+import * as z from "zod/v3"
 
 export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
   asEnumType({
@@ -606,34 +586,6 @@ export type IFruit = z.infer<typeof Fruit>
 
 </Tab>
 </Tabs>
-
-#### 使用 z.nativeEnum
-
-我们还可以使用 `z.nativeEnum` 来定义枚举类型，例如：
-
-```ts twoslash
-import { z } from "zod"
-import { asEnumType } from "@gqloom/zod"
-
-enum FruitEnum {
-  apple,
-  banana,
-  orange,
-}
-
-export const Fruit = z.nativeEnum(FruitEnum).superRefine(
-  asEnumType({
-    name: "Fruit",
-    valuesConfig: {
-      apple: { description: "red" },
-      banana: { description: "yellow" },
-      orange: { description: "orange" },
-    },
-  })
-)
-
-export type IFruit = z.infer<typeof Fruit>
-```
 
 ## 自定义类型映射
 

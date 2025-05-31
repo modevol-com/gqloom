@@ -1,8 +1,5 @@
 import {
-  type GQLoomExtensions,
-  type GraphQLSilk,
   SYMBOLS,
-  deepMerge,
   ensureInterfaceType,
   mapValue,
   weave,
@@ -20,53 +17,43 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  type GraphQLObjectTypeConfig,
-  type GraphQLObjectTypeExtensions,
   type GraphQLOutputType,
   GraphQLString,
   GraphQLUnionType,
-  type GraphQLUnionTypeConfig,
   isInterfaceType,
   isNonNullType,
   isObjectType,
 } from "graphql"
-import {
-  type EnumLike,
-  type Schema,
-  ZodArray,
-  ZodBoolean,
-  ZodDate,
-  ZodDefault,
-  ZodDiscriminatedUnion,
-  type ZodDiscriminatedUnionOption,
-  ZodEffects,
-  ZodEnum,
-  ZodLiteral,
-  ZodNativeEnum,
-  ZodNullable,
-  ZodNumber,
-  ZodObject,
-  ZodOptional,
-  type ZodRawShape,
-  type ZodSchema,
-  ZodString,
-  type ZodTypeAny,
-  ZodUnion,
-  type z,
-} from "zod"
-import { getConfig } from "./metadata"
-// import { metadataCollector } from "./metadata-collector"
+import type { ZodTypeAny } from "zod/v3"
+import type { $ZodObject, $ZodShape, $ZodType, $ZodTypeDef } from "zod/v4/core"
+import { asField } from "./metadata"
 import type {
-  EnumConfig,
   FieldConfig,
-  ObjectConfig,
-  TypeOrFieldConfig,
-  UnionConfig,
   ZodWeaverConfig,
   ZodWeaverConfigOptions,
 } from "./types"
-import { ZodIDKinds } from "./utils"
-import { resolveTypeByDiscriminatedUnion } from "./utils"
+import {
+  getEnumConfig,
+  getFieldConfig,
+  getObjectConfig,
+  getUnionConfig,
+  isID,
+  isZodArray,
+  isZodBoolean,
+  isZodDate,
+  isZodDefault,
+  isZodDiscriminatedUnion,
+  isZodEnum,
+  isZodInt,
+  isZodLiteral,
+  isZodNumber,
+  isZodObject,
+  isZodString,
+  isZodType,
+  isZodUnion,
+  resolveTypeByDiscriminatedUnion,
+} from "./utils"
+import { ZodWeaver as ZodWeaverV3 } from "./v3"
 
 export class ZodWeaver {
   public static vendor = "zod"
@@ -75,13 +62,11 @@ export class ZodWeaver {
    * @param schema Zod Schema
    * @returns GraphQL Silk Like Zod Schema
    */
-  public static unravel<TSchema extends Schema>(
-    schema: TSchema
-  ): TSchema & GraphQLSilk<z.output<TSchema>, z.input<TSchema>> {
+  public static unravel<TSchema extends $ZodType>(schema: TSchema): TSchema {
     const config = weaverContext.value?.getConfig<ZodWeaverConfig>("gqloom.zod")
     return Object.assign(schema, {
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
-        ? function (this: Schema) {
+        ? function (this: $ZodType) {
             return weaverContext.useConfig(config, () =>
               ZodWeaver.getGraphQLTypeBySelf.call(this)
             )
@@ -99,73 +84,62 @@ export class ZodWeaver {
     return weave(ZodWeaver, ...inputs)
   }
 
-  protected static toNullableGraphQLType(schema: Schema): GraphQLOutputType {
+  protected static toNullableGraphQLType(schema: $ZodType): GraphQLOutputType {
     const nullable = (ofType: GraphQLOutputType) => {
-      let isNonNull = !schema.isNullable() && !schema.isOptional()
-      if ("coerce" in schema._def && schema._def.coerce === true) {
-        isNonNull = !schema.isOptional()
-      }
-      if (!isNonNull) return ofType
+      if (
+        (["null", "nullable", "optional"] as $ZodTypeDef["type"][]).includes(
+          schema._zod.def.type
+        )
+      )
+        return ofType
       if (isNonNullType(ofType)) return ofType
       return new GraphQLNonNull(ofType)
     }
 
-    const gqlType = ZodWeaver.toGraphQLType(schema)
+    const gqlType = ZodWeaver.toMemoriedGraphQLType(schema)
 
     return nullable(gqlType)
   }
 
-  protected static toGraphQLType(
-    schema: Schema,
-    config?: TypeOrFieldConfig
-  ): GraphQLOutputType {
+  protected static toMemoriedGraphQLType(schema: $ZodType): GraphQLOutputType {
     const existing = weaverContext.getGraphQLType(schema)
     if (existing) return existing
-    const gqlType = ZodWeaver.toGraphQLTypePurely(schema, config)
+    const gqlType = ZodWeaver.toGraphQLType(schema)
     return weaverContext.memoGraphQLType(schema, gqlType)
   }
 
-  protected static toGraphQLTypePurely(
-    schema: Schema,
-    config?: TypeOrFieldConfig
-  ): GraphQLOutputType {
-    const customType = (config as FieldConfig | undefined)?.type
+  protected static toGraphQLType(schema: $ZodType): GraphQLOutputType {
+    const customType = (asField.get(schema) as FieldConfig | undefined)?.type
     if (customType) return customType
 
     const preset = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
     const presetType = preset?.presetGraphQLType?.(schema)
     if (presetType) return presetType
 
-    if (schema instanceof ZodEffects) {
-      config ??= getConfig(schema)
-      return ZodWeaver.toGraphQLType(schema.innerType(), config)
+    if (isZodDefault(schema)) {
+      return ZodWeaver.toMemoriedGraphQLType(schema._zod.def.innerType)
     }
 
-    if (schema instanceof ZodOptional || schema instanceof ZodNullable) {
-      return ZodWeaver.toGraphQLType(schema.unwrap(), config)
-    }
-
-    if (schema instanceof ZodDefault) {
-      return ZodWeaver.toGraphQLType(
-        schema._def.innerType,
-        deepMerge(config, {
-          extensions: { defaultValue: schema._def.defaultValue },
-        })
+    if (isZodArray(schema)) {
+      return new GraphQLList(
+        ZodWeaver.toNullableGraphQLType(schema._zod.def.element)
       )
     }
 
-    if (schema instanceof ZodArray) {
-      return new GraphQLList(ZodWeaver.toNullableGraphQLType(schema.element))
+    if (
+      "innerType" in schema._zod.def &&
+      isZodType(schema._zod.def.innerType)
+    ) {
+      return ZodWeaver.toMemoriedGraphQLType(schema._zod.def.innerType)
     }
 
-    if (schema instanceof ZodString) {
-      if (schema._def.checks.some((ch) => ZodIDKinds.has(ch.kind)))
-        return GraphQLID
+    if (isZodString(schema)) {
+      if (isID(schema)) return GraphQLID
       return GraphQLString
     }
 
-    if (schema instanceof ZodLiteral) {
-      switch (typeof schema.value) {
+    if (isZodLiteral(schema)) {
+      switch (typeof schema._zod.def.values[0]) {
         case "boolean":
           return GraphQLBoolean
         case "number":
@@ -176,57 +150,55 @@ export class ZodWeaver {
       }
     }
 
-    if (schema instanceof ZodNumber) {
-      if (schema.isInt) return GraphQLInt
+    if (isZodNumber(schema)) {
+      if (isZodInt(schema)) return GraphQLInt
       return GraphQLFloat
     }
 
-    if (schema instanceof ZodBoolean) {
+    if (isZodBoolean(schema)) {
       return GraphQLBoolean
     }
 
-    if (schema instanceof ZodDate) {
+    if (isZodDate(schema)) {
       return GraphQLString
     }
 
-    if (schema instanceof ZodObject) {
+    if (isZodObject(schema)) {
       const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
-        ZodWeaver.getObjectConfig(schema, config)
+        getObjectConfig(schema)
 
       return new GraphQLObjectType({
         name,
-        fields: mapValue(schema.shape as ZodRawShape, (field, key) => {
-          if (key.startsWith("__")) return mapValue.SKIP
-          const { type, ...fieldConfig } = ZodWeaver.getFieldConfig(field)
-          if (type === null) return mapValue.SKIP
-          return {
-            type: type ?? ZodWeaver.toNullableGraphQLType(field),
-            ...fieldConfig,
+        fields: mapValue(
+          (schema as $ZodObject)._zod.def.shape,
+          (field, key) => {
+            if (key.startsWith("__")) return mapValue.SKIP
+            const { type, ...fieldConfig } = getFieldConfig(field)
+            if (type === null || type === SYMBOLS.FIELD_HIDDEN)
+              return mapValue.SKIP
+            return {
+              type: type ?? ZodWeaver.toNullableGraphQLType(field),
+              ...fieldConfig,
+            }
           }
-        }),
+        ),
         ...objectConfig,
       })
     }
 
-    if (schema instanceof ZodEnum || schema instanceof ZodNativeEnum) {
-      const { name, valuesConfig, ...enumConfig } = ZodWeaver.getEnumConfig(
-        schema,
-        config
-      )
+    if (isZodEnum(schema)) {
+      const { name, valuesConfig, ...enumConfig } = getEnumConfig(schema)
 
       const values: GraphQLEnumValueConfigMap = {}
 
-      if ("options" in schema) {
-        for (const value of schema.options) {
-          const key = String(value)
-          values[key] = { value, ...valuesConfig?.[key] }
-        }
-      } else {
-        Object.entries(schema.enum as EnumLike).forEach(([key, value]) => {
-          if (typeof schema.enum?.[schema.enum[key]] === "number") return
-          values[key] = { value, ...valuesConfig?.[key] }
-        })
-      }
+      Object.entries(schema._zod.def.entries).forEach(([key, value]) => {
+        if (
+          typeof schema._zod.def.entries?.[schema._zod.def.entries[key]] ===
+          "number"
+        )
+          return
+        values[key] = { value, ...valuesConfig?.[key] }
+      })
 
       if (!name)
         throw new Error(
@@ -240,11 +212,11 @@ export class ZodWeaver {
       })
     }
 
-    if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
-      const { name, ...unionConfig } = ZodWeaver.getUnionConfig(schema, config)
+    if (isZodUnion(schema)) {
+      const { name, ...unionConfig } = getUnionConfig(schema)
 
-      const types = (schema.options as ZodTypeAny[]).map((s) => {
-        const gqlType = ZodWeaver.toGraphQLType(s)
+      const types = (schema._zod.def.options as $ZodType[]).map((s) => {
+        const gqlType = ZodWeaver.toMemoriedGraphQLType(s)
         if (isObjectType(gqlType)) return gqlType
         throw new Error(
           `Union types ${name ?? "(unnamed)"} can only contain objects, but got ${gqlType}`
@@ -257,10 +229,10 @@ export class ZodWeaver {
         )
 
       return new GraphQLUnionType({
-        resolveType:
-          schema instanceof ZodDiscriminatedUnion
-            ? resolveTypeByDiscriminatedUnion(schema)
-            : undefined,
+        // TODO: resolve type
+        resolveType: isZodDiscriminatedUnion(schema)
+          ? resolveTypeByDiscriminatedUnion(schema)
+          : undefined,
         types,
         name,
         ...unionConfig,
@@ -270,107 +242,13 @@ export class ZodWeaver {
     throw new Error(`zod type ${schema.constructor.name} is not supported`)
   }
 
-  protected static getObjectConfig(
-    schema: ZodObject<any>,
-    config?: TypeOrFieldConfig
-  ): Partial<GraphQLObjectTypeConfig<any, any>> {
-    const objectConfig = config as ObjectConfig | undefined
-    const interfaces = objectConfig?.interfaces?.map(
-      ZodWeaver.ensureInterfaceType
-    )
-
-    const name = (() => {
-      if ("__typename" in schema.shape) {
-        let __typename = schema.shape["__typename"]
-        while (
-          __typename instanceof ZodOptional ||
-          __typename instanceof ZodNullable
-        ) {
-          __typename = __typename.unwrap()
-        }
-        if (__typename instanceof ZodLiteral) {
-          return __typename.value as string
-        }
-      }
-      return weaverContext.names.get(schema)
-    })()
-
-    return {
-      name,
-      description: schema.description,
-      ...objectConfig,
-      interfaces,
-      extensions: deepMerge(
-        objectConfig?.extensions
-      ) as GraphQLObjectTypeExtensions,
-    }
-  }
-
-  public static getDiscriminatedUnionOptionName(
-    option: ZodDiscriminatedUnionOption<any> | undefined,
-    config?: TypeOrFieldConfig
-  ): string | undefined {
-    if (option instanceof ZodEffects) {
-      config ??= getConfig(option)
-      return ZodWeaver.getDiscriminatedUnionOptionName(option, config)
-    }
-    const { name } = ZodWeaver.getObjectConfig(option as ZodObject<any>, config)
-    return name
-  }
-
-  protected static ensureInterfaceType(
-    item: GraphQLInterfaceType | ZodObject<any>
+  public static ensureInterfaceType(
+    item: GraphQLInterfaceType | $ZodObject<$ZodShape>
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = ZodWeaver.toGraphQLType(item)
+    const gqlType = ZodWeaver.toMemoriedGraphQLType(item)
 
     return ensureInterfaceType(gqlType)
-  }
-
-  protected static getEnumConfig(
-    schema: ZodEnum<any> | ZodNativeEnum<any>,
-    config?: TypeOrFieldConfig
-  ): EnumConfig {
-    const enumConfig = config as EnumConfig | undefined
-
-    return {
-      name: weaverContext.names.get(schema),
-      description: schema.description,
-      ...enumConfig,
-      extensions: deepMerge(enumConfig?.extensions),
-    }
-  }
-
-  protected static getUnionConfig(
-    schema: ZodDiscriminatedUnion<any, any> | ZodUnion<any>,
-    config?: TypeOrFieldConfig
-  ): Partial<GraphQLUnionTypeConfig<any, any>> {
-    const unionConfig = config as UnionConfig | undefined
-    return {
-      name: weaverContext.names.get(schema),
-      ...unionConfig,
-      description: schema.description,
-      extensions: deepMerge(unionConfig?.extensions),
-    }
-  }
-
-  protected static getFieldConfig(schema: ZodSchema): FieldConfig {
-    const fromDefault = (() => {
-      if (schema instanceof ZodDefault) {
-        return {
-          defaultValue: schema._def.defaultValue,
-        } as GQLoomExtensions
-      }
-    })()
-    const config = getConfig(schema) as FieldConfig | undefined
-    return {
-      description: schema.description,
-      ...config,
-      extensions: deepMerge(
-        fromDefault,
-        config?.extensions
-      ) as GraphQLObjectTypeExtensions,
-    }
   }
 
   /**
@@ -405,11 +283,17 @@ export class ZodWeaver {
       )
   }
 
-  public static getGraphQLType(schema: Schema): GraphQLOutputType {
-    return ZodWeaver.toNullableGraphQLType(schema)
+  public static getGraphQLType(
+    schema: $ZodType | ZodTypeAny
+  ): GraphQLOutputType {
+    if ("_zod" in schema) {
+      return ZodWeaver.toNullableGraphQLType(schema)
+    } else {
+      return ZodWeaverV3.getGraphQLType(schema)
+    }
   }
 
-  protected static getGraphQLTypeBySelf(this: Schema): GraphQLOutputType {
+  protected static getGraphQLTypeBySelf(this: $ZodType): GraphQLOutputType {
     return ZodWeaver.toNullableGraphQLType(this)
   }
 }

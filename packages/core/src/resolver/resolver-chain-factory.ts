@@ -263,7 +263,7 @@ export class FieldChainFactory<
             input: InferInputO<TInput>,
           ][],
       payloads: (ResolverPayload | undefined)[]
-    ) => MayPromise<NonNullable<StandardSchemaV1.InferOutput<TOutput>>[]>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
   ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
     const hasInput = typeof this.options.input !== "undefined"

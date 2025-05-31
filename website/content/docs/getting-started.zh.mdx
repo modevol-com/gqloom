@@ -174,7 +174,7 @@ export const helloResolver = resolver({
 
 ```ts twoslash title="src/resolvers/index.ts"
 import { query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 
 export const helloResolver = resolver({
   hello: query(z.string())
@@ -574,7 +574,7 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 // @filename: resolvers/user.ts
 // ---cut---
 import { mutation, query, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 import { db } from "../providers"
 import { users } from "../schema"
 
@@ -832,7 +832,7 @@ export const userResolver = resolver.of(users, {
 ```ts title="src/resolvers/user.ts"
 import { mutation, query, resolver } from "@gqloom/core"
 import { eq } from "drizzle-orm"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts" // [!code ++]
 import { db } from "../providers"
 import { users } from "../schema"
@@ -1063,7 +1063,7 @@ export const db = drizzle(process.env.DB_FILE_NAME ?? "file:local.db", {
 // ---cut---
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { db } from "../providers"
 import { cats } from "../schema"
 
@@ -1296,7 +1296,7 @@ export const useCurrentUser = createMemoization(async () => {
 // ---cut---
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { cats } from "../schema"
@@ -1480,7 +1480,7 @@ export const catResolver = resolver.of(cats, {
 ```ts title="src/resolvers/cat.ts"
 import { field, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { cats } from "../schema"
@@ -1572,7 +1572,7 @@ export const userResolver = resolver.of(users, {
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle" // [!code ++]
 import { eq } from "drizzle-orm"
-import { z } from "zod"
+import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { users } from "../schema"

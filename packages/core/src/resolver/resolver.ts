@@ -468,7 +468,7 @@ export class ObjectChainResolver<
  * Type for the executor of a resolver
  * @template TFields - The fields or operations to resolve
  */
-type Executor<
+export type Executor<
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
 > = {
   [K in keyof TFields]: TFields[K] extends Loom.Field<

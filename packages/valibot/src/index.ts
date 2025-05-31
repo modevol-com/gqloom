@@ -194,7 +194,8 @@ export class ValibotWeaver {
             const { type, ...fieldConfig } =
               ValibotMetadataCollector.getFieldConfig(field) ?? {}
 
-            if (type === null) return mapValue.SKIP
+            if (type === null || type === SYMBOLS.FIELD_HIDDEN)
+              return mapValue.SKIP
 
             return {
               type:

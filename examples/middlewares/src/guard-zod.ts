@@ -1,5 +1,5 @@
-import { mutation, resolver } from "@gqloom/zod"
-import { z } from "zod"
+import { mutation, resolver } from "@gqloom/core"
+import * as z from "zod"
 import { authGuard } from "./middlewares"
 
 export const AdminResolver = resolver(

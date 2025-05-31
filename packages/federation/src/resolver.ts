@@ -1,6 +1,7 @@
 import {
   ChainResolver,
   EasyDataLoader,
+  type Executor,
   type GraphQLSilk,
   type Loom,
   type LoomObjectType,
@@ -17,11 +18,12 @@ import {
   type ValueOf,
   applyMiddlewares,
   createInputParser,
+  filterMiddlewares,
   getMemoizationMap,
   loom,
   silk,
 } from "@gqloom/core"
-import { GraphQLID } from "graphql"
+import { GraphQLID, type GraphQLObjectTypeExtensions } from "graphql"
 import type { ResolveReferenceExtension } from "."
 import type { DirectiveList } from "./mock-ast"
 
@@ -81,6 +83,9 @@ export class FederatedChainResolver<
     string,
     Loom.FieldOrOperation | typeof SYMBOLS.FIELD_HIDDEN
   >,
+  TRequiredKey extends
+    | keyof StandardSchemaV1.InferOutput<TParent>
+    | undefined = undefined,
 > extends ObjectChainResolver<TParent, TFields> {
   /**
    * A directive decorates part of a GraphQL schema or operation with additional configuration.
@@ -111,18 +116,18 @@ export class FederatedChainResolver<
         NonNullable<StandardSchemaV1.InferOutput<TParent>>,
         TRequiredKey
       >,
-      payload: Pick<ResolverPayload, "root" | "context" | "info"> | undefined
+      payload: Pick<ResolverPayload, "root" | "context" | "info"> | void
     ) => MayPromise<
       NonNullable<StandardSchemaV1.InferOutput<TParent>> | null | undefined
     >
-  ) {
+  ): FederatedChainResolver<TParent, TFields, TRequiredKey> {
     this.meta.options ??= {}
     this.meta.options.extensions ??= {}
     this.meta.options.extensions = {
       ...this.meta.options.extensions,
       [FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE]: resolve,
     }
-    return this
+    return this as any
   }
 
   /**
@@ -155,10 +160,7 @@ export class FederatedChainResolver<
         NonNullable<StandardSchemaV1.InferOutput<TParent>>,
         TRequiredKey
       >[],
-      payloads: (
-        | Pick<ResolverPayload, "root" | "context" | "info">
-        | undefined
-      )[]
+      payloads: (Pick<ResolverPayload, "root" | "context" | "info"> | void)[]
     ) => MayPromise<
       (NonNullable<StandardSchemaV1.InferOutput<TParent>> | null | undefined)[]
     >
@@ -170,9 +172,7 @@ export class FederatedChainResolver<
             NonNullable<StandardSchemaV1.InferOutput<TParent>>,
             TRequiredKey
           >,
-          payload:
-            | Pick<ResolverPayload, "root" | "context" | "info">
-            | undefined,
+          payload: Pick<ResolverPayload, "root" | "context" | "info"> | void,
         ],
         any
       >((args) => {
@@ -204,12 +204,10 @@ export class FederatedChainResolver<
   public static addResolveReference(middlewares: Middleware[]) {
     const field = FederatedChainResolver.referenceField
     return (parent: LoomObjectType): LoomObjectType => {
-      if (
-        FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE in parent.extensions
-      ) {
-        const resolve = parent.extensions[
-          FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE
-        ] as (source: any, payload: ResolverPayload) => MayPromise<any>
+      const resolve = FederatedChainResolver.getResolveReference(
+        parent.extensions
+      )
+      if (resolve) {
         const apollo: ResolveReferenceExtension<any, any>["apollo"] = {
           subgraph: {
             resolveReference: (root, context, info) => {
@@ -241,6 +239,74 @@ export class FederatedChainResolver<
       }
       return parent
     }
+  }
+
+  protected static getResolveReference(
+    extensions?: Readonly<GraphQLObjectTypeExtensions<any, any>> | null
+  ):
+    | ((
+        source: any,
+        payload: Pick<ResolverPayload, "root" | "context" | "info"> | void
+      ) => MayPromise<any>)
+    | undefined {
+    if (
+      extensions &&
+      FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE in extensions
+    ) {
+      return extensions[FederatedChainResolver.EXTENSION_RESOLVE_REFERENCE] as (
+        source: any,
+        payload: Pick<ResolverPayload, "root" | "context" | "info"> | void
+      ) => MayPromise<any>
+    }
+  }
+
+  public toExecutor(
+    ...middlewares: Middleware[]
+  ): TRequiredKey extends undefined
+    ? Executor<TFields>
+    : Executor<TFields> & {
+        $resolveReference: (
+          source: Pick<
+            NonNullable<StandardSchemaV1.InferOutput<TParent>>,
+            NonNullable<TRequiredKey>
+          >,
+          payload: Pick<ResolverPayload, "root" | "context" | "info"> | void
+        ) => MayPromise<
+          NonNullable<StandardSchemaV1.InferOutput<TParent>> | null | undefined
+        >
+      } {
+    const executor = super.toExecutor(...middlewares)
+    const resolveReference = FederatedChainResolver.getResolveReference(
+      this.meta.options?.extensions
+    )
+    if (resolveReference) {
+      const mids = filterMiddlewares(
+        "resolveReference",
+        middlewares,
+        this.meta.options?.middlewares
+      )
+      Object.assign(executor, {
+        $resolveReference: (
+          root: any,
+          payload: Pick<ResolverPayload, "root" | "context" | "info"> | void
+        ) => {
+          const field = FederatedChainResolver.referenceField
+          const payloadFull = { args: {}, field, ...payload } as ResolverPayload
+          return applyMiddlewares(
+            {
+              operation: "resolveReference",
+              outputSilk: field["~meta"].output,
+              parent: undefined,
+              payload: payloadFull,
+              parseInput: createInputParser(field["~meta"].input, undefined),
+            },
+            () => resolveReference(root, payload),
+            mids
+          )
+        },
+      })
+    }
+    return executor as any
   }
 
   protected static referenceField: Loom.Field<any, any, any, any> = loom.field(

@@ -4,6 +4,9 @@ import {
   type Loom,
   type SchemaWeaver,
   collectNames,
+  field,
+  query,
+  resolver,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -20,19 +23,15 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
-import * as z3 from "zod/v3"
-import * as z from "zod/v4"
+import { type Schema, z } from "zod/v3"
 import {
   ZodWeaver,
   asEnumType,
   asField,
   asObjectType,
   asUnionType,
-  field,
-  query,
-  resolver,
-} from "../src"
-import { resolveTypeByDiscriminatedUnion } from "../src/utils"
+} from "../../src/v3"
+import { resolveTypeByDiscriminatedUnion } from "../../src/v3/utils"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -57,7 +56,7 @@ describe("ZodWeaver", () => {
 
     expect(getGraphQLType(z.number().nullable())).toEqual(GraphQLFloat)
 
-    expect(getGraphQLType(z.int().nullable())).toEqual(GraphQLInt)
+    expect(getGraphQLType(z.number().int().nullable())).toEqual(GraphQLInt)
 
     expect(getGraphQLType(z.boolean().default(false).nullable())).toEqual(
       GraphQLBoolean
@@ -65,64 +64,74 @@ describe("ZodWeaver", () => {
 
     expect(getGraphQLType(z.date().nullable())).toEqual(GraphQLString)
 
-    expect(getGraphQLType(z.cuid().nullable())).toEqual(GraphQLID)
-    expect(getGraphQLType(z.cuid2().nullable())).toEqual(GraphQLID)
-    expect(getGraphQLType(z.ulid().nullable())).toEqual(GraphQLID)
-    expect(getGraphQLType(z.uuid().nullable())).toEqual(GraphQLID)
+    expect(
+      getGraphQLType(
+        z
+          .string()
+          .cuid()
+          .nullable()
+          .superRefine(() => void 0)
+      )
+    ).toEqual(GraphQLID)
+    expect(getGraphQLType(z.string().cuid2().nullable())).toEqual(GraphQLID)
+    expect(getGraphQLType(z.string().ulid().nullable())).toEqual(GraphQLID)
+    expect(getGraphQLType(z.string().uuid().nullable())).toEqual(GraphQLID)
 
-    expect(getGraphQLType(z.email().nullable())).toEqual(GraphQLString)
+    expect(getGraphQLType(z.string().email().nullable())).toEqual(GraphQLString)
     expect(getGraphQLType(z.literal("").nullable())).toEqual(GraphQLString)
     expect(getGraphQLType(z.literal(0).nullable())).toEqual(GraphQLFloat)
     expect(getGraphQLType(z.literal(false).nullable())).toEqual(GraphQLBoolean)
   })
 
+  it("should keep default value in extensions", () => {
+    const objectType = z
+      .object({
+        __typename: z.literal("ObjectType").nullish(),
+        foo: z.string().default("foo"),
+      })
+      .optional()
+
+    const objectGqlType = getGraphQLType(objectType) as GraphQLObjectType
+
+    const extensions = objectGqlType.getFields().foo.extensions
+
+    expect(extensions.defaultValue).toEqual(expect.any(Function))
+    expect(extensions.defaultValue?.()).toEqual("foo")
+  })
+
   it("should handle custom type", () => {
     expect(
       getGraphQLType(
-        z.date().optional().register(asField, { type: GraphQLDate })
+        z
+          .date()
+          .optional()
+          .superRefine(asField({ type: GraphQLDate }))
       )
     ).toEqual(GraphQLDate)
   })
 
   it("should handle hidden field", () => {
-    const Dog1 = z.object({
+    const Dog = z.object({
       __typename: z.literal("Dog").nullish(),
       name: z.string().optional(),
-      birthday: z.date().optional().register(asField, { type: null }),
+      birthday: z
+        .date()
+        .optional()
+        .superRefine(asField({ type: null })),
     })
 
-    expect(printZodSilk(Dog1)).toMatchInlineSnapshot(`
+    expect(printZodSilk(Dog)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }"
     `)
 
-    const r1 = resolver.of(Dog1, {
-      dog: query(Dog1, () => ({})),
+    const r = resolver.of(Dog, {
+      dog: query(Dog, () => ({})),
       birthday: field.hidden,
     })
 
-    expect(printResolver(r1)).toMatchInlineSnapshot(`
-      "type Dog {
-        name: String
-      }
-
-      type Query {
-        dog: Dog!
-      }"
-    `)
-
-    const Dog2 = z.object({
-      __typename: z.literal("Dog").nullish(),
-      name: z.string().optional(),
-      birthday: z.date().optional().register(asField, { type: field.hidden }),
-    })
-
-    const r2 = resolver.of(Dog2, {
-      dog: query(Dog2, () => ({})),
-    })
-
-    expect(printResolver(r2)).toMatchInlineSnapshot(`
+    expect(printResolver(r)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }
@@ -150,8 +159,7 @@ describe("ZodWeaver", () => {
     const schema1 = ZodWeaver.weave(r1, config)
 
     const zSilk = ZodWeaver.useConfig(config)
-    const zDog = zSilk(Dog)
-    const r2 = resolver({ dog: query(zDog).resolve(() => ({})) })
+    const r2 = resolver({ dog: query(zSilk(Dog), () => ({})) })
     const schema2 = ZodWeaver.weave(r2)
 
     expect(printSchema(schema2)).toEqual(printSchema(schema1))
@@ -205,7 +213,7 @@ describe("ZodWeaver", () => {
         age: z.number(),
         loveFish: z.boolean().optional(),
       })
-      .register(asObjectType, { name: "Cat" })
+      .superRefine(asObjectType({ name: "Cat" }))
 
     const Cat3 = z
       .object({
@@ -213,7 +221,7 @@ describe("ZodWeaver", () => {
         age: z.number(),
         loveFish: z.boolean().optional(),
       })
-      .register(asObjectType, { name: "Cat" })
+      .superRefine(asObjectType("Cat"))
 
     const Cat = z.object({
       __typename: z.literal("Cat").nullish(),
@@ -239,18 +247,69 @@ describe("ZodWeaver", () => {
     `)
   })
 
+  it("should handle coerce", () => {
+    const Input = z.object({
+      __typename: z.literal("Input").nullish(),
+      coerceNumber: z.coerce.number(),
+      coerceNumberNullish: z.coerce.number().nullish(),
+    })
+    const Cat = z.object({
+      __typename: z.literal("Cat").nullish(),
+      name: z.string(),
+      birthday: z.coerce.date(),
+    })
+
+    expect(printZodSilk(Input)).toMatchInlineSnapshot(`
+      "type Input {
+        coerceNumber: Float!
+        coerceNumberNullish: Float
+      }"
+    `)
+
+    expect(printZodSilk(Cat)).toMatchInlineSnapshot(`
+      "type Cat {
+        name: String!
+        birthday: String!
+      }"
+    `)
+  })
+
   it("should handle enum", () => {
     const fruitZ = z
       .enum(["apple", "banana", "orange"])
+      .superRefine(
+        asEnumType({
+          name: "Fruit",
+          valuesConfig: {
+            apple: { description: "red" },
+            banana: { description: "yellow" },
+            orange: { description: "orange" },
+          },
+        })
+      )
       .describe("Some fruits you might like")
-      .register(asEnumType, {
-        name: "Fruit",
-        valuesConfig: {
-          apple: { description: "red" },
-          banana: { description: "yellow" },
-          orange: { description: "orange" },
-        },
-      })
+
+    enum Fruit {
+      apple = 0,
+      banana = 1,
+      orange = 2,
+    }
+
+    const fruitN = z
+      .nativeEnum(Fruit)
+      .describe("Some fruits you might like")
+      .superRefine(
+        asEnumType({
+          name: "Fruit",
+          valuesConfig: {
+            apple: { description: "red" },
+            banana: { description: "yellow" },
+            orange: { description: "orange" },
+          },
+        })
+      )
+
+    expect(printZodSilk(fruitN)).toEqual(printZodSilk(fruitZ))
 
     expect(printZodSilk(fruitZ)).toMatchInlineSnapshot(`
       """"Some fruits you might like"""
@@ -284,7 +343,7 @@ describe("ZodWeaver", () => {
         color: z.string(),
         prize: z.number(),
       })
-      .register(asObjectType, { interfaces: [Fruit] })
+      .superRefine(asObjectType({ interfaces: [Fruit] }))
 
     const r = resolver({
       orange: query(Orange, () => 0 as any),
@@ -368,7 +427,7 @@ describe("ZodWeaver", () => {
 
     const Animal = z
       .discriminatedUnion("__typename", [Cat, Dog])
-      .register(asUnionType, { name: "Animal" })
+      .superRefine(asUnionType("Animal"))
 
     const r = resolver({
       animal: query(Animal, () => 0 as any),
@@ -399,21 +458,6 @@ describe("ZodWeaver", () => {
       resolveTypeBase(data, {} as any, {} as any, {} as any)
     expect(resolveType({ __typename: "Cat", name: "", age: 6 })).toEqual("Cat")
     expect(resolveType({ __typename: "Dog", name: "", age: 6 })).toEqual("Dog")
-  })
-
-  it("should handle v3", () => {
-    const z3Dog = z3.object({
-      __typename: z3.literal("Dog"),
-      name: z3.string(),
-      birthday: z3.string(),
-    })
-
-    expect(printZodSilk(z3Dog)).toMatchInlineSnapshot(`
-      "type Dog {
-        name: String!
-        birthday: String!
-      }"
-    `)
   })
 
   describe("should avoid duplicate", () => {
@@ -527,7 +571,7 @@ describe("ZodWeaver", () => {
           resolve: ({ data }) => data.map((d) => ({ ...d, __typename: null })),
         }),
         mustDog: query(
-          Dog.required().register(asObjectType, { name: "DogRequired" }),
+          Dog.required().superRefine(asObjectType("DogRequired")),
           {
             input: { data: DataInput },
             resolve: ({ data }) => ({
@@ -560,17 +604,20 @@ describe("ZodWeaver", () => {
           mustDog(data: DataInput!): DogRequired!
         }
 
+        """Does the dog love fish?"""
         input DogInput {
           name: String!
           birthday: String
         }
 
+        """Does the dog love fish?"""
         type DogRequired {
           name: String!
           birthday: String!
         }
 
         input DataInput {
+          """Does the dog love fish?"""
           dog: DogInput!
         }"
       `)
@@ -579,7 +626,7 @@ describe("ZodWeaver", () => {
     it("should avoid duplicate enum", () => {
       const Fruit = z
         .enum(["apple", "banana", "orange"])
-        .register(asEnumType, { name: "Fruit" })
+        .superRefine(asEnumType("Fruit"))
       const r1 = resolver({
         fruit: query(Fruit.optional(), () => "apple" as const),
         fruits: query(z.array(Fruit.optional()), () => []),
@@ -613,14 +660,14 @@ describe("ZodWeaver", () => {
           color: z.string().optional(),
           flavor: z.string(),
         })
-        .register(asObjectType, { interfaces: [Fruit] })
+        .superRefine(asObjectType({ interfaces: [Fruit] }))
 
       const Apple = z
         .object({
           color: z.string().optional(),
           flavor: z.string().optional(),
         })
-        .register(asObjectType, { name: "Apple", interfaces: [Fruit] })
+        .superRefine(asObjectType({ name: "Apple", interfaces: [Fruit] }))
 
       const r1 = resolver({
         apple: query(Apple.optional(), () => ({ flavor: "" })),
@@ -665,9 +712,7 @@ describe("ZodWeaver", () => {
         __typename: z.literal("Orange").nullish(),
         color: z.string(),
       })
-      const Fruit = z
-        .union([Apple, Orange])
-        .register(asUnionType, { name: "Fruit" })
+      const Fruit = z.union([Apple, Orange]).superRefine(asUnionType("Fruit"))
 
       const r1 = resolver({
         fruit: query(Fruit.optional(), () => ({ flavor: "" })),
@@ -698,7 +743,7 @@ describe("ZodWeaver", () => {
   })
 })
 
-function printZodSilk(schema: Parameters<typeof getGraphQLType>[0]): string {
+function printZodSilk(schema: Schema): string {
   let gqlType = getGraphQLType(schema)
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)

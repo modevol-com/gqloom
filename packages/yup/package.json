@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/yup",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Create GraphQL schema and resolvers easily using using Yup!",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,7 +18,8 @@
     }
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "check:type": "tsc --noEmit"
   },
   "files": ["dist"],
   "keywords": [
