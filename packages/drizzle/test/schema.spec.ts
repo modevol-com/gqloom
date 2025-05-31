@@ -1,4 +1,11 @@
-import { getGraphQLType, query, resolver, silk, weave } from "@gqloom/core"
+import {
+  field,
+  getGraphQLType,
+  query,
+  resolver,
+  silk,
+  weave,
+} from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { pgTable } from "drizzle-orm/pg-core"
 import * as pg from "drizzle-orm/pg-core"
@@ -288,6 +295,7 @@ describe("drizzleSilk", () => {
         id: pg.serial().primaryKey(),
         name: pg.text(),
         hidden: pg.text(),
+        hidden2: pg.text(),
         getter: pg.text(),
       }),
       {
@@ -295,6 +303,7 @@ describe("drizzleSilk", () => {
         fields: {
           name: { description: "name of the foo" },
           hidden: { type: null },
+          hidden2: { type: field.hidden },
           getter: { type: () => silk.getType(v.date()) },
         },
       }

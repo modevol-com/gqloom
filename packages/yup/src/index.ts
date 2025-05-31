@@ -151,7 +151,11 @@ export class YupWeaver {
             if (key.startsWith("__")) return mapValue.SKIP
             const fieldSchema = YupWeaver.ensureSchema(fieldSchemaOrigin)
             const fieldDesc = fieldSchema.describe()
-            if (fieldDesc.meta?.asField?.type === null) return mapValue.SKIP
+            if (
+              fieldDesc.meta?.asField?.type === null ||
+              fieldDesc.meta?.asField?.type === SYMBOLS.FIELD_HIDDEN
+            )
+              return mapValue.SKIP
             const { type: _, ...rest } = fieldDesc.meta?.asField ?? {}
             return {
               extensions: deepMerge(

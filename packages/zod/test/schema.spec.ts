@@ -85,24 +85,44 @@ describe("ZodWeaver", () => {
   })
 
   it("should handle hidden field", () => {
-    const Dog = z.object({
+    const Dog1 = z.object({
       __typename: z.literal("Dog").nullish(),
       name: z.string().optional(),
       birthday: z.date().optional().register(asField, { type: null }),
     })
 
-    expect(printZodSilk(Dog)).toMatchInlineSnapshot(`
+    expect(printZodSilk(Dog1)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }"
     `)
 
-    const r = resolver.of(Dog, {
-      dog: query(Dog, () => ({})),
+    const r1 = resolver.of(Dog1, {
+      dog: query(Dog1, () => ({})),
       birthday: field.hidden,
     })
 
-    expect(printResolver(r)).toMatchInlineSnapshot(`
+    expect(printResolver(r1)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }
+
+      type Query {
+        dog: Dog!
+      }"
+    `)
+
+    const Dog2 = z.object({
+      __typename: z.literal("Dog").nullish(),
+      name: z.string().optional(),
+      birthday: z.date().optional().register(asField, { type: field.hidden }),
+    })
+
+    const r2 = resolver.of(Dog2, {
+      dog: query(Dog2, () => ({})),
+    })
+
+    expect(printResolver(r2)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }

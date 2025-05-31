@@ -132,24 +132,43 @@ describe("ValibotWeaver", () => {
   })
 
   it("should handle hidden field", () => {
-    const Dog = v.object({
+    const Dog1 = v.object({
       __typename: v.nullish(v.literal("Dog")),
       name: v.optional(v.string()),
       birthday: v.pipe(v.optional(v.date()), asField({ type: null })),
     })
 
-    expect(print(Dog)).toMatchInlineSnapshot(`
+    expect(print(Dog1)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }"
     `)
 
-    const r = resolver.of(Dog, {
-      dog: query(Dog, () => ({})),
-      birthday: field.hidden,
+    const r = resolver.of(Dog1, {
+      dog: query(Dog1, () => ({})),
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }
+
+      type Query {
+        dog: Dog!
+      }"
+    `)
+
+    const Dog2 = v.object({
+      __typename: v.nullish(v.literal("Dog")),
+      name: v.optional(v.string()),
+      birthday: v.pipe(v.optional(v.date()), asField({ type: field.hidden })),
+    })
+
+    const r2 = resolver.of(Dog2, {
+      dog: query(Dog2, () => ({})),
+    })
+
+    expect(printResolver(r2)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }

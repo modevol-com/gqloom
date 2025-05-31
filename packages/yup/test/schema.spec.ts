@@ -96,25 +96,46 @@ describe("YupWeaver", () => {
   })
 
   it("should handle hidden field", () => {
-    const Dog = yupSilk(
+    const Dog1 = yupSilk(
       object({
         name: string(),
         birthday: date().meta({ asField: { type: null } }),
       }).label("Dog")
     )
 
-    expect(printYupSilk(Dog)).toMatchInlineSnapshot(`
+    expect(printYupSilk(Dog1)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }"
     `)
 
-    const r = resolver.of(Dog, {
-      dog: query(Dog, () => ({})),
+    const r1 = resolver.of(Dog1, {
+      dog: query(Dog1, () => ({})),
       birthday: field.hidden,
     })
 
-    expect(printResolver(r)).toMatchInlineSnapshot(`
+    expect(printResolver(r1)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }
+
+      type Query {
+        dog: Dog
+      }"
+    `)
+
+    const Dog2 = yupSilk(
+      object({
+        name: string(),
+        birthday: date().meta({ asField: { type: field.hidden } }),
+      }).label("Dog")
+    )
+
+    const r2 = resolver.of(Dog2, {
+      dog: query(Dog2, () => ({})),
+    })
+
+    expect(printResolver(r2)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }
