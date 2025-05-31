@@ -45,7 +45,7 @@ describe("helper", () => {
     it("should handle empty values", () => {
       const columns: Column[] = []
       const values: unknown[][] = []
-      const result = inArrayMultiple(columns, values)
+      const result = inArrayMultiple(columns, values, {})
       expect(result).toEqual(sql`FALSE`)
     })
   })
@@ -94,10 +94,10 @@ describe("helper", () => {
 
 describe("getSelectedColumns", () => {
   const selectedColumns = new Set<string>()
-  const r = resolver.of(sqliteTables.user, {
-    users: query(sqliteTables.user.$list()).resolve((_input, payload) => {
+  const r = resolver.of(sqliteTables.users, {
+    users: query(sqliteTables.users.$list()).resolve((_input, payload) => {
       for (const column of Object.keys(
-        getSelectedColumns(sqliteTables.user, payload)
+        getSelectedColumns(sqliteTables.users, payload)
       )) {
         selectedColumns.add(column)
       }
