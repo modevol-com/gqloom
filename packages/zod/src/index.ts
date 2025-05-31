@@ -174,7 +174,8 @@ export class ZodWeaver {
           (field, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
             const { type, ...fieldConfig } = getFieldConfig(field)
-            if (type === null) return mapValue.SKIP
+            if (type === null || type === SYMBOLS.FIELD_HIDDEN)
+              return mapValue.SKIP
             return {
               type: type ?? ZodWeaver.toNullableGraphQLType(field),
               ...fieldConfig,

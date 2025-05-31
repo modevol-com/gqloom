@@ -1,4 +1,4 @@
-import { deepMerge, weaverContext } from "@gqloom/core"
+import { type SYMBOLS, deepMerge, weaverContext } from "@gqloom/core"
 import type {
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfig,
@@ -168,7 +168,12 @@ export class ValibotMetadataCollector {
 }
 export interface FieldConfig
   extends Partial<Omit<GraphQLFieldConfig<any, any>, "type">> {
-  type?: GraphQLOutputType | (() => GraphQLOutputType) | undefined | null
+  type?:
+    | GraphQLOutputType
+    | (() => GraphQLOutputType)
+    | undefined
+    | null
+    | typeof SYMBOLS.FIELD_HIDDEN
 }
 
 /**

@@ -67,8 +67,9 @@ export interface DrizzleSilkConfig<TTable extends Table>
            */
           type?:
             | GraphQLOutputType
+            | typeof SYMBOLS.FIELD_HIDDEN
             | null
-            | (() => GraphQLOutputType | null)
+            | (() => GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN | null)
             | undefined
         })
       | undefined
