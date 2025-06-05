@@ -55,6 +55,16 @@ export interface CallableInputParser<
    * Parse the input and return the result
    */
   getResult(): Promise<InferInputO<TSchema>>
+
+  /**
+   * Set the result's value of parsing
+   */
+  setResult(value: InferInputO<TSchema>): void
+
+  /**
+   * Clear the result of parsing, the parser will run again to get the result.
+   */
+  clearResult(): void
 }
 
 export function createInputParser<
@@ -75,6 +85,12 @@ export function createInputParser<
   })
   Object.defineProperty(parse, "getResult", {
     value: async () => getStandardValue(await parse()),
+  })
+  Object.defineProperty(parse, "setResult", {
+    value: (value: InferInputO<TSchema>) => (result = { value }),
+  })
+  Object.defineProperty(parse, "clearResult", {
+    value: () => (result = undefined),
   })
 
   return parse as unknown as CallableInputParser<TSchema>

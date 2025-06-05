@@ -158,6 +158,23 @@ describe("CallableInputParser", () => {
     expect(parseTime).toBe(1)
   })
 
+  it("should be able to set result", async () => {
+    const parseInput = createInputParser(
+      { count: silk(GraphQLInt) },
+      { count: 1 }
+    )
+    await parseInput()
+    expect(parseInput.result).toEqual({ value: { count: 1 } })
+    parseInput.setResult({ count: 2 })
+    expect(parseInput.result).toEqual({ value: { count: 2 } })
+    await parseInput()
+    expect(parseInput.result).toEqual({ value: { count: 2 } })
+
+    parseInput.result = { value: { count: 3 } }
+    await parseInput()
+    expect(parseInput.result).toEqual({ value: { count: 3 } })
+  })
+
   it("should be able to clear cache", async () => {
     let parseTime = 0
     const parseInput = createInputParser(
@@ -182,6 +199,10 @@ describe("CallableInputParser", () => {
     parseInput.result = undefined
     await parseInput()
     expect(parseTime).toBe(3)
+
+    parseInput.clearResult()
+    await parseInput()
+    expect(parseTime).toBe(4)
   })
 })
 
