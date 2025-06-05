@@ -8,10 +8,10 @@ icon: Fence
 
 ## 定义中间件
 
-中间件是一个函数，它将在调用时被注入 `options` 对象作为参数，`options` 包含以下字段：
+中间件是一个函数，它将在调用时被注入 `options` 对象作为参数，`options` 包含以下属性：
   - `outputSilk`: 输出丝线，包含了当前正在解析字段的输出类型；
   - `parent`: 当前字段的父节点，相当于 `useResolverPayload().root`；
-  - `parseInput`: 用于获取当前字段输入的函数；
+  - `parseInput`: 用于获取或修改当前字段的输入；
   - `type`: 当前字段的类型，其值为 `query`, `mutation`, `subscription` 或 `field`；
   - `next`: 用于调用下一个中间件的函数；
 
@@ -454,9 +454,9 @@ export const postsResolver = resolver({
       })
     )
     .use(async ({ next, parseInput }) => { // [!code hl]
-      const inputResult = await parseInput.getResult() // [!code hl]
-      inputResult.authorId = (await useUser()).id // [!code hl]
-      parseInput.result = { value: inputResult } // [!code hl]
+      const result = await parseInput.getResult() // [!code hl]
+      result.authorId = (await useUser()).id // [!code hl]
+      parseInput.setResult(result) // [!code hl]
       return next() // [!code hl]
     })
     .resolve(({ title, content, authorId }) => {
@@ -503,9 +503,9 @@ export const postsResolver = resolver({
       })
     )
     .use(async ({ next, parseInput }) => { // [!code hl]
-      const inputResult = await parseInput.getResult() // [!code hl]
-      inputResult.authorId = (await useUser()).id // [!code hl]
-      parseInput.result = { value: inputResult } // [!code hl]
+      const result = await parseInput.getResult() // [!code hl]
+      result.authorId = (await useUser()).id // [!code hl]
+      parseInput.setResult(result) // [!code hl]
       return next() // [!code hl]
     })
     .resolve(({ title, content, authorId }) => {

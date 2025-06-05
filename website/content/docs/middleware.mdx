@@ -11,7 +11,7 @@ Middleware is a function that intervenes in the processing flow of a parsed func
 Middleware is a function that will be injected with an `options` object as a parameter when called. The `options` object contains the following fields:
   - `outputSilk`: output silk, which includes the output type of the field currently being parsed;
   - `parent`: the parent node of the current field, equivalent to `useResolverPayload().root`;
-  - `parseInput`: a function used to obtain the input of the current field;
+  - `parseInput`: a function used to obtain or modify the input of the current field;
   - `type`: the type of the current field, whose value can be `query`, `mutation`, `subscription`, or `field`;
   - `next`: a function used to call the next middleware;
 
@@ -454,9 +454,9 @@ export const postsResolver = resolver({
       })
     )
     .use(async ({ next, parseInput }) => { // [!code hl]
-      const inputResult = await parseInput.getResult() // [!code hl]
-      inputResult.authorId = (await useUser()).id // [!code hl]
-      parseInput.result = { value: inputResult } // [!code hl]
+      const result = await parseInput.getResult() // [!code hl]
+      result.authorId = (await useUser()).id // [!code hl]
+      parseInput.setResult(result) // [!code hl]
       return next() // [!code hl]
     })
     .resolve(({ title, content, authorId }) => {
@@ -503,9 +503,9 @@ export const postsResolver = resolver({
       })
     )
     .use(async ({ next, parseInput }) => { // [!code hl]
-      const inputResult = await parseInput.getResult() // [!code hl]
-      inputResult.authorId = (await useUser()).id // [!code hl]
-      parseInput.result = { value: inputResult } // [!code hl]
+      const result = await parseInput.getResult() // [!code hl]
+      result.authorId = (await useUser()).id // [!code hl]
+      parseInput.setResult(result) // [!code hl]
       return next() // [!code hl]
     })
     .resolve(({ title, content, authorId }) => {
