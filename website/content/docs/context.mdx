@@ -11,11 +11,15 @@ A common use case is to store the identity of the current visitor in the context
 
 In `GQLoom`, we access the context through the `useContext()` function.
 
-GQLoom's `useContext` function is designed to reference [React](https://zh-hans.react.dev/)'s `useContext` function.
+GQLoom's `useContext` function is designed to reference [React](https://react.dev/)'s `useContext` function.
 You can call the `useContext` function from anywhere within the [resolver](./resolver) to access the context of the current request without explicitly passing the `context` function.
 Behind the scenes, `useContext` uses Node.js' [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to pass the context implicitly.
 
 ### Enabling Context
+
+<Callout>
+For environments that do not support `AsyncLocalStorage`, such as browsers or Cloudflare Workers, you can use the `context` property in [resolverPayload](./context#access-to-resolver-payload-directly).
+</Callout>
 
 We enable context by passing `asyncContextProvider` to the `weave` function. `asyncContextProvider` is essentially a global middleware.
 
@@ -291,7 +295,7 @@ In addition to the `useContext` function, GQLoom provides the `useResolverPayloa
 
 - field: the definition of the field being resolved by the current resolver;
 
-### Direct Access to Resolver Payload
+### Access to Resolver Payload directly
 
 For environments that do not provide `AsyncLocalStorage`, such as browsers or Cloudflare Workers, we can directly access the resolver payload within resolver functions and middleware.
 

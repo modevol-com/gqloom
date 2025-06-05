@@ -17,6 +17,10 @@ GQLoom 的 `useContext` 函数的设计参考了 [React](https://zh-hans.react.d
 
 ### 启用上下文
 
+<Callout>
+对于不支持 `AsyncLocalStorage` 的环境，如浏览器或 Cloudflare Workers，可以使用 [resolverPayload](./context#直接访问解析器负载) 中的 `context` 属性。
+</Callout>
+
 我们通过在 weave 函数中传入 `asyncContextProvider` 来启用上下文。`asyncContextProvider` 实际上是一个全局中间件。
 
 ```ts
