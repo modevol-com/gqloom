@@ -634,18 +634,18 @@ export class QueryFactoryWithResolve<
   implements Loom.Query<TOutput, TInput>
 {
   public get "~meta"(): Loom.Query<TOutput, TInput>["~meta"] {
-    return loom.query(this.output, this.options)["~meta"]
+    return loom.query(this.outputSilk, this.options)["~meta"]
   }
 
   public constructor(
-    protected output: TOutput,
+    protected outputSilk: TOutput,
     protected readonly options: QueryOptions<TOutput, TInput>
   ) {
     super(options)
   }
 
   protected clone(options?: Partial<typeof this.options> | undefined): this {
-    return new QueryFactoryWithResolve(this.output, {
+    return new QueryFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
     }) as this
@@ -654,9 +654,24 @@ export class QueryFactoryWithResolve<
   public input<TInputNew extends GraphQLSilk<TInputO>>(
     input: TInputNew
   ): QueryFactoryWithResolve<TInputO, TOutput, TInputNew> {
-    return new QueryFactoryWithResolve(this.output, {
+    return new QueryFactoryWithResolve(this.outputSilk, {
       ...this.options,
       input,
+    } as QueryOptions<any, any>)
+  }
+
+  public output<TOutputNew extends GraphQLSilk>(
+    output: TOutputNew,
+    transform: (
+      output: StandardSchemaV1.InferOutput<TOutput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutputNew>>
+  ): QueryFactoryWithResolve<TInputO, TOutputNew, TInput> {
+    return new QueryFactoryWithResolve(output, {
+      ...this.options,
+      middlewares: [
+        ...(this.options.middlewares ?? []),
+        async (next) => transform(await next()),
+      ],
     } as QueryOptions<any, any>)
   }
 }
@@ -670,18 +685,18 @@ export class MutationFactoryWithResolve<
   implements Loom.Mutation<TOutput, TInput>
 {
   public get "~meta"(): Loom.Mutation<TOutput, TInput>["~meta"] {
-    return loom.mutation(this.output, this.options)["~meta"]
+    return loom.mutation(this.outputSilk, this.options)["~meta"]
   }
 
   public constructor(
-    protected output: TOutput,
+    protected outputSilk: TOutput,
     protected readonly options: MutationOptions<TOutput, TInput>
   ) {
     super(options)
   }
 
   protected clone(options?: Partial<typeof this.options> | undefined): this {
-    return new MutationFactoryWithResolve(this.output, {
+    return new MutationFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
     }) as this
@@ -690,9 +705,24 @@ export class MutationFactoryWithResolve<
   public input<TInputNew extends GraphQLSilk<TInputO>>(
     input: TInputNew
   ): MutationFactoryWithResolve<TInputO, TOutput, TInputNew> {
-    return new MutationFactoryWithResolve(this.output, {
+    return new MutationFactoryWithResolve(this.outputSilk, {
       ...this.options,
       input,
+    } as MutationOptions<any, any>)
+  }
+
+  public output<TOutputNew extends GraphQLSilk>(
+    output: TOutputNew,
+    transform: (
+      output: StandardSchemaV1.InferOutput<TOutput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutputNew>>
+  ): MutationFactoryWithResolve<TInputO, TOutputNew, TInput> {
+    return new MutationFactoryWithResolve(output, {
+      ...this.options,
+      middlewares: [
+        ...(this.options.middlewares ?? []),
+        async (next) => transform(await next()),
+      ],
     } as MutationOptions<any, any>)
   }
 }
@@ -709,11 +739,11 @@ export class FieldFactoryWithResolve<
     undefined,
     string[] | undefined
   >["~meta"] {
-    return loom.field(this.output, this.options as any)["~meta"]
+    return loom.field(this.outputSilk, this.options as any)["~meta"]
   }
 
   public constructor(
-    protected output: TOutput,
+    protected outputSilk: TOutput,
     protected readonly options: FieldOptions<
       TParent,
       TOutput,
@@ -725,9 +755,24 @@ export class FieldFactoryWithResolve<
   }
 
   protected clone(options?: Partial<typeof this.options> | undefined): this {
-    return new FieldFactoryWithResolve(this.output, {
+    return new FieldFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
     }) as this
+  }
+
+  public output<TOutputNew extends GraphQLSilk>(
+    output: TOutputNew,
+    transform: (
+      output: StandardSchemaV1.InferOutput<TOutput>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutputNew>>
+  ): FieldFactoryWithResolve<TParent, TOutputNew> {
+    return new FieldFactoryWithResolve(output, {
+      ...this.options,
+      middlewares: [
+        ...(this.options.middlewares ?? []),
+        async (next) => transform(await next()),
+      ],
+    } as FieldOptions<any, any, any, any>)
   }
 }
