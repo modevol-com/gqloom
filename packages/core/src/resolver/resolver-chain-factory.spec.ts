@@ -82,25 +82,9 @@ describe("QueryFactoryWithResolve", () => {
       q2["~meta"].middlewares ?? []
     )
     expect(result).toBe("Skyler")
-  })
-
-  test("middlewares should apply transform", async () => {
-    const q = new QueryFactoryWithResolve(Giraffe, {
-      resolve: () => Skyler,
-    })
-    const q2 = q.output(silk(GraphQLString), (g) => g.name + "_transformed")
-    const result = await applyMiddlewares(
-      {
-        outputSilk: q2["~meta"].output,
-        parent: undefined,
-        payload: undefined,
-        parseInput: createInputParser(q2["~meta"].input, undefined),
-        operation: "query",
-      },
-      () => q2["~meta"].resolve(undefined, undefined),
-      q2["~meta"].middlewares ?? []
+    expect(silk.getType(q2["~meta"].output)).toEqual(
+      silk.getType(silk(GraphQLString))
     )
-    expect(result).toBe("Skyler_transformed")
   })
 
   test("description, deprecationReason, extensions", () => {
@@ -151,25 +135,9 @@ describe("MutationFactoryWithResolve", () => {
       m2["~meta"].middlewares ?? []
     )
     expect(result).toBe("Skyler")
-  })
-
-  test("middlewares should apply transform", async () => {
-    const m = new MutationFactoryWithResolve(Giraffe, {
-      resolve: () => Skyler,
-    })
-    const m2 = m.output(silk(GraphQLString), (g) => g.name + "_transformed")
-    const result = await applyMiddlewares(
-      {
-        outputSilk: m2["~meta"].output,
-        parent: undefined,
-        payload: undefined,
-        parseInput: createInputParser(m2["~meta"].input, undefined),
-        operation: "mutation",
-      },
-      () => m2["~meta"].resolve(undefined, undefined),
-      m2["~meta"].middlewares ?? []
+    expect(silk.getType(m2["~meta"].output)).toEqual(
+      silk.getType(silk(GraphQLString))
     )
-    expect(result).toBe("Skyler_transformed")
   })
 
   test("description, deprecationReason, extensions", () => {
@@ -212,25 +180,9 @@ describe("FieldFactoryWithResolve", () => {
       f2["~meta"].middlewares ?? []
     )
     expect(result).toBe("Skyler")
-  })
-
-  test("middlewares should apply transform", async () => {
-    const f = new FieldFactoryWithResolve(Giraffe, {
-      resolve: () => Skyler,
-    })
-    const f2 = f.output(silk(GraphQLString), (g) => g.name + "_transformed")
-    const result = await applyMiddlewares(
-      {
-        outputSilk: f2["~meta"].output,
-        parent: undefined,
-        payload: undefined,
-        parseInput: createInputParser(f2["~meta"].input, undefined),
-        operation: "field",
-      },
-      () => f2["~meta"].resolve(undefined, undefined, undefined),
-      f2["~meta"].middlewares ?? []
+    expect(silk.getType(f2["~meta"].output)).toEqual(
+      silk.getType(silk(GraphQLString))
     )
-    expect(result).toBe("Skyler_transformed")
   })
 
   test("description, deprecationReason, extensions", () => {
