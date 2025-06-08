@@ -1,4 +1,4 @@
-import { mapValue, pascalCase, weaverContext } from "@gqloom/core"
+import { SYMBOLS, mapValue, pascalCase, weaverContext } from "@gqloom/core"
 import {
   type Column,
   type InferInsertModel,
@@ -20,7 +20,7 @@ import {
 } from "graphql"
 import { getValue, isColumnVisible } from "../helper"
 import { DrizzleWeaver } from "../index"
-import type { DrizzleResolverFactoryOptions } from "../types"
+import type { DrizzleResolverFactoryOptions, DrizzleSilkConfig } from "../types"
 
 export class DrizzleInputFactory<TTable extends Table> {
   public constructor(
@@ -193,12 +193,14 @@ export class DrizzleInputFactory<TTable extends Table> {
     const existing = weaverContext.getNamedType(name) as GraphQLEnumType
     if (existing != null) return existing
 
-    const fieldsConfig = getValue(tableConfig?.fields) ?? {}
     return weaverContext.memoNamedType(
       new GraphQLEnumType({
         name,
         values: mapValue(getTableColumns(this.table), (_, columnName) => {
-          const columnConfig = fieldsConfig[columnName]
+          const columnConfig = DrizzleInputFactory.getColumnConfig(
+            tableConfig,
+            columnName
+          )
           return { value: columnName, description: columnConfig?.description }
         }),
       })
@@ -214,7 +216,6 @@ export class DrizzleInputFactory<TTable extends Table> {
     if (existing != null) return existing
 
     const columns = getTableColumns(this.table)
-    const fieldsConfig = getValue(tableConfig?.fields) ?? {}
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
@@ -225,8 +226,12 @@ export class DrizzleInputFactory<TTable extends Table> {
           ) {
             return mapValue.SKIP
           }
+
+          const fieldConfig = DrizzleInputFactory.getColumnConfig(
+            tableConfig,
+            columnName
+          )
           const type = (() => {
-            const fieldConfig = fieldsConfig[columnName]
             const t =
               getValue(fieldConfig?.type) || DrizzleWeaver.getColumnType(column)
             if (column.hasDefault) return t
@@ -234,8 +239,7 @@ export class DrizzleInputFactory<TTable extends Table> {
               return new GraphQLNonNull(t)
             return t
           })()
-          const columnConfig = fieldsConfig[columnName]
-          return { type, description: columnConfig?.description }
+          return { type, description: fieldConfig?.description }
         }),
       })
     )
@@ -296,7 +300,6 @@ export class DrizzleInputFactory<TTable extends Table> {
     if (existing != null) return existing
 
     const columns = getTableColumns(this.table)
-    const fieldsConfig = getValue(tableConfig?.fields) ?? {}
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
@@ -307,10 +310,12 @@ export class DrizzleInputFactory<TTable extends Table> {
           ) {
             return mapValue.SKIP
           }
+          const columnConfig = DrizzleInputFactory.getColumnConfig(
+            tableConfig,
+            columnName
+          )
           const type =
-            getValue(fieldsConfig[columnName]?.type) ||
-            DrizzleWeaver.getColumnType(column)
-          const columnConfig = fieldsConfig[columnName]
+            getValue(columnConfig?.type) || DrizzleWeaver.getColumnType(column)
           return { type, description: columnConfig?.description }
         }),
       })
@@ -326,7 +331,6 @@ export class DrizzleInputFactory<TTable extends Table> {
     if (existing != null) return existing
 
     const columns = getTableColumns(this.table)
-    const fieldsConfig = getValue(tableConfig?.fields) ?? {}
     const filterFields: Record<
       string,
       GraphQLFieldConfig<any, any, any>
@@ -337,7 +341,10 @@ export class DrizzleInputFactory<TTable extends Table> {
       ) {
         return mapValue.SKIP
       }
-      const columnConfig = fieldsConfig[columnName]
+      const columnConfig = DrizzleInputFactory.getColumnConfig(
+        tableConfig,
+        columnName
+      )
       return {
         type: DrizzleInputFactory.columnFilters(column),
         description: columnConfig?.description,
@@ -411,13 +418,15 @@ export class DrizzleInputFactory<TTable extends Table> {
     if (existing != null) return existing
 
     const columns = getTableColumns(this.table)
-    const fieldsConfig = getValue(tableConfig?.fields) ?? {}
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
         fields: mapValue(columns, (_, columnName) => {
           const type = DrizzleInputFactory.orderDirection()
-          const columnConfig = fieldsConfig[columnName]
+          const columnConfig = DrizzleInputFactory.getColumnConfig(
+            tableConfig,
+            columnName
+          )
           return { type, description: columnConfig?.description }
         }),
       })
@@ -453,6 +462,15 @@ export class DrizzleInputFactory<TTable extends Table> {
         },
       })
     )
+  }
+
+  protected static getColumnConfig(
+    config: DrizzleSilkConfig<any> | undefined,
+    columnName: string
+  ) {
+    const configFields = getValue(config?.fields) ?? {}
+    if (configFields[columnName] === SYMBOLS.FIELD_HIDDEN) return undefined
+    return configFields[columnName]
   }
 }
 

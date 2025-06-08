@@ -6,6 +6,7 @@ import {
   silk,
   weave,
 } from "@gqloom/core"
+import type { StandardSchemaV1 } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { pgTable } from "drizzle-orm/pg-core"
 import * as pg from "drizzle-orm/pg-core"
@@ -20,7 +21,7 @@ import {
   printType,
 } from "graphql"
 import * as v from "valibot"
-import { describe, expect, it } from "vitest"
+import { describe, expect, expectTypeOf, it } from "vitest"
 import { DrizzleWeaver, drizzleSilk } from "../src"
 
 describe("drizzleSilk", () => {
@@ -74,6 +75,75 @@ describe("drizzleSilk", () => {
         interval: String
         array: [String!]
         enum: Mood
+      }"
+    `)
+  })
+
+  it("should infer type", () => {
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        id: pg.serial().primaryKey(),
+        name: pg.text(),
+        password: pg.text(),
+      }),
+      {
+        fields: {
+          name: { description: "name of the foo" },
+          password: field.hidden,
+        },
+      }
+    )
+
+    type IFoo = StandardSchemaV1.InferOutput<typeof Foo>
+
+    type ExpectedFoo =
+      | { name: string | null; id: number }
+      | (Partial<{
+          name: string | null
+          id: number
+          password: string | null
+        }> & { __selective_foo_brand__: never })
+
+    expectTypeOf<IFoo>().toMatchTypeOf<ExpectedFoo>()
+
+    expectTypeOf<{
+      name: string | null
+      id: number
+      password: string
+    }>().toMatchTypeOf<IFoo>()
+
+    expectTypeOf<{
+      name: string | null
+      id: number
+    }>().toMatchTypeOf<IFoo>()
+
+    expectTypeOf({ name: "Bob", id: 1 }).toMatchTypeOf<IFoo>()
+
+    expectTypeOf<{
+      __selective_foo_brand__: never
+    }>().toMatchTypeOf<IFoo>()
+  })
+
+  it("should hide fields", () => {
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        id: pg.serial().primaryKey(),
+        name: pg.text(),
+        password: pg.text(),
+      }),
+      {
+        fields: { password: field.hidden },
+      }
+    )
+
+    expect(
+      printType(
+        (getGraphQLType(Foo) as GraphQLNonNull<GraphQLObjectType>).ofType
+      )
+    ).toMatchInlineSnapshot(`
+      "type FooItem {
+        id: Int!
+        name: String
       }"
     `)
   })

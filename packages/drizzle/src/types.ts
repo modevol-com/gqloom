@@ -72,11 +72,26 @@ export interface DrizzleSilkConfig<TTable extends Table>
             | (() => GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN | null)
             | undefined
         })
+      | typeof SYMBOLS.FIELD_HIDDEN
       | undefined
   }>
 }
 
+export type HideFields<TConfig extends DrizzleSilkConfig<any>> = UnwrapGetter<
+  TConfig["fields"]
+> extends Record<string | number | symbol, any>
+  ? {
+      [K in keyof UnwrapGetter<TConfig["fields"]>]: UnwrapGetter<
+        TConfig["fields"]
+      >[K] extends typeof SYMBOLS.FIELD_HIDDEN
+        ? K
+        : never
+    }[keyof UnwrapGetter<TConfig["fields"]>]
+  : never
+
 export type ValueOrGetter<T> = T | (() => T)
+
+export type UnwrapGetter<T> = T extends (...args: any) => infer R ? R : T
 
 export type SelectedTableColumns<TTable extends Table> = Partial<
   TTable["_"]["columns"]
@@ -87,8 +102,11 @@ export type SelectedTableColumns<TTable extends Table> = Partial<
   [K in `__selective_${TTable["_"]["name"]}_brand__`]: SQL<never>
 }
 
-export type SelectiveTable<TTable extends Table> =
-  | InferSelectModel<TTable>
+export type SelectiveTable<
+  TTable extends Table,
+  THideFields extends string | number | symbol = never,
+> =
+  | Omit<InferSelectModel<TTable>, THideFields>
   | (Partial<InferSelectModel<TTable>> & {
       /**
        * This is a brand for the selected fields, used to indicate that the fields are selected by GraphQL Query.
