@@ -36,6 +36,7 @@ import type {
   DrizzleSilkConfig,
   DrizzleWeaverConfig,
   DrizzleWeaverConfigOptions,
+  HideFields,
   SelectiveTable,
 } from "./types"
 
@@ -118,6 +119,7 @@ export class DrizzleWeaver {
           ...config,
           fields: mapValue(columns, (column, columnName) => {
             const fieldConfig = fieldsConfig[columnName]
+            if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return mapValue.SKIP
             const fieldType = getValue(fieldConfig?.type)
             let type =
               fieldType === undefined
@@ -216,16 +218,24 @@ export class DrizzleWeaver {
  * @param table drizzle table
  * @returns GraphQL Silk Like drizzle table
  */
-export function drizzleSilk<TTable extends Table>(
-  table: TTable,
-  config?: DrizzleSilkConfig<TTable>
-): TableSilk<TTable> {
+export function drizzleSilk<
+  TTable extends Table,
+  const TConfig extends DrizzleSilkConfig<TTable>,
+>(table: TTable, config?: TConfig): TableSilk<TTable, HideFields<TConfig>> {
   if (config) DrizzleWeaver.silkConfigs.set(table, config)
   return DrizzleWeaver.unravel(table)
 }
 
-export type TableSilk<TTable extends Table> = TTable &
-  SilkVariant<GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>>
+export type TableSilk<
+  TTable extends Table,
+  THideFields extends string | number | symbol = never,
+> = TTable &
+  SilkVariant<
+    GraphQLSilk<
+      SelectiveTable<TTable, THideFields>,
+      SelectiveTable<TTable, THideFields>
+    >
+  >
 
 export type SilkVariant<TSilk extends GraphQLSilk<unknown, unknown>> =
   TSilk extends GraphQLSilk<infer TOutput, infer TInput>
