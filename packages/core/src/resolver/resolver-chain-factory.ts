@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import {
-  EasyDataLoader,
+  LoomDataLoader,
   type MayPromise,
   type Middleware,
   type RequireKeys,
@@ -268,7 +268,7 @@ export class FieldChainFactory<
     if (!this.options?.output) throw new Error("Output is required")
     const hasInput = typeof this.options.input !== "undefined"
     const initLoader = () =>
-      new EasyDataLoader<
+      new LoomDataLoader<
         [
           parent: InferParent<TParent, TDependencies>,
           input: InferInputO<TInput>,

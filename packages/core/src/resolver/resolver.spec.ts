@@ -81,7 +81,9 @@ describe("resolver", () => {
           return new Date().getFullYear() - giraffe.birthday.getFullYear()
         }),
 
-      self: field(Giraffe).load((giraffes) => {
+      self: field(Giraffe).load(async (giraffes) => {
+        await new Promise((resolve) => setTimeout(resolve, 6))
+        await new Promise((resolve) => setTimeout(resolve, 3))
         return giraffes
       }),
     })
@@ -262,7 +264,7 @@ describe("resolver", () => {
     })
 
     it("should load related field", async () => {
-      expect(await giraffeExecutor.self(Skyler, nil, nil)).toEqual(Skyler)
+      expect(await giraffeExecutor.self(Skyler)).toEqual(Skyler)
     })
 
     it("should hidden fields", () => {

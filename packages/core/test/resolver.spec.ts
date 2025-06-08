@@ -745,12 +745,13 @@ describe("dataLoader by field.load", () => {
       .input({
         limit: silk(new GraphQLNonNull(GraphQLInt)),
       })
-      .load((inputs) => {
+      .load(async (inputs) => {
+        await new Promise((resolve) => setTimeout(resolve, 6))
         logs.push({ inputs })
-        return inputs.map(
-          ([post, { limit }]) =>
-            postCommentsMap.get(post.id)?.slice(0, limit) ?? []
-        )
+        await new Promise((resolve) => setTimeout(resolve, 3))
+        return inputs.map(([post, { limit }]) => {
+          return postCommentsMap.get(post.id)?.slice(0, limit) ?? []
+        })
       }),
   })
 

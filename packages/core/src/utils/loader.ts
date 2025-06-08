@@ -2,9 +2,11 @@ export type BatchLoadFn<TKey, TData> = (
   keys: TKey[]
 ) => Promise<(TData | Error)[]>
 
-export class EasyDataLoader<TKey, TData> {
-  protected queue: TKey[]
-  protected cache: Map<TKey, Promise<TData>>
+/**
+ * GraphQL Loom built-in data loader.
+ */
+export class LoomDataLoader<TKey, TData> {
+  protected results: Map<TKey, Promise<TData>>
   protected resolvers: Map<
     TKey,
     [
@@ -13,49 +15,47 @@ export class EasyDataLoader<TKey, TData> {
     ]
   >
   public constructor(protected readonly batchLoadFn: BatchLoadFn<TKey, TData>) {
-    this.queue = []
-    this.cache = new Map()
+    this.results = new Map()
     this.resolvers = new Map()
   }
 
+  /**
+   * Load data for a given key.
+   * @param key - The key to load data for.
+   * @returns A promise that resolves to the loaded data.
+   */
   public load(key: TKey): Promise<TData> {
-    const existing = this.cache.get(key)
+    const existing = this.results.get(key)
     if (existing) return existing
 
     const promise = new Promise<TData>((resolve, reject) => {
-      this.queue.push(key)
       this.resolvers.set(key, [resolve, reject])
       this.nextTickBatchLoad()
     })
-    this.cache.set(key, promise)
+    this.results.set(key, promise)
     return promise
   }
 
+  /**
+   * Clear the cache and reset the loader.
+   */
   public clear(): void {
-    this.queue = []
-    this.cache = new Map()
+    this.results = new Map()
     this.resolvers = new Map()
-  }
-
-  public clearByKey(key: TKey): void {
-    this.queue = this.queue.filter((k) => k !== key)
-    this.cache.delete(key)
-    this.resolvers.delete(key)
   }
 
   protected async executeBatchLoad(): Promise<void> {
-    if (this.queue.length === 0) return
+    if (this.resolvers.size === 0) return
 
-    const [keys, resolvers] = [this.queue, this.resolvers]
-    this.queue = []
+    const resolvers = this.resolvers
     this.resolvers = new Map()
+    const keys = Array.from(resolvers.keys())
 
     try {
       const list = await this.batchLoadFn(keys)
       for (let i = 0; i < list.length; i++) {
         const data = list[i]
-        const resolve = resolvers.get(keys[i])?.[0]
-        const reject = resolvers.get(keys[i])?.[1]
+        const [resolve, reject] = resolvers.get(keys[i]) ?? []
         if (data instanceof Error) {
           reject?.(data)
         } else {
@@ -72,13 +72,26 @@ export class EasyDataLoader<TKey, TData> {
 
   protected nextTickPromise?: Promise<void>
   protected nextTickBatchLoad(): Promise<void> {
-    this.nextTickPromise ??= EasyDataLoader.nextTick()
-      .then(() => this.executeBatchLoad())
-      .finally(() => (this.nextTickPromise = undefined))
+    const load = async () => {
+      try {
+        while (this.resolvers.size > 0) {
+          await LoomDataLoader.nextTick()
+          await this.executeBatchLoad()
+        }
+      } finally {
+        this.nextTickPromise = undefined
+      }
+    }
+    this.nextTickPromise ??= load()
     return this.nextTickPromise
   }
 
   public static nextTick(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve))
   }
+}
+
+export {
+  /** Alias for LoomDataLoader */
+  LoomDataLoader as EasyDataLoader,
 }
