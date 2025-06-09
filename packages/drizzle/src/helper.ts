@@ -137,3 +137,16 @@ export function getSelectedColumns<TTable extends Table>(
     return mapValue.SKIP
   }) as SelectedTableColumns<TTable>
 }
+
+/**
+ * Get the queried columns from the resolver payload
+ * @param table - The table to get the queried columns from
+ * @param payload - The resolver payload
+ * @returns The queried columns
+ */
+export function getQueriedColumns(
+  table: Table,
+  payload: ResolverPayload | (ResolverPayload | undefined)[] | undefined
+): Partial<Record<string, true>> {
+  return mapValue(getSelectedColumns(table, payload), () => true)
+}

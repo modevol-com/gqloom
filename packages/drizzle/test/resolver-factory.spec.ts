@@ -721,6 +721,10 @@ describe.concurrent("DrizzleResolverFactory", () => {
         "GQLoom-Drizzle Error: Relation users.nonExistentRelation not found in drizzle instance"
       )
     })
+
+    it.todo("should handle limit and offset")
+    it.todo("should handle orderBy")
+    it.todo("should handle where")
   })
 
   describe("relationField with multiple field relations", () => {
