@@ -730,16 +730,21 @@ export class MutationFactoryWithResolve<
 export class FieldFactoryWithResolve<
   TParent extends GraphQLSilk,
   TOutput extends GraphQLSilk,
+  TInputO = never,
+  TInput extends GraphQLSilk<TInputO> | void = void,
 > extends BaseChainFactory<
-  Loom.Field<TParent, TOutput, undefined, string[] | undefined>
+  Loom.Field<TParent, TOutput, TInput, string[] | undefined>
 > {
   public get "~meta"(): Loom.Field<
     TParent,
     TOutput,
-    any,
+    TInput,
     string[] | undefined
   >["~meta"] {
-    return loom.field(this.outputSilk, this.options as any)["~meta"]
+    return loom.field<TParent, TOutput, any, string[] | undefined>(
+      this.outputSilk,
+      this.options as any
+    )["~meta"] as any
   }
 
   public constructor(
@@ -747,7 +752,7 @@ export class FieldFactoryWithResolve<
     protected readonly options: FieldOptions<
       TParent,
       TOutput,
-      any,
+      TInput,
       string[] | undefined
     >
   ) {
@@ -761,12 +766,21 @@ export class FieldFactoryWithResolve<
     }) as this
   }
 
+  public input<TInputNew extends GraphQLSilk<TInputO>>(
+    input: TInputNew
+  ): FieldFactoryWithResolve<TParent, TOutput, TInputO, TInputNew> {
+    return new FieldFactoryWithResolve(this.outputSilk, {
+      ...this.options,
+      input,
+    } as FieldOptions<any, any, any, any>)
+  }
+
   public output<TOutputNew extends GraphQLSilk>(
     output: TOutputNew,
     transform: (
       output: StandardSchemaV1.InferOutput<TOutput>
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutputNew>>
-  ): FieldFactoryWithResolve<TParent, TOutputNew> {
+  ): FieldFactoryWithResolve<TParent, TOutputNew, TInputO, TInput> {
     return new FieldFactoryWithResolve(output, {
       ...this.options,
       middlewares: [
