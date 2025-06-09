@@ -1,5 +1,4 @@
 import { weave } from "@gqloom/core"
-import { eq } from "drizzle-orm"
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql"
 import {
   type GraphQLSchema,
@@ -9,13 +8,14 @@ import {
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { drizzleResolverFactory } from "../src"
-import * as schema from "./schema/sqlite"
-import { post, user } from "./schema/sqlite"
+import type * as schema from "./schema/sqlite"
+import { posts, users } from "./schema/sqlite"
+import { relations } from "./schema/sqlite-relations"
 
 const pathToDB = new URL("./schema/sqlite-1.db", import.meta.url)
 
 describe("resolver by sqlite", () => {
-  let db: LibSQLDatabase<typeof schema>
+  let db: LibSQLDatabase<typeof schema, typeof relations>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
@@ -43,30 +43,30 @@ describe("resolver by sqlite", () => {
 
   beforeAll(async () => {
     db = drizzle({
-      schema,
+      relations,
       connection: { url: `file:${pathToDB.pathname}` },
       logger: { logQuery: (query) => logs.push(query) },
     })
-    const userFactory = drizzleResolverFactory(db, "user")
-    const postFactory = drizzleResolverFactory(db, "post")
+    const userFactory = drizzleResolverFactory(db, users)
+    const postFactory = drizzleResolverFactory(db, posts)
     gqlSchema = weave(userFactory.resolver(), postFactory.resolver())
     yoga = createYoga({ schema: gqlSchema })
 
     await db
-      .insert(user)
+      .insert(users)
       .values([{ name: "Tom" }, { name: "Tony" }, { name: "Taylor" }])
-    const Tom = await db.query.user.findFirst({
-      where: eq(user.name, "Tom"),
+    const Tom = await db.query.users.findFirst({
+      where: { name: "Tom" },
     })
-    const Tony = await db.query.user.findFirst({
-      where: eq(user.name, "Tony"),
+    const Tony = await db.query.users.findFirst({
+      where: { name: "Tony" },
     })
-    const Taylor = await db.query.user.findFirst({
-      where: eq(user.name, "Taylor"),
+    const Taylor = await db.query.users.findFirst({
+      where: { name: "Taylor" },
     })
     if (!Tom || !Tony || !Taylor) throw new Error("User not found")
 
-    await db.insert(post).values([
+    await db.insert(posts).values([
       { title: "Post 1", authorId: Tom.id },
       { title: "Post 2", authorId: Tony.id },
       { title: "Post 3", authorId: Taylor.id },
@@ -79,8 +79,8 @@ describe("resolver by sqlite", () => {
   })
 
   afterAll(async () => {
-    await db.delete(post)
-    await db.delete(user)
+    await db.delete(posts)
+    await db.delete(users)
   })
 
   it("should weave GraphQL schema correctly", async () => {
@@ -92,8 +92,8 @@ describe("resolver by sqlite", () => {
   describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-      query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
-        user(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
+      query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
+        users(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
           id
           name
         }
@@ -101,36 +101,36 @@ describe("resolver by sqlite", () => {
     `
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
+        users: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
       })
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
           limit: 2,
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Taylor" }, { name: "Tom" }],
+        users: [{ name: "Taylor" }, { name: "Tom" }],
       })
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
           limit: 1,
           offset: 1,
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Tom" }],
+        users: [{ name: "Tom" }],
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc
-        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc limit ?
-        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc limit ? offset ?
+        select "id", "name" from "users" where "users"."name" like ? order by "users"."name" asc
+        select "id", "name" from "users" where "users"."name" like ? order by "users"."name" asc limit ?
+        select "id", "name" from "users" where "users"."name" like ? order by "users"."name" asc limit ? offset ?
         "
       `)
     })
@@ -139,8 +139,8 @@ describe("resolver by sqlite", () => {
       await expect(
         execute(
           /* GraphQL */ `
-          query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $offset: Int) {
-            userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
+          query users ($orderBy: UserOrderBy, $where: UserFilters!, $offset: Int) {
+            usersSingle(orderBy: $orderBy, where: $where, offset: $offset) {
               id
               name
             }
@@ -151,19 +151,19 @@ describe("resolver by sqlite", () => {
           }
         )
       ).resolves.toMatchObject({
-        userSingle: { name: "Taylor" },
+        usersSingle: { name: "Taylor" },
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name" from "user" where "user"."name" = ? limit ?
+        select "id", "name" from "users" where "users"."name" = ? limit ?
         "
       `)
     })
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
-          user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
+        query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
+          users(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
             id
             name
             posts {
@@ -176,11 +176,11 @@ describe("resolver by sqlite", () => {
 
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
-        user: [
+        users: [
           {
             name: "Taylor",
             posts: [{ title: "Post 3" }],
@@ -197,8 +197,8 @@ describe("resolver by sqlite", () => {
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name" from "user" where "user"."name" like ? order by "user"."name" asc
-        select "id", "title", "authorId" from "post" where "post"."authorId" in (?, ?, ?)
+        select "id", "name" from "users" where "users"."name" like ? order by "users"."name" asc
+        select "id", "title", "authorId" from "posts" where "posts"."authorId" in (?, ?, ?)
         "
       `)
     })
@@ -207,8 +207,8 @@ describe("resolver by sqlite", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-      mutation insertIntoUser($values: [UserInsertInput!]!) {
-        insertIntoUser(values: $values) {
+      mutation insertIntoUsers($values: [UserInsertInput!]!) {
+        insertIntoUsers(values: $values) {
           id
           name
         }
@@ -220,26 +220,26 @@ describe("resolver by sqlite", () => {
           values: [{ name: "Tina" }],
         })
       ).resolves.toMatchObject({
-        insertIntoUser: [{ name: "Tina" }],
+        insertIntoUsers: [{ name: "Tina" }],
       })
 
       // Verify the user was inserted
-      const Tina = await db.query.user.findFirst({
-        where: eq(user.name, "Tina"),
+      const Tina = await db.query.users.findFirst({
+        where: { name: "Tina" },
       })
       expect(Tina).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "user" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name"
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        insert into "users" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name"
+        select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email" from "users" as "d0" where "d0"."name" = ? limit ?
         "
       `)
     })
 
     it("should insert a user with on conflict correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUser($values: [UserInsertInput!]!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
-          insertIntoUser(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, values: $values) {
+        mutation insertIntoUsers($values: [UserInsertInput!]!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUsers(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, values: $values) {
             id
             name
           }
@@ -251,7 +251,7 @@ describe("resolver by sqlite", () => {
           values: [{ name: "Tina", id: 77 }],
         })
       ).resolves.toMatchObject({
-        insertIntoUser: [{ name: "Tina" }],
+        insertIntoUsers: [{ name: "Tina" }],
       })
 
       await expect(
@@ -260,7 +260,7 @@ describe("resolver by sqlite", () => {
           doNothing: {},
         })
       ).resolves.toMatchObject({
-        insertIntoUser: [],
+        insertIntoUsers: [],
       })
 
       await expect(
@@ -269,7 +269,7 @@ describe("resolver by sqlite", () => {
           doNothing: { target: ["id"] },
         })
       ).resolves.toMatchObject({
-        insertIntoUser: [],
+        insertIntoUsers: [],
       })
 
       await expect(
@@ -281,22 +281,22 @@ describe("resolver by sqlite", () => {
           },
         })
       ).resolves.toMatchObject({
-        insertIntoUser: [{ name: "TinaUpdate" }],
+        insertIntoUsers: [{ name: "TinaUpdate" }],
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) returning "id", "name"
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict do nothing returning "id", "name"
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do nothing returning "id", "name"
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do update set "name" = ? returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) on conflict do nothing returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("users"."id") do nothing returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("users"."id") do update set "name" = ? returning "id", "name"
         "
       `)
     })
 
     it("should insert a single user with on conflict correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoUserSingle($value: UserInsertInput!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
-          insertIntoUserSingle(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, value: $value) {
+        mutation insertIntoUsersSingle($value: UserInsertInput!, $doNothing: UserInsertOnConflictDoNothingInput, $doUpdate: UserInsertOnConflictDoUpdateInput) {
+          insertIntoUsersSingle(onConflictDoNothing: $doNothing, onConflictDoUpdate: $doUpdate, value: $value) {
             id
             name
           }
@@ -308,7 +308,7 @@ describe("resolver by sqlite", () => {
           value: { name: "Tina", id: 78 },
         })
       ).resolves.toMatchObject({
-        insertIntoUserSingle: { name: "Tina" },
+        insertIntoUsersSingle: { name: "Tina" },
       })
 
       await expect(
@@ -317,7 +317,7 @@ describe("resolver by sqlite", () => {
           doNothing: {},
         })
       ).resolves.toMatchObject({
-        insertIntoUserSingle: null,
+        insertIntoUsersSingle: null,
       })
 
       await expect(
@@ -326,7 +326,7 @@ describe("resolver by sqlite", () => {
           doNothing: { target: ["id"] },
         })
       ).resolves.toMatchObject({
-        insertIntoUserSingle: null,
+        insertIntoUsersSingle: null,
       })
 
       await expect(
@@ -338,29 +338,29 @@ describe("resolver by sqlite", () => {
           },
         })
       ).resolves.toMatchObject({
-        insertIntoUserSingle: { name: "TinaUpdate" },
+        insertIntoUsersSingle: { name: "TinaUpdate" },
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) returning "id", "name"
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict do nothing returning "id", "name"
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do nothing returning "id", "name"
-        insert into "user" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("user"."id") do update set "name" = ? returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) on conflict do nothing returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("users"."id") do nothing returning "id", "name"
+        insert into "users" ("id", "name", "age", "email") values (?, ?, null, null) on conflict ("users"."id") do update set "name" = ? returning "id", "name"
         "
       `)
     })
 
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updateUser($set: UserUpdateInput!, $where: UserFilters!) {
-          updateUser(set: $set, where: $where) {
+        mutation updateUsers($set: UserUpdateInput!, $where: UserFilters!) {
+          updateUsers(set: $set, where: $where) {
             id
             name
           }
         }
       `
 
-      const [Troy] = await db.insert(user).values({ name: "Troy" }).returning()
+      const [Troy] = await db.insert(users).values({ name: "Troy" }).returning()
       if (!Troy) throw new Error("User not found")
 
       await expect(
@@ -369,35 +369,35 @@ describe("resolver by sqlite", () => {
           where: { id: { eq: Troy.id } },
         })
       ).resolves.toMatchObject({
-        updateUser: [{ id: Troy.id, name: "Tiffany" }],
+        updateUsers: [{ id: Troy.id, name: "Tiffany" }],
       })
 
       // Verify the user was updated
-      const updatedUser = await db.query.user.findFirst({
-        where: eq(user.name, "Tiffany"),
+      const updatedUser = await db.query.users.findFirst({
+        where: { name: "Tiffany" },
       })
       expect(updatedUser).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "user" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name", "age", "email"
-        update "user" set "name" = ? where "user"."id" = ? returning "id", "name"
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        insert into "users" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name", "age", "email"
+        update "users" set "name" = ? where "users"."id" = ? returning "id", "name"
+        select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email" from "users" as "d0" where "d0"."name" = ? limit ?
         "
       `)
     })
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUser($where: UserFilters!) {
-          deleteFromUser(where: $where) {
+        mutation deleteFromUsers($where: UserFilters!) {
+          deleteFromUsers(where: $where) {
             id
             name
           }
         }
       `
 
-      const Tony = await db.query.user.findFirst({
-        where: eq(user.name, "Tony"),
+      const Tony = await db.query.users.findFirst({
+        where: { name: "Tony" },
       })
       if (!Tony) throw new Error("User not found")
 
@@ -406,27 +406,27 @@ describe("resolver by sqlite", () => {
           where: { id: { eq: Tony.id } },
         })
       ).resolves.toMatchObject({
-        deleteFromUser: [{ id: Tony.id, name: "Tony" }],
+        deleteFromUsers: [{ id: Tony.id, name: "Tony" }],
       })
 
       // Verify the user was deleted
-      const deletedUser = await db.query.user.findFirst({
-        where: eq(user.name, "Tony"),
+      const deletedUser = await db.query.users.findFirst({
+        where: { name: "Tony" },
       })
       expect(deletedUser).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
-        delete from "user" where "user"."id" = ? returning "id", "name"
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email" from "users" as "d0" where "d0"."name" = ? limit ?
+        delete from "users" where "users"."id" = ? returning "id", "name"
+        select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email" from "users" as "d0" where "d0"."name" = ? limit ?
         "
       `)
     })
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPost($values: [PostInsertInput!]!) {
-          insertIntoPost(values: $values) {
+        mutation insertIntoPosts($values: [PostInsertInput!]!) {
+          insertIntoPosts(values: $values) {
             id
             title
             authorId
@@ -434,8 +434,8 @@ describe("resolver by sqlite", () => {
         }
       `
 
-      const Tom = await db.query.user.findFirst({
-        where: eq(user.name, "Tom"),
+      const Tom = await db.query.users.findFirst({
+        where: { name: "Tom" },
       })
       if (!Tom) throw new Error("User not found")
 
@@ -444,27 +444,27 @@ describe("resolver by sqlite", () => {
           values: [{ title: "Post 5", authorId: Tom.id }],
         })
       ).resolves.toMatchObject({
-        insertIntoPost: [{ title: "Post 5", authorId: Tom.id }],
+        insertIntoPosts: [{ title: "Post 5", authorId: Tom.id }],
       })
 
       // Verify the post was inserted
-      const p = await db.query.post.findFirst({
-        where: eq(post.title, "Post 5"),
+      const p = await db.query.posts.findFirst({
+        where: { title: "Post 5" },
       })
       expect(p).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
-        insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, ?) returning "id", "title", "authorId"
-        select "id", "title", "content", "authorId" from "post" where "post"."title" = ? limit ?
+        select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email" from "users" as "d0" where "d0"."name" = ? limit ?
+        insert into "posts" ("id", "title", "content", "authorId") values (null, ?, null, ?) returning "id", "title", "authorId"
+        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId" from "posts" as "d0" where "d0"."title" = ? limit ?
         "
       `)
     })
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePost($set: PostUpdateInput!, $where: PostFilters!) {
-          updatePost(set: $set, where: $where) {
+        mutation updatePosts($set: PostUpdateInput!, $where: PostFilters!) {
+          updatePosts(set: $set, where: $where) {
             id
             title
           }
@@ -472,7 +472,7 @@ describe("resolver by sqlite", () => {
       `
 
       const [PostU] = await db
-        .insert(post)
+        .insert(posts)
         .values({ title: "Post U" })
         .returning()
       if (!PostU) throw new Error("Post not found")
@@ -483,27 +483,27 @@ describe("resolver by sqlite", () => {
           where: { id: { eq: PostU.id } },
         })
       ).resolves.toMatchObject({
-        updatePost: [{ id: PostU.id, title: "Updated Post U" }],
+        updatePosts: [{ id: PostU.id, title: "Updated Post U" }],
       })
 
       // Verify the post was updated
-      const updatedPost = await db.query.post.findFirst({
-        where: eq(post.title, "Updated Post U"),
+      const updatedPost = await db.query.posts.findFirst({
+        where: { title: "Updated Post U" },
       })
       expect(updatedPost).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
-        update "post" set "title" = ? where "post"."id" = ? returning "id", "title"
-        select "id", "title", "content", "authorId" from "post" where "post"."title" = ? limit ?
+        insert into "posts" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
+        update "posts" set "title" = ? where "posts"."id" = ? returning "id", "title"
+        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId" from "posts" as "d0" where "d0"."title" = ? limit ?
         "
       `)
     })
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPost($where: PostFilters!) {
-          deleteFromPost(where: $where) {
+        mutation deleteFromPosts($where: PostFilters!) {
+          deleteFromPosts(where: $where) {
             id
             title
           }
@@ -511,7 +511,7 @@ describe("resolver by sqlite", () => {
       `
 
       const [PostD] = await db
-        .insert(post)
+        .insert(posts)
         .values({ title: "Post D" })
         .returning()
       if (!PostD) throw new Error("Post not found")
@@ -521,19 +521,19 @@ describe("resolver by sqlite", () => {
           where: { id: { eq: PostD.id } },
         })
       ).resolves.toMatchObject({
-        deleteFromPost: [{ id: PostD.id, title: "Post D" }],
+        deleteFromPosts: [{ id: PostD.id, title: "Post D" }],
       })
 
       // Verify the post was deleted
-      const deletedPost = await db.query.post.findFirst({
-        where: eq(post.id, PostD.id),
+      const deletedPost = await db.query.posts.findFirst({
+        where: { id: PostD.id },
       })
       expect(deletedPost).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
-        delete from "post" where "post"."id" = ? returning "id", "title"
-        select "id", "title", "content", "authorId" from "post" where "post"."id" = ? limit ?
+        insert into "posts" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
+        delete from "posts" where "posts"."id" = ? returning "id", "title"
+        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId" from "posts" as "d0" where "d0"."id" = ? limit ?
         "
       `)
     })

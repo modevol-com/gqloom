@@ -8,8 +8,37 @@ import { DrizzlePostgresResolverFactory } from "./resolver-postgres"
 import { DrizzleSQLiteResolverFactory } from "./resolver-sqlite"
 import type { BaseDatabase } from "./types"
 
+/**
+ * Create a resolver factory for SQLite databases.
+ *
+ * @param db - The SQLite database instance.
+ * @param table - The table to create a resolver factory for.
+ * @param options - The options for the resolver factory.
+ */
 export function drizzleResolverFactory<
-  TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
+  TDatabase extends BaseSQLiteDatabase<any, any, any, any, any, any>,
+  TTable extends SQLiteTable,
+>(
+  db: TDatabase,
+  table: TTable,
+  options?: DrizzleResolverFactoryOptions<TTable>
+): DrizzleSQLiteResolverFactory<TDatabase, TTable>
+
+/**
+ * @deprecated directly use `table` instead of `tableName`.
+ *
+ * ## Example
+ * ⛔️ Don't do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, "users")
+ * ```
+ * ✅ Do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, users)
+ * ```
+ */
+export function drizzleResolverFactory<
+  TDatabase extends BaseSQLiteDatabase<any, any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
 >(
   db: TDatabase,
@@ -21,17 +50,54 @@ export function drizzleResolverFactory<
   TDatabase,
   NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
 >
+
+/**
+ * Create a resolver factory for PostgreSQL databases.
+ *
+ * @param db - The PostgreSQL database instance.
+ * @param table - The table to create a resolver factory for.
+ * @param options - The options for the resolver factory.
+ */
 export function drizzleResolverFactory<
-  TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
-  TTable extends SQLiteTable,
+  TDatabase extends PgDatabase<any, any, any, any, any>,
+  TTable extends PgTable,
 >(
   db: TDatabase,
   table: TTable,
   options?: DrizzleResolverFactoryOptions<TTable>
-): DrizzleSQLiteResolverFactory<TDatabase, TTable>
+): DrizzlePostgresResolverFactory<TDatabase, TTable>
 
+/**
+ * Create a resolver factory for MySQL databases.
+ *
+ * @param db - The MySQL database instance.
+ * @param table - The table to create a resolver factory for.
+ * @param options - The options for the resolver factory.
+ */
 export function drizzleResolverFactory<
-  TDatabase extends PgDatabase<any, any, any>,
+  TDatabase extends MySqlDatabase<any, any, any, any, any, any>,
+  TTable extends MySqlTable,
+>(
+  db: TDatabase,
+  table: TTable,
+  options?: DrizzleResolverFactoryOptions<TTable>
+): DrizzleMySQLResolverFactory<TDatabase, TTable>
+
+/**
+ * @deprecated directly use `table` instead of `tableName`.
+ *
+ * ## Example
+ * ⛔️ Don't do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, "users")
+ * ```
+ * ✅ Do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, users)
+ * ```
+ */
+export function drizzleResolverFactory<
+  TDatabase extends PgDatabase<any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
 >(
   db: TDatabase,
@@ -43,17 +109,23 @@ export function drizzleResolverFactory<
   TDatabase,
   NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
 >
-export function drizzleResolverFactory<
-  TDatabase extends PgDatabase<any, any, any>,
-  TTable extends PgTable,
->(
-  db: TDatabase,
-  table: TTable,
-  options?: DrizzleResolverFactoryOptions<TTable>
-): DrizzlePostgresResolverFactory<TDatabase, TTable>
+
+/**
+ * @deprecated directly use `table` instead of `tableName`.
+ *
+ * ## Example
+ * ⛔️ Don't do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, "users")
+ * ```
+ * ✅ Do this
+ * ```ts
+ * const userFactory = drizzleResolverFactory(db, users)
+ * ```
+ */
 
 export function drizzleResolverFactory<
-  TDatabase extends MySqlDatabase<any, any, any, any>,
+  TDatabase extends MySqlDatabase<any, any, any, any, any, any>,
   TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
 >(
   db: TDatabase,
@@ -65,14 +137,6 @@ export function drizzleResolverFactory<
   TDatabase,
   NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
 >
-export function drizzleResolverFactory<
-  TDatabase extends MySqlDatabase<any, any, any, any>,
-  TTable extends MySqlTable,
->(
-  db: TDatabase,
-  table: TTable,
-  options?: DrizzleResolverFactoryOptions<TTable>
-): DrizzleMySQLResolverFactory<TDatabase, TTable>
 
 export function drizzleResolverFactory(
   db: BaseDatabase,
