@@ -736,7 +736,7 @@ export class FieldFactoryWithResolve<
   public get "~meta"(): Loom.Field<
     TParent,
     TOutput,
-    undefined,
+    any,
     string[] | undefined
   >["~meta"] {
     return loom.field(this.outputSilk, this.options as any)["~meta"]
@@ -747,7 +747,7 @@ export class FieldFactoryWithResolve<
     protected readonly options: FieldOptions<
       TParent,
       TOutput,
-      undefined,
+      any,
       string[] | undefined
     >
   ) {
