@@ -13,6 +13,7 @@ import {
   getValue,
   inArrayMultiple,
   isColumnVisible,
+  paramsAsKey,
 } from "../src/helper"
 import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
 import * as sqliteTables from "./schema/sqlite"
@@ -161,5 +162,78 @@ describe("getSelectedColumns", () => {
     `)
     await execute({ schema, document: query })
     expect(selectedColumns).toEqual(new Set(["id", "name"]))
+  })
+})
+
+describe("paramsAsKey", () => {
+  it("should handle null and undefined", () => {
+    expect(paramsAsKey(null)).toBe("null")
+    expect(paramsAsKey(undefined)).toBe("undefined")
+  })
+
+  it("should handle primitive values", () => {
+    expect(paramsAsKey(42)).toBe("42")
+    expect(paramsAsKey("hello")).toBe("hello")
+    expect(paramsAsKey(true)).toBe("true")
+  })
+
+  it("should handle flat objects", () => {
+    const obj = { a: 1, b: "test", c: true }
+    expect(paramsAsKey(obj)).toBe("a=1&b=test&c=true")
+  })
+
+  it("should handle nested objects", () => {
+    const obj = {
+      a: 1,
+      b: {
+        c: "test",
+        d: {
+          e: true,
+        },
+      },
+    }
+    expect(paramsAsKey(obj)).toBe("a=1&b.c=test&b.d.e=true")
+  })
+
+  it("should handle arrays", () => {
+    const obj = {
+      a: [1, 2, 3],
+      b: {
+        c: ["x", "y"],
+      },
+    }
+    expect(paramsAsKey(obj)).toBe("a.0=1&a.1=2&a.2=3&b.c.0=x&b.c.1=y")
+  })
+
+  it("should generate same key for objects with different key order", () => {
+    const obj1 = { a: 1, b: 2, c: 3 }
+    const obj2 = { c: 3, a: 1, b: 2 }
+    expect(paramsAsKey(obj1)).toBe(paramsAsKey(obj2))
+  })
+
+  it("should handle null values in objects", () => {
+    const obj = { a: null, b: undefined, c: 1 }
+    expect(paramsAsKey(obj)).toBe("a=&b=&c=1")
+  })
+
+  it("should handle array of objects", () => {
+    const arr = [
+      { a: 1, b: 2 },
+      { a: 3, b: 4 },
+    ]
+    expect(paramsAsKey(arr)).toBe("0.a=1&0.b=2&1.a=3&1.b=4")
+  })
+
+  it("should handle object with array of objects", () => {
+    const obj = {
+      group: [
+        { id: 1, name: "foo" },
+        { id: 2, name: "bar" },
+      ],
+    }
+
+    expect(paramsAsKey(obj)).toBe(
+      "group.0.id=1&group.0.name=foo&group.1.id=2&group.1.name=bar"
+    )
   })
 })

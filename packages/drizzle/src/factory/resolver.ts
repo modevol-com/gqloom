@@ -1,5 +1,4 @@
 import {
-  EasyDataLoader,
   FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
@@ -9,7 +8,6 @@ import {
   type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
-  type ResolverPayload,
   capitalize,
   getMemoizationMap,
   loom,
@@ -54,7 +52,7 @@ import {
   type SelectiveTable,
   type TableSilk,
 } from ".."
-import { getSelectedColumns, inArrayMultiple } from "../helper"
+import { getSelectedColumns } from "../helper"
 import {
   type ColumnFilters,
   type CountArgs,
@@ -67,6 +65,7 @@ import {
   type SelectSingleArgs,
   type UpdateArgs,
 } from "./input"
+import { RelationFieldLoader } from "./relation-field-loader"
 import type {
   AnyQueryBuilder,
   BaseDatabase,
@@ -417,7 +416,7 @@ export abstract class DrizzleResolverFactory<
         targetTable,
       ]
     })()
-    if (!queryBuilder || !relation || !(targetTable instanceof Table)) {
+    if (!relation || !queryBuilder || !(targetTable instanceof Table)) {
       throw new Error(
         `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
           relationName
@@ -427,73 +426,19 @@ export abstract class DrizzleResolverFactory<
     const output = DrizzleWeaver.unravel(targetTable)
 
     const isList = relation instanceof Many
-    const fieldsLength = relation.sourceColumns.length
 
-    const getKeyByField = (parent: any) => {
-      if (fieldsLength === 1) {
-        return parent[relation.sourceColumns[0].name]
-      }
-      return relation.sourceColumns.map((field) => parent[field.name]).join("-")
-    }
-
-    const referenceColumns = Object.fromEntries(
-      relation.targetColumns.map((col) => [col.name, col])
+    const columns = Object.entries(getTableColumns(targetTable))
+    const dependencies = relation.sourceColumns.map(
+      (col) => columns.find(([_, value]) => value === col)?.[0] ?? col.name
     )
-
-    const getKeyByReference = (item: any) => {
-      if (fieldsLength === 1) {
-        return item[relation.targetColumns[0].name]
-      }
-      return relation.targetColumns
-        .map((reference) => item[reference.name])
-        .join("-")
-    }
-
-    const initLoader = () => {
-      return new EasyDataLoader(
-        async (inputs: [any, payload: ResolverPayload | undefined][]) => {
-          const where = (() => {
-            if (fieldsLength === 1) {
-              const values = inputs.map(
-                ([parent]) => parent[relation.sourceColumns[0].name]
-              )
-              return inArray(relation.targetColumns[0], values)
-            }
-            const values = inputs.map((input) =>
-              relation.sourceColumns.map((field) => input[0][field.name])
-            )
-            return inArrayMultiple(relation.targetColumns, values, targetTable)
-          })()
-          const selectedColumns = getSelectedColumns(
-            targetTable,
-            inputs.map((input) => input[1])
-          )
-
-          const list = await (this.db as any)
-            .select({ ...selectedColumns, ...referenceColumns })
-            .from(targetTable)
-            .where(where)
-
-          const groups = new Map<string, any>()
-          for (const item of list) {
-            const key = getKeyByReference(item)
-            isList
-              ? groups.set(key, [...(groups.get(key) ?? []), item])
-              : groups.set(key, item)
-          }
-          return inputs.map(([parent]) => {
-            const key = getKeyByField(parent)
-            return groups.get(key) ?? (isList ? [] : null)
-          })
-        }
-      )
-    }
+    const initLoader = () =>
+      new RelationFieldLoader(this.db, relation, queryBuilder, targetTable)
 
     return new FieldFactoryWithResolve(
       isList ? output.$list() : output.$nullable(),
       {
         ...options,
-        dependencies: ["tableName"],
+        dependencies,
         resolve: (parent, _input, payload) => {
           const loader = (() => {
             if (!payload) return initLoader()

@@ -150,3 +150,46 @@ export function getQueriedColumns(
 ): Partial<Record<string, true>> {
   return mapValue(getSelectedColumns(table, payload), () => true)
 }
+
+export function paramsAsKey(params: any): string {
+  if (typeof params !== "object" || params === null) return String(params)
+
+  const searchParams = new URLSearchParams()
+
+  function addToParams(obj: unknown, prefix = "") {
+    if (Array.isArray(obj)) {
+      obj.forEach((value, index) => {
+        const key = prefix ? `${prefix}.${index}` : String(index)
+        if (value != null && typeof value === "object") {
+          addToParams(value, key)
+        } else {
+          searchParams.set(key, String(value))
+        }
+      })
+      return
+    }
+
+    if (typeof obj !== "object" || obj === null) {
+      searchParams.set(prefix, String(obj))
+      return
+    }
+
+    for (const [key, value] of Object.entries(obj)) {
+      const newPrefix = prefix ? `${prefix}.${key}` : key
+
+      if (value == null) {
+        searchParams.set(newPrefix, "")
+      } else if (Array.isArray(value)) {
+        addToParams(value, newPrefix)
+      } else if (typeof value === "object") {
+        addToParams(value, newPrefix)
+      } else {
+        searchParams.set(newPrefix, String(value))
+      }
+    }
+  }
+
+  addToParams(params)
+  searchParams.sort()
+  return searchParams.toString()
+}
