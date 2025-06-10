@@ -1,5 +1,14 @@
 import { resolver } from "@gqloom/core"
-import { defineRelations, eq, gte, inArray, like, lt, sql } from "drizzle-orm"
+import {
+  defineRelations,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  like,
+  lt,
+  sql,
+} from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
@@ -888,8 +897,178 @@ describe("DrizzleResolverFactory", () => {
       expect(answer.map((p) => p.title)).toEqual(["Post C", "Post B", "Post A"])
     })
 
-    it.todo("should handle where for to-many relation")
-    it.todo("should handle where for to-one relation")
+    it("should handle where for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+
+      await db
+        .delete(sqliteSchemas.posts)
+        .where(eq(sqliteSchemas.posts.authorId, John.id))
+
+      // Insert test posts with different titles and content
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: John.id, title: "JavaScript Guide", content: "JS content" },
+        {
+          authorId: John.id,
+          title: "TypeScript Tutorial",
+          content: "TS content",
+        },
+        {
+          authorId: John.id,
+          title: "Python Basics",
+          content: "Python content",
+        },
+        {
+          authorId: John.id,
+          title: "Java Programming",
+          content: "Java content",
+        },
+      ])
+
+      const postsField = userFactory.relationField("posts")
+
+      // First test: verify basic functionality without where clause works
+      let answer = await postsField["~meta"].resolve(John, {
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(4)
+
+      // Test filtering by title containing "Script"
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.title, "%Script%"),
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual([
+        "JavaScript Guide",
+        "TypeScript Tutorial",
+      ])
+
+      // Test filtering by content containing "content"
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.content, "%content"),
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(4)
+
+      // Test filtering by exact title
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => eq(p.title, "Python Basics"),
+      })
+      expect(answer).toHaveLength(1)
+      expect(answer[0].title).toBe("Python Basics")
+
+      // Test combining where with limit
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.title, "%a%"),
+        orderBy: { title: "asc" },
+        limit: 2,
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual([
+        "Java Programming",
+        "JavaScript Guide",
+      ])
+
+      // Test where with no matches
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.title, "%NonExistent%"),
+      })
+      expect(answer).toHaveLength(0)
+    })
+
+    it("should handle where for to-one relation", async () => {
+      const postFactory = drizzleResolverFactory(db, sqliteSchemas.posts)
+      const authorField = postFactory.relationField("author")
+
+      // Create users with different names and ages
+      const [Alice, Bob, Charlie] = await db
+        .insert(sqliteSchemas.users)
+        .values([
+          { name: "Alice", age: 25, email: "alice@example.com" },
+          { name: "Bob", age: 30, email: "bob@example.com" },
+          { name: "Charlie", age: 35 },
+        ])
+        .returning()
+
+      // Create posts authored by these users
+      const [post1, post2, post3] = await db
+        .insert(sqliteSchemas.posts)
+        .values([
+          { authorId: Alice.id, title: "Alice's Post" },
+          { authorId: Bob.id, title: "Bob's Post" },
+          { authorId: Charlie.id, title: "Charlie's Post" },
+        ])
+        .returning()
+
+      try {
+        // Test filtering author by age >= 30
+        let author = await authorField["~meta"].resolve(post1, {
+          where: gte(sqliteSchemas.users.age, 30),
+        })
+        expect(author).toBeNull() // Alice is 25, should not match
+
+        author = await authorField["~meta"].resolve(post2, {
+          where: gte(sqliteSchemas.users.age, 30),
+        })
+        expect(author).toMatchObject({ name: "Bob", age: 30 })
+
+        author = await authorField["~meta"].resolve(post3, {
+          where: gte(sqliteSchemas.users.age, 30),
+        })
+        expect(author).toMatchObject({ name: "Charlie", age: 35 })
+
+        // Test filtering author by email not null
+        author = await authorField["~meta"].resolve(post1, {
+          where: isNotNull(sqliteSchemas.users.email),
+        })
+        expect(author).toMatchObject({
+          name: "Alice",
+          email: "alice@example.com",
+        })
+
+        author = await authorField["~meta"].resolve(post3, {
+          where: isNotNull(sqliteSchemas.users.email),
+        })
+        expect(author).toBeNull() // Charlie has no email
+
+        // Test filtering author by name pattern
+        author = await authorField["~meta"].resolve(post2, {
+          where: like(sqliteSchemas.users.name, "B%"),
+        })
+        expect(author).toMatchObject({ name: "Bob" })
+
+        author = await authorField["~meta"].resolve(post1, {
+          where: like(sqliteSchemas.users.name, "B%"),
+        })
+        expect(author).toBeNull() // Alice doesn't match pattern
+
+        // Test filtering with exact match
+        author = await authorField["~meta"].resolve(post3, {
+          where: eq(sqliteSchemas.users.name, "Charlie"),
+        })
+        expect(author).toMatchObject({ name: "Charlie", age: 35 })
+
+        author = await authorField["~meta"].resolve(post3, {
+          where: eq(sqliteSchemas.users.name, "NotCharlie"),
+        })
+        expect(author).toBeNull()
+      } finally {
+        // Clean up test data
+        await db
+          .delete(sqliteSchemas.posts)
+          .where(
+            inArray(sqliteSchemas.posts.id, [post1.id, post2.id, post3.id])
+          )
+        await db
+          .delete(sqliteSchemas.users)
+          .where(
+            inArray(sqliteSchemas.users.id, [Alice.id, Bob.id, Charlie.id])
+          )
+      }
+    })
   })
 
   describe("relationField with multiple field relations", () => {

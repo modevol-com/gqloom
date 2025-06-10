@@ -422,22 +422,22 @@ export abstract class DrizzleResolverFactory<
 
     input ??= (
       toMany
-        ? silk<QueryToManyFieldOptions, RelationToManyArgs<TTable>>(
+        ? silk<QueryToManyFieldOptions<any>, RelationToManyArgs<TTable>>(
             () => targetInputFactory.relationToManyArgs(),
             (args) => ({
               value: {
-                where: this.extractFilters(args.where, targetTable),
+                where: (t) => this.extractFilters(args.where, t),
                 orderBy: args.orderBy,
                 limit: args.limit,
                 offset: args.offset,
               },
             })
           )
-        : silk<QueryToOneFieldOptions, RelationToOneArgs<TTable>>(
+        : silk<QueryToOneFieldOptions<any>, RelationToOneArgs<TTable>>(
             () => targetInputFactory.relationToOneArgs(),
             (args) => ({
               value: {
-                where: this.extractFilters(args.where, targetTable),
+                where: (t) => this.extractFilters(args.where, t),
               },
             })
           )

@@ -173,12 +173,12 @@ export interface RelationManyField<
       InferSelectModel<TRelationTable>[],
       InferSelectModel<TRelationTable>[]
     >,
-    QueryToManyFieldOptions,
-    GraphQLSilk<QueryToManyFieldOptions, TInputI>
+    QueryToManyFieldOptions<TRelationTable>,
+    GraphQLSilk<QueryToManyFieldOptions<TRelationTable>, TInputI>
   > {}
 
-export interface QueryToManyFieldOptions {
-  where?: SQL
+export interface QueryToManyFieldOptions<TTable extends Table> {
+  where?: SQL | ((table: TTable) => SQL | undefined)
   orderBy?: Partial<Record<string, "asc" | "desc">>
   limit?: number
   offset?: number
@@ -194,12 +194,12 @@ export interface RelationOneField<
       InferSelectModel<TRelationTable> | null | undefined,
       InferSelectModel<TRelationTable> | null | undefined
     >,
-    QueryToOneFieldOptions,
-    GraphQLSilk<QueryToOneFieldOptions, TInputI>
+    QueryToOneFieldOptions<TRelationTable>,
+    GraphQLSilk<QueryToOneFieldOptions<TRelationTable>, TInputI>
   > {}
 
-export interface QueryToOneFieldOptions {
-  where?: SQL
+export interface QueryToOneFieldOptions<TTable extends Table> {
+  where?: SQL | ((table: TTable) => SQL | undefined)
 }
 
 export type QueryFieldOptions<
@@ -211,8 +211,10 @@ export type QueryFieldOptions<
 > = InferTableRelationalConfig<
   QueryBuilder<TDatabase, TTable>
 >["relations"][TRelationName] extends Many<any, any>
-  ? QueryToManyFieldOptions
-  : QueryToOneFieldOptions
+  ? QueryToManyFieldOptions<
+      InferRelationTable<TDatabase, TTable, TRelationName>
+    >
+  : QueryToOneFieldOptions<InferRelationTable<TDatabase, TTable, TRelationName>>
 
 export type InsertArrayMutation<
   TTable extends Table,

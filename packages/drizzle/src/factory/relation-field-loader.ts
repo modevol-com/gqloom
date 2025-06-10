@@ -50,7 +50,7 @@ export class RelationFieldLoader extends EasyDataLoader<
   protected async batchLoadOne(
     inputs: [
       parent: any,
-      args: QueryToOneFieldOptions,
+      args: QueryToOneFieldOptions<any>,
       payload: ResolverPayload | undefined,
     ][]
   ): Promise<any[]> {
@@ -84,19 +84,23 @@ export class RelationFieldLoader extends EasyDataLoader<
 
   protected async loadOneByParent(
     parents: any[],
-    args: QueryToOneFieldOptions,
+    args: QueryToOneFieldOptions<any>,
     columns: Partial<Record<string, Column>>
   ): Promise<any[]> {
+    const where =
+      typeof args.where === "function"
+        ? args.where(this.targetTable)
+        : args.where
     return await (this.db as any)
       .select(columns)
       .from(this.targetTable)
-      .where(and(this.whereByParent(parents), args.where))
+      .where(and(this.whereByParent(parents), where))
   }
 
   protected async batchLoadMany(
     inputs: [
       parent: any,
-      args: QueryToManyFieldOptions,
+      args: QueryToManyFieldOptions<any>,
       payload: ResolverPayload | undefined,
     ][]
   ): Promise<any[]> {
@@ -127,14 +131,13 @@ export class RelationFieldLoader extends EasyDataLoader<
       if (!groups) return []
       const key = this.getKeyForParent(parent)
       const parentResult = groups.get(key)
-      if (!parentResult) return []
       return parentResult?.[this.relationName] ?? []
     })
   }
 
   protected async loadManyByParent(
     parents: any[],
-    args: QueryToManyFieldOptions,
+    args: QueryToManyFieldOptions<any>,
     columns: Partial<Record<string, Column>>
   ): Promise<any[]> {
     return await this.queryBuilder.findMany({
