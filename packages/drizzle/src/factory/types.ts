@@ -388,6 +388,11 @@ export type InferRelationTable<
   TTable extends Table,
   TTargetTableName extends
     keyof TDatabase["_"]["relations"]["config"][TTable["_"]["name"]],
-> = TDatabase["_"]["relations"]["config"][TTable["_"]["name"]]["relations"][TTargetTableName]["targetTable"]
+> = Extract<
+  ValueOf<InferTablesConfig<TDatabase>>,
+  {
+    dbName: TDatabase["_"]["relations"]["config"][TTable["_"]["name"]][TTargetTableName]["targetTable"]["_"]["name"]
+  }
+>["table"]
 
 type ValueOf<T> = T[keyof T]

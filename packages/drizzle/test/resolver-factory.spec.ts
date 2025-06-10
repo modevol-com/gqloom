@@ -742,16 +742,6 @@ describe("DrizzleResolverFactory", () => {
       ])
       const postsField = userFactory.relationField("posts")
       const answer = await postsField["~meta"].resolve(John, {})
-      // const answer = (
-      //   await db.query.users.findFirst({
-      //     where: { RAW: (users) => inArray(users.id, [John.id]) },
-      //     with: {
-      //       posts: {
-      //         columns: { id: true, title: true, authorId: true },
-      //       },
-      //     },
-      //   })
-      // )?.posts
       expect(answer).toMatchObject([
         { authorId: John.id },
         { authorId: John.id },
@@ -764,6 +754,65 @@ describe("DrizzleResolverFactory", () => {
       }).toThrow(
         "GQLoom-Drizzle Error: Relation users.nonExistentRelation not found in drizzle instance"
       )
+    })
+
+    it("should work with aliased relation", async () => {
+      const [Jane] = await db
+        .select()
+        .from(sqliteSchemas.users)
+        .where(eq(sqliteSchemas.users.name, "Jane"))
+        .limit(1)
+      const [Jill] = await db
+        .select()
+        .from(sqliteSchemas.users)
+        .where(eq(sqliteSchemas.users.name, "Jill"))
+        .limit(1)
+      const [Jim] = await db
+        .select()
+        .from(sqliteSchemas.users)
+        .where(eq(sqliteSchemas.users.name, "Jim"))
+        .limit(1)
+
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: Jane.id, title: "Jane's post", reviewerId: Jim.id },
+        { authorId: Jane.id, title: "Jane's post 2", reviewerId: Jim.id },
+        { authorId: Jill.id, title: "Jill's post", reviewerId: Jim.id },
+        { authorId: Jill.id, title: "Jill's post 2", reviewerId: Jim.id },
+        { authorId: Jim.id, title: "Jim's post", reviewerId: Jill.id },
+        { authorId: Jim.id, title: "Jim's post 2", reviewerId: Jim.id },
+      ])
+
+      const userFactory = drizzleResolverFactory(db, sqliteSchemas.users)
+      const postsField = userFactory.relationField("posts")
+      const reviewedPostsField = userFactory.relationField("reviewedPosts")
+      let answer
+      answer = await postsField["~meta"].resolve(Jane, {})
+      expect(answer).toMatchObject([
+        { title: "Jane's post" },
+        { title: "Jane's post 2" },
+      ])
+      answer = await postsField["~meta"].resolve(Jill, {})
+      expect(answer).toMatchObject([
+        { title: "Jill's post" },
+        { title: "Jill's post 2" },
+      ])
+      answer = await postsField["~meta"].resolve(Jim, {})
+      expect(answer).toMatchObject([
+        { title: "Jim's post" },
+        { title: "Jim's post 2" },
+      ])
+      answer = await reviewedPostsField["~meta"].resolve(Jane, {})
+      expect(answer).toMatchObject([])
+      answer = await reviewedPostsField["~meta"].resolve(Jill, {})
+      expect(answer).toMatchObject([{ title: "Jim's post" }])
+      answer = await reviewedPostsField["~meta"].resolve(Jim, {})
+      expect(answer).toMatchObject([
+        { title: "Jane's post" },
+        { title: "Jane's post 2" },
+        { title: "Jill's post" },
+        { title: "Jill's post 2" },
+        { title: "Jim's post 2" },
+      ])
     })
 
     it.todo("should handle limit and offset for to-many relation")

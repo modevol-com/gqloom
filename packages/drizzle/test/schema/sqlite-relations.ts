@@ -3,13 +3,20 @@ import * as schema from "./sqlite"
 
 export const relations = defineRelations(schema, (r) => ({
   users: {
-    posts: r.many.posts(),
+    posts: r.many.posts({ alias: "author" }),
+    reviewedPosts: r.many.posts({ alias: "reviewer" }),
     courses: r.many.studentToCourses(),
   },
   posts: {
     author: r.one.users({
       from: r.posts.authorId,
       to: r.users.id,
+      alias: "author",
+    }),
+    reviewer: r.one.users({
+      from: r.posts.reviewerId,
+      to: r.users.id,
+      alias: "reviewer",
     }),
   },
   courses: {

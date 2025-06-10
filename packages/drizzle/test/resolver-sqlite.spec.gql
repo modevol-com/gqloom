@@ -19,6 +19,8 @@ type Post {
   authorId: Int
   content: String
   id: Int!
+  reviewer(where: UserFilters): User
+  reviewerId: Int
   title: String!
 }
 
@@ -29,6 +31,7 @@ input PostFilters {
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
+  reviewerId: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
@@ -36,6 +39,7 @@ input PostFiltersNested {
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
+  reviewerId: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
@@ -43,6 +47,7 @@ input PostInsertInput {
   authorId: Int
   content: String
   id: Int
+  reviewerId: Int
   title: String!
 }
 
@@ -62,6 +67,7 @@ input PostOrderBy {
   authorId: OrderDirection
   content: OrderDirection
   id: OrderDirection
+  reviewerId: OrderDirection
   title: OrderDirection
 }
 
@@ -69,6 +75,7 @@ enum PostTableColumn {
   authorId
   content
   id
+  reviewerId
   title
 }
 
@@ -76,6 +83,7 @@ input PostUpdateInput {
   authorId: Int
   content: String
   id: Int
+  reviewerId: Int
   title: String
 }
 
@@ -231,6 +239,7 @@ type User {
   """The name of the user"""
   name: String!
   posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  reviewedPosts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
 }
 
 """A user"""

@@ -26,6 +26,7 @@ export const posts = drizzleSilk(
     title: t.text().notNull(),
     content: t.text(),
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
+    reviewerId: t.int().references(() => users.id, { onDelete: "cascade" }),
   }),
   { name: "Post" }
 )
