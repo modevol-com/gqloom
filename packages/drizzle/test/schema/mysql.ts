@@ -1,12 +1,12 @@
-import * as t from "drizzle-orm/mysql-core"
+import { int, mysqlTable, primaryKey, text } from "drizzle-orm/mysql-core"
 import { drizzleSilk } from "../../src"
 
 export const users = drizzleSilk(
-  t.mysqlTable("users", {
-    id: t.int().primaryKey().autoincrement(),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
+  mysqlTable("users", {
+    id: int().primaryKey().autoincrement(),
+    name: text().notNull(),
+    age: int(),
+    email: text(),
   }),
   {
     name: "User",
@@ -18,11 +18,11 @@ export const users = drizzleSilk(
 )
 
 export const posts = drizzleSilk(
-  t.mysqlTable("posts", {
-    id: t.int().primaryKey().autoincrement(),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
+  mysqlTable("posts", {
+    id: int().primaryKey().autoincrement(),
+    title: text().notNull(),
+    content: text(),
+    authorId: int().references(() => users.id, { onDelete: "cascade" }),
   }),
   {
     name: "Post",
@@ -31,4 +31,13 @@ export const posts = drizzleSilk(
       title: { description: "The title of the post" },
     },
   }
+)
+
+export const userStarPosts = mysqlTable(
+  "userStarPosts",
+  {
+    userId: int("user_id").references(() => users.id),
+    postId: int("post_id").references(() => posts.id),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.postId] })]
 )

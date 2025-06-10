@@ -1,12 +1,12 @@
-import * as t from "drizzle-orm/pg-core"
+import { integer, pgTable, primaryKey, serial, text } from "drizzle-orm/pg-core"
 import { drizzleSilk } from "../../src"
 
 export const users = drizzleSilk(
-  t.pgTable("users", {
-    id: t.serial().primaryKey(),
-    name: t.text().notNull(),
-    age: t.integer(),
-    email: t.text(),
+  pgTable("users", {
+    id: serial().primaryKey(),
+    name: text().notNull(),
+    age: integer(),
+    email: text(),
   }),
   {
     name: "User",
@@ -18,11 +18,11 @@ export const users = drizzleSilk(
 )
 
 export const posts = drizzleSilk(
-  t.pgTable("posts", {
-    id: t.serial().primaryKey(),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.integer().references(() => users.id, { onDelete: "cascade" }),
+  pgTable("posts", {
+    id: serial().primaryKey(),
+    title: text().notNull(),
+    content: text(),
+    authorId: integer().references(() => users.id, { onDelete: "cascade" }),
   }),
   {
     name: "Post",
@@ -31,4 +31,13 @@ export const posts = drizzleSilk(
       title: { description: "The title of the post" },
     },
   }
+)
+
+export const userStarPosts = pgTable(
+  "userStarPosts",
+  {
+    userId: integer().references(() => users.id),
+    postId: integer().references(() => posts.id),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.postId] })]
 )

@@ -683,7 +683,6 @@ describe("DrizzleResolverFactory", () => {
           { studentId: Joe.id, courseId: english.id },
         ])
         .returning()
-
       await db.insert(sqliteSchemas.studentCourseGrades).values(
         studentCourses.map((it) => ({
           ...it,
@@ -1006,23 +1005,23 @@ describe("DrizzleResolverFactory", () => {
       try {
         // Test filtering author by age >= 30
         let author = await authorField["~meta"].resolve(post1, {
-          where: gte(sqliteSchemas.users.age, 30),
+          where: (u) => gte(u.age, 30),
         })
         expect(author).toBeNull() // Alice is 25, should not match
 
         author = await authorField["~meta"].resolve(post2, {
-          where: gte(sqliteSchemas.users.age, 30),
+          where: (u) => gte(u.age, 30),
         })
         expect(author).toMatchObject({ name: "Bob", age: 30 })
 
         author = await authorField["~meta"].resolve(post3, {
-          where: gte(sqliteSchemas.users.age, 30),
+          where: (u) => gte(u.age, 30),
         })
         expect(author).toMatchObject({ name: "Charlie", age: 35 })
 
         // Test filtering author by email not null
         author = await authorField["~meta"].resolve(post1, {
-          where: isNotNull(sqliteSchemas.users.email),
+          where: (u) => isNotNull(u.email),
         })
         expect(author).toMatchObject({
           name: "Alice",
@@ -1030,29 +1029,29 @@ describe("DrizzleResolverFactory", () => {
         })
 
         author = await authorField["~meta"].resolve(post3, {
-          where: isNotNull(sqliteSchemas.users.email),
+          where: (u) => isNotNull(u.email),
         })
         expect(author).toBeNull() // Charlie has no email
 
         // Test filtering author by name pattern
         author = await authorField["~meta"].resolve(post2, {
-          where: like(sqliteSchemas.users.name, "B%"),
+          where: (u) => like(u.name, "B%"),
         })
         expect(author).toMatchObject({ name: "Bob" })
 
         author = await authorField["~meta"].resolve(post1, {
-          where: like(sqliteSchemas.users.name, "B%"),
+          where: (u) => like(u.name, "B%"),
         })
         expect(author).toBeNull() // Alice doesn't match pattern
 
         // Test filtering with exact match
         author = await authorField["~meta"].resolve(post3, {
-          where: eq(sqliteSchemas.users.name, "Charlie"),
+          where: (u) => eq(u.name, "Charlie"),
         })
         expect(author).toMatchObject({ name: "Charlie", age: 35 })
 
         author = await authorField["~meta"].resolve(post3, {
-          where: eq(sqliteSchemas.users.name, "NotCharlie"),
+          where: (u) => eq(u.name, "NotCharlie"),
         })
         expect(author).toBeNull()
       } finally {

@@ -1,13 +1,13 @@
 import { sql } from "drizzle-orm"
-import * as t from "drizzle-orm/sqlite-core"
+import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import { drizzleSilk } from "../../src"
 
 export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
+  sqliteTable("users", {
+    id: int().primaryKey({ autoIncrement: true }),
+    name: text().notNull(),
+    age: int(),
+    email: text(),
   }),
   {
     name: "User",
@@ -21,35 +21,48 @@ export const users = drizzleSilk(
 )
 
 export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-    reviewerId: t.int().references(() => users.id, { onDelete: "cascade" }),
+  sqliteTable("posts", {
+    id: int().primaryKey({ autoIncrement: true }),
+    title: text().notNull(),
+    content: text(),
+    authorId: int().references(() => users.id, { onDelete: "cascade" }),
+    reviewerId: int().references(() => users.id, { onDelete: "cascade" }),
   }),
   { name: "Post" }
 )
 
+export const userStarPosts = sqliteTable(
+  "userStarPosts",
+  {
+    userId: int().references(() => users.id),
+    postId: int().references(() => posts.id),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.postId] })]
+)
+
 export const courses = drizzleSilk(
-  t.sqliteTable("courses", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
+  sqliteTable("courses", {
+    id: int().primaryKey({ autoIncrement: true }),
+    name: text().notNull(),
   })
 )
 
 export const studentToCourses = drizzleSilk(
-  t.sqliteTable("studentToCourses", {
-    studentId: t.int().references(() => users.id),
-    courseId: t.int().references(() => courses.id),
-    createdAt: t.int({ mode: "timestamp" }).default(sql`(CURRENT_TIMESTAMP)`),
-  })
+  sqliteTable(
+    "studentToCourses",
+    {
+      studentId: int().references(() => users.id),
+      courseId: int().references(() => courses.id),
+      createdAt: int({ mode: "timestamp" }).default(sql`(CURRENT_TIMESTAMP)`),
+    },
+    (t) => [primaryKey({ columns: [t.studentId, t.courseId] })]
+  )
 )
 
 export const studentCourseGrades = drizzleSilk(
-  t.sqliteTable("studentCourseGrades", {
-    studentId: t.int().references(() => users.id),
-    courseId: t.int().references(() => courses.id),
-    grade: t.int(),
+  sqliteTable("studentCourseGrades", {
+    studentId: int().references(() => users.id),
+    courseId: int().references(() => courses.id),
+    grade: int(),
   })
 )

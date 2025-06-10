@@ -8,6 +8,7 @@ import { GraphQLString, execute, parse } from "graphql"
 import { beforeEach, describe, expect, it } from "vitest"
 import {
   getEnumNameByColumn,
+  getPrimaryColumns,
   getSelectedColumns,
   getValue,
   inArrayMultiple,
@@ -15,6 +16,8 @@ import {
   paramsAsKey,
 } from "../src/helper"
 import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
+import * as mysqlTables from "./schema/mysql"
+import * as pgTables from "./schema/postgres"
 import * as sqliteTables from "./schema/sqlite"
 
 describe("getEnumNameByColumn", () => {
@@ -262,5 +265,34 @@ describe("paramsAsKey", () => {
     expect(paramsAsKey(inArray(sqliteTables.users.id, [2]))).not.toEqual(
       paramsAsKey(inArray(sqliteTables.users.id, [3]))
     )
+  })
+})
+
+describe("getPrimaryColumns", () => {
+  it("should return the primary columns for a table", () => {
+    expect(getPrimaryColumns(sqliteTables.users)).toEqual([
+      ["id", sqliteTables.users.id],
+    ])
+  })
+
+  it("should return the primary columns for a sqlite table with a composite primary key", () => {
+    expect(getPrimaryColumns(sqliteTables.userStarPosts)).toEqual([
+      ["userId", sqliteTables.userStarPosts.userId],
+      ["postId", sqliteTables.userStarPosts.postId],
+    ])
+  })
+
+  it("should return the primary columns for a mysql table with a composite primary key", () => {
+    expect(getPrimaryColumns(mysqlTables.userStarPosts)).toEqual([
+      ["userId", mysqlTables.userStarPosts.userId],
+      ["postId", mysqlTables.userStarPosts.postId],
+    ])
+  })
+
+  it("should return the primary columns for a pg table with a composite primary key", () => {
+    expect(getPrimaryColumns(pgTables.userStarPosts)).toEqual([
+      ["userId", pgTables.userStarPosts.userId],
+      ["postId", pgTables.userStarPosts.postId],
+    ])
   })
 })

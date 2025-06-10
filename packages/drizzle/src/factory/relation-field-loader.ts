@@ -4,12 +4,16 @@ import {
   Many,
   type Relation,
   type Table,
-  and,
   getTableColumns,
   getTableName,
   inArray,
 } from "drizzle-orm"
-import { getSelectedColumns, inArrayMultiple, paramsAsKey } from "../helper"
+import {
+  getPrimaryColumns,
+  getSelectedColumns,
+  inArrayMultiple,
+  paramsAsKey,
+} from "../helper"
 import type {
   AnyQueryBuilder,
   BaseDatabase,
@@ -32,11 +36,8 @@ export class RelationFieldLoader extends EasyDataLoader<
     protected sourceTable: Table,
     protected targetTable: Table
   ) {
-    const isMany = relation instanceof Many
-    super((...args) =>
-      isMany ? this.batchLoadMany(...args) : this.batchLoadOne(...args)
-    )
-    this.isMany = isMany
+    super((...args) => this.batchLoad(...args))
+    this.isMany = relation instanceof Many
     this.fieldsLength = relation.sourceColumns.length
     const queryBuilder = matchQueryBuilder(this.db.query, this.sourceTable)
     if (!queryBuilder) {
@@ -47,7 +48,7 @@ export class RelationFieldLoader extends EasyDataLoader<
     this.queryBuilder = queryBuilder
   }
 
-  protected async batchLoadOne(
+  protected async batchLoad(
     inputs: [
       parent: any,
       args: QueryToOneFieldOptions<any>,
@@ -55,66 +56,22 @@ export class RelationFieldLoader extends EasyDataLoader<
     ][]
   ): Promise<any[]> {
     const inputGroups = this.keyByArgs(inputs)
-
     const resultsGroups = new Map<string, Map<string, any>>()
     await Promise.all(
       Array.from(inputGroups.values()).map(async (inputs) => {
         const args = inputs[0][1]
         const columns = this.columns(inputs)
-        const results = await this.loadOneByParent(
-          inputs.map((input) => input[0]),
-          args,
-          columns
-        )
-        const groups = new Map<string, any>(
-          results.map((item: any) => [this.getKeyByReference(item), item])
-        )
-        resultsGroups.set(paramsAsKey(args), groups)
-      })
-    )
-
-    return inputs.map(([parent, args]) => {
-      const paramsKey = paramsAsKey(args)
-      const groups = resultsGroups.get(paramsKey)
-      if (!groups) return null
-      const key = this.getKeyByField(parent)
-      return groups.get(key) ?? null
-    })
-  }
-
-  protected async loadOneByParent(
-    parents: any[],
-    args: QueryToOneFieldOptions<any>,
-    columns: Partial<Record<string, Column>>
-  ): Promise<any[]> {
-    const where =
-      typeof args.where === "function"
-        ? args.where(this.targetTable)
-        : args.where
-    return await (this.db as any)
-      .select(columns)
-      .from(this.targetTable)
-      .where(and(this.whereByParent(parents), where))
-  }
-
-  protected async batchLoadMany(
-    inputs: [
-      parent: any,
-      args: QueryToManyFieldOptions<any>,
-      payload: ResolverPayload | undefined,
-    ][]
-  ): Promise<any[]> {
-    const inputGroups = this.keyByArgs(inputs)
-    const resultsGroups = new Map<string, Map<string, any>>()
-    await Promise.all(
-      Array.from(inputGroups.values()).map(async (inputs) => {
-        const args = inputs[0][1]
-        const columns = this.columns(inputs)
-        const parentResults = await this.loadManyByParent(
-          inputs.map((input) => input[0]),
-          args,
-          columns
-        )
+        const parentResults = this.isMany
+          ? await this.loadManyByParent(
+              inputs.map((input) => input[0]),
+              args,
+              columns
+            )
+          : await this.loadOneByParent(
+              inputs.map((input) => input[0]),
+              args,
+              columns
+            )
         const groups = new Map<string, any>(
           parentResults.map((parent: any) => [
             this.getKeyForParent(parent),
@@ -128,10 +85,26 @@ export class RelationFieldLoader extends EasyDataLoader<
     return inputs.map(([parent, args]) => {
       const paramsKey = paramsAsKey(args)
       const groups = resultsGroups.get(paramsKey)
-      if (!groups) return []
+      if (!groups) return null
       const key = this.getKeyForParent(parent)
       const parentResult = groups.get(key)
-      return parentResult?.[this.relationName] ?? []
+      return parentResult?.[this.relationName] ?? null
+    })
+  }
+
+  protected async loadOneByParent(
+    parents: any[],
+    args: QueryToOneFieldOptions<any>,
+    columns: Partial<Record<string, Column>>
+  ): Promise<any[]> {
+    return await this.queryBuilder.findMany({
+      where: { RAW: (table) => this.whereForParent(table, parents) },
+      with: {
+        [this.relationName]: {
+          where: { RAW: args.where },
+          columns: mapValue(columns, () => true),
+        },
+      } as never,
     })
   }
 
@@ -173,32 +146,8 @@ export class RelationFieldLoader extends EasyDataLoader<
     return inputGroups
   }
 
-  protected whereByParent(parents: any[]) {
-    if (this.fieldsLength === 1) {
-      const values = parents.map(
-        (parent) =>
-          parent[
-            this.fieldKey(this.sourceTable, this.relation.sourceColumns[0])
-          ]
-      )
-      return inArray(this.relation.targetColumns[0], values)
-    }
-    const values = parents.map((parent) =>
-      this.relation.sourceColumns.map(
-        (field) => parent[this.fieldKey(this.sourceTable, field)]
-      )
-    )
-    return inArrayMultiple(
-      this.relation.targetColumns,
-      values,
-      this.targetTable
-    )
-  }
-
   protected whereForParent(table: Table, parents: any[]) {
-    const primaryColumns = Object.entries(getTableColumns(table)).filter(
-      ([_, col]) => col.primary
-    )
+    const primaryColumns = getPrimaryColumns(table)
     if (primaryColumns.length === 1) {
       const [key, column] = primaryColumns[0]
       return inArray(
@@ -209,30 +158,11 @@ export class RelationFieldLoader extends EasyDataLoader<
     return inArrayMultiple(
       primaryColumns.map((it) => it[1]),
       parents.map((parent) => primaryColumns.map((it) => parent[it[0]])),
-      this.sourceTable
+      table
     )
   }
 
   protected tablesColumnToFieldKey: Map<Table, Map<string, string>> = new Map()
-
-  protected fieldKey(table: Table, column: Column): string {
-    const columnNameToFieldKeys =
-      this.tablesColumnToFieldKey.get(table) ??
-      new Map<string, string>(
-        Object.entries(getTableColumns(table)).map(([key, sourceColumn]) => [
-          sourceColumn.name,
-          key,
-        ])
-      )
-    this.tablesColumnToFieldKey.set(table, columnNameToFieldKeys)
-    const key = columnNameToFieldKeys.get(column.name)
-    if (!key) {
-      throw new Error(
-        `Column ${column.name} not found in source table ${getTableName(this.sourceTable)}`
-      )
-    }
-    return key
-  }
 
   protected columns(
     inputs: [parent: any, args: any, payload: ResolverPayload | undefined][]
@@ -246,18 +176,6 @@ export class RelationFieldLoader extends EasyDataLoader<
       this.relation.targetColumns.map((col) => [col.name, col])
     )
     return { ...selectedColumns, ...referenceColumns }
-  }
-
-  protected getKeyByField(parent: any): string {
-    return this.relation.sourceColumns
-      .map((col) => parent[this.fieldKey(this.sourceTable, col)])
-      .join()
-  }
-
-  protected getKeyByReference(item: any): string {
-    return this.relation.targetColumns
-      .map((col) => item[this.fieldKey(this.targetTable, col)])
-      .join()
   }
 
   protected getKeyForParent(parent: any): string {
