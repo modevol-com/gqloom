@@ -26,7 +26,6 @@ export class RelationFieldLoader extends EasyDataLoader<
   any
 > {
   protected isMany: boolean
-  protected fieldsLength: number
   protected queryBuilder: AnyQueryBuilder
 
   public constructor(
@@ -38,7 +37,6 @@ export class RelationFieldLoader extends EasyDataLoader<
   ) {
     super((...args) => this.batchLoad(...args))
     this.isMany = relation instanceof Many
-    this.fieldsLength = relation.sourceColumns.length
     const queryBuilder = matchQueryBuilder(this.db.query, this.sourceTable)
     if (!queryBuilder) {
       throw new Error(
