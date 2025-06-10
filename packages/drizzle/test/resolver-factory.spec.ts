@@ -865,12 +865,10 @@ describe("DrizzleResolverFactory", () => {
       })
       if (!John) throw new Error("John not found")
 
-      // 先删除已有的 posts
       await db
         .delete(sqliteSchemas.posts)
         .where(eq(sqliteSchemas.posts.authorId, John.id))
 
-      // 插入新的测试数据
       await db.insert(sqliteSchemas.posts).values([
         { authorId: John.id, title: "Post C" },
         { authorId: John.id, title: "Post A" },
@@ -879,13 +877,11 @@ describe("DrizzleResolverFactory", () => {
 
       const postsField = userFactory.relationField("posts")
 
-      // Test ascending order
       let answer = await postsField["~meta"].resolve(John, {
         orderBy: { title: "asc" },
       })
       expect(answer.map((p) => p.title)).toEqual(["Post A", "Post B", "Post C"])
 
-      // Test descending order
       answer = await postsField["~meta"].resolve(John, {
         orderBy: { title: "desc" },
       })
