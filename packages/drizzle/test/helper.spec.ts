@@ -8,7 +8,6 @@ import { GraphQLString, execute, parse } from "graphql"
 import { beforeEach, describe, expect, it } from "vitest"
 import {
   getEnumNameByColumn,
-  getQueriedColumns,
   getSelectedColumns,
   getValue,
   inArrayMultiple,
@@ -96,7 +95,6 @@ describe("helper", () => {
 
 describe("getSelectedColumns", () => {
   const selectedColumns = new Set<string>()
-  const queriedColumns = new Set<string>()
   const r = resolver.of(sqliteTables.users, {
     users: query(sqliteTables.users.$list()).resolve((_input, payload) => {
       for (const column of Object.keys(
@@ -106,17 +104,6 @@ describe("getSelectedColumns", () => {
       }
       return []
     }),
-
-    usersByQuery: query(sqliteTables.users.$list()).resolve(
-      (_input, payload) => {
-        for (const column of Object.keys(
-          getQueriedColumns(sqliteTables.users, payload)
-        )) {
-          queriedColumns.add(column)
-        }
-        return []
-      }
-    ),
 
     greeting: field(silk(GraphQLString))
       .derivedFrom("name")
@@ -137,18 +124,6 @@ describe("getSelectedColumns", () => {
     `)
     await execute({ schema, document: query })
     expect(selectedColumns).toEqual(new Set(["id", "name"]))
-  })
-
-  it("should access queried columns", async () => {
-    const query = parse(/* GraphQL */ `
-      query {
-        usersByQuery {
-          id
-        }
-      }
-    `)
-    await execute({ schema, document: query })
-    expect(queriedColumns).toEqual(new Set(["id"]))
   })
 
   it("should handle derived fields", async () => {

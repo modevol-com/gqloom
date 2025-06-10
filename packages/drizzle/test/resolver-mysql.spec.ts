@@ -212,7 +212,7 @@ describe("resolver by mysql", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc
-        select \`id\`, \`title\`, \`authorId\` from \`posts\` where \`posts\`.\`authorId\` in (?, ?, ?)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\`, \`posts\`.\`r\` as \`posts\` from \`users\` as \`d0\` left join lateral(select coalesce(json_arrayagg(json_object('id', \`id\`, 'title', \`title\`, 'authorId', \`authorId\`)), json_array()) as \`r\` from (select \`d1\`.\`id\` as \`id\`, \`d1\`.\`title\` as \`title\`, \`d1\`.\`authorId\` as \`authorId\` from \`posts\` as \`d1\` where \`d0\`.\`id\` = \`d1\`.\`authorId\`) as \`t\`) as \`posts\` on true where \`d0\`.\`id\` in (?, ?, ?)
         "
       `)
     })

@@ -15,7 +15,7 @@ enum OrderDirection {
 }
 
 type Post {
-  author: User
+  author(where: UserFilters): User
   authorId: Int
   content: String
   id: Int!
@@ -154,17 +154,75 @@ input SQLiteTextFiltersNested {
   notLike: String
 }
 
+input SQLiteTimestampFilters {
+  AND: [SQLiteTimestampFiltersNested!]
+  NOT: SQLiteTimestampFiltersNested
+  OR: [SQLiteTimestampFiltersNested!]
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  in: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notIn: [String!]
+  notLike: String
+}
+
+input SQLiteTimestampFiltersNested {
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  in: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notIn: [String!]
+  notLike: String
+}
+
+input StudentToCoursesFilters {
+  AND: [StudentToCoursesFiltersNested!]
+  NOT: StudentToCoursesFiltersNested
+  OR: [StudentToCoursesFiltersNested!]
+  courseId: SQLiteIntegerFilters
+  createdAt: SQLiteTimestampFilters
+  studentId: SQLiteIntegerFilters
+}
+
+input StudentToCoursesFiltersNested {
+  courseId: SQLiteIntegerFilters
+  createdAt: SQLiteTimestampFilters
+  studentId: SQLiteIntegerFilters
+}
+
 type StudentToCoursesItem {
   courseId: Int
   createdAt: String
   studentId: Int
 }
 
+input StudentToCoursesOrderBy {
+  courseId: OrderDirection
+  createdAt: OrderDirection
+  studentId: OrderDirection
+}
+
 """A user"""
 type User {
   """The age of the user"""
   age: Int
-  courses: [StudentToCoursesItem!]!
+  courses(limit: Int, offset: Int, orderBy: StudentToCoursesOrderBy, where: StudentToCoursesFilters): [StudentToCoursesItem!]!
 
   """The email of the user"""
   email: String
@@ -172,7 +230,7 @@ type User {
 
   """The name of the user"""
   name: String!
-  posts: [Post!]!
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
 }
 
 """A user"""

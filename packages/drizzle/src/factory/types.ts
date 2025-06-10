@@ -27,6 +27,8 @@ import type {
   InsertSingleArgs,
   InsertSingleWithOnConflictArgs,
   MutationResult,
+  RelationToManyArgs,
+  RelationToOneArgs,
   SelectArrayArgs,
   SelectSingleArgs,
   UpdateArgs,
@@ -107,21 +109,23 @@ export interface SelectArrayQuery<
     GraphQLSilk<SelectArrayOptions, TInputI>
   > {}
 
-export type SelectArrayOptions = {
+export interface SelectArrayOptions {
   where?: SQL
   orderBy?: (Column | SQL | SQL.Aliased)[]
   limit?: number
   offset?: number
 }
 
-export interface CountQuery<
-  TTable extends Table,
-  TInputI = SelectArrayArgs<TTable>,
-> extends QueryFactoryWithResolve<
-    CountArgs<TTable>,
+export interface CountQuery<TTable extends Table, TInputI = CountArgs<TTable>>
+  extends QueryFactoryWithResolve<
+    CountOptions,
     GraphQLSilk<number, number>,
-    GraphQLSilk<CountArgs<TTable>, TInputI>
+    GraphQLSilk<CountOptions, TInputI>
   > {}
+
+export interface CountOptions {
+  where?: SQL
+}
 
 export interface SelectSingleQuery<
   TTable extends Table,
@@ -135,33 +139,80 @@ export interface SelectSingleQuery<
     GraphQLSilk<SelectSingleOptions, TInputI>
   > {}
 
-export type SelectSingleOptions = {
+export interface SelectSingleOptions {
   where?: SQL
   orderBy?: (Column | SQL | SQL.Aliased)[]
   offset?: number
 }
 
+export type RelationField<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"],
+> = InferTableRelationalConfig<
+  QueryBuilder<TDatabase, TTable>
+>["relations"][TRelationName] extends Many<any, any>
+  ? RelationManyField<
+      TTable,
+      InferRelationTable<TDatabase, TTable, TRelationName>
+    >
+  : RelationOneField<
+      TTable,
+      InferRelationTable<TDatabase, TTable, TRelationName>
+    >
+
 export interface RelationManyField<
   TTable extends Table,
   TRelationTable extends Table,
+  TInputI = RelationToManyArgs<TRelationTable>,
 > extends FieldFactoryWithResolve<
     GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable>[],
       InferSelectModel<TRelationTable>[]
-    >
+    >,
+    QueryToManyFieldOptions,
+    GraphQLSilk<QueryToManyFieldOptions, TInputI>
   > {}
+
+export interface QueryToManyFieldOptions {
+  where?: SQL
+  orderBy?: Partial<Record<string, "asc" | "desc">>
+  limit?: number
+  offset?: number
+}
 
 export interface RelationOneField<
   TTable extends Table,
   TRelationTable extends Table,
+  TInputI = RelationToOneArgs<TTable>,
 > extends FieldFactoryWithResolve<
     GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable> | null | undefined,
       InferSelectModel<TRelationTable> | null | undefined
-    >
+    >,
+    QueryToOneFieldOptions,
+    GraphQLSilk<QueryToOneFieldOptions, TInputI>
   > {}
+
+export interface QueryToOneFieldOptions {
+  where?: SQL
+}
+
+export type QueryFieldOptions<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"],
+> = InferTableRelationalConfig<
+  QueryBuilder<TDatabase, TTable>
+>["relations"][TRelationName] extends Many<any, any>
+  ? QueryToManyFieldOptions
+  : QueryToOneFieldOptions
 
 export type InsertArrayMutation<
   TTable extends Table,

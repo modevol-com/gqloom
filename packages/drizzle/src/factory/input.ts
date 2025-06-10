@@ -3,6 +3,7 @@ import {
   type Column,
   type InferInsertModel,
   type InferSelectModel,
+  type Many,
   type Table,
   getTableColumns,
   getTableName,
@@ -19,8 +20,13 @@ import {
   isNonNullType,
 } from "graphql"
 import { getValue, isColumnVisible } from "../helper"
-import { DrizzleWeaver } from "../index"
+import { type BaseDatabase, DrizzleWeaver } from "../index"
 import type { DrizzleResolverFactoryOptions, DrizzleSilkConfig } from "../types"
+import type {
+  InferRelationTable,
+  InferTableRelationalConfig,
+  QueryBuilder,
+} from "./types"
 
 export class DrizzleInputFactory<TTable extends Table> {
   public constructor(
@@ -74,6 +80,39 @@ export class DrizzleInputFactory<TTable extends Table> {
 
     return weaverContext.memoNamedType(
       new GraphQLObjectType<CountArgs<TTable>>({
+        name,
+        fields: {
+          where: { type: this.filters() },
+        },
+      })
+    )
+  }
+
+  public relationToManyArgs() {
+    const name = `${pascalCase(getTableName(this.table))}RelationToManyArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<RelationToManyArgs<TTable>>({
+        name,
+        fields: {
+          where: { type: this.filters() },
+          orderBy: { type: this.orderBy() },
+          limit: { type: GraphQLInt },
+          offset: { type: GraphQLInt },
+        },
+      })
+    )
+  }
+
+  public relationToOneArgs() {
+    const name = `${pascalCase(getTableName(this.table))}RelationToOneArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<RelationToOneArgs<TTable>>({
         name,
         fields: {
           where: { type: this.filters() },
@@ -492,6 +531,29 @@ export interface SelectSingleArgs<TTable extends Table> {
 }
 
 export interface CountArgs<TTable extends Table> {
+  where?: Filters<TTable>
+}
+
+export type RelationArgs<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"],
+> = InferTableRelationalConfig<
+  QueryBuilder<TDatabase, TTable>
+>["relations"][TRelationName] extends Many<any, any>
+  ? RelationToManyArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
+  : RelationToOneArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
+
+export interface RelationToManyArgs<TTable extends Table> {
+  where?: Filters<TTable>
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
+  limit?: number
+  offset?: number
+}
+
+export interface RelationToOneArgs<TTable extends Table> {
   where?: Filters<TTable>
 }
 

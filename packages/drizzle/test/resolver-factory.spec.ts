@@ -1,5 +1,5 @@
 import { resolver } from "@gqloom/core"
-import { defineRelations, eq, inArray, sql } from "drizzle-orm"
+import { defineRelations, eq, gte, inArray, like, lt, sql } from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
@@ -45,7 +45,7 @@ import { relations as sqliteRelations } from "./schema/sqlite-relations"
 
 const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
 
-describe.concurrent("DrizzleResolverFactory", () => {
+describe("DrizzleResolverFactory", () => {
   let db: LibSQLDatabase<typeof sqliteSchemas, typeof sqliteRelations>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
@@ -137,6 +137,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       expect(["", ...log, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        select "id", "name", "age", "email" from "users" order by "users"."name" asc, "users"."age" asc
+        select "id", "name", "age", "email" from "users" order by "users"."age" desc, "users"."name" asc
         "
       `)
     })
@@ -393,7 +395,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
   })
 
-  describe.concurrent("selectSingleQuery", () => {
+  describe("selectSingleQuery", () => {
     it("should be used without error", () => {
       const userResolver = resolver.of(sqliteSchemas.users, {
         user: userFactory.selectSingleQuery(),
@@ -483,22 +485,22 @@ describe.concurrent("DrizzleResolverFactory", () => {
         expect(answer).toBe(5)
 
         answer = await query["~meta"].resolve({
-          where: { age: { gte: 12 } },
+          where: gte(sqliteSchemas.users.age, 12),
         })
         expect(answer).toBe(3)
 
         answer = await query["~meta"].resolve({
-          where: { age: { lt: 12 } },
+          where: lt(sqliteSchemas.users.age, 12),
         })
         expect(answer).toBe(2)
 
         answer = await query["~meta"].resolve({
-          where: { age: { in: [10, 11] } },
+          where: inArray(sqliteSchemas.users.age, [10, 11]),
         })
         expect(answer).toBe(2)
 
         answer = await query["~meta"].resolve({
-          where: { name: { like: "J%" } },
+          where: like(sqliteSchemas.users.name, "J%"),
         })
         expect(answer).toBe(5)
       })
@@ -510,7 +512,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
               age: v.nullish(v.number()),
             }),
             v.transform(({ age }) => ({
-              where: age != null ? { age: { eq: age } } : undefined,
+              where: age != null ? eq(sqliteSchemas.users.age, age) : undefined,
             }))
           ),
         })
@@ -680,10 +682,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
         }))
       )
 
-      let answer
-      answer = await Promise.all(
+      const answer = await Promise.all(
         studentCourses.map((sc) => {
-          return gradeField["~meta"].resolve(sc, undefined)
+          return gradeField["~meta"].resolve(sc, {})
         })
       )
 
@@ -701,13 +702,56 @@ describe.concurrent("DrizzleResolverFactory", () => {
           },
         ])
       )
+    })
+
+    it("should resolve correctly for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+      const Joe = await db.query.users.findFirst({
+        where: { name: "Joe" },
+      })
+      if (!Joe) throw new Error("Joe not found")
+
+      const [math, english] = await db
+        .insert(sqliteSchemas.courses)
+        .values([{ name: "Math" }, { name: "English" }])
+        .returning()
+
+      const studentCourses = await db
+        .insert(sqliteSchemas.studentToCourses)
+        .values([
+          { studentId: John.id, courseId: math.id },
+          { studentId: John.id, courseId: english.id },
+          { studentId: Joe.id, courseId: math.id },
+          { studentId: Joe.id, courseId: english.id },
+        ])
+        .returning()
+
+      await db.insert(sqliteSchemas.studentCourseGrades).values(
+        studentCourses.map((it) => ({
+          ...it,
+          grade: Math.floor(Math.random() * 51) + 50,
+        }))
+      )
 
       await db.insert(sqliteSchemas.posts).values([
         { authorId: John.id, title: "Hello" },
         { authorId: John.id, title: "World" },
       ])
       const postsField = userFactory.relationField("posts")
-      answer = await postsField["~meta"].resolve(John, undefined)
+      const answer = await postsField["~meta"].resolve(John, {})
+      // const answer = (
+      //   await db.query.users.findFirst({
+      //     where: { RAW: (users) => inArray(users.id, [John.id]) },
+      //     with: {
+      //       posts: {
+      //         columns: { id: true, title: true, authorId: true },
+      //       },
+      //     },
+      //   })
+      // )?.posts
       expect(answer).toMatchObject([
         { authorId: John.id },
         { authorId: John.id },
@@ -722,9 +766,10 @@ describe.concurrent("DrizzleResolverFactory", () => {
       )
     })
 
-    it.todo("should handle limit and offset")
-    it.todo("should handle orderBy")
-    it.todo("should handle where")
+    it.todo("should handle limit and offset for to-many relation")
+    it.todo("should handle orderBy for to-many relation")
+    it.todo("should handle where for to-many relation")
+    it.todo("should handle where for to-one relation")
   })
 
   describe("relationField with multiple field relations", () => {
@@ -764,7 +809,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // Test loading multiple relations at once
       const courseField = studentCourseFactory.relationField("course")
       const results = await Promise.all(
-        studentCourses.map((sc) => courseField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => courseField["~meta"].resolve(sc, {}))
       )
 
       expect(results).toMatchObject([
@@ -775,7 +820,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // Test with batch loading multiple parents
       const studentField = studentCourseFactory.relationField("student")
       const studentResults = await Promise.all(
-        studentCourses.map((sc) => studentField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => studentField["~meta"].resolve(sc, {}))
       )
 
       expect(studentResults).toMatchObject([
@@ -822,7 +867,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       // Load all courses for all student-course relationships at once
       const allResults = await Promise.all(
-        studentCourses.map((sc) => executor.course(sc))
+        studentCourses.map((sc) => executor.course(sc, {}))
       )
 
       // Verify results include both Math and English courses
@@ -836,7 +881,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // Test the student relationship in same batch
       const studentField = studentCourseFactory.relationField("student")
       const studentResults = await Promise.all(
-        studentCourses.map((sc) => studentField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => studentField["~meta"].resolve(sc, {}))
       )
 
       // Verify results show both John and Joe
@@ -943,7 +988,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       expect(studentCourses.length).toBe(3)
 
       const grades = await Promise.all(
-        studentCourses.map((sc) => gradeField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => gradeField["~meta"].resolve(sc, {}))
       )
 
       // Verify we got all the grades back
@@ -980,7 +1025,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
   })
 
-  describe.concurrent("queriesResolver", () => {
+  describe("queriesResolver", () => {
     it("should be created without error", async () => {
       const resolver = userFactory.queriesResolver()
       expect(resolver).toBeDefined()
