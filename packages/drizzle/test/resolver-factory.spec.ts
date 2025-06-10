@@ -815,8 +815,83 @@ describe("DrizzleResolverFactory", () => {
       ])
     })
 
-    it.todo("should handle limit and offset for to-many relation")
-    it.todo("should handle orderBy for to-many relation")
+    it("should handle limit and offset for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+
+      await db
+        .delete(sqliteSchemas.posts)
+        .where(eq(sqliteSchemas.posts.authorId, John.id))
+
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: John.id, title: "Post 1" },
+        { authorId: John.id, title: "Post 2" },
+        { authorId: John.id, title: "Post 3" },
+        { authorId: John.id, title: "Post 4" },
+        { authorId: John.id, title: "Post 5" },
+      ])
+
+      const postsField = userFactory.relationField("posts")
+
+      let answer = await postsField["~meta"].resolve(John, {
+        limit: 2,
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual(["Post 1", "Post 2"])
+
+      answer = await postsField["~meta"].resolve(John, {
+        limit: 100,
+        offset: 2,
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(3)
+      expect(answer.map((p) => p.title)).toEqual(["Post 3", "Post 4", "Post 5"])
+
+      answer = await postsField["~meta"].resolve(John, {
+        limit: 2,
+        offset: 1,
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual(["Post 2", "Post 3"])
+    })
+
+    it("should handle orderBy for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+
+      // 先删除已有的 posts
+      await db
+        .delete(sqliteSchemas.posts)
+        .where(eq(sqliteSchemas.posts.authorId, John.id))
+
+      // 插入新的测试数据
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: John.id, title: "Post C" },
+        { authorId: John.id, title: "Post A" },
+        { authorId: John.id, title: "Post B" },
+      ])
+
+      const postsField = userFactory.relationField("posts")
+
+      // Test ascending order
+      let answer = await postsField["~meta"].resolve(John, {
+        orderBy: { title: "asc" },
+      })
+      expect(answer.map((p) => p.title)).toEqual(["Post A", "Post B", "Post C"])
+
+      // Test descending order
+      answer = await postsField["~meta"].resolve(John, {
+        orderBy: { title: "desc" },
+      })
+      expect(answer.map((p) => p.title)).toEqual(["Post C", "Post B", "Post A"])
+    })
+
     it.todo("should handle where for to-many relation")
     it.todo("should handle where for to-one relation")
   })
