@@ -1,7 +1,7 @@
 import { field, query, resolver, silk, weave } from "@gqloom/core"
 import type { Table } from "drizzle-orm"
 import type { Column } from "drizzle-orm"
-import { sql } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 import * as mysql from "drizzle-orm/mysql-core"
 import * as pg from "drizzle-orm/pg-core"
 import { GraphQLString, execute, parse } from "graphql"
@@ -209,6 +209,58 @@ describe("paramsAsKey", () => {
 
     expect(paramsAsKey(obj)).toBe(
       "group.0.id=1&group.0.name=foo&group.1.id=2&group.1.name=bar"
+    )
+  })
+
+  it("should handle functions", () => {
+    const obj = {
+      foo: () => void 0,
+      bar: function test() {
+        return 1
+      },
+      baz: "normal",
+    }
+    expect(paramsAsKey(obj)).toBe("bar=[Function]&baz=normal&foo=[Function]")
+  })
+
+  it("should handle recursive objects", () => {
+    const foo: any = {
+      bar: {},
+      normal: "value",
+    }
+    foo.bar = foo
+    expect(paramsAsKey(foo)).toBe("bar=[Circular]()&normal=value")
+
+    const o1 = {
+      a: 1,
+      b: 2,
+      foo,
+    }
+    const o2 = {
+      a: 1,
+      b: 2,
+      foo,
+    }
+    expect(paramsAsKey(o1)).toBe(paramsAsKey(o2))
+    expect(paramsAsKey(o1)).toBe(
+      "a=1&b=2&foo.bar=[Circular](foo)&foo.normal=value"
+    )
+  })
+
+  it("should drizzle sql", () => {
+    expect(paramsAsKey(sql`1`)).toEqual(paramsAsKey(sql`1`))
+    expect(paramsAsKey(sql`1`)).not.toEqual(paramsAsKey(sql`2`))
+    expect(paramsAsKey(and(eq(sqliteTables.users.id, 2)))).toEqual(
+      paramsAsKey(and(eq(sqliteTables.users.id, 2)))
+    )
+    expect(paramsAsKey(and(eq(sqliteTables.users.id, 2)))).not.toEqual(
+      paramsAsKey(and(eq(sqliteTables.users.id, 3)))
+    )
+    expect(paramsAsKey(inArray(sqliteTables.users.id, [2]))).toEqual(
+      paramsAsKey(inArray(sqliteTables.users.id, [2]))
+    )
+    expect(paramsAsKey(inArray(sqliteTables.users.id, [2]))).not.toEqual(
+      paramsAsKey(inArray(sqliteTables.users.id, [3]))
     )
   })
 })
