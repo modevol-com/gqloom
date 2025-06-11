@@ -5,7 +5,9 @@ export type BatchLoadFn<TKey, TData> = (
 /**
  * GraphQL Loom built-in data loader.
  */
-export class LoomDataLoader<TKey, TData> {
+export abstract class LoomDataLoader<TKey, TData> {
+  protected abstract batchLoad(keys: TKey[]): Promise<(TData | Error)[]>
+
   protected results: Map<TKey, Promise<TData>>
   protected resolvers: Map<
     TKey,
@@ -14,7 +16,7 @@ export class LoomDataLoader<TKey, TData> {
       reject: (reason?: any) => void,
     ]
   >
-  public constructor(protected readonly batchLoadFn: BatchLoadFn<TKey, TData>) {
+  public constructor() {
     this.results = new Map()
     this.resolvers = new Map()
   }
@@ -52,7 +54,7 @@ export class LoomDataLoader<TKey, TData> {
     const keys = Array.from(resolvers.keys())
 
     try {
-      const list = await this.batchLoadFn(keys)
+      const list = await this.batchLoad(keys)
       for (let i = 0; i < list.length; i++) {
         const data = list[i]
         const [resolve, reject] = resolvers.get(keys[i]) ?? []
@@ -91,7 +93,11 @@ export class LoomDataLoader<TKey, TData> {
   }
 }
 
-export {
-  /** Alias for LoomDataLoader */
-  LoomDataLoader as EasyDataLoader,
+export class EasyDataLoader<TKey, TData> extends LoomDataLoader<TKey, TData> {
+  protected batchLoad(keys: TKey[]): Promise<(TData | Error)[]> {
+    return this.batchLoadFn(keys)
+  }
+  public constructor(protected readonly batchLoadFn: BatchLoadFn<TKey, TData>) {
+    super()
+  }
 }

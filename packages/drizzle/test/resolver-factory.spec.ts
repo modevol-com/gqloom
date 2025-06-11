@@ -1,5 +1,14 @@
-import { resolver } from "@gqloom/core"
-import { defineRelations, eq, inArray, sql } from "drizzle-orm"
+import { resolver, weave } from "@gqloom/core"
+import {
+  defineRelations,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  like,
+  lt,
+  sql,
+} from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,
@@ -13,6 +22,7 @@ import {
   drizzle as pgDrizzle,
 } from "drizzle-orm/node-postgres"
 import * as sqlite from "drizzle-orm/sqlite-core"
+import { execute, parse } from "graphql"
 import * as v from "valibot"
 import {
   afterAll,
@@ -45,7 +55,7 @@ import { relations as sqliteRelations } from "./schema/sqlite-relations"
 
 const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
 
-describe.concurrent("DrizzleResolverFactory", () => {
+describe("DrizzleResolverFactory", () => {
   let db: LibSQLDatabase<typeof sqliteSchemas, typeof sqliteRelations>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
@@ -137,6 +147,8 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       expect(["", ...log, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        select "id", "name", "age", "email" from "users" order by "users"."name" asc, "users"."age" asc
+        select "id", "name", "age", "email" from "users" order by "users"."age" desc, "users"."name" asc
         "
       `)
     })
@@ -393,7 +405,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
   })
 
-  describe.concurrent("selectSingleQuery", () => {
+  describe("selectSingleQuery", () => {
     it("should be used without error", () => {
       const userResolver = resolver.of(sqliteSchemas.users, {
         user: userFactory.selectSingleQuery(),
@@ -483,22 +495,22 @@ describe.concurrent("DrizzleResolverFactory", () => {
         expect(answer).toBe(5)
 
         answer = await query["~meta"].resolve({
-          where: { age: { gte: 12 } },
+          where: gte(sqliteSchemas.users.age, 12),
         })
         expect(answer).toBe(3)
 
         answer = await query["~meta"].resolve({
-          where: { age: { lt: 12 } },
+          where: lt(sqliteSchemas.users.age, 12),
         })
         expect(answer).toBe(2)
 
         answer = await query["~meta"].resolve({
-          where: { age: { in: [10, 11] } },
+          where: inArray(sqliteSchemas.users.age, [10, 11]),
         })
         expect(answer).toBe(2)
 
         answer = await query["~meta"].resolve({
-          where: { name: { like: "J%" } },
+          where: like(sqliteSchemas.users.name, "J%"),
         })
         expect(answer).toBe(5)
       })
@@ -510,7 +522,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
               age: v.nullish(v.number()),
             }),
             v.transform(({ age }) => ({
-              where: age != null ? { age: { eq: age } } : undefined,
+              where: age != null ? eq(sqliteSchemas.users.age, age) : undefined,
             }))
           ),
         })
@@ -672,7 +684,6 @@ describe.concurrent("DrizzleResolverFactory", () => {
           { studentId: Joe.id, courseId: english.id },
         ])
         .returning()
-
       await db.insert(sqliteSchemas.studentCourseGrades).values(
         studentCourses.map((it) => ({
           ...it,
@@ -680,10 +691,9 @@ describe.concurrent("DrizzleResolverFactory", () => {
         }))
       )
 
-      let answer
-      answer = await Promise.all(
+      const answer = await Promise.all(
         studentCourses.map((sc) => {
-          return gradeField["~meta"].resolve(sc, undefined)
+          return gradeField["~meta"].resolve(sc, {})
         })
       )
 
@@ -701,13 +711,46 @@ describe.concurrent("DrizzleResolverFactory", () => {
           },
         ])
       )
+    })
+
+    it("should resolve correctly for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+      const Joe = await db.query.users.findFirst({
+        where: { name: "Joe" },
+      })
+      if (!Joe) throw new Error("Joe not found")
+
+      const [math, english] = await db
+        .insert(sqliteSchemas.courses)
+        .values([{ name: "Math" }, { name: "English" }])
+        .returning()
+
+      const studentCourses = await db
+        .insert(sqliteSchemas.studentToCourses)
+        .values([
+          { studentId: John.id, courseId: math.id },
+          { studentId: John.id, courseId: english.id },
+          { studentId: Joe.id, courseId: math.id },
+          { studentId: Joe.id, courseId: english.id },
+        ])
+        .returning()
+
+      await db.insert(sqliteSchemas.studentCourseGrades).values(
+        studentCourses.map((it) => ({
+          ...it,
+          grade: Math.floor(Math.random() * 51) + 50,
+        }))
+      )
 
       await db.insert(sqliteSchemas.posts).values([
         { authorId: John.id, title: "Hello" },
         { authorId: John.id, title: "World" },
       ])
       const postsField = userFactory.relationField("posts")
-      answer = await postsField["~meta"].resolve(John, undefined)
+      const answer = await postsField["~meta"].resolve(John, {})
       expect(answer).toMatchObject([
         { authorId: John.id },
         { authorId: John.id },
@@ -720,6 +763,494 @@ describe.concurrent("DrizzleResolverFactory", () => {
       }).toThrow(
         "GQLoom-Drizzle Error: Relation users.nonExistentRelation not found in drizzle instance"
       )
+    })
+
+    it("should work with aliased relation", async () => {
+      const [Jane] = await db
+        .select()
+        .from(sqliteSchemas.users)
+        .where(eq(sqliteSchemas.users.name, "Jane"))
+        .limit(1)
+      const [Jill] = await db
+        .select()
+        .from(sqliteSchemas.users)
+        .where(eq(sqliteSchemas.users.name, "Jill"))
+        .limit(1)
+      const [Jim] = await db
+        .select()
+        .from(sqliteSchemas.users)
+        .where(eq(sqliteSchemas.users.name, "Jim"))
+        .limit(1)
+
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: Jane.id, title: "Jane's post", reviewerId: Jim.id },
+        { authorId: Jane.id, title: "Jane's post 2", reviewerId: Jim.id },
+        { authorId: Jill.id, title: "Jill's post", reviewerId: Jim.id },
+        { authorId: Jill.id, title: "Jill's post 2", reviewerId: Jim.id },
+        { authorId: Jim.id, title: "Jim's post", reviewerId: Jill.id },
+        { authorId: Jim.id, title: "Jim's post 2", reviewerId: Jim.id },
+      ])
+
+      const userFactory = drizzleResolverFactory(db, sqliteSchemas.users)
+      const postsField = userFactory.relationField("posts")
+      const reviewedPostsField = userFactory.relationField("reviewedPosts")
+      let answer
+      answer = await postsField["~meta"].resolve(Jane, {})
+      expect(answer).toMatchObject([
+        { title: "Jane's post" },
+        { title: "Jane's post 2" },
+      ])
+      answer = await postsField["~meta"].resolve(Jill, {})
+      expect(answer).toMatchObject([
+        { title: "Jill's post" },
+        { title: "Jill's post 2" },
+      ])
+      answer = await postsField["~meta"].resolve(Jim, {})
+      expect(answer).toMatchObject([
+        { title: "Jim's post" },
+        { title: "Jim's post 2" },
+      ])
+      answer = await reviewedPostsField["~meta"].resolve(Jane, {})
+      expect(answer).toMatchObject([])
+      answer = await reviewedPostsField["~meta"].resolve(Jill, {})
+      expect(answer).toMatchObject([{ title: "Jim's post" }])
+      answer = await reviewedPostsField["~meta"].resolve(Jim, {})
+      expect(answer).toMatchObject([
+        { title: "Jane's post" },
+        { title: "Jane's post 2" },
+        { title: "Jill's post" },
+        { title: "Jill's post 2" },
+        { title: "Jim's post 2" },
+      ])
+    })
+
+    it("should handle limit and offset for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+
+      await db
+        .delete(sqliteSchemas.posts)
+        .where(eq(sqliteSchemas.posts.authorId, John.id))
+
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: John.id, title: "Post 1" },
+        { authorId: John.id, title: "Post 2" },
+        { authorId: John.id, title: "Post 3" },
+        { authorId: John.id, title: "Post 4" },
+        { authorId: John.id, title: "Post 5" },
+      ])
+
+      const postsField = userFactory.relationField("posts")
+
+      let answer = await postsField["~meta"].resolve(John, {
+        limit: 2,
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual(["Post 1", "Post 2"])
+
+      answer = await postsField["~meta"].resolve(John, {
+        limit: 100,
+        offset: 2,
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(3)
+      expect(answer.map((p) => p.title)).toEqual(["Post 3", "Post 4", "Post 5"])
+
+      answer = await postsField["~meta"].resolve(John, {
+        limit: 2,
+        offset: 1,
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual(["Post 2", "Post 3"])
+    })
+
+    it("should handle orderBy for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+
+      await db
+        .delete(sqliteSchemas.posts)
+        .where(eq(sqliteSchemas.posts.authorId, John.id))
+
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: John.id, title: "Post C" },
+        { authorId: John.id, title: "Post A" },
+        { authorId: John.id, title: "Post B" },
+      ])
+
+      const postsField = userFactory.relationField("posts")
+
+      let answer = await postsField["~meta"].resolve(John, {
+        orderBy: { title: "asc" },
+      })
+      expect(answer.map((p) => p.title)).toEqual(["Post A", "Post B", "Post C"])
+
+      answer = await postsField["~meta"].resolve(John, {
+        orderBy: { title: "desc" },
+      })
+      expect(answer.map((p) => p.title)).toEqual(["Post C", "Post B", "Post A"])
+    })
+
+    it("should handle where for to-many relation", async () => {
+      const John = await db.query.users.findFirst({
+        where: { name: "John" },
+      })
+      if (!John) throw new Error("John not found")
+
+      await db
+        .delete(sqliteSchemas.posts)
+        .where(eq(sqliteSchemas.posts.authorId, John.id))
+
+      // Insert test posts with different titles and content
+      await db.insert(sqliteSchemas.posts).values([
+        { authorId: John.id, title: "JavaScript Guide", content: "JS content" },
+        {
+          authorId: John.id,
+          title: "TypeScript Tutorial",
+          content: "TS content",
+        },
+        {
+          authorId: John.id,
+          title: "Python Basics",
+          content: "Python content",
+        },
+        {
+          authorId: John.id,
+          title: "Java Programming",
+          content: "Java content",
+        },
+      ])
+
+      const postsField = userFactory.relationField("posts")
+
+      // First test: verify basic functionality without where clause works
+      let answer = await postsField["~meta"].resolve(John, {
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(4)
+
+      // Test filtering by title containing "Script"
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.title, "%Script%"),
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual([
+        "JavaScript Guide",
+        "TypeScript Tutorial",
+      ])
+
+      // Test filtering by content containing "content"
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.content, "%content"),
+        orderBy: { title: "asc" },
+      })
+      expect(answer).toHaveLength(4)
+
+      // Test filtering by exact title
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => eq(p.title, "Python Basics"),
+      })
+      expect(answer).toHaveLength(1)
+      expect(answer[0].title).toBe("Python Basics")
+
+      // Test combining where with limit
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.title, "%a%"),
+        orderBy: { title: "asc" },
+        limit: 2,
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toEqual([
+        "Java Programming",
+        "JavaScript Guide",
+      ])
+
+      // Test where with no matches
+      answer = await postsField["~meta"].resolve(John, {
+        where: (p) => like(p.title, "%NonExistent%"),
+      })
+      expect(answer).toHaveLength(0)
+    })
+
+    it("should handle where for to-one relation", async () => {
+      const postFactory = drizzleResolverFactory(db, sqliteSchemas.posts)
+      const authorField = postFactory.relationField("author")
+
+      // Create users with different names and ages
+      const [Alice, Bob, Charlie] = await db
+        .insert(sqliteSchemas.users)
+        .values([
+          { name: "Alice", age: 25, email: "alice@example.com" },
+          { name: "Bob", age: 30, email: "bob@example.com" },
+          { name: "Charlie", age: 35 },
+        ])
+        .returning()
+
+      // Create posts authored by these users
+      const [post1, post2, post3] = await db
+        .insert(sqliteSchemas.posts)
+        .values([
+          { authorId: Alice.id, title: "Alice's Post" },
+          { authorId: Bob.id, title: "Bob's Post" },
+          { authorId: Charlie.id, title: "Charlie's Post" },
+        ])
+        .returning()
+
+      try {
+        // Test filtering author by age >= 30
+        let author = await authorField["~meta"].resolve(post1, {
+          where: (u) => gte(u.age, 30),
+        })
+        expect(author).toBeNull() // Alice is 25, should not match
+
+        author = await authorField["~meta"].resolve(post2, {
+          where: (u) => gte(u.age, 30),
+        })
+        expect(author).toMatchObject({ name: "Bob", age: 30 })
+
+        author = await authorField["~meta"].resolve(post3, {
+          where: (u) => gte(u.age, 30),
+        })
+        expect(author).toMatchObject({ name: "Charlie", age: 35 })
+
+        // Test filtering author by email not null
+        author = await authorField["~meta"].resolve(post1, {
+          where: (u) => isNotNull(u.email),
+        })
+        expect(author).toMatchObject({
+          name: "Alice",
+          email: "alice@example.com",
+        })
+
+        author = await authorField["~meta"].resolve(post3, {
+          where: (u) => isNotNull(u.email),
+        })
+        expect(author).toBeNull() // Charlie has no email
+
+        // Test filtering author by name pattern
+        author = await authorField["~meta"].resolve(post2, {
+          where: (u) => like(u.name, "B%"),
+        })
+        expect(author).toMatchObject({ name: "Bob" })
+
+        author = await authorField["~meta"].resolve(post1, {
+          where: (u) => like(u.name, "B%"),
+        })
+        expect(author).toBeNull() // Alice doesn't match pattern
+
+        // Test filtering with exact match
+        author = await authorField["~meta"].resolve(post3, {
+          where: (u) => eq(u.name, "Charlie"),
+        })
+        expect(author).toMatchObject({ name: "Charlie", age: 35 })
+
+        author = await authorField["~meta"].resolve(post3, {
+          where: (u) => eq(u.name, "NotCharlie"),
+        })
+        expect(author).toBeNull()
+      } finally {
+        // Clean up test data
+        await db
+          .delete(sqliteSchemas.posts)
+          .where(
+            inArray(sqliteSchemas.posts.id, [post1.id, post2.id, post3.id])
+          )
+        await db
+          .delete(sqliteSchemas.users)
+          .where(
+            inArray(sqliteSchemas.users.id, [Alice.id, Bob.id, Charlie.id])
+          )
+      }
+    })
+  })
+
+  describe("relationField with multiple relation field", () => {
+    let John: typeof sqliteSchemas.users.$inferSelect
+    let Jane: typeof sqliteSchemas.users.$inferSelect
+    let Jill: typeof sqliteSchemas.users.$inferSelect
+    beforeAll(async () => {
+      John = (await db.query.users.findFirst({
+        where: { name: "John" },
+      }))!
+      Jane = (await db.query.users.findFirst({
+        where: { name: "Jane" },
+      }))!
+      Jill = (await db.query.users.findFirst({
+        where: { name: "Jill" },
+      }))!
+      const posts = await db
+        .insert(sqliteSchemas.posts)
+        .values([
+          { authorId: John.id, title: "John's post", reviewerId: Jane.id },
+          { authorId: John.id, title: "John's post 2", reviewerId: Jane.id },
+          { authorId: Jane.id, title: "Jane's post", reviewerId: John.id },
+          { authorId: Jane.id, title: "Jane's post 2", reviewerId: John.id },
+          { authorId: Jill.id, title: "Jill's post", reviewerId: John.id },
+          { authorId: Jill.id, title: "Jill's post 2", reviewerId: John.id },
+        ])
+        .returning()
+      await db.insert(sqliteSchemas.userStarPosts).values([
+        { userId: John.id, postId: posts[0].id },
+        { userId: Jane.id, postId: posts[1].id },
+        { userId: Jill.id, postId: posts[2].id },
+        { userId: John.id, postId: posts[3].id },
+        { userId: Jane.id, postId: posts[4].id },
+        { userId: Jill.id, postId: posts[5].id },
+      ])
+    })
+
+    afterAll(async () => {
+      await db.delete(sqliteSchemas.userStarPosts)
+      await db.delete(sqliteSchemas.posts)
+    })
+
+    it("should aggregate relation fields", async () => {
+      const userFactory = drizzleResolverFactory(db, sqliteSchemas.users)
+      const userStarPostsFactory = drizzleResolverFactory(
+        db,
+        sqliteSchemas.userStarPosts
+      )
+      const schema = weave(
+        userFactory.resolver(),
+        userStarPostsFactory.resolver()
+      )
+
+      const { data } = await execute({
+        schema,
+        contextValue: {},
+        document: parse(/* GraphQL */ `
+          query {
+            users(where: { name: { in: ["John", "Jane", "Jill"] } }) {
+              name
+              posts {
+                title
+              }
+              reviewedPosts {
+                title
+              }
+              starredPosts {
+                post {
+                  title
+                }
+              }
+            }
+          }
+        `),
+      })
+
+      expect(data).toMatchInlineSnapshot(`
+        {
+          "users": [
+            {
+              "name": "John",
+              "posts": [
+                {
+                  "title": "John's post",
+                },
+                {
+                  "title": "John's post 2",
+                },
+              ],
+              "reviewedPosts": [
+                {
+                  "title": "Jane's post",
+                },
+                {
+                  "title": "Jane's post 2",
+                },
+                {
+                  "title": "Jill's post",
+                },
+                {
+                  "title": "Jill's post 2",
+                },
+              ],
+              "starredPosts": [
+                {
+                  "post": {
+                    "title": "John's post",
+                  },
+                },
+                {
+                  "post": {
+                    "title": "Jane's post 2",
+                  },
+                },
+              ],
+            },
+            {
+              "name": "Jane",
+              "posts": [
+                {
+                  "title": "Jane's post",
+                },
+                {
+                  "title": "Jane's post 2",
+                },
+              ],
+              "reviewedPosts": [
+                {
+                  "title": "John's post",
+                },
+                {
+                  "title": "John's post 2",
+                },
+              ],
+              "starredPosts": [
+                {
+                  "post": {
+                    "title": "John's post 2",
+                  },
+                },
+                {
+                  "post": {
+                    "title": "Jill's post",
+                  },
+                },
+              ],
+            },
+            {
+              "name": "Jill",
+              "posts": [
+                {
+                  "title": "Jill's post",
+                },
+                {
+                  "title": "Jill's post 2",
+                },
+              ],
+              "reviewedPosts": [],
+              "starredPosts": [
+                {
+                  "post": {
+                    "title": "Jane's post",
+                  },
+                },
+                {
+                  "post": {
+                    "title": "Jill's post 2",
+                  },
+                },
+              ],
+            },
+          ],
+        }
+      `)
+
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "select "id", "name" from "users" where "users"."name" in (?, ?, ?)",
+          "select "d0"."id" as "id", coalesce((select json_group_array(json_object('title', "title", 'id', "id")) as "r" from (select "d1"."title" as "title", "d1"."id" as "id" from "posts" as "d1" where "d0"."id" = "d1"."authorId") as "t"), jsonb_array()) as "posts", coalesce((select json_group_array(json_object('title', "title", 'id', "id")) as "r" from (select "d1"."title" as "title", "d1"."id" as "id" from "posts" as "d1" where "d0"."id" = "d1"."reviewerId") as "t"), jsonb_array()) as "reviewedPosts", coalesce((select json_group_array(json_object('postId', "postId", 'userId', "userId")) as "r" from (select "d1"."postId" as "postId", "d1"."userId" as "userId" from "userStarPosts" as "d1" where "d0"."id" = "d1"."userId") as "t"), jsonb_array()) as "starredPosts" from "users" as "d0" where "d0"."id" in (?, ?, ?)",
+          "select "d0"."userId" as "userId", "d0"."postId" as "postId", (select json_object('title', "title", 'id', "id") as "r" from (select "d1"."title" as "title", "d1"."id" as "id" from "posts" as "d1" where "d0"."postId" = "d1"."id" limit ?) as "t") as "post" from "userStarPosts" as "d0" where ("d0"."userId", "d0"."postId") IN ((?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?))",
+        ]
+      `)
     })
   })
 
@@ -760,7 +1291,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // Test loading multiple relations at once
       const courseField = studentCourseFactory.relationField("course")
       const results = await Promise.all(
-        studentCourses.map((sc) => courseField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => courseField["~meta"].resolve(sc, {}))
       )
 
       expect(results).toMatchObject([
@@ -771,7 +1302,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // Test with batch loading multiple parents
       const studentField = studentCourseFactory.relationField("student")
       const studentResults = await Promise.all(
-        studentCourses.map((sc) => studentField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => studentField["~meta"].resolve(sc, {}))
       )
 
       expect(studentResults).toMatchObject([
@@ -818,7 +1349,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
 
       // Load all courses for all student-course relationships at once
       const allResults = await Promise.all(
-        studentCourses.map((sc) => executor.course(sc))
+        studentCourses.map((sc) => executor.course(sc, {}))
       )
 
       // Verify results include both Math and English courses
@@ -832,7 +1363,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       // Test the student relationship in same batch
       const studentField = studentCourseFactory.relationField("student")
       const studentResults = await Promise.all(
-        studentCourses.map((sc) => studentField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => studentField["~meta"].resolve(sc, {}))
       )
 
       // Verify results show both John and Joe
@@ -939,7 +1470,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
       expect(studentCourses.length).toBe(3)
 
       const grades = await Promise.all(
-        studentCourses.map((sc) => gradeField["~meta"].resolve(sc, undefined))
+        studentCourses.map((sc) => gradeField["~meta"].resolve(sc, {}))
       )
 
       // Verify we got all the grades back
@@ -976,7 +1507,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
     })
   })
 
-  describe.concurrent("queriesResolver", () => {
+  describe("queriesResolver", () => {
     it("should be created without error", async () => {
       const resolver = userFactory.queriesResolver()
       expect(resolver).toBeDefined()

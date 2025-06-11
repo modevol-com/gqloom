@@ -198,7 +198,7 @@ describe("resolver by sqlite", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         select "id", "name" from "users" where "users"."name" like ? order by "users"."name" asc
-        select "id", "title", "authorId" from "posts" where "posts"."authorId" in (?, ?, ?)
+        select "d0"."id" as "id", coalesce((select json_group_array(json_object('id', "id", 'title', "title")) as "r" from (select "d1"."id" as "id", "d1"."title" as "title" from "posts" as "d1" where "d0"."id" = "d1"."authorId") as "t"), jsonb_array()) as "posts" from "users" as "d0" where "d0"."id" in (?, ?, ?)
         "
       `)
     })
@@ -455,8 +455,8 @@ describe("resolver by sqlite", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email" from "users" as "d0" where "d0"."name" = ? limit ?
-        insert into "posts" ("id", "title", "content", "authorId") values (null, ?, null, ?) returning "id", "title", "authorId"
-        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId" from "posts" as "d0" where "d0"."title" = ? limit ?
+        insert into "posts" ("id", "title", "content", "authorId", "reviewerId") values (null, ?, null, ?, null) returning "id", "title", "authorId"
+        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId", "d0"."reviewerId" as "reviewerId" from "posts" as "d0" where "d0"."title" = ? limit ?
         "
       `)
     })
@@ -493,9 +493,9 @@ describe("resolver by sqlite", () => {
       expect(updatedPost).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "posts" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
+        insert into "posts" ("id", "title", "content", "authorId", "reviewerId") values (null, ?, null, null, null) returning "id", "title", "content", "authorId", "reviewerId"
         update "posts" set "title" = ? where "posts"."id" = ? returning "id", "title"
-        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId" from "posts" as "d0" where "d0"."title" = ? limit ?
+        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId", "d0"."reviewerId" as "reviewerId" from "posts" as "d0" where "d0"."title" = ? limit ?
         "
       `)
     })
@@ -531,9 +531,9 @@ describe("resolver by sqlite", () => {
       expect(deletedPost).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into "posts" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
+        insert into "posts" ("id", "title", "content", "authorId", "reviewerId") values (null, ?, null, null, null) returning "id", "title", "content", "authorId", "reviewerId"
         delete from "posts" where "posts"."id" = ? returning "id", "title"
-        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId" from "posts" as "d0" where "d0"."id" = ? limit ?
+        select "d0"."id" as "id", "d0"."title" as "title", "d0"."content" as "content", "d0"."authorId" as "authorId", "d0"."reviewerId" as "reviewerId" from "posts" as "d0" where "d0"."id" = ? limit ?
         "
       `)
     })

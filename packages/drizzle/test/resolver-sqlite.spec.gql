@@ -15,10 +15,13 @@ enum OrderDirection {
 }
 
 type Post {
-  author: User
+  author(where: UserFilters): User
   authorId: Int
   content: String
   id: Int!
+  reviewer(where: UserFilters): User
+  reviewerId: Int
+  starredBy(limit: Int, offset: Int, orderBy: UserStarPostsOrderBy, where: UserStarPostsFilters): [UserStarPostsItem!]!
   title: String!
 }
 
@@ -29,6 +32,7 @@ input PostFilters {
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
+  reviewerId: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
@@ -36,6 +40,7 @@ input PostFiltersNested {
   authorId: SQLiteIntegerFilters
   content: SQLiteTextFilters
   id: SQLiteIntegerFilters
+  reviewerId: SQLiteIntegerFilters
   title: SQLiteTextFilters
 }
 
@@ -43,6 +48,7 @@ input PostInsertInput {
   authorId: Int
   content: String
   id: Int
+  reviewerId: Int
   title: String!
 }
 
@@ -62,6 +68,7 @@ input PostOrderBy {
   authorId: OrderDirection
   content: OrderDirection
   id: OrderDirection
+  reviewerId: OrderDirection
   title: OrderDirection
 }
 
@@ -69,6 +76,7 @@ enum PostTableColumn {
   authorId
   content
   id
+  reviewerId
   title
 }
 
@@ -76,6 +84,7 @@ input PostUpdateInput {
   authorId: Int
   content: String
   id: Int
+  reviewerId: Int
   title: String
 }
 
@@ -154,17 +163,75 @@ input SQLiteTextFiltersNested {
   notLike: String
 }
 
+input SQLiteTimestampFilters {
+  AND: [SQLiteTimestampFiltersNested!]
+  NOT: SQLiteTimestampFiltersNested
+  OR: [SQLiteTimestampFiltersNested!]
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  in: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notIn: [String!]
+  notLike: String
+}
+
+input SQLiteTimestampFiltersNested {
+  eq: String
+  gt: String
+  gte: String
+  ilike: String
+  in: [String!]
+  isNotNull: Boolean
+  isNull: Boolean
+  like: String
+  lt: String
+  lte: String
+  ne: String
+  notIlike: String
+  notIn: [String!]
+  notLike: String
+}
+
+input StudentToCoursesFilters {
+  AND: [StudentToCoursesFiltersNested!]
+  NOT: StudentToCoursesFiltersNested
+  OR: [StudentToCoursesFiltersNested!]
+  courseId: SQLiteIntegerFilters
+  createdAt: SQLiteTimestampFilters
+  studentId: SQLiteIntegerFilters
+}
+
+input StudentToCoursesFiltersNested {
+  courseId: SQLiteIntegerFilters
+  createdAt: SQLiteTimestampFilters
+  studentId: SQLiteIntegerFilters
+}
+
 type StudentToCoursesItem {
   courseId: Int
   createdAt: String
   studentId: Int
 }
 
+input StudentToCoursesOrderBy {
+  courseId: OrderDirection
+  createdAt: OrderDirection
+  studentId: OrderDirection
+}
+
 """A user"""
 type User {
   """The age of the user"""
   age: Int
-  courses: [StudentToCoursesItem!]!
+  courses(limit: Int, offset: Int, orderBy: StudentToCoursesOrderBy, where: StudentToCoursesFilters): [StudentToCoursesItem!]!
 
   """The email of the user"""
   email: String
@@ -172,7 +239,9 @@ type User {
 
   """The name of the user"""
   name: String!
-  posts: [Post!]!
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  reviewedPosts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  starredPosts(limit: Int, offset: Int, orderBy: UserStarPostsOrderBy, where: UserStarPostsFilters): [UserStarPostsItem!]!
 }
 
 """A user"""
@@ -239,6 +308,29 @@ input UserOrderBy {
 
   """The name of the user"""
   name: OrderDirection
+}
+
+input UserStarPostsFilters {
+  AND: [UserStarPostsFiltersNested!]
+  NOT: UserStarPostsFiltersNested
+  OR: [UserStarPostsFiltersNested!]
+  postId: SQLiteIntegerFilters
+  userId: SQLiteIntegerFilters
+}
+
+input UserStarPostsFiltersNested {
+  postId: SQLiteIntegerFilters
+  userId: SQLiteIntegerFilters
+}
+
+type UserStarPostsItem {
+  postId: Int
+  userId: Int
+}
+
+input UserStarPostsOrderBy {
+  postId: OrderDirection
+  userId: OrderDirection
 }
 
 enum UserTableColumn {

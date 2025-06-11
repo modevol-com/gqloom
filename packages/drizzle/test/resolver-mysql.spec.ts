@@ -212,7 +212,7 @@ describe("resolver by mysql", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc
-        select \`id\`, \`title\`, \`authorId\` from \`posts\` where \`posts\`.\`authorId\` in (?, ?, ?)
+        select \`d0\`.\`id\` as \`id\`, \`posts\`.\`r\` as \`posts\` from \`users\` as \`d0\` left join lateral(select coalesce(json_arrayagg(json_object('id', \`id\`, 'title', \`title\`)), json_array()) as \`r\` from (select \`d1\`.\`id\` as \`id\`, \`d1\`.\`title\` as \`title\` from \`posts\` as \`d1\` where \`d0\`.\`id\` = \`d1\`.\`authorId\`) as \`t\`) as \`posts\` on true where \`d0\`.\`id\` in (?, ?, ?)
         "
       `)
     })

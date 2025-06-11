@@ -163,6 +163,44 @@ describe("FieldFactoryWithResolve", () => {
     }
   })
 
+  test("input() should set input type", () => {
+    const GiraffeInputDefault = silk(
+      new GraphQLNonNull(
+        new GraphQLObjectType<IGiraffe>({
+          name: "GiraffeInput",
+          fields: {
+            name: { type: GraphQLString },
+            birthday: { type: GraphQLString },
+            heightInMeters: { type: GraphQLFloat },
+          },
+        })
+      )
+    )
+    const f = new FieldFactoryWithResolve<
+      typeof Giraffe,
+      typeof Giraffe,
+      Partial<IGiraffe>,
+      typeof GiraffeInputDefault
+    >(Giraffe, {
+      resolve: () => Skyler,
+    })
+
+    const GiraffeInput = silk(
+      new GraphQLNonNull(
+        new GraphQLObjectType<Partial<IGiraffe>>({
+          name: "GiraffeInput",
+          fields: {
+            name: { type: GraphQLString },
+            birthday: { type: GraphQLString },
+            heightInMeters: { type: GraphQLFloat },
+          },
+        })
+      )
+    )
+    const f2 = f.input(GiraffeInput)
+    expect(f2["~meta"].input).toBe(GiraffeInput)
+  })
+
   test("output() should set output type and transform", async () => {
     const f = new FieldFactoryWithResolve(Giraffe, {
       resolve: () => Skyler,
@@ -192,6 +230,7 @@ describe("FieldFactoryWithResolve", () => {
       .description("desc")
       .deprecationReason("deprecated")
       .extensions({ foo: "bar" })
+
     expect(f["~meta"].description).toBe("desc")
     expect(f["~meta"].deprecationReason).toBe("deprecated")
     expect(f["~meta"].extensions).toEqual({ foo: "bar" })

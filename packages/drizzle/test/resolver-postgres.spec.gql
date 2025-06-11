@@ -111,7 +111,7 @@ input PgTextFiltersNested {
 
 """A post"""
 type Post {
-  author: User
+  author(where: UserFilters): User
   authorId: Int
   content: String
   id: Int!
@@ -209,7 +209,7 @@ type User {
 
   """The name of the user"""
   name: String!
-  posts: [Post!]!
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
 }
 
 """A user"""

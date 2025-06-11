@@ -1,5 +1,4 @@
 import {
-  EasyDataLoader,
   FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
@@ -9,9 +8,7 @@ import {
   type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
-  type ResolverPayload,
   capitalize,
-  getMemoizationMap,
   loom,
   mapValue,
   silk,
@@ -54,33 +51,42 @@ import {
   type SelectiveTable,
   type TableSilk,
 } from ".."
-import { getSelectedColumns, inArrayMultiple } from "../helper"
+import { getSelectedColumns } from "../helper"
 import {
   type ColumnFilters,
   type CountArgs,
   type DeleteArgs,
   DrizzleInputFactory,
+  type Filters,
   type FiltersCore,
   type InsertArrayArgs,
   type InsertSingleArgs,
+  type RelationArgs,
+  type RelationToManyArgs,
+  type RelationToOneArgs,
   type SelectArrayArgs,
   type SelectSingleArgs,
   type UpdateArgs,
 } from "./input"
+import {
+  RelationFieldSelector,
+  RelationFieldsLoader,
+} from "./relation-field-loader"
 import type {
-  AnyQueryBuilder,
   BaseDatabase,
+  CountOptions,
   CountQuery,
   DeleteMutation,
   DrizzleQueriesResolver,
-  InferRelationTable,
   InferTableName,
   InferTableRelationalConfig,
   InsertArrayMutation,
   InsertSingleMutation,
   QueryBuilder,
-  RelationManyField,
-  RelationOneField,
+  QueryFieldOptions,
+  QueryToManyFieldOptions,
+  QueryToOneFieldOptions,
+  RelationField,
   SelectArrayOptions,
   SelectArrayQuery,
   SelectSingleOptions,
@@ -182,18 +188,21 @@ export abstract class DrizzleResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<CountArgs<TTable>, TInputI>
+    input?: GraphQLSilk<CountOptions, TInputI>
     middlewares?: Middleware<CountQuery<TTable, TInputI>>[]
   } = {}): CountQuery<TTable, TInputI> {
-    input ??= silk<CountArgs<TTable>, CountArgs<TTable>>(() =>
-      this.inputFactory.countArgs()
-    ) as GraphQLSilk<CountArgs<TTable>, TInputI>
+    input ??= silk<CountOptions, CountArgs<TTable>>(
+      () => this.inputFactory.countArgs(),
+      (args) => ({
+        value: { where: this.extractFilters(args.where, this.table) },
+      })
+    ) as GraphQLSilk<CountOptions, TInputI>
 
     return new QueryFactoryWithResolve(silk(new GraphQLNonNull(GraphQLInt)), {
       input,
       ...options,
-      resolve: (args) => {
-        return this.db.$count(this.table, this.extractFilters(args.where))
+      resolve: (args: CountOptions) => {
+        return this.db.$count(this.table, args.where)
       },
     } as QueryOptions<any, any>)
   }
@@ -216,10 +225,11 @@ export abstract class DrizzleResolverFactory<
   }
 
   protected extractFilters(
-    filters: SelectArrayArgs<TTable>["where"],
+    filters: Filters<any> | undefined,
     table?: any
   ): SQL | undefined {
     if (filters == null) return
+    table ??= this.table
 
     const entries = Object.entries(filters as FiltersCore<TTable>)
     const variants: (SQL | undefined)[] = []
@@ -259,7 +269,7 @@ export abstract class DrizzleResolverFactory<
         continue
       }
 
-      const column = getTableColumns(this.table)[columnName]!
+      const column = getTableColumns(table)[columnName]!
       const extractedColumn = this.extractFiltersColumn(
         column,
         columnName,
@@ -373,51 +383,35 @@ export abstract class DrizzleResolverFactory<
     TRelationName extends keyof InferTableRelationalConfig<
       QueryBuilder<TDatabase, TTable>
     >["relations"],
+    TInputI = RelationArgs<TDatabase, TTable, TRelationName>,
   >(
     relationName: TRelationName,
-    options?: GraphQLFieldOptions & {
-      middlewares?: Middleware<
-        InferTableRelationalConfig<
-          QueryBuilder<TDatabase, TTable>
-        >["relations"][TRelationName] extends Many<any, any>
-          ? RelationManyField<
-              TTable,
-              InferRelationTable<TDatabase, TTable, TRelationName>
-            >
-          : RelationOneField<
-              TTable,
-              InferRelationTable<TDatabase, TTable, TRelationName>
-            >
-      >[]
-    }
-  ): InferTableRelationalConfig<
-    QueryBuilder<TDatabase, TTable>
-  >["relations"][TRelationName] extends Many<any, any>
-    ? RelationManyField<
-        TTable,
-        InferRelationTable<TDatabase, TTable, TRelationName>
+    {
+      input,
+      ...options
+    }: GraphQLFieldOptions & {
+      input?: GraphQLSilk<
+        QueryFieldOptions<TDatabase, TTable, TRelationName>,
+        TInputI
       >
-    : RelationOneField<
-        TTable,
-        InferRelationTable<TDatabase, TTable, TRelationName>
-      > {
-    const [relation, queryBuilder, targetTable] = (() => {
+      middlewares?: Middleware<
+        RelationField<TDatabase, TTable, TRelationName>
+      >[]
+    } = {}
+  ): RelationField<TDatabase, TTable, TRelationName> {
+    const [relation, targetTable] = (() => {
       const tableKey = matchTableByTablesConfig(
         this.db._.relations.tablesConfig,
         this.table
       )?.tsName
-      if (!tableKey) return [undefined, undefined, undefined]
+      if (!tableKey) return [undefined, undefined]
       const relation = this.db._.relations["config"]?.[tableKey]?.[
         relationName
       ] as Relation
       const targetTable = relation?.targetTable
-      return [
-        relation,
-        matchQueryBuilder(this.db.query, targetTable),
-        targetTable,
-      ]
+      return [relation, targetTable]
     })()
-    if (!queryBuilder || !relation || !(targetTable instanceof Table)) {
+    if (!relation || !(targetTable instanceof Table)) {
       throw new Error(
         `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
           relationName
@@ -425,83 +419,61 @@ export abstract class DrizzleResolverFactory<
       )
     }
     const output = DrizzleWeaver.unravel(targetTable)
+    const toMany = relation instanceof Many
+    const targetInputFactory = new DrizzleInputFactory(targetTable)
 
-    const isList = relation instanceof Many
-    const fieldsLength = relation.sourceColumns.length
-
-    const getKeyByField = (parent: any) => {
-      if (fieldsLength === 1) {
-        return parent[relation.sourceColumns[0].name]
-      }
-      return relation.sourceColumns.map((field) => parent[field.name]).join("-")
-    }
-
-    const referenceColumns = Object.fromEntries(
-      relation.targetColumns.map((col) => [col.name, col])
-    )
-
-    const getKeyByReference = (item: any) => {
-      if (fieldsLength === 1) {
-        return item[relation.targetColumns[0].name]
-      }
-      return relation.targetColumns
-        .map((reference) => item[reference.name])
-        .join("-")
-    }
-
-    const initLoader = () => {
-      return new EasyDataLoader(
-        async (inputs: [any, payload: ResolverPayload | undefined][]) => {
-          const where = (() => {
-            if (fieldsLength === 1) {
-              const values = inputs.map(
-                ([parent]) => parent[relation.sourceColumns[0].name]
-              )
-              return inArray(relation.targetColumns[0], values)
-            }
-            const values = inputs.map((input) =>
-              relation.sourceColumns.map((field) => input[0][field.name])
-            )
-            return inArrayMultiple(relation.targetColumns, values, targetTable)
-          })()
-          const selectedColumns = getSelectedColumns(
-            targetTable,
-            inputs.map((input) => input[1])
+    input ??= (
+      toMany
+        ? silk<QueryToManyFieldOptions<any>, RelationToManyArgs<TTable>>(
+            () => targetInputFactory.relationToManyArgs(),
+            (args) => ({
+              value: {
+                where: (t) => this.extractFilters(args.where, t),
+                orderBy: args.orderBy,
+                limit: args.limit,
+                offset: args.offset,
+              },
+            })
           )
+        : silk<QueryToOneFieldOptions<any>, RelationToOneArgs<TTable>>(
+            () => targetInputFactory.relationToOneArgs(),
+            (args) => ({
+              value: {
+                where: (t) => this.extractFilters(args.where, t),
+              },
+            })
+          )
+    ) as GraphQLSilk<
+      QueryFieldOptions<TDatabase, TTable, TRelationName>,
+      TInputI
+    >
 
-          const list = await (this.db as any)
-            .select({ ...selectedColumns, ...referenceColumns })
-            .from(targetTable)
-            .where(where)
-
-          const groups = new Map<string, any>()
-          for (const item of list) {
-            const key = getKeyByReference(item)
-            isList
-              ? groups.set(key, [...(groups.get(key) ?? []), item])
-              : groups.set(key, item)
-          }
-          return inputs.map(([parent]) => {
-            const key = getKeyByField(parent)
-            return groups.get(key) ?? (isList ? [] : null)
-          })
-        }
-      )
-    }
+    /** columnTableName -> columnTsKey */
+    const columnKeys = new Map(
+      Object.entries(getTableColumns(targetTable)).map(([name, col]) => [
+        col.name,
+        name,
+      ])
+    )
+    const dependencies = relation.sourceColumns.map(
+      (col) => columnKeys.get(col.name) ?? col.name
+    )
+    const initSelector = () =>
+      new RelationFieldSelector(relationName, relation, targetTable)
 
     return new FieldFactoryWithResolve(
-      isList ? output.$list() : output.$nullable(),
+      toMany ? output.$list() : output.$nullable(),
       {
+        input,
         ...options,
-        dependencies: ["tableName"],
-        resolve: (parent, _input, payload) => {
-          const loader = (() => {
-            if (!payload) return initLoader()
-            const memoMap = getMemoizationMap(payload)
-            if (!memoMap.has(initLoader)) memoMap.set(initLoader, initLoader())
-            return memoMap.get(initLoader) as ReturnType<typeof initLoader>
-          })()
-          return loader.load([parent, payload])
+        dependencies,
+        resolve: (parent, input, payload) => {
+          const loader = RelationFieldsLoader.getLoaderByPath(
+            payload,
+            this.db,
+            this.table
+          )
+          return loader.load([initSelector, parent, input, payload])
         },
       } as FieldOptions<any, any, any, any>
     )
@@ -601,17 +573,6 @@ function matchTableByTablesConfig(
   for (const config of Object.values(tablesConfig)) {
     if (config.table === targetTable) {
       return config
-    }
-  }
-}
-
-function matchQueryBuilder(
-  queries: Record<string, any>,
-  targetTable: any
-): AnyQueryBuilder | undefined {
-  for (const qb of Object.values(queries)) {
-    if (qb.table != null && qb.table === targetTable) {
-      return qb
     }
   }
 }
