@@ -14,35 +14,14 @@ import {
   silk,
 } from "@gqloom/core"
 import {
-  type Column,
   type InferSelectModel,
   Many,
   type Relation,
-  type SQL,
   Table,
   type TableRelationalConfig,
   type TablesRelationalConfig,
-  and,
-  asc,
-  desc,
-  eq,
   getTableColumns,
   getTableName,
-  gt,
-  gte,
-  ilike,
-  inArray,
-  isNotNull,
-  isNull,
-  like,
-  lt,
-  lte,
-  ne,
-  not,
-  notIlike,
-  notInArray,
-  notLike,
-  or,
 } from "drizzle-orm"
 import { GraphQLInt, GraphQLNonNull } from "graphql"
 import {
@@ -53,12 +32,9 @@ import {
 } from ".."
 import { getSelectedColumns } from "../helper"
 import {
-  type ColumnFilters,
   type CountArgs,
   type DeleteArgs,
   DrizzleInputFactory,
-  type Filters,
-  type FiltersCore,
   type InsertArrayArgs,
   type InsertSingleArgs,
   type RelationArgs,
@@ -72,16 +48,20 @@ import {
   RelationFieldSelector,
   RelationFieldsLoader,
 } from "./relation-field-loader"
+import { DrizzleArgsTransformer } from "./transform"
 import type {
   BaseDatabase,
   CountOptions,
   CountQuery,
   DeleteMutation,
+  DeleteOptions,
   DrizzleQueriesResolver,
   InferTableName,
   InferTableRelationalConfig,
   InsertArrayMutation,
+  InsertArrayOptions,
   InsertSingleMutation,
+  InsertSingleOptions,
   QueryBuilder,
   QueryFieldOptions,
   QueryToManyFieldOptions,
@@ -92,6 +72,7 @@ import type {
   SelectSingleOptions,
   SelectSingleQuery,
   UpdateMutation,
+  UpdateOptions,
 } from "./types"
 
 export abstract class DrizzleResolverFactory<
@@ -100,6 +81,7 @@ export abstract class DrizzleResolverFactory<
 > {
   protected readonly inputFactory: DrizzleInputFactory<typeof this.table>
   protected readonly tableName: InferTableName<TTable>
+  protected readonly argsTransformer: DrizzleArgsTransformer<TTable>
   public constructor(
     protected readonly db: TDatabase,
     protected readonly table: TTable,
@@ -107,6 +89,7 @@ export abstract class DrizzleResolverFactory<
   ) {
     this.inputFactory = new DrizzleInputFactory(table, options)
     this.tableName = getTableName(table)
+    this.argsTransformer = new DrizzleArgsTransformer(table)
   }
 
   private _output?: TableSilk<TTable>
@@ -124,14 +107,7 @@ export abstract class DrizzleResolverFactory<
   } = {}): SelectArrayQuery<TTable, TInputI> {
     input ??= silk<SelectArrayOptions | undefined, SelectArrayArgs<TTable>>(
       () => this.inputFactory.selectArrayArgs(),
-      (args) => ({
-        value: {
-          where: this.extractFilters(args.where, this.table),
-          orderBy: this.extractOrderBy(args.orderBy),
-          limit: args.limit,
-          offset: args.offset,
-        },
-      })
+      this.argsTransformer.toSelectArrayOptions
     ) as GraphQLSilk<SelectArrayOptions, TInputI>
 
     return new QueryFactoryWithResolve(this.output.$list(), {
@@ -159,13 +135,7 @@ export abstract class DrizzleResolverFactory<
   } = {}): SelectSingleQuery<TTable, TInputI> {
     input ??= silk<SelectSingleOptions | undefined, SelectSingleArgs<TTable>>(
       () => this.inputFactory.selectSingleArgs(),
-      (args) => ({
-        value: {
-          where: this.extractFilters(args.where, this.table),
-          orderBy: this.extractOrderBy(args.orderBy),
-          offset: args.offset,
-        },
-      })
+      this.argsTransformer.toSelectSingleOptions
     ) as GraphQLSilk<SelectSingleOptions, TInputI>
 
     return new QueryFactoryWithResolve(this.output.$nullable(), {
@@ -193,9 +163,7 @@ export abstract class DrizzleResolverFactory<
   } = {}): CountQuery<TTable, TInputI> {
     input ??= silk<CountOptions, CountArgs<TTable>>(
       () => this.inputFactory.countArgs(),
-      (args) => ({
-        value: { where: this.extractFilters(args.where, this.table) },
-      })
+      this.argsTransformer.toCountOptions
     ) as GraphQLSilk<CountOptions, TInputI>
 
     return new QueryFactoryWithResolve(silk(new GraphQLNonNull(GraphQLInt)), {
@@ -205,178 +173,6 @@ export abstract class DrizzleResolverFactory<
         return this.db.$count(this.table, args.where)
       },
     } as QueryOptions<any, any>)
-  }
-
-  protected extractOrderBy(
-    orders?: SelectArrayArgs<TTable>["orderBy"]
-  ): SQL[] | undefined {
-    if (orders == null) return
-    const answer: SQL[] = []
-    const columns = getTableColumns(this.table)
-    for (const [column, direction] of Object.entries(orders)) {
-      if (!direction) continue
-      if (column in columns) {
-        answer.push(
-          direction === "asc" ? asc(columns[column]) : desc(columns[column])
-        )
-      }
-    }
-    return answer
-  }
-
-  protected extractFilters(
-    filters: Filters<any> | undefined,
-    table?: any
-  ): SQL | undefined {
-    if (filters == null) return
-    table ??= this.table
-
-    const entries = Object.entries(filters as FiltersCore<TTable>)
-    const variants: (SQL | undefined)[] = []
-
-    for (const [columnName, operators] of entries) {
-      if (operators == null) continue
-
-      if (columnName === "OR" && Array.isArray(operators)) {
-        const orConditions: SQL[] = []
-        for (const variant of operators) {
-          const extracted = this.extractFilters(variant, table)
-          if (extracted) orConditions.push(extracted)
-        }
-        if (orConditions.length > 0) {
-          variants.push(or(...orConditions))
-        }
-        continue
-      }
-
-      if (columnName === "AND" && Array.isArray(operators)) {
-        const andConditions: SQL[] = []
-        for (const variant of operators) {
-          const extracted = this.extractFilters(variant, table)
-          if (extracted) andConditions.push(extracted)
-        }
-        if (andConditions.length > 0) {
-          variants.push(and(...andConditions))
-        }
-        continue
-      }
-
-      if (columnName === "NOT" && operators) {
-        const extracted = this.extractFilters(operators, table)
-        if (extracted) {
-          variants.push(not(extracted))
-        }
-        continue
-      }
-
-      const column = getTableColumns(table)[columnName]!
-      const extractedColumn = this.extractFiltersColumn(
-        column,
-        columnName,
-        operators,
-        table
-      )
-      if (extractedColumn) variants.push(extractedColumn)
-    }
-
-    return and(...variants)
-  }
-
-  protected extractFiltersColumn<TColumn extends Column>(
-    column: TColumn,
-    columnName: string,
-    operators: ColumnFilters<TColumn["_"]["data"]>,
-    table?: any
-  ): SQL | undefined {
-    const entries = Object.entries(operators)
-
-    const variants: (SQL | undefined)[] = []
-    const binaryOperators = { eq, ne, gt, gte, lt, lte }
-    const textOperators = { like, notLike, ilike, notIlike }
-    const arrayOperators = { in: inArray, notIn: notInArray }
-    const nullOperators = { isNull, isNotNull }
-
-    const tableColumn = table ? table[columnName] : column
-
-    if (operators.OR) {
-      const orVariants = [] as SQL[]
-
-      for (const variant of operators.OR) {
-        const extracted = this.extractFiltersColumn(
-          column,
-          columnName,
-          variant,
-          table
-        )
-
-        if (extracted) orVariants.push(extracted)
-      }
-
-      variants.push(or(...orVariants))
-    }
-
-    if (operators.AND) {
-      const andVariants = [] as SQL[]
-
-      for (const variant of operators.AND) {
-        const extracted = this.extractFiltersColumn(
-          column,
-          columnName,
-          variant,
-          table
-        )
-
-        if (extracted) andVariants.push(extracted)
-      }
-
-      variants.push(and(...andVariants))
-    }
-
-    if (operators.NOT) {
-      const extracted = this.extractFiltersColumn(
-        column,
-        columnName,
-        operators.NOT,
-        table
-      )
-      if (extracted) {
-        variants.push(not(extracted))
-      }
-    }
-
-    for (const [operatorName, operatorValue] of entries) {
-      if (operatorValue === null || operatorValue === false) continue
-
-      if (operatorName in binaryOperators) {
-        const operator =
-          binaryOperators[operatorName as keyof typeof binaryOperators]
-        variants.push(operator(tableColumn, operatorValue))
-      } else if (operatorName in textOperators) {
-        const operator =
-          textOperators[operatorName as keyof typeof textOperators]
-        variants.push(operator(tableColumn, operatorValue))
-      } else if (operatorName in arrayOperators) {
-        const operator =
-          arrayOperators[operatorName as keyof typeof arrayOperators]
-        variants.push(operator(tableColumn, operatorValue))
-      } else if (operatorName in nullOperators) {
-        const operator =
-          nullOperators[operatorName as keyof typeof nullOperators]
-        if (operatorValue === true) variants.push(operator(tableColumn))
-      }
-    }
-
-    return and(...variants)
-  }
-
-  protected toColumn(columnName: string) {
-    const column = getTableColumns(this.table)[columnName]
-    if (!column) {
-      throw new Error(
-        `Column ${columnName} not found in table ${this.tableName}`
-      )
-    }
-    return column
   }
 
   public relationField<
@@ -426,22 +222,11 @@ export abstract class DrizzleResolverFactory<
       toMany
         ? silk<QueryToManyFieldOptions<any>, RelationToManyArgs<TTable>>(
             () => targetInputFactory.relationToManyArgs(),
-            (args) => ({
-              value: {
-                where: (t) => this.extractFilters(args.where, t),
-                orderBy: args.orderBy,
-                limit: args.limit,
-                offset: args.offset,
-              },
-            })
+            this.argsTransformer.toQueryToManyFieldOptions
           )
         : silk<QueryToOneFieldOptions<any>, RelationToOneArgs<TTable>>(
             () => targetInputFactory.relationToOneArgs(),
-            (args) => ({
-              value: {
-                where: (t) => this.extractFilters(args.where, t),
-              },
-            })
+            this.argsTransformer.toQueryToOneFieldOptions
           )
     ) as GraphQLSilk<
       QueryFieldOptions<TDatabase, TTable, TRelationName>,
@@ -539,28 +324,28 @@ export abstract class DrizzleResolverFactory<
 
   public abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+      input?: GraphQLSilk<InsertArrayOptions<TTable>, TInputI>
       middlewares?: Middleware[]
     }
   ): InsertArrayMutation<TTable, TInputI>
 
   public abstract insertSingleMutation<TInputI = InsertSingleArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+      input?: GraphQLSilk<InsertSingleOptions<TTable>, TInputI>
       middlewares?: Middleware[]
     }
   ): InsertSingleMutation<TTable, TInputI>
 
   public abstract updateMutation<TInputI = UpdateArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+      input?: GraphQLSilk<UpdateOptions<TTable>, TInputI>
       middlewares?: Middleware[]
     }
   ): UpdateMutation<TTable, TInputI>
 
   public abstract deleteMutation<TInputI = DeleteArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+      input?: GraphQLSilk<DeleteOptions, TInputI>
       middlewares?: Middleware[]
     }
   ): DeleteMutation<TTable, TInputI>

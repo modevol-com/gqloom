@@ -7,6 +7,7 @@ import type {
 import type {
   AnyRelations,
   Column,
+  InferInsertModel,
   InferSelectModel,
   Many,
   SQL,
@@ -227,18 +228,18 @@ export interface InsertArrayMutationReturningItems<
   TTable extends Table,
   TInputI = InsertArrayWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertArrayWithOnConflictArgs<TTable>,
+    InsertArrayWithOnConflictOptions<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InsertArrayWithOnConflictArgs<TTable>, TInputI>
+    GraphQLSilk<InsertArrayWithOnConflictOptions<TTable>, TInputI>
   > {}
 
 export interface InsertArrayMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertArrayArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertArrayArgs<TTable>,
+    InsertArrayOptions<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    GraphQLSilk<InsertArrayOptions<TTable>, TInputI>
   > {}
 
 export type InsertSingleMutation<
@@ -252,22 +253,51 @@ export interface InsertSingleMutationReturningItem<
   TTable extends Table,
   TInputI = InsertSingleWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertSingleWithOnConflictArgs<TTable>,
+    InsertSingleWithOnConflictOptions<TTable>,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InsertSingleWithOnConflictArgs<TTable>, TInputI>
+    GraphQLSilk<InsertSingleWithOnConflictOptions<TTable>, TInputI>
   > {}
 
 export interface InsertSingleMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertSingleArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertSingleArgs<TTable>,
+    InsertSingleOptions<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    GraphQLSilk<InsertSingleOptions<TTable>, TInputI>
   > {}
+
+export interface InsertArrayOptions<TTable extends Table> {
+  values: InferInsertModel<TTable>[]
+}
+
+export interface InsertArrayWithOnConflictOptions<TTable extends Table>
+  extends InsertArrayOptions<TTable>,
+    InsertOnConflictInputOptions<TTable> {}
+
+export interface InsertSingleOptions<TTable extends Table> {
+  value: InferInsertModel<TTable>
+}
+
+export interface InsertSingleWithOnConflictOptions<TTable extends Table>
+  extends InsertSingleOptions<TTable>,
+    InsertOnConflictInputOptions<TTable> {}
+
+export interface InsertOnConflictInputOptions<TTable extends Table> {
+  onConflictDoUpdate?: {
+    target: Column[]
+    set?: Partial<InferInsertModel<TTable>>
+    targetWhere?: SQL
+    setWhere?: SQL
+  }
+  onConflictDoNothing?: {
+    target?: Column[]
+    where?: SQL
+  }
+}
 
 export type UpdateMutation<TTable extends Table, TInputI = UpdateArgs<TTable>> =
   | UpdateMutationReturningItems<TTable, TInputI>
@@ -277,19 +307,24 @@ export interface UpdateMutationReturningItems<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    UpdateArgs<TTable>,
+    UpdateOptions<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    GraphQLSilk<UpdateOptions<TTable>, TInputI>
   > {}
 
 export interface UpdateMutationReturningSuccess<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    UpdateArgs<TTable>,
+    UpdateOptions<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    GraphQLSilk<UpdateOptions<TTable>, TInputI>
   > {}
+
+export interface UpdateOptions<TTable extends Table> {
+  where?: SQL
+  set: Partial<InferInsertModel<TTable>>
+}
 
 export type DeleteMutation<TTable extends Table, TInputI = DeleteArgs<TTable>> =
   | DeleteMutationReturningItems<TTable, TInputI>
@@ -299,19 +334,23 @@ export interface DeleteMutationReturningItems<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    DeleteArgs<TTable>,
+    DeleteOptions,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    GraphQLSilk<DeleteOptions, TInputI>
   > {}
 
 export interface DeleteMutationReturningSuccess<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    DeleteArgs<TTable>,
+    DeleteOptions,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    GraphQLSilk<DeleteOptions, TInputI>
   > {}
+
+export interface DeleteOptions {
+  where?: SQL
+}
 
 export type QueryBuilder<
   TDatabase extends BaseDatabase,

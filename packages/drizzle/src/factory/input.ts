@@ -562,25 +562,18 @@ export interface InsertArrayArgs<TTable extends Table> {
 }
 
 export interface InsertArrayWithOnConflictArgs<TTable extends Table>
-  extends InsertArrayArgs<TTable> {
-  onConflictDoUpdate?: {
-    target: string[]
-    set?: Partial<InferInsertModel<TTable>>
-    targetWhere?: Filters<TTable>
-    setWhere?: Filters<TTable>
-  }
-  onConflictDoNothing?: {
-    target?: string[]
-    where?: Filters<TTable>
-  }
-}
+  extends InsertArrayArgs<TTable>,
+    InsertOnConflictInputArgs<TTable> {}
 
 export interface InsertSingleArgs<TTable extends Table> {
   value: InferInsertModel<TTable>
 }
 
 export interface InsertSingleWithOnConflictArgs<TTable extends Table>
-  extends InsertSingleArgs<TTable> {
+  extends InsertSingleArgs<TTable>,
+    InsertOnConflictInputArgs<TTable> {}
+
+export interface InsertOnConflictInputArgs<TTable extends Table> {
   onConflictDoUpdate?: {
     target: string[]
     set?: Partial<InferInsertModel<TTable>>
@@ -592,6 +585,7 @@ export interface InsertSingleWithOnConflictArgs<TTable extends Table>
     where?: Filters<TTable>
   }
 }
+
 export interface UpdateArgs<TTable extends Table> {
   where?: Filters<TTable>
   set: Partial<InferInsertModel<TTable>>

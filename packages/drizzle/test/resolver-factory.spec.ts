@@ -1693,7 +1693,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
       const mutation = userFactory.updateMutation()
       expect(
         await mutation["~meta"].resolve({
-          where: { name: { eq: "Bob" } },
+          where: eq(mysqlSchemas.users.name, "Bob"),
           set: { age: 19 },
         })
       ).toMatchObject({ isSuccess: true })
@@ -1721,7 +1721,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
       try {
         const mutation = userFactory.deleteMutation()
         const answer = await mutation["~meta"].resolve({
-          where: { name: { eq: "Alice" } },
+          where: eq(mysqlSchemas.users.name, "Alice"),
         })
         expect(answer).toMatchObject({ isSuccess: true })
       } finally {
@@ -1854,7 +1854,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
       try {
         const mutation = userFactory.updateMutation()
         const answer = await mutation["~meta"].resolve({
-          where: { name: { eq: "Bob" } },
+          where: eq(pgSchemas.users.name, "Bob"),
           set: { age: 19 },
         })
         expect(answer).toMatchObject([{ name: "Bob", age: 19 }])
@@ -1883,7 +1883,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
       try {
         const mutation = userFactory.deleteMutation()
         const answer = await mutation["~meta"].resolve({
-          where: { name: { eq: "Alice" } },
+          where: eq(pgSchemas.users.name, "Alice"),
         })
         expect(answer).toMatchObject([{ name: "Alice", age: 18 }])
       } finally {
@@ -2020,7 +2020,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
       try {
         const mutation = userFactory.updateMutation()
         const answer = await mutation["~meta"].resolve({
-          where: { name: { eq: "Bob" } },
+          where: eq(sqliteSchemas.users.name, "Bob"),
           set: { age: 19 },
         })
         expect(answer).toMatchObject([{ name: "Bob", age: 19 }])
@@ -2051,7 +2051,7 @@ describe.concurrent("DrizzleSQLiteResolverFactory", () => {
       try {
         const mutation = userFactory.deleteMutation()
         const answer = await mutation["~meta"].resolve({
-          where: { name: { eq: "Alice" } },
+          where: eq(sqliteSchemas.users.name, "Alice"),
         })
 
         expect(answer).toMatchObject([{ name: "Alice", age: 18 }])
