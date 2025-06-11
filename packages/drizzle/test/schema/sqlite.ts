@@ -60,9 +60,13 @@ export const studentToCourses = drizzleSilk(
 )
 
 export const studentCourseGrades = drizzleSilk(
-  sqliteTable("studentCourseGrades", {
-    studentId: int().references(() => users.id),
-    courseId: int().references(() => courses.id),
-    grade: int(),
-  })
+  sqliteTable(
+    "studentCourseGrades",
+    {
+      studentId: int().references(() => users.id),
+      courseId: int().references(() => courses.id),
+      grade: int(),
+    },
+    (t) => [primaryKey({ columns: [t.studentId, t.courseId] })]
+  )
 )

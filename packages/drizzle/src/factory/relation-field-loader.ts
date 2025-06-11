@@ -1,4 +1,10 @@
-import { EasyDataLoader, type ResolverPayload, mapValue } from "@gqloom/core"
+import {
+  type BaseField,
+  LoomDataLoader,
+  type ResolverPayload,
+  getMemoizationMap,
+  mapValue,
+} from "@gqloom/core"
 import {
   type Column,
   Many,
@@ -8,167 +14,203 @@ import {
   inArray,
 } from "drizzle-orm"
 import {
-  getFullPath,
+  getParentPath,
   getPrimaryColumns,
   getSelectedColumns,
   inArrayMultiple,
 } from "../helper"
-import type {
-  AnyQueryBuilder,
-  BaseDatabase,
-  QueryToManyFieldOptions,
-  QueryToOneFieldOptions,
-} from "./types"
+import type { AnyQueryBuilder, BaseDatabase } from "./types"
 
-export class RelationFieldLoader extends EasyDataLoader<
-  [parent: any, arg: any, payload: ResolverPayload | undefined],
+interface RelationFieldsLoaderInput {
+  id: number
+  selector: RelationFieldSelector
+  parent: any
+  args: any
+  payload: ResolverPayload | undefined
+}
+
+export class RelationFieldsLoader extends LoomDataLoader<
+  [
+    selector: (loader: RelationFieldsLoader) => RelationFieldSelector,
+    parent: any,
+    args: any,
+    payload: ResolverPayload | undefined,
+  ],
   any
 > {
-  protected isMany: boolean
+  public static getLoaderByPath(
+    payload: ResolverPayload | undefined,
+    ...args: ConstructorParameters<typeof RelationFieldsLoader>
+  ): RelationFieldsLoader {
+    if (!payload) return new RelationFieldsLoader(...args)
+    const memoMap = getMemoizationMap(payload)
+    const parentPath = getParentPath(payload.info)
+    /** parentPath -> loader */
+    const loaderMap: Map<string, RelationFieldsLoader> =
+      memoMap.get(RelationFieldsLoader) ?? new Map()
+    memoMap.set(RelationFieldsLoader, loaderMap)
+    const loader =
+      loaderMap.get(parentPath) ?? new RelationFieldsLoader(...args)
+    loaderMap.set(parentPath, loader)
+
+    return loader
+  }
+
   protected queryBuilder: AnyQueryBuilder
+  protected selectors: Map<Function, RelationFieldSelector>
 
   public constructor(
     protected db: BaseDatabase,
-    protected relationName: string | number | symbol,
-    protected relation: Relation<string, string>,
-    protected sourceTable: Table,
-    protected targetTable: Table
+    protected table: Table
   ) {
-    super((...args) => this.batchLoad(...args))
-    this.isMany = relation instanceof Many
-    const queryBuilder = matchQueryBuilder(this.db.query, this.sourceTable)
+    const queryBuilder = matchQueryBuilder(db.query, table)
     if (!queryBuilder) {
       throw new Error(
-        `Query builder not found for source table ${getTableName(this.sourceTable)}`
+        `Query builder not found for source table ${getTableName(table)}`
       )
     }
+    super()
+
     this.queryBuilder = queryBuilder
+    this.selectors = new Map()
   }
 
   protected async batchLoad(
-    inputs: [
+    inputBatch: [
+      selector: (loader: RelationFieldsLoader) => RelationFieldSelector,
       parent: any,
-      args: QueryToOneFieldOptions<any> | QueryToManyFieldOptions<any>,
-      payload: ResolverPayload | undefined,
+      args: any,
+      payload: ResolverPayload<object, BaseField> | undefined,
     ][]
   ): Promise<any[]> {
-    const inputGroups = new Map<string | number, typeof inputs>()
-    const groupKey = (input: (typeof inputs)[number]) =>
-      input[2]?.info ? getFullPath(input[2]?.info) : inputs.indexOf(input)
-    for (let i = 0; i < inputs.length; i++) {
-      const input = inputs[i]
-      const key = groupKey(input)
-      const array = inputGroups.get(key) ?? []
-      array.push(input)
-      inputGroups.set(key, array)
-    }
-
-    const resultsGroups = new Map<string | number, Map<string, any>>()
-    await Promise.all(
-      Array.from(inputGroups.values()).map(async (inputs) => {
-        const args = inputs[0][1]
-        const columns = this.columns(inputs)
-        const parentResults = this.isMany
-          ? await this.loadManyByParent(
-              inputs.map((input) => input[0]),
-              args,
-              columns
-            )
-          : await this.loadOneByParent(
-              inputs.map((input) => input[0]),
-              args,
-              columns
-            )
-        const groups = new Map<string, any>(
-          parentResults.map((parent: any) => [
-            this.getKeyForParent(parent),
-            parent,
-          ])
-        )
-        resultsGroups.set(groupKey(inputs[0]), groups)
+    const inputs = inputBatch.map<RelationFieldsLoaderInput>(
+      ([selector, ...rest], index) => ({
+        id: index,
+        parentPath: rest[2]?.info
+          ? getParentPath(rest[2]?.info)
+          : `isolated:${index}`,
+        selector: this.getSelector(selector),
+        parent: rest[0],
+        args: rest[1],
+        payload: rest[2],
       })
     )
-
-    return inputs.map((input) => {
-      const groups = resultsGroups.get(groupKey(input))
-      if (!groups) return null
-      const key = this.getKeyForParent(input[0])
-      const parentResult = groups.get(key)
-      return parentResult?.[this.relationName] ?? null
-    })
-  }
-
-  protected async loadOneByParent(
-    parents: any[],
-    args: QueryToOneFieldOptions<any>,
-    columns: Partial<Record<string, Column>>
-  ): Promise<any[]> {
-    return await this.queryBuilder.findMany({
-      where: { RAW: (table) => this.whereForParent(table, parents) },
-      with: {
-        [this.relationName]: {
-          where: { RAW: args.where },
-          columns: mapValue(columns, () => true),
-        },
-      } as never,
-    })
-  }
-
-  protected async loadManyByParent(
-    parents: any[],
-    args: QueryToManyFieldOptions<any>,
-    columns: Partial<Record<string, Column>>
-  ): Promise<any[]> {
-    return await this.queryBuilder.findMany({
-      where: { RAW: (table) => this.whereForParent(table, parents) },
-      with: {
-        [this.relationName]: {
-          where: { RAW: args.where },
-          orderBy: args.orderBy,
-          limit: args.limit,
-          offset: args.offset,
-          columns: mapValue(columns, () => true),
-        },
-      } as never,
-    })
-  }
-
-  protected whereForParent(table: Table, parents: any[]) {
-    const primaryColumns = getPrimaryColumns(table)
-    if (primaryColumns.length === 1) {
-      const [key, column] = primaryColumns[0]
-      return inArray(
-        column,
-        parents.map((parent) => parent[key])
-      )
+    /** field -> inputs */
+    const inputGroups = new Map<
+      RelationFieldSelector,
+      RelationFieldsLoaderInput[]
+    >()
+    for (const input of inputs) {
+      const groupByField = inputGroups.get(input.selector) ?? []
+      groupByField.push(input)
+      inputGroups.set(input.selector, groupByField)
     }
-    return inArrayMultiple(
-      primaryColumns.map((it) => it[1]),
-      parents.map((parent) => primaryColumns.map((it) => parent[it[0]])),
-      table
-    )
+
+    const results = await this.loadBatchParents(inputGroups)
+
+    return inputs.map(({ id }) => results.get(id))
   }
 
-  protected tablesColumnToFieldKey: Map<Table, Map<string, string>> = new Map()
+  protected async loadBatchParents(
+    inputGroups: Map<RelationFieldSelector, RelationFieldsLoaderInput[]>
+  ): Promise<Map<number, any>> {
+    const { parents, relations } = this.getParentRelation(inputGroups)
 
-  protected columns(
-    inputs: [parent: any, args: any, payload: ResolverPayload | undefined][]
+    const parentsWithRelationsList = await this.queryBuilder.findMany({
+      where: {
+        RAW: (table) => whereByParent(table, Array.from(parents.values())),
+      },
+      with: relations as never,
+      columns: Object.fromEntries(
+        getPrimaryColumns(this.table).map(([key]) => [key, true])
+      ),
+    })
+
+    const parentsWithRelations = new Map<string, any>(
+      parentsWithRelationsList.map((parent) => [
+        keyForParent(this.table, parent),
+        parent,
+      ])
+    )
+
+    /** input.id -> result */
+    const results = new Map<number, any>()
+
+    for (const [selector, inputs] of inputGroups) {
+      for (const input of inputs) {
+        const parent = parentsWithRelations.get(
+          keyForParent(this.table, input.parent)
+        )
+        const result =
+          parent?.[selector.relationName] ?? (selector.isMany ? [] : null)
+        results.set(input.id, result)
+      }
+    }
+
+    return results
+  }
+
+  protected getParentRelation(
+    inputGroups: Map<RelationFieldSelector, RelationFieldsLoaderInput[]>
   ) {
-    const selectedColumns = getSelectedColumns(
-      this.targetTable,
-      inputs.map((input) => input[2])
-    )
-
-    const referenceColumns = Object.fromEntries(
-      this.relation.targetColumns.map((col) => [col.name, col])
-    )
-    return { ...selectedColumns, ...referenceColumns }
+    const parents = new Map<string, any>()
+    const relations: any = {}
+    for (const [selector, inputs] of inputGroups) {
+      const selectedColumns = getSelectedColumns(
+        selector.targetTable,
+        inputs.map((input) => input.payload)
+      )
+      const primaryColumns = Object.fromEntries(
+        getPrimaryColumns(selector.targetTable)
+      )
+      const columns = { ...selectedColumns, ...primaryColumns }
+      relations[selector.relationName] = selector.selectField(
+        inputs[0].args,
+        columns
+      )
+      for (const input of inputs) {
+        parents.set(keyForParent(this.table, input.parent), input.parent)
+      }
+    }
+    return { parents, relations }
   }
 
-  protected getKeyForParent(parent: any): string {
-    return getPrimaryColumns(this.sourceTable)
-      .map(([key]) => parent[key])
-      .join()
+  protected getSelector(
+    selector: (loader: RelationFieldsLoader) => RelationFieldSelector
+  ) {
+    const existing = this.selectors.get(selector)
+    if (existing) return existing
+    const selectorInstance = selector(this)
+    this.selectors.set(selector, selectorInstance)
+    return selectorInstance
+  }
+}
+
+export class RelationFieldSelector {
+  public isMany: boolean
+
+  public constructor(
+    public readonly relationName: string | number | symbol,
+    relation: Relation<string, string>,
+    public readonly targetTable: Table
+  ) {
+    this.isMany = relation instanceof Many
+  }
+
+  public selectField(args: any, columns: Partial<Record<string, Column>>) {
+    if (this.isMany) {
+      return {
+        where: { RAW: args.where },
+        orderBy: args.orderBy,
+        limit: args.limit,
+        offset: args.offset,
+        columns: mapValue(columns, () => true),
+      }
+    }
+    return {
+      where: { RAW: args.where },
+      columns: mapValue(columns, () => true),
+    }
   }
 }
 
@@ -181,4 +223,26 @@ function matchQueryBuilder(
       return qb
     }
   }
+}
+
+function keyForParent(table: Table, parent: any) {
+  return getPrimaryColumns(table)
+    .map(([key]) => parent[key])
+    .join()
+}
+
+function whereByParent(table: Table, parents: any[]) {
+  const primaryColumns = getPrimaryColumns(table)
+  if (primaryColumns.length === 1) {
+    const [key, column] = primaryColumns[0]
+    return inArray(
+      column,
+      parents.map((parent) => parent[key])
+    )
+  }
+  return inArrayMultiple(
+    primaryColumns.map((it) => it[1]),
+    parents.map((parent) => primaryColumns.map(([key]) => parent[key])),
+    table
+  )
 }

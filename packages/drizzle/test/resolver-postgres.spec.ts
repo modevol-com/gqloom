@@ -203,7 +203,7 @@ describe("resolver by postgres", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         select "id", "name" from "users" where "users"."name" like $1 order by "users"."name" asc
-        select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email", "posts"."r" as "posts" from "users" as "d0" left join lateral(select coalesce(json_agg(row_to_json("t".*)), '[]') as "r" from (select "d1"."id" as "id", "d1"."title" as "title", "d1"."authorId" as "authorId" from "posts" as "d1" where "d0"."id" = "d1"."authorId") as "t") as "posts" on true where "d0"."id" in ($1, $2, $3)
+        select "d0"."id" as "id", "posts"."r" as "posts" from "users" as "d0" left join lateral(select coalesce(json_agg(row_to_json("t".*)), '[]') as "r" from (select "d1"."id" as "id", "d1"."title" as "title" from "posts" as "d1" where "d0"."id" = "d1"."authorId") as "t") as "posts" on true where "d0"."id" in ($1, $2, $3)
         "
       `)
     })

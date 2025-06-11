@@ -194,87 +194,16 @@ export function getPrimaryColumns(
   return primaryColumns
 }
 
-export function getFullPath(info: GraphQLResolveInfo): string {
-  const asKey = (key: string | number) =>
-    typeof key === "number" ? `[n]` : key
-  let path = asKey(info.path.key)
-  let parent = info.path.prev
-  while (parent) {
-    path = `${asKey(parent.key)}.${path}`
-    parent = parent.prev
+export function getParentPath(info: GraphQLResolveInfo): string {
+  let path = ""
+  let prev = info.path.prev
+  while (prev) {
+    path = path ? `${pathKey(prev)}.${path}` : pathKey(prev)
+    prev = prev.prev
   }
   return path
 }
 
-export function paramsAsKey(params: any): string {
-  if (typeof params !== "object" || params === null) return String(params)
-
-  const searchParams = new URLSearchParams()
-  const visited = new WeakMap<object, string>()
-
-  function addToParams(obj: unknown, prefix = "") {
-    // Handle functions
-    if (typeof obj === "function") {
-      searchParams.set(prefix, "[Function]")
-      return
-    }
-
-    if (Array.isArray(obj)) {
-      // Check for circular reference
-      if (visited.has(obj)) {
-        searchParams.set(prefix, `[Circular](${visited.get(obj)})`)
-        return
-      }
-      visited.set(obj, prefix)
-
-      obj.forEach((value, index) => {
-        const key = prefix ? `${prefix}.${index}` : String(index)
-        if (
-          value != null &&
-          (typeof value === "object" || typeof value === "function")
-        ) {
-          addToParams(value, key)
-        } else {
-          searchParams.set(key, String(value))
-        }
-      })
-
-      visited.delete(obj)
-      return
-    }
-
-    if (typeof obj !== "object" || obj === null) {
-      searchParams.set(prefix, String(obj))
-      return
-    }
-
-    // Check for circular reference
-    if (visited.has(obj)) {
-      searchParams.set(prefix, `[Circular](${visited.get(obj)})`)
-      return
-    }
-    visited.set(obj, prefix)
-
-    for (const [key, value] of Object.entries(obj)) {
-      const newPrefix = prefix ? `${prefix}.${key}` : key
-
-      if (value == null) {
-        searchParams.set(newPrefix, "")
-      } else if (typeof value === "function") {
-        searchParams.set(newPrefix, "[Function]")
-      } else if (Array.isArray(value)) {
-        addToParams(value, newPrefix)
-      } else if (typeof value === "object") {
-        addToParams(value, newPrefix)
-      } else {
-        searchParams.set(newPrefix, String(value))
-      }
-    }
-
-    visited.delete(obj)
-  }
-
-  addToParams(params)
-  searchParams.sort()
-  return decodeURI(searchParams.toString())
+export function pathKey(path: GraphQLResolveInfo["path"]): string {
+  return typeof path.key === "number" ? `[n]` : path.key
 }

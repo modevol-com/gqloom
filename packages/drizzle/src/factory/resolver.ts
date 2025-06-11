@@ -9,7 +9,6 @@ import {
   QueryFactoryWithResolve,
   type QueryOptions,
   capitalize,
-  getMemoizationMap,
   loom,
   mapValue,
   silk,
@@ -69,7 +68,10 @@ import {
   type SelectSingleArgs,
   type UpdateArgs,
 } from "./input"
-import { RelationFieldLoader } from "./relation-field-loader"
+import {
+  RelationFieldSelector,
+  RelationFieldsLoader,
+} from "./relation-field-loader"
 import type {
   BaseDatabase,
   CountOptions,
@@ -446,18 +448,18 @@ export abstract class DrizzleResolverFactory<
       TInputI
     >
 
-    const columns = Object.entries(getTableColumns(targetTable))
-    const dependencies = relation.sourceColumns.map(
-      (col) => columns.find(([_, value]) => value === col)?.[0] ?? col.name
+    /** columnTableName -> columnTsKey */
+    const columnKeys = new Map(
+      Object.entries(getTableColumns(targetTable)).map(([name, col]) => [
+        col.name,
+        name,
+      ])
     )
-    const initLoader = () =>
-      new RelationFieldLoader(
-        this.db,
-        relationName,
-        relation,
-        this.table,
-        targetTable
-      )
+    const dependencies = relation.sourceColumns.map(
+      (col) => columnKeys.get(col.name) ?? col.name
+    )
+    const initSelector = () =>
+      new RelationFieldSelector(relationName, relation, targetTable)
 
     return new FieldFactoryWithResolve(
       toMany ? output.$list() : output.$nullable(),
@@ -466,13 +468,12 @@ export abstract class DrizzleResolverFactory<
         ...options,
         dependencies,
         resolve: (parent, input, payload) => {
-          const loader = (() => {
-            if (!payload) return initLoader()
-            const memoMap = getMemoizationMap(payload)
-            if (!memoMap.has(initLoader)) memoMap.set(initLoader, initLoader())
-            return memoMap.get(initLoader) as ReturnType<typeof initLoader>
-          })()
-          return loader.load([parent, input, payload])
+          const loader = RelationFieldsLoader.getLoaderByPath(
+            payload,
+            this.db,
+            this.table
+          )
+          return loader.load([initSelector, parent, input, payload])
         },
       } as FieldOptions<any, any, any, any>
     )
