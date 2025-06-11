@@ -6,6 +6,7 @@ export const relations = defineRelations(schema, (r) => ({
     posts: r.many.posts({ alias: "author" }),
     reviewedPosts: r.many.posts({ alias: "reviewer" }),
     courses: r.many.studentToCourses(),
+    starredPosts: r.many.userStarPosts(),
   },
   posts: {
     author: r.one.users({
@@ -17,6 +18,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.posts.reviewerId,
       to: r.users.id,
       alias: "reviewer",
+    }),
+    starredBy: r.many.userStarPosts({
+      from: r.posts.id,
+      to: r.userStarPosts.postId,
+      alias: "starredBy",
     }),
   },
   courses: {
@@ -34,6 +40,16 @@ export const relations = defineRelations(schema, (r) => ({
     grade: r.one.studentCourseGrades({
       from: [r.studentToCourses.studentId, r.studentToCourses.courseId],
       to: [r.studentCourseGrades.studentId, r.studentCourseGrades.courseId],
+    }),
+  },
+  userStarPosts: {
+    user: r.one.users({
+      from: r.userStarPosts.userId,
+      to: r.users.id,
+    }),
+    post: r.one.posts({
+      from: r.userStarPosts.postId,
+      to: r.posts.id,
     }),
   },
 }))

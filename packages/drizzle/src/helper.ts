@@ -24,6 +24,7 @@ import {
   SQLiteTable,
   getTableConfig as getSQLiteTableConfig,
 } from "drizzle-orm/sqlite-core"
+import type { GraphQLResolveInfo } from "graphql"
 import type {
   DrizzleFactoryInputVisibilityBehaviors,
   SelectedTableColumns,
@@ -191,6 +192,18 @@ export function getPrimaryColumns(
   }
   tablePrimaryKeys.set(table, primaryColumns)
   return primaryColumns
+}
+
+export function getFullPath(info: GraphQLResolveInfo): string {
+  const asKey = (key: string | number) =>
+    typeof key === "number" ? `[n]` : key
+  let path = asKey(info.path.key)
+  let parent = info.path.prev
+  while (parent) {
+    path = `${asKey(parent.key)}.${path}`
+    parent = parent.prev
+  }
+  return path
 }
 
 export function paramsAsKey(params: any): string {

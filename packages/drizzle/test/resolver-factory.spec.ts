@@ -1,4 +1,4 @@
-import { resolver } from "@gqloom/core"
+import { resolver, weave } from "@gqloom/core"
 import {
   defineRelations,
   eq,
@@ -22,6 +22,7 @@ import {
   drizzle as pgDrizzle,
 } from "drizzle-orm/node-postgres"
 import * as sqlite from "drizzle-orm/sqlite-core"
+import { execute, parse } from "graphql"
 import * as v from "valibot"
 import {
   afterAll,
@@ -1067,6 +1068,191 @@ describe("DrizzleResolverFactory", () => {
             inArray(sqliteSchemas.users.id, [Alice.id, Bob.id, Charlie.id])
           )
       }
+    })
+  })
+
+  describe("relationField with multiple relation field", () => {
+    let John: typeof sqliteSchemas.users.$inferSelect
+    let Jane: typeof sqliteSchemas.users.$inferSelect
+    let Jill: typeof sqliteSchemas.users.$inferSelect
+    beforeAll(async () => {
+      John = (await db.query.users.findFirst({
+        where: { name: "John" },
+      }))!
+      Jane = (await db.query.users.findFirst({
+        where: { name: "Jane" },
+      }))!
+      Jill = (await db.query.users.findFirst({
+        where: { name: "Jill" },
+      }))!
+      const posts = await db
+        .insert(sqliteSchemas.posts)
+        .values([
+          { authorId: John.id, title: "John's post", reviewerId: Jane.id },
+          { authorId: John.id, title: "John's post 2", reviewerId: Jane.id },
+          { authorId: Jane.id, title: "Jane's post", reviewerId: John.id },
+          { authorId: Jane.id, title: "Jane's post 2", reviewerId: John.id },
+          { authorId: Jill.id, title: "Jill's post", reviewerId: John.id },
+          { authorId: Jill.id, title: "Jill's post 2", reviewerId: John.id },
+        ])
+        .returning()
+      await db.insert(sqliteSchemas.userStarPosts).values([
+        { userId: John.id, postId: posts[0].id },
+        { userId: Jane.id, postId: posts[1].id },
+        { userId: Jill.id, postId: posts[2].id },
+        { userId: John.id, postId: posts[3].id },
+        { userId: Jane.id, postId: posts[4].id },
+        { userId: Jill.id, postId: posts[5].id },
+      ])
+    })
+
+    afterAll(async () => {
+      await db.delete(sqliteSchemas.userStarPosts)
+      await db.delete(sqliteSchemas.posts)
+    })
+
+    it("should aggregate relation fields", async () => {
+      const userFactory = drizzleResolverFactory(db, sqliteSchemas.users)
+      const userStarPostsFactory = drizzleResolverFactory(
+        db,
+        sqliteSchemas.userStarPosts
+      )
+      const schema = weave(
+        userFactory.resolver(),
+        userStarPostsFactory.resolver()
+      )
+
+      const { data } = await execute({
+        schema,
+        contextValue: {},
+        document: parse(/* GraphQL */ `
+          query {
+            users(where: { name: { in: ["John", "Jane", "Jill"] } }) {
+              name
+              posts {
+                title
+              }
+              reviewedPosts {
+                title
+              }
+              starredPosts {
+                post {
+                  title
+                }
+              }
+            }
+          }
+        `),
+      })
+
+      expect(data).toMatchInlineSnapshot(`
+        {
+          "users": [
+            {
+              "name": "John",
+              "posts": [
+                {
+                  "title": "John's post",
+                },
+                {
+                  "title": "John's post 2",
+                },
+              ],
+              "reviewedPosts": [
+                {
+                  "title": "Jane's post",
+                },
+                {
+                  "title": "Jane's post 2",
+                },
+                {
+                  "title": "Jill's post",
+                },
+                {
+                  "title": "Jill's post 2",
+                },
+              ],
+              "starredPosts": [
+                {
+                  "post": {
+                    "title": "John's post",
+                  },
+                },
+                {
+                  "post": {
+                    "title": "Jane's post 2",
+                  },
+                },
+              ],
+            },
+            {
+              "name": "Jane",
+              "posts": [
+                {
+                  "title": "Jane's post",
+                },
+                {
+                  "title": "Jane's post 2",
+                },
+              ],
+              "reviewedPosts": [
+                {
+                  "title": "John's post",
+                },
+                {
+                  "title": "John's post 2",
+                },
+              ],
+              "starredPosts": [
+                {
+                  "post": {
+                    "title": "John's post 2",
+                  },
+                },
+                {
+                  "post": {
+                    "title": "Jill's post",
+                  },
+                },
+              ],
+            },
+            {
+              "name": "Jill",
+              "posts": [
+                {
+                  "title": "Jill's post",
+                },
+                {
+                  "title": "Jill's post 2",
+                },
+              ],
+              "reviewedPosts": [],
+              "starredPosts": [
+                {
+                  "post": {
+                    "title": "Jane's post",
+                  },
+                },
+                {
+                  "post": {
+                    "title": "Jill's post 2",
+                  },
+                },
+              ],
+            },
+          ],
+        }
+      `)
+
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "select "id", "name" from "users" where "users"."name" in (?, ?, ?)",
+          "select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email", coalesce((select json_group_array(json_object('title', "title", 'authorId', "authorId")) as "r" from (select "d1"."title" as "title", "d1"."authorId" as "authorId" from "posts" as "d1" where "d0"."id" = "d1"."authorId") as "t"), jsonb_array()) as "posts" from "users" as "d0" where "d0"."id" in (?, ?, ?)",
+          "select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email", coalesce((select json_group_array(json_object('title', "title", 'reviewerId', "reviewerId")) as "r" from (select "d1"."title" as "title", "d1"."reviewerId" as "reviewerId" from "posts" as "d1" where "d0"."id" = "d1"."reviewerId") as "t"), jsonb_array()) as "reviewedPosts" from "users" as "d0" where "d0"."id" in (?, ?, ?)",
+          "select "d0"."id" as "id", "d0"."name" as "name", "d0"."age" as "age", "d0"."email" as "email", coalesce((select json_group_array(json_object('postId', "postId", 'userId', "userId")) as "r" from (select "d1"."postId" as "postId", "d1"."userId" as "userId" from "userStarPosts" as "d1" where "d0"."id" = "d1"."userId") as "t"), jsonb_array()) as "starredPosts" from "users" as "d0" where "d0"."id" in (?, ?, ?)",
+          "select "d0"."userId" as "userId", "d0"."postId" as "postId", (select json_object('title', "title", 'id', "id") as "r" from (select "d1"."title" as "title", "d1"."id" as "id" from "posts" as "d1" where "d0"."postId" = "d1"."id" limit ?) as "t") as "post" from "userStarPosts" as "d0" where ("d0"."userId", "d0"."postId") IN ((?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?))",
+        ]
+      `)
     })
   })
 

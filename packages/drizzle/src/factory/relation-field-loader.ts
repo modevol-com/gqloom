@@ -4,15 +4,14 @@ import {
   Many,
   type Relation,
   type Table,
-  getTableColumns,
   getTableName,
   inArray,
 } from "drizzle-orm"
 import {
+  getFullPath,
   getPrimaryColumns,
   getSelectedColumns,
   inArrayMultiple,
-  paramsAsKey,
 } from "../helper"
 import type {
   AnyQueryBuilder,
@@ -49,12 +48,22 @@ export class RelationFieldLoader extends EasyDataLoader<
   protected async batchLoad(
     inputs: [
       parent: any,
-      args: QueryToOneFieldOptions<any>,
+      args: QueryToOneFieldOptions<any> | QueryToManyFieldOptions<any>,
       payload: ResolverPayload | undefined,
     ][]
   ): Promise<any[]> {
-    const inputGroups = this.keyByArgs(inputs)
-    const resultsGroups = new Map<string, Map<string, any>>()
+    const inputGroups = new Map<string | number, typeof inputs>()
+    const groupKey = (input: (typeof inputs)[number]) =>
+      input[2]?.info ? getFullPath(input[2]?.info) : inputs.indexOf(input)
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i]
+      const key = groupKey(input)
+      const array = inputGroups.get(key) ?? []
+      array.push(input)
+      inputGroups.set(key, array)
+    }
+
+    const resultsGroups = new Map<string | number, Map<string, any>>()
     await Promise.all(
       Array.from(inputGroups.values()).map(async (inputs) => {
         const args = inputs[0][1]
@@ -76,15 +85,14 @@ export class RelationFieldLoader extends EasyDataLoader<
             parent,
           ])
         )
-        resultsGroups.set(paramsAsKey(args), groups)
+        resultsGroups.set(groupKey(inputs[0]), groups)
       })
     )
 
-    return inputs.map(([parent, args]) => {
-      const paramsKey = paramsAsKey(args)
-      const groups = resultsGroups.get(paramsKey)
+    return inputs.map((input) => {
+      const groups = resultsGroups.get(groupKey(input))
       if (!groups) return null
-      const key = this.getKeyForParent(parent)
+      const key = this.getKeyForParent(input[0])
       const parentResult = groups.get(key)
       return parentResult?.[this.relationName] ?? null
     })
@@ -125,25 +133,6 @@ export class RelationFieldLoader extends EasyDataLoader<
     })
   }
 
-  protected keyByArgs<TArgs>(
-    inputs: [parent: any, args: TArgs, payload: ResolverPayload | undefined][]
-  ): Map<
-    string,
-    [parent: any, args: TArgs, payload: ResolverPayload | undefined][]
-  > {
-    const inputGroups = new Map<
-      string,
-      [parent: any, args: TArgs, payload: ResolverPayload | undefined][]
-    >()
-    for (const input of inputs) {
-      const key = paramsAsKey(input[1])
-      const array = inputGroups.get(key) ?? []
-      array.push(input)
-      inputGroups.set(key, array)
-    }
-    return inputGroups
-  }
-
   protected whereForParent(table: Table, parents: any[]) {
     const primaryColumns = getPrimaryColumns(table)
     if (primaryColumns.length === 1) {
@@ -177,8 +166,7 @@ export class RelationFieldLoader extends EasyDataLoader<
   }
 
   protected getKeyForParent(parent: any): string {
-    return Object.entries(getTableColumns(this.sourceTable))
-      .filter(([_, col]) => col.primary)
+    return getPrimaryColumns(this.sourceTable)
       .map(([key]) => parent[key])
       .join()
   }

@@ -21,6 +21,7 @@ type Post {
   id: Int!
   reviewer(where: UserFilters): User
   reviewerId: Int
+  starredBy(limit: Int, offset: Int, orderBy: UserStarPostsOrderBy, where: UserStarPostsFilters): [UserStarPostsItem!]!
   title: String!
 }
 
@@ -240,6 +241,7 @@ type User {
   name: String!
   posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
   reviewedPosts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  starredPosts(limit: Int, offset: Int, orderBy: UserStarPostsOrderBy, where: UserStarPostsFilters): [UserStarPostsItem!]!
 }
 
 """A user"""
@@ -306,6 +308,29 @@ input UserOrderBy {
 
   """The name of the user"""
   name: OrderDirection
+}
+
+input UserStarPostsFilters {
+  AND: [UserStarPostsFiltersNested!]
+  NOT: UserStarPostsFiltersNested
+  OR: [UserStarPostsFiltersNested!]
+  postId: SQLiteIntegerFilters
+  userId: SQLiteIntegerFilters
+}
+
+input UserStarPostsFiltersNested {
+  postId: SQLiteIntegerFilters
+  userId: SQLiteIntegerFilters
+}
+
+type UserStarPostsItem {
+  postId: Int
+  userId: Int
+}
+
+input UserStarPostsOrderBy {
+  postId: OrderDirection
+  userId: OrderDirection
 }
 
 enum UserTableColumn {
