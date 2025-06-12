@@ -218,11 +218,7 @@ function matchQueryBuilder(
   queries: Record<string, any>,
   table: any
 ): AnyQueryBuilder | undefined {
-  for (const qb of Object.values(queries)) {
-    if (qb.table != null && qb.table === table) {
-      return qb
-    }
-  }
+  return Object.values(queries).find((qb) => qb.table === table)
 }
 
 function keyForParent(table: Table, parent: any) {

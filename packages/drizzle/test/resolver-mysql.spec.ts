@@ -1,4 +1,5 @@
 import { weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import { drizzle } from "drizzle-orm/mysql2"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 import {
@@ -7,6 +8,7 @@ import {
   printSchema,
 } from "graphql"
 import { type YogaServerInstance, createYoga } from "graphql-yoga"
+import * as v from "valibot"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
@@ -39,7 +41,7 @@ describe("resolver by mysql", () => {
     const { data, errors } = await response.json()
 
     if (response.status !== 200 || errors != null) {
-      console.info(errors)
+      // console.info(errors)
       throw new Error(JSON.stringify(errors))
     }
     return data
@@ -52,9 +54,14 @@ describe("resolver by mysql", () => {
         mode: "default",
         logger: { logQuery: (query) => logs.push(query) },
       })
-      const userFactory = drizzleResolverFactory(db, users)
+      const userFactory = drizzleResolverFactory(db, users, {
+        input: {
+          email: v.nullish(v.pipe(v.string(), v.email())),
+        },
+      })
       const postFactory = drizzleResolverFactory(db, posts)
       gqlSchema = weave(
+        ValibotWeaver,
         userFactory.resolver({ name: "users" }),
         postFactory.resolver({ name: "posts" })
       )
@@ -249,6 +256,34 @@ describe("resolver by mysql", () => {
       `)
     })
 
+    it("should throw error when insert a user with invalid email", async () => {
+      const q1 = /* GraphQL */ `
+        mutation insertIntoUsers($values: [UserInsertInput!]!) {
+          insertIntoUsers(values: $values) {
+            isSuccess
+          }
+        }
+      `
+      await expect(
+        execute(q1, {
+          values: [{ name: "Tina", email: "modevol.com" }],
+        })
+      ).rejects.toThrow("Invalid email")
+
+      const q2 = /* GraphQL */ `
+        mutation insertIntoUsersSingle($value: UserInsertInput!) {
+          insertIntoUsersSingle(value: $value) {
+            isSuccess
+          }
+        }
+      `
+      await expect(
+        execute(q2, {
+          value: { name: "Tina", email: "modevol.com" },
+        })
+      ).rejects.toThrow("Invalid email")
+    })
+
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
         mutation updateUser($set: UserUpdateInput!, $where: UserFilters!) {
@@ -289,6 +324,26 @@ describe("resolver by mysql", () => {
         select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
         "
       `)
+    })
+
+    it("should throw error when update a user with invalid email", async () => {
+      const q = /* GraphQL */ `
+        mutation updateUsers($set: UserUpdateInput!, $where: UserFilters!) {
+          updateUsers(set: $set, where: $where) {
+            isSuccess
+          }
+        }
+      `
+      const [Danny] = await db
+        .insert(users)
+        .values({ name: "Danny" })
+        .$returningId()
+      await expect(
+        execute(q, {
+          set: { email: "modevol.com" },
+          where: { id: { eq: Danny.id } },
+        })
+      ).rejects.toThrow("Invalid email")
     })
 
     it("should delete a user correctly", async () => {

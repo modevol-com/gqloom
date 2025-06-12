@@ -1,4 +1,5 @@
-import type { StandardSchemaV1 } from "@gqloom/core"
+import type { MayPromise, StandardSchemaV1 } from "@gqloom/core"
+import type { GraphQLSilk } from "@gqloom/core"
 import {
   type Column,
   type SQL,
@@ -25,6 +26,7 @@ import {
   notLike,
   or,
 } from "drizzle-orm"
+import type { DrizzleResolverFactoryOptions } from "../types"
 import type {
   ColumnFilters,
   CountArgs,
@@ -58,49 +60,58 @@ import type {
 export class DrizzleArgsTransformer<TTable extends Table> {
   public toSelectArrayOptions: (
     args: SelectArrayArgs<TTable>
-  ) => StandardSchemaV1.Result<SelectArrayOptions>
+  ) => MayPromise<StandardSchemaV1.Result<SelectArrayOptions>>
 
   public toSelectSingleOptions: (
     args: SelectSingleArgs<TTable>
-  ) => StandardSchemaV1.Result<SelectSingleOptions>
+  ) => MayPromise<StandardSchemaV1.Result<SelectSingleOptions>>
 
   public toCountOptions: (
     args: CountArgs<TTable>
-  ) => StandardSchemaV1.Result<CountOptions>
+  ) => MayPromise<StandardSchemaV1.Result<CountOptions>>
 
   public toQueryToManyFieldOptions: (
     args: RelationToManyArgs<TTable>
-  ) => StandardSchemaV1.Result<QueryToManyFieldOptions<TTable>>
+  ) => MayPromise<StandardSchemaV1.Result<QueryToManyFieldOptions<TTable>>>
 
   public toQueryToOneFieldOptions: (
     args: RelationToOneArgs<TTable>
-  ) => StandardSchemaV1.Result<QueryToOneFieldOptions<TTable>>
+  ) => MayPromise<StandardSchemaV1.Result<QueryToOneFieldOptions<TTable>>>
 
   public toInsertArrayOptions: (
     args: InsertArrayArgs<TTable>
-  ) => StandardSchemaV1.Result<InsertArrayOptions<TTable>>
+  ) => MayPromise<StandardSchemaV1.Result<InsertArrayOptions<TTable>>>
 
   public toInsertArrayWithOnConflictOptions: (
     args: InsertArrayWithOnConflictArgs<TTable>
-  ) => StandardSchemaV1.Result<InsertArrayWithOnConflictOptions<TTable>>
+  ) => MayPromise<
+    StandardSchemaV1.Result<InsertArrayWithOnConflictOptions<TTable>>
+  >
 
   public toInsertSingleOptions: (
     args: InsertSingleArgs<TTable>
-  ) => StandardSchemaV1.Result<InsertSingleOptions<TTable>>
+  ) => MayPromise<StandardSchemaV1.Result<InsertSingleOptions<TTable>>>
 
   public toInsertSingleWithOnConflictOptions: (
     args: InsertSingleWithOnConflictArgs<TTable>
-  ) => StandardSchemaV1.Result<InsertSingleWithOnConflictOptions<TTable>>
+  ) => MayPromise<
+    StandardSchemaV1.Result<InsertSingleWithOnConflictOptions<TTable>>
+  >
 
   public toUpdateOptions: (
     args: UpdateArgs<TTable>
-  ) => StandardSchemaV1.Result<UpdateOptions<TTable>>
+  ) => MayPromise<StandardSchemaV1.Result<UpdateOptions<TTable>>>
 
   public toDeleteOptions: (
     args: DeleteArgs<TTable>
-  ) => StandardSchemaV1.Result<DeleteOptions>
+  ) => MayPromise<StandardSchemaV1.Result<DeleteOptions>>
 
-  public constructor(protected readonly table: TTable) {
+  public constructor(
+    protected readonly table: TTable,
+    protected readonly options:
+      | DrizzleResolverFactoryOptions<TTable>
+      | undefined
+  ) {
     this.toSelectArrayOptions = (args) => ({
       value: {
         where: this.extractFilters(args.where),
@@ -136,74 +147,178 @@ export class DrizzleArgsTransformer<TTable extends Table> {
         where: this.extractFilters(args.where),
       },
     })
-    this.toInsertArrayOptions = (args) => ({ value: { values: args.values } })
 
-    this.toInsertArrayWithOnConflictOptions = (args) => ({
-      value: {
-        values: args.values,
-        onConflictDoNothing: args.onConflictDoNothing
-          ? {
-              target: args.onConflictDoNothing.target?.map((t) =>
-                this.toColumn(t)
-              ),
-              where: this.extractFilters(args.onConflictDoNothing?.where),
-            }
-          : undefined,
-        onConflictDoUpdate: args.onConflictDoUpdate
-          ? {
-              target: args.onConflictDoUpdate.target.map((t) =>
-                this.toColumn(t)
-              ),
-              set: args.onConflictDoUpdate.set,
-              targetWhere: this.extractFilters(
-                args.onConflictDoUpdate?.targetWhere
-              ),
-              setWhere: this.extractFilters(args.onConflictDoUpdate?.setWhere),
-            }
-          : undefined,
-      },
-    })
+    this.toInsertArrayOptions = async (args) => {
+      const valuesResult = await this.validateInsertValues(args.values, [
+        "values",
+      ])
 
-    this.toInsertSingleOptions = (args) => ({
-      value: { value: args.value },
-    })
+      if (valuesResult.issues) return { issues: valuesResult.issues }
+      return { value: { values: valuesResult.value } }
+    }
 
-    this.toInsertSingleWithOnConflictOptions = (args) => ({
-      value: {
-        value: args.value,
-        onConflictDoNothing: args.onConflictDoNothing
-          ? {
-              target: args.onConflictDoNothing.target?.map((t) =>
-                this.toColumn(t)
-              ),
-              where: this.extractFilters(args.onConflictDoNothing?.where),
-            }
-          : undefined,
-        onConflictDoUpdate: args.onConflictDoUpdate
-          ? {
-              target: args.onConflictDoUpdate.target.map((t) =>
-                this.toColumn(t)
-              ),
-              set: args.onConflictDoUpdate.set,
-              targetWhere: this.extractFilters(
-                args.onConflictDoUpdate?.targetWhere
-              ),
-              setWhere: this.extractFilters(args.onConflictDoUpdate?.setWhere),
-            }
-          : undefined,
-      },
-    })
+    this.toInsertArrayWithOnConflictOptions = async (args) => {
+      const valuesResult = await this.validateInsertValues(args.values, [
+        "values",
+      ])
+      if (valuesResult.issues) return { issues: valuesResult.issues }
+      return {
+        value: {
+          values: valuesResult.value,
+          onConflictDoNothing: args.onConflictDoNothing
+            ? {
+                target: args.onConflictDoNothing.target?.map((t) =>
+                  this.toColumn(t)
+                ),
+                where: this.extractFilters(args.onConflictDoNothing?.where),
+              }
+            : undefined,
+          onConflictDoUpdate: args.onConflictDoUpdate
+            ? {
+                target: args.onConflictDoUpdate.target.map((t) =>
+                  this.toColumn(t)
+                ),
+                set: args.onConflictDoUpdate.set,
+                targetWhere: this.extractFilters(
+                  args.onConflictDoUpdate?.targetWhere
+                ),
+                setWhere: this.extractFilters(
+                  args.onConflictDoUpdate?.setWhere
+                ),
+              }
+            : undefined,
+        },
+      }
+    }
 
-    this.toUpdateOptions = (args) => ({
-      value: {
-        where: this.extractFilters(args.where),
-        set: args.set,
-      },
-    })
+    this.toInsertSingleOptions = async (args) => {
+      const valueResult = await this.validateInsertValue(args.value, ["value"])
+      if (valueResult.issues) return { issues: valueResult.issues }
+      return { value: { value: valueResult.value } }
+    }
+
+    this.toInsertSingleWithOnConflictOptions = async (args) => {
+      const valueResult = await this.validateInsertValue(args.value, ["value"])
+      if (valueResult.issues) return { issues: valueResult.issues }
+      return {
+        value: {
+          value: valueResult.value,
+          onConflictDoNothing: args.onConflictDoNothing
+            ? {
+                target: args.onConflictDoNothing.target?.map((t) =>
+                  this.toColumn(t)
+                ),
+                where: this.extractFilters(args.onConflictDoNothing?.where),
+              }
+            : undefined,
+          onConflictDoUpdate: args.onConflictDoUpdate
+            ? {
+                target: args.onConflictDoUpdate.target.map((t) =>
+                  this.toColumn(t)
+                ),
+                set: args.onConflictDoUpdate.set,
+                targetWhere: this.extractFilters(
+                  args.onConflictDoUpdate?.targetWhere
+                ),
+                setWhere: this.extractFilters(
+                  args.onConflictDoUpdate?.setWhere
+                ),
+              }
+            : undefined,
+        },
+      }
+    }
+
+    this.toUpdateOptions = async (args) => {
+      const setResult = await this.validateUpdateValue(args.set, ["set"])
+      if (setResult.issues) return { issues: setResult.issues }
+      return {
+        value: {
+          where: this.extractFilters(args.where),
+          set: setResult.value,
+        },
+      }
+    }
 
     this.toDeleteOptions = (args) => ({
       value: { where: this.extractFilters(args.where) },
     })
+  }
+
+  protected async validateInsertValues(
+    values: TTable["$inferInsert"][],
+    path: ReadonlyArray<PropertyKey>
+  ): Promise<StandardSchemaV1.Result<TTable["$inferInsert"][]>> {
+    const results: TTable["$inferInsert"][] = []
+    const issues: StandardSchemaV1.Issue[] = []
+
+    await Promise.all(
+      values.map(async (value, index) => {
+        const res = await this.validateInsertValue(value, [...path, index])
+        if (res.issues) {
+          issues.push(...res.issues)
+          return
+        }
+        results[index] = res.value
+      })
+    )
+    return { value: results, ...(issues.length > 0 && { issues }) }
+  }
+
+  protected async validateInsertValue(
+    value: TTable["$inferInsert"],
+    path: ReadonlyArray<PropertyKey>
+  ): Promise<StandardSchemaV1.Result<TTable["$inferInsert"]>> {
+    const result: Record<string, any> = {}
+    const issues: StandardSchemaV1.Issue[] = []
+    for (const key of Object.keys(getTableColumns(this.table))) {
+      const columnSilk = this.getColumnSilk(key, "insert")
+      if (columnSilk == null) {
+        result[key] = value[key]
+        continue
+      }
+      const res = await columnSilk["~standard"].validate(value[key])
+      if ("value" in res) {
+        result[key] = res.value
+      }
+      if (res.issues) {
+        issues.push(
+          ...res.issues.map((issue) => ({
+            ...issue,
+            path: [...path, key, ...(issue.path ?? [])],
+          }))
+        )
+      }
+    }
+    return { value: result, ...(issues.length > 0 && { issues }) }
+  }
+
+  protected async validateUpdateValue(
+    value: Partial<TTable["$inferInsert"]>,
+    path: ReadonlyArray<PropertyKey>
+  ): Promise<StandardSchemaV1.Result<Partial<TTable["$inferInsert"]>>> {
+    const result: Record<string, any> = {}
+    const issues: StandardSchemaV1.Issue[] = []
+    for (const key of Object.keys(value)) {
+      const columnSilk = this.getColumnSilk(key, "update")
+      if (columnSilk == null) {
+        result[key] = value[key]
+        continue
+      }
+      const res = await columnSilk["~standard"].validate(value[key])
+      if ("value" in res) {
+        result[key] = res.value
+      }
+      if (res.issues) {
+        issues.push(
+          ...res.issues.map((issue) => ({
+            ...issue,
+            path: [...path, key, ...(issue.path ?? [])],
+          }))
+        )
+      }
+    }
+    return { value: result, ...(issues.length > 0 && { issues }) }
   }
 
   protected toColumn(columnName: string) {
@@ -214,6 +329,19 @@ export class DrizzleArgsTransformer<TTable extends Table> {
       )
     }
     return column
+  }
+
+  protected getColumnSilk(
+    columnName: string,
+    mutation: "insert" | "update"
+  ): GraphQLSilk<any, any> | undefined {
+    const behavior = this.options?.input?.[columnName]
+    if (behavior == null || typeof behavior === "boolean") return undefined
+    if ("~standard" in behavior) return behavior
+    const mutationBehavior = behavior[mutation]
+    if (mutationBehavior == null || typeof mutationBehavior === "boolean")
+      return undefined
+    return mutationBehavior
   }
 
   public extractFilters(
