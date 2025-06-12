@@ -127,7 +127,12 @@ async function parseInputEntries(
         result[key] = res.value
       }
       if (res.issues) {
-        issues.push(...res.issues.slice())
+        issues.push(
+          ...res.issues.map((issue) => ({
+            ...issue,
+            path: [key, ...(issue.path ?? [])],
+          }))
+        )
       }
     })
   )
