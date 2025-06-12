@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from "@gqloom/core"
+import type { GraphQLSilk } from "@gqloom/core"
 import {
   type Column,
   type SQL,
@@ -142,6 +143,7 @@ export class DrizzleArgsTransformer<TTable extends Table> {
         where: this.extractFilters(args.where),
       },
     })
+
     this.toInsertArrayOptions = (args) => ({ value: { values: args.values } })
 
     this.toInsertArrayWithOnConflictOptions = (args) => ({
@@ -212,6 +214,34 @@ export class DrizzleArgsTransformer<TTable extends Table> {
     })
   }
 
+  protected async validateInsertValue(
+    value: TTable["$inferInsert"],
+    path: ReadonlyArray<PropertyKey>
+  ): Promise<StandardSchemaV1.Result<TTable["$inferInsert"]>> {
+    const result: Record<string, any> = {}
+    const issues: StandardSchemaV1.Issue[] = []
+    for (const key of Object.keys(getTableColumns(this.table))) {
+      const columnSilk = this.getColumnSilk(key, "insert")
+      if (columnSilk == null) {
+        result[key] = value[key]
+        continue
+      }
+      const res = await columnSilk["~standard"].validate(value[key])
+      if ("value" in res) {
+        result[key] = res.value
+      }
+      if (res.issues) {
+        issues.push(
+          ...res.issues.map((issue) => ({
+            ...issue,
+            path: [...path, key, ...(issue.path ?? [])],
+          }))
+        )
+      }
+    }
+    return { value: result, ...(issues.length > 0 ? { issues } : null) }
+  }
+
   protected toColumn(columnName: string) {
     const column = getTableColumns(this.table)[columnName]
     if (!column) {
@@ -220,6 +250,19 @@ export class DrizzleArgsTransformer<TTable extends Table> {
       )
     }
     return column
+  }
+
+  protected getColumnSilk(
+    columnName: string,
+    mutation: "insert" | "update"
+  ): GraphQLSilk<any, any> | undefined {
+    const behavior = this.options?.input?.[columnName]
+    if (behavior == null || typeof behavior === "boolean") return undefined
+    if ("~standard" in behavior) return behavior
+    const mutationBehavior = behavior[mutation]
+    if (mutationBehavior == null || typeof mutationBehavior === "boolean")
+      return undefined
+    return mutationBehavior
   }
 
   public extractFilters(
