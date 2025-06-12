@@ -1,4 +1,5 @@
 import { SYMBOLS, mapValue, pascalCase, weaverContext } from "@gqloom/core"
+import { getGraphQLType } from "@gqloom/core"
 import {
   type Column,
   type InferInsertModel,
@@ -246,6 +247,30 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
+  protected getColumnInputType(
+    key: string,
+    mutation: "insert" | "update",
+    column: Column,
+    columnConfig: ReturnType<typeof DrizzleInputFactory.getColumnConfig>
+  ) {
+    const colSilk = (() => {
+      const behavior = this.options?.input[key]
+      if (typeof behavior != "object" || behavior == null) return undefined
+      if ("~standard" in behavior) {
+        return behavior
+      }
+      const mutationConfigBehavior = behavior[mutation]
+      if (
+        typeof mutationConfigBehavior != "object" ||
+        mutationConfigBehavior == null
+      )
+        return undefined
+      return mutationConfigBehavior
+    })()
+    if (colSilk != null) return getGraphQLType(colSilk)
+    return getValue(columnConfig?.type) || DrizzleWeaver.getColumnType(column)
+  }
+
   public insertInput() {
     const tableConfig = DrizzleWeaver.silkConfigs.get(this.table)
     const tableName = tableConfig?.name ?? getTableName(this.table)
@@ -259,25 +284,21 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLObjectType({
         name,
         description: tableConfig?.description,
-        fields: mapValue(columns, (column, columnName) => {
-          if (
-            !isColumnVisible(columnName, this.options?.input ?? {}, "insert")
-          ) {
+        fields: mapValue(columns, (column, key) => {
+          if (!isColumnVisible(key, this.options?.input ?? {}, "insert")) {
             return mapValue.SKIP
           }
 
           const fieldConfig = DrizzleInputFactory.getColumnConfig(
             tableConfig,
-            columnName
+            key
           )
-          const type = (() => {
-            const t =
-              getValue(fieldConfig?.type) || DrizzleWeaver.getColumnType(column)
-            if (column.hasDefault) return t
-            if (column.notNull && !isNonNullType(t))
-              return new GraphQLNonNull(t)
-            return t
-          })()
+          let type = this.getColumnInputType(key, "insert", column, fieldConfig)
+          const isNotNull =
+            !column.hasDefault && column.notNull && !isNonNullType(type)
+          if (isNotNull) {
+            type = new GraphQLNonNull(type)
+          }
           return { type, description: fieldConfig?.description }
         }),
       })
@@ -343,18 +364,23 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLObjectType({
         name,
         description: tableConfig?.description,
-        fields: mapValue(columns, (column, columnName) => {
-          if (
-            !isColumnVisible(columnName, this.options?.input ?? {}, "update")
-          ) {
+        fields: mapValue(columns, (column, key) => {
+          if (!isColumnVisible(key, this.options?.input ?? {}, "update")) {
             return mapValue.SKIP
           }
           const columnConfig = DrizzleInputFactory.getColumnConfig(
             tableConfig,
-            columnName
+            key
           )
-          const type =
-            getValue(columnConfig?.type) || DrizzleWeaver.getColumnType(column)
+          let type = this.getColumnInputType(
+            key,
+            "update",
+            column,
+            columnConfig
+          )
+          if (type instanceof GraphQLNonNull) {
+            type = type.ofType
+          }
           return { type, description: columnConfig?.description }
         }),
       })

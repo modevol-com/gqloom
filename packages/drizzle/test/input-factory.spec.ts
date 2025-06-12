@@ -1,4 +1,5 @@
-import { field } from "@gqloom/core"
+import { field, initWeaverContext, provideWeaverContext } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as pg from "drizzle-orm/pg-core"
 import { GraphQLScalarType, printType } from "graphql"
 import * as v from "valibot"
@@ -140,10 +141,17 @@ describe("DrizzleInputFactory", () => {
     const inputFactoryWithOptions = new DrizzleInputFactory(userTable, {
       input: options,
     })
+    const weaverContext = initWeaverContext()
+    weaverContext.vendorWeavers.set(ValibotWeaver.vendor, ValibotWeaver)
 
     it("should respect column visibility in InsertInput", () => {
       expect(
-        printType(inputFactoryWithOptions.insertInput())
+        printType(
+          provideWeaverContext(
+            () => inputFactoryWithOptions.insertInput(),
+            weaverContext
+          )
+        )
       ).toMatchInlineSnapshot(`
         "type UsersInsertInput {
           id: Int
@@ -156,7 +164,12 @@ describe("DrizzleInputFactory", () => {
 
     it("should respect column visibility in UpdateInput", () => {
       expect(
-        printType(inputFactoryWithOptions.updateInput())
+        printType(
+          provideWeaverContext(
+            () => inputFactoryWithOptions.updateInput(),
+            weaverContext
+          )
+        )
       ).toMatchInlineSnapshot(`
         "type UsersUpdateInput {
           id: Int
