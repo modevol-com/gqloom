@@ -172,9 +172,16 @@ class FieldLoader<
       parents: InferParent<TParent, TDependencies>[],
       input: InferInputO<TInput>,
       payloads: (ResolverPayload | undefined)[]
-    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>,
+    getByPath: boolean = true
   ) {
     if (!payload) return new FieldLoader(resolve)
+    const memoMap = getMemoizationMap(payload)
+    if (!getByPath) {
+      const loader = memoMap.get(resolve) ?? new FieldLoader(resolve)
+      memoMap.set(resolve, loader)
+      return loader
+    }
     const fullPath: GraphQLResolveInfo["path"][] = []
     let path: GraphQLResolveInfo["path"] | undefined = payload.info.path
     while (path) {
@@ -185,7 +192,6 @@ class FieldLoader<
       .reverse()
       .map((p) => (typeof p.key === "number" ? "[n]" : p.key))
       .join(".")
-    const memoMap = getMemoizationMap(payload)
     const fieldLoaders =
       memoMap.get(resolve) ??
       new Map<string, FieldLoader<TParent, TOutput, TInput, TDependencies>>()
@@ -333,7 +339,11 @@ export class FieldChainFactory<
     return createField(this.options.output, {
       ...this.options,
       resolve: (parent, input, payload) => {
-        const loader = FieldLoader.getByPath(payload, resolve)
+        const loader = FieldLoader.getByPath(
+          payload,
+          resolve,
+          this.options?.input != null
+        )
         return loader.load([parent, input, payload])
       },
     }) as any
