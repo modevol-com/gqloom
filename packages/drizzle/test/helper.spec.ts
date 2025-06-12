@@ -14,7 +14,7 @@ import {
   inArrayMultiple,
   isColumnVisible,
 } from "../src/helper"
-import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
+import type { DrizzleFactoryInputBehaviors } from "../src/types"
 import * as mysqlTables from "./schema/mysql"
 import * as pgTables from "./schema/postgres"
 import * as sqliteTables from "./schema/sqlite"
@@ -55,7 +55,7 @@ describe("helper", () => {
 
   describe("isColumnVisible", () => {
     it("should handle boolean configuration", () => {
-      const options: DrizzleFactoryInputVisibilityBehaviors<Table> = {
+      const options: DrizzleFactoryInputBehaviors<Table> = {
         "*": true,
         column1: false,
         column2: {

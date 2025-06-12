@@ -89,7 +89,7 @@ export abstract class DrizzleResolverFactory<
   ) {
     this.inputFactory = new DrizzleInputFactory(table, options)
     this.tableName = getTableName(table)
-    this.argsTransformer = new DrizzleArgsTransformer(table)
+    this.argsTransformer = new DrizzleArgsTransformer(table, options)
   }
 
   private _output?: TableSilk<TTable>

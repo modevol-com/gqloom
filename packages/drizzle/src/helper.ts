@@ -26,10 +26,10 @@ import {
 } from "drizzle-orm/sqlite-core"
 import type { GraphQLResolveInfo } from "graphql"
 import type {
-  DrizzleFactoryInputVisibilityBehaviors,
+  ColumnBehavior,
+  DrizzleFactoryInputBehaviors,
   SelectedTableColumns,
   ValueOrGetter,
-  VisibilityBehavior,
 } from "./types"
 
 /**
@@ -79,20 +79,22 @@ export function getEnumNameByColumn(column: Column): string | undefined {
 
 export function isColumnVisible(
   columnName: string,
-  options: DrizzleFactoryInputVisibilityBehaviors<Table>,
-  behavior: keyof VisibilityBehavior
+  options: DrizzleFactoryInputBehaviors<Table>,
+  behavior: keyof ColumnBehavior<any>
 ): boolean {
   // Get specific column configuration
   const columnConfig = options?.[columnName as keyof typeof options]
-  // Get global default configuration
+  // Get table default configuration
   const defaultConfig = options?.["*"]
   if (columnConfig != null) {
     if (typeof columnConfig === "boolean") {
       return columnConfig
     }
-    const specificBehavior = columnConfig[behavior]
-    if (specificBehavior != null) {
-      return specificBehavior
+    if (!("~standard" in columnConfig)) {
+      const specificBehavior = columnConfig[behavior]
+      if (specificBehavior != null) {
+        return specificBehavior !== false
+      }
     }
   }
 
@@ -102,7 +104,7 @@ export function isColumnVisible(
     }
     const defaultBehavior = defaultConfig[behavior]
     if (defaultBehavior != null) {
-      return defaultBehavior
+      return defaultBehavior !== false
     }
   }
 

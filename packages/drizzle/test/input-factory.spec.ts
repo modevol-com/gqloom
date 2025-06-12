@@ -1,8 +1,10 @@
+import { field } from "@gqloom/core"
 import * as pg from "drizzle-orm/pg-core"
 import { GraphQLScalarType, printType } from "graphql"
+import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import { DrizzleInputFactory, drizzleSilk } from "../src"
-import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
+import type { DrizzleFactoryInputBehaviors } from "../src/types"
 
 describe("DrizzleInputFactory", () => {
   const userTable = pg.pgTable("users", {
@@ -111,14 +113,15 @@ describe("DrizzleInputFactory", () => {
   })
 
   describe("with column visibility options", () => {
-    const options: DrizzleFactoryInputVisibilityBehaviors<typeof userTable> = {
+    const options: DrizzleFactoryInputBehaviors<typeof userTable> = {
+      email: v.pipe(v.string(), v.email()),
       "*": {
         filters: true,
         insert: true,
         update: true,
       },
       password: {
-        filters: false,
+        filters: field.hidden,
         insert: true,
         update: true,
       },

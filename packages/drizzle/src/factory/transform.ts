@@ -25,6 +25,7 @@ import {
   notLike,
   or,
 } from "drizzle-orm"
+import type { DrizzleResolverFactoryOptions } from "../types"
 import type {
   ColumnFilters,
   CountArgs,
@@ -100,7 +101,12 @@ export class DrizzleArgsTransformer<TTable extends Table> {
     args: DeleteArgs<TTable>
   ) => StandardSchemaV1.Result<DeleteOptions>
 
-  public constructor(protected readonly table: TTable) {
+  public constructor(
+    protected readonly table: TTable,
+    protected readonly options:
+      | DrizzleResolverFactoryOptions<TTable>
+      | undefined
+  ) {
     this.toSelectArrayOptions = (args) => ({
       value: {
         where: this.extractFilters(args.where),
