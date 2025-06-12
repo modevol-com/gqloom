@@ -1,5 +1,4 @@
 import { weave } from "@gqloom/core"
-import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/mysql2"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 import {
@@ -11,17 +10,16 @@ import { type YogaServerInstance, createYoga } from "graphql-yoga"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
-import { post, postsRelations, user, usersRelations } from "./schema/mysql"
+import { posts, users } from "./schema/mysql"
+import { relations } from "./schema/mysql-relations"
 
 const schema = {
-  drizzle_user: user,
-  drizzle_post: post,
-  usersRelations,
-  postsRelations,
+  users,
+  posts,
 }
 
 describe("resolver by mysql", () => {
-  let db: MySql2Database<typeof schema>
+  let db: MySql2Database<typeof schema, typeof relations>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
@@ -50,33 +48,33 @@ describe("resolver by mysql", () => {
   beforeAll(async () => {
     try {
       db = drizzle(config.mysqlUrl, {
-        schema,
+        relations,
         mode: "default",
         logger: { logQuery: (query) => logs.push(query) },
       })
-      const userFactory = drizzleResolverFactory(db, "drizzle_user")
-      const postFactory = drizzleResolverFactory(db, "drizzle_post")
+      const userFactory = drizzleResolverFactory(db, users)
+      const postFactory = drizzleResolverFactory(db, posts)
       gqlSchema = weave(
-        userFactory.resolver({ name: "user" }),
-        postFactory.resolver({ name: "post" })
+        userFactory.resolver({ name: "users" }),
+        postFactory.resolver({ name: "posts" })
       )
       yoga = createYoga({ schema: gqlSchema })
 
       await db
-        .insert(user)
+        .insert(users)
         .values([{ name: "Tom" }, { name: "Tony" }, { name: "Taylor" }])
-      const Tom = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tom"),
+      const Tom = await db.query.users.findFirst({
+        where: { name: "Tom" },
       })
-      const Tony = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tony"),
+      const Tony = await db.query.users.findFirst({
+        where: { name: "Tony" },
       })
-      const Taylor = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Taylor"),
+      const Taylor = await db.query.users.findFirst({
+        where: { name: "Taylor" },
       })
       if (!Tom || !Tony || !Taylor) throw new Error("User not found")
 
-      await db.insert(post).values([
+      await db.insert(posts).values([
         { title: "Post 1", authorId: Tom.id },
         { title: "Post 2", authorId: Tony.id },
         { title: "Post 3", authorId: Taylor.id },
@@ -92,8 +90,8 @@ describe("resolver by mysql", () => {
   })
 
   afterAll(async () => {
-    await db.delete(post)
-    await db.delete(user)
+    await db.delete(posts)
+    await db.delete(users)
   })
 
   it("should weave GraphQL schema correctly", async () => {
@@ -105,47 +103,47 @@ describe("resolver by mysql", () => {
   describe("query", () => {
     it("should query users correctly", async () => {
       const q = /* GraphQL */ `
-      query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
-        user(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
+      query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
+        users(orderBy: $orderBy, where: $where, limit: $limit, offset: $offset) {
           id
           name
         }
       }
-    `
+      `
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
+        users: [{ name: "Taylor" }, { name: "Tom" }, { name: "Tony" }],
       })
 
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
           limit: 2,
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Taylor" }, { name: "Tom" }],
+        users: [{ name: "Taylor" }, { name: "Tom" }],
       })
 
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
           limit: 1,
           offset: 1,
         })
       ).resolves.toMatchObject({
-        user: [{ name: "Tom" }],
+        users: [{ name: "Tom" }],
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc
-        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc limit ?
-        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc limit ? offset ?
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc limit ?
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc limit ? offset ?
         "
       `)
     })
@@ -154,31 +152,31 @@ describe("resolver by mysql", () => {
       await expect(
         execute(
           /* GraphQL */ `
-          query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $offset: Int) {
-            userSingle(orderBy: $orderBy, where: $where, offset: $offset) {
+          query users ($orderBy: UserOrderBy, $where: UserFilters!, $offset: Int) {
+            usersSingle(orderBy: $orderBy, where: $where, offset: $offset) {
               id
               name
             }
           }
-        `,
+          `,
           {
             where: { name: { eq: "Taylor" } },
           }
         )
       ).resolves.toMatchObject({
-        userSingle: { name: "Taylor" },
+        usersSingle: { name: "Taylor" },
       })
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` = ? limit ?
         "
       `)
     })
 
     it("should query user with posts correctly", async () => {
       const q = /* GraphQL */ `
-        query user ($orderBy: [UserOrderBy!], $where: UserFilters!, $limit: Int, $offset: Int) {
-          user(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
+        query users ($orderBy: UserOrderBy, $where: UserFilters!, $limit: Int, $offset: Int) {
+          users(orderBy: $orderBy,where: $where, limit: $limit, offset: $offset) {
             id
             name
             posts {
@@ -191,11 +189,11 @@ describe("resolver by mysql", () => {
 
       await expect(
         execute(q, {
-          orderBy: [{ name: "asc" }],
+          orderBy: { name: "asc" },
           where: { name: { like: "T%" } },
         })
       ).resolves.toMatchObject({
-        user: [
+        users: [
           {
             name: "Taylor",
             posts: [{ title: "Post 3" }],
@@ -213,8 +211,8 @@ describe("resolver by mysql", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select \`id\`, \`name\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` like ? order by \`drizzle_user\`.\`name\` asc
-        select \`id\`, \`title\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`authorId\` in (?, ?, ?)
+        select \`id\`, \`name\` from \`users\` where \`users\`.\`name\` like ? order by \`users\`.\`name\` asc
+        select \`d0\`.\`id\` as \`id\`, \`posts\`.\`r\` as \`posts\` from \`users\` as \`d0\` left join lateral(select coalesce(json_arrayagg(json_object('id', \`id\`, 'title', \`title\`)), json_array()) as \`r\` from (select \`d1\`.\`id\` as \`id\`, \`d1\`.\`title\` as \`title\` from \`posts\` as \`d1\` where \`d0\`.\`id\` = \`d1\`.\`authorId\`) as \`t\`) as \`posts\` on true where \`d0\`.\`id\` in (?, ?, ?)
         "
       `)
     })
@@ -223,30 +221,30 @@ describe("resolver by mysql", () => {
   describe("mutation", () => {
     it("should insert a new user correctly", async () => {
       const q = /* GraphQL */ `
-      mutation insertIntoUser($values: [UserInsertInput!]!) {
-        insertIntoUser(values: $values) {
+      mutation insertIntoUsers($values: [UserInsertInput!]!) {
+        insertIntoUsers(values: $values) {
           isSuccess
         }
       }
-    `
+      `
 
       await expect(
         execute(q, {
           values: [{ name: "Tina" }],
         })
       ).resolves.toMatchObject({
-        insertIntoUser: { isSuccess: true },
+        insertIntoUsers: { isSuccess: true },
       })
 
       // Verify the user was inserted
-      const Tina = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tina"),
+      const Tina = await db.query.users.findFirst({
+        where: { name: "Tina" },
       })
       expect(Tina).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into \`drizzle_user\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        insert into \`users\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
         "
       `)
     })
@@ -254,18 +252,18 @@ describe("resolver by mysql", () => {
     it("should update user information correctly", async () => {
       const q = /* GraphQL */ `
         mutation updateUser($set: UserUpdateInput!, $where: UserFilters!) {
-          updateUser(set: $set, where: $where) {
+          updateUsers(set: $set, where: $where) {
             isSuccess
           }
         }
       `
 
       const [TroyID] = await db
-        .insert(user)
+        .insert(users)
         .values({ name: "Troy" })
         .$returningId()
-      const Troy = await db.query.drizzle_user.findFirst({
-        where: eq(user.id, TroyID.id),
+      const Troy = await db.query.users.findFirst({
+        where: { id: TroyID.id },
       })
       if (!Troy) throw new Error("User not found")
 
@@ -275,35 +273,35 @@ describe("resolver by mysql", () => {
           where: { id: { eq: Troy.id } },
         })
       ).resolves.toMatchObject({
-        updateUser: { isSuccess: true },
+        updateUsers: { isSuccess: true },
       })
 
       // Verify the user was updated
-      const updatedUser = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tiffany"),
+      const updatedUser = await db.query.users.findFirst({
+        where: { name: "Tiffany" },
       })
       expect(updatedUser).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into \`drizzle_user\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`id\` = ? limit ?
-        update \`drizzle_user\` set \`name\` = ? where \`drizzle_user\`.\`id\` = ?
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        insert into \`users\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
+        update \`users\` set \`name\` = ? where \`users\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
         "
       `)
     })
 
     it("should delete a user correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromUser($where: UserFilters!) {
-          deleteFromUser(where: $where) {
+        mutation deleteFromUsers($where: UserFilters!) {
+          deleteFromUsers(where: $where) {
             isSuccess
           }
         }
       `
 
-      const Tony = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tony"),
+      const Tony = await db.query.users.findFirst({
+        where: { name: "Tony" },
       })
       if (!Tony) throw new Error("User not found")
 
@@ -312,36 +310,36 @@ describe("resolver by mysql", () => {
           where: { id: { eq: Tony.id } },
         })
       ).resolves.toMatchObject({
-        deleteFromUser: {
+        deleteFromUsers: {
           isSuccess: true,
         },
       })
 
       // Verify the user was deleted
-      const deletedUser = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tony"),
+      const deletedUser = await db.query.users.findFirst({
+        where: { name: "Tony" },
       })
       expect(deletedUser).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
-        delete from \`drizzle_user\` where \`drizzle_user\`.\`id\` = ?
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
+        delete from \`users\` where \`users\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
         "
       `)
     })
 
     it("should insert a new post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation insertIntoPost($values: [PostInsertInput!]!) {
-          insertIntoPost(values: $values) {
+        mutation insertIntoPosts($values: [PostInsertInput!]!) {
+          insertIntoPosts(values: $values) {
             isSuccess
           }
         }
       `
 
-      const Tom = await db.query.drizzle_user.findFirst({
-        where: eq(user.name, "Tom"),
+      const Tom = await db.query.users.findFirst({
+        where: { name: "Tom" },
       })
       if (!Tom) throw new Error("User not found")
 
@@ -350,41 +348,41 @@ describe("resolver by mysql", () => {
           values: [{ title: "Post 5", authorId: Tom.id }],
         })
       ).resolves.toMatchObject({
-        insertIntoPost: {
+        insertIntoPosts: {
           isSuccess: true,
         },
       })
 
       // Verify the post was inserted
-      const p = await db.query.drizzle_post.findFirst({
-        where: eq(post.title, "Post 5"),
+      const p = await db.query.posts.findFirst({
+        where: { title: "Post 5" },
       })
       expect(p).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
-        insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, ?)
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`name\` as \`name\`, \`d0\`.\`age\` as \`age\`, \`d0\`.\`email\` as \`email\` from \`users\` as \`d0\` where \`d0\`.\`name\` = ? limit ?
+        insert into \`posts\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, ?)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`title\` = ? limit ?
         "
       `)
     })
 
     it("should update post information correctly", async () => {
       const q = /* GraphQL */ `
-        mutation updatePost($set: PostUpdateInput!, $where: PostFilters!) {
-          updatePost(set: $set, where: $where) {
+        mutation updatePosts($set: PostUpdateInput!, $where: PostFilters!) {
+          updatePosts(set: $set, where: $where) {
             isSuccess
           }
         }
       `
 
       const [PostUID] = await db
-        .insert(post)
+        .insert(posts)
         .values({ title: "Post U" })
         .$returningId()
 
-      const PostU = await db.query.drizzle_post.findFirst({
-        where: eq(post.id, PostUID.id),
+      const PostU = await db.query.posts.findFirst({
+        where: { id: PostUID.id },
       })
       if (!PostU) throw new Error("Post not found")
 
@@ -394,40 +392,40 @@ describe("resolver by mysql", () => {
           where: { id: { eq: PostU.id } },
         })
       ).resolves.toMatchObject({
-        updatePost: { isSuccess: true },
+        updatePosts: { isSuccess: true },
       })
 
       // Verify the post was updated
-      const updatedPost = await db.query.drizzle_post.findFirst({
-        where: eq(post.title, "Updated Post U"),
+      const updatedPost = await db.query.posts.findFirst({
+        where: { title: "Updated Post U" },
       })
       expect(updatedPost).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
-        update \`drizzle_post\` set \`title\` = ? where \`drizzle_post\`.\`id\` = ?
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
+        insert into \`posts\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
+        update \`posts\` set \`title\` = ? where \`posts\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`title\` = ? limit ?
         "
       `)
     })
 
     it("should delete a post correctly", async () => {
       const q = /* GraphQL */ `
-        mutation deleteFromPost($where: PostFilters!) {
-          deleteFromPost(where: $where) {
+        mutation deleteFromPosts($where: PostFilters!) {
+          deleteFromPosts(where: $where) {
             isSuccess
           }
         }
       `
 
       const [PostDID] = await db
-        .insert(post)
+        .insert(posts)
         .values({ title: "Post D" })
         .$returningId()
 
-      const PostD = await db.query.drizzle_post.findFirst({
-        where: eq(post.id, PostDID.id),
+      const PostD = await db.query.posts.findFirst({
+        where: { id: PostDID.id },
       })
       if (!PostD) throw new Error("Post not found")
 
@@ -436,20 +434,20 @@ describe("resolver by mysql", () => {
           where: { id: { eq: PostD.id } },
         })
       ).resolves.toMatchObject({
-        deleteFromPost: { isSuccess: true },
+        deleteFromPosts: { isSuccess: true },
       })
 
       // Verify the post was deleted
-      const deletedPost = await db.query.drizzle_post.findFirst({
-        where: eq(post.id, PostD.id),
+      const deletedPost = await db.query.posts.findFirst({
+        where: { id: PostD.id },
       })
       expect(deletedPost).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
-        delete from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ?
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
+        insert into \`posts\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
+        delete from \`posts\` where \`posts\`.\`id\` = ?
+        select \`d0\`.\`id\` as \`id\`, \`d0\`.\`title\` as \`title\`, \`d0\`.\`content\` as \`content\`, \`d0\`.\`authorId\` as \`authorId\` from \`posts\` as \`d0\` where \`d0\`.\`id\` = ? limit ?
         "
       `)
     })

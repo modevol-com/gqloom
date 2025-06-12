@@ -5,7 +5,7 @@ import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { cats } from "../schema"
 
-const catResolverFactory = drizzleResolverFactory(db, "cats")
+const catResolverFactory = drizzleResolverFactory(db, cats)
 
 export const catResolver = resolver.of(cats, {
   cats: catResolverFactory.selectArrayQuery(),
@@ -23,7 +23,9 @@ export const catResolver = resolver.of(cats, {
 
   owner: catResolverFactory.relationField("owner"),
 
-  createCats: catResolverFactory.insertArrayMutation({
+  insertCats: catResolverFactory.insertArrayMutation(),
+
+  createManyCats: catResolverFactory.insertArrayMutation({
     input: v.pipeAsync(
       v.objectAsync({
         values: v.arrayAsync(

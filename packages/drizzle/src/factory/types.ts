@@ -4,7 +4,15 @@ import type {
   MutationFactoryWithResolve,
   QueryFactoryWithResolve,
 } from "@gqloom/core"
-import type { InferSelectModel, Many, Table } from "drizzle-orm"
+import type {
+  AnyRelations,
+  Column,
+  InferInsertModel,
+  InferSelectModel,
+  Many,
+  SQL,
+  Table,
+} from "drizzle-orm"
 import type { MySqlDatabase } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
 import type { PgDatabase } from "drizzle-orm/pg-core"
@@ -20,6 +28,8 @@ import type {
   InsertSingleArgs,
   InsertSingleWithOnConflictArgs,
   MutationResult,
+  RelationToManyArgs,
+  RelationToOneArgs,
   SelectArrayArgs,
   SelectSingleArgs,
   UpdateArgs,
@@ -34,13 +44,12 @@ export type DrizzleResolver<
   | DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName>
 
 export type DrizzleQueriesResolver<
-  TDatabase extends BaseDatabase,
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
 > = {
-  [key in TTableName]: SelectArrayQuery<TDatabase, TTable>
+  [key in TTableName]: SelectArrayQuery<TTable>
 } & {
-  [key in `${TTableName}Single`]: SelectArrayQuery<TDatabase, TTable>
+  [key in `${TTableName}Single`]: SelectSingleQuery<TTable>
 } & {
   [key in `${TTableName}Count`]: CountQuery<TTable>
 }
@@ -49,7 +58,7 @@ export type DrizzleResolverReturningItems<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
-> = DrizzleQueriesResolver<TDatabase, TTable, TTableName> & {
+> = DrizzleQueriesResolver<TTable, TTableName> & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningItems<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningItem<TTable>
@@ -63,7 +72,7 @@ export type DrizzleResolverReturningSuccess<
   TDatabase extends BaseDatabase,
   TTable extends Table,
   TTableName extends string = TTable["_"]["name"],
-> = DrizzleQueriesResolver<TDatabase, TTable, TTableName> & {
+> = DrizzleQueriesResolver<TTable, TTableName> & {
   [key in `insertInto${Capitalize<TTableName>}`]: InsertArrayMutationReturningSuccess<TTable>
 } & {
   [key in `insertInto${Capitalize<TTableName>}Single`]: InsertSingleMutationReturningSuccess<TTable>
@@ -78,10 +87,10 @@ export type DrizzleResolverRelations<
   TTable extends Table,
 > = {
   [TRelationName in keyof InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
+    QueryBuilder<TDatabase, TTable>
   >["relations"]]: InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"][TRelationName] extends Many<any>
+    QueryBuilder<TDatabase, TTable>
+  >["relations"][TRelationName] extends Many<any, any>
     ? RelationManyField<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
@@ -93,68 +102,120 @@ export type DrizzleResolverRelations<
 }
 
 export interface SelectArrayQuery<
-  TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectArrayArgs<TTable>,
 > extends QueryFactoryWithResolve<
-    InferSelectArrayOptions<TDatabase, TTable>,
+    SelectArrayOptions | undefined,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
+    GraphQLSilk<SelectArrayOptions, TInputI>
   > {}
 
-export type InferSelectArrayOptions<
-  TDatabase extends BaseDatabase,
-  TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findMany"]>[0]
+export interface SelectArrayOptions {
+  where?: SQL
+  orderBy?: (Column | SQL | SQL.Aliased)[]
+  limit?: number
+  offset?: number
+}
 
-export interface CountQuery<
-  TTable extends Table,
-  TInputI = SelectArrayArgs<TTable>,
-> extends QueryFactoryWithResolve<
-    CountArgs<TTable>,
+export interface CountQuery<TTable extends Table, TInputI = CountArgs<TTable>>
+  extends QueryFactoryWithResolve<
+    CountOptions,
     GraphQLSilk<number, number>,
-    GraphQLSilk<CountArgs<TTable>, TInputI>
+    GraphQLSilk<CountOptions, TInputI>
   > {}
+
+export interface CountOptions {
+  where?: SQL
+}
 
 export interface SelectSingleQuery<
-  TDatabase extends BaseDatabase,
   TTable extends Table,
   TInputI = SelectSingleArgs<TTable>,
 > extends QueryFactoryWithResolve<
-    InferSelectSingleOptions<TDatabase, TTable>,
+    SelectSingleOptions | undefined,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+    GraphQLSilk<SelectSingleOptions, TInputI>
   > {}
 
-export type InferSelectSingleOptions<
+export interface SelectSingleOptions {
+  where?: SQL
+  orderBy?: (Column | SQL | SQL.Aliased)[]
+  offset?: number
+}
+
+export type RelationField<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-> = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findFirst"]>[0]
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"],
+> = InferTableRelationalConfig<
+  QueryBuilder<TDatabase, TTable>
+>["relations"][TRelationName] extends Many<any, any>
+  ? RelationManyField<
+      TTable,
+      InferRelationTable<TDatabase, TTable, TRelationName>
+    >
+  : RelationOneField<
+      TTable,
+      InferRelationTable<TDatabase, TTable, TRelationName>
+    >
 
 export interface RelationManyField<
   TTable extends Table,
   TRelationTable extends Table,
+  TInputI = RelationToManyArgs<TRelationTable>,
 > extends FieldFactoryWithResolve<
     GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable>[],
       InferSelectModel<TRelationTable>[]
-    >
+    >,
+    QueryToManyFieldOptions<TRelationTable>,
+    GraphQLSilk<QueryToManyFieldOptions<TRelationTable>, TInputI>
   > {}
+
+export interface QueryToManyFieldOptions<TTable extends Table> {
+  where?: SQL | ((table: TTable) => SQL | undefined)
+  orderBy?: Partial<Record<string, "asc" | "desc">>
+  limit?: number
+  offset?: number
+}
 
 export interface RelationOneField<
   TTable extends Table,
   TRelationTable extends Table,
+  TInputI = RelationToOneArgs<TTable>,
 > extends FieldFactoryWithResolve<
     GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     GraphQLSilk<
       InferSelectModel<TRelationTable> | null | undefined,
       InferSelectModel<TRelationTable> | null | undefined
-    >
+    >,
+    QueryToOneFieldOptions<TRelationTable>,
+    GraphQLSilk<QueryToOneFieldOptions<TRelationTable>, TInputI>
   > {}
+
+export interface QueryToOneFieldOptions<TTable extends Table> {
+  where?: SQL | ((table: TTable) => SQL | undefined)
+}
+
+export type QueryFieldOptions<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"],
+> = InferTableRelationalConfig<
+  QueryBuilder<TDatabase, TTable>
+>["relations"][TRelationName] extends Many<any, any>
+  ? QueryToManyFieldOptions<
+      InferRelationTable<TDatabase, TTable, TRelationName>
+    >
+  : QueryToOneFieldOptions<InferRelationTable<TDatabase, TTable, TRelationName>>
 
 export type InsertArrayMutation<
   TTable extends Table,
@@ -167,18 +228,18 @@ export interface InsertArrayMutationReturningItems<
   TTable extends Table,
   TInputI = InsertArrayWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertArrayWithOnConflictArgs<TTable>,
+    InsertArrayWithOnConflictOptions<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<InsertArrayWithOnConflictArgs<TTable>, TInputI>
+    GraphQLSilk<InsertArrayWithOnConflictOptions<TTable>, TInputI>
   > {}
 
 export interface InsertArrayMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertArrayArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertArrayArgs<TTable>,
+    InsertArrayOptions<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    GraphQLSilk<InsertArrayOptions<TTable>, TInputI>
   > {}
 
 export type InsertSingleMutation<
@@ -192,22 +253,51 @@ export interface InsertSingleMutationReturningItem<
   TTable extends Table,
   TInputI = InsertSingleWithOnConflictArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertSingleWithOnConflictArgs<TTable>,
+    InsertSingleWithOnConflictOptions<TTable>,
     GraphQLSilk<
       InferSelectModel<TTable> | null | undefined,
       InferSelectModel<TTable> | null | undefined
     >,
-    GraphQLSilk<InsertSingleWithOnConflictArgs<TTable>, TInputI>
+    GraphQLSilk<InsertSingleWithOnConflictOptions<TTable>, TInputI>
   > {}
 
 export interface InsertSingleMutationReturningSuccess<
   TTable extends Table,
   TInputI = InsertSingleArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    InsertSingleArgs<TTable>,
+    InsertSingleOptions<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    GraphQLSilk<InsertSingleOptions<TTable>, TInputI>
   > {}
+
+export interface InsertArrayOptions<TTable extends Table> {
+  values: InferInsertModel<TTable>[]
+}
+
+export interface InsertArrayWithOnConflictOptions<TTable extends Table>
+  extends InsertArrayOptions<TTable>,
+    InsertOnConflictInputOptions<TTable> {}
+
+export interface InsertSingleOptions<TTable extends Table> {
+  value: InferInsertModel<TTable>
+}
+
+export interface InsertSingleWithOnConflictOptions<TTable extends Table>
+  extends InsertSingleOptions<TTable>,
+    InsertOnConflictInputOptions<TTable> {}
+
+export interface InsertOnConflictInputOptions<TTable extends Table> {
+  onConflictDoUpdate?: {
+    target: Column[]
+    set?: Partial<InferInsertModel<TTable>>
+    targetWhere?: SQL
+    setWhere?: SQL
+  }
+  onConflictDoNothing?: {
+    target?: Column[]
+    where?: SQL
+  }
+}
 
 export type UpdateMutation<TTable extends Table, TInputI = UpdateArgs<TTable>> =
   | UpdateMutationReturningItems<TTable, TInputI>
@@ -217,19 +307,24 @@ export interface UpdateMutationReturningItems<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    UpdateArgs<TTable>,
+    UpdateOptions<TTable>,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    GraphQLSilk<UpdateOptions<TTable>, TInputI>
   > {}
 
 export interface UpdateMutationReturningSuccess<
   TTable extends Table,
   TInputI = UpdateArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    UpdateArgs<TTable>,
+    UpdateOptions<TTable>,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    GraphQLSilk<UpdateOptions<TTable>, TInputI>
   > {}
+
+export interface UpdateOptions<TTable extends Table> {
+  where?: SQL
+  set: Partial<InferInsertModel<TTable>>
+}
 
 export type DeleteMutation<TTable extends Table, TInputI = DeleteArgs<TTable>> =
   | DeleteMutationReturningItems<TTable, TInputI>
@@ -239,31 +334,37 @@ export interface DeleteMutationReturningItems<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    DeleteArgs<TTable>,
+    DeleteOptions,
     GraphQLSilk<InferSelectModel<TTable>[], InferSelectModel<TTable>[]>,
-    GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    GraphQLSilk<DeleteOptions, TInputI>
   > {}
 
 export interface DeleteMutationReturningSuccess<
   TTable extends Table,
   TInputI = DeleteArgs<TTable>,
 > extends MutationFactoryWithResolve<
-    DeleteArgs<TTable>,
+    DeleteOptions,
     GraphQLSilk<MutationResult, MutationResult>,
-    GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    GraphQLSilk<DeleteOptions, TInputI>
   > {}
+
+export interface DeleteOptions {
+  where?: SQL
+}
 
 export type QueryBuilder<
   TDatabase extends BaseDatabase,
-  TTableName extends keyof TDatabase["_"]["schema"],
-> = TDatabase["query"] extends { [key in TTableName]: any }
-  ? TDatabase["query"][TTableName]
+  TTable extends Table,
+> = TDatabase["query"] extends {
+  [key in InferTableTsName<TDatabase, TTable>]: any
+}
+  ? TDatabase["query"][InferTableTsName<TDatabase, TTable>]
   : never
 
 export type AnyQueryBuilder =
   | MySqlRelationalQueryBuilder<any, any, any>
   | PgRelationalQueryBuilder<any, any>
-  | SQLiteRelationalQueryBuilder<any, any, any, any>
+  | SQLiteRelationalQueryBuilder<any, any, any>
 
 export type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
   TQueryBuilder extends MySqlRelationalQueryBuilder<
@@ -280,25 +381,59 @@ export type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
       : TQueryBuilder extends SQLiteRelationalQueryBuilder<
             any,
             any,
-            any,
             infer TTableRelationalConfig
           >
         ? TTableRelationalConfig
         : never
 
 export type BaseDatabase =
-  | BaseSQLiteDatabase<any, any, any, any>
-  | PgDatabase<any, any, any>
-  | MySqlDatabase<any, any, any, any>
+  | BaseSQLiteDatabase<any, any, any, AnyRelations, any, any>
+  | PgDatabase<any, any, AnyRelations, any, any>
+  | MySqlDatabase<any, any, any, AnyRelations, any, any>
+
+export type InferTablesConfig<TDatabase extends BaseDatabase> =
+  TDatabase extends BaseSQLiteDatabase<
+    any,
+    any,
+    any,
+    any,
+    infer TTablesConfig,
+    any
+  >
+    ? TTablesConfig
+    : TDatabase extends PgDatabase<any, any, any, infer TTablesConfig, any>
+      ? TTablesConfig
+      : TDatabase extends MySqlDatabase<
+            any,
+            any,
+            any,
+            any,
+            infer TTablesConfig,
+            any
+          >
+        ? TTablesConfig
+        : never
+
+export type InferTableTsName<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+> = Extract<
+  ValueOf<InferTablesConfig<TDatabase>>,
+  { dbName: TTable["_"]["name"] }
+>["tsName"]
 
 export type InferTableName<TTable extends Table> = TTable["_"]["name"]
 
 export type InferRelationTable<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-  TRelationName extends keyof InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"],
-> = TDatabase["_"]["fullSchema"][InferTableRelationalConfig<
-  QueryBuilder<TDatabase, InferTableName<TTable>>
->["relations"][TRelationName]["referencedTableName"]]
+  TTargetTableName extends
+    keyof TDatabase["_"]["relations"]["config"][TTable["_"]["name"]],
+> = Extract<
+  ValueOf<InferTablesConfig<TDatabase>>,
+  {
+    dbName: TDatabase["_"]["relations"]["config"][TTable["_"]["name"]][TTargetTableName]["targetTable"]["_"]["name"]
+  }
+>["table"]
+
+type ValueOf<T> = T[keyof T]
