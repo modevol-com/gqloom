@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/drizzle",
-  "version": "0.10.0-beta.5",
+  "version": "0.11.0-beta.0",
   "description": "GQLoom integration with Drizzle ORM",
   "type": "module",
   "main": "./dist/index.js",
@@ -44,7 +44,7 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.9.0",
+    "@gqloom/core": ">= 0.19.0",
     "drizzle-orm": ">= 1.0.0-beta.1",
     "graphql": ">= 16.8.0"
   },
