@@ -1,6 +1,7 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
+import type { GraphQLResolveInfo } from "graphql"
 import {
-  EasyDataLoader,
+  LoomDataLoader,
   type MayPromise,
   type Middleware,
   type RequireKeys,
@@ -147,6 +148,76 @@ export abstract class BaseChainFactory<TField extends Loom.BaseField = any> {
   }
 }
 
+class FieldLoader<
+  TParent extends GraphQLSilk,
+  TOutput extends GraphQLSilk,
+  TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
+  TDependencies extends string[] | undefined = undefined,
+> extends LoomDataLoader<
+  [
+    parent: InferParent<TParent, TDependencies>,
+    input: InferInputO<TInput>,
+    payload: ResolverPayload | undefined,
+  ],
+  any
+> {
+  public static getByPath<
+    TParent extends GraphQLSilk,
+    TOutput extends GraphQLSilk,
+    TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
+    TDependencies extends string[] | undefined = undefined,
+  >(
+    payload: ResolverPayload | undefined,
+    resolve: (
+      parents: InferParent<TParent, TDependencies>[],
+      input: InferInputO<TInput>,
+      payloads: (ResolverPayload | undefined)[]
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
+  ) {
+    if (!payload) return new FieldLoader(resolve)
+    const fullPath: GraphQLResolveInfo["path"][] = []
+    let path: GraphQLResolveInfo["path"] | undefined = payload.info.path
+    while (path) {
+      fullPath.push(path)
+      path = path.prev
+    }
+    const pathKey = fullPath
+      .reverse()
+      .map((p) => (typeof p.key === "number" ? "[n]" : p.key))
+      .join(".")
+    const memoMap = getMemoizationMap(payload)
+    const fieldLoaders =
+      memoMap.get(resolve) ??
+      new Map<string, FieldLoader<TParent, TOutput, TInput, TDependencies>>()
+    memoMap.set(resolve, fieldLoaders)
+    const fieldLoader = fieldLoaders.get(pathKey) ?? new FieldLoader(resolve)
+    fieldLoaders.set(pathKey, fieldLoader)
+    return fieldLoader
+  }
+
+  public constructor(
+    protected readonly resolve: (
+      parents: InferParent<TParent, TDependencies>[],
+      input: InferInputO<TInput>,
+      payloads: (ResolverPayload | undefined)[]
+    ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
+  ) {
+    super()
+  }
+
+  protected batchLoad(
+    args: [
+      parent: InferParent<TParent, TDependencies>,
+      input: InferInputO<TInput>,
+      payload: ResolverPayload<object, Loom.BaseField> | undefined,
+    ][]
+  ): Promise<any[]> {
+    const parents = args.map(([parent]) => parent)
+    const payloads = args.map(([, , payload]) => payload)
+    return this.resolve(parents, args[0]?.[1], payloads) as any
+  }
+}
+
 /**
  * Factory for creating field resolvers with chainable configuration
  * @template TOutput - The output type of the field
@@ -248,49 +319,21 @@ export class FieldChainFactory<
    * by batching them together and handling caching automatically.
    *
    * @template TParent - The parent type that extends GraphQLSilk
-   * @param resolve - A function that handles batch loading of data. The function receives:
-   *   - When no input type is defined: An array of parent objects
-   *   - When input type is defined: An array of tuples containing [parent, input]
-   *   - An array of resolver payloads
+   * @param resolve - A function that handles batch loading of data.
    * @returns A GraphQL field resolver that implements batch loading
    */
   public load<TParent extends GraphQLSilk>(
     resolve: (
-      parameters: InferInputO<TInput> extends void | undefined
-        ? InferParent<TParent, TDependencies>[]
-        : [
-            parent: InferParent<TParent, TDependencies>,
-            input: InferInputO<TInput>,
-          ][],
+      parents: InferParent<TParent, TDependencies>[],
+      input: InferInputO<TInput>,
       payloads: (ResolverPayload | undefined)[]
     ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>[]>
   ): Loom.Field<TParent, TOutput, TInput, TDependencies> {
     if (!this.options?.output) throw new Error("Output is required")
-    const hasInput = typeof this.options.input !== "undefined"
-    const initLoader = () =>
-      new EasyDataLoader<
-        [
-          parent: InferParent<TParent, TDependencies>,
-          input: InferInputO<TInput>,
-          payload: ResolverPayload | undefined,
-        ],
-        any
-      >((args) => {
-        const parents = args.map(([parent, input]) =>
-          hasInput ? [parent, input] : parent
-        )
-        const payloads = args.map(([, , payload]) => payload)
-        return resolve(parents as any, payloads) as any
-      })
     return createField(this.options.output, {
       ...this.options,
       resolve: (parent, input, payload) => {
-        const loader = (() => {
-          if (!payload) return initLoader()
-          const memoMap = getMemoizationMap(payload)
-          if (!memoMap.has(resolve)) memoMap.set(resolve, initLoader())
-          return memoMap.get(resolve) as ReturnType<typeof initLoader>
-        })()
+        const loader = FieldLoader.getByPath(payload, resolve)
         return loader.load([parent, input, payload])
       },
     }) as any
