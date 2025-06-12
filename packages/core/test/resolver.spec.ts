@@ -745,11 +745,11 @@ describe("dataLoader by field.load", () => {
       .input({
         limit: silk(new GraphQLNonNull(GraphQLInt)),
       })
-      .load(async (inputs) => {
+      .load(async (posts, { limit }) => {
         await new Promise((resolve) => setTimeout(resolve, 6))
-        logs.push({ inputs })
+        logs.push({ posts, limit })
         await new Promise((resolve) => setTimeout(resolve, 3))
-        return inputs.map(([post, { limit }]) => {
+        return posts.map((post) => {
           return postCommentsMap.get(post.id)?.slice(0, limit) ?? []
         })
       }),
@@ -838,25 +838,21 @@ describe("dataLoader by field.load", () => {
     expect(logs).toMatchInlineSnapshot(`
       [
         {
-          "inputs": [
-            [
-              {
-                "id": 1,
-                "title": "Post 1",
-              },
-              {
-                "limit": 2,
-              },
-            ],
-            [
-              {
-                "id": 2,
-                "title": "Post 2",
-              },
-              {
-                "limit": 3,
-              },
-            ],
+          "limit": 2,
+          "posts": [
+            {
+              "id": 1,
+              "title": "Post 1",
+            },
+          ],
+        },
+        {
+          "limit": 3,
+          "posts": [
+            {
+              "id": 2,
+              "title": "Post 2",
+            },
           ],
         },
       ]
