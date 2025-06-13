@@ -1,6 +1,5 @@
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { eq } from "drizzle-orm"
 import * as z from "zod"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
@@ -15,19 +14,11 @@ export const userResolver = resolver.of(users, {
 
   usersByName: query(users.$list())
     .input({ name: z.string() })
-    .resolve(({ name }) => {
-      return db.query.users.findMany({
-        where: eq(users.name, name),
-      })
-    }),
+    .resolve(({ name }) => db.query.users.findMany({ where: { name } })),
 
   userByPhone: query(users.$nullable())
     .input({ phone: z.string() })
-    .resolve(({ phone }) => {
-      return db.query.users.findFirst({
-        where: eq(users.phone, phone),
-      })
-    }),
+    .resolve(({ phone }) => db.query.users.findFirst({ where: { phone } })),
 
   createUser: mutation(users)
     .input({

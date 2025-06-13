@@ -20,10 +20,14 @@ import type {
 import { DrizzleResolverFactory } from "./resolver"
 import type {
   DeleteMutationReturningItems,
+  DeleteOptions,
   DrizzleResolverReturningItems,
   InsertArrayMutationReturningItems,
+  InsertArrayWithOnConflictOptions,
   InsertSingleMutationReturningItem,
+  InsertSingleWithOnConflictOptions,
   UpdateMutationReturningItems,
+  UpdateOptions,
 } from "./types"
 
 export class DrizzleSQLiteResolverFactory<
@@ -34,38 +38,30 @@ export class DrizzleSQLiteResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InsertArrayWithOnConflictArgs<TTable>, TInputI>
+    input?: GraphQLSilk<InsertArrayWithOnConflictOptions<TTable>, TInputI>
     middlewares?: Middleware<
       InsertArrayMutationReturningItems<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningItems<TTable, TInputI> {
     input ??= silk(
       () =>
-        this.inputFactory.insertArrayWithOnConflictArgs() as GraphQLOutputType
-    )
+        this.inputFactory.insertArrayWithOnConflictArgs() as GraphQLOutputType,
+      this.argsTransformer.toInsertArrayWithOnConflictOptions
+    ) as any
 
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args: InsertArrayWithOnConflictArgs<TTable>, payload) => {
+      resolve: async (
+        args: InsertArrayWithOnConflictOptions<TTable>,
+        payload
+      ) => {
         let query: any = this.db.insert(this.table).values(args.values)
         if (args.onConflictDoUpdate) {
-          query = query.onConflictDoUpdate({
-            target: args.onConflictDoUpdate.target.map((t) => this.toColumn(t)),
-            set: args.onConflictDoUpdate.set,
-            targetWhere: this.extractFilters(
-              args.onConflictDoUpdate.targetWhere
-            ),
-            setWhere: this.extractFilters(args.onConflictDoUpdate.setWhere),
-          })
+          query = query.onConflictDoUpdate(args.onConflictDoUpdate)
         }
         if (args.onConflictDoNothing) {
-          query = query.onConflictDoNothing({
-            target: args.onConflictDoNothing.target?.map((t) =>
-              this.toColumn(t)
-            ),
-            where: this.extractFilters(args.onConflictDoNothing.where),
-          })
+          query = query.onConflictDoNothing(args.onConflictDoNothing)
         }
         return await query.returning(getSelectedColumns(this.table, payload))
       },
@@ -78,40 +74,30 @@ export class DrizzleSQLiteResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InsertSingleWithOnConflictArgs<TTable>, TInputI>
+    input?: GraphQLSilk<InsertSingleWithOnConflictOptions<TTable>, TInputI>
     middlewares?: Middleware<
       InsertSingleMutationReturningItem<TTable, TInputI>
     >[]
   } = {}): InsertSingleMutationReturningItem<TTable, TInputI> {
     input ??= silk(
       () =>
-        this.inputFactory.insertSingleWithOnConflictArgs() as GraphQLOutputType
-    )
+        this.inputFactory.insertSingleWithOnConflictArgs() as GraphQLOutputType,
+      this.argsTransformer.toInsertSingleWithOnConflictOptions
+    ) as any
+
     return new MutationFactoryWithResolve(this.output.$nullable(), {
       ...options,
       input,
       resolve: async (
-        args: InsertSingleWithOnConflictArgs<TTable>,
+        args: InsertSingleWithOnConflictOptions<TTable>,
         payload
       ) => {
         let query: any = this.db.insert(this.table).values(args.value)
         if (args.onConflictDoUpdate) {
-          query = query.onConflictDoUpdate({
-            target: args.onConflictDoUpdate.target.map((t) => this.toColumn(t)),
-            set: args.onConflictDoUpdate.set,
-            targetWhere: this.extractFilters(
-              args.onConflictDoUpdate.targetWhere
-            ),
-            setWhere: this.extractFilters(args.onConflictDoUpdate.setWhere),
-          })
+          query = query.onConflictDoUpdate(args.onConflictDoUpdate)
         }
         if (args.onConflictDoNothing) {
-          query = query.onConflictDoNothing({
-            target: args.onConflictDoNothing.target?.map((t) =>
-              this.toColumn(t)
-            ),
-            where: this.extractFilters(args.onConflictDoNothing.where),
-          })
+          query = query.onConflictDoNothing(args.onConflictDoNothing)
         }
         return (
           await query.returning(getSelectedColumns(this.table, payload))
@@ -124,18 +110,21 @@ export class DrizzleSQLiteResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    input?: GraphQLSilk<UpdateOptions<TTable>, TInputI>
     middlewares?: Middleware<UpdateMutationReturningItems<TTable, TInputI>>[]
   } = {}): UpdateMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.updateArgs() as GraphQLOutputType)
+    input ??= silk(
+      () => this.inputFactory.updateArgs() as GraphQLOutputType,
+      this.argsTransformer.toUpdateOptions
+    ) as any
 
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args, payload) => {
-        const query = this.db.update(this.table).set(args.set)
+      resolve: async (args: UpdateOptions<TTable>, payload) => {
+        let query: any = this.db.update(this.table).set(args.set)
         if (args.where) {
-          query.where(this.extractFilters(args.where))
+          query = query.where(args.where)
         }
         return await query.returning(getSelectedColumns(this.table, payload))
       },
@@ -146,18 +135,21 @@ export class DrizzleSQLiteResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    input?: GraphQLSilk<DeleteOptions, TInputI>
     middlewares?: Middleware<DeleteMutationReturningItems<TTable, TInputI>>[]
   } = {}): DeleteMutationReturningItems<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.deleteArgs() as GraphQLOutputType)
+    input ??= silk(
+      () => this.inputFactory.deleteArgs() as GraphQLOutputType,
+      this.argsTransformer.toDeleteOptions
+    ) as any
 
     return new MutationFactoryWithResolve(this.output.$list(), {
       ...options,
       input,
-      resolve: async (args, payload) => {
-        const query = this.db.delete(this.table)
+      resolve: async (args: DeleteOptions, payload) => {
+        let query: any = this.db.delete(this.table)
         if (args.where) {
-          query.where(this.extractFilters(args.where))
+          query = query.where(args.where)
         }
         return await query.returning(getSelectedColumns(this.table, payload))
       },

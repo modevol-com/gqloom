@@ -1,5 +1,4 @@
 import {
-  EasyDataLoader,
   FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
@@ -9,80 +8,71 @@ import {
   type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
-  type ResolverPayload,
   capitalize,
-  getMemoizationMap,
   loom,
   mapValue,
   silk,
 } from "@gqloom/core"
 import {
-  type Column,
   type InferSelectModel,
   Many,
   type Relation,
-  type SQL,
-  type Table,
-  and,
-  asc,
-  desc,
-  eq,
+  Table,
+  type TableRelationalConfig,
+  type TablesRelationalConfig,
   getTableColumns,
   getTableName,
-  gt,
-  gte,
-  ilike,
-  inArray,
-  isNotNull,
-  isNull,
-  like,
-  lt,
-  lte,
-  ne,
-  normalizeRelation,
-  notIlike,
-  notInArray,
-  notLike,
-  or,
 } from "drizzle-orm"
-import { GraphQLError, GraphQLInt, GraphQLNonNull } from "graphql"
+import { GraphQLInt, GraphQLNonNull } from "graphql"
 import {
   type DrizzleResolverFactoryOptions,
   DrizzleWeaver,
   type SelectiveTable,
   type TableSilk,
 } from ".."
-import { getSelectedColumns, inArrayMultiple } from "../helper"
+import { getSelectedColumns } from "../helper"
 import {
-  type ColumnFilters,
   type CountArgs,
   type DeleteArgs,
   DrizzleInputFactory,
-  type FiltersCore,
   type InsertArrayArgs,
   type InsertSingleArgs,
+  type RelationArgs,
+  type RelationToManyArgs,
+  type RelationToOneArgs,
   type SelectArrayArgs,
   type SelectSingleArgs,
   type UpdateArgs,
 } from "./input"
+import {
+  RelationFieldSelector,
+  RelationFieldsLoader,
+} from "./relation-field-loader"
+import { DrizzleArgsTransformer } from "./transform"
 import type {
   BaseDatabase,
+  CountOptions,
   CountQuery,
   DeleteMutation,
+  DeleteOptions,
   DrizzleQueriesResolver,
-  InferRelationTable,
-  InferSelectArrayOptions,
-  InferSelectSingleOptions,
   InferTableName,
   InferTableRelationalConfig,
   InsertArrayMutation,
+  InsertArrayOptions,
   InsertSingleMutation,
+  InsertSingleOptions,
   QueryBuilder,
-  RelationManyField,
-  RelationOneField,
+  QueryFieldOptions,
+  QueryToManyFieldOptions,
+  QueryToOneFieldOptions,
+  RelationField,
+  SelectArrayOptions,
   SelectArrayQuery,
+  SelectSingleOptions,
   SelectSingleQuery,
   UpdateMutation,
+  UpdateOptions,
 } from "./types"
 
 export abstract class DrizzleResolverFactory<
@@ -91,6 +81,7 @@ export abstract class DrizzleResolverFactory<
 > {
   protected readonly inputFactory: DrizzleInputFactory<typeof this.table>
   protected readonly tableName: InferTableName<TTable>
+  protected readonly argsTransformer: DrizzleArgsTransformer<TTable>
   public constructor(
     protected readonly db: TDatabase,
     protected readonly table: TTable,
@@ -98,6 +89,7 @@ export abstract class DrizzleResolverFactory<
   ) {
     this.inputFactory = new DrizzleInputFactory(table, options)
     this.tableName = getTableName(table)
+    this.argsTransformer = new DrizzleArgsTransformer(table, options)
   }
 
   private _output?: TableSilk<TTable>
@@ -110,35 +102,25 @@ export abstract class DrizzleResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
-    middlewares?: Middleware<SelectArrayQuery<TDatabase, TTable, TInputI>>[]
-  } = {}): SelectArrayQuery<TDatabase, TTable, TInputI> {
-    input ??= silk<
-      InferSelectArrayOptions<TDatabase, TTable>,
-      SelectArrayArgs<TTable>
-    >(
+    input?: GraphQLSilk<SelectArrayOptions | undefined, TInputI>
+    middlewares?: Middleware<SelectArrayQuery<TTable, TInputI>>[]
+  } = {}): SelectArrayQuery<TTable, TInputI> {
+    input ??= silk<SelectArrayOptions | undefined, SelectArrayArgs<TTable>>(
       () => this.inputFactory.selectArrayArgs(),
-      (args) => ({
-        value: {
-          where: this.extractFilters(args.where),
-          orderBy: this.extractOrderBy(args.orderBy),
-          limit: args.limit,
-          offset: args.offset,
-        },
-      })
-    ) as GraphQLSilk<InferSelectArrayOptions<TDatabase, TTable>, TInputI>
+      this.argsTransformer.toSelectArrayOptions
+    ) as GraphQLSilk<SelectArrayOptions, TInputI>
 
     return new QueryFactoryWithResolve(this.output.$list(), {
       input,
       ...options,
-      resolve: (opts, payload) => {
+      resolve: (opts: SelectArrayOptions | undefined, payload) => {
         let query: any = (this.db as any)
           .select(getSelectedColumns(this.table, payload))
           .from(this.table)
-        if (opts.where) query = query.where(opts.where)
-        if (opts.orderBy?.length) query = query.orderBy(...opts.orderBy)
-        if (opts.limit) query = query.limit(opts.limit)
-        if (opts.offset) query = query.offset(opts.offset)
+        if (opts?.where) query = query.where(opts.where)
+        if (opts?.orderBy?.length) query = query.orderBy(...opts.orderBy)
+        if (opts?.limit) query = query.limit(opts.limit)
+        if (opts?.offset) query = query.offset(opts.offset)
         return query
       },
     } as QueryOptions<any, any>)
@@ -148,34 +130,25 @@ export abstract class DrizzleResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
-    middlewares?: Middleware<SelectSingleQuery<TDatabase, TTable, TInputI>>[]
-  } = {}): SelectSingleQuery<TDatabase, TTable, TInputI> {
-    input ??= silk<
-      InferSelectSingleOptions<TDatabase, TTable>,
-      SelectSingleArgs<TTable>
-    >(
+    input?: GraphQLSilk<SelectSingleOptions | undefined, TInputI>
+    middlewares?: Middleware<SelectSingleQuery<TTable, TInputI>>[]
+  } = {}): SelectSingleQuery<TTable, TInputI> {
+    input ??= silk<SelectSingleOptions | undefined, SelectSingleArgs<TTable>>(
       () => this.inputFactory.selectSingleArgs(),
-      (args) => ({
-        value: {
-          where: this.extractFilters(args.where),
-          orderBy: this.extractOrderBy(args.orderBy),
-          offset: args.offset,
-        },
-      })
-    ) as GraphQLSilk<InferSelectSingleOptions<TDatabase, TTable>, TInputI>
+      this.argsTransformer.toSelectSingleOptions
+    ) as GraphQLSilk<SelectSingleOptions, TInputI>
 
     return new QueryFactoryWithResolve(this.output.$nullable(), {
       input,
       ...options,
-      resolve: (opts, payload) => {
+      resolve: (opts: SelectSingleOptions | undefined, payload) => {
         let query: any = (this.db as any)
           .select(getSelectedColumns(this.table, payload))
           .from(this.table)
-        if (opts.where) query = query.where(opts.where)
-        if (opts.orderBy?.length) query = query.orderBy(...opts.orderBy)
+        if (opts?.where) query = query.where(opts.where)
+        if (opts?.orderBy?.length) query = query.orderBy(...opts.orderBy)
         query = query.limit(1)
-        if (opts.offset) query = query.offset(opts.offset)
+        if (opts?.offset) query = query.offset(opts.offset)
         return query.then((res: any) => res[0])
       },
     } as QueryOptions<any, any>)
@@ -185,273 +158,107 @@ export abstract class DrizzleResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<CountArgs<TTable>, TInputI>
+    input?: GraphQLSilk<CountOptions, TInputI>
     middlewares?: Middleware<CountQuery<TTable, TInputI>>[]
   } = {}): CountQuery<TTable, TInputI> {
-    input ??= silk<CountArgs<TTable>, CountArgs<TTable>>(() =>
-      this.inputFactory.countArgs()
-    ) as GraphQLSilk<CountArgs<TTable>, TInputI>
+    input ??= silk<CountOptions, CountArgs<TTable>>(
+      () => this.inputFactory.countArgs(),
+      this.argsTransformer.toCountOptions
+    ) as GraphQLSilk<CountOptions, TInputI>
 
     return new QueryFactoryWithResolve(silk(new GraphQLNonNull(GraphQLInt)), {
       input,
       ...options,
-      resolve: (args) => {
-        return this.db.$count(this.table, this.extractFilters(args.where))
+      resolve: (args: CountOptions) => {
+        return this.db.$count(this.table, args.where)
       },
     } as QueryOptions<any, any>)
   }
 
-  protected extractOrderBy(
-    orders?: SelectArrayArgs<TTable>["orderBy"]
-  ): SQL[] | undefined {
-    if (orders == null) return
-    const answer: SQL[] = []
-    const columns = getTableColumns(this.table)
-    for (const order of orders) {
-      for (const [column, direction] of Object.entries(order)) {
-        if (!direction) continue
-        if (column in columns) {
-          answer.push(
-            direction === "asc" ? asc(columns[column]) : desc(columns[column])
-          )
-        }
-      }
-    }
-    return answer
-  }
-
-  protected extractFilters(
-    filters: SelectArrayArgs<TTable>["where"]
-  ): SQL | undefined {
-    if (filters == null) return
-    const tableName = getTableName(this.table)
-
-    if (!filters.OR?.length) delete filters.OR
-
-    const entries = Object.entries(filters as FiltersCore<TTable>)
-
-    if (filters.OR) {
-      if (entries.length > 1) {
-        throw new GraphQLError(
-          `WHERE ${tableName}: Cannot specify both fields and 'OR' in table filters!`
-        )
-      }
-
-      const variants = [] as SQL[]
-
-      for (const variant of filters.OR) {
-        const extracted = this.extractFilters(variant)
-        if (extracted) variants.push(extracted)
-      }
-
-      return or(...variants)
-    }
-
-    const variants: SQL[] = []
-    for (const [columnName, operators] of entries) {
-      if (operators == null) continue
-
-      const column = getTableColumns(this.table)[columnName]!
-      variants.push(this.extractFiltersColumn(column, columnName, operators)!)
-    }
-
-    return and(...variants)
-  }
-
-  protected extractFiltersColumn<TColumn extends Column>(
-    column: TColumn,
-    columnName: string,
-    operators: ColumnFilters<TColumn["_"]["data"]>
-  ): SQL | undefined {
-    if (!operators.OR?.length) delete operators.OR
-
-    const entries = Object.entries(operators)
-
-    if (operators.OR) {
-      if (entries.length > 1) {
-        throw new GraphQLError(
-          `WHERE ${columnName}: Cannot specify both fields and 'OR' in column operators!`
-        )
-      }
-
-      const variants = [] as SQL[]
-
-      for (const variant of operators.OR) {
-        const extracted = this.extractFiltersColumn(column, columnName, variant)
-
-        if (extracted) variants.push(extracted)
-      }
-
-      return or(...variants)
-    }
-
-    const variants: SQL[] = []
-    const binaryOperators = { eq, ne, gt, gte, lt, lte }
-    const textOperators = { like, notLike, ilike, notIlike }
-    const arrayOperators = { inArray, notInArray }
-    const nullOperators = { isNull, isNotNull }
-
-    for (const [operatorName, operatorValue] of entries) {
-      if (operatorValue === null || operatorValue === false) continue
-
-      if (operatorName in binaryOperators) {
-        const operator =
-          binaryOperators[operatorName as keyof typeof binaryOperators]
-        variants.push(operator(column, operatorValue))
-      } else if (operatorName in textOperators) {
-        const operator =
-          textOperators[operatorName as keyof typeof textOperators]
-        variants.push(operator(column, operatorValue))
-      } else if (operatorName in arrayOperators) {
-        const operator =
-          arrayOperators[operatorName as keyof typeof arrayOperators]
-        variants.push(operator(column, operatorValue))
-      } else if (operatorName in nullOperators) {
-        const operator =
-          nullOperators[operatorName as keyof typeof nullOperators]
-        if (operatorValue === true) variants.push(operator(column))
-      }
-    }
-
-    return and(...variants)
-  }
-
-  protected toColumn(columnName: string) {
-    const column = getTableColumns(this.table)[columnName]
-    if (!column) {
-      throw new Error(
-        `Column ${columnName} not found in table ${this.tableName}`
-      )
-    }
-    return column
-  }
-
   public relationField<
     TRelationName extends keyof InferTableRelationalConfig<
-      QueryBuilder<TDatabase, InferTableName<TTable>>
+      QueryBuilder<TDatabase, TTable>
     >["relations"],
+    TInputI = RelationArgs<TDatabase, TTable, TRelationName>,
   >(
     relationName: TRelationName,
-    options?: GraphQLFieldOptions & {
-      middlewares?: Middleware<
-        InferTableRelationalConfig<
-          QueryBuilder<TDatabase, InferTableName<TTable>>
-        >["relations"][TRelationName] extends Many<any>
-          ? RelationManyField<
-              TTable,
-              InferRelationTable<TDatabase, TTable, TRelationName>
-            >
-          : RelationOneField<
-              TTable,
-              InferRelationTable<TDatabase, TTable, TRelationName>
-            >
-      >[]
-    }
-  ): InferTableRelationalConfig<
-    QueryBuilder<TDatabase, InferTableName<TTable>>
-  >["relations"][TRelationName] extends Many<any>
-    ? RelationManyField<
-        TTable,
-        InferRelationTable<TDatabase, TTable, TRelationName>
+    {
+      input,
+      ...options
+    }: GraphQLFieldOptions & {
+      input?: GraphQLSilk<
+        QueryFieldOptions<TDatabase, TTable, TRelationName>,
+        TInputI
       >
-    : RelationOneField<
-        TTable,
-        InferRelationTable<TDatabase, TTable, TRelationName>
-      > {
-    const relation = this.db._.schema?.[this.tableName]?.relations?.[
-      relationName
-    ] as Relation
-    if (!relation) {
+      middlewares?: Middleware<
+        RelationField<TDatabase, TTable, TRelationName>
+      >[]
+    } = {}
+  ): RelationField<TDatabase, TTable, TRelationName> {
+    const [relation, targetTable] = (() => {
+      const tableKey = matchTableByTablesConfig(
+        this.db._.relations.tablesConfig,
+        this.table
+      )?.tsName
+      if (!tableKey) return [undefined, undefined]
+      const relation = this.db._.relations["config"]?.[tableKey]?.[
+        relationName
+      ] as Relation
+      const targetTable = relation?.targetTable
+      return [relation, targetTable]
+    })()
+    if (!relation || !(targetTable instanceof Table)) {
       throw new Error(
-        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(relationName)} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
+        `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
+          relationName
+        )} not found in drizzle instance. Did you forget to pass relations to drizzle constructor?`
       )
     }
-    const output = DrizzleWeaver.unravel(relation.referencedTable)
-    const table = relation.referencedTable
+    const output = DrizzleWeaver.unravel(targetTable)
+    const toMany = relation instanceof Many
+    const targetInputFactory = new DrizzleInputFactory(targetTable)
 
-    const normalizedRelation = normalizeRelation(
-      this.db._.schema,
-      this.db._.tableNamesMap,
-      relation
-    )
-    const isList = relation instanceof Many
-    const fieldsLength = normalizedRelation.fields.length
-
-    const getKeyByField = (parent: any) => {
-      if (fieldsLength === 1) {
-        return parent[normalizedRelation.fields[0].name]
-      }
-      return normalizedRelation.fields
-        .map((field) => parent[field.name])
-        .join("-")
-    }
-
-    const referenceColumns = Object.fromEntries(
-      normalizedRelation.references.map((col) => [col.name, col])
-    )
-
-    const getKeyByReference = (item: any) => {
-      if (fieldsLength === 1) {
-        return item[normalizedRelation.references[0].name]
-      }
-      return normalizedRelation.references
-        .map((reference) => item[reference.name])
-        .join("-")
-    }
-
-    const initLoader = () => {
-      return new EasyDataLoader(
-        async (inputs: [any, payload: ResolverPayload | undefined][]) => {
-          const where = (() => {
-            if (fieldsLength === 1) {
-              const values = inputs.map(
-                (input) => input[0][normalizedRelation.fields[0].name]
-              )
-              return inArray(normalizedRelation.references[0], values)
-            }
-            const values = inputs.map((input) =>
-              normalizedRelation.fields.map((field) => input[0][field.name])
-            )
-            return inArrayMultiple(normalizedRelation.references, values)
-          })()
-          const selectedColumns = getSelectedColumns(
-            table,
-            inputs.map((input) => input[1])
+    input ??= (
+      toMany
+        ? silk<QueryToManyFieldOptions<any>, RelationToManyArgs<TTable>>(
+            () => targetInputFactory.relationToManyArgs(),
+            this.argsTransformer.toQueryToManyFieldOptions
           )
+        : silk<QueryToOneFieldOptions<any>, RelationToOneArgs<TTable>>(
+            () => targetInputFactory.relationToOneArgs(),
+            this.argsTransformer.toQueryToOneFieldOptions
+          )
+    ) as GraphQLSilk<
+      QueryFieldOptions<TDatabase, TTable, TRelationName>,
+      TInputI
+    >
 
-          const list = await (this.db as any)
-            .select({ ...selectedColumns, ...referenceColumns })
-            .from(table)
-            .where(where)
-
-          const groups = new Map<string, any>()
-          for (const item of list) {
-            const key = getKeyByReference(item)
-            isList
-              ? groups.set(key, [...(groups.get(key) ?? []), item])
-              : groups.set(key, item)
-          }
-          return inputs.map(([parent]) => {
-            const key = getKeyByField(parent)
-            return groups.get(key) ?? (isList ? [] : null)
-          })
-        }
-      )
-    }
+    /** columnTableName -> columnTsKey */
+    const columnKeys = new Map(
+      Object.entries(getTableColumns(targetTable)).map(([name, col]) => [
+        col.name,
+        name,
+      ])
+    )
+    const dependencies = relation.sourceColumns.map(
+      (col) => columnKeys.get(col.name) ?? col.name
+    )
+    const initSelector = () =>
+      new RelationFieldSelector(relationName, relation, targetTable)
 
     return new FieldFactoryWithResolve(
-      isList ? output.$list() : output.$nullable(),
+      toMany ? output.$list() : output.$nullable(),
       {
+        input,
         ...options,
-        dependencies: ["tableName"],
-        resolve: (parent, _input, payload) => {
-          const loader = (() => {
-            if (!payload) return initLoader()
-            const memoMap = getMemoizationMap(payload)
-            if (!memoMap.has(initLoader)) memoMap.set(initLoader, initLoader())
-            return memoMap.get(initLoader) as ReturnType<typeof initLoader>
-          })()
-          return loader.load([parent, payload])
+        dependencies,
+        resolve: (parent, input, payload) => {
+          const loader = RelationFieldsLoader.getLoaderByPath(
+            payload,
+            this.db,
+            this.table
+          )
+          return loader.load([initSelector, parent, input, payload])
         },
       } as FieldOptions<any, any, any, any>
     )
@@ -467,7 +274,7 @@ export abstract class DrizzleResolverFactory<
     const name = options?.name ?? this.tableName
 
     const fields: Record<string, Loom.Field<any, any, any, any>> = mapValue(
-      this.db._.schema?.[this.tableName]?.relations ?? {},
+      this.db._.relations.config[this.tableName] ?? {},
       (_, key) => this.relationField(key)
     )
 
@@ -494,7 +301,7 @@ export abstract class DrizzleResolverFactory<
     middlewares?: Middleware[]
   }): ObjectChainResolver<
     GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
-    DrizzleQueriesResolver<TDatabase, TTable, TTableName>
+    DrizzleQueriesResolver<TTable, TTableName>
   > {
     const name = options?.name ?? this.tableName
 
@@ -517,29 +324,40 @@ export abstract class DrizzleResolverFactory<
 
   public abstract insertArrayMutation<TInputI = InsertArrayArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+      input?: GraphQLSilk<InsertArrayOptions<TTable>, TInputI>
       middlewares?: Middleware[]
     }
   ): InsertArrayMutation<TTable, TInputI>
 
   public abstract insertSingleMutation<TInputI = InsertSingleArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+      input?: GraphQLSilk<InsertSingleOptions<TTable>, TInputI>
       middlewares?: Middleware[]
     }
   ): InsertSingleMutation<TTable, TInputI>
 
   public abstract updateMutation<TInputI = UpdateArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+      input?: GraphQLSilk<UpdateOptions<TTable>, TInputI>
       middlewares?: Middleware[]
     }
   ): UpdateMutation<TTable, TInputI>
 
   public abstract deleteMutation<TInputI = DeleteArgs<TTable>>(
     options?: GraphQLFieldOptions & {
-      input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+      input?: GraphQLSilk<DeleteOptions, TInputI>
       middlewares?: Middleware[]
     }
   ): DeleteMutation<TTable, TInputI>
+}
+
+function matchTableByTablesConfig(
+  tablesConfig: TablesRelationalConfig,
+  targetTable: Table
+): TableRelationalConfig | undefined {
+  for (const config of Object.values(tablesConfig)) {
+    if (config.table === targetTable) {
+      return config
+    }
+  }
 }

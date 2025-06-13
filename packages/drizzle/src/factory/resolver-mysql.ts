@@ -21,10 +21,14 @@ import {
 import { DrizzleResolverFactory } from "./resolver"
 import type {
   DeleteMutationReturningSuccess,
+  DeleteOptions,
   DrizzleResolverReturningSuccess,
   InsertArrayMutationReturningSuccess,
+  InsertArrayOptions,
   InsertSingleMutationReturningSuccess,
+  InsertSingleOptions,
   UpdateMutationReturningSuccess,
+  UpdateOptions,
 } from "./types"
 
 export class DrizzleMySQLResolverFactory<
@@ -41,22 +45,23 @@ export class DrizzleMySQLResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InsertArrayArgs<TTable>, TInputI>
+    input?: GraphQLSilk<InsertArrayOptions<TTable>, TInputI>
     middlewares?: Middleware<
       InsertArrayMutationReturningSuccess<TTable, TInputI>
     >[]
   } = {}): InsertArrayMutationReturningSuccess<TTable, TInputI> {
     input ??= silk(
-      () => this.inputFactory.insertArrayArgs() as GraphQLOutputType
-    )
+      () => this.inputFactory.insertArrayArgs() as GraphQLOutputType,
+      this.argsTransformer.toInsertArrayOptions
+    ) as any
 
     return new MutationFactoryWithResolve(
       DrizzleMySQLResolverFactory.mutationResult,
       {
         ...options,
         input,
-        resolve: async (input) => {
-          await this.db.insert(this.table).values(input.values)
+        resolve: async (args: InsertArrayOptions<TTable>) => {
+          await this.db.insert(this.table).values(args.values)
           return { isSuccess: true }
         },
       } as MutationOptions<any, any>
@@ -67,21 +72,22 @@ export class DrizzleMySQLResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<InsertSingleArgs<TTable>, TInputI>
+    input?: GraphQLSilk<InsertSingleOptions<TTable>, TInputI>
     middlewares?: Middleware<
       InsertSingleMutationReturningSuccess<TTable, TInputI>
     >[]
   } = {}): InsertSingleMutationReturningSuccess<TTable, TInputI> {
     input ??= silk(
-      () => this.inputFactory.insertSingleArgs() as GraphQLOutputType
-    )
+      () => this.inputFactory.insertSingleArgs() as GraphQLOutputType,
+      this.argsTransformer.toInsertSingleOptions
+    ) as any
 
     return new MutationFactoryWithResolve(
       DrizzleMySQLResolverFactory.mutationResult,
       {
         ...options,
         input,
-        resolve: async (args) => {
+        resolve: async (args: InsertSingleOptions<TTable>) => {
           await this.db.insert(this.table).values(args.value)
           return { isSuccess: true }
         },
@@ -93,20 +99,23 @@ export class DrizzleMySQLResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<UpdateArgs<TTable>, TInputI>
+    input?: GraphQLSilk<UpdateOptions<TTable>, TInputI>
     middlewares?: Middleware<UpdateMutationReturningSuccess<TTable, TInputI>>[]
   } = {}): UpdateMutationReturningSuccess<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.updateArgs() as GraphQLOutputType)
+    input ??= silk(
+      () => this.inputFactory.updateArgs() as GraphQLOutputType,
+      this.argsTransformer.toUpdateOptions
+    ) as any
 
     return new MutationFactoryWithResolve(
       DrizzleMySQLResolverFactory.mutationResult,
       {
         ...options,
         input,
-        resolve: async (args) => {
-          let query = this.db.update(this.table).set(args.set)
+        resolve: async (args: UpdateOptions<TTable>) => {
+          let query: any = this.db.update(this.table).set(args.set)
           if (args.where) {
-            query = query.where(this.extractFilters(args.where)) as any
+            query = query.where(args.where)
           }
           await query
           return { isSuccess: true }
@@ -119,20 +128,23 @@ export class DrizzleMySQLResolverFactory<
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<DeleteArgs<TTable>, TInputI>
+    input?: GraphQLSilk<DeleteOptions, TInputI>
     middlewares?: Middleware<DeleteMutationReturningSuccess<TTable, TInputI>>[]
   } = {}): DeleteMutationReturningSuccess<TTable, TInputI> {
-    input ??= silk(() => this.inputFactory.deleteArgs() as GraphQLOutputType)
+    input ??= silk(
+      () => this.inputFactory.deleteArgs() as GraphQLOutputType,
+      this.argsTransformer.toDeleteOptions
+    ) as any
 
     return new MutationFactoryWithResolve(
       DrizzleMySQLResolverFactory.mutationResult,
       {
         ...options,
         input,
-        resolve: async (args) => {
-          let query = this.db.delete(this.table)
+        resolve: async (args: DeleteOptions) => {
+          let query: any = this.db.delete(this.table)
           if (args.where) {
-            query = query.where(this.extractFilters(args.where)) as any
+            query = query.where(args.where)
           }
           await query
           return { isSuccess: true }

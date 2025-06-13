@@ -6,7 +6,7 @@ import { GraphQLString } from "graphql"
 import { execute, parse } from "graphql"
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import { useSelectedColumns } from "../src/context"
-import { user } from "./schema/sqlite"
+import { users } from "./schema/sqlite"
 
 describe("useSelectedColumns", () => {
   const selectedColumns = new Set<string>()
@@ -18,18 +18,18 @@ describe("useSelectedColumns", () => {
       },
     },
   })
-  const r = resolver.of(user, {
-    users: query(user.$list()).resolve(() => {
-      for (const column of Object.keys(useSelectedColumns(user))) {
+  const r = resolver.of(users, {
+    users: query(users.$list()).resolve(() => {
+      for (const column of Object.keys(useSelectedColumns(users))) {
         selectedColumns.add(column)
       }
       const one = 1
       const two = 2
       if (one + two < one) {
         // it should be able to select all columns without using useSelectedColumns
-        return db.select().from(user)
+        return db.select().from(users)
       }
-      return db.select(useSelectedColumns(user)).from(user)
+      return db.select(useSelectedColumns(users)).from(users)
     }),
 
     greeting: field(silk(GraphQLString))
@@ -41,7 +41,7 @@ describe("useSelectedColumns", () => {
 
   beforeAll(async () => {
     await db.run(sql`
-      CREATE TABLE user (
+      CREATE TABLE users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
           age INTEGER,
@@ -50,7 +50,7 @@ describe("useSelectedColumns", () => {
   })
 
   afterEach(async () => {
-    await db.delete(user)
+    await db.delete(users)
     logs = []
   })
 
@@ -63,14 +63,14 @@ describe("useSelectedColumns", () => {
         }
       }
     `)
-    await db.insert(user).values({ id: 1, name: "John" })
+    await db.insert(users).values({ id: 1, name: "John" })
     logs = []
     const result = await execute({ schema, document: query })
     expect(selectedColumns).toEqual(new Set(["id", "name"]))
     expect(result.data?.users).toEqual([{ id: 1, name: "John" }])
     expect(logs).toMatchInlineSnapshot(`
       [
-        "select "id", "name" from "user"",
+        "select "id", "name" from "users"",
       ]
     `)
   })
@@ -84,13 +84,13 @@ describe("useSelectedColumns", () => {
         }
       }
     `)
-    await db.insert(user).values({ id: 1, name: "John" })
+    await db.insert(users).values({ id: 1, name: "John" })
     logs = []
     const result = await execute({ schema, document: query })
     expect(result.data?.users).toEqual([{ id: 1, greeting: "Hello John" }])
     expect(logs).toMatchInlineSnapshot(`
       [
-        "select "id", "name" from "user"",
+        "select "id", "name" from "users"",
       ]
     `)
   })

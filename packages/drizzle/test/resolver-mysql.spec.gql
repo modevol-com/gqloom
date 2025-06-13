@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPost(where: PostFilters): MutationSuccessResult
-  deleteFromUser(where: UserFilters): MutationSuccessResult
-  insertIntoPost(values: [PostInsertInput!]!): MutationSuccessResult
-  insertIntoPostSingle(value: PostInsertInput!): MutationSuccessResult
-  insertIntoUser(values: [UserInsertInput!]!): MutationSuccessResult
-  insertIntoUserSingle(value: UserInsertInput!): MutationSuccessResult
-  updatePost(set: PostUpdateInput!, where: PostFilters): MutationSuccessResult
-  updateUser(set: UserUpdateInput!, where: UserFilters): MutationSuccessResult
+  deleteFromPosts(where: PostFilters): MutationSuccessResult
+  deleteFromUsers(where: UserFilters): MutationSuccessResult
+  insertIntoPosts(values: [PostInsertInput!]!): MutationSuccessResult
+  insertIntoPostsSingle(value: PostInsertInput!): MutationSuccessResult
+  insertIntoUsers(values: [UserInsertInput!]!): MutationSuccessResult
+  insertIntoUsersSingle(value: UserInsertInput!): MutationSuccessResult
+  updatePosts(set: PostUpdateInput!, where: PostFilters): MutationSuccessResult
+  updateUsers(set: UserUpdateInput!, where: UserFilters): MutationSuccessResult
 }
 
 type MutationSuccessResult {
@@ -14,39 +14,43 @@ type MutationSuccessResult {
 }
 
 input MySqlIntFilters {
-  OR: [MySqlIntFiltersOr!]
+  AND: [MySqlIntFiltersNested!]
+  NOT: MySqlIntFiltersNested
+  OR: [MySqlIntFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
-input MySqlIntFiltersOr {
+input MySqlIntFiltersNested {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input MySqlTextFilters {
-  OR: [MySqlTextFiltersOr!]
+  AND: [MySqlTextFiltersNested!]
+  NOT: MySqlTextFiltersNested
+  OR: [MySqlTextFiltersNested!]
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -54,16 +58,16 @@ input MySqlTextFilters {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
-input MySqlTextFiltersOr {
+input MySqlTextFiltersNested {
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -71,7 +75,7 @@ input MySqlTextFiltersOr {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
@@ -82,7 +86,7 @@ enum OrderDirection {
 
 """A post"""
 type Post {
-  author: User
+  author(where: UserFilters): User
   authorId: Int
   content: String
   id: Int!
@@ -93,7 +97,9 @@ type Post {
 
 """A post"""
 input PostFilters {
-  OR: [PostFiltersOr!]
+  AND: [PostFiltersNested!]
+  NOT: PostFiltersNested
+  OR: [PostFiltersNested!]
   authorId: MySqlIntFilters
   content: MySqlTextFilters
   id: MySqlIntFilters
@@ -102,7 +108,7 @@ input PostFilters {
   title: MySqlTextFilters
 }
 
-input PostFiltersOr {
+input PostFiltersNested {
   authorId: MySqlIntFilters
   content: MySqlTextFilters
   id: MySqlIntFilters
@@ -141,12 +147,12 @@ input PostUpdateInput {
 }
 
 type Query {
-  post(limit: Int, offset: Int, orderBy: [PostOrderBy!], where: PostFilters): [Post!]!
-  postCount(where: PostFilters): Int!
-  postSingle(offset: Int, orderBy: [PostOrderBy!], where: PostFilters): Post
-  user(limit: Int, offset: Int, orderBy: [UserOrderBy!], where: UserFilters): [User!]!
-  userCount(where: UserFilters): Int!
-  userSingle(offset: Int, orderBy: [UserOrderBy!], where: UserFilters): User
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  postsCount(where: PostFilters): Int!
+  postsSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): Post
+  users(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [User!]!
+  usersCount(where: UserFilters): Int!
+  usersSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): User
 }
 
 """A user"""
@@ -157,12 +163,14 @@ type User {
 
   """The name of the user"""
   name: String!
-  posts: [Post!]!
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
 }
 
 """A user"""
 input UserFilters {
-  OR: [UserFiltersOr!]
+  AND: [UserFiltersNested!]
+  NOT: UserFiltersNested
+  OR: [UserFiltersNested!]
   age: MySqlIntFilters
   email: MySqlTextFilters
   id: MySqlIntFilters
@@ -171,7 +179,7 @@ input UserFilters {
   name: MySqlTextFilters
 }
 
-input UserFiltersOr {
+input UserFiltersNested {
   age: MySqlIntFilters
   email: MySqlTextFilters
   id: MySqlIntFilters

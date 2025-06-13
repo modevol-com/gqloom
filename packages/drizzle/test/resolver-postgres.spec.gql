@@ -1,12 +1,12 @@
 type Mutation {
-  deleteFromPost(where: PostFilters): [Post!]!
-  deleteFromUser(where: UserFilters): [User!]!
-  insertIntoPost(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, values: [PostInsertInput!]!): [Post!]!
-  insertIntoPostSingle(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, value: PostInsertInput!): Post
-  insertIntoUser(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, values: [UserInsertInput!]!): [User!]!
-  insertIntoUserSingle(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, value: UserInsertInput!): User
-  updatePost(set: PostUpdateInput!, where: PostFilters): [Post!]!
-  updateUser(set: UserUpdateInput!, where: UserFilters): [User!]!
+  deleteFromPosts(where: PostFilters): [Post!]!
+  deleteFromUsers(where: UserFilters): [User!]!
+  insertIntoPosts(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, values: [PostInsertInput!]!): [Post!]!
+  insertIntoPostsSingle(onConflictDoNothing: PostInsertOnConflictDoNothingInput, onConflictDoUpdate: PostInsertOnConflictDoUpdateInput, value: PostInsertInput!): Post
+  insertIntoUsers(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, values: [UserInsertInput!]!): [User!]!
+  insertIntoUsersSingle(onConflictDoNothing: UserInsertOnConflictDoNothingInput, onConflictDoUpdate: UserInsertOnConflictDoUpdateInput, value: UserInsertInput!): User
+  updatePosts(set: PostUpdateInput!, where: PostFilters): [Post!]!
+  updateUsers(set: UserUpdateInput!, where: UserFilters): [User!]!
 }
 
 enum OrderDirection {
@@ -15,66 +15,72 @@ enum OrderDirection {
 }
 
 input PgIntegerFilters {
-  OR: [PgIntegerFiltersOr!]
+  AND: [PgIntegerFiltersNested!]
+  NOT: PgIntegerFiltersNested
+  OR: [PgIntegerFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
-input PgIntegerFiltersOr {
+input PgIntegerFiltersNested {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input PgSerialFilters {
-  OR: [PgSerialFiltersOr!]
+  AND: [PgSerialFiltersNested!]
+  NOT: PgSerialFiltersNested
+  OR: [PgSerialFiltersNested!]
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
-input PgSerialFiltersOr {
+input PgSerialFiltersNested {
   eq: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
+  in: [Int!]
   isNotNull: Boolean
   isNull: Boolean
   lt: Int
   lte: Int
   ne: Int
-  notInArray: [Int!]
+  notIn: [Int!]
 }
 
 input PgTextFilters {
-  OR: [PgTextFiltersOr!]
+  AND: [PgTextFiltersNested!]
+  NOT: PgTextFiltersNested
+  OR: [PgTextFiltersNested!]
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -82,16 +88,16 @@ input PgTextFilters {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
-input PgTextFiltersOr {
+input PgTextFiltersNested {
   eq: String
   gt: String
   gte: String
   ilike: String
-  inArray: [String!]
+  in: [String!]
   isNotNull: Boolean
   isNull: Boolean
   like: String
@@ -99,13 +105,13 @@ input PgTextFiltersOr {
   lte: String
   ne: String
   notIlike: String
-  notInArray: [String!]
+  notIn: [String!]
   notLike: String
 }
 
 """A post"""
 type Post {
-  author: User
+  author(where: UserFilters): User
   authorId: Int
   content: String
   id: Int!
@@ -116,7 +122,9 @@ type Post {
 
 """A post"""
 input PostFilters {
-  OR: [PostFiltersOr!]
+  AND: [PostFiltersNested!]
+  NOT: PostFiltersNested
+  OR: [PostFiltersNested!]
   authorId: PgIntegerFilters
   content: PgTextFilters
   id: PgSerialFilters
@@ -125,7 +133,7 @@ input PostFilters {
   title: PgTextFilters
 }
 
-input PostFiltersOr {
+input PostFiltersNested {
   authorId: PgIntegerFilters
   content: PgTextFilters
   id: PgSerialFilters
@@ -185,12 +193,12 @@ input PostUpdateInput {
 }
 
 type Query {
-  post(limit: Int, offset: Int, orderBy: [PostOrderBy!], where: PostFilters): [Post!]!
-  postCount(where: PostFilters): Int!
-  postSingle(offset: Int, orderBy: [PostOrderBy!], where: PostFilters): Post
-  user(limit: Int, offset: Int, orderBy: [UserOrderBy!], where: UserFilters): [User!]!
-  userCount(where: UserFilters): Int!
-  userSingle(offset: Int, orderBy: [UserOrderBy!], where: UserFilters): User
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
+  postsCount(where: PostFilters): Int!
+  postsSingle(offset: Int, orderBy: PostOrderBy, where: PostFilters): Post
+  users(limit: Int, offset: Int, orderBy: UserOrderBy, where: UserFilters): [User!]!
+  usersCount(where: UserFilters): Int!
+  usersSingle(offset: Int, orderBy: UserOrderBy, where: UserFilters): User
 }
 
 """A user"""
@@ -201,12 +209,14 @@ type User {
 
   """The name of the user"""
   name: String!
-  posts: [Post!]!
+  posts(limit: Int, offset: Int, orderBy: PostOrderBy, where: PostFilters): [Post!]!
 }
 
 """A user"""
 input UserFilters {
-  OR: [UserFiltersOr!]
+  AND: [UserFiltersNested!]
+  NOT: UserFiltersNested
+  OR: [UserFiltersNested!]
   age: PgIntegerFilters
   email: PgTextFilters
   id: PgSerialFilters
@@ -215,7 +225,7 @@ input UserFilters {
   name: PgTextFilters
 }
 
-input UserFiltersOr {
+input UserFiltersNested {
   age: PgIntegerFilters
   email: PgTextFilters
   id: PgSerialFilters
