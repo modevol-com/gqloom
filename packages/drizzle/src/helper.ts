@@ -115,7 +115,8 @@ export function getSelectedColumns<TTable extends Table>(
   if (!payload) {
     return getTableColumns(table) as SelectedTableColumns<TTable>
   }
-  let selectedFields = new Set<string>()
+  let selectedFields
+  selectedFields = new Set<string>()
   if (Array.isArray(payload)) {
     for (const p of payload) {
       if (p) {

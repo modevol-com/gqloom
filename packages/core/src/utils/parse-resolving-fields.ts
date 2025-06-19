@@ -17,19 +17,19 @@ export interface ResolvingFields {
   /**
    * Fields explicitly requested in the GraphQL query
    */
-  requestedFields: Set<string>
+  requestedFields: ReadonlySet<string>
   /**
    * Fields that are derived from other fields (computed fields)
    */
-  derivedFields: Set<string>
+  derivedFields: ReadonlySet<string>
   /**
    * Fields that derived fields depend on
    */
-  derivedDependencies: Set<string>
+  derivedDependencies: ReadonlySet<string>
   /**
    * Final set of fields that need to be resolved, after processing derived fields
    */
-  selectedFields: Set<string>
+  selectedFields: ReadonlySet<string>
 }
 
 /**
