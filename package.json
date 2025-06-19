@@ -37,7 +37,7 @@
     "typescript": "^5.4.3",
     "vitest": "^2.1.8"
   },
-  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39",
+  "packageManager": "pnpm@10.12.1+sha256.889bac470ec93ccc3764488a19d6ba8f9c648ad5e50a9a6e4be3768a5de387a3",
   "pnpm": {
     "patchedDependencies": {
       "graphql@16.8.1": "patches/graphql@16.8.1.patch"
