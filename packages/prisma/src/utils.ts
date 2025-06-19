@@ -63,7 +63,8 @@ export function getSelectedFields(
   if (!payload) {
     return Object.fromEntries(model.fields.map((field) => [field.name, true]))
   }
-  let selectedFields = new Set<string>()
+  let selectedFields
+  selectedFields = new Set<string>()
   if (Array.isArray(payload)) {
     for (const p of payload) {
       if (p) {
