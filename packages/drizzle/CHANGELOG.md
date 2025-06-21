@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Next (YYYY-MM-DD)
+
+- Refactor: Migrating to Relational Queries version 2
+
 ## 0.9.2 (2025-05-13)
 
 - Fix: DrizzleInputFactory to support custom column types

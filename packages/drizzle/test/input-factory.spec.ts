@@ -1,8 +1,11 @@
+import { field, initWeaverContext, provideWeaverContext } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import * as pg from "drizzle-orm/pg-core"
 import { GraphQLScalarType, printType } from "graphql"
+import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import { DrizzleInputFactory, drizzleSilk } from "../src"
-import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
+import type { DrizzleFactoryInputBehaviors } from "../src/types"
 
 describe("DrizzleInputFactory", () => {
   const userTable = pg.pgTable("users", {
@@ -53,7 +56,9 @@ describe("DrizzleInputFactory", () => {
         password: PgTextFilters
         createdAt: PgTimestampFilters
         updatedAt: PgTimestampFilters
-        OR: [UsersFiltersOr!]
+        OR: [UsersFiltersNested!]
+        AND: [UsersFiltersNested!]
+        NOT: UsersFiltersNested
       }"
     `)
   })
@@ -109,14 +114,15 @@ describe("DrizzleInputFactory", () => {
   })
 
   describe("with column visibility options", () => {
-    const options: DrizzleFactoryInputVisibilityBehaviors<typeof userTable> = {
+    const options: DrizzleFactoryInputBehaviors<typeof userTable> = {
+      email: v.pipe(v.string(), v.email()),
       "*": {
         filters: true,
         insert: true,
         update: true,
       },
       password: {
-        filters: false,
+        filters: field.hidden,
         insert: true,
         update: true,
       },
@@ -135,10 +141,17 @@ describe("DrizzleInputFactory", () => {
     const inputFactoryWithOptions = new DrizzleInputFactory(userTable, {
       input: options,
     })
+    const weaverContext = initWeaverContext()
+    weaverContext.vendorWeavers.set(ValibotWeaver.vendor, ValibotWeaver)
 
     it("should respect column visibility in InsertInput", () => {
       expect(
-        printType(inputFactoryWithOptions.insertInput())
+        printType(
+          provideWeaverContext(
+            () => inputFactoryWithOptions.insertInput(),
+            weaverContext
+          )
+        )
       ).toMatchInlineSnapshot(`
         "type UsersInsertInput {
           id: Int
@@ -151,7 +164,12 @@ describe("DrizzleInputFactory", () => {
 
     it("should respect column visibility in UpdateInput", () => {
       expect(
-        printType(inputFactoryWithOptions.updateInput())
+        printType(
+          provideWeaverContext(
+            () => inputFactoryWithOptions.updateInput(),
+            weaverContext
+          )
+        )
       ).toMatchInlineSnapshot(`
         "type UsersUpdateInput {
           id: Int
@@ -172,7 +190,9 @@ describe("DrizzleInputFactory", () => {
           email: PgTextFilters
           createdAt: PgTimestampFilters
           updatedAt: PgTimestampFilters
-          OR: [UsersFiltersOr!]
+          OR: [UsersFiltersNested!]
+          AND: [UsersFiltersNested!]
+          NOT: UsersFiltersNested
         }"
       `)
     })

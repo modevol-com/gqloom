@@ -1,4 +1,4 @@
-import { SYMBOLS, type WeaverConfig } from "@gqloom/core"
+import { type GraphQLSilk, SYMBOLS, type WeaverConfig } from "@gqloom/core"
 import type { Column, InferSelectModel, SQL, Table } from "drizzle-orm"
 import type {
   GraphQLFieldConfig,
@@ -27,12 +27,12 @@ export interface DrizzleWeaverConfig
  */
 export interface DrizzleResolverFactoryOptions<TTable extends Table> {
   /**
-   * Config the visibility behavior of the columns
+   * Config the behavior of the columns
    */
-  input: DrizzleFactoryInputVisibilityBehaviors<TTable>
+  input: DrizzleFactoryInputBehaviors<TTable>
 }
 
-export interface VisibilityBehavior {
+export interface ColumnBehavior<TOutput> {
   /**
    * Is this column visible in the filters?
    */
@@ -41,20 +41,24 @@ export interface VisibilityBehavior {
   /**
    * Is this column visible in the insert mutation input?
    */
-  insert?: boolean
+  insert?: boolean | GraphQLSilk<TOutput, any>
   /**
    * Is this column visible in the update mutation input?
    */
-  update?: boolean
+  update?: boolean | GraphQLSilk<TOutput, any>
 }
 
-export type DrizzleFactoryInputVisibilityBehaviors<TTable extends Table> = {
-  [K in keyof TTable["_"]["columns"]]?: VisibilityBehavior | boolean | undefined
+export type DrizzleFactoryInputBehaviors<TTable extends Table> = {
+  [K in keyof TTable["_"]["columns"]]?:
+    | ColumnBehavior<TTable["$inferInsert"][K]>
+    | GraphQLSilk<TTable["$inferInsert"][K], any>
+    | boolean
+    | undefined
 } & {
   /**
    * Config the default visibility behavior of all columns
    */
-  "*"?: VisibilityBehavior | boolean | undefined
+  "*"?: ColumnBehavior<never> | boolean | undefined
 }
 
 export interface DrizzleSilkConfig<TTable extends Table>
