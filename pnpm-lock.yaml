@@ -84,13 +84,13 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        version: 0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.9.3(@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        version: 0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/valibot':
         specifier: latest
-        version: 0.9.0(@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(valibot@1.0.0-rc.1(typescript@5.7.3))
+        version: 0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(valibot@1.0.0-rc.1(typescript@5.7.3))
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0
@@ -127,13 +127,13 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        version: 0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.9.3(@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        version: 0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/zod':
         specifier: latest
-        version: 0.9.0(@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.0-beta.20250415T232143)
+        version: 0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.0-beta.20250415T232143)
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0
@@ -246,7 +246,7 @@ importers:
         version: 6.4.6
       '@mikro-orm/postgresql':
         specifier: ^6.4.6
-        version: 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.4.7)(mysql2@3.12.0)(sqlite3@5.1.7)
+        version: 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.12.0)(sqlite3@5.1.7)
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
@@ -411,8 +411,8 @@ importers:
         specifier: ^6.4.6
         version: 6.4.6
       '@mikro-orm/libsql':
-        specifier: ^6.4.6
-        version: 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)
 
   packages/prisma:
     dependencies:
@@ -585,7 +585,7 @@ importers:
         version: 6.4.6
       '@mikro-orm/postgresql':
         specifier: ^6.4.6
-        version: 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.4.7)(mysql2@3.12.0)(sqlite3@5.1.7)
+        version: 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.12.0)(sqlite3@5.1.7)
       '@tailwindcss/postcss':
         specifier: ^4.0.3
         version: 4.0.3
@@ -749,8 +749,8 @@ packages:
     resolution: {integrity: sha512-YBDiuAX9i1lLc6GeTy1m7DGLFn/gMnvXqlalOIMjM7DeOgIacEjjfwPqb0M1CQ2v11HhR15d1NmxJoRCfrNqcA==}
     engines: {node: '>=14'}
 
-  '@asamuzakjp/css-color@3.1.2':
-    resolution: {integrity: sha512-nwgc7jPn3LpZ4JWsoHtuwBsad1qSSLDDX634DdG0PBJofIuIEtSWk4KkRmuXyu178tjuHAbwiMNNzwqIyLYxZw==}
+  '@asamuzakjp/css-color@3.2.0':
+    resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
   '@babel/helper-string-parser@7.25.9':
     resolution: {integrity: sha512-4A/SCr/2KLd5jrtOMFzaKjVtAei3+2r/NChoBNoZ3EyP/+GlhoaEGoWOZUmFmoITP7zOJyHIMm+DYRd8o3PvHA==}
@@ -835,28 +835,28 @@ packages:
     resolution: {integrity: sha512-JqWH1vsgdGcw2RR6VliXXdA0/59LttzlU8UlRT/iUUsEeWfYq8I+K0yhihEUTTHLRm1EXvpsCx3083EU15ecsA==}
     engines: {node: '>=18'}
 
-  '@csstools/css-calc@2.1.2':
-    resolution: {integrity: sha512-TklMyb3uBB28b5uQdxjReG4L80NxAqgrECqLZFQbyLekwwlcDDS8r3f07DKqeo8C4926Br0gf/ZDe17Zv4wIuw==}
+  '@csstools/css-calc@2.1.4':
+    resolution: {integrity: sha512-3N8oaj+0juUw/1H3YwmDDJXCgTB1gKU6Hc/bB502u9zR0q2vd786XJH9QfrKIEgFlZmhZiq6epXl4rHqhzsIgQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@csstools/css-parser-algorithms': ^3.0.4
-      '@csstools/css-tokenizer': ^3.0.3
+      '@csstools/css-parser-algorithms': ^3.0.5
+      '@csstools/css-tokenizer': ^3.0.4
 
-  '@csstools/css-color-parser@3.0.8':
-    resolution: {integrity: sha512-pdwotQjCCnRPuNi06jFuP68cykU1f3ZWExLe/8MQ1LOs8Xq+fTkYgd+2V8mWUWMrOn9iS2HftPVaMZDaXzGbhQ==}
+  '@csstools/css-color-parser@3.0.10':
+    resolution: {integrity: sha512-TiJ5Ajr6WRd1r8HSiwJvZBiJOqtH86aHpUjq5aEKWHiII2Qfjqd/HCWKPOW8EP4vcspXbHnXrwIDlu5savQipg==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@csstools/css-parser-algorithms': ^3.0.4
-      '@csstools/css-tokenizer': ^3.0.3
+      '@csstools/css-parser-algorithms': ^3.0.5
+      '@csstools/css-tokenizer': ^3.0.4
 
-  '@csstools/css-parser-algorithms@3.0.4':
-    resolution: {integrity: sha512-Up7rBoV77rv29d3uKHUIVubz1BTcgyUK72IvCQAbfbMv584xHcGKCKbWh7i8hPrRJ7qU4Y8IO3IY9m+iTB7P3A==}
+  '@csstools/css-parser-algorithms@3.0.5':
+    resolution: {integrity: sha512-DaDeUkXZKjdGhgYaHNJTV9pV7Y9B3b644jCLs9Upc3VeNGg6LWARAT6O+Q+/COo+2gg/bM5rhpMAtf70WqfBdQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@csstools/css-tokenizer': ^3.0.3
+      '@csstools/css-tokenizer': ^3.0.4
 
-  '@csstools/css-tokenizer@3.0.3':
-    resolution: {integrity: sha512-UJnjoFsmxfKUdNYdWgOB0mWUypuLvAfQPH1+pyvRJs6euowbFkFC6P13w1l8mJyi3vxYMxc9kld5jZEGRQs6bw==}
+  '@csstools/css-tokenizer@3.0.4':
+    resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
     engines: {node: '>=18'}
 
   '@drizzle-team/brocli@0.10.2':
@@ -1502,6 +1502,11 @@ packages:
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
+  '@gqloom/core@0.10.1':
+    resolution: {integrity: sha512-m+E2PsYx0zt19nTbbfSPvsge3uyIIyWc8eT3snyanIaKGUWWtgPAYZhNhTRjuOZgnaVagpBPd3LvChovhZ2C3A==}
+    peerDependencies:
+      graphql: '>= 16.8.0'
+
   '@gqloom/core@0.2.0':
     resolution: {integrity: sha512-2DHHG3NClw45J77tptKfc2FUazS8F/8H3EoGt5IFjuYblWeZQINJhNIQ5GhjTOeZ6D7H3Ge+Cqr6F//UaC4akw==}
     peerDependencies:
@@ -1512,15 +1517,10 @@ packages:
     peerDependencies:
       graphql: '>= 16.8.0'
 
-  '@gqloom/core@0.9.1':
-    resolution: {integrity: sha512-P0mcR4eWRbb+yMKPcDYxv5haK+spaRC3mLnFJy0J8P/1AlyunjtgsZI25ihZPTXfSWmFlU+BPoDMXrSNeSDQGQ==}
+  '@gqloom/drizzle@0.10.0':
+    resolution: {integrity: sha512-8rM/z9oAUZUkAdjLJMyf9RYzZPO+6oP7mBQlUTaE0Y0+MoRSnia+MMPKiaSN3+G95Wy3d8CnIOs1Pzk3adPaqw==}
     peerDependencies:
-      graphql: '>= 16.8.0'
-
-  '@gqloom/drizzle@0.9.3':
-    resolution: {integrity: sha512-tJC6yYXZmvlBszwdstUHuQRElFZ+BbclKWk993809leDYAJ9bSz05joQYRDyoumaPRhk6HwIlo/2PsRIqXii4A==}
-    peerDependencies:
-      '@gqloom/core': '>= 0.9.0'
+      '@gqloom/core': '>= 0.10.0'
       drizzle-orm: '>= 0.38.0'
       graphql: '>= 16.8.0'
 
@@ -1531,19 +1531,19 @@ packages:
       '@mikro-orm/core': '>= 6.0.0'
       graphql: '>= 16.8.0'
 
-  '@gqloom/valibot@0.9.0':
-    resolution: {integrity: sha512-3g0txLJ4yJtL6KGoYFnp4ZRMtDEKaqqxNM8vEJFmltpuDcqvmVBbIHBpIl95UIxwnqoZHYARxUMJc0G61POpHA==}
+  '@gqloom/valibot@0.10.0':
+    resolution: {integrity: sha512-U5sWCGmd0n6pKd6BVsRX4aGQ3usfUJFGbe2M0h3vQQhpFjIa5Y3eG4gvu0pbDZj4hi2LLBQWQsuvlvC3lLXJ9g==}
     peerDependencies:
-      '@gqloom/core': '>= 0.9.0'
+      '@gqloom/core': '>= 0.10.0'
       graphql: '>= 16.8.0'
       valibot: '>= 1.0.0'
 
-  '@gqloom/zod@0.9.0':
-    resolution: {integrity: sha512-78P5rH9vDrvoJlcYIsitYGGAFixDhAoql3/uxLdM2rU2OSZMQBxZJF3NPygHoCbHsh/7dg19F7l6/2NsV5Hs9w==}
+  '@gqloom/zod@0.10.0':
+    resolution: {integrity: sha512-iUArHUAumiLClt0tbg5QVqSogC0CoBMSBEoj+49/rRmMr+8ZqqivM/YsSZhEEDxRD/FuHO+ak83DJQkfWIg4ew==}
     peerDependencies:
-      '@gqloom/core': '>= 0.9.0'
+      '@gqloom/core': '>= 0.10.0'
       graphql: '>= 16.8.0'
-      zod: '>= 3.24.0'
+      zod: '>= 3.25.0'
 
   '@graphql-tools/executor@1.2.8':
     resolution: {integrity: sha512-0qZs/iuRiYRir7bBkA7oN+21wwmSMPQuFK8WcAcxUYJZRhvnlrJ8Nid++PN4OCzTgHPV70GNFyXOajseVCCffA==}
@@ -1776,8 +1776,18 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@libsql/darwin-arm64@0.5.11':
+    resolution: {integrity: sha512-Av4+H8VypNZdbRbDKu5ogoCBHOdYh2Vx6iO7+0SACjcgnpqjnGL59lJUuX3fmV48VI6al1xORYJVApo//B5iqA==}
+    cpu: [arm64]
+    os: [darwin]
+
   '@libsql/darwin-x64@0.4.7':
     resolution: {integrity: sha512-ezc7V75+eoyyH07BO9tIyJdqXXcRfZMbKcLCeF8+qWK5nP8wWuMcfOVywecsXGRbT99zc5eNra4NEx6z5PkSsA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@libsql/darwin-x64@0.5.11':
+    resolution: {integrity: sha512-+BXozvOKhwbye16itymY2YXeHOcIeZGORdJK2prfXA7Q2HR4/dRdUirR1o/koxxxG616uiWlAVj5WJ0j2IWkQA==}
     cpu: [x64]
     os: [darwin]
 
@@ -1791,8 +1801,23 @@ packages:
   '@libsql/isomorphic-ws@0.1.5':
     resolution: {integrity: sha512-DtLWIH29onUYR00i0GlQ3UdcTRC6EP4u9w/h9LxpUZJWRMARk6dQwZ6Jkd+QdwVpuAOrdxt18v0K2uIYR3fwFg==}
 
+  '@libsql/linux-arm-gnueabihf@0.5.11':
+    resolution: {integrity: sha512-znsVKbKgOerCNkIY0HjtvkioVGLskmGXZodZn3TMDRTmn1PIUt7/dnxU5moKMdKa1hKDSOC52dqF77nAdkn4UA==}
+    cpu: [arm]
+    os: [linux]
+
+  '@libsql/linux-arm-musleabihf@0.5.11':
+    resolution: {integrity: sha512-l4gJY6AvhQ4fUJRpjph3AW6pbiAUcVxJUH0oM5Pf/GnA9acpaDgLtle2hWMz16BSncg/Jl2jVpaJuyJsJ9E7YA==}
+    cpu: [arm]
+    os: [linux]
+
   '@libsql/linux-arm64-gnu@0.4.7':
     resolution: {integrity: sha512-WlX2VYB5diM4kFfNaYcyhw5y+UJAI3xcMkEUJZPtRDEIu85SsSFrQ+gvoKfcVh76B//ztSeEX2wl9yrjF7BBCA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@libsql/linux-arm64-gnu@0.5.11':
+    resolution: {integrity: sha512-axXEenVUnSKR25g0iqL/OH4z4qrPBNwdBhjTWZr613L9tnboDPAioP1kVEy77nN8C8CL/dyXh5X4vKuIwHrQpQ==}
     cpu: [arm64]
     os: [linux]
 
@@ -1801,8 +1826,18 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@libsql/linux-arm64-musl@0.5.11':
+    resolution: {integrity: sha512-Pzz9dm2D78PQpy3pYKbvzBBOwdjg9c3yoQSu5QQQCGL4J5e1bZpa/p6Z3BoYBlvmdo1V36ljS6N4hRir/rnCxg==}
+    cpu: [arm64]
+    os: [linux]
+
   '@libsql/linux-x64-gnu@0.4.7':
     resolution: {integrity: sha512-CMnNRCmlWQqqzlTw6NeaZXzLWI8bydaXDke63JTUCvu8R+fj/ENsLrVBtPDlxQ0wGsYdXGlrUCH8Qi9gJep0yQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@libsql/linux-x64-gnu@0.5.11':
+    resolution: {integrity: sha512-DxOU0MqG7soKZFVzOo7Zot5qDajZjjOgjf/sOjeJf/aeRBr3KkKiwgWKnmjDhuhitahqc8Nu2D92/dsAuDHJsA==}
     cpu: [x64]
     os: [linux]
 
@@ -1811,8 +1846,18 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@libsql/linux-x64-musl@0.5.11':
+    resolution: {integrity: sha512-uRou4r+PiDA616t2USnsjbot88ennTrwKqhVUY7S6LTPI3RiKizZg6YESCwhzofPtk8Ualp/hMQGTGSoW9DUKw==}
+    cpu: [x64]
+    os: [linux]
+
   '@libsql/win32-x64-msvc@0.4.7':
     resolution: {integrity: sha512-7pJzOWzPm6oJUxml+PCDRzYQ4A1hTMHAciTAHfFK4fkbDZX33nWPVG7Y3vqdKtslcwAzwmrNDc6sXy2nwWnbiw==}
+    cpu: [x64]
+    os: [win32]
+
+  '@libsql/win32-x64-msvc@0.5.11':
+    resolution: {integrity: sha512-NES0P2pyx5XjveTYotTG03eoJwx0haJBYWXfqmcPLmbQ5u03Qmd7rxhLfWDdIRj4PrdhVProwdB0FA82ryLcKQ==}
     cpu: [x64]
     os: [win32]
 
@@ -1830,6 +1875,22 @@ packages:
     resolution: {integrity: sha512-xVm/ALG/3vTMgh6SrvojJ6jjMa0s2hNzWN0triDB16BaNdLwWE4aAaAe+3CuoMFqJAArSOUISTEjExbzELB1ZA==}
     engines: {node: '>= 18.12.0'}
 
+  '@mikro-orm/knex@6.4.16':
+    resolution: {integrity: sha512-2xQodj3uh8maPGsLR7PZMmECtdyLutGxzzrGrrhSX2b+7v9k4MeMazTi4/627hJvivdUpuofypW5zMpw3TU1vQ==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+      better-sqlite3: '*'
+      libsql: '*'
+      mariadb: '*'
+    peerDependenciesMeta:
+      better-sqlite3:
+        optional: true
+      libsql:
+        optional: true
+      mariadb:
+        optional: true
+
   '@mikro-orm/knex@6.4.6':
     resolution: {integrity: sha512-o6t67tFH/GuPZCCEtKbTTL8HDXNgB2ITjButCTZLwteL0qI9yE/f7K6K+dEUKW+hAL3KRvc2BQeumvCVWFeISg==}
     engines: {node: '>= 18.12.0'}
@@ -1846,8 +1907,8 @@ packages:
       mariadb:
         optional: true
 
-  '@mikro-orm/libsql@6.4.6':
-    resolution: {integrity: sha512-ZOTrR6YQzCYDIs36bV8nSX2kgKJdPfF2NshpxhnjJeTDm0TBvw6UzfW1gs7h9/x0rLx44m9EySz6X08PIkYpLQ==}
+  '@mikro-orm/libsql@6.4.16':
+    resolution: {integrity: sha512-aOclJz/IerLHKvk2Dp61UDkwTywCmvyD56jz6RPi6sd1Dps1p0BHhGMC4AAz9ZBAhbh2fJtK4g2ZSV108yL/EQ==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -2890,8 +2951,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  acorn@8.14.1:
-    resolution: {integrity: sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==}
+  acorn@8.15.0:
+    resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -3033,8 +3094,8 @@ packages:
     resolution: {integrity: sha512-ml9pReCu3M61kGlqoTm2umSXTlRTuGTx0bfYj+uIUKKYycG5NtSbeetV3faSU6R7ajOPw0g/J1PvK4qNy7s5bA==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
 
-  brace-expansion@1.1.11:
-    resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
+  brace-expansion@1.1.12:
+    resolution: {integrity: sha512-9T9UjW3r0UW5c1Q7GTwllptXwhvYmEzFhzMfZ9H7FQWt+uZePjZPjBP/W1ZEyZ1twGWom5/56TF4lPcqjnDHcg==}
 
   brace-expansion@2.0.1:
     resolution: {integrity: sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==}
@@ -3257,8 +3318,8 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
-  cssstyle@4.3.0:
-    resolution: {integrity: sha512-6r0NiY0xizYqfBvWp1G7WXJ06/bZyrk7Dc6PHql82C/pKGUTKu4yAX4Y8JPamb1ob9nBKuxWzCGTRuGwU3yxJQ==}
+  cssstyle@4.5.0:
+    resolution: {integrity: sha512-/7gw8TGrvH/0g564EnhgFZogTMVe+lifpB7LWU+PEsiq5o83TUXR3fDbzTRXOJhoJwck5IS9ez3Em5LNMMO2aw==}
     engines: {node: '>=18'}
 
   csstype@3.1.3:
@@ -3294,6 +3355,15 @@ packages:
 
   debug@4.4.0:
     resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
+  debug@4.4.1:
+    resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -3357,6 +3427,10 @@ packages:
 
   detect-libc@2.0.3:
     resolution: {integrity: sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==}
+    engines: {node: '>=8'}
+
+  detect-libc@2.0.4:
+    resolution: {integrity: sha512-3UDv+G9CsCKO1WKMGw9fwq/SWJYbI0c5Y7LU1AXYoDdbhE2AHQ6N6Nb34sG8Fj7T5APy8qXDCKuuIHd1BR0tVA==}
     engines: {node: '>=8'}
 
   detect-node-es@1.1.0:
@@ -3507,12 +3581,15 @@ packages:
   end-of-stream@1.4.4:
     resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
 
+  end-of-stream@1.4.5:
+    resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
+
   enhanced-resolve@5.18.0:
     resolution: {integrity: sha512-0/r0MySGYG8YqlayBZ6MuCfECmHFdJ5qyPh8s8wa5Hnm6SaFLSK1VYCbj+NKp090Nm1caZhD+QTnmxO7esYGyQ==}
     engines: {node: '>=10.13.0'}
 
-  entities@4.5.0:
-    resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
+  entities@6.0.1:
+    resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
     engines: {node: '>=0.12'}
 
   env-paths@2.2.1:
@@ -3738,8 +3815,8 @@ packages:
     resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
     engines: {node: '>= 6'}
 
-  form-data@4.0.2:
-    resolution: {integrity: sha512-hGfm/slu0ZabnNt4oaRZ6uREyfCj6P4fT/n6A1rGV+Z0VdGXjfOhVUpkn6qVQONHGIFwmveGXyDs75+nr6FM8w==}
+  form-data@4.0.3:
+    resolution: {integrity: sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==}
     engines: {node: '>= 6'}
 
   formdata-polyfill@4.0.10:
@@ -4001,8 +4078,8 @@ packages:
   html-void-elements@3.0.0:
     resolution: {integrity: sha512-bEqo66MRXsUGxWHV5IP0PUiAWwoEjba4VCzg0LjFJBpchPaTfyfCKTG6bc5F8ucKec3q5y6qOdGyYTSBEvhCrg==}
 
-  http-cache-semantics@4.1.1:
-    resolution: {integrity: sha512-er295DKPVsV82j5kw1Gjt+ADA/XYHsajl82cGNQG2eyoPkvgUhX+nDIyelzhIWbbsXP39EHcI6l5tYs2FYqYXQ==}
+  http-cache-semantics@4.2.0:
+    resolution: {integrity: sha512-dTxcvPXqPvXBQpq5dUr6mEMJX4oIEFv6bwom3FDwKRDsuIjjJGANqhBuoAn9c1RQJIdAKav33ED65E2ys+87QQ==}
 
   http-errors@2.0.0:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
@@ -4281,6 +4358,11 @@ packages:
   libsql@0.4.7:
     resolution: {integrity: sha512-T9eIRCs6b0J1SHKYIvD8+KCJMcWZ900iZyxdnSCdqxN12Z1ijzT+jY5nrk72Jw4B0HGzms2NgpryArlJqvc3Lw==}
     cpu: [x64, arm64, wasm32]
+    os: [darwin, linux, win32]
+
+  libsql@0.5.11:
+    resolution: {integrity: sha512-P2xY1nL2Jl7oM75LcguAEYqouVcevWhLWT8RU/p9ldaqQx5s/chF9t5ZFXPWP0x9myQQ4SguRqPO+FqdnCzKQg==}
+    cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
   light-my-request@5.13.0:
@@ -4821,8 +4903,8 @@ packages:
       sass:
         optional: true
 
-  node-abi@3.74.0:
-    resolution: {integrity: sha512-c5XK0MjkGBrQPGYG24GBADZud0NCbznxNx0ZkS+ebUTrmV1qTDxPxSL8zEAPURXSbLRWVexxmP4986BziahL5w==}
+  node-abi@3.75.0:
+    resolution: {integrity: sha512-OhYaY5sDsIka7H7AtijtI9jwGYLyl29eQn/W623DiN/MIv5sUqc4g7BIDThX+gb7di9f6xK02nkp8sdfFWZLTg==}
     engines: {node: '>=10'}
 
   node-abort-controller@3.1.1:
@@ -4943,8 +5025,8 @@ packages:
     resolution: {integrity: sha512-TXfryirbmq34y8QBwgqCVLi+8oA3oWx2eAnSn62ITyEhEYaWRlVZ2DvMM9eZbMs/RfxPu/PK/aBLyGj4IrqMHw==}
     engines: {node: '>=18'}
 
-  parse5@7.2.1:
-    resolution: {integrity: sha512-BuBYQYlv1ckiPdQi/ohiivi9Sagc9JG+Ozs0r7b/0iK3sKmrb0b9FdWdBbOdx6hBCM/F9Ir82ofnBhtZOjCRPQ==}
+  parse5@7.3.0:
+    resolution: {integrity: sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==}
 
   parseurl@1.3.3:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
@@ -5174,8 +5256,8 @@ packages:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
 
-  pump@3.0.2:
-    resolution: {integrity: sha512-tUPXtzlGM8FE3P0ZL6DVs/3P58k9nk8/jZeQCurTJylQA8qFYzHFfhBJkuqyE0FifOsQ0uKWekiZ5g8wtr28cw==}
+  pump@3.0.3:
+    resolution: {integrity: sha512-todwxLMY7/heScKmntwQG8CXVkWUOdYxIvY2s0VWAAMh/nd8SoYiRaKjlr7+iCs984f2P8zvrfWcDDYVb73NfA==}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -5421,6 +5503,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.7.2:
+    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   send@0.18.0:
     resolution: {integrity: sha512-qqWzuOjSFOuqPjFe4NOsMLafToQQwBSOEpS+FwEt3A2V3vKubTquT3vmLTQpFgMXp8AlFWFuP1qKaJZOtPpVXg==}
     engines: {node: '>= 0.8.0'}
@@ -5513,8 +5600,8 @@ packages:
     resolution: {integrity: sha512-a6KW9G+6B3nWZ1yB8G7pJwL3ggLy1uTzKAgCb7ttblwqdz9fMGJUuTy3uFzEP48FAs9FLILlmzDlE2JJhVQaXQ==}
     engines: {node: '>= 10'}
 
-  socks@2.8.4:
-    resolution: {integrity: sha512-D3YaD0aRxR3mEcqnidIs7ReYJFVzWdd6fXJYUM8ixcQcJRGTka/b3saV0KflYhyVJXKhb947GndU35SxYNResQ==}
+  socks@2.8.5:
+    resolution: {integrity: sha512-iF+tNDQla22geJdTyJB1wM/qrX9DMRwWrciEPwWLPRWAUEM8sQiyxgckLxWT1f7+9VabJS0jTGGr4QgBuvi6Ww==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
   sonic-boom@4.0.1:
@@ -5679,8 +5766,8 @@ packages:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
 
-  tar-fs@2.1.2:
-    resolution: {integrity: sha512-EsaAXwxmx8UB7FRKqeozqEPop69DXcmYwTQwXvyAPF352HJsPdkVhvTaDPYqfNgruveJIJy3TA2l+2zj8LJIJA==}
+  tar-fs@2.1.3:
+    resolution: {integrity: sha512-090nwYJDmlhwFwEW3QQl+vaNnxsO2yVsd45eTKRBzSzu+hlb1w2K9inVq5b0ngXuLVqQ4ApvsUHHnu/zQNkWAg==}
 
   tar-stream@2.2.0:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
@@ -5774,8 +5861,8 @@ packages:
   tr46@1.0.1:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
 
-  tr46@5.1.0:
-    resolution: {integrity: sha512-IUWnUK7ADYR5Sl1fZlO1INDUhVhatWl7BtJWsIhwJ0UAK7ilzzIa8uIqOO/aYVWHZPJkKbEL+362wrzoeRF7bw==}
+  tr46@5.1.1:
+    resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
 
   tree-kill@1.2.2:
@@ -6123,8 +6210,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  ws@8.18.1:
-    resolution: {integrity: sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w==}
+  ws@8.18.2:
+    resolution: {integrity: sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -6310,12 +6397,12 @@ snapshots:
 
   '@apollo/utils.withrequired@2.0.1': {}
 
-  '@asamuzakjp/css-color@3.1.2':
+  '@asamuzakjp/css-color@3.2.0':
     dependencies:
-      '@csstools/css-calc': 2.1.2(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)
-      '@csstools/css-color-parser': 3.0.8(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)
-      '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
-      '@csstools/css-tokenizer': 3.0.3
+      '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-color-parser': 3.0.10(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
     optional: true
 
@@ -6383,26 +6470,26 @@ snapshots:
   '@csstools/color-helpers@5.0.2':
     optional: true
 
-  '@csstools/css-calc@2.1.2(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)':
+  '@csstools/css-calc@2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
-      '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
-      '@csstools/css-tokenizer': 3.0.3
+      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-tokenizer': 3.0.4
     optional: true
 
-  '@csstools/css-color-parser@3.0.8(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)':
+  '@csstools/css-color-parser@3.0.10(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
       '@csstools/color-helpers': 5.0.2
-      '@csstools/css-calc': 2.1.2(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)
-      '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
-      '@csstools/css-tokenizer': 3.0.3
+      '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-tokenizer': 3.0.4
     optional: true
 
-  '@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3)':
+  '@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4)':
     dependencies:
-      '@csstools/css-tokenizer': 3.0.3
+      '@csstools/css-tokenizer': 3.0.4
     optional: true
 
-  '@csstools/css-tokenizer@3.0.3':
+  '@csstools/css-tokenizer@3.0.4':
     optional: true
 
   '@drizzle-team/brocli@0.10.2': {}
@@ -6805,6 +6892,10 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
+  '@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
+    dependencies:
+      graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
+
   '@gqloom/core@0.2.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -6813,13 +6904,9 @@ snapshots:
     dependencies:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
-  '@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
+  '@gqloom/drizzle@0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
-      graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-
-  '@gqloom/drizzle@0.9.3(@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
-    dependencies:
-      '@gqloom/core': 0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      '@gqloom/core': 0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       drizzle-orm: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.12.0)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7)
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
@@ -6829,15 +6916,15 @@ snapshots:
       '@mikro-orm/core': 6.4.6
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
-  '@gqloom/valibot@0.9.0(@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(valibot@1.0.0-rc.1(typescript@5.7.3))':
+  '@gqloom/valibot@0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(valibot@1.0.0-rc.1(typescript@5.7.3))':
     dependencies:
-      '@gqloom/core': 0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      '@gqloom/core': 0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
       valibot: 1.0.0-rc.1(typescript@5.7.3)
 
-  '@gqloom/zod@0.9.0(@gqloom/core@0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.0-beta.20250415T232143)':
+  '@gqloom/zod@0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.0-beta.20250415T232143)':
     dependencies:
-      '@gqloom/core': 0.9.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      '@gqloom/core': 0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
       zod: 4.0.0-beta.20250415T232143
 
@@ -7064,7 +7151,13 @@ snapshots:
   '@libsql/darwin-arm64@0.4.7':
     optional: true
 
+  '@libsql/darwin-arm64@0.5.11':
+    optional: true
+
   '@libsql/darwin-x64@0.4.7':
+    optional: true
+
+  '@libsql/darwin-x64@0.5.11':
     optional: true
 
   '@libsql/hrana-client@0.7.0':
@@ -7087,19 +7180,40 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@libsql/linux-arm-gnueabihf@0.5.11':
+    optional: true
+
+  '@libsql/linux-arm-musleabihf@0.5.11':
+    optional: true
+
   '@libsql/linux-arm64-gnu@0.4.7':
+    optional: true
+
+  '@libsql/linux-arm64-gnu@0.5.11':
     optional: true
 
   '@libsql/linux-arm64-musl@0.4.7':
     optional: true
 
+  '@libsql/linux-arm64-musl@0.5.11':
+    optional: true
+
   '@libsql/linux-x64-gnu@0.4.7':
+    optional: true
+
+  '@libsql/linux-x64-gnu@0.5.11':
     optional: true
 
   '@libsql/linux-x64-musl@0.4.7':
     optional: true
 
+  '@libsql/linux-x64-musl@0.5.11':
+    optional: true
+
   '@libsql/win32-x64-msvc@0.4.7':
+    optional: true
+
+  '@libsql/win32-x64-msvc@0.5.11':
     optional: true
 
   '@lukeed/ms@2.0.2': {}
@@ -7153,7 +7267,7 @@ snapshots:
       mikro-orm: 6.4.6
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.4.7)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7)':
+  '@mikro-orm/knex@6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)':
     dependencies:
       '@mikro-orm/core': 6.4.6
       fs-extra: 11.3.0
@@ -7161,7 +7275,7 @@ snapshots:
       sqlstring: 2.3.3
     optionalDependencies:
       better-sqlite3: 11.8.1
-      libsql: 0.4.7
+      libsql: 0.5.11
     transitivePeerDependencies:
       - mysql
       - mysql2
@@ -7171,12 +7285,30 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/libsql@6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)':
+  '@mikro-orm/knex@6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7)':
     dependencies:
       '@mikro-orm/core': 6.4.6
-      '@mikro-orm/knex': 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.4.7)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7)
       fs-extra: 11.3.0
-      libsql: 0.4.7
+      knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7)
+      sqlstring: 2.3.3
+    optionalDependencies:
+      better-sqlite3: 11.8.1
+      libsql: 0.5.11
+    transitivePeerDependencies:
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
+  '@mikro-orm/libsql@6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)':
+    dependencies:
+      '@mikro-orm/core': 6.4.6
+      '@mikro-orm/knex': 6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)
+      fs-extra: 11.3.0
+      libsql: 0.5.11
       sqlstring-sqlite: 0.1.1
     transitivePeerDependencies:
       - better-sqlite3
@@ -7189,10 +7321,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/postgresql@6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.4.7)(mysql2@3.12.0)(sqlite3@5.1.7)':
+  '@mikro-orm/postgresql@6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.12.0)(sqlite3@5.1.7)':
     dependencies:
       '@mikro-orm/core': 6.4.6
-      '@mikro-orm/knex': 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.4.7)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7)
+      '@mikro-orm/knex': 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.12.0)(pg@8.13.2)(sqlite3@5.1.7)
       pg: 8.13.2
       postgres-array: 3.0.2
       postgres-date: 2.1.0
@@ -7319,7 +7451,7 @@ snapshots:
   '@npmcli/fs@1.1.1':
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.7.1
+      semver: 7.7.2
     optional: true
 
   '@npmcli/move-file@1.1.2':
@@ -8188,12 +8320,12 @@ snapshots:
 
   acorn@8.12.1: {}
 
-  acorn@8.14.1:
+  acorn@8.15.0:
     optional: true
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.4.0
+      debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -8330,7 +8462,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  brace-expansion@1.1.11:
+  brace-expansion@1.1.12:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
@@ -8563,9 +8695,9 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  cssstyle@4.3.0:
+  cssstyle@4.5.0:
     dependencies:
-      '@asamuzakjp/css-color': 3.1.2
+      '@asamuzakjp/css-color': 3.2.0
       rrweb-cssom: 0.8.0
     optional: true
 
@@ -8592,6 +8724,11 @@ snapshots:
   debug@4.4.0:
     dependencies:
       ms: 2.1.3
+
+  debug@4.4.1:
+    dependencies:
+      ms: 2.1.3
+    optional: true
 
   decimal.js@10.5.0:
     optional: true
@@ -8634,6 +8771,9 @@ snapshots:
   detect-libc@2.0.2: {}
 
   detect-libc@2.0.3:
+    optional: true
+
+  detect-libc@2.0.4:
     optional: true
 
   detect-node-es@1.1.0: {}
@@ -8712,12 +8852,17 @@ snapshots:
     dependencies:
       once: 1.4.0
 
+  end-of-stream@1.4.5:
+    dependencies:
+      once: 1.4.0
+    optional: true
+
   enhanced-resolve@5.18.0:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.2.1
 
-  entities@4.5.0:
+  entities@6.0.1:
     optional: true
 
   env-paths@2.2.1:
@@ -9126,11 +9271,12 @@ snapshots:
       combined-stream: 1.0.8
       mime-types: 2.1.35
 
-  form-data@4.0.2:
+  form-data@4.0.3:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       es-set-tostringtag: 2.1.0
+      hasown: 2.0.2
       mime-types: 2.1.35
     optional: true
 
@@ -9524,7 +9670,7 @@ snapshots:
 
   html-void-elements@3.0.0: {}
 
-  http-cache-semantics@4.1.1:
+  http-cache-semantics@4.2.0:
     optional: true
 
   http-errors@2.0.0:
@@ -9539,7 +9685,7 @@ snapshots:
     dependencies:
       '@tootallnate/once': 1.1.2
       agent-base: 6.0.2
-      debug: 4.4.0
+      debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -9547,7 +9693,7 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.0
+      debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -9555,7 +9701,7 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.0
+      debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -9563,7 +9709,7 @@ snapshots:
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.0
+      debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -9735,16 +9881,16 @@ snapshots:
 
   jsdom@25.0.1:
     dependencies:
-      cssstyle: 4.3.0
+      cssstyle: 4.5.0
       data-urls: 5.0.0
       decimal.js: 10.5.0
-      form-data: 4.0.2
+      form-data: 4.0.3
       html-encoding-sniffer: 4.0.0
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       is-potential-custom-element-name: 1.0.1
       nwsapi: 2.2.20
-      parse5: 7.2.1
+      parse5: 7.3.0
       rrweb-cssom: 0.7.1
       saxes: 6.0.0
       symbol-tree: 3.2.4
@@ -9754,7 +9900,7 @@ snapshots:
       whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.2.0
-      ws: 8.18.1
+      ws: 8.18.2
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -9812,6 +9958,21 @@ snapshots:
       '@libsql/linux-x64-gnu': 0.4.7
       '@libsql/linux-x64-musl': 0.4.7
       '@libsql/win32-x64-msvc': 0.4.7
+
+  libsql@0.5.11:
+    dependencies:
+      '@neon-rs/load': 0.0.4
+      detect-libc: 2.0.2
+    optionalDependencies:
+      '@libsql/darwin-arm64': 0.5.11
+      '@libsql/darwin-x64': 0.5.11
+      '@libsql/linux-arm-gnueabihf': 0.5.11
+      '@libsql/linux-arm-musleabihf': 0.5.11
+      '@libsql/linux-arm64-gnu': 0.5.11
+      '@libsql/linux-arm64-musl': 0.5.11
+      '@libsql/linux-x64-gnu': 0.5.11
+      '@libsql/linux-x64-musl': 0.5.11
+      '@libsql/win32-x64-msvc': 0.5.11
 
   light-my-request@5.13.0:
     dependencies:
@@ -9959,7 +10120,7 @@ snapshots:
     dependencies:
       agentkeepalive: 4.6.0
       cacache: 15.3.0
-      http-cache-semantics: 4.1.1
+      http-cache-semantics: 4.2.0
       http-proxy-agent: 4.0.1
       https-proxy-agent: 5.0.1
       is-lambda: 1.0.1
@@ -10490,7 +10651,7 @@ snapshots:
 
   minimatch@3.1.2:
     dependencies:
-      brace-expansion: 1.1.11
+      brace-expansion: 1.1.12
     optional: true
 
   minimatch@9.0.4:
@@ -10630,9 +10791,9 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  node-abi@3.74.0:
+  node-abi@3.75.0:
     dependencies:
-      semver: 7.7.1
+      semver: 7.7.2
     optional: true
 
   node-abort-controller@3.1.1: {}
@@ -10663,7 +10824,7 @@ snapshots:
       nopt: 5.0.0
       npmlog: 6.0.2
       rimraf: 3.0.2
-      semver: 7.7.1
+      semver: 7.7.2
       tar: 6.2.1
       which: 2.0.2
     transitivePeerDependencies:
@@ -10768,9 +10929,9 @@ snapshots:
 
   parse-ms@4.0.0: {}
 
-  parse5@7.2.1:
+  parse5@7.3.0:
     dependencies:
-      entities: 4.5.0
+      entities: 6.0.1
     optional: true
 
   parseurl@1.3.3: {}
@@ -10929,17 +11090,17 @@ snapshots:
 
   prebuild-install@7.1.3:
     dependencies:
-      detect-libc: 2.0.3
+      detect-libc: 2.0.4
       expand-template: 2.0.3
       github-from-package: 0.0.0
       minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 2.0.0
-      node-abi: 3.74.0
-      pump: 3.0.2
+      node-abi: 3.75.0
+      pump: 3.0.3
       rc: 1.2.8
       simple-get: 4.0.1
-      tar-fs: 2.1.2
+      tar-fs: 2.1.3
       tunnel-agent: 0.6.0
     optional: true
 
@@ -10983,9 +11144,9 @@ snapshots:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  pump@3.0.2:
+  pump@3.0.3:
     dependencies:
-      end-of-stream: 1.4.4
+      end-of-stream: 1.4.5
       once: 1.4.0
     optional: true
 
@@ -11282,6 +11443,9 @@ snapshots:
   semver@7.7.1:
     optional: true
 
+  semver@7.7.2:
+    optional: true
+
   send@0.18.0:
     dependencies:
       debug: 2.6.9
@@ -11429,13 +11593,13 @@ snapshots:
   socks-proxy-agent@6.2.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.0
-      socks: 2.8.4
+      debug: 4.4.1
+      socks: 2.8.5
     transitivePeerDependencies:
       - supports-color
     optional: true
 
-  socks@2.8.4:
+  socks@2.8.5:
     dependencies:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
@@ -11587,18 +11751,18 @@ snapshots:
 
   tapable@2.2.1: {}
 
-  tar-fs@2.1.2:
+  tar-fs@2.1.3:
     dependencies:
       chownr: 1.1.4
       mkdirp-classic: 0.5.3
-      pump: 3.0.2
+      pump: 3.0.3
       tar-stream: 2.2.0
     optional: true
 
   tar-stream@2.2.0:
     dependencies:
       bl: 4.1.0
-      end-of-stream: 1.4.4
+      end-of-stream: 1.4.5
       fs-constants: 1.0.0
       inherits: 2.0.4
       readable-stream: 3.6.2
@@ -11619,7 +11783,7 @@ snapshots:
   terser@5.32.0:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.14.1
+      acorn: 8.15.0
       commander: 2.20.3
       source-map-support: 0.5.21
     optional: true
@@ -11687,7 +11851,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  tr46@5.1.0:
+  tr46@5.1.1:
     dependencies:
       punycode: 2.3.1
     optional: true
@@ -11970,7 +12134,7 @@ snapshots:
 
   whatwg-url@14.2.0:
     dependencies:
-      tr46: 5.1.0
+      tr46: 5.1.1
       webidl-conversions: 7.0.0
     optional: true
 
@@ -12021,7 +12185,7 @@ snapshots:
 
   ws@8.18.0: {}
 
-  ws@8.18.1:
+  ws@8.18.2:
     optional: true
 
   xml-name-validator@5.0.0:
