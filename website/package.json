@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@apollo/server": "^4.10.4",
-    "@apollo/subgraph": "^2.8.2",
+    "@apollo/subgraph": "^2.11.0",
     "@fumadocs/cli": "^0.1.1",
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "workspace:*",
