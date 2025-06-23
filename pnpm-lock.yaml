@@ -490,8 +490,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       '@orama/orama':
-        specifier: ^3.1.6
-        version: 3.1.6
+        specifier: ^3.1.7
+        version: 3.1.7
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -2083,9 +2083,9 @@ packages:
     engines: {node: '>=10'}
     deprecated: This functionality has been moved to @npmcli/fs
 
-  '@orama/orama@3.1.6':
-    resolution: {integrity: sha512-qtSrqCqRU93SjEBedz987tvWao1YQSELjBhGkHYGVP7Dg0lBWP6d+uZEIt5gxTAYio/YWWlhivmRABvRfPLmnQ==}
-    engines: {node: '>= 16.0.0'}
+  '@orama/orama@3.1.7':
+    resolution: {integrity: sha512-6yB0117ZjsgNevZw3LP+bkrZa9mU/POPVaXgzMPOBbBc35w2P3R+1vMMhEfC06kYCpd5bf0jodBaTkYQW5TVeQ==}
+    engines: {node: '>= 20.0.0'}
 
   '@oxc-transform/binding-darwin-arm64@0.53.0':
     resolution: {integrity: sha512-QG1djnqQ+EywamRwFMRYogmbF4aL+Fmw/tDKuZ4cpWpOBPaxgTNryfYS1WwCARlZLmLzDEZr0YkYSQ7Rmjyf1Q==}
@@ -7460,7 +7460,7 @@ snapshots:
       rimraf: 3.0.2
     optional: true
 
-  '@orama/orama@3.1.6': {}
+  '@orama/orama@3.1.7': {}
 
   '@oxc-transform/binding-darwin-arm64@0.53.0':
     optional: true
@@ -9311,7 +9311,7 @@ snapshots:
   fumadocs-core@15.3.0(@types/react@19.0.8)(next@15.3.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       '@formatjs/intl-localematcher': 0.6.1
-      '@orama/orama': 3.1.6
+      '@orama/orama': 3.1.7
       '@shikijs/rehype': 3.4.0
       '@shikijs/transformers': 3.4.0
       github-slugger: 2.0.0
