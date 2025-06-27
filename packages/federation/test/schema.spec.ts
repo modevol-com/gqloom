@@ -3,6 +3,7 @@ import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/dis
 import { printSubgraphSchema } from "@apollo/subgraph"
 import { loom, silk } from "@gqloom/core"
 import {
+  GraphQLBoolean,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
@@ -23,6 +24,10 @@ describe("FederatedSchemaLoom", () => {
       fields: {
         id: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
+        deprecated: {
+          type: new GraphQLNonNull(GraphQLBoolean),
+          deprecationReason: "test",
+        },
       },
       extensions: {
         directives: { key: { fields: "id", resolvable: true } },
@@ -66,6 +71,10 @@ describe("FederatedSchemaLoom", () => {
       fields: {
         id: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
+        deprecated: {
+          type: new GraphQLNonNull(GraphQLBoolean),
+          deprecationReason: "test",
+        },
       },
     })
   )
@@ -111,6 +120,7 @@ describe("FederatedSchemaLoom", () => {
       {
         id: String!
         name: String!
+        deprecated: Boolean! @deprecated(reason: "test")
       }"
     `)
   })
@@ -125,6 +135,7 @@ describe("FederatedSchemaLoom", () => {
       }
 
       type User {
+        deprecated: Boolean! @deprecated(reason: "test")
         id: String!
         name: String!
       }
