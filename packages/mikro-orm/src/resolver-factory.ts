@@ -390,7 +390,7 @@ export class MikroInputFactory<
             ;(value as any).where[key] = conditions
           })
       }
-      return value
+      return { value }
     })
   }
 

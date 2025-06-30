@@ -711,7 +711,7 @@ describe("MikroResolverFactory", async () => {
           where: { id: { eq: 1 } },
         })
       ).toMatchObject({
-        where: { id: { $eq: 1 } },
+        value: { where: { id: { $eq: 1 } } },
       })
 
       expect(
@@ -719,7 +719,7 @@ describe("MikroResolverFactory", async () => {
           where: { id: 1 },
         })
       ).toMatchObject({
-        where: { id: 1 },
+        value: { where: { id: 1 } },
       })
     })
   })
