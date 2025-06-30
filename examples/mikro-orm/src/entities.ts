@@ -24,7 +24,11 @@ export const User: EntitySchemaSilk<EntitySchema<IUser>> = mikroSilk(
     name: "User",
     properties: {
       id: { type: "number", primary: true },
-      createdAt: { type: Date, defaultRaw: "now", onCreate: () => new Date() },
+      createdAt: {
+        type: Date,
+        defaultRaw: "now()",
+        onCreate: () => new Date(),
+      },
       email: { type: "string", unique: true },
       name: { type: "string" },
       role: { type: "string", default: "user" },
@@ -44,12 +48,12 @@ export const Post: EntitySchemaSilk<EntitySchema<IPost>> = mikroSilk(
       id: { type: "number", primary: true },
       createdAt: {
         type: Date,
-        defaultRaw: "now",
+        defaultRaw: "now()",
         onCreate: () => new Date(),
       },
       updatedAt: {
         type: Date,
-        defaultRaw: "now",
+        defaultRaw: "now()",
         onCreate: () => new Date(),
         onUpdate: () => new Date(),
       },

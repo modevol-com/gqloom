@@ -236,11 +236,11 @@ importers:
   examples/mikro-orm:
     dependencies:
       '@gqloom/core':
-        specifier: ^0.7.0
-        version: 0.7.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        specifier: workspace:*
+        version: link:../../packages/core
       '@gqloom/mikro-orm':
-        specifier: ^0.7.0
-        version: 0.7.0(@gqloom/core@0.7.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(@mikro-orm/core@6.4.6)(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        specifier: workspace:*
+        version: link:../../packages/mikro-orm
       '@mikro-orm/core':
         specifier: ^6.4.6
         version: 6.4.6
@@ -1662,23 +1662,11 @@ packages:
     peerDependencies:
       graphql: '>= 16.8.0'
 
-  '@gqloom/core@0.7.0':
-    resolution: {integrity: sha512-Y1EdzPcnNgnVAXUg1hn2xzz8kNtHLIPueekXHZdIiLgtM93xjQpuOSeGzkMc/Rcigt/zuJX/Me+i+h75h9TZqA==}
-    peerDependencies:
-      graphql: '>= 16.8.0'
-
   '@gqloom/drizzle@0.10.0':
     resolution: {integrity: sha512-8rM/z9oAUZUkAdjLJMyf9RYzZPO+6oP7mBQlUTaE0Y0+MoRSnia+MMPKiaSN3+G95Wy3d8CnIOs1Pzk3adPaqw==}
     peerDependencies:
       '@gqloom/core': '>= 0.10.0'
       drizzle-orm: '>= 0.38.0'
-      graphql: '>= 16.8.0'
-
-  '@gqloom/mikro-orm@0.7.0':
-    resolution: {integrity: sha512-95TcqpTGbP9qE79vpRduNFk8tbG+C3ouwiJ88jFwQXd+hFnqaleIILrPGWVhn7wx64HYcrdK+9xRqyHN+Mh0QA==}
-    peerDependencies:
-      '@gqloom/core': '>= 0.5.0'
-      '@mikro-orm/core': '>= 6.0.0'
       graphql: '>= 16.8.0'
 
   '@gqloom/valibot@0.10.0':
@@ -7141,20 +7129,10 @@ snapshots:
     dependencies:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
-  '@gqloom/core@0.7.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
-    dependencies:
-      graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-
   '@gqloom/drizzle@0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
       '@gqloom/core': 0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       drizzle-orm: 0.39.3(@libsql/client@0.14.0)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7)
-      graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-
-  '@gqloom/mikro-orm@0.7.0(@gqloom/core@0.7.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(@mikro-orm/core@6.4.6)(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
-    dependencies:
-      '@gqloom/core': 0.7.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
-      '@mikro-orm/core': 6.4.6
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
   '@gqloom/valibot@0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(valibot@1.0.0-rc.1(typescript@5.7.3))':

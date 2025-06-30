@@ -11,6 +11,10 @@ const ormPromise = MikroORM.init({
   clientUrl: process.env.DATABASE_URL!,
 })
 
+ormPromise.then(async (orm) => {
+  await orm.getSchemaGenerator().updateSchema()
+})
+
 const userResolverFactory = new MikroResolverFactory(User, () =>
   ormPromise.then((orm) => orm.em.fork())
 )
