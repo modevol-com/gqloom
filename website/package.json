@@ -46,7 +46,7 @@
     "@mikro-orm/postgresql": "^6.4.6",
     "@tailwindcss/postcss": "^4.0.3",
     "@types/mdx": "^2.0.13",
-    "@types/node": "22.13.0",
+    "@types/node": "24.0.10",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "dotenv": "^16.4.7",
