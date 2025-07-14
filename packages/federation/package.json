@@ -28,7 +28,7 @@
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
-    "@apollo/server": "^4.10.4",
+    "@apollo/server": "^4.12.2",
     "@apollo/subgraph": "^2.11.0",
     "@gqloom/core": "workspace:*",
     "@mercuriusjs/federation": "^3.0.0",
