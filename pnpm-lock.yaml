@@ -242,11 +242,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mikro-orm
       '@mikro-orm/core':
-        specifier: ^6.4.6
-        version: 6.4.6
+        specifier: ^6.4.16
+        version: 6.4.16
       '@mikro-orm/postgresql':
         specifier: ^6.4.6
-        version: 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(sqlite3@5.1.7)
+        version: 6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(sqlite3@5.1.7)
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
@@ -408,11 +408,11 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@mikro-orm/core':
-        specifier: ^6.4.6
-        version: 6.4.6
+        specifier: ^6.4.16
+        version: 6.4.16
       '@mikro-orm/libsql':
         specifier: ^6.4.16
-        version: 6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)
+        version: 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)
 
   packages/prisma:
     dependencies:
@@ -581,11 +581,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/zod
       '@mikro-orm/core':
-        specifier: ^6.4.6
-        version: 6.4.6
+        specifier: ^6.4.16
+        version: 6.4.16
       '@mikro-orm/postgresql':
         specifier: ^6.4.6
-        version: 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(sqlite3@5.1.7)
+        version: 6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(sqlite3@5.1.7)
       '@tailwindcss/postcss':
         specifier: ^4.0.3
         version: 4.0.3
@@ -2011,8 +2011,8 @@ packages:
   '@mercuriusjs/federation@3.0.0':
     resolution: {integrity: sha512-GVk6n314p6rs2gfF3OtqsREftyuzYztiAq0XFl7wg/8w6bJMNctzn/nMkBcA8JYl++d52uchzWLD7eo2yQXQTw==}
 
-  '@mikro-orm/core@6.4.6':
-    resolution: {integrity: sha512-xVm/ALG/3vTMgh6SrvojJ6jjMa0s2hNzWN0triDB16BaNdLwWE4aAaAe+3CuoMFqJAArSOUISTEjExbzELB1ZA==}
+  '@mikro-orm/core@6.4.16':
+    resolution: {integrity: sha512-BW/My1VlI0R25Eojdh0UiET8J+mEruThksGVfllEnjJQ0uwGs3mm/TbMclv0g+d7Qp4+mpzDQU4+lIo8okHYsw==}
     engines: {node: '>= 18.12.0'}
 
   '@mikro-orm/knex@6.4.16':
@@ -3593,6 +3593,10 @@ packages:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
+  dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
+    engines: {node: '>=12'}
+
   drizzle-kit@0.31.4:
     resolution: {integrity: sha512-tCPWVZWZqWVx2XUsVpJRnH9Mx0ClVOf5YUHerZ5so1OKSlqww4zy1R5ksEdGRcO3tM3zj0PYN6V48TbQCL1RfA==}
     hasBin: true
@@ -4268,8 +4272,8 @@ packages:
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
-  ignore@5.3.1:
-    resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
+  ignore@5.3.2:
+    resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
 
   image-size@2.0.2:
@@ -4887,8 +4891,8 @@ packages:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
-  mikro-orm@6.4.6:
-    resolution: {integrity: sha512-Lr3uFK06O/4F/AtQAsuYD6QH7DgmUooSVFVGf1y02IuiKVFKOMJ4iKimkRMyoA+ykKhgYIp8WiaEqbWJVuz4Vw==}
+  mikro-orm@6.4.16:
+    resolution: {integrity: sha512-a+19cRuEPEJ3qf5Vpv4HO9TAxo/I6/rP1bZT93ln8YtNzAbCrcLC766EG6upLS6Sf7OLqdq0cXs5mUN9ESQQrg==}
     engines: {node: '>= 18.12.0'}
 
   mime-db@1.52.0:
@@ -7503,19 +7507,19 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@mikro-orm/core@6.4.6':
+  '@mikro-orm/core@6.4.16':
     dependencies:
       dataloader: 2.2.3
-      dotenv: 16.4.7
+      dotenv: 16.5.0
       esprima: 4.0.1
       fs-extra: 11.3.0
       globby: 11.1.0
-      mikro-orm: 6.4.6
+      mikro-orm: 6.4.16
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)':
+  '@mikro-orm/knex@6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)':
     dependencies:
-      '@mikro-orm/core': 6.4.6
+      '@mikro-orm/core': 6.4.16
       fs-extra: 11.3.0
       knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       sqlstring: 2.3.3
@@ -7531,9 +7535,9 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/knex@6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)':
+  '@mikro-orm/knex@6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)':
     dependencies:
-      '@mikro-orm/core': 6.4.6
+      '@mikro-orm/core': 6.4.16
       fs-extra: 11.3.0
       knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       sqlstring: 2.3.3
@@ -7549,10 +7553,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/libsql@6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)':
+  '@mikro-orm/libsql@6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)':
     dependencies:
-      '@mikro-orm/core': 6.4.6
-      '@mikro-orm/knex': 6.4.16(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)
+      '@mikro-orm/core': 6.4.16
+      '@mikro-orm/knex': 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)
       fs-extra: 11.3.0
       libsql: 0.5.11
       sqlstring-sqlite: 0.1.1
@@ -7567,10 +7571,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/postgresql@6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(sqlite3@5.1.7)':
+  '@mikro-orm/postgresql@6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(sqlite3@5.1.7)':
     dependencies:
-      '@mikro-orm/core': 6.4.6
-      '@mikro-orm/knex': 6.4.6(@mikro-orm/core@6.4.6)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
+      '@mikro-orm/core': 6.4.16
+      '@mikro-orm/knex': 6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       pg: 8.13.2
       postgres-array: 3.0.2
       postgres-date: 2.1.0
@@ -9034,6 +9038,8 @@ snapshots:
 
   dotenv@16.4.7: {}
 
+  dotenv@16.5.0: {}
+
   drizzle-kit@0.31.4:
     dependencies:
       '@drizzle-team/brocli': 0.10.2
@@ -9769,7 +9775,7 @@ snapshots:
       array-union: 2.1.0
       dir-glob: 3.0.1
       fast-glob: 3.3.3
-      ignore: 5.3.1
+      ignore: 5.3.2
       merge2: 1.4.1
       slash: 3.0.0
 
@@ -9981,7 +9987,7 @@ snapshots:
 
   ieee754@1.2.1: {}
 
-  ignore@5.3.1: {}
+  ignore@5.3.2: {}
 
   image-size@2.0.2: {}
 
@@ -10880,7 +10886,7 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
-  mikro-orm@6.4.6: {}
+  mikro-orm@6.4.16: {}
 
   mime-db@1.52.0: {}
 
