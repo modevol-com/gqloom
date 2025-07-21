@@ -29,7 +29,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "check:type": "tsc --noEmit"
+    "check:type": "tsgo --noEmit"
   },
   "keywords": [
     "gqloom",

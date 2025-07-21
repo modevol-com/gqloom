@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "check:type": "tsc --noEmit"
+    "check:type": "tsgo --noEmit"
   },
   "files": ["dist"],
   "keywords": ["gqloom", "graphql", "schema", "typescript", "mikro-orm"],

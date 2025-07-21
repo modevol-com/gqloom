@@ -37,7 +37,7 @@
   },
   "scripts": {
     "build": "tsup --dts-resolve",
-    "check:type": "tsc --noEmit"
+    "check:type": "tsgo --noEmit"
   },
   "files": ["dist"],
   "peerDependencies": {
