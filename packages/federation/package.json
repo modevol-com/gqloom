@@ -31,7 +31,7 @@
     "@apollo/server": "^4.12.2",
     "@apollo/subgraph": "^2.11.0",
     "@gqloom/core": "workspace:*",
-    "@mercuriusjs/federation": "^3.0.0",
+    "@mercuriusjs/federation": "^5.0.0",
     "fastify": "^4.28.1",
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
