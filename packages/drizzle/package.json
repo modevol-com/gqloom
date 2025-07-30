@@ -51,7 +51,7 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/valibot": "workspace:*",
-    "@libsql/client": "^0.14.0",
+    "@libsql/client": "^0.15.10",
     "@types/pg": "^8.11.10",
     "dotenv": "^16.4.7",
     "drizzle-kit": "^0.31.4",
