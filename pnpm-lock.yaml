@@ -136,7 +136,7 @@ importers:
         version: 0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.39.3(@libsql/client@0.15.10)(@prisma/client@6.1.0(prisma@6.1.0))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/zod':
         specifier: latest
-        version: 0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.0-beta.20250415T232143)
+        version: 0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.14)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.10
@@ -153,8 +153,8 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       zod:
-        specifier: 4.0.0-beta.20250415T232143
-        version: 4.0.0-beta.20250415T232143
+        specifier: 4.0.14
+        version: 4.0.14
     devDependencies:
       '@types/node':
         specifier: ^24.0.10
@@ -233,8 +233,8 @@ importers:
         specifier: 1.0.0-beta.7
         version: 1.0.0-beta.7(typescript@5.7.3)
       zod:
-        specifier: 4.0.0-beta.20250415T232143
-        version: 4.0.0-beta.20250415T232143
+        specifier: 4.0.14
+        version: 4.0.14
 
   examples/mikro-orm:
     dependencies:
@@ -313,8 +313,8 @@ importers:
         specifier: 1.0.0-beta.7
         version: 1.0.0-beta.7(typescript@5.7.3)
       zod:
-        specifier: 4.0.0-beta.20250415T232143
-        version: 4.0.0-beta.20250415T232143
+        specifier: 4.0.14
+        version: 4.0.14
 
   packages/core:
     dependencies:
@@ -445,8 +445,8 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0
       zod:
-        specifier: 4.0.0-beta.20250415T232143
-        version: 4.0.0-beta.20250415T232143
+        specifier: 4.0.14
+        version: 4.0.14
 
   packages/valibot:
     dependencies:
@@ -484,8 +484,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       zod:
-        specifier: 3.25.17
-        version: 3.25.17
+        specifier: 4.0.14
+        version: 4.0.14
 
   website:
     dependencies:
@@ -644,8 +644,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       zod:
-        specifier: 3.25.17
-        version: 3.25.17
+        specifier: 4.0.14
+        version: 4.0.14
 
 packages:
 
@@ -3131,9 +3131,6 @@ packages:
   '@whatwg-node/server@0.9.36':
     resolution: {integrity: sha512-KT9qKLmbuWSuFv0Vg4JyK2vN2+vSuQPeEa25xpndYFROAIZntYe7e2BlWAk9l7IrgnV+M4bCVhjrAwwRsaCeiA==}
     engines: {node: '>=16.0.0'}
-
-  '@zod/core@0.5.1':
-    resolution: {integrity: sha512-Iqa3r1weIYaG1pjR+vNhfmaQ+5YtdQEp839R7bil0CC30cwiExXuBI5AAEjZMMS2CzGcBlAWca+0+vxzUmdJ6Q==}
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -5901,6 +5898,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
@@ -6540,8 +6538,8 @@ packages:
   zod@3.25.17:
     resolution: {integrity: sha512-8hQzQ/kMOIFbwOgPrm9Sf9rtFHpFUMy4HvN0yEB0spw14aYi0uT5xG5CE2DB9cd51GWNsz+DNO7se1kztHMKnw==}
 
-  zod@4.0.0-beta.20250415T232143:
-    resolution: {integrity: sha512-qy5jcyX/4Vt003S9II2NxTeAU31CQ71wJxk54stbrU+dhF+RcZL6xMwj8vGBbRVJi26pjCbTe2BldpK75nzlDw==}
+  zod@4.0.14:
+    resolution: {integrity: sha512-nGFJTnJN6cM2v9kXL+SOBq3AtjQby3Mv5ySGFof5UGRHrRioSJ5iG680cYNjE/yWk671nROcpPj4hAS8nyLhSw==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -7279,11 +7277,11 @@ snapshots:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
       valibot: 1.0.0-rc.1(typescript@5.7.3)
 
-  '@gqloom/zod@0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.0-beta.20250415T232143)':
+  '@gqloom/zod@0.10.0(@gqloom/core@0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.0.14)':
     dependencies:
       '@gqloom/core': 0.10.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-      zod: 4.0.0-beta.20250415T232143
+      zod: 4.0.14
 
   '@graphql-tools/executor@1.2.8(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
@@ -8695,8 +8693,6 @@ snapshots:
     dependencies:
       '@whatwg-node/fetch': 0.9.18
       tslib: 2.6.2
-
-  '@zod/core@0.5.1': {}
 
   abbrev@1.1.1:
     optional: true
@@ -12713,8 +12709,6 @@ snapshots:
 
   zod@3.25.17: {}
 
-  zod@4.0.0-beta.20250415T232143:
-    dependencies:
-      '@zod/core': 0.5.1
+  zod@4.0.14: {}
 
   zwitch@2.0.4: {}
