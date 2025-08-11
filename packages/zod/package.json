@@ -50,7 +50,7 @@
   "files": ["dist"],
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "zod": "3.25.17"
+    "zod": "4.0.17"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
