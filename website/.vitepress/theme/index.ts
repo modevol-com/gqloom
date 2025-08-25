@@ -5,9 +5,9 @@ import DefaultTheme from "vitepress/theme"
 
 // https://vitepress.dev/guide/custom-theme
 import { h } from "vue"
+import "./style.css"
 import "../../css/tailwind.css"
 import "../../css/input-schema.css"
-import "./style.css"
 
 import "@shikijs/vitepress-twoslash/style.css"
 

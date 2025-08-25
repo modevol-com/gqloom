@@ -11,6 +11,7 @@ import { FeatureCard, type FeatureProps } from "./feature-card"
 import { FlowingLines } from "./flowing-lines"
 import { Highlight, type IHighlight } from "./highlight"
 import styles from "./home.module.css"
+import { RuntimeTypes } from "./runtime-types"
 
 const HomeSchemaLibrary = defineComponent({
   name: "HomeSchemaLibrary",
@@ -474,9 +475,9 @@ const GraphQLIntro = defineComponent({
             <a
               href="https://graphql.org/"
               target="_blank"
-              class="underline text-4xl !text-pink-600 dark:!text-rose-400 opacity-90 transition-opacity hover:opacity-100"
+              class="text-4xl opacity-90 transition-opacity hover:opacity-100"
             >
-              GraphQL
+              <b class="underline text-pink-600 dark:text-rose-400">GraphQL</b>
             </a>{" "}
             的磅礴之力
           </h2>
@@ -486,9 +487,9 @@ const GraphQLIntro = defineComponent({
             <a
               href="https://graphql.org/"
               target="_blank"
-              class="underline text-4xl !text-pink-600 dark:!text-rose-400 opacity-90 transition-opacity hover:opacity-100"
+              class="text-4xl opacity-90 transition-opacity hover:opacity-100"
             >
-              GraphQL
+              <b class="underline text-pink-600 dark:text-rose-400">GraphQL</b>
             </a>
           </h2>
         )}
@@ -510,25 +511,37 @@ const Hero = defineComponent({
     const texts = computed(() => {
       if (lang.value === "zh")
         return {
-          description: "将运行时类型编织成 GraphQL Schema",
           star: "在 GitHub 点亮繁星",
           start: "快速上手",
+          description: "愉快且高效地建构 GraphQL 服务",
         }
       return {
-        description: "Weaving runtime types into GraphQL Schema",
         star: "Star on GitHub",
         start: "Getting Started",
+        description: "Build GraphQL server enjoyably and efficiently",
       }
     })
 
     return () => (
       <section class="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full">
         <div class="flex flex-col gap-6 w-md max-w-screen text-center items-center">
-          <h1 class="!text-4xl text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 !sm:text-5xl !font-bold bg-clip-text">
-            GraphQL Loom
+          <h1 class="text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 bg-clip-text">
+            <b class="text-4xl sm:text-5xl font-bold">GraphQL Loom</b>
           </h1>
-          <div class="text-lg dark:text-white text-black sm:mt-4">
-            {texts.value.description}
+          <div class="dark:text-white text-black sm:mt-4">
+            {lang.value === "zh" ? (
+              <div class="h-[1.5em] text-lg flex items-center">
+                将
+                <RuntimeTypes />
+                编织成 GraphQL Schema
+              </div>
+            ) : (
+              <div class="h-[1.5em] text-lg flex items-center">
+                Weaving
+                <RuntimeTypes />
+                into GraphQL Schema
+              </div>
+            )}
           </div>
           <div class="flex flex-wrap px-4 gap-4">
             <a
