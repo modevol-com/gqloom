@@ -7,7 +7,7 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview",
-    "check:type": "tsgo --noEmit"
+    "check:type": "tsgo --project ./tsconfig.check.json --noEmit"
   },
   "keywords": [],
   "author": "",

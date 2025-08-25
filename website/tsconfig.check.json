@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.json" },
+    { "path": "./snippets/home/mikro/tsconfig.json" },
+    { "path": "./snippets/home/drizzle/tsconfig.json" }
+  ]
+}

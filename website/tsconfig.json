@@ -5,9 +5,16 @@
     "moduleResolution": "bundler",
     "jsx": "preserve",
     "jsxImportSource": "vue",
+    "composite": true,
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "include": ["./.vitepress", "./components", "./css", "./env.d.ts"]
+  "include": [
+    "./.vitepress",
+    "./components",
+    "./css",
+    "./env.d.ts",
+    "./snippets/*.ts"
+  ]
 }
