@@ -505,12 +505,66 @@ importers:
         specifier: ^3.5.19
         version: 3.5.19(typescript@5.7.3)
     devDependencies:
+      '@gqloom/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@gqloom/drizzle':
+        specifier: workspace:*
+        version: link:../packages/drizzle
+      '@gqloom/federation':
+        specifier: workspace:*
+        version: link:../packages/federation
+      '@gqloom/mikro-orm':
+        specifier: workspace:*
+        version: link:../packages/mikro-orm
+      '@gqloom/prisma':
+        specifier: workspace:*
+        version: link:../packages/prisma
+      '@gqloom/valibot':
+        specifier: workspace:*
+        version: link:../packages/valibot
+      '@gqloom/yup':
+        specifier: workspace:*
+        version: link:../packages/yup
+      '@gqloom/zod':
+        specifier: workspace:*
+        version: link:../packages/zod
+      '@mikro-orm/core':
+        specifier: ^6.4.16
+        version: 6.4.16
+      '@mikro-orm/postgresql':
+        specifier: ^6.4.6
+        version: 6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.17)(mysql2@3.14.1)(sqlite3@5.1.7)
       '@shikijs/vitepress-twoslash':
         specifier: ^3.11.0
         version: 3.11.0(typescript@5.7.3)
+      drizzle-kit:
+        specifier: ^0.31.4
+        version: 0.31.4
+      drizzle-orm:
+        specifier: ^0.39.3
+        version: 0.39.3(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.1.0)(typescript@5.7.3))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.1.0)(sqlite3@5.1.7)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
+      graphql-scalars:
+        specifier: ^1.24.1
+        version: 1.24.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      graphql-yoga:
+        specifier: ^5.6.0
+        version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      valibot:
+        specifier: ^1.1.0
+        version: 1.1.0(typescript@5.7.3)
       vitepress:
         specifier: 2.0.0-alpha.12
         version: 2.0.0-alpha.12(@types/node@24.0.10)(jiti@2.5.1)(lightningcss@1.30.1)(postcss@8.5.6)(terser@5.32.0)(tsx@4.20.3)(typescript@5.7.3)(yaml@2.7.1)
+      yup:
+        specifier: ^1.4.0
+        version: 1.4.0
+      zod:
+        specifier: ^4.1.1
+        version: 4.1.1
 
   website-fuma:
     dependencies:
@@ -5067,10 +5121,6 @@ packages:
   loupe@3.1.2:
     resolution: {integrity: sha512-23I4pFZHmAemUnz8WZXbYRSKYj801VDaNv9ETuMh7IrMc7VuVVSo+Z9iLE3ni30+U48iDWfi30d3twAXBYmnCg==}
 
-  lru-cache@10.2.2:
-    resolution: {integrity: sha512-9hp3Vp2/hFQUiIwKo8XCeFVnrg8Pk3TYNPIR7tJADKi5YfcF7vEaK7avFHTlSy3kOKYaJQaalfEo6YuXdceBOQ==}
-    engines: {node: 14 || >=16.14}
-
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
@@ -6738,6 +6788,14 @@ packages:
       typescript:
         optional: true
 
+  valibot@1.1.0:
+    resolution: {integrity: sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   value-or-promise@1.0.12:
     resolution: {integrity: sha512-Z6Uz+TYwEqE7ZN50gwn+1LCVo9ZVrpxRPOhOLnncYkY1ZzOYtrX8Fwf/rFktZ8R5mJms6EZf5TqNOMeZmnPq9Q==}
     engines: {node: '>=12'}
@@ -7014,6 +7072,9 @@ packages:
   zod@4.0.17:
     resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}
 
+  zod@4.1.1:
+    resolution: {integrity: sha512-SgMZK/h8Tigt9nnKkfJMvB/mKjiJXaX26xegP4sa+0wHIFVFWVlsQGdhklDmuargBD3Hsi3rsQRIzwJIhTPJHA==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -7284,7 +7345,7 @@ snapshots:
   '@envelop/core@5.0.1':
     dependencies:
       '@envelop/types': 5.0.0
-      tslib: 2.6.2
+      tslib: 2.8.1
 
   '@envelop/types@5.0.0':
     dependencies:
@@ -7704,7 +7765,7 @@ snapshots:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@repeaterjs/repeater': 3.0.6
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-      tslib: 2.6.2
+      tslib: 2.8.1
       value-or-promise: 1.0.12
 
   '@graphql-tools/merge@8.4.2(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
@@ -7724,7 +7785,7 @@ snapshots:
       '@graphql-tools/merge': 9.0.4(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@graphql-tools/utils': 10.3.1(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-      tslib: 2.6.2
+      tslib: 2.8.1
       value-or-promise: 1.0.12
 
   '@graphql-tools/schema@9.0.19(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
@@ -7755,14 +7816,14 @@ snapshots:
 
   '@graphql-yoga/logger@2.0.0':
     dependencies:
-      tslib: 2.6.2
+      tslib: 2.8.1
 
   '@graphql-yoga/subscription@5.0.1':
     dependencies:
       '@graphql-yoga/typed-event-target': 3.0.0
       '@repeaterjs/repeater': 3.0.6
       '@whatwg-node/events': 0.1.1
-      tslib: 2.6.2
+      tslib: 2.8.1
 
   '@graphql-yoga/typed-event-target@3.0.0':
     dependencies:
@@ -9453,7 +9514,7 @@ snapshots:
   '@whatwg-node/server@0.9.36':
     dependencies:
       '@whatwg-node/fetch': 0.9.18
-      tslib: 2.6.2
+      tslib: 2.8.1
 
   '@zod/core@0.5.1': {}
 
@@ -10726,8 +10787,8 @@ snapshots:
       '@whatwg-node/server': 0.9.36
       dset: 3.1.3
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-      lru-cache: 10.2.2
-      tslib: 2.6.2
+      lru-cache: 10.4.3
+      tslib: 2.8.1
 
   graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8): {}
 
@@ -11304,8 +11365,6 @@ snapshots:
   longest-streak@3.1.0: {}
 
   loupe@3.1.2: {}
-
-  lru-cache@10.2.2: {}
 
   lru-cache@10.4.3: {}
 
@@ -13390,6 +13449,10 @@ snapshots:
     optionalDependencies:
       typescript: 5.7.3
 
+  valibot@1.1.0(typescript@5.7.3):
+    optionalDependencies:
+      typescript: 5.7.3
+
   value-or-promise@1.0.12: {}
 
   vary@1.1.2: {}
@@ -13664,5 +13727,7 @@ snapshots:
       '@zod/core': 0.5.1
 
   zod@4.0.17: {}
+
+  zod@4.1.1: {}
 
   zwitch@2.0.4: {}

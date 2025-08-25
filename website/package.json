@@ -12,8 +12,26 @@
   "author": "",
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
+    "@gqloom/core": "workspace:*",
+    "@gqloom/drizzle": "workspace:*",
+    "@gqloom/federation": "workspace:*",
+    "@gqloom/mikro-orm": "workspace:*",
+    "@gqloom/prisma": "workspace:*",
+    "@gqloom/valibot": "workspace:*",
+    "@gqloom/yup": "workspace:*",
+    "@gqloom/zod": "workspace:*",
+    "@mikro-orm/core": "^6.4.16",
+    "@mikro-orm/postgresql": "^6.4.6",
     "@shikijs/vitepress-twoslash": "^3.11.0",
-    "vitepress": "2.0.0-alpha.12"
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.39.3",
+    "graphql": "^16.8.1",
+    "graphql-scalars": "^1.24.1",
+    "graphql-yoga": "^5.6.0",
+    "valibot": "^1.1.0",
+    "vitepress": "2.0.0-alpha.12",
+    "yup": "^1.4.0",
+    "zod": "^4.1.1"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",

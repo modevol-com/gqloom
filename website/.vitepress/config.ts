@@ -70,8 +70,8 @@ export default defineConfig({
     },
   },
   markdown: {
-    codeTransformers: [transformerTwoslash() as any],
-    languages: ["ts"] as any,
+    codeTransformers: [transformerTwoslash()],
+    languages: ["ts", "js", "bash"],
   },
   ignoreDeadLinks: [/^https?:\/\/localhost/],
   srcExclude: ["snippets/"],
