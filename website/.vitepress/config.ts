@@ -1,6 +1,7 @@
 import { URL, fileURLToPath } from "node:url"
 import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
 import tailwindcss from "@tailwindcss/vite"
+import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig } from "vitepress"
 
 // https://vitepress.dev/reference/site-config
@@ -76,7 +77,7 @@ export default defineConfig({
   ignoreDeadLinks: [/^https?:\/\/localhost/],
   srcExclude: ["snippets/"],
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), vueJsx()],
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("../", import.meta.url)),

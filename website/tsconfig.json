@@ -3,9 +3,11 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "jsxImportSource": "vue",
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "include": ["./.vitepress", "./components", "./css", "./snippets"]
+  "include": ["./.vitepress", "./components", "./css", "./env.d.ts"]
 }

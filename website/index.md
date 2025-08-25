@@ -3,7 +3,7 @@ layout: page
 sidebar: false
 ---
 <script setup>
-import Home from '@/components/home.vue'
+import { Home } from '@/components/home.tsx'
 </script>
 
 <Home>

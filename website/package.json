@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
-    "preview": "vitepress preview"
+    "preview": "vitepress preview",
+    "check:type": "tsgo --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +24,7 @@
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/postgresql": "^6.4.6",
     "@shikijs/vitepress-twoslash": "^3.11.0",
+    "@vitejs/plugin-vue-jsx": "^5.1.0",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.39.3",
     "graphql": "^16.8.1",
