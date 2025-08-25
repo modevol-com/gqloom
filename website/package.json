@@ -12,9 +12,14 @@
   "author": "",
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
+    "@shikijs/vitepress-twoslash": "^3.11.0",
     "vitepress": "2.0.0-alpha.12"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "colord": "^2.9.3",
+    "lucide-vue-next": "^0.541.0",
+    "tailwindcss": "^4.1.12",
     "vue": "^3.5.19"
   }
 }

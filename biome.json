@@ -6,7 +6,8 @@
     "ignore": [
       "**/dist/**/*",
       ".vercel/",
-      "website/.next/",
+      "website-fuma/",
+      "website/.vitepress/cache",
       "docs/doc_build/",
       "**/generated/**/*",
       "packages/prisma/test/client/**/*",
@@ -101,7 +102,7 @@
         "useValidTypeof": "error"
       }
     },
-    "ignore": ["**/*.js", "**/generated/**", "**/draft/**/*"]
+    "ignore": ["**/*.js", "**/generated/**", "**/draft/**/*", "**/*.vue"]
   },
   "javascript": {
     "formatter": {
