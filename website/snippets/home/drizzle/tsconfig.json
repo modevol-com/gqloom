@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -7,5 +7,5 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["./.vitepress", "./components", "./css", "./snippets"]
+  "include": ["./*.ts"]
 }
