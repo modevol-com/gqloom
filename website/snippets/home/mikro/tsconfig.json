@@ -3,9 +3,8 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "composite": true,
     "paths": {
-      "@/*": ["./*"]
+      "src/*": ["./*"]
     }
   },
   "include": ["./*.ts"]

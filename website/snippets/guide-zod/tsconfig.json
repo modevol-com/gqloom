@@ -4,8 +4,8 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "src/*": ["./*"]
+      "src/*": ["./src/*"]
     }
   },
-  "include": ["./*.ts"]
+  "include": ["./**/*.ts"]
 }

@@ -1,10 +1,10 @@
-// @paths: {"@/*": ["snippets/home/mikro/*"]}
+// @paths: {"src/*": ["snippets/home/mikro/*"]}
 import { createServer } from "node:http"
-import { Post, User } from "@/entities"
 import { resolver, weave } from "@gqloom/core"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
 import { MikroORM } from "@mikro-orm/postgresql"
 import { createYoga } from "graphql-yoga"
+import { Post, User } from "src/entities"
 
 const ormPromise = MikroORM.init({
   dbName: "gqloom",

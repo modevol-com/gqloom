@@ -3,6 +3,10 @@ import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
 import tailwindcss from "@tailwindcss/vite"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig } from "vitepress"
+import {
+  groupIconMdPlugin,
+  groupIconVitePlugin,
+} from "vitepress-plugin-group-icons"
 import sidebarEn from "./sidebar-en"
 import sidebarZh from "./sidebar-zh"
 
@@ -75,11 +79,14 @@ export default defineConfig({
   markdown: {
     codeTransformers: [transformerTwoslash()],
     languages: ["ts", "js", "bash"],
+    config(md) {
+      md.use(groupIconMdPlugin)
+    },
   },
   ignoreDeadLinks: [/^https?:\/\/localhost/],
   srcExclude: ["snippets/"],
   vite: {
-    plugins: [tailwindcss(), vueJsx()],
+    plugins: [tailwindcss(), vueJsx(), groupIconVitePlugin()],
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("../", import.meta.url)),

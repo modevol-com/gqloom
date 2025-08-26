@@ -1,10 +1,10 @@
-// @paths: {"@/*": ["snippets/home/drizzle/*"]}
+// @paths: {"src/*": ["snippets/home/drizzle/*"]}
 import { createServer } from "node:http"
-import * as tables from "@/schema"
 import { weave } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { createYoga } from "graphql-yoga"
+import * as tables from "src/schema"
 
 const db = drizzle(process.env.DATABASE_URL!, { schema: tables })
 

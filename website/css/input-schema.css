@@ -8,5 +8,5 @@
   @apply text-gray-700 dark:text-gray-200;
 }
 .input-schema-active {
-  @apply text-orange-700 dark:text-orange-200;
+  @apply text-pink-700 dark:text-rose-300;
 }

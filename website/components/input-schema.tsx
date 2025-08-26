@@ -3,7 +3,6 @@ import type { JSX } from "vue/jsx-runtime"
 
 export const inputSchema = ref<"valibot" | "zod">("valibot")
 
-// 定义 slots 的类型接口
 interface InputSchemaSlots {
   valibot?: () => JSX.Element
   zod?: () => JSX.Element

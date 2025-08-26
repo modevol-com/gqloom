@@ -10,6 +10,7 @@ import "../../css/tailwind.css"
 import "../../css/input-schema.css"
 
 import "@shikijs/vitepress-twoslash/style.css"
+import "virtual:group-icons.css"
 
 export default {
   extends: DefaultTheme,

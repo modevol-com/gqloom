@@ -1,3 +1,4 @@
+import { cn } from "@/css"
 import { useData } from "vitepress"
 import {
   type CSSProperties,
@@ -157,7 +158,3 @@ export const RuntimeTypes = defineComponent({
     )
   },
 })
-
-function cn(...classes: (string | false | null | undefined | 0)[]): string {
-  return classes.filter(Boolean).join(" ")
-}
