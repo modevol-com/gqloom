@@ -1,0 +1,350 @@
+---
+title: 上下文（Context）
+icon: Shuffle
+---
+
+# 上下文（Context）
+
+在 Node.js 世界中，上下文（Context）允许我们在同一个请求中共享数据和状态。在 GraphQL 中，上下文允许在同一个请求的多个[解析函数](./resolver)和[中间件](./middleware)之间共享数据。
+
+一个常见的用例是将当前访问者的身份信息存储在上下文中，以便在解析函数和中间件中访问。
+
+## 访问上下文
+
+在 `GQLoom` 中，我们通过 `useContext()` 函数访问上下文。
+
+GQLoom 的 `useContext` 函数的设计参考了 [React](https://zh-hans.react.dev/) 的 `useContext` 函数。
+你可以在[解析器](./resolver)内的任何地方调用 `useContext` 函数以访问当前请求的上下文，而不需要显式地传递 `context` 函数。
+在幕后，`useContext` 使用 Node.js 的 [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) 来隐式传递上下文。
+
+### 启用上下文
+
+::: info
+对于不支持 `AsyncLocalStorage` 的环境，如浏览器或 Cloudflare Workers，可以使用 [resolverPayload](./context#直接访问解析器负载) 中的 `context` 属性。
+:::
+
+
+我们通过在 weave 函数中传入 `asyncContextProvider` 来启用上下文。`asyncContextProvider` 实际上是一个全局中间件。
+
+```ts
+import { weave } from "@gqloom/core"
+import { asyncContextProvider } from "@gqloom/core/context"
+
+const schema = weave(ValibotWeaver,asyncContextProvider, ...resolvers)
+```
+
+接下来，让我们尝试在各个地方访问上下文。
+我们将使用 [graphql-yoga](https://the-guild.dev/graphql/yoga-server) 作为适配器。
+
+### 在解析函数中访问上下文
+
+::: code-group
+```ts twoslash [valibot]
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
+import { ValibotWeaver } from "@gqloom/valibot"
+import * as v from "valibot"
+import { type YogaInitialContext, createYoga } from "graphql-yoga"
+import { createServer } from "http"
+
+const helloResolver = resolver({
+  hello: query(v.string(), () => {
+    const user = // [!code hl]
+      useContext<YogaInitialContext>().request.headers.get("Authorization") // [!code hl]
+    return `Hello, ${user ?? "World"}`
+  }),
+})
+
+const yoga = createYoga({ schema: weave(ValibotWeaver, helloResolver) })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+```ts twoslash [zod]
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
+import { ZodWeaver } from "@gqloom/zod"
+import * as z from "zod"
+import { type YogaInitialContext, createYoga } from "graphql-yoga"
+import { createServer } from "http"
+
+const helloResolver = resolver({
+  hello: query(z.string(), () => {
+    const user = // [!code hl]
+      useContext<YogaInitialContext>().request.headers.get("Authorization") // [!code hl]
+    return `Hello, ${user ?? "World"}`
+  }),
+})
+
+const yoga = createYoga({ schema: weave(ZodWeaver, helloResolver) })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+:::
+
+在上面的代码中，我们使用 `useContext` 函数从上下文中获取当前请求的 `Authorization` 头部，并将其与 `Hello` 字符串连接起来。
+`useContext` 函数接受一个泛型参数，该参数指定上下文的类型，在这里，我们传入了 `YogaInitialContext` 类型。
+
+让我们尝试调用这个查询：
+```shell
+curl -X POST http://localhost:4000/graphql -H "content-type: application/json" -H "authorization: Tom" --data-raw '{"query": "query { hello }"}'
+```
+你应该会得到以下响应：
+```json
+{"data":{"hello":"Hello, Tom"}}
+```
+
+### 在中间件中访问上下文
+
+```ts twoslash
+import { Middleware } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
+import { type YogaInitialContext } from "graphql-yoga"
+
+function useUser() {
+  const user =
+    useContext<YogaInitialContext>().request.headers.get("Authorization")
+  return user
+}
+
+const authGuard: Middleware = (next) => {
+  const user = useUser()
+  if (!user) throw new Error("Please login first")
+  return next()
+}
+```
+在上面的代码中，我们创建了一个名为 `useUser` 的自定义钩子，它使用 `useContext` 函数从上下文中获取当前请求的 `Authorization` 头部。
+然后，我们创建了一个名为 `authGuard` 的中间件，它使用 `useUser` 钩子来获取用户，并在用户未登录时抛出错误。
+
+要了解更多关于中间件的信息，请参阅 [中间件文档](./middleware)。
+
+### 在验证输入时访问上下文
+
+#### Valibot
+
+我们可以在 `valibot` 中自定义验证或转换，并在其中直接访问上下文。
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
+import { ValibotWeaver } from "@gqloom/valibot"
+import * as v from "valibot"
+import { type YogaInitialContext, createYoga } from "graphql-yoga"
+import { createServer } from "http"
+
+async function useUser() {
+  const authorization =
+    useContext<YogaInitialContext>().request.headers.get("Authorization")
+  const user = await UserService.getUserByAuthorization(authorization)
+  return user
+}
+
+const helloResolver = resolver({
+  hello: query(v.string(), {
+    input: {
+      name: v.pipeAsync(
+        v.nullish(v.string()),
+        v.transformAsync(async (value) => { // [!code hl]
+          if (value != null) return value // [!code hl]
+          const user = await useUser() // [!code hl]
+          return user.name // [!code hl]
+        }) // [!code hl]
+      ),
+    },
+    resolve: ({ name }) => `Hello, ${name}`,
+  }),
+})
+
+const yoga = createYoga({ schema: weave(ValibotWeaver, helloResolver) })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+在上面的代码中，我们在 `v.transformAsync` 中使用 `useUser()` 来获取上下文中的用户信息，并将其作为 `name` 的值返回。
+
+#### Zod
+
+我们可以在 `zod` 中自定义验证或转换，并在其中直接访问上下文：
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
+import { query, resolver, weave } from "@gqloom/core"
+import { useContext } from "@gqloom/core/context"
+import { ZodWeaver } from "@gqloom/zod"
+import * as z from "zod"
+import { type YogaInitialContext, createYoga } from "graphql-yoga"
+import { createServer } from "http"
+
+async function useUser() {
+  const authorization =
+    useContext<YogaInitialContext>().request.headers.get("Authorization")
+  const user = await UserService.getUserByAuthorization(authorization)
+  return user
+}
+
+const helloResolver = resolver({
+  hello: query(z.string(), {
+    input: {
+      name: z
+        .string()
+        .nullish()
+        .transform(async (value) => { // [!code hl]
+          if (value != null) return value // [!code hl]
+          const user = await useUser() // [!code hl]
+          return user.name // [!code hl]
+        }), // [!code hl]
+    },
+    resolve: ({ name }) => `Hello, ${name}`,
+  }),
+})
+
+const yoga = createYoga({ schema: weave(ZodWeaver, helloResolver) })
+createServer(yoga).listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+在上面的代码中，我们在 `z.transform` 中使用 `useUser()` 来获取上下文中的用户信息，并将其作为 `name` 的值返回。
+
+## 记忆化
+
+考虑我们通过以下自定义函数来访问用户：
+
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+// ---cut---
+import { useContext } from "@gqloom/core/context"
+import { type YogaInitialContext } from "graphql-yoga"
+
+async function useUser() {
+  const authorization =
+    useContext<YogaInitialContext>().request.headers.get("Authorization")
+  const user = await UserService.getUserByAuthorization(authorization)
+  return user
+}
+```
+
+我们可能在 `useUser()` 中执行一些昂贵的操作，例如从数据库中获取用户信息，并且我们还有可能在同一请求中多次调用它。
+为了避免多次调用造成的额外开销，我们可以使用记忆化（Memoization）来缓存结果，并在后续调用中重用它们。
+
+在 GQLoom 中，我们使用 `createMemoization` 函数来创建一个记忆化函数。
+记忆化函数会在第一次被调用后，将其结果缓存在上下文中，并在后续调用中直接返回缓存的结果。
+也就是说，在同一个请求中，记忆化函数只会被执行一次，无论它被调用多少次。
+
+让我们将 `useUser()` 函数记忆化：
+
+```ts twoslash
+const UserService = {
+  getUserByAuthorization: async (authorization: string | null) => {
+    return { name: "World" }
+  },
+}
+import { type YogaInitialContext } from "graphql-yoga"
+// ---cut---
+import { createMemoization, useContext } from "@gqloom/core/context"
+
+const useUser = createMemoization(async () => {
+  const authorization =
+    useContext<YogaInitialContext>().request.headers.get("Authorization")
+  const user = await UserService.getUserByAuthorization(authorization)
+  return user
+})
+```
+如你所见，我们只需要将函数包装在 `createMemoization` 函数中即可。
+随后，我们可以在解析器内的任何地方调用 `useUser()`，而无需担心多次调用带来的开销。
+
+## 注入上下文
+
+`asyncContextProvider` 还允许我们注入上下文。这通常与 [执行器](./advanced/executor) 一起使用。
+
+```ts
+const giraffeExecutor = giraffeResolver.toExecutor(
+  asyncContextProvider.with(useCurrentUser.provide({ id: 9, roles: ["admin"] }))
+)
+```
+
+## 访问解析器参数
+
+除了 `useContext` 函数，GQLoom 还提供了 `useResolverPayload` 函数，用于访问解析器中的所有参数：
+
+- root: 上一个对象，对于根查询类型上的字段来说，通常不会使用；
+
+- args: 在 GraphQL 查询中为字段提供的参数；
+
+- context: 在各个解析函数和中间件中共享的上下文对象，即 `useContext` 的返回值；
+
+- info: 包含有关当前解析器调用的信息，例如 GraphQL 查询的路径、字段名称等；
+
+- field: 当前解析器正在解析的字段定义；
+
+### 直接访问解析器负载
+
+对于不提供 `AsyncLocalStorage` 的环境，如浏览器或 Cloudflare Workers，我们可以直接在解析函数和中间件中访问解析器负载。
+
+#### 解析函数
+
+在解析函数中，`payload` 总是最后一个参数。
+
+::: code-group
+```ts [valibot]
+const helloResolver = resolver({
+  hello: query(v.string()).resolve((_input, payload) => {
+    const user = // [!code hl]
+      (payload!.context as YogaInitialContext).request.headers.get("Authorization") // [!code hl]
+    return `Hello, ${user ?? "World"}`
+  }),
+})
+```
+
+```ts [zod]
+const helloResolver = resolver({
+  hello: query(z.string()).resolve((_input, payload) => {
+    const user = // [!code hl]
+      (payload!.context as YogaInitialContext).request.headers.get("Authorization") // [!code hl]
+    return `Hello, ${user ?? "World"}`
+  }),
+})
+```
+:::
+
+#### 中间件
+
+```ts twoslash
+import { Middleware, ResolverPayload } from "@gqloom/core"
+import { type YogaInitialContext } from "graphql-yoga"
+
+function getUser(payload: ResolverPayload) {
+  const user = (payload.context as YogaInitialContext).request.headers.get(
+    "Authorization"
+  )
+  return user
+}
+
+const authGuard: Middleware = ({ next, payload }) => {
+  const user = getUser(payload!)
+  if (!user) throw new Error("Please login first")
+  return next()
+}
+```
+
+## 在各个适配器中使用上下文
+
+在 GraphQL 生态中，每个适配器都提供了不同的上下文对象，你可以在适配器章节中了解如何使用：
+
+- [Yoga](./advanced/adapters/yoga)
+- [Apollo](./advanced/adapters/apollo)
+- [Mercurius](./advanced/adapters/mercurius)
