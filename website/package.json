@@ -37,7 +37,7 @@
     "valibot": "^1.1.0",
     "vitepress": "2.0.0-alpha.12",
     "yup": "^1.4.0",
-    "zod": "^4.1.1"
+    "zod": "3.25.17"
   },
   "dependencies": {
     "@iconify/vue": "^5.0.0",

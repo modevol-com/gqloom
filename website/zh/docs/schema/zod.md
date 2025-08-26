@@ -1,4 +1,7 @@
 # Zod
+<script setup lang="ts">
+import { Tabs, Tab } from '@/components/tabs'
+</script>
 
 [Zod](https://zod.dev/) 是 TypeScript 优先的 Schema 声明和验证库。这里的 “Schema” 一词泛指任何数据类型，从简单的字符串到复杂的嵌套对象。
 
@@ -137,8 +140,10 @@ export const { Cat } = collectNames({
 
 #### 使用 `asObjectType`
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import { asObjectType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -150,7 +155,11 @@ export const Cat = z
   })
   .register(asObjectType, { name: "Cat" })
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -162,7 +171,9 @@ export const Cat = z
   })
   .superRefine(asObjectType({ name: "Cat" }))
 ```
-:::
+
+</Tab>
+</Tabs>
 
 在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `superRefine()` 中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
 
@@ -170,8 +181,10 @@ export const Cat = z
 
 通过 `asObjectType` 注册器，我们可以为对象添加更多元数据，例如 `description`、`deprecationReason`、`extensions` 等。
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import { asObjectType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -186,7 +199,11 @@ export const Cat = z
     description: "A cute cat",
   })
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -203,7 +220,9 @@ export const Cat = z
     })
   )
 ```
-:::
+
+</Tab>
+</Tabs>
 
 在上面的代码中，我们为 `Cat` 对象添加了一个 `description` 元数据，该元数据将在 GraphQL Schema 中呈现：
 
@@ -218,8 +237,10 @@ type Cat {
 
 我们还可以使用 asField 函数为字段添加元数据，例如 description、type 等。
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import { asField, asObjectType } from "@gqloom/zod"
 import { GraphQLInt } from "graphql"
 import * as z from "zod/v4"
@@ -238,7 +259,11 @@ export const Cat = z
     description: "A cute cat",
   })
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { asField, asObjectType } from "@gqloom/zod/v3"
 import { GraphQLInt } from "graphql"
 import * as z from "zod/v3"
@@ -260,7 +285,9 @@ export const Cat = z
     })
   )
 ```
-:::
+
+</Tab>
+</Tabs>
 
 在上面的代码中，我们为 `age` 字段添加了 `type` 和 `description` 元数据，最终得到如下 GraphQL Schema：
 
@@ -279,8 +306,10 @@ type Cat {
 
 我们还可以使用 `asObjectType` 函数来声明接口，例如：
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import * as z from "zod/v4"
 import { asObjectType } from "@gqloom/zod"
 
@@ -301,7 +330,11 @@ const Orange = z
   })
   .register(asObjectType, { name: "Orange", interfaces: [Fruit] })
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { asObjectType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -322,7 +355,9 @@ const Orange = z
   })
   .superRefine(asObjectType({ name: "Orange", interfaces: [Fruit] }))
 ```
-:::
+
+</Tab>
+</Tabs>
 
 在上面的代码中，我们使用 `asObjectType` 函数创建了一个接口 `Fruit`，并使用 `interfaces` 选项将 `Orange` 对象声明为 `Fruit` 接口的实现。
 
@@ -330,8 +365,10 @@ const Orange = z
 
 我们还可以使用 `asField` 函数将 `type` 设置为 `null` 来省略字段，例如：
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import { asField } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -341,7 +378,11 @@ const Dog = z.object({
   birthday: z.date().nullish().register(asField, { type: null }),
 })
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { asField } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -354,7 +395,9 @@ const Dog = z.object({
     .superRefine(asField({ type: null })),
 })
 ```
-:::
+
+</Tab>
+</Tabs>
 
 将得到如下 GraphQL Schema：
 
@@ -370,8 +413,10 @@ type Dog {
 
 我们推荐使用 `z.discriminatedUnion` 来定义联合类型，例如：
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import { asUnionType } from "@gqloom/zod"
 import { z } from "zod/v4"
 
@@ -393,7 +438,11 @@ const Animal = z
   .discriminatedUnion("__typename", [Cat, Dog])
   .register(asUnionType, { name: "Animal" })
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { asUnionType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -415,7 +464,9 @@ const Animal = z
   .discriminatedUnion("__typename", [Cat, Dog])
   .superRefine(asUnionType("Animal"))
 ```
-:::
+
+</Tab>
+</Tabs>
 
 在上面的代码中，我们使用 `z.discriminatedUnion` 函数创建了一个联合类型。对于 `Animal` 来说，它通过 `__typename` 字段来区分具体的类型。
 
@@ -423,8 +474,10 @@ const Animal = z
 
 我们还可以使用 `z.union` 来定义联合类型：
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import { z } from "zod/v4"
 import { asUnionType, collectNames } from "@gqloom/zod"
 
@@ -447,7 +500,11 @@ const Animal = z.union([Cat, Dog]).register(asUnionType, {
 
 collectNames({ Cat, Dog, Animal })
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { collectNames } from "@gqloom/core"
 import { asUnionType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
@@ -473,7 +530,9 @@ const Animal = z.union([Cat, Dog]).superRefine(
 
 collectNames({ Cat, Dog, Animal })
 ```
-:::
+
+</Tab>
+</Tabs>
 
 在上面的代码中，我们使用 `z.union` 函数创建了一个联合类型。对于 `Animal` 来说，我们通过 `resolveType` 函数来区分具体的类型。
 在这里，如果一个动物它喜欢鱼，那么它就是一只猫，否则就是一只狗。
@@ -486,8 +545,10 @@ collectNames({ Cat, Dog, Animal })
 
 通常，我们更推荐使用 `z.enum` 来定义枚举类型，例如：
 
-::: code-group
-```ts twoslash [zod-v4]
+<Tabs groupId="zod-version">
+<Tab title="zod-v4">
+
+```ts twoslash
 import { asEnumType } from "@gqloom/zod"
 import * as z from "zod/v4"
 
@@ -504,7 +565,11 @@ export const Fruit = z
 
 export type IFruit = z.infer<typeof Fruit>
 ```
-```ts twoslash [zod-v3]
+
+</Tab>
+<Tab title="zod-v3">
+
+```ts twoslash
 import { asEnumType } from "@gqloom/zod/v3"
 import * as z from "zod/v3"
 
@@ -521,7 +586,9 @@ export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
 
 export type IFruit = z.infer<typeof Fruit>
 ```
-:::
+
+</Tab>
+</Tabs>
 
 ## 自定义类型映射
 
