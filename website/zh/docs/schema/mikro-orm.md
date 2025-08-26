@@ -1,6 +1,4 @@
----
-title: Mikro ORM
----
+# Mikro ORM
 
 ::: warning
 GQLoom 对于 Mikro ORM 的基础目前处于实验阶段。可能还缺失一些常用的功能。现有的功能还缺乏完善的测试。如果有任何问题，请随时在 [GitHub](https://github.com/modevol-com/gqloom/issues) 上报告。
