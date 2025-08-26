@@ -3,6 +3,8 @@ import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
 import tailwindcss from "@tailwindcss/vite"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig } from "vitepress"
+import sidebarEn from "./sidebar-en"
+import sidebarZh from "./sidebar-zh"
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -23,7 +25,7 @@ export default defineConfig({
           { text: "主页", link: "/zh" },
           { text: "文档", link: "/zh/docs/" },
         ],
-        // sidebar: sidebarZh,
+        sidebar: sidebarZh,
         docFooter: {
           prev: "上一篇",
           next: "下一篇",
@@ -62,7 +64,7 @@ export default defineConfig({
         },
       },
     },
-    // sidebar: sidebarEn,
+    sidebar: sidebarEn,
     socialLinks: [
       { icon: "github", link: "https://github.com/modevol-com/gqloom" },
     ],

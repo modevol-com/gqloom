@@ -7,7 +7,10 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview",
-    "check:type": "tsgo --project ./tsconfig.check.json --noEmit"
+    "check:type": "concurrently 'pnpm run check:type:*'",
+    "check:type:root": "tsgo --noEmit",
+    "check:type:home-drizzle": "tsgo --project ./snippets/home/drizzle/tsconfig.json --noEmit",
+    "check:type:home-mikro": "tsgo --project ./snippets/home/mikro/tsconfig.json --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +28,7 @@
     "@mikro-orm/postgresql": "^6.4.6",
     "@shikijs/vitepress-twoslash": "^3.11.0",
     "@vitejs/plugin-vue-jsx": "^5.1.0",
+    "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.39.3",
     "graphql": "^16.8.1",

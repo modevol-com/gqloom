@@ -1,0 +1,47 @@
+---
+icon: BookMarked
+---
+# Introduction
+
+## What is GraphQL
+
+GraphQL is a query language for APIs, developed and open-sourced by Facebook. It allows clients to specify the required data structure, reducing unnecessary data transfer and improving the performance and maintainability of the API.
+
+GraphQL brings the following advantages:
+
+- **Type Safety**: Strong type system to ensure the consistency and security of data from the server to the client.
+- **Flexible Aggregation**: Automatically aggregate multiple queries, reducing the number of client requests and ensuring the simplicity of the server-side API.
+- **Efficient Querying**: The client can specify the required data structure, reducing unnecessary data transfer and improving the performance and maintainability of the API.
+- **Easy to Extend**: Extending the API by adding new fields and types without modifying existing code.
+- **Efficient Collaboration**: Using Schema as documentation, which can reduce communication costs and improve development efficiency in team development.
+- **Thriving Ecosystem**: Tools and frameworks are emerging constantly. The active community, with diverse applications, is growing fast and has bright prospects.
+
+## What is GQLoom
+
+GQLoom is a **Code First** GraphQL Schema Loom, used to weave **runtime types** in the **TypeScript/JavaScript** ecosystem into a GraphQL Schema.
+
+Runtime validation libraries such as [Zod](https://zod.dev/), [Valibot](https://valibot.dev/), and [Yup](https://github.com/jquense/yup) have been widely used in backend application development. At the same time, when using ORM libraries such as [Prisma](https://www.prisma.io/), [MikroORM](https://mikro-orm.io/), and [Drizzle](https://orm.drizzle.team/), we also pre-define the database table structures or entity models that contain runtime types.
+The responsibility of GQLoom is to weave these runtime types into a GraphQL Schema.
+
+When developing backend applications with GQLoom, you only need to write types using the Schema libraries you are familiar with. Modern Schema libraries will infer TypeScript types for you, and GQLoom will weave GraphQL types for you.
+In addition, the **resolver factory** of GQLoom can also create CRUD interfaces for [Prisma](./schema/prisma.mdx#resolver-factory), [MikroORM](./schema/mikro-orm.mdx#resolver-factory), and [Drizzle](./schema/drizzle.mdx#resolver-factory), and supports custom input and adding middleware.
+
+::: info
+The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](https://typegraphql.com/), and some technical implementations refer to 
+::: code-group
+<<< @/snippets/hello-valibot.ts{ts twoslash} [valibot]
+<<< @/snippets/hello-zod.ts{ts twoslash} [zod]
+:::[Pothos](https://pothos-graphql.dev/).
+:::
+
+### Hello, World
+
+
+### Highlights you should not miss
+
+- 🧑‍💻 **Development Experience**: Fewer boilerplate codes, semantic API design, and extensive ecosystem integration make development enjoyable.
+- 🔒 **Type Safety**: Automatically infer types from the Schema, enjoy intelligent code completion during development, and detect potential problems during compilation.
+- 🎯 **Interface Factory**: Ordinary CRUD interfaces are too simple yet too cumbersome. Let the resolver factory create them quickly.
+- 🔋 **Fully Prepared**: Middleware, context, subscriptions, and federated graphs are ready.
+- 🔮 **No Magic**: No decorators, no metadata and reflection, no code generation. It can run anywhere with just JavaScript/TypeScript.
+- 🧩 **Rich Integration**: Use your favorite validation libraries and ORMs to build your next GraphQL application.

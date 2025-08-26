@@ -513,7 +513,7 @@ const Hero = defineComponent({
       if (lang.value === "zh")
         return {
           star: "在 GitHub 点亮繁星",
-          start: "入门引导",
+          start: "入门指南",
           description: "愉快且高效地建构 GraphQL 服务",
         }
       return {
