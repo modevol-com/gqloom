@@ -1,5 +1,4 @@
 ---
-title: Context
 icon: Shuffle
 ---
 
