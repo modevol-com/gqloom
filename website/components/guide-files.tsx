@@ -78,7 +78,7 @@ export const GuideFiles = defineComponent({
   setup() {
     return () => (
       <TreeRoot
-        class="list-none select-none w-full bg-slate-50 dark:bg-slate-900 text-stone-700 dark:text-stone-300 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm !p-2 text-sm font-medium"
+        class="list-none select-none w-full bg-slate-50 dark:bg-zinc-900 text-stone-700 dark:text-stone-300 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm !p-2 text-sm font-medium"
         items={filesWithPaths}
         getKey={(item) => item.path}
         defaultExpanded={["src"]}
