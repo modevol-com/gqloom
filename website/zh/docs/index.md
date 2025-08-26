@@ -18,7 +18,7 @@ GraphQL 带来了以下优点：
 
 ## GQLoom 是什么
 
-GQLoom 是一个 **代码优先（Code-First）** 的 GraphQL Schema 纺织器，用于将 **TypeScript/JavaScript** 生态中的**运行时类型**编织成 GraphQL Schema。
+**GQLoom** 是一个 **代码优先（Code-First）** 的 GraphQL Schema 纺织器，用于将 **TypeScript/JavaScript** 生态中的**运行时类型**编织成 GraphQL Schema。
 
 [Zod](https://zod.dev/)、[Valibot](https://valibot.dev/)、[Yup](https://github.com/jquense/yup) 等运行时验证库已经在后端应用开发中得到广泛的使用；同时在使用 [Prisma](https://www.prisma.io/) 、[MikroORM](https://mikro-orm.io/)、[Drizzle](https://orm.drizzle.team/) 等 ORM 库时，我们也会预先定义包含运行时类型的数据库表结构或实体模型。
 GQLoom 的职责就是将这些运行时类型编织为 GraphQL Schema。

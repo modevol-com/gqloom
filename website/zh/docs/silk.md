@@ -115,6 +115,6 @@ const Cat = z.object({
 
 在上面的代码中，我们使用 [Zod](https://zod.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Zod 集成](../schema/zod)章节中了解如何使用 [Zod](https://zod.dev/) 创建更复杂的类型。
 
-<Callout>
+::: info
 `GQLoom` 核心库遵循了 [标准 Schema 规范](https://github.com/standard-schema/standard-schema)，得益于 `Valibot`、`Zod` 同样遵循此规范，我们不需要使用额外的包装函数就可以将来自 Valibot、Zod 的 Schema 作为丝线使用。
-</Callout>
+:::
