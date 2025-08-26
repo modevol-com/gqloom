@@ -47,7 +47,6 @@ import { InputSchemaCodes, inputSchema } from "@/components/input-schema.tsx"
 GQLoom 对项目的文件结构没有任何要求，这里只提供一个参考，在实践中你可以按照需求和喜好组织文件。
 :::
 
-
 ### 初始化项目
 
 首先，让我们新建文件夹并初始化项目：
@@ -223,6 +222,7 @@ yarn add -D drizzle-kit
 ```
 :::
 
+### 定义数据库表格
 
 接下来在 `src/schema/index.ts` 文件中定义数据库表格，我们将定义 `users` 和 `cats` 两个表格，并建立它们之间的关系：
 
