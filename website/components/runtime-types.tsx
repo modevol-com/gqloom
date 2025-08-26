@@ -13,43 +13,55 @@ const runtimeTypeItems = [
   {
     name: "Default",
     href: undefined,
-    class: "text-nowrap",
+    class: cn("truncate text-nowrap"),
     getText: (lang: string) => (lang === "zh" ? "运行时类型" : "runtime types"),
   },
   {
     name: "Valibot",
     href: "./docs/schema/valibot",
-    class: "dark:text-amber-200 text-orange-700 text-nowrap font-semibold",
+    class: cn(
+      "truncate dark:text-amber-200 text-orange-700 text-nowrap font-semibold"
+    ),
     getText: (lang: string) => `Valibot ${lang === "zh" ? "类型" : "types"}`,
   },
   {
     name: "Zod",
     href: "./docs/schema/zod",
-    class: "dark:text-cyan-400 text-cyan-700 text-nowrap font-semibold",
+    class: cn(
+      "truncate dark:text-cyan-400 text-cyan-700 text-nowrap font-semibold"
+    ),
     getText: (lang: string) => `Zod ${lang === "zh" ? "类型" : "types"}`,
   },
   {
     name: "Yup",
     href: "./docs/schema/yup",
-    class: "dark:text-stone-300 text-stone-700 text-nowrap font-semibold",
+    class: cn(
+      "truncate dark:text-stone-300 text-stone-700 text-nowrap font-semibold"
+    ),
     getText: (lang: string) => `Yup ${lang === "zh" ? "类型" : "types"}`,
   },
   {
     name: "Drizzle",
     href: "./docs/schema/drizzle",
-    class: "dark:text-teal-400 text-teal-600 text-nowrap font-semibold",
+    class: cn(
+      "truncate dark:text-teal-400 text-teal-600 text-nowrap font-semibold"
+    ),
     getText: () => "Drizzle Table",
   },
   {
     name: "Prisma",
     href: "./docs/schema/prisma",
-    class: "dark:text-blue-400 text-blue-700 text-nowrap font-semibold",
+    class: cn(
+      "truncate dark:text-blue-400 text-blue-700 text-nowrap font-semibold"
+    ),
     getText: () => "Prisma Model",
   },
   {
     name: "MikroORM",
     href: "./docs/schema/mikro-orm",
-    class: "dark:text-sky-400 text-sky-800 text-nowrap font-semibold",
+    class: cn(
+      "truncate dark:text-sky-400 text-sky-800 text-nowrap font-semibold"
+    ),
     getText: () => "Mikro ORM Entity",
   },
 ]
@@ -135,9 +147,17 @@ export const RuntimeTypes = defineComponent({
               </a>
             )
           }
-          return <span {...sharedProps}>{content}</span>
+          return (
+            <span {...sharedProps}>
+              <strong class={item.class}>{content}</strong>
+            </span>
+          )
         })}
       </span>
     )
   },
 })
+
+function cn(...classes: (string | false | null | undefined | 0)[]): string {
+  return classes.filter(Boolean).join(" ")
+}
