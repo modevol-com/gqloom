@@ -72,12 +72,12 @@ The good thing is that we have schema libraries like [Valibot](https://valibot.d
 
 `GQLoom` has currently integrated Schemas from the following libraries:
 
-- [Valibot](../schema/valibot)
-- [Zod](../schema/zod)
-- [Yup](../schema/yup)
-- [Mikro ORM](../schema/mikro-orm)
-- [Prisma](../schema/prisma)
-- [Drizzle](../schema/drizzle)
+- [Valibot](./schema/valibot.md)
+- [Zod](./schema/zod.md)
+- [Yup](./schema/yup.md)
+- [Mikro ORM](./schema/mikro-orm.md)
+- [Prisma](./schema/prisma.md)
+- [Drizzle](./schema/drizzle.md)
 
 ### Use Valibot to create silk
 
@@ -95,7 +95,7 @@ const Cat = v.object({
 })
 ```
 
-In the code above, we use [Valibot](https://valibot.dev/) to create some simple schemas as silk. You can learn more about how to create more complex types with [Valibot](https://valibot.dev/) in the [Valibot Integration](../schema/valibot) chapter.
+In the code above, we use [Valibot](https://valibot.dev/) to create some simple schemas as silk. You can learn more about how to create more complex types with [Valibot](https://valibot.dev/) in the [Valibot Integration](./schema/valibot.md) chapter.
 
 ### Use Zod to create silk
 
@@ -113,7 +113,7 @@ const Cat = z.object({
 })
 ```
 
-In the code above, we have created some simple Schema as silk using [Zod](https://zod.dev/), you can learn how to create more complex types using [Zod integration](../schema/zod) section to learn how to create more complex types using [Zod](https://zod.dev/).
+In the code above, we have created some simple Schema as silk using [Zod](https://zod.dev/), you can learn how to create more complex types using [Zod integration](./schema/zod.md) section to learn how to create more complex types using [Zod](https://zod.dev/).
 
 ::: info
 The core library of `GQLoom` follows the [Standard Schema specification](https://github.com/standard-schema/standard-schema). Thanks to `Valibot` and `Zod` also following this specification, we don't need to use additional wrapper functions to use the Schema from Valibot and Zod as Silk.

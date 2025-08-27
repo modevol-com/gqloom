@@ -520,6 +520,9 @@ importers:
       '@apollo/server':
         specifier: ^4.12.2
         version: 4.12.2(encoding@0.1.13)(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      '@apollo/subgraph':
+        specifier: ^2.11.0
+        version: 2.11.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/core':
         specifier: workspace:*
         version: link:../packages/core

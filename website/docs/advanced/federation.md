@@ -50,7 +50,7 @@ export const User = v.pipe(
 export interface IUser extends v.InferOutput<typeof User> {}
 ```
 
-```ts twoslash [zod]
+```ts [zod]
 import * as z from "zod"
 import { asObjectType } from "@gqloom/zod"
 

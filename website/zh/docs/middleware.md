@@ -34,7 +34,7 @@ const middleware: Middleware = async (next) => {
 
 ### 错误捕获
 
-在使用 [Valibot](../schema/valibot) 或 [Zod](../schema/zod) 等库进行输入验证时，我们可以在中间件中捕获验证错误，并返回自定义的错误信息。
+在使用 [Valibot](./schema/valibot.md) 或 [Zod](./schema/zod.md) 等库进行输入验证时，我们可以在中间件中捕获验证错误，并返回自定义的错误信息。
 
 ::: code-group
 ```ts twoslash [Valibot]

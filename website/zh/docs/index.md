@@ -24,7 +24,7 @@ GraphQL 带来了以下优点：
 GQLoom 的职责就是将这些运行时类型编织为 GraphQL Schema。
 
 当使用 GQLoom 开发后端应用时，你只需要使用你熟悉的 Schema 库编写类型，现代的 Schema 库将为你推导 TypeScript 类型，而 GQLoom 将为你编织 GraphQL 类型。  
-除此之外，GQLoom 的**解析器工厂**还可以为 [Prisma](./schema/prisma.mdx#解析器工厂)、[MikroORM](./schema/mikro-orm.mdx#解析器工厂)、[Drizzle](./schema/drizzle.mdx#解析器工厂) 生成 CRUD 接口，并支持自定义输入和添加中间件。
+除此之外，GQLoom 的**解析器工厂**还可以为 [Prisma](./schema/prisma.md#解析器工厂)、[MikroORM](./schema/mikro-orm.md#解析器工厂)、[Drizzle](./schema/drizzle.md#解析器工厂) 生成 CRUD 接口，并支持自定义输入和添加中间件。
 
 ::: info
 GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)启发，在一些技术实现上参考了 [Pothos](https://pothos-graphql.dev/) 。

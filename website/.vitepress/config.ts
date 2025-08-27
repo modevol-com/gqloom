@@ -1,5 +1,6 @@
 import { URL, fileURLToPath } from "node:url"
 import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
+import { createFileSystemTypesCache } from "@shikijs/vitepress-twoslash/cache-fs"
 import tailwindcss from "@tailwindcss/vite"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig } from "vitepress"
@@ -77,7 +78,11 @@ export default defineConfig({
     },
   },
   markdown: {
-    codeTransformers: [transformerTwoslash()],
+    codeTransformers: [
+      transformerTwoslash({
+        typesCache: createFileSystemTypesCache(),
+      }),
+    ],
     languages: ["ts", "js", "bash"],
     config(md) {
       md.use(groupIconMdPlugin)

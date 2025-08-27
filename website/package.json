@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",
-    "build": "vitepress build",
+    "build": "pnpm -w run build && node --max_old_space_size=20480 ./node_modules/vitepress/bin/vitepress.js build",
     "preview": "vitepress preview",
     "check:type": "concurrently 'pnpm run check:type:*'",
     "check:type:root": "tsgo --noEmit",
@@ -17,6 +17,7 @@
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
     "@apollo/server": "^4.12.2",
+    "@apollo/subgraph": "^2.11.0",
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "workspace:*",
     "@gqloom/federation": "workspace:*",

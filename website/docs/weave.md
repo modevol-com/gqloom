@@ -5,7 +5,7 @@ icon: Waves
 
 In GQLoom, the `weave` function is used to weave multiple Resolvers or Silks into a single GraphQL Schema.
 
-The `weave` function can take [resolver](./resolver), [silk](./silk), weaver configuration, global [middleware](./middleware)
+The `weave` function can take [resolver](./resolver.md), [silk](./silk.md), weaver configuration, global [middleware](./middleware.md)
 
 ## Weaving resolvers
 The most common usage is to weave multiple resolvers together, for example:
@@ -18,7 +18,7 @@ export const schema = weave(helloResolver, catResolver);
 
 ## Weaving a single silk
 
-Sometimes we need to weave a single [silk](../silk) woven into a GraphQL Schema, for example:
+Sometimes we need to weave a single [silk](./silk.md) woven into a GraphQL Schema, for example:
 
 ::: code-group
 ```ts twoslash [valibot]
