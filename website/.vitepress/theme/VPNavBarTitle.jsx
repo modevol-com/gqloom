@@ -32,13 +32,13 @@ export default defineComponent((_props, { slots }) => {
   return () => (
     <div
       class={
-        "VPNavBarTitle vp-raw min-[960px]:w-[var(--vp-sidebar-width)] flex flex-row items-center min-[960px]:justify-end gap-2 pr-4"
+        "VPNavBarTitle vp-raw h-[var(--vp-nav-height)] min-[960px]:w-[var(--vp-sidebar-width)] min-[960px]:px-4 max-[960px]:gap-4 flex flex-row items-center justify-between"
       }
     >
       <a
         class={cn(
-          "flex h-[var(--vp-nav-height)] items-center border-b border-transparent text-base font-semibold text-[var(--vp-c-text-1)] transition-opacity duration-250",
-          hasSidebar.value && "min-[960px]:border-b-[var(--vp-c-divider)]"
+          "flex h-10 items-center border-b border-transparent text-base font-semibold text-[var(--vp-c-text-1)] transition-opacity duration-250",
+          hasSidebar.value && ""
         )}
         href={link.value ?? normalizeLink(currentLang.value.link)}
         rel={rel.value}

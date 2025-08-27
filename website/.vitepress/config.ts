@@ -39,9 +39,15 @@ export default defineConfig({
           replacement: fileURLToPath(new URL("../", import.meta.url)),
         },
         {
-          find: /^.*\/VPNavBarTitle\.vue$/,
+          find: /^\..*\/VPNavBarTitle\.vue$/,
           replacement: fileURLToPath(
             new URL("./theme/VPNavBarTitle.jsx", import.meta.url)
+          ),
+        },
+        {
+          find: /^\..*\/VPNavBarSearch\.vue$/,
+          replacement: fileURLToPath(
+            new URL("./theme/VPNavBarSearch.jsx", import.meta.url)
           ),
         },
       ],

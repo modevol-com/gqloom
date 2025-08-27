@@ -153,24 +153,73 @@
 
 @reference "@/css/tailwind.css";
 
-.has-sidebar {
+.VPNav>.VPNavBar.has-sidebar>.wrapper>.container>.title .DocSearch-Button {
+  @apply min-[960px]:bg-[var(--vp-c-bg)] px-2;
+}
+
+.VPNav>.VPNavBar>.wrapper>.container>.title>.VPNavBarTitle {
+  @apply w-fit gap-1;
+
+  >a {
+    @apply bg-[var(--vp-c-bg)]/30 px-3 rounded-lg backdrop-blur-sm;
+  }
+
   .DocSearch-Button {
-    @apply bg-[var(--vp-c-bg)] px-2;
+    @apply bg-[var(--docsearch-searchbox-background)]/50 backdrop-blur-sm shadow-sm;
   }
+}
 
-  .DocSearch-Button-Placeholder {
-    @apply px-1;
-  }
+.DocSearch-Button-Placeholder {
+  @apply px-1;
+}
 
-  .VPNavBarSearch {
-    @apply pl-0 flex-none;
-  }
+.VPNavBarSearch {
+  @apply pl-0 flex-none;
 }
 
 .VPNav>.VPNavBar.has-sidebar>.wrapper>.container>.title {
   @apply px-0 flex flex-row min-[960px]:justify-end;
 }
 
-.VPNav>.VPNavBar>.wrapper>.container>.content>.content-body>.VPNavBarSearch {
-  @apply hidden pointer-events-none;
+.VPNav>.VPNavBar>.wrapper>.container>.content>.content-body {
+  @apply bg-transparent;
+
+  >*,
+  >*>.button {
+    @apply h-10
+  }
+
+  >* {
+    @apply bg-[var(--vp-c-bg)]/30 backdrop-blur-sm;
+  }
+
+  > :first-child {
+    @apply rounded-l-lg;
+  }
+
+  > :last-child {
+    @apply rounded-r-lg;
+  }
+}
+
+.VPNav>.VPNavBar {
+  @apply !bg-transparent;
+
+  >.divider {
+    @apply hidden;
+  }
+}
+
+.Layout>.VPLocalNav {
+  @apply bg-transparent border-b-transparent;
+
+  >.container {
+    @apply min-[960px]:justify-end min-[960px]:relative;
+
+    >.VPLocalNavOutlineDropdown {
+      >.items {
+        @apply left-auto right-3 w-64;
+      }
+    }
+  }
 }
