@@ -3,10 +3,7 @@ import { defineComponent } from "vue"
 
 export default defineComponent({
   props: {
-    enable: {
-      type: Boolean,
-      default: false,
-    },
+    enable: { type: Boolean, default: false },
   },
   setup(props) {
     return () => (props.enable ? <VPNavBarSearch /> : null)
