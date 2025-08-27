@@ -8,11 +8,36 @@ import {
   groupIconMdPlugin,
   groupIconVitePlugin,
 } from "vitepress-plugin-group-icons"
+import llmstxt from "vitepress-plugin-llms"
 import sidebarEn from "./sidebar-en"
 import sidebarZh from "./sidebar-zh"
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  markdown: {
+    codeTransformers: [
+      transformerTwoslash({
+        typesCache: createFileSystemTypesCache(),
+      }),
+    ],
+    languages: ["ts", "js", "bash"],
+    config(md) {
+      md.use(groupIconMdPlugin)
+    },
+  },
+  vite: {
+    plugins: [
+      tailwindcss(),
+      vueJsx(),
+      groupIconVitePlugin(),
+      llmstxt({ ignoreFiles: ["zh/**/*"] }),
+    ],
+    resolve: {
+      alias: {
+        "@": fileURLToPath(new URL("../", import.meta.url)),
+      },
+    },
+  },
   title: "GQLoom",
   description:
     "GQLoom is a Code First GraphQL Schema Loom used to weave runtime types in the TypeScript/JavaScript ecosystem into a GraphQL Schema.",
@@ -77,25 +102,6 @@ export default defineConfig({
       level: [2, 3],
     },
   },
-  markdown: {
-    codeTransformers: [
-      transformerTwoslash({
-        typesCache: createFileSystemTypesCache(),
-      }),
-    ],
-    languages: ["ts", "js", "bash"],
-    config(md) {
-      md.use(groupIconMdPlugin)
-    },
-  },
   ignoreDeadLinks: [/^https?:\/\/localhost/],
   srcExclude: ["snippets/"],
-  vite: {
-    plugins: [tailwindcss(), vueJsx(), groupIconVitePlugin()],
-    resolve: {
-      alias: {
-        "@": fileURLToPath(new URL("../", import.meta.url)),
-      },
-    },
-  },
 })

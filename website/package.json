@@ -40,6 +40,7 @@
     "mercurius": "^16.2.0",
     "valibot": "^1.1.0",
     "vitepress": "2.0.0-alpha.12",
+    "vitepress-plugin-llms": "^1.7.3",
     "yup": "^1.4.0",
     "zod": "3.25.17"
   },
