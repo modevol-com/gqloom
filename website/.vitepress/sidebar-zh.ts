@@ -88,6 +88,10 @@ export default [
             text: "Hono",
             link: "/zh/docs/advanced/adapters/hono",
           },
+          {
+            text: "Elysia",
+            link: "/zh/docs/advanced/adapters/elysia",
+          },
         ],
       },
       {

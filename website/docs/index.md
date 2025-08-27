@@ -27,15 +27,15 @@ When developing backend applications with GQLoom, you only need to write types u
 In addition, the **resolver factory** of GQLoom can also create CRUD interfaces for [Prisma](./schema/prisma.mdx#resolver-factory), [MikroORM](./schema/mikro-orm.mdx#resolver-factory), and [Drizzle](./schema/drizzle.mdx#resolver-factory), and supports custom input and adding middleware.
 
 ::: info
-The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](https://typegraphql.com/), and some technical implementations refer to 
-::: code-group
-<<< @/snippets/hello-valibot.ts{ts twoslash} [valibot]
-<<< @/snippets/hello-zod.ts{ts twoslash} [zod]
-:::[Pothos](https://pothos-graphql.dev/).
+The design of GQLoom is inspired by [tRPC](https://trpc.io/) and [TypeGraphQL](https://typegraphql.com/), and some technical implementations draw from [Pothos](https://pothos-graphql.dev/).
 :::
 
 ### Hello, World
 
+::: code-group
+<<< @/snippets/hello-valibot.ts{ts twoslash} [valibot]
+<<< @/snippets/hello-zod.ts{ts twoslash} [zod]
+:::
 
 ### Highlights you should not miss
 

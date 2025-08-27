@@ -1,9 +1,9 @@
 # Apollo
 
-[Apollo Server](https://www.apollographql.com/docs/apollo-server/) 是一款开源、符合规范的 GraphQL 服务器，与包括 [Apollo Client](https://www.apollographql.com/docs/react) 在内的任何 GraphQL 客户端兼容。
-它是构建生产就绪、自文档化 GraphQL API 的最佳方式，可使用来自任何来源的数据。
+[Apollo Server](https://www.apollographql.com/docs/apollo-server/) is an open-source, spec-compliant GraphQL server that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react).
+It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
 
-## 安装
+## Installation
 
 ::: code-group
 ```sh [npm]
@@ -20,7 +20,7 @@ bun add graphql @apollo/server @gqloom/core
 ```
 :::
 
-## 使用
+## Usage
 ```ts twoslash
 // @filename: resolvers.ts
 import { resolver, query, silk, weave } from "@gqloom/core"
@@ -51,7 +51,7 @@ startStandaloneServer(server, {
 })
 ```
 
-## 上下文
+## Context
 
-`Apollo Server` 的默认上下文为空对象，你需要手动传递上下文到解析器中。
-更多信息请查看 [Apollo Server 文档](https://www.apollographql.com/docs/apollo-server/data/context)。
+The default context for `Apollo Server` is an empty object, you need to pass the context to the resolvers manually.
+See the [Apollo Server documentation](https://www.apollographql.com/docs/apollo-server/data/context) for more information.

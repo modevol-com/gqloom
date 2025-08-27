@@ -64,12 +64,12 @@ export const Tabs = defineComponent({
         onUpdate:modelValue={props.groupId ? onUpdateModelValue : undefined}
         class="mt-4"
       >
-        <TabsList class="relative flex items-center gap-4 border-b border-b-slate-200 dark:border-b-slate-700">
+        <TabsList class="vp-raw relative flex items-center gap-4 border-b border-b-slate-200 dark:border-b-slate-700">
           {tabTitles.map((title) => (
             <TabsTrigger
               key={title}
               value={title}
-              class="px-3 py-2 !font-medium !text-slate-500 data-[state=active]:!text-pink-600 dark:!text-slate-400 dark:data-[state=active]:!text-rose-400"
+              class="cursor-pointer x-2 py-1 font-medium text-slate-500 data-[state=active]:text-pink-600 dark:text-slate-400 dark:data-[state=active]:text-rose-400"
             >
               {title}
             </TabsTrigger>

@@ -295,10 +295,10 @@ const Hero = defineComponent({
     })
 
     return () => (
-      <section class="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full">
+      <section class="flex flex-col-reverse sm:flex-row max-w-5xl justify-evenly items-center w-full vp-raw">
         <div class="flex flex-col gap-6 w-md max-w-screen text-center items-center">
-          <h1 class="text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 bg-clip-text">
-            <b class="text-4xl sm:text-5xl font-bold">GraphQL Loom</b>
+          <h1 class="text-4xl sm:text-5xl font-bold text-transparent bg-gradient-to-r from-pink-500 to-yellow-500 dark:from-rose-400 dark:to-orange-300 bg-clip-text">
+            GraphQL Loom
           </h1>
           <div class="dark:text-white text-black sm:mt-4 flex flex-col gap-1">
             {lang.value === "zh" ? (
