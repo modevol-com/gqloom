@@ -157,15 +157,15 @@
   @apply min-[960px]:bg-[var(--vp-c-bg)] px-2;
 }
 
-.VPNav>.VPNavBar>.wrapper>.container>.title>.VPNavBarTitle {
+.VPNav>.VPNavBar:not(.has-sidebar)>.wrapper>.container>.title>.VPNavBarTitle {
   @apply w-fit gap-1;
 
   >a {
-    @apply bg-[var(--vp-c-bg)]/30 px-3 rounded-lg backdrop-blur-sm;
+    @apply bg-[var(--vp-c-bg)]/40 px-3 rounded-lg backdrop-blur-sm;
   }
 
   .DocSearch-Button {
-    @apply bg-[var(--docsearch-searchbox-background)]/50 backdrop-blur-sm shadow-sm;
+    @apply bg-[var(--docsearch-searchbox-background)]/60 backdrop-blur-sm shadow-sm;
   }
 }
 
@@ -190,7 +190,7 @@
   }
 
   >* {
-    @apply bg-[var(--vp-c-bg)]/30 backdrop-blur-sm;
+    @apply bg-[var(--vp-c-bg)]/40 backdrop-blur-sm;
   }
 
   > :first-child {
