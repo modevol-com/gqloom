@@ -99,6 +99,10 @@ export default [
         link: "/docs/advanced/printing-schema",
       },
       {
+        text: "Executor",
+        link: "/docs/advanced/executor",
+      },
+      {
         text: "Subscription",
         link: "/docs/advanced/subscription",
       },

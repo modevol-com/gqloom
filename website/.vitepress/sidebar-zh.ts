@@ -99,6 +99,10 @@ export default [
         link: "/zh/docs/advanced/printing-schema",
       },
       {
+        text: "执行器",
+        link: "/zh/docs/advanced/executor",
+      },
+      {
         text: "订阅（Subscription）",
         link: "/zh/docs/advanced/subscription",
       },
