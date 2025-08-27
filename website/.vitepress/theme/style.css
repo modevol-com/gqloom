@@ -202,6 +202,17 @@
   }
 }
 
+.VPLocalNav>.container {
+  .VPLocalNavOutlineDropdown>button {
+    @apply h-10 py-1 px-2;
+  }
+
+  >button.menu,
+  .VPLocalNavOutlineDropdown {
+    @apply m-2 bg-[var(--vp-c-bg)]/40 backdrop-blur-sm h-10 rounded-lg border border-slate-700/10 dark:border-slate-800/80;
+  }
+}
+
 .VPNav>.VPNavBar {
   @apply !bg-transparent;
 
