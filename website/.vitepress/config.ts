@@ -33,9 +33,18 @@ export default defineConfig({
       llmstxt({ ignoreFiles: ["zh/**/*"] }),
     ],
     resolve: {
-      alias: {
-        "@": fileURLToPath(new URL("../", import.meta.url)),
-      },
+      alias: [
+        {
+          find: "@",
+          replacement: fileURLToPath(new URL("../", import.meta.url)),
+        },
+        {
+          find: /^.*\/VPNavBarTitle\.vue$/,
+          replacement: fileURLToPath(
+            new URL("./theme/VPNavBarTitle.jsx", import.meta.url)
+          ),
+        },
+      ],
     },
   },
   title: "GQLoom",

@@ -1,14 +1,11 @@
 import TwoslashFloatingVue from "@shikijs/vitepress-twoslash/client"
 import type { Theme } from "vitepress"
 import type { EnhanceAppContext } from "vitepress"
-import DefaultTheme from "vitepress/theme"
-
-// https://vitepress.dev/guide/custom-theme
-import { h } from "vue"
-import "./style.css"
+import DefaultTheme from "vitepress/theme-without-fonts"
+import { Layout } from "./layout"
 import "../../css/tailwind.css"
+import "./style.css"
 import "../../css/input-schema.css"
-
 import "@shikijs/vitepress-twoslash/style.css"
 import "virtual:group-icons.css"
 
@@ -17,9 +14,5 @@ export default {
   enhanceApp({ app }: EnhanceAppContext) {
     app.use(TwoslashFloatingVue)
   },
-  Layout: () => {
-    return h(DefaultTheme.Layout, null, {
-      // https://vitepress.dev/guide/extending-default-theme#layout-slots
-    })
-  },
+  Layout,
 } satisfies Theme

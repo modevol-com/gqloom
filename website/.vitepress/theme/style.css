@@ -110,17 +110,13 @@
 
 :root {
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(
-    120deg,
-    #bd34fe 30%,
-    #41d1ff
-  );
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg,
+      #bd34fe 30%,
+      #41d1ff);
 
-  --vp-home-hero-image-background-image: linear-gradient(
-    -45deg,
-    #bd34fe 50%,
-    #47caff 50%
-  );
+  --vp-home-hero-image-background-image: linear-gradient(-45deg,
+      #bd34fe 50%,
+      #47caff 50%);
   --vp-home-hero-image-filter: blur(44px);
 }
 
@@ -153,4 +149,28 @@
 
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
+}
+
+@reference "@/css/tailwind.css";
+
+.has-sidebar {
+  .DocSearch-Button {
+    @apply bg-[var(--vp-c-bg)] px-2;
+  }
+
+  .DocSearch-Button-Placeholder {
+    @apply px-1;
+  }
+
+  .VPNavBarSearch {
+    @apply pl-0 flex-none;
+  }
+}
+
+.VPNav>.VPNavBar.has-sidebar>.wrapper>.container>.title {
+  @apply px-0 flex flex-row min-[960px]:justify-end;
+}
+
+.VPNav>.VPNavBar>.wrapper>.container>.content>.content-body>.VPNavBarSearch {
+  @apply hidden pointer-events-none;
 }

@@ -10,10 +10,9 @@
     }
   },
   "include": [
-    "./.vitepress",
-    "./components",
-    "./css",
-    "./env.d.ts",
+    "./.vitepress/**/*",
+    "./components/**/*",
+    "./css/**/*",
     "./snippets/*.ts"
   ]
 }
