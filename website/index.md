@@ -3,7 +3,7 @@ layout: page
 sidebar: false
 ---
 <script setup>
-import { Home } from '@/components/home.tsx'
+import { Home, ormTab } from '@/components/home.tsx'
 </script>
 
 <Home>
@@ -31,21 +31,25 @@ type Giraffe {
 
 </template>
 
-<template v-slot:drizzle>
+<template v-slot:orm>
+
+<template v-if="ormTab === 'Drizzle'">
 
 <!--@include: ./snippets/home/drizzle.md-->
 
 </template>
 
-<template v-slot:prisma>
+<template v-else-if="ormTab === 'Prisma'">
 
 <!--@include: ./snippets/home/prisma.md-->
 
 </template>
 
-<template v-slot:mikro>
+<template v-else-if="ormTab === 'MikroORM'">
 
 <!--@include: ./snippets/home/mikro.md-->
+
+</template>
 
 </template>
 

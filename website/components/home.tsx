@@ -1,12 +1,6 @@
 import { Icon } from "@iconify/vue"
 import { useData } from "vitepress"
-import {
-  type PropType,
-  type SlotsType,
-  computed,
-  defineComponent,
-  ref,
-} from "vue"
+import { type SlotsType, computed, defineComponent, ref } from "vue"
 import { FeatureCard } from "./feature-card"
 import { FlowingLines } from "./flowing-lines"
 import { Highlight } from "./highlight"
@@ -99,37 +93,46 @@ const HomeFeatures = defineComponent({
 const supportedORM = ["Drizzle", "MikroORM", "Prisma"] as const
 type SupportedORM = (typeof supportedORM)[number]
 
+export const ormTab = ref<SupportedORM>("Drizzle")
+
 const OrmTabs = defineComponent({
   name: "OrmTabs",
-  props: {
-    tab: {
-      type: String as PropType<SupportedORM>,
-      required: true,
-    },
-  },
-  emits: ["update:tab"],
-  setup(props, { emit }) {
+  setup() {
     const { lang } = useData()
     const splitter = computed(() => (lang.value === "zh" ? "、" : ", "))
 
+    const list = (() => {
+      const arr: (SupportedORM | "__splitter")[] = []
+      for (let i = 0; i < supportedORM.length; i++) {
+        arr.push(supportedORM[i])
+        if (i !== supportedORM.length - 1) {
+          arr.push("__splitter")
+        }
+      }
+      return arr
+    })()
+
     return () => (
       <>
-        {supportedORM.map((orm, index) => (
-          <>
+        {list.map((orm, index) => {
+          if (orm === "__splitter") {
+            return <span key={index}>{splitter.value}</span>
+          }
+          return (
             <span
-              onClick={() => emit("update:tab", orm)}
+              key={index}
+              onClick={() => (ormTab.value = orm)}
               class={[
                 "mx-[0.2em] border-b-2 border-solid transition-colors cursor-pointer hover:text-rose-700 hover:opacity-80 dark:hover:text-rose-200",
-                props.tab === orm
+                ormTab.value === orm
                   ? "border-rose-500"
                   : "opacity-60 border-transparent",
               ]}
             >
               {orm}
             </span>
-            {index !== supportedORM.length - 1 && <span>{splitter.value}</span>}
-          </>
-        ))}
+          )
+        })}
       </>
     )
   },
@@ -141,13 +144,10 @@ const HomeOrmLibrary = defineComponent({
     class: String,
   },
   slots: Object as SlotsType<{
-    drizzle?: () => JSX.Element
-    prisma?: () => JSX.Element
-    mikro?: () => JSX.Element
+    orm?: () => JSX.Element
   }>,
   setup(props, { slots }) {
     const { lang } = useData()
-    const tab = ref<SupportedORM>("Drizzle")
 
     const intro = computed(() => {
       return lang.value === "zh" ? textZh.ormIntro : textEn.ormIntro
@@ -158,7 +158,7 @@ const HomeOrmLibrary = defineComponent({
         Drizzle: "drizzle",
         Prisma: "prisma",
         MikroORM: "mikro-orm",
-      }[tab.value]
+      }[ormTab.value]
       const hash = lang.value === "zh" ? "#解析器工厂" : "#resolver-factory"
       return `./docs/schema/${ormPage}${hash}`
     })
@@ -178,20 +178,12 @@ const HomeOrmLibrary = defineComponent({
                     ResolverFactory
                   </a>{" "}
                   使用在
-                  <OrmTabs
-                    tab={tab.value}
-                    onUpdate:tab={(newTab) => (tab.value = newTab)}
-                  />{" "}
-                  已定义的数据库模型创建 CRUD 操作。
+                  <OrmTabs /> 已定义的数据库模型创建 CRUD 操作。
                 </>
               ) : (
                 <>
                   Create CRUD operations with predefined database models from{" "}
-                  <OrmTabs
-                    tab={tab.value}
-                    onUpdate:tab={(newTab) => (tab.value = newTab)}
-                  />{" "}
-                  by using{" "}
+                  <OrmTabs /> by using{" "}
                   <a
                     class="!text-amber-600 dark:!text-orange-400 font-bold"
                     href={url.value}
@@ -213,14 +205,8 @@ const HomeOrmLibrary = defineComponent({
               ))}
             </ul>
           </div>
-          <div
-            class={["vp-doc w-xl max-w-[90vw]", styles["code-wrapper"]].join(
-              " "
-            )}
-          >
-            {tab.value === "Drizzle" && slots.drizzle?.()}
-            {tab.value === "Prisma" && slots.prisma?.()}
-            {tab.value === "MikroORM" && slots.mikro?.()}
+          <div class={["vp-doc w-xl max-w-[90vw]", styles["code-wrapper"]]}>
+            {slots.orm?.()}
           </div>
         </div>
       </section>
@@ -347,9 +333,7 @@ export const Home = defineComponent({
   slots: Object as SlotsType<{
     schemaLibraries?: () => JSX.Element
     schemaGraphQl?: () => JSX.Element
-    drizzle?: () => JSX.Element
-    prisma?: () => JSX.Element
-    mikro?: () => JSX.Element
+    orm?: () => JSX.Element
   }>,
   setup(_, { slots }) {
     return () => (
@@ -370,9 +354,7 @@ export const Home = defineComponent({
         <HomeFeatures class="mt-24 lg:mt-32" />
         <HomeOrmLibrary class="mt-24 lg:mt-32">
           {{
-            drizzle: () => slots.drizzle?.(),
-            prisma: () => slots.prisma?.(),
-            mikro: () => slots.mikro?.(),
+            orm: () => slots.orm?.(),
           }}
         </HomeOrmLibrary>
         <GraphQLIntro class="mt-24 lg:mt-32" />
