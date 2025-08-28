@@ -40,7 +40,7 @@ export default defineConfig({
         },
       }),
       llmstxt({ ignoreFiles: ["zh/**/*"] }),
-    ] as any[],
+    ],
     resolve: {
       alias: [
         {
