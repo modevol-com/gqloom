@@ -29,7 +29,16 @@ export default defineConfig({
     plugins: [
       tailwindcss(),
       vueJsx(),
-      groupIconVitePlugin(),
+      groupIconVitePlugin({
+        customIcon: {
+          ".gql": "vscode-icons:file-type-graphql",
+          ".graphql": "vscode-icons:file-type-graphql",
+          zod: "https://raw.githubusercontent.com/colinhacks/zod/refs/heads/main/logo.svg",
+          valibot:
+            "https://raw.githubusercontent.com/fabian-hiller/valibot/refs/heads/main/brand/valibot-icon.svg",
+          prisma: "vscode-icons:file-type-light-prisma",
+        },
+      }),
       llmstxt({ ignoreFiles: ["zh/**/*"] }),
     ],
     resolve: {

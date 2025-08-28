@@ -181,6 +181,10 @@
   @apply px-0 flex flex-row min-[960px]:justify-end;
 }
 
+.Layout>.VPContent.has-sidebar {
+  @apply pt-0;
+}
+
 .VPNav {
   >.VPNavBar>.wrapper>.container>.content {
     @apply flex flex-row items-center justify-end;
