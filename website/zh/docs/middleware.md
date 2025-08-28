@@ -37,7 +37,7 @@ const middleware: Middleware = async (next) => {
 在使用 [Valibot](./schema/valibot.md) 或 [Zod](./schema/zod.md) 等库进行输入验证时，我们可以在中间件中捕获验证错误，并返回自定义的错误信息。
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 import { type Middleware } from "@gqloom/core"
 import { ValiError } from "valibot"
 import { GraphQLError } from "graphql"
@@ -54,7 +54,7 @@ export const valibotExceptionFilter: Middleware = async (next) => {
   }
 }
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 import { type Middleware } from "@gqloom/core"
 import { ZodError } from "zod"
 import { GraphQLError } from "graphql"
@@ -91,7 +91,7 @@ export const outputValidator: Middleware = async ({ next, outputSilk }) => {
 
 #### Valibot
 
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export const outputValidator: Middleware = (next) => next()
@@ -167,7 +167,7 @@ createServer(yoga).listen(4000, () => {
 将会得到类似如下的结果：
 
 ::: code-group
-```json [Valibot]
+```json [valibot]
 {
   "errors": [
     {
@@ -199,7 +199,7 @@ createServer(yoga).listen(4000, () => {
   "data": null
 }
 ```
-```json [Zod]
+```json [zod]
 {
   "errors": [
     {
@@ -283,7 +283,7 @@ export function authGuard(role: "admin" | "editor"): Middleware {
 我们可以为不同的解析器应用不同的中间件：
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -419,7 +419,7 @@ export const cache = (options: CacheOptions = {}): Middleware => {
 我们可以通过中间件来修改请求输入：
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 const useUser = async () => ({ id: 1 })
 // ---cut---
 import { mutation, resolver } from "@gqloom/core"
@@ -464,7 +464,7 @@ export const postsResolver = resolver({
     }),
 })
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 const useUser = async () => ({ id: 1 })
 // ---cut---
 import { mutation, resolver } from "@gqloom/core"
@@ -520,7 +520,7 @@ GQLoom 能够在各种范围内应用中间件，包括解析函数、解析器�
 我们可以在解析函数中直接使用中间件，只需要在构造时使用 `use` 方法，例如：
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export const outputValidator: Middleware = (next) => next()
@@ -537,7 +537,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export const outputValidator: Middleware = (next) => next()

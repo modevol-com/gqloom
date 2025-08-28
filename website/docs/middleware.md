@@ -37,7 +37,7 @@ Next, we'll introduce some common types of middleware.
 When using [Valibot](./schema/valibot.md) or [Zod](./schema/zod.md) libraries for input validation, we can catch validation errors in the middleware and return customized error messages.
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 import { type Middleware } from "@gqloom/core"
 import { ValiError } from "valibot"
 import { GraphQLError } from "graphql"
@@ -54,7 +54,7 @@ export const valibotExceptionFilter: Middleware = async (next) => {
   }
 }
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 import { type Middleware } from "@gqloom/core"
 import { ZodError } from "zod"
 import { GraphQLError } from "graphql"
@@ -167,7 +167,7 @@ When we make the following query:
 A result similar to the following will be given:
 
 ::: code-group
-```json [Valibot]
+```json [valibot]
 {
   "errors": [
     {
@@ -199,7 +199,7 @@ A result similar to the following will be given:
   "data": null
 }
 ```
-```json [Zod]
+```json [zod]
 {
   "errors": [
     {
@@ -283,7 +283,7 @@ The middleware function checks that the user is authenticated and has the specif
 We can apply different middleware for different resolvers:
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -313,7 +313,7 @@ const editorResolver = resolver(
   { middlewares: [authGuard("editor")] } // [!code hl]
 )
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -419,7 +419,7 @@ export const cache = (options: CacheOptions = {}): Middleware => {
 We can modify the request input through middleware:
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 const useUser = async () => ({ id: 1 })
 // ---cut---
 import { mutation, resolver } from "@gqloom/core"
@@ -464,7 +464,7 @@ export const postsResolver = resolver({
     }),
 })
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 const useUser = async () => ({ id: 1 })
 // ---cut---
 import { mutation, resolver } from "@gqloom/core"
@@ -520,7 +520,7 @@ GQLoom is able to apply middleware in a variety of scopes, including resolver fu
 We can use middleware directly in the resolver function by using the `use` method during its construction, for example:
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export const outputValidator: Middleware = (next) => next()
@@ -537,7 +537,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export const outputValidator: Middleware = (next) => next()
@@ -562,7 +562,7 @@ We can also apply middleware at the resolver level, so the middleware will take 
 We just need to use the `use` method to add `middlewares` to the resolver:
 
 ::: code-group
-```ts twoslash [Valibot]
+```ts twoslash [valibot]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {
@@ -584,7 +584,7 @@ const editorResolver = resolver({
   updateArticle: mutation(v.boolean(), () => true),
 }).use(authGuard("editor")) // [!code hl]
 ```
-```ts twoslash [Zod]
+```ts twoslash [zod]
 // @filename: middlewares.ts
 import { type Middleware } from "@gqloom/core"
 export function authGuard(role: "admin" | "editor"): Middleware {

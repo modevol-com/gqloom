@@ -5,9 +5,9 @@ import DefaultTheme from "vitepress/theme-without-fonts"
 import { Layout } from "./layout"
 import "../../css/tailwind.css"
 import "./style.css"
+import "./code-icons.css"
 import "../../css/input-schema.css"
 import "@shikijs/vitepress-twoslash/style.css"
-import "virtual:group-icons.css"
 
 export default {
   extends: DefaultTheme,

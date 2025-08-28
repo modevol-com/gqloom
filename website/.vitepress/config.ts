@@ -4,10 +4,6 @@ import { createFileSystemTypesCache } from "@shikijs/vitepress-twoslash/cache-fs
 import tailwindcss from "@tailwindcss/vite"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig } from "vitepress"
-import {
-  groupIconMdPlugin,
-  groupIconVitePlugin,
-} from "vitepress-plugin-group-icons"
 import llmstxt from "vitepress-plugin-llms"
 import sidebarEn from "./sidebar-en"
 import sidebarZh from "./sidebar-zh"
@@ -20,27 +16,10 @@ export default defineConfig({
         typesCache: createFileSystemTypesCache(),
       }),
     ],
-    languages: ["ts", "js", "bash"],
-    config(md) {
-      md.use(groupIconMdPlugin)
-    },
+    languages: ["ts", "js", "bash", "graphql", "gql", "prisma", "json"],
   },
   vite: {
-    plugins: [
-      tailwindcss(),
-      vueJsx(),
-      groupIconVitePlugin({
-        customIcon: {
-          ".gql": "vscode-icons:file-type-graphql",
-          ".graphql": "vscode-icons:file-type-graphql",
-          zod: "https://raw.githubusercontent.com/colinhacks/zod/refs/heads/main/logo.svg",
-          valibot:
-            "https://raw.githubusercontent.com/fabian-hiller/valibot/refs/heads/main/brand/valibot-icon.svg",
-          prisma: "vscode-icons:file-type-light-prisma",
-        },
-      }),
-      llmstxt({ ignoreFiles: ["zh/**/*"] }),
-    ],
+    plugins: [tailwindcss(), vueJsx(), llmstxt({ ignoreFiles: ["zh/**/*"] })],
     resolve: {
       alias: [
         {

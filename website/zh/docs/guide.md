@@ -295,7 +295,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "createUser": {
@@ -321,7 +321,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "usersByName": [
@@ -419,7 +419,7 @@ mutation {
   }
 }
 ```
-```json [Response]
+```json [Response.json]
 {
   "errors": [
     {
@@ -459,7 +459,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "mine": {
@@ -542,7 +542,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "createCats": [
@@ -575,7 +575,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "cats": [
@@ -641,7 +641,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "cats": [
@@ -693,7 +693,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "mine": {

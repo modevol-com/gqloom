@@ -1,0 +1,138 @@
+/* base css: https://github.com/yuyinws/vitepress-plugin-group-icons/blob/main/src/codegen.ts */
+.vp-code-block-title [data-title]::before,
+.vp-code-group [data-title]::before {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.5em;
+  margin-bottom: -0.2em;
+  background: var(--icon) no-repeat center / contain;
+}
+
+.vp-code-block-title-bar {
+  position: relative;
+  margin: 16px -24px 0 -24px;
+  background-color: var(--vp-code-block-bg);
+  overflow-x: auto;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vp-code-tab-text-color);
+  white-space: nowrap;
+  transition: background-color 0.5s;
+  border-radius: 8px 8px 0 0;
+  padding: 0 12px;
+  box-shadow: inset 0 -1px var(--vp-code-tab-divider);
+}
+
+.custom-block .vp-code-block-title-bar {
+  margin: 16px 0 0 0;
+}
+
+@media (min-width: 640px) {
+  .vp-code-block-title-bar {
+    margin: 16px 0 0 0;
+  }
+}
+
+.vp-code-block-title-text {
+  padding: 0 12px;
+  line-height: 48px;
+}
+
+
+.vp-code-block-title div[class*=language-] {
+  margin-top: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+
+[data-title$=".json"]:before {
+  content: "";
+  --icon: url('https://api.iconify.design/vscode-icons/file-type-light-json.svg');
+}
+
+html.dark [data-title$=".json"]:before {
+  content: "";
+  --icon: url('https://api.iconify.design/vscode-icons/file-type-json.svg');
+}
+
+[data-title$="yup"],
+[data-title$=".ts"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-typescript.svg');
+  }
+}
+
+[data-title^="graphql" i],
+[data-title$=".graphql" i],
+[data-title$=".gql" i] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-graphql.svg');
+  }
+}
+
+[data-title="zod" i] {
+  &:before {
+    content: "";
+    --icon: url('https://raw.githubusercontent.com/colinhacks/zod/refs/heads/main/logo.svg');
+  }
+}
+
+[data-title="valibot" i] {
+  &:before {
+    content: "";
+    --icon: url('https://raw.githubusercontent.com/fabian-hiller/valibot/refs/heads/main/brand/valibot-icon.svg');
+  }
+}
+
+[data-title$="prisma"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-light-prisma.svg');
+  }
+}
+
+html.dark [data-title$="prisma"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-prisma.svg');
+  }
+}
+
+[data-title$="pnpm"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-light-pnpm.svg');
+  }
+}
+
+html.dark [data-title$="pnpm"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-pnpm.svg');
+  }
+}
+
+[data-title$="npm"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-npm.svg');
+  }
+}
+
+[data-title$="yarn"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-yarn.svg');
+  }
+}
+
+[data-title$="bun"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-bun.svg');
+  }
+}

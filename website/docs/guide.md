@@ -295,7 +295,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "createUser": {
@@ -321,7 +321,7 @@ Let's continue to try to retrieve the user we just created:
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "usersByName": [
@@ -419,7 +419,7 @@ If we directly call this new query in the playground, the application will give 
   }
 }
 ```
-```json [Response]
+```json [Response.json]
 {
   "errors": [
     {
@@ -459,7 +459,7 @@ Open the `Headers` at the bottom of the playground and add the `authorization` f
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "mine": {
@@ -542,7 +542,7 @@ mutation {
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "createCats": [
@@ -575,7 +575,7 @@ Let's use the `cats` query to confirm the data in the database again:
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "cats": [
@@ -641,7 +641,7 @@ Let's try to query the owner of a cat in the playground:
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "cats": [
@@ -693,7 +693,7 @@ Let's try to query the cats of the current user:
 }
 ```
 
-```json [Response]
+```json [Response.json]
 {
   "data": {
     "mine": {
