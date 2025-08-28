@@ -85,6 +85,13 @@ export default defineConfig({
           next: "下一篇",
         },
         outlineTitle: "目录",
+        notFound: {
+          title: "页面不存在",
+          link: "/zh",
+          linkText: "返回主页",
+          linkLabel: "返回主页",
+          quote: "但如果你不改变方向，继续寻找，你可能会到达你正在寻找的地方。",
+        },
       },
     },
   },
