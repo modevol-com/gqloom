@@ -13,8 +13,8 @@ function useRedirect() {
   watchEffect(() => {
     if (!page.value.isNotFound) return
     let targetPath = page.value.relativePath
-    if (targetPath.startsWith("en/")) {
-      targetPath = targetPath.replace("en/", "/")
+    if (targetPath.startsWith("en")) {
+      targetPath = targetPath.replace("en", "")
     }
     if (targetPath.includes("/getting-started")) {
       targetPath = targetPath.replace("/getting-started", "/guide")
