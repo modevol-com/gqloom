@@ -52,9 +52,14 @@ export default defineComponent((_props, { slots }) => {
           />
         )}
         {theme.value.siteTitle ? (
-          <span class="text-sm" v-html={theme.value.siteTitle} />
+          <span
+            class="text-sm text-yellow-600 dark:text-amber-200"
+            v-html={theme.value.siteTitle}
+          />
         ) : theme.value.siteTitle === undefined ? (
-          <span class="text-sm">{site.value.title}</span>
+          <span class="text-sm text-yellow-600 dark:text-amber-200">
+            {site.value.title}
+          </span>
         ) : null}
         {slots["nav-bar-title-after"]?.()}
       </a>

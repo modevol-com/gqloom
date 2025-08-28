@@ -215,6 +215,7 @@
   }
 }
 
+/** remove nav divider */
 .VPNav>.VPNavBar {
   @apply !bg-transparent;
 
@@ -223,6 +224,7 @@
   }
 }
 
+/** remove local nav divider */
 .Layout>.VPLocalNav {
   @apply bg-transparent border-b-transparent;
 
@@ -235,4 +237,59 @@
       }
     }
   }
+}
+
+/** side bar icon */
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem>.item>.VPLink>.text {
+  @apply inline-flex items-center;
+
+  &::before {
+    @apply mr-2 inline-block size-4;
+    content: '';
+
+    background-color: currentColor;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(1)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/book-marked.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/book-marked.svg');
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(2)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/pencil-ruler.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/pencil-ruler.svg');
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(3)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/volleyball.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/volleyball.svg');
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(4)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/radio-tower.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/radio-tower.svg');
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(5)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/waves.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/waves.svg');
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(6)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/shuffle.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/shuffle.svg');
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(7)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/hard-drive-download.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/hard-drive-download.svg');
+}
+
+#VPSidebarNav>.group:nth-child(2)>.VPSidebarItem>.items>.VPSidebarItem:nth-child(8)>.item>.VPLink>.text::before {
+  mask-image: url('https://api.iconify.design/lucide/fence.svg');
+  -webkit-mask-image: url('https://api.iconify.design/lucide/fence.svg');
 }
