@@ -181,24 +181,22 @@
   @apply px-0 flex flex-row min-[960px]:justify-end;
 }
 
-.VPNav>.VPNavBar>.wrapper>.container>.content>.content-body {
-  @apply bg-transparent;
+.VPNav {
+  >.VPNavBar>.wrapper>.container>.content {
+    @apply flex flex-row items-center justify-end;
 
-  >*,
-  >*>.button {
-    @apply h-10
+    >.content-body {
+      @apply h-10 w-fit bg-[var(--vp-c-bg)]/40 backdrop-blur-sm pr-4 shadow-sm rounded-lg;
+
+      >*,
+      >*>.button {
+        @apply h-10
+      }
+    }
   }
 
-  >* {
-    @apply bg-[var(--vp-c-bg)]/40 backdrop-blur-sm;
-  }
-
-  > :first-child {
-    @apply rounded-l-lg;
-  }
-
-  > :last-child {
-    @apply rounded-r-lg;
+  >.VPNavBar.has-sidebar>.wrapper>.container>.content {
+    padding-right: max(calc((100vw - var(--vp-layout-max-width)) * 0.5 - 48px), 8px);
   }
 }
 
