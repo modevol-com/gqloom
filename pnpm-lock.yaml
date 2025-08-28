@@ -498,9 +498,6 @@ importers:
       colord:
         specifier: ^2.9.3
         version: 2.9.3
-      lucide-vue-next:
-        specifier: ^0.541.0
-        version: 0.541.0(vue@3.5.19(typescript@5.7.3))
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -5447,11 +5444,6 @@ packages:
     resolution: {integrity: sha512-uGWG/2RKuDLeQHCodn5cmJ9Zij80EstOdcBP+j//B2sr78w7woiEL4aMu6CRlRkyOyJ8sZry8QLhQTmZjynLdA==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
-  lucide-vue-next@0.541.0:
-    resolution: {integrity: sha512-BXY//i7H0ojCDRmux7WzhTl2FiKVmE42fyaLuQOKBGaeBRLEGkkSgYMBxIk9ZjAKa+JELRmFVV1xAFUumB89QA==}
-    peerDependencies:
-      vue: '>=3.0.1'
 
   magic-string@0.30.15:
     resolution: {integrity: sha512-zXeaYRgZ6ldS1RJJUrMrYgNJ4fdwnyI6tVqoiIhyCyv5IVTK9BU8Ic2l253GGETQHxI4HNUwhJ3fjDhKqEoaAw==}
@@ -12150,10 +12142,6 @@ snapshots:
   lucide-react@0.526.0(react@19.1.1):
     dependencies:
       react: 19.1.1
-
-  lucide-vue-next@0.541.0(vue@3.5.19(typescript@5.7.3)):
-    dependencies:
-      vue: 3.5.19(typescript@5.7.3)
 
   magic-string@0.30.15:
     dependencies:

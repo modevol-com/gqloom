@@ -31,42 +31,42 @@ export const highlights: IHighlight[] = [
 
 export const features: FeatureProps[] = [
   {
-    icon: "RadioTower",
+    icon: "lucide:radio-tower",
     title: "Resolver",
     description:
       "Resolvers are the core components of GraphQL. You can define query, mutation, and subscription operations within them, and also dynamically add additional fields to objects for flexible data processing.",
     to: "./docs/resolver",
   },
   {
-    icon: "Shuffle",
+    icon: "lucide:shuffle",
     title: "Context",
     description:
       "With the context mechanism, you can conveniently inject data anywhere in the application, ensuring efficient data flow between different components and layers.",
     to: "./docs/context",
   },
   {
-    icon: "Fence",
+    icon: "lucide:fence",
     title: "Middleware",
     description:
       "Adopting the concept of aspect - oriented programming, middleware allows you to seamlessly integrate additional logic during the resolution process, such as error handling, user permission verification, and log tracking, enhancing the robustness and maintainability of the system.",
     to: "./docs/middleware",
   },
   {
-    icon: "HardDriveDownload",
+    icon: "lucide:hard-drive-download",
     title: "Dataloader",
     description:
       "Dataloader is a powerful tool for optimizing performance. It can fetch data in batches, significantly reducing the number of database queries, effectively improving system performance, and making the code structure clearer and easier to maintain.",
     to: "./docs/dataloader",
   },
   {
-    icon: "SatelliteDish",
+    icon: "lucide:satellite-dish",
     title: "Subscription",
     description:
       "The subscription feature provides clients with the ability to obtain real - time data updates without manual polling, ensuring that clients always stay in sync with server data and enhancing the user experience.",
     to: "./docs/advanced/subscription",
   },
   {
-    icon: "Satellite",
+    icon: "lucide:satellite",
     title: "Federation",
     description:
       "Federation is a microservice - based GraphQL architecture that can easily aggregate multiple services to enable cross - service queries, allowing you to manage complex distributed systems as if operating on a single graph.",

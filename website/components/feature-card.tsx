@@ -1,9 +1,9 @@
+import { Icon } from "@iconify/vue"
 import { defineComponent } from "vue"
-import { LucideIcon, type LucideIconName } from "./lucide-icon"
 
 export interface FeatureProps {
   to: string
-  icon?: LucideIconName
+  icon?: string
   title: string
   description: string
 }
@@ -19,7 +19,7 @@ export const FeatureCard = defineComponent({
       >
         {props.icon && (
           <div class="bg-slate-200/60 dark:bg-slate-800/60 p-1 size-fit rounded border-solid border border-slate-300/40">
-            <LucideIcon icon={props.icon} class="size-5" />
+            <Icon icon={props.icon} class="size-5" />
           </div>
         )}
         <h3 class="mb-1 text-sm font-medium">{props.title}</h3>
