@@ -1,0 +1,5 @@
+@reference "@/css/tailwind.css";
+
+.code-wrapper code {
+  @apply max-h-[32em] max-w-xl overflow-auto
+}

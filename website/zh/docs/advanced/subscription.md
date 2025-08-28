@@ -1,0 +1,142 @@
+<script setup>
+import { Tabs, Tab } from "@/components/tabs"
+</script>
+# 订阅（Subscription）
+
+在 GraphQL 中，订阅（Subscription）允许服务端推送数据到客户端。
+
+## 基础使用
+
+在 `GQLoom` 中，我们使用 `subscription` 函数来定义一个订阅:
+
+<Tabs groupId='schema-builder'>
+<Tab title="valibot">
+
+```ts twoslash
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+import * as v from "valibot"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+const countdownResolver = resolver({
+  countdown: subscription(v.number())
+    .input({ seconds: v.pipe(v.number(), v.integer()) })
+    .subscribe(async function* (data) {
+      for (let i = data.seconds; i >= 0; i--) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        yield i
+      }
+    }),
+})
+
+const schema = weave(countdownResolver)
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+<Tab title="zod">
+
+```ts twoslash
+import { weave, resolver, subscription } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import * as z from "zod"
+import { createServer } from "node:http"
+import { createYoga } from "graphql-yoga"
+
+const countdownResolver = resolver({
+  countdown: subscription(z.number())
+    .input({ seconds: z.number().int() })
+    .subscribe(async function* (data) {
+      for (let i = data.seconds; i >= 0; i--) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        yield i
+      }
+    }),
+})
+
+const schema = weave(ZodWeaver, countdownResolver)
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</Tab>
+</Tabs>
+
+在上面的代码中，我们定义了一个 `countdown` 订阅，它接受一个 `seconds` 参数。
+我们在订阅函数中传入了一个[异步生成器](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator)，它会每秒推送一个数字，直到数字为 0。
+
+## 使用发布/订阅
+
+我们还可以使用 [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started) 提供的发布/订阅（publish/subscribe）功能来更轻松地推送消息：
+
+<Tabs groupId='schema-builder'>
+<Tab title="valibot">
+
+```ts twoslash
+import { resolver, query, subscription } from "@gqloom/core"
+import { createPubSub } from "graphql-yoga"
+import * as v from "valibot"
+
+const pubSub = createPubSub<{ greeting: [string] }>()
+
+const HelloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.string() })
+    .resolve(({ name }) => {
+      const hello = `Hello, ${name}`
+      pubSub.publish("greeting", hello)
+      return hello
+    }),
+
+  listenGreeting: subscription(v.string())
+    .subscribe(() => pubSub.subscribe("greeting"))
+    .resolve((payload) => payload),
+})
+```
+
+</Tab>
+<Tab title="zod">
+
+```ts twoslash
+import { resolver, query, subscription } from "@gqloom/zod"
+import { createPubSub } from "graphql-yoga"
+import * as z from "zod"
+
+const pubSub = createPubSub<{ greeting: [string] }>()
+
+const HelloResolver = resolver({
+  hello: query(z.string())
+    .input({ name: z.string() })
+    .resolve(({ name }) => {
+      const hello = `Hello, ${name}`
+      pubSub.publish("greeting", hello)
+      return hello
+    }),
+
+  listenGreeting: subscription(z.string())
+    .subscribe(() => pubSub.subscribe("greeting"))
+    .resolve((payload) => payload),
+})
+```
+
+</Tab>
+</Tabs>
+
+在上面的代码中，我们定义了一个 `hello` 查询和一个 `listenGreeting` 订阅。
+当 `hello` 查询被调用时，它会发布一个 `greeting` 事件，然后 `listenGreeting` 订阅会订阅这个事件，并在事件发生时推送消息。
+
+你可以在 [GraphQL Yoga 文档](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started)了解到发布/订阅功能的详细用法。
+
+## 在分布式系统中使用订阅
+
+订阅功能在单体应用中可以很轻松地工作。但在分布式系统中，订阅功能可能会变得复杂。你可以考虑使用来自 [WunderGraph Cosmo](https://cosmo-docs.wundergraph.com/) 的[事件驱动的联合订阅](https://cosmo-docs.wundergraph.com/router/event-driven-federated-subscriptions-edfs)功能来处理分布式系统中的订阅。
