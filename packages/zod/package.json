@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/zod",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Create GraphQL schema and resolvers easily using using Zod!",
   "type": "module",
   "main": "./dist/index.js",
@@ -45,12 +45,12 @@
   "peerDependencies": {
     "@gqloom/core": ">= 0.10.0",
     "graphql": ">= 16.8.0",
-    "zod": ">= 3.25.0"
+    "zod": ">= 3.25.35"
   },
   "files": ["dist"],
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "zod": "3.25.17"
+    "zod": "4.1.5"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

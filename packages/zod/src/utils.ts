@@ -32,46 +32,36 @@ import type {
   UnionConfig,
 } from "./types"
 
-function matchDiscriminators(
-  input: any,
-  discs: util.DiscriminatorMap
-): boolean {
-  let matched = true
-  for (const [key, value] of discs) {
-    const data = input?.[key]
+export function resolveTypeByDiscriminatedUnion(
+  schema: $ZodDiscriminatedUnion
+): GraphQLTypeResolver<any, any> {
+  const discriminator = schema._zod.def.discriminator
 
-    if (value.values.size && !value.values.has(data)) {
-      matched = false
-    }
-    if (value.maps.length > 0) {
-      for (const m of value.maps) {
-        if (!matchDiscriminators(data, m)) {
-          matched = false
-        }
+  const optionsMap = new Map<any, $ZodObject<$ZodShape>>()
+  for (const option of schema._zod.def.options) {
+    if (!isZodObject(option)) continue
+
+    const propValues = option._zod.propValues
+    if (propValues && discriminator in propValues) {
+      const values = propValues[discriminator]!
+      for (const value of values) {
+        optionsMap.set(value, option)
       }
     }
   }
 
-  return matched
-}
-
-export function resolveTypeByDiscriminatedUnion(
-  schema: $ZodDiscriminatedUnion
-): GraphQLTypeResolver<any, any> {
   return (data) => {
-    const def = schema._zod.def
-    const filteredOptions: $ZodType[] = []
-    for (const option of def.options) {
-      if (option._zod.disc) {
-        if (matchDiscriminators(data, option._zod.disc)) {
-          filteredOptions.push(option)
-        }
-      } else {
-        // no discriminator
-        filteredOptions.push(option)
-      }
+    if (!data || typeof data !== "object") {
+      return undefined
     }
-    return getObjectConfig(filteredOptions[0] as $ZodObject).name
+    const discriminatorValue = data[discriminator]
+    const matchedOption = optionsMap.get(discriminatorValue)
+
+    if (matchedOption) {
+      return getObjectConfig(matchedOption).name
+    }
+
+    return undefined
   }
 }
 
@@ -167,7 +157,7 @@ export function getDescription(schema: $ZodType): string | undefined {
 export function isZodDiscriminatedUnion(
   schema: $ZodUnion<$ZodType[]>
 ): schema is $ZodDiscriminatedUnion<$ZodType[]> {
-  return isZodType(schema) && "disc" in schema._zod
+  return isZodUnion(schema) && "discriminator" in schema._zod.def
 }
 
 export function getObjectConfig(

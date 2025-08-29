@@ -25,10 +25,11 @@ import {
   isObjectType,
 } from "graphql"
 import type { ZodTypeAny } from "zod/v3"
-import type { $ZodObject, $ZodShape, $ZodType, $ZodTypeDef } from "zod/v4/core"
+import type { $ZodObject, $ZodType, $ZodTypeDef } from "zod/v4/core"
 import { asField } from "./metadata"
 import type {
   FieldConfig,
+  LooseZodObject,
   ZodWeaverConfig,
   ZodWeaverConfigOptions,
 } from "./types"
@@ -243,10 +244,10 @@ export class ZodWeaver {
   }
 
   public static ensureInterfaceType(
-    item: GraphQLInterfaceType | $ZodObject<$ZodShape>
+    item: GraphQLInterfaceType | LooseZodObject
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = ZodWeaver.toMemoriedGraphQLType(item)
+    const gqlType = ZodWeaver.toMemoriedGraphQLType(item as unknown as $ZodType)
 
     return ensureInterfaceType(gqlType)
   }

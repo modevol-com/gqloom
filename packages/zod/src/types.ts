@@ -9,7 +9,14 @@ import type {
   GraphQLOutputType,
   GraphQLUnionTypeConfig,
 } from "graphql"
-import type { $ZodObject, $ZodShape, $ZodType } from "zod/v4/core"
+import type { $ZodObject, $ZodType } from "zod/v4/core"
+
+export interface LooseZodObject extends Pick<$ZodObject, "~standard"> {
+  _zod: Omit<
+    $ZodObject<any, any>["_zod"],
+    "def" | "parent" | "parse" | "run" | "toJSONSchema"
+  >
+}
 
 export interface ObjectConfig
   extends Omit<
@@ -17,7 +24,7 @@ export interface ObjectConfig
       "fields" | "name" | "interfaces"
     >,
     Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields" | "name">> {
-  interfaces?: ($ZodObject<$ZodShape> | GraphQLInterfaceType)[]
+  interfaces?: (LooseZodObject | GraphQLInterfaceType)[]
   [k: string]: unknown
 }
 
