@@ -53,11 +53,11 @@ export default defineComponent((_props, { slots }) => {
         )}
         {theme.value.siteTitle ? (
           <span
-            class="text-sm text-yellow-600 dark:text-amber-200"
+            class="text-sm text-yellow-700 dark:text-amber-200"
             v-html={theme.value.siteTitle}
           />
         ) : theme.value.siteTitle === undefined ? (
-          <span class="text-sm text-yellow-600 dark:text-amber-200">
+          <span class="text-sm text-yellow-700 dark:text-amber-200">
             {site.value.title}
           </span>
         ) : null}

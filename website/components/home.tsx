@@ -321,7 +321,7 @@ const Hero = defineComponent({
         </div>
         <div class="sm:w-sm w-3xs relative">
           <div class="blur-3xl absolute left-0 top-0 -z-1 rounded-full opacity-10 dark:opacity-30 bg-gradient-to-bl to-rose-400/20 from-yellow-400/5 size-full aspect-square" />
-          <img src="/gqloom.svg" class="size-full" />
+          <img alt="GQLoom Logo" src="/gqloom.svg" class="size-full" />
         </div>
       </section>
     )
