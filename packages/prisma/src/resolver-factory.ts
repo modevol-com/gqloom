@@ -196,7 +196,7 @@ export class PrismaResolverFactory<
   protected uniqueWhere(
     instance: Omit<
       StandardSchemaV1.InferOutput<NonNullable<TModelSilk>>,
-      `__selective_${typeof this.silk.name}_brand__`
+      `__selective_${string}_brand__`
     >
   ): any {
     if (this.silk.model.primaryKey == null) {

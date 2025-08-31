@@ -23,6 +23,7 @@ import {
   type GraphQLObjectTypeConfig,
   type GraphQLObjectTypeExtensions,
   type GraphQLOutputType,
+  type GraphQLSchema,
   GraphQLString,
   GraphQLUnionType,
   type GraphQLUnionTypeConfig,
@@ -95,7 +96,7 @@ export class ZodWeaver {
    * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
    * @returns GraphQL Schema
    */
-  public static weave(...inputs: Parameters<typeof weave>) {
+  public static weave(...inputs: Parameters<typeof weave>): GraphQLSchema {
     return weave(ZodWeaver, ...inputs)
   }
 

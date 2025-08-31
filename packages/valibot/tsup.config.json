@@ -1,9 +1,0 @@
-{
-  "entry": ["./src/index.ts"],
-  "format": ["esm", "cjs"],
-  "minify": false,
-  "dts": true,
-  "outDir": "./dist",
-  "clean": true,
-  "tsconfig": "../../tsconfig.tsup.json"
-}

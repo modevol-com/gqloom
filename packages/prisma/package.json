@@ -38,7 +38,7 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "check:type": "tsgo --noEmit",
     "init": "exec prisma migrate dev --name init",
     "generate": "pnpm build && prisma generate",

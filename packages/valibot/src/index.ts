@@ -328,5 +328,5 @@ export class ValibotWeaver {
 }
 
 export * from "./metadata"
-export * from "@gqloom/core"
+export * from "./re-export"
 export * from "./types"
