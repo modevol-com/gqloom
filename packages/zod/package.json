@@ -28,7 +28,7 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "check:type": "tsgo --noEmit"
   },
   "keywords": [

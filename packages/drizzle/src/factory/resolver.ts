@@ -89,7 +89,7 @@ export abstract class DrizzleResolverFactory<
   TDatabase extends BaseDatabase,
   TTable extends Table,
 > {
-  protected readonly inputFactory: DrizzleInputFactory<typeof this.table>
+  protected readonly inputFactory: DrizzleInputFactory<TTable>
   protected readonly tableName: InferTableName<TTable>
   public constructor(
     protected readonly db: TDatabase,

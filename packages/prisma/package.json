@@ -32,13 +32,13 @@
         "default": "./generated/index.js"
       },
       "require": {
-        "types": "./generated/index.d.ts",
+        "types": "./generated/index.d.cts",
         "default": "./generated/index.cjs"
       }
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "check:type": "tsgo --noEmit",
     "init": "exec prisma migrate dev --name init",
     "generate": "pnpm build && prisma generate",

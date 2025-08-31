@@ -697,7 +697,9 @@ export class QueryFactoryWithResolve<
     super(options)
   }
 
-  protected clone(options?: Partial<typeof this.options> | undefined): this {
+  protected clone(
+    options?: Partial<QueryOptions<TOutput, TInput>> | undefined
+  ): this {
     return new QueryFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
@@ -748,7 +750,9 @@ export class MutationFactoryWithResolve<
     super(options)
   }
 
-  protected clone(options?: Partial<typeof this.options> | undefined): this {
+  protected clone(
+    options?: Partial<MutationOptions<TOutput, TInput>> | undefined
+  ): this {
     return new MutationFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
@@ -812,7 +816,11 @@ export class FieldFactoryWithResolve<
     super(options)
   }
 
-  protected clone(options?: Partial<typeof this.options> | undefined): this {
+  protected clone(
+    options?:
+      | Partial<FieldOptions<TParent, TOutput, TInput, string[] | undefined>>
+      | undefined
+  ): this {
     return new FieldFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
