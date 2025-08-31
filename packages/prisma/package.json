@@ -32,7 +32,7 @@
         "default": "./generated/index.js"
       },
       "require": {
-        "types": "./generated/index.d.ts",
+        "types": "./generated/index.d.cts",
         "default": "./generated/index.cjs"
       }
     }
