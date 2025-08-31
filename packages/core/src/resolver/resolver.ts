@@ -290,6 +290,14 @@ export interface ResolverFactory {
   ): ChainResolver<TFields>
 }
 
+export interface ResolverMeta<
+  TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
+> {
+  [IS_RESOLVER]: true
+  fields: TFields
+  options?: ResolverOptionsWithExtensions
+}
+
 /**
  * Base class for chain resolvers
  * @template TFields - The fields or operations to resolve
@@ -298,11 +306,7 @@ export class ChainResolver<
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
 > implements Loom.Resolver
 {
-  protected meta: {
-    [IS_RESOLVER]: true
-    fields: TFields
-    options?: ResolverOptionsWithExtensions
-  }
+  protected meta: ResolverMeta<TFields>
 
   /**
    * Creates a new chain resolver
@@ -323,7 +327,7 @@ export class ChainResolver<
   /**
    * Gets the metadata for the resolver
    */
-  public get "~meta"(): typeof this.meta {
+  public get "~meta"(): ResolverMeta<TFields> {
     return this.meta
   }
 
@@ -410,12 +414,7 @@ export class ObjectChainResolver<
   TParent extends GraphQLSilk,
   TFields extends Record<string, Loom.FieldOrOperation | typeof FIELD_HIDDEN>,
 > extends ChainResolver<TFields> {
-  protected meta: {
-    [IS_RESOLVER]: true
-    fields: TFields
-    parent: TParent
-    options?: ResolverOptionsWithExtensions
-  }
+  protected meta: ResolverMeta<TFields> & { parent: TParent }
 
   /**
    * Creates a new object chain resolver
@@ -440,8 +439,8 @@ export class ObjectChainResolver<
   /**
    * Gets the metadata for the resolver
    */
-  public get "~meta"(): typeof this.meta {
-    return super["~meta"] as typeof this.meta
+  public get "~meta"(): ResolverMeta<TFields> & { parent: TParent } {
+    return super["~meta"] as ResolverMeta<TFields> & { parent: TParent }
   }
 
   /**

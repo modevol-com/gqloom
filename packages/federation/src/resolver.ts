@@ -313,4 +313,11 @@ export class FederatedChainResolver<
     silk(GraphQLID),
     () => undefined
   )
+
+  /**
+   * Gets the metadata for the resolver
+   */
+  public get "~meta"() {
+    return this.meta
+  }
 }

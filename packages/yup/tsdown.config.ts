@@ -8,4 +8,5 @@ export default defineConfig({
   outDir: "./dist",
   clean: true,
   tsconfig: "../../tsconfig.json",
+  external: ["@gqloom/core"],
 })
