@@ -215,6 +215,7 @@ describe("mikroSilk", () => {
         }),
       }),
       {
+        name: "RenameUser",
         fields: {
           password: { type: null },
           password2: field.hidden,
@@ -223,7 +224,7 @@ describe("mikroSilk", () => {
     )
 
     expect(printType(unwrap(getGraphQLType(User)))).toMatchInlineSnapshot(`
-      "type User {
+      "type RenameUser {
         id: ID!
         name: String!
         email: String!
