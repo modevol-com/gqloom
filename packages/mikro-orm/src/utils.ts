@@ -1,10 +1,14 @@
-import type { EntitySchema } from "@mikro-orm/core"
+import { type EntitySchema, Platform } from "@mikro-orm/core"
 import {
   GraphQLList,
   GraphQLNonNull,
   type GraphQLObjectType,
   type GraphQLOutputType,
 } from "graphql"
+
+class DefaultPlatform extends Platform {}
+
+export const platform = new DefaultPlatform()
 
 /**
  * Store origin GraphQLType for EntitySchema
@@ -34,4 +38,11 @@ export function unwrapGraphQLType(
     return unwrapGraphQLType(gqlType.ofType)
   }
   return gqlType
+}
+
+export function isSubclass<TParent>(
+  childClass: any,
+  parentClass: TParent
+): childClass is TParent {
+  return childClass.prototype instanceof (parentClass as any)
 }

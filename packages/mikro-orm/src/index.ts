@@ -11,8 +11,10 @@ import {
 import {
   type EntityProperty,
   type EntitySchema,
+  type PropertyOptions,
   ReferenceKind,
   type RequiredEntityData,
+  Type,
 } from "@mikro-orm/core"
 import {
   GraphQLBoolean,
@@ -33,7 +35,7 @@ import type {
   MikroWeaverConfig,
   MikroWeaverConfigOptions,
 } from "./types"
-import { EntityGraphQLTypes } from "./utils"
+import { EntityGraphQLTypes, isSubclass } from "./utils"
 
 export class MikroWeaver {
   public static vendor = "gqloom.mikro-orm"
@@ -159,7 +161,7 @@ export class MikroWeaver {
       return gqlType
     }
     function list(gqlType: GraphQLOutputType) {
-      if (property.type.endsWith("[]"))
+      if (MikroWeaver.normalizeType(property).endsWith("[]"))
         return new GraphQLList(new GraphQLNonNull(gqlType))
       return gqlType
     }
@@ -187,7 +189,9 @@ export class MikroWeaver {
     if (property.kind !== ReferenceKind.SCALAR) return
     if (property.primary === true) return GraphQLID
 
-    switch (MikroWeaver.extractSimpleType(property.type)) {
+    switch (
+      MikroWeaver.extractSimpleType(MikroWeaver.normalizeType(property))
+    ) {
       case "string":
         return GraphQLString
       case "double":
@@ -206,6 +210,17 @@ export class MikroWeaver {
       default:
         return GraphQLString
     }
+  }
+
+  protected static normalizeType(
+    prop: Pick<PropertyOptions<any>, "type" | "runtimeType">
+  ): string {
+    if (prop.runtimeType) return prop.runtimeType
+    if (typeof prop.type === "string") return prop.type
+    if (isSubclass(prop.type, Type)) {
+      return prop.type.prototype.runtimeType
+    }
+    return "string"
   }
 
   // mikro-orm Platform.extractSimpleType

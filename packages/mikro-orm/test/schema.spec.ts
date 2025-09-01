@@ -1,5 +1,5 @@
 import { getGraphQLType } from "@gqloom/core"
-import { EntitySchema, type Ref } from "@mikro-orm/core"
+import { defineEntity } from "@mikro-orm/core"
 import {
   GraphQLNonNull,
   type GraphQLObjectType,
@@ -9,44 +9,28 @@ import {
 import { describe, expect, it } from "vitest"
 import { mikroSilk } from "../src"
 
-const nullable = true
-
 describe("mikroSilk", () => {
-  interface IBook {
-    ISBN: string
-    sales: number
-    title: string
-    isPublished: boolean
-    price: number
-    tags: string[]
-    author: Ref<IAuthor>
-  }
-
-  interface IAuthor {
-    name: string
-  }
-
   const Author = mikroSilk(
-    new EntitySchema<IAuthor>({
+    defineEntity({
       name: "Author",
-      properties: {
-        name: { type: "string" },
-      },
+      properties: (p) => ({
+        name: p.string(),
+      }),
     })
   )
 
   const Book = mikroSilk(
-    new EntitySchema<IBook>({
+    defineEntity({
       name: "Book",
-      properties: {
-        ISBN: { type: "string", primary: true },
-        sales: { type: "number", hidden: false },
-        title: { type: "string" },
-        isPublished: { type: Boolean },
-        price: { type: "number", nullable },
-        tags: { type: "string[]", array: true },
-        author: { entity: () => Author, kind: "m:1", ref: true },
-      },
+      properties: (p) => ({
+        ISBN: p.string().primary(),
+        sales: p.float().hidden(false),
+        title: p.string(),
+        isPublished: p.boolean(),
+        price: p.float().nullable(),
+        tags: p.array().$type<string[]>(),
+        author: () => p.manyToOne(Author),
+      }),
     }),
     { extensions: { foo: "bar" } }
   )
