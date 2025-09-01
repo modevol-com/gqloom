@@ -1,4 +1,4 @@
-import { getGraphQLType, query, resolver, weave } from "@gqloom/core"
+import { field, getGraphQLType, query, resolver, weave } from "@gqloom/core"
 import { ArrayType, DateTimeType, defineEntity } from "@mikro-orm/core"
 import {
   GraphQLNonNull,
@@ -199,6 +199,35 @@ describe("mikroSilk", () => {
       }
 
       scalar DateTime"
+    `)
+  })
+
+  it("should hide fields", () => {
+    const User = mikroSilk(
+      defineEntity({
+        name: "User",
+        properties: (p) => ({
+          id: p.string().primary(),
+          name: p.string(),
+          email: p.string(),
+          password: p.string(),
+          password2: p.string(),
+        }),
+      }),
+      {
+        fields: {
+          password: { type: null },
+          password2: field.hidden,
+        },
+      }
+    )
+
+    expect(printType(unwrap(getGraphQLType(User)))).toMatchInlineSnapshot(`
+      "type User {
+        id: ID!
+        name: String!
+        email: String!
+      }"
     `)
   })
 })

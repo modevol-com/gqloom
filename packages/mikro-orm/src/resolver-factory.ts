@@ -372,7 +372,7 @@ export class MikroInputFactory<
     const comparisonKeys = new Set<string>()
 
     Object.entries(properties).map(([key, property]) => {
-      const type = MikroWeaver.getFieldType(property)
+      const type = MikroWeaver.getFieldType(property, this.entity)
       if (type == null) return mapValue.SKIP
       if (type instanceof GraphQLScalarType) comparisonKeys.add(key)
     })
@@ -403,7 +403,7 @@ export class MikroInputFactory<
           name,
           fields: () =>
             mapValue(this.entity.meta.properties, (property) => {
-              const type = MikroWeaver.getFieldType(property)
+              const type = MikroWeaver.getFieldType(property, this.entity)
               if (type == null) return mapValue.SKIP
               return {
                 type: MikroInputFactory.queryOrderType(),
@@ -425,7 +425,7 @@ export class MikroInputFactory<
           name,
           fields: () =>
             mapValue(this.entity.meta.properties, (property) => {
-              const type = MikroWeaver.getFieldType(property)
+              const type = MikroWeaver.getFieldType(property, this.entity)
               if (type == null) return mapValue.SKIP
               return {
                 type:

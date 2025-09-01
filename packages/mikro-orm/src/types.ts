@@ -1,12 +1,15 @@
 import type { WeaverConfig } from "@gqloom/core"
-// biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
 import type { SYMBOLS } from "@gqloom/core"
 import type {
   EntityProperty,
   EntitySchema,
   PropertyOptions,
 } from "@mikro-orm/core"
-import type { GraphQLOutputType } from "graphql"
+import type {
+  GraphQLFieldConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+} from "graphql"
 
 export interface GQLoomMikroFieldExtensions {
   mikroProperty?: PropertyOptions<any>
@@ -26,3 +29,24 @@ export interface MikroWeaverConfig
     MikroWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.mikro-orm"
 }
+
+export interface MikroSilkConfig<TSchema extends EntitySchema<any, any>>
+  extends Partial<Omit<GraphQLObjectTypeConfig<any, any>, "fields">> {
+  fields?: ValueOrGetter<{
+    [K in keyof InferEntity<TSchema>]?:
+      | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
+          /**
+           * The type of the field, set to `null` to hide the field
+           */
+          type?:
+            | ValueOrGetter<
+                GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN | null
+              >
+            | undefined
+        })
+      | typeof SYMBOLS.FIELD_HIDDEN
+      | undefined
+  }>
+}
+
+export type ValueOrGetter<T> = T | (() => T)

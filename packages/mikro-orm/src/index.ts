@@ -27,12 +27,12 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  type GraphQLObjectTypeConfig,
   type GraphQLOutputType,
   GraphQLString,
 } from "graphql"
 import type {
   InferEntity,
+  MikroSilkConfig,
   MikroWeaverConfig,
   MikroWeaverConfigOptions,
 } from "./types"
@@ -68,12 +68,12 @@ export class MikroWeaver {
 
   public static ObjectConfigMap = new WeakMap<
     EntitySchema,
-    Partial<GraphQLObjectTypeConfig<any, any>>
+    MikroSilkConfig<EntitySchema>
   >()
 
   public static asObjectType(
     schema: EntitySchema,
-    config: Partial<GraphQLObjectTypeConfig<any, any>>
+    config: MikroSilkConfig<EntitySchema>
   ) {
     MikroWeaver.ObjectConfigMap.set(schema, config)
     return schema
@@ -112,6 +112,7 @@ export class MikroWeaver {
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name: name ?? entity.meta.className,
+          ...config,
           fields: mapValue(properties, (value, key) => {
             if (pick != null && !pick.includes(key)) return mapValue.SKIP
             const originField = originFields?.[key]
@@ -124,14 +125,13 @@ export class MikroWeaver {
               if (typeof partial === "boolean") return partial
             })()
 
-            const field = MikroWeaver.getFieldConfig(value, {
+            const field = MikroWeaver.getFieldConfig(value, entity, {
               nullable,
               originField,
             })
             if (field == null) return mapValue.SKIP
             return field
           }),
-          ...config,
         })
       )
     )
@@ -139,6 +139,7 @@ export class MikroWeaver {
 
   public static getFieldConfig(
     property: EntityProperty,
+    entity: EntitySchema,
     {
       nullable,
       originField,
@@ -155,7 +156,7 @@ export class MikroWeaver {
     return { type: gqlType, description: property.comment }
 
     function getGraphQLTypeByProperty() {
-      let gqlType = MikroWeaver.getFieldType(property)
+      let gqlType = MikroWeaver.getFieldType(property, entity)
       if (gqlType == null) return
 
       gqlType = list(gqlType)
@@ -182,8 +183,28 @@ export class MikroWeaver {
   }
 
   public static getFieldType(
-    property: EntityProperty
+    property: EntityProperty,
+    entity: EntitySchema
   ): GraphQLOutputType | undefined {
+    const entityConfig = MikroWeaver.ObjectConfigMap.get(entity)
+    const fieldsConfig =
+      typeof entityConfig?.fields === "function"
+        ? entityConfig.fields()
+        : entityConfig?.fields
+    const fieldConfig = fieldsConfig?.[property.name]
+    if (fieldConfig !== undefined) {
+      if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return
+      let type: GraphQLOutputType | undefined | null | false
+      if (typeof fieldConfig.type === "function") {
+        type = fieldConfig.type()
+      } else {
+        type = fieldConfig.type
+      }
+      if (type !== undefined) {
+        return type ? type : undefined
+      }
+    }
+
     const config =
       weaverContext.getConfig<MikroWeaverConfig>("gqloom.mikro-orm")
     const presetType = config?.presetGraphQLType?.(property)
@@ -285,7 +306,7 @@ export class MikroWeaver {
  */
 export function mikroSilk<TSchema extends EntitySchema>(
   schema: TSchema,
-  config?: Partial<GraphQLObjectTypeConfig<any, any>>
+  config?: MikroSilkConfig<TSchema>
 ): EntitySchemaSilk<TSchema> {
   if (config) MikroWeaver.asObjectType(schema, config)
   return MikroWeaver.unravel(schema)
