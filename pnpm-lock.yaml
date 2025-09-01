@@ -245,11 +245,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mikro-orm
       '@mikro-orm/core':
-        specifier: ^6.4.16
-        version: 6.4.16
+        specifier: ^6.5.1
+        version: 6.5.1
       '@mikro-orm/postgresql':
-        specifier: ^6.4.6
-        version: 6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.17)(mysql2@3.14.1)(sqlite3@5.1.7)
+        specifier: ^6.5.1
+        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(sqlite3@5.1.7)
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
@@ -411,11 +411,11 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@mikro-orm/core':
-        specifier: ^6.4.16
-        version: 6.4.16
+        specifier: ^6.5.1
+        version: 6.5.1
       '@mikro-orm/libsql':
-        specifier: ^6.4.16
-        version: 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)
+        specifier: ^6.5.1
+        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)
 
   packages/prisma:
     dependencies:
@@ -542,11 +542,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/zod
       '@mikro-orm/core':
-        specifier: ^6.4.16
-        version: 6.4.16
+        specifier: ^6.5.1
+        version: 6.5.1
       '@mikro-orm/postgresql':
-        specifier: ^6.4.6
-        version: 6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.17)(mysql2@3.14.1)(sqlite3@5.1.7)
+        specifier: ^6.5.1
+        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(sqlite3@5.1.7)
       '@shikijs/vitepress-twoslash':
         specifier: ^3.11.0
         version: 3.11.0(typescript@5.7.3)
@@ -1441,23 +1441,23 @@ packages:
   '@libsql/core@0.15.10':
     resolution: {integrity: sha512-fAMD+GnGQNdZ9zxeNC8AiExpKnou/97GJWkiDDZbTRHj3c9dvF1y4jsRQ0WE72m/CqTdbMGyU98yL0SJ9hQVeg==}
 
-  '@libsql/darwin-arm64@0.5.11':
-    resolution: {integrity: sha512-Av4+H8VypNZdbRbDKu5ogoCBHOdYh2Vx6iO7+0SACjcgnpqjnGL59lJUuX3fmV48VI6al1xORYJVApo//B5iqA==}
-    cpu: [arm64]
-    os: [darwin]
-
   '@libsql/darwin-arm64@0.5.17':
     resolution: {integrity: sha512-WTYG2skZsUnZmfZ2v7WFj7s3/5s2PfrYBZOWBKOnxHA8g4XCDc/4bFDaqob9Q2e88+GC7cWeJ8VNkVBFpD2Xxg==}
     cpu: [arm64]
     os: [darwin]
 
-  '@libsql/darwin-x64@0.5.11':
-    resolution: {integrity: sha512-+BXozvOKhwbye16itymY2YXeHOcIeZGORdJK2prfXA7Q2HR4/dRdUirR1o/koxxxG616uiWlAVj5WJ0j2IWkQA==}
-    cpu: [x64]
+  '@libsql/darwin-arm64@0.5.20':
+    resolution: {integrity: sha512-faHM2FX26xruO4w76YkW+lA28yKcTIzNiGvK9Q8+8sCuC7cn3KdMO6KJ84c6fJQwtwG+F4hxIoy95U5FYge3bg==}
+    cpu: [arm64]
     os: [darwin]
 
   '@libsql/darwin-x64@0.5.17':
     resolution: {integrity: sha512-ab0RlTR4KYrxgjNrZhAhY/10GibKoq6G0W4oi0kdm+eYiAv/Ip8GDMpSaZdAcoKA4T+iKR/ehczKHnMEB8MFxA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@libsql/darwin-x64@0.5.20':
+    resolution: {integrity: sha512-19l0oEW/r2kZxDJg+w53C0kq7eFFKpeKDEjV/FAAkBfQwJoGqS4sep9u1fK1X3KzOF5rB8cVyIrQGk+6ibzUeQ==}
     cpu: [x64]
     os: [darwin]
 
@@ -1471,18 +1471,13 @@ packages:
   '@libsql/isomorphic-ws@0.1.5':
     resolution: {integrity: sha512-DtLWIH29onUYR00i0GlQ3UdcTRC6EP4u9w/h9LxpUZJWRMARk6dQwZ6Jkd+QdwVpuAOrdxt18v0K2uIYR3fwFg==}
 
-  '@libsql/linux-arm-gnueabihf@0.5.11':
-    resolution: {integrity: sha512-znsVKbKgOerCNkIY0HjtvkioVGLskmGXZodZn3TMDRTmn1PIUt7/dnxU5moKMdKa1hKDSOC52dqF77nAdkn4UA==}
-    cpu: [arm]
-    os: [linux]
-
   '@libsql/linux-arm-gnueabihf@0.5.17':
     resolution: {integrity: sha512-PcASh4k47RqC+kMWAbLUKf1y6Do0q8vnUGi0yhKY4ghJcimMExViBimjbjYRSa+WIb/zh3QxNoXOhQAXx3tiuw==}
     cpu: [arm]
     os: [linux]
 
-  '@libsql/linux-arm-musleabihf@0.5.11':
-    resolution: {integrity: sha512-l4gJY6AvhQ4fUJRpjph3AW6pbiAUcVxJUH0oM5Pf/GnA9acpaDgLtle2hWMz16BSncg/Jl2jVpaJuyJsJ9E7YA==}
+  '@libsql/linux-arm-gnueabihf@0.5.20':
+    resolution: {integrity: sha512-vfw5/R00ysWG0iMLxqV8I5mVnHwjofxuLAL9i6wwdexIIXusG1ExSIOP8/W6xvjPXetgzEVRo4A7zr1S6SGBBg==}
     cpu: [arm]
     os: [linux]
 
@@ -1491,9 +1486,9 @@ packages:
     cpu: [arm]
     os: [linux]
 
-  '@libsql/linux-arm64-gnu@0.5.11':
-    resolution: {integrity: sha512-axXEenVUnSKR25g0iqL/OH4z4qrPBNwdBhjTWZr613L9tnboDPAioP1kVEy77nN8C8CL/dyXh5X4vKuIwHrQpQ==}
-    cpu: [arm64]
+  '@libsql/linux-arm-musleabihf@0.5.20':
+    resolution: {integrity: sha512-VGqyvg0k3bg0JMMHCR0XrqBseFU9syWRxEbC0Aluipkw5Xsb+DSr9cNvMtGUbGDg2pEfkY/DDa9hTlst6K7P5w==}
+    cpu: [arm]
     os: [linux]
 
   '@libsql/linux-arm64-gnu@0.5.17':
@@ -1501,8 +1496,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@libsql/linux-arm64-musl@0.5.11':
-    resolution: {integrity: sha512-Pzz9dm2D78PQpy3pYKbvzBBOwdjg9c3yoQSu5QQQCGL4J5e1bZpa/p6Z3BoYBlvmdo1V36ljS6N4hRir/rnCxg==}
+  '@libsql/linux-arm64-gnu@0.5.20':
+    resolution: {integrity: sha512-Wq6oF4goWp20G/LBmI6rdFY716bb81VCzyglkkAwqMwdJeIsaC0DRvD62nx1OSbSZmZMRDobqoe2ZP8BvMvXyQ==}
     cpu: [arm64]
     os: [linux]
 
@@ -1511,9 +1506,9 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@libsql/linux-x64-gnu@0.5.11':
-    resolution: {integrity: sha512-DxOU0MqG7soKZFVzOo7Zot5qDajZjjOgjf/sOjeJf/aeRBr3KkKiwgWKnmjDhuhitahqc8Nu2D92/dsAuDHJsA==}
-    cpu: [x64]
+  '@libsql/linux-arm64-musl@0.5.20':
+    resolution: {integrity: sha512-Xb112/q3/Z6lKKhwJgR2QVRYtRQblEB69VbStIVjKKw5RZv+r77ZSOHfsR3RHL+R66VN431+DLJBV0+B+AImQw==}
+    cpu: [arm64]
     os: [linux]
 
   '@libsql/linux-x64-gnu@0.5.17':
@@ -1521,8 +1516,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@libsql/linux-x64-musl@0.5.11':
-    resolution: {integrity: sha512-uRou4r+PiDA616t2USnsjbot88ennTrwKqhVUY7S6LTPI3RiKizZg6YESCwhzofPtk8Ualp/hMQGTGSoW9DUKw==}
+  '@libsql/linux-x64-gnu@0.5.20':
+    resolution: {integrity: sha512-fHUaOYx7cVqbqPLqOIArfPsuWnu+jk9ETR0gt/8rH1J6pW5qhdDWn3B35Hk/ZmzNacBFSWZnHxxhWnZMWYVnVA==}
     cpu: [x64]
     os: [linux]
 
@@ -1531,13 +1526,18 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@libsql/win32-x64-msvc@0.5.11':
-    resolution: {integrity: sha512-NES0P2pyx5XjveTYotTG03eoJwx0haJBYWXfqmcPLmbQ5u03Qmd7rxhLfWDdIRj4PrdhVProwdB0FA82ryLcKQ==}
+  '@libsql/linux-x64-musl@0.5.20':
+    resolution: {integrity: sha512-EpT1Va1L/y2w0Sj75lxRmaTyX/MD32eKpZiz++3mrE2zRTYAURo9GEbglvSC6Y5aRnLcHPx6XmR25wigRb8WZg==}
     cpu: [x64]
-    os: [win32]
+    os: [linux]
 
   '@libsql/win32-x64-msvc@0.5.17':
     resolution: {integrity: sha512-f5bGH8+3A5sn6Lrqg8FsQ09a1pYXPnKGXGTFiAYlfQXVst1tUTxDTugnuWcJYKXyzDe/T7ccxyIZXeSmPOhq8A==}
+    cpu: [x64]
+    os: [win32]
+
+  '@libsql/win32-x64-msvc@0.5.20':
+    resolution: {integrity: sha512-3/G5/SZWXmOCaNwEwDdiXEpjeY7NGx1khPjON1yi3BViKrb2TJiiHHn6zpCN7+ZWNibQFZylkETSTURRlealNA==}
     cpu: [x64]
     os: [win32]
 
@@ -1548,28 +1548,12 @@ packages:
   '@mercuriusjs/federation@5.0.0':
     resolution: {integrity: sha512-5E2S3mgxq+yK4XZm0UMms3lcG3QG/83xh8mmo/XyjwQiT8DulX8ibBXvlQtmOO4g4U9N+AUEqrqPfnoC5I+TSA==}
 
-  '@mikro-orm/core@6.4.16':
-    resolution: {integrity: sha512-BW/My1VlI0R25Eojdh0UiET8J+mEruThksGVfllEnjJQ0uwGs3mm/TbMclv0g+d7Qp4+mpzDQU4+lIo8okHYsw==}
+  '@mikro-orm/core@6.5.1':
+    resolution: {integrity: sha512-tODBZok5Y7AIFCM3604UsmO8MZU6TKEQFhBOblAPJj/c7JTPaws+zalmriA+K3z1dbDcS/ZKipJJKweUGpS1EA==}
     engines: {node: '>= 18.12.0'}
 
-  '@mikro-orm/knex@6.4.16':
-    resolution: {integrity: sha512-2xQodj3uh8maPGsLR7PZMmECtdyLutGxzzrGrrhSX2b+7v9k4MeMazTi4/627hJvivdUpuofypW5zMpw3TU1vQ==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      '@mikro-orm/core': ^6.0.0
-      better-sqlite3: '*'
-      libsql: '*'
-      mariadb: '*'
-    peerDependenciesMeta:
-      better-sqlite3:
-        optional: true
-      libsql:
-        optional: true
-      mariadb:
-        optional: true
-
-  '@mikro-orm/knex@6.4.6':
-    resolution: {integrity: sha512-o6t67tFH/GuPZCCEtKbTTL8HDXNgB2ITjButCTZLwteL0qI9yE/f7K6K+dEUKW+hAL3KRvc2BQeumvCVWFeISg==}
+  '@mikro-orm/knex@6.5.1':
+    resolution: {integrity: sha512-R8ee7BqKgum5fMs7aWTW0TdvQyJmj6/pcmx8l2FnQhb7D0hSXP96C8ojSKuXGX2+NUnxsw7qpLu2LKMDwPrjiQ==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -1584,14 +1568,14 @@ packages:
       mariadb:
         optional: true
 
-  '@mikro-orm/libsql@6.4.16':
-    resolution: {integrity: sha512-aOclJz/IerLHKvk2Dp61UDkwTywCmvyD56jz6RPi6sd1Dps1p0BHhGMC4AAz9ZBAhbh2fJtK4g2ZSV108yL/EQ==}
+  '@mikro-orm/libsql@6.5.1':
+    resolution: {integrity: sha512-V8Ld+MBmIItFf/vAUuiayrigKJ3GDOH2kkNlneTf5N2TTmxTXgWxbAbFejAnE+/PR1STnP796NDHCCbQ0rCJNA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
-  '@mikro-orm/postgresql@6.4.6':
-    resolution: {integrity: sha512-ZcuGp6n/SPzkHPANksjdLPyeu6jT7WCg3ueNViVrxdsguCi+/grz4I+hbOQDXV8uNHCAUOw6+WP2ndcVEYkZZQ==}
+  '@mikro-orm/postgresql@6.5.1':
+    resolution: {integrity: sha512-yM/v7uhRInsSV4v2/9MMcF6e60fkeN3OhDvcUr4QnBVZ070QRzkLXbJKWmtT+fG/VldvjS61Lv/ZriD8S+9SCA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -2884,12 +2868,12 @@ packages:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
-  dotenv@16.5.0:
-    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
-    engines: {node: '>=12'}
-
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.2.1:
+    resolution: {integrity: sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==}
     engines: {node: '>=12'}
 
   drizzle-kit@0.31.4:
@@ -3296,8 +3280,8 @@ packages:
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
 
-  fs-extra@11.3.0:
-    resolution: {integrity: sha512-Z4XaCL6dUDHfP/jT25jJKMmtxvuwbkrD1vNSMFlo9lNLY2c5FHYSQgHPRZUjAB26TpDEoW9HCOgplrdbaPV/ew==}
+  fs-extra@11.3.1:
+    resolution: {integrity: sha512-eXvGGwZ5CL17ZSwHWd3bbgk7UUpF6IFHtP57NYYakPvHOs8GDgDe5KJI36jIJzDkJ6eJjuzRA8eBQb6SkKue0g==}
     engines: {node: '>=14.14'}
 
   fs-minipass@2.1.0:
@@ -3734,13 +3718,13 @@ packages:
       tedious:
         optional: true
 
-  libsql@0.5.11:
-    resolution: {integrity: sha512-P2xY1nL2Jl7oM75LcguAEYqouVcevWhLWT8RU/p9ldaqQx5s/chF9t5ZFXPWP0x9myQQ4SguRqPO+FqdnCzKQg==}
+  libsql@0.5.17:
+    resolution: {integrity: sha512-RRlj5XQI9+Wq+/5UY8EnugSWfRmHEw4hn3DKlPrkUgZONsge1PwTtHcpStP6MSNi8ohcbsRgEHJaymA33a8cBw==}
     cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
-  libsql@0.5.17:
-    resolution: {integrity: sha512-RRlj5XQI9+Wq+/5UY8EnugSWfRmHEw4hn3DKlPrkUgZONsge1PwTtHcpStP6MSNi8ohcbsRgEHJaymA33a8cBw==}
+  libsql@0.5.20:
+    resolution: {integrity: sha512-hkWCsiwTbNsrKeWqPh91ZZEcLDo0+WUnFv2QzITD33F7Er9KOlr7N2SGfNjAbnkciN+iPJ7g108Jkno1JFmzTw==}
     cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
@@ -4074,8 +4058,8 @@ packages:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
-  mikro-orm@6.4.16:
-    resolution: {integrity: sha512-a+19cRuEPEJ3qf5Vpv4HO9TAxo/I6/rP1bZT93ln8YtNzAbCrcLC766EG6upLS6Sf7OLqdq0cXs5mUN9ESQQrg==}
+  mikro-orm@6.5.1:
+    resolution: {integrity: sha512-TbsJ/3RCNsK5iZopGzoFmqZCtrfLItUf+64YSLEoyaGUMKY51j6ln+bF4YzNbBEuzFMC7KlrF2m0WlsCTSgqGg==}
     engines: {node: '>= 18.12.0'}
 
   millify@6.1.0:
@@ -4477,6 +4461,10 @@ packages:
 
   postgres-array@3.0.2:
     resolution: {integrity: sha512-6faShkdFugNQCLwucjPcY5ARoW1SlbnrZjmGl0IrrqewpvxvhSLHimCVzqeuULCbG0fQv7Dtk1yDbG3xv7Veog==}
+    engines: {node: '>=12'}
+
+  postgres-array@3.0.4:
+    resolution: {integrity: sha512-nAUSGfSDGOaOAEGwqsRY27GPOea7CNipJPOA7lPbdEpx5Kg3qzdP0AaWC5MlhTWV9s4hFX39nomVZ+C4tnGOJQ==}
     engines: {node: '>=12'}
 
   postgres-bytea@1.0.0:
@@ -6413,16 +6401,16 @@ snapshots:
     dependencies:
       js-base64: 3.7.7
 
-  '@libsql/darwin-arm64@0.5.11':
-    optional: true
-
   '@libsql/darwin-arm64@0.5.17':
     optional: true
 
-  '@libsql/darwin-x64@0.5.11':
+  '@libsql/darwin-arm64@0.5.20':
     optional: true
 
   '@libsql/darwin-x64@0.5.17':
+    optional: true
+
+  '@libsql/darwin-x64@0.5.20':
     optional: true
 
   '@libsql/hrana-client@0.7.0':
@@ -6445,46 +6433,46 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@libsql/linux-arm-gnueabihf@0.5.11':
-    optional: true
-
   '@libsql/linux-arm-gnueabihf@0.5.17':
     optional: true
 
-  '@libsql/linux-arm-musleabihf@0.5.11':
+  '@libsql/linux-arm-gnueabihf@0.5.20':
     optional: true
 
   '@libsql/linux-arm-musleabihf@0.5.17':
     optional: true
 
-  '@libsql/linux-arm64-gnu@0.5.11':
+  '@libsql/linux-arm-musleabihf@0.5.20':
     optional: true
 
   '@libsql/linux-arm64-gnu@0.5.17':
     optional: true
 
-  '@libsql/linux-arm64-musl@0.5.11':
+  '@libsql/linux-arm64-gnu@0.5.20':
     optional: true
 
   '@libsql/linux-arm64-musl@0.5.17':
     optional: true
 
-  '@libsql/linux-x64-gnu@0.5.11':
+  '@libsql/linux-arm64-musl@0.5.20':
     optional: true
 
   '@libsql/linux-x64-gnu@0.5.17':
     optional: true
 
-  '@libsql/linux-x64-musl@0.5.11':
+  '@libsql/linux-x64-gnu@0.5.20':
     optional: true
 
   '@libsql/linux-x64-musl@0.5.17':
     optional: true
 
-  '@libsql/win32-x64-msvc@0.5.11':
+  '@libsql/linux-x64-musl@0.5.20':
     optional: true
 
   '@libsql/win32-x64-msvc@0.5.17':
+    optional: true
+
+  '@libsql/win32-x64-msvc@0.5.20':
     optional: true
 
   '@lukeed/ms@2.0.2': {}
@@ -6498,25 +6486,25 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@mikro-orm/core@6.4.16':
+  '@mikro-orm/core@6.5.1':
     dependencies:
       dataloader: 2.2.3
-      dotenv: 16.5.0
+      dotenv: 17.2.1
       esprima: 4.0.1
-      fs-extra: 11.3.0
+      fs-extra: 11.3.1
       globby: 11.1.0
-      mikro-orm: 6.4.16
+      mikro-orm: 6.5.1
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)':
+  '@mikro-orm/knex@6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)':
     dependencies:
-      '@mikro-orm/core': 6.4.16
-      fs-extra: 11.3.0
+      '@mikro-orm/core': 6.5.1
+      fs-extra: 11.3.1
       knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       sqlstring: 2.3.3
     optionalDependencies:
       better-sqlite3: 11.8.1
-      libsql: 0.5.11
+      libsql: 0.5.20
     transitivePeerDependencies:
       - mysql
       - mysql2
@@ -6526,30 +6514,12 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/knex@6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.17)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)':
+  '@mikro-orm/libsql@6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)':
     dependencies:
-      '@mikro-orm/core': 6.4.16
-      fs-extra: 11.3.0
-      knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
-      sqlstring: 2.3.3
-    optionalDependencies:
-      better-sqlite3: 11.8.1
-      libsql: 0.5.17
-    transitivePeerDependencies:
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
-
-  '@mikro-orm/libsql@6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)':
-    dependencies:
-      '@mikro-orm/core': 6.4.16
-      '@mikro-orm/knex': 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.11)
-      fs-extra: 11.3.0
-      libsql: 0.5.11
+      '@mikro-orm/core': 6.5.1
+      '@mikro-orm/knex': 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
+      fs-extra: 11.3.1
+      libsql: 0.5.20
       sqlstring-sqlite: 0.1.1
     transitivePeerDependencies:
       - better-sqlite3
@@ -6562,12 +6532,12 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/postgresql@6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.17)(mysql2@3.14.1)(sqlite3@5.1.7)':
+  '@mikro-orm/postgresql@6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(sqlite3@5.1.7)':
     dependencies:
-      '@mikro-orm/core': 6.4.16
-      '@mikro-orm/knex': 6.4.6(@mikro-orm/core@6.4.16)(better-sqlite3@11.8.1)(libsql@0.5.17)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
+      '@mikro-orm/core': 6.5.1
+      '@mikro-orm/knex': 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       pg: 8.13.2
-      postgres-array: 3.0.2
+      postgres-array: 3.0.4
       postgres-date: 2.1.0
       postgres-interval: 4.0.2
     transitivePeerDependencies:
@@ -7860,9 +7830,9 @@ snapshots:
 
   dotenv@16.4.7: {}
 
-  dotenv@16.5.0: {}
-
   dotenv@16.6.1: {}
+
+  dotenv@17.2.1: {}
 
   drizzle-kit@0.31.4:
     dependencies:
@@ -8277,7 +8247,7 @@ snapshots:
   fs-constants@1.0.0:
     optional: true
 
-  fs-extra@11.3.0:
+  fs-extra@11.3.1:
     dependencies:
       graceful-fs: 4.2.11
       jsonfile: 6.1.0
@@ -8759,21 +8729,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  libsql@0.5.11:
-    dependencies:
-      '@neon-rs/load': 0.0.4
-      detect-libc: 2.0.2
-    optionalDependencies:
-      '@libsql/darwin-arm64': 0.5.11
-      '@libsql/darwin-x64': 0.5.11
-      '@libsql/linux-arm-gnueabihf': 0.5.11
-      '@libsql/linux-arm-musleabihf': 0.5.11
-      '@libsql/linux-arm64-gnu': 0.5.11
-      '@libsql/linux-arm64-musl': 0.5.11
-      '@libsql/linux-x64-gnu': 0.5.11
-      '@libsql/linux-x64-musl': 0.5.11
-      '@libsql/win32-x64-msvc': 0.5.11
-
   libsql@0.5.17:
     dependencies:
       '@neon-rs/load': 0.0.4
@@ -8788,6 +8743,21 @@ snapshots:
       '@libsql/linux-x64-gnu': 0.5.17
       '@libsql/linux-x64-musl': 0.5.17
       '@libsql/win32-x64-msvc': 0.5.17
+
+  libsql@0.5.20:
+    dependencies:
+      '@neon-rs/load': 0.0.4
+      detect-libc: 2.0.2
+    optionalDependencies:
+      '@libsql/darwin-arm64': 0.5.20
+      '@libsql/darwin-x64': 0.5.20
+      '@libsql/linux-arm-gnueabihf': 0.5.20
+      '@libsql/linux-arm-musleabihf': 0.5.20
+      '@libsql/linux-arm64-gnu': 0.5.20
+      '@libsql/linux-arm64-musl': 0.5.20
+      '@libsql/linux-x64-gnu': 0.5.20
+      '@libsql/linux-x64-musl': 0.5.20
+      '@libsql/win32-x64-msvc': 0.5.20
 
   light-my-request@6.6.0:
     dependencies:
@@ -9293,7 +9263,7 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
-  mikro-orm@6.4.16: {}
+  mikro-orm@6.5.1: {}
 
   millify@6.1.0:
     dependencies:
@@ -9681,6 +9651,8 @@ snapshots:
   postgres-array@2.0.0: {}
 
   postgres-array@3.0.2: {}
+
+  postgres-array@3.0.4: {}
 
   postgres-bytea@1.0.0: {}
 

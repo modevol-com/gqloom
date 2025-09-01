@@ -43,6 +43,9 @@ import { type EntitySchemaSilk, type EntitySilk, mikroSilk } from "."
 import type { GQLoomMikroFieldExtensions } from "./types"
 import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export class EntitySchemaWeaver {
   public static weave(
     silk: GraphQLSilk<any, any>,
@@ -244,6 +247,9 @@ function getGraphQLTypeWithName(
   }
 }
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export interface CallableEntitySchemaWeaver {
   <TSilk extends GraphQLSilk>(
     silk: TSilk,
@@ -267,11 +273,17 @@ export interface CallableEntitySchemaWeaver {
   ) => EntitySilk<SilkSchemaEntityWithRelations<TSilk, TRelations>>
 }
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export type SilkSchemaEntityWithRelations<
   TSilk extends GraphQLSilk,
   TRelations extends Record<string, RelationProperty<any, any>> = never,
 > = SilkSchemaEntity<TSilk> & InferRelations<TRelations>
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver =
   Object.assign(
     (
@@ -361,18 +373,29 @@ export interface ManyToOneProperty<TTarget extends object, _TOwner> {
   nullable?: boolean
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<ManyToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable?: false
   }
 ): ManyToOneProperty<TTarget, TOwner>
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<ManyToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable: true
   }
 ): ManyToOneProperty<TTarget, TOwner> & WithNullable
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: ManyToOneOptions<TOwner, TTarget>
@@ -390,6 +413,9 @@ export interface OneToManyProperty<TTarget extends object, _TOwner> {
   entity: string | (() => string | EntityName<TTarget>)
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToMany<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options: OneToManyOptions<TOwner, TTarget>
@@ -407,18 +433,29 @@ export interface OneToOneProperty<TTarget extends object, _TOwner> {
   nullable?: boolean
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<OneToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable?: false
   }
 ): OneToOneProperty<TTarget, TOwner>
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<OneToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable: true
   }
 ): OneToOneProperty<TTarget, TOwner> & WithNullable
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: OneToOneOptions<TOwner, TTarget>
@@ -436,6 +473,9 @@ export interface ManyToManyProperty<TTarget extends object, _TOwner> {
   entity: string | (() => string | EntityName<TTarget>)
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToMany<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: ManyToManyOptions<TOwner, TTarget>

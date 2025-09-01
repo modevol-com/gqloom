@@ -32,8 +32,8 @@
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "@mikro-orm/core": "^6.4.16",
-    "@mikro-orm/libsql": "^6.4.16"
+    "@mikro-orm/core": "^6.5.1",
+    "@mikro-orm/libsql": "^6.5.1"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
