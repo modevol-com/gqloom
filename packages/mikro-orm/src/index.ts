@@ -15,6 +15,7 @@ import {
   ReferenceKind,
   type RequiredEntityData,
   Type,
+  types,
 } from "@mikro-orm/core"
 import {
   GraphQLBoolean,
@@ -161,8 +162,10 @@ export class MikroWeaver {
       return gqlType
     }
     function list(gqlType: GraphQLOutputType) {
-      if (MikroWeaver.normalizeType(property).endsWith("[]"))
+      const nType = MikroWeaver.normalizeType(property)
+      if (nType.endsWith("[]") || nType === "array") {
         return new GraphQLList(new GraphQLNonNull(gqlType))
+      }
       return gqlType
     }
 
@@ -189,9 +192,11 @@ export class MikroWeaver {
     if (property.kind !== ReferenceKind.SCALAR) return
     if (property.primary === true) return GraphQLID
 
-    switch (
-      MikroWeaver.extractSimpleType(MikroWeaver.normalizeType(property))
-    ) {
+    const simpleType = MikroWeaver.extractSimpleType(
+      MikroWeaver.normalizeType(property)
+    )
+
+    switch (simpleType) {
       case "string":
         return GraphQLString
       case "double":
@@ -212,26 +217,37 @@ export class MikroWeaver {
     }
   }
 
+  protected static typeNames: Map<any, string> = new Map(
+    Object.entries(types).map(([key, value]) => [value, key])
+  )
+
   protected static normalizeType(
     prop: Pick<PropertyOptions<any>, "type" | "runtimeType">
   ): string {
     if (prop.runtimeType) return prop.runtimeType
     if (typeof prop.type === "string") return prop.type
+    if (prop.type instanceof Type) {
+      return MikroWeaver.typeNames.get(prop.type) ?? prop.type.runtimeType
+    }
     if (isSubclass(prop.type, Type)) {
-      return prop.type.prototype.runtimeType
+      return (
+        MikroWeaver.typeNames.get(prop.type) ?? prop.type.prototype.runtimeType
+      )
     }
     return "string"
   }
 
   // mikro-orm Platform.extractSimpleType
   protected static extractSimpleType(type: string): EntityProperty["type"] {
-    return type.toLowerCase().match(/[^(), ]+/)![0]
+    let simpleType = type.toLowerCase().match(/[^(), ]+/)![0]
+    if (simpleType.endsWith("[]")) simpleType = simpleType.slice(0, -2)
+    return simpleType
   }
 
   /**
-   * Create a Valibot weaver config object
-   * @param config Valibot weaver config options
-   * @returns a Valibot weaver config object
+   * Create a Mikro-ORM weaver config object
+   * @param config Mikro-ORM weaver config options
+   * @returns a Mikro-ORM weaver config object
    */
   public static config = function (
     config: MikroWeaverConfigOptions
@@ -243,9 +259,9 @@ export class MikroWeaver {
   }
 
   /**
-   * Use a Valibot weaver config
-   * @param config Valibot weaver config options
-   * @returns a new Valibot to silk function
+   * Use a Mikro-ORM weaver config
+   * @param config Mikro-ORM weaver config options
+   * @returns a new Mikro-ORM Schema to silk function
    */
   public static useConfig = function (
     config: MikroWeaverConfigOptions

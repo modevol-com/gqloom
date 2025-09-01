@@ -19,8 +19,8 @@ describe("isSubclass", () => {
     expect(isSubclass(Unrelated, Parent)).toBe(false)
   })
 
-  it("should return false for the same class", () => {
-    expect(isSubclass(Parent, Parent)).toBe(false)
+  it("should return true for the same class", () => {
+    expect(isSubclass(Parent, Parent)).toBe(true)
   })
 
   it("should return false when parent is subclass of child", () => {

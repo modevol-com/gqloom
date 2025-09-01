@@ -44,5 +44,8 @@ export function isSubclass<TParent>(
   childClass: any,
   parentClass: TParent
 ): childClass is TParent {
-  return childClass.prototype instanceof (parentClass as any)
+  return (
+    Object.is(childClass, parentClass) ||
+    childClass.prototype instanceof (parentClass as any)
+  )
 }
