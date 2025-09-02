@@ -1,4 +1,6 @@
 import {
+  FieldFactoryWithResolve,
+  type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type ListSilk,
@@ -15,12 +17,17 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
+  type Collection,
   type EntityManager,
-  type EntitySchema,
+  type EntityName,
+  EntitySchema,
   type FindAllOptions,
   type PrimaryProperty,
   QueryOrder,
+  type Reference,
+  ReferenceKind,
   type RequiredEntityData,
+  type ScalarReference,
   Utils,
 } from "@mikro-orm/core"
 import {
@@ -72,6 +79,123 @@ export class MikroResolverFactory<
 
   protected getEm() {
     return this.options.getEntityManager()
+  }
+
+  public relationField<TKey extends InferRelationKeys<InferEntity<TSchema>>>(
+    key: TKey,
+    options: {
+      middlewares?: Middleware<MikroResolverRelationField<TSchema, TKey>>[]
+    } & GraphQLFieldOptions = {}
+  ): MikroResolverRelationField<TSchema, TKey> {
+    const property = this.entity.meta.properties[key as string]
+    if (property == null) throw new Error(`Property ${String(key)} not found`)
+
+    if (
+      property.kind === ReferenceKind.ONE_TO_MANY ||
+      property.kind === ReferenceKind.MANY_TO_MANY
+    ) {
+      return this.collectionField(key as any, options as any) as any
+    }
+
+    if (
+      property.kind === ReferenceKind.ONE_TO_ONE ||
+      property.kind === ReferenceKind.MANY_TO_ONE
+    ) {
+      return this.referenceField(key as any, options as any) as any
+    }
+
+    if (!property.ref)
+      throw new Error(`Property ${String(key)} is not a reference field`)
+
+    return this.scalarReferenceField(key as any, options as any) as any
+  }
+
+  protected getEntityMeta(entityName: EntityName<any>) {
+    if (entityName instanceof EntitySchema) {
+      return entityName.init().meta
+    }
+    if (!this.options.metadata) throw new Error("Metadata not found")
+    return this.options.metadata.get(entityName)
+  }
+
+  protected get meta() {
+    return this.entity.init().meta
+  }
+
+  public collectionField<
+    TKey extends InferCollectionKeys<InferEntity<TSchema>>,
+  >(
+    key: TKey,
+    options: {
+      middlewares?: Middleware<MikroResolverCollectionField<TSchema, TKey>>[]
+    } & GraphQLFieldOptions = {}
+  ): MikroResolverCollectionField<TSchema, TKey> {
+    const property = this.meta.properties[key as string]
+    if (property == null) throw new Error(`Property ${String(key)} not found`)
+    if (
+      property.kind !== ReferenceKind.ONE_TO_MANY &&
+      property.kind !== ReferenceKind.MANY_TO_MANY
+    )
+      throw new Error(`Property ${String(key)} is not a collection field`)
+    const targetEntity = this.getEntityMeta(property.entity())
+    return new FieldFactoryWithResolve(
+      silk(new GraphQLList(MikroWeaver.getGraphQLType(targetEntity))),
+      {
+        ...options,
+        resolve: (_parent, _input) => {
+          // TODO:
+        },
+      } as FieldOptions<any, any, any, any>
+    )
+  }
+
+  public referenceField<TKey extends InferReferenceKeys<InferEntity<TSchema>>>(
+    key: TKey,
+    options: {
+      middlewares?: Middleware<MikroResolverReferenceField<TSchema, TKey>>[]
+    } & GraphQLFieldOptions = {}
+  ): MikroResolverReferenceField<TSchema, TKey> {
+    const property = this.meta.properties[key as string]
+    if (property == null) throw new Error(`Property ${String(key)} not found`)
+    if (
+      property.kind !== ReferenceKind.ONE_TO_ONE &&
+      property.kind !== ReferenceKind.MANY_TO_ONE
+    )
+      throw new Error(`Property ${String(key)} is not a reference field`)
+    const targetEntity = this.getEntityMeta(property.entity())
+    return new FieldFactoryWithResolve(
+      silk.nullable(silk(MikroWeaver.getGraphQLType(targetEntity))),
+      {
+        ...options,
+        resolve: (_parent, _input) => {
+          // TODO: Implement
+        },
+      } as FieldOptions<any, any, any, any>
+    ) as any
+  }
+
+  public scalarReferenceField<
+    TKey extends InferScalarReferenceKeys<InferEntity<TSchema>>,
+  >(
+    key: TKey,
+    options: {
+      middlewares?: Middleware<
+        MikroScalarResolverReferenceField<TSchema, TKey>
+      >[]
+    } & GraphQLFieldOptions = {}
+  ): MikroScalarResolverReferenceField<TSchema, TKey> {
+    const property = this.meta.properties[key as string]
+    if (property == null) throw new Error(`Property ${String(key)} not found`)
+    if (property.kind !== ReferenceKind.SCALAR || !property.ref)
+      throw new Error(`Property ${String(key)} is not a scalar reference field`)
+    const output = MikroWeaver.getFieldType(property, this.meta)
+    if (output == null) throw new Error(`Property ${String(key)} is be hidden`)
+    return new FieldFactoryWithResolve(silk(output), {
+      ...options,
+      resolve: (_parent, _input) => {
+        // TODO: Implement
+      },
+    } as FieldOptions<any, any, any, any>)
   }
 
   /**
@@ -278,9 +402,7 @@ export class MikroInputFactory<
 > {
   public constructor(
     protected readonly entity: TSchema,
-    protected readonly options?: MikroResolverFactoryOptions<
-      InferEntity<TSchema>
-    >
+    protected readonly options?: MikroResolverFactoryOptions<TSchema>
   ) {}
 
   public createInput(): GraphQLSilk<
@@ -339,7 +461,7 @@ export class MikroInputFactory<
           )
           const type = customSilk
             ? weaverContext.getGraphQLType(customSilk)
-            : MikroWeaver.getFieldType(property, this.entity)
+            : MikroWeaver.getFieldType(property, this.meta)
 
           if (type == null) return mapValue.SKIP
 
@@ -448,7 +570,7 @@ export class MikroInputFactory<
           )
           const type = customSilk
             ? weaverContext.getGraphQLType(customSilk)
-            : MikroWeaver.getFieldType(property, this.entity)
+            : MikroWeaver.getFieldType(property, this.meta)
 
           if (type == null) return mapValue.SKIP
 
@@ -517,7 +639,7 @@ export class MikroInputFactory<
     const gqlType =
       weaverContext.getNamedType(name) ??
       weaverContext.memoNamedType(
-        MikroWeaver.getGraphQLType(this.entity, {
+        MikroWeaver.getGraphQLType(this.entity.init().meta, {
           pick: this.entity.meta.primaryKeys,
           name,
         })
@@ -566,7 +688,7 @@ export class MikroInputFactory<
         return mapValue.SKIP
       }
 
-      const type = MikroWeaver.getFieldType(property, this.entity)
+      const type = MikroWeaver.getFieldType(property, this.meta)
       if (type == null) return mapValue.SKIP
       if (type instanceof GraphQLScalarType) comparisonKeys.add(key)
     })
@@ -608,7 +730,7 @@ export class MikroInputFactory<
                 return mapValue.SKIP
               }
 
-              const type = MikroWeaver.getFieldType(property, this.entity)
+              const type = MikroWeaver.getFieldType(property, this.meta)
               if (type == null) return mapValue.SKIP
               return {
                 type: MikroInputFactory.queryOrderType(),
@@ -641,7 +763,7 @@ export class MikroInputFactory<
                 return mapValue.SKIP
               }
 
-              const type = MikroWeaver.getFieldType(property, this.entity)
+              const type = MikroWeaver.getFieldType(property, this.meta)
               if (type == null) return mapValue.SKIP
               return {
                 type:
@@ -654,6 +776,10 @@ export class MikroInputFactory<
         })
       )
     )
+  }
+
+  public get meta() {
+    return this.entity.init().meta
   }
 
   public static queryOrderType(): GraphQLEnumType {
@@ -863,3 +989,96 @@ export interface FindManyOptions<TEntity> {
   limit?: number
   offset?: number
 }
+
+export type InferRelationKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends
+    | Reference<any>
+    | ScalarReference<any>
+    | Collection<any>
+    ? K
+    : never
+}[keyof TEntity]
+
+export type InferReferenceKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends
+    | Collection<any>
+    | ScalarReference<any>
+    ? never
+    : TEntity[K] extends Reference<any>
+      ? K
+      : never
+}[keyof TEntity]
+
+export type InferCollectionKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends Collection<any> ? K : never
+}[keyof TEntity]
+
+export type InferScalarReferenceKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends ScalarReference<any> ? K : never
+}[keyof TEntity]
+
+export type MikroResolverRelationField<
+  TSchema extends EntitySchema<any, any> & GraphQLSilk,
+  TKey,
+> = TKey extends InferCollectionKeys<InferEntity<TSchema>>
+  ? MikroResolverCollectionField<TSchema, TKey>
+  : TKey extends InferReferenceKeys<InferEntity<TSchema>>
+    ? MikroResolverReferenceField<TSchema, TKey>
+    : TKey extends InferScalarReferenceKeys<InferEntity<TSchema>>
+      ? MikroScalarResolverReferenceField<TSchema, TKey>
+      : never
+
+export interface MikroResolverReferenceField<
+  TSchema extends EntitySchema<any, any> & GraphQLSilk,
+  TKey,
+> extends FieldFactoryWithResolve<
+    TSchema,
+    GraphQLSilk<
+      TKey extends keyof InferEntity<TSchema>
+        ? UnwrapRef<InferEntity<TSchema>[TKey]>
+        : never
+    >
+  > {}
+
+export interface MikroResolverCollectionField<
+  TSchema extends EntitySchema<any, any> & GraphQLSilk,
+  TKey,
+> extends FieldFactoryWithResolve<
+    TSchema,
+    GraphQLSilk<
+      TKey extends keyof InferEntity<TSchema>
+        ? UnwrapCollection<InferEntity<TSchema>[TKey]>
+        : never
+    >
+  > {}
+
+export interface MikroScalarResolverReferenceField<
+  TSchema extends EntitySchema<any, any> & GraphQLSilk,
+  TKey,
+> extends FieldFactoryWithResolve<
+    TSchema,
+    GraphQLSilk<
+      TKey extends keyof InferEntity<TSchema>
+        ? UnwrapRef<InferEntity<TSchema>[TKey]>
+        : never
+    >
+  > {}
+
+type UnwrapRef<T> = T extends ScalarReference<any>
+  ? UnwrapScalarReference<T>
+  : T extends Reference<any>
+    ? UnwrapReference<T>
+    : T extends Collection<any>
+      ? UnwrapCollection<T>
+      : T
+
+type UnwrapScalarReference<T extends ScalarReference<any>> =
+  T extends ScalarReference<infer Value> ? Value : T
+
+type UnwrapReference<T extends Reference<any>> = T extends Reference<
+  infer Value
+>
+  ? Value
+  : T
+
+type UnwrapCollection<T> = T extends Collection<infer Value> ? Value : T

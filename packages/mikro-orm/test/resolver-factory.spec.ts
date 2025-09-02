@@ -16,6 +16,7 @@ import {
   RequestContext,
   type RequiredEntityData,
   defineConfig,
+  defineEntity,
 } from "@mikro-orm/libsql"
 import {
   GraphQLFloat,
@@ -726,6 +727,59 @@ describe("MikroResolverFactory", async () => {
       ).toMatchObject({
         value: { where: { id: 1 } },
       })
+    })
+  })
+
+  describe("relationField", () => {
+    const _User = defineEntity({
+      name: "User",
+      properties: (p) => ({
+        id: p.string().primary(),
+        name: p.string(),
+        posts: () => p.oneToMany(_Post),
+      }),
+    })
+    const User = mikroSilk(_User)
+
+    const _Post = defineEntity({
+      name: "Post",
+      properties: (p) => ({
+        id: p.string().primary(),
+        title: p.string(),
+        content: p.string().lazy(),
+        author: () => p.manyToOne(_User),
+      }),
+    })
+    const Post = mikroSilk(_Post)
+
+    const userFactory = new MikroResolverFactory(User, () => orm.em)
+    const postFactory = new MikroResolverFactory(Post, () => orm.em)
+
+    it("should be able to create a relationField", () => {
+      const pf2 = userFactory.collectionField("posts")
+      expect(pf2).toBeDefined()
+      const af2 = postFactory.referenceField("author")
+      expect(af2).toBeDefined()
+      const cf2 = postFactory.scalarReferenceField("content")
+      expect(cf2).toBeDefined()
+
+      const pf1 = userFactory.relationField("posts")
+      expect(pf1).toBeDefined()
+      expect(pf1["~meta"].output).toBeTypeOf("object")
+      expect(pf1["~meta"].operation).toEqual("field")
+      expect(pf1["~meta"].resolve).toBeTypeOf("function")
+
+      const af1 = postFactory.relationField("author")
+      expect(af1).toBeDefined()
+      expect(af1["~meta"].output).toBeTypeOf("object")
+      expect(af1["~meta"].operation).toEqual("field")
+      expect(af1["~meta"].resolve).toBeTypeOf("function")
+
+      const cf1 = postFactory.relationField("content")
+      expect(cf1["~meta"].output).toBeTypeOf("object")
+      expect(cf1["~meta"].operation).toEqual("field")
+      expect(cf1["~meta"].resolve).toBeTypeOf("function")
+      expect(cf1).toBeDefined()
     })
   })
 })

@@ -4,6 +4,7 @@ import type {
   EntityManager,
   EntityProperty,
   EntitySchema,
+  MetadataStorage,
   PropertyOptions,
 } from "@mikro-orm/core"
 import type {
@@ -52,9 +53,12 @@ export interface MikroSilkConfig<TSchema extends EntitySchema<any, any>>
 
 export type ValueOrGetter<T> = T | (() => T)
 
-export interface MikroResolverFactoryOptions<TEntity> {
+export interface MikroResolverFactoryOptions<
+  TSchema extends EntitySchema<any, any>,
+> {
   getEntityManager: () => MayPromise<EntityManager>
-  input?: MikroFactoryPropertyBehaviors<TEntity>
+  input?: MikroFactoryPropertyBehaviors<InferEntity<TSchema>>
+  metadata?: MetadataStorage
 }
 
 export interface PropertyBehavior<TOutput> {

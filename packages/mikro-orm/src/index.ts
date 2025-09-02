@@ -9,6 +9,7 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
+  type EntityMetadata,
   type EntityProperty,
   type EntitySchema,
   type PropertyOptions,
@@ -67,12 +68,12 @@ export class MikroWeaver {
   }
 
   public static ObjectConfigMap = new WeakMap<
-    EntitySchema,
+    EntityMetadata,
     MikroSilkConfig<EntitySchema>
   >()
 
   public static asObjectType(
-    schema: EntitySchema,
+    schema: EntityMetadata,
     config: MikroSilkConfig<EntitySchema>
   ) {
     MikroWeaver.ObjectConfigMap.set(schema, config)
@@ -80,38 +81,38 @@ export class MikroWeaver {
   }
 
   public static getGraphQLTypeBySelf(this: EntitySchema) {
-    return MikroWeaver.getGraphQLType(this)
+    return MikroWeaver.getGraphQLType(this.init().meta)
   }
 
-  public static getGraphQLType<TSchema extends EntitySchema>(
-    entity: TSchema,
+  public static getGraphQLType(
+    meta: EntityMetadata,
     {
       required,
       partial,
       pick,
       name: entityName,
     }: {
-      required?: (keyof InferEntity<TSchema>)[] | boolean
-      partial?: (keyof InferEntity<TSchema>)[] | boolean
-      pick?: (keyof InferEntity<TSchema>)[]
+      required?: string[] | boolean
+      partial?: string[] | boolean
+      pick?: string[]
       name?: string
     } = {}
   ) {
-    const config = MikroWeaver.ObjectConfigMap.get(entity)
-    const name = entityName ?? entity.meta.className ?? config?.name
+    const config = MikroWeaver.ObjectConfigMap.get(meta)
+    const name = entityName ?? meta.className ?? config?.name
 
     const existing = weaverContext.getNamedType(name)
     if (existing != null) return new GraphQLNonNull(existing)
 
-    const properties = entity.init().meta.properties
+    const properties = meta.properties
 
-    const originType = EntityGraphQLTypes.get(entity)
+    const originType = EntityGraphQLTypes.get(meta)
     const originFields = originType?.getFields()
 
     return new GraphQLNonNull(
       weaverContext.memoNamedType(
         new GraphQLObjectType({
-          name: name ?? entity.meta.className,
+          name: name ?? meta.className,
           ...config,
           fields: mapValue(properties, (value, key) => {
             if (pick != null && !pick.includes(key)) return mapValue.SKIP
@@ -125,7 +126,7 @@ export class MikroWeaver {
               if (typeof partial === "boolean") return partial
             })()
 
-            const field = MikroWeaver.getFieldConfig(value, entity, {
+            const field = MikroWeaver.getFieldConfig(value, meta, {
               nullable,
               originField,
             })
@@ -139,7 +140,7 @@ export class MikroWeaver {
 
   public static getFieldConfig(
     property: EntityProperty,
-    entity: EntitySchema,
+    entity: EntityMetadata,
     {
       nullable,
       originField,
@@ -184,7 +185,7 @@ export class MikroWeaver {
 
   public static getFieldType(
     property: EntityProperty,
-    entity: EntitySchema
+    entity: EntityMetadata
   ): GraphQLOutputType | undefined {
     const entityConfig = MikroWeaver.ObjectConfigMap.get(entity)
     const fieldsConfig =
@@ -308,7 +309,7 @@ export function mikroSilk<TSchema extends EntitySchema>(
   schema: TSchema,
   config?: MikroSilkConfig<TSchema>
 ): EntitySchemaSilk<TSchema> {
-  if (config) MikroWeaver.asObjectType(schema, config)
+  if (config) MikroWeaver.asObjectType(schema.init().meta, config)
   return MikroWeaver.unravel(schema)
 }
 

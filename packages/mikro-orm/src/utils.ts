@@ -1,4 +1,4 @@
-import { type EntitySchema, Platform } from "@mikro-orm/core"
+import { type EntityMetadata, Platform } from "@mikro-orm/core"
 import {
   GraphQLList,
   GraphQLNonNull,
@@ -13,7 +13,10 @@ export const platform = new DefaultPlatform()
 /**
  * Store origin GraphQLType for EntitySchema
  */
-export const EntityGraphQLTypes = new WeakMap<EntitySchema, GraphQLObjectType>()
+export const EntityGraphQLTypes = new WeakMap<
+  EntityMetadata,
+  GraphQLObjectType
+>()
 
 export type CapitalizeFirstLetter<TString extends string> =
   TString extends `${infer TFirst}${infer TRest}`

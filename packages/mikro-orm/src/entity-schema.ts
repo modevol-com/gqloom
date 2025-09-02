@@ -93,7 +93,7 @@ export class EntitySchemaWeaver {
       },
     })
 
-    EntityGraphQLTypes.set(entity, gqlType)
+    EntityGraphQLTypes.set(entity.meta, gqlType)
 
     return mikroSilk(entity, options?.asObjectType)
   }
