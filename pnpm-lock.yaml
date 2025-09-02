@@ -410,12 +410,18 @@ importers:
       '@gqloom/core':
         specifier: workspace:*
         version: link:../core
+      '@gqloom/valibot':
+        specifier: workspace:*
+        version: link:../valibot
       '@mikro-orm/core':
         specifier: ^6.5.1
         version: 6.5.1
       '@mikro-orm/libsql':
         specifier: ^6.5.1
         version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)
+      valibot:
+        specifier: 1.0.0-beta.12
+        version: 1.0.0-beta.12(typescript@5.7.3)
 
   packages/prisma:
     dependencies:

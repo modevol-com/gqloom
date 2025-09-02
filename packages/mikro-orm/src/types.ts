@@ -1,6 +1,7 @@
-import type { WeaverConfig } from "@gqloom/core"
+import type { GraphQLSilk, MayPromise, WeaverConfig } from "@gqloom/core"
 import type { SYMBOLS } from "@gqloom/core"
 import type {
+  EntityManager,
   EntityProperty,
   EntitySchema,
   PropertyOptions,
@@ -50,3 +51,38 @@ export interface MikroSilkConfig<TSchema extends EntitySchema<any, any>>
 }
 
 export type ValueOrGetter<T> = T | (() => T)
+
+export interface MikroResolverFactoryOptions<TEntity> {
+  getEntityManager: () => MayPromise<EntityManager>
+  input?: MikroFactoryPropertyBehaviors<TEntity>
+}
+
+export interface PropertyBehavior<TOutput> {
+  /**
+   * Is this property visible in the filters?
+   */
+  filters?: boolean | typeof SYMBOLS.FIELD_HIDDEN
+
+  /**
+   * Is this property visible in the create mutation input?
+   */
+  create?: boolean | typeof SYMBOLS.FIELD_HIDDEN | GraphQLSilk<TOutput, any>
+  /**
+   * Is this property visible in the update mutation input?
+   */
+  update?: boolean | typeof SYMBOLS.FIELD_HIDDEN | GraphQLSilk<TOutput, any>
+}
+
+export type MikroFactoryPropertyBehaviors<TEntity> = {
+  [K in keyof TEntity]?:
+    | PropertyBehavior<TEntity[K]>
+    | GraphQLSilk<TEntity[K], any>
+    | boolean
+    | typeof SYMBOLS.FIELD_HIDDEN
+    | undefined
+} & {
+  /**
+   * Config the default behavior of all properties
+   */
+  "*"?: PropertyBehavior<never> | boolean | undefined
+}

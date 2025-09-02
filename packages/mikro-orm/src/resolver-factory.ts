@@ -31,26 +31,27 @@ import {
   type GraphQLOutputType,
   GraphQLScalarType,
   GraphQLString,
+  isNonNullType,
 } from "graphql"
 import { type GraphQLFieldConfig, GraphQLInt } from "graphql"
 import { MikroWeaver } from "."
-import type { InferEntity } from "./types"
-
-interface MikroResolverFactoryOptions {
-  getEntityManager: () => MayPromise<EntityManager>
-}
+import type {
+  InferEntity,
+  MikroFactoryPropertyBehaviors,
+  MikroResolverFactoryOptions,
+} from "./types"
 
 export class MikroResolverFactory<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
-  public readonly options: MikroResolverFactoryOptions
+  public readonly options: MikroResolverFactoryOptions<InferEntity<TSchema>>
   protected flushMiddleware: Middleware
   protected inputFactory: MikroInputFactory<TSchema>
   public constructor(
     protected readonly entity: TSchema,
     optionsOrGetEntityManager:
-      | MikroResolverFactoryOptions
-      | MikroResolverFactoryOptions["getEntityManager"]
+      | MikroResolverFactoryOptions<InferEntity<TSchema>>
+      | (() => MayPromise<EntityManager>)
   ) {
     if (typeof optionsOrGetEntityManager === "function") {
       this.options = { getEntityManager: optionsOrGetEntityManager }
@@ -60,7 +61,7 @@ export class MikroResolverFactory<
 
     entity.init()
 
-    this.inputFactory = new MikroInputFactory(entity)
+    this.inputFactory = new MikroInputFactory(entity, this.options)
     this.flushMiddleware = async (next) => {
       const result = await next()
       const em = await this.getEm()
@@ -275,7 +276,12 @@ export class MikroResolverFactory<
 export class MikroInputFactory<
   TSchema extends EntitySchema<any, any> & GraphQLSilk,
 > {
-  public constructor(protected readonly entity: TSchema) {}
+  public constructor(
+    protected readonly entity: TSchema,
+    protected readonly options?: MikroResolverFactoryOptions<
+      InferEntity<TSchema>
+    >
+  ) {}
 
   public createInput(): GraphQLSilk<
     RequiredEntityData<InferEntity<TSchema>>,
@@ -285,20 +291,106 @@ export class MikroInputFactory<
 
     const gqlType =
       weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        MikroWeaver.getGraphQLType(this.entity, {
-          partial: this.entity.meta.primaryKeys,
-          name: `${this.entity.meta.name}CreateInput`,
-        })
-      )
+      weaverContext.memoNamedType(this.buildCreateInputType(name))
 
     return silk(
       new GraphQLObjectType({
         name: name + "Wrapper",
-        fields: { data: { type: gqlType } },
+        fields: { data: { type: new GraphQLNonNull(gqlType) } },
       }) as GraphQLOutputType,
-      (value) => ({ value: value.data })
+      async (value) => {
+        if (this.options?.input) {
+          const validatedData = await this.validateCreateInput(value.data, [
+            "data",
+          ])
+          if (validatedData.issues) {
+            throw new Error(
+              `Validation failed: ${validatedData.issues.map((i) => i.message).join(", ")}`
+            )
+          }
+          return { value: validatedData.value }
+        }
+        return { value: value.data }
+      }
     )
+  }
+
+  protected buildCreateInputType(name: string): GraphQLObjectType {
+    return new GraphQLObjectType({
+      name,
+      fields: () =>
+        mapValue(this.entity.meta.properties, (property, propertyName) => {
+          // Check visibility
+          if (
+            !MikroInputFactory.isPropertyVisible(
+              propertyName,
+              this.options?.input,
+              "create"
+            )
+          ) {
+            return mapValue.SKIP
+          }
+
+          // Get custom type if configured
+          const customSilk = MikroInputFactory.getPropertyConfig(
+            this.options?.input,
+            propertyName,
+            "create"
+          )
+          const type = customSilk
+            ? weaverContext.getGraphQLType(customSilk)
+            : MikroWeaver.getFieldType(property, this.entity)
+
+          if (type == null) return mapValue.SKIP
+
+          // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
+          const isRequired =
+            property.nullable !== true && !property.default && !property.primary
+          const finalType =
+            isRequired && !isNonNullType(type) ? new GraphQLNonNull(type) : type
+
+          return {
+            type: finalType,
+            description: property.comment,
+          } as GraphQLFieldConfig<any, any>
+        }),
+    })
+  }
+
+  protected async validateCreateInput(
+    data: RequiredEntityData<InferEntity<TSchema>>,
+    path: ReadonlyArray<PropertyKey>
+  ): Promise<
+    StandardSchemaV1.Result<RequiredEntityData<InferEntity<TSchema>>>
+  > {
+    const result: any = {}
+    const issues: StandardSchemaV1.Issue[] = []
+
+    for (const [propertyName, value] of Object.entries(data)) {
+      const customSilk = MikroInputFactory.getPropertyConfig(
+        this.options?.input,
+        propertyName,
+        "create"
+      )
+      if (customSilk && customSilk["~standard"]) {
+        const validationResult = await customSilk["~standard"].validate(value)
+        if ("value" in validationResult) {
+          result[propertyName] = validationResult.value
+        }
+        if (validationResult.issues) {
+          issues.push(
+            ...validationResult.issues.map((issue) => ({
+              ...issue,
+              path: [...path, propertyName, ...(issue.path ?? [])],
+            }))
+          )
+        }
+      } else {
+        result[propertyName] = value
+      }
+    }
+
+    return { value: result, ...(issues.length > 0 && { issues }) }
   }
 
   public updateInput(): GraphQLSilk<
@@ -308,21 +400,112 @@ export class MikroInputFactory<
     const name = `${this.entity.meta.name}UpdateInput`
     const gqlType =
       weaverContext.getNamedType(name) ??
-      weaverContext.memoNamedType(
-        MikroWeaver.getGraphQLType(this.entity, {
-          partial: true,
-          required: this.entity.meta.primaryKeys,
-          name,
-        })
-      )
+      weaverContext.memoNamedType(this.buildUpdateInputType(name))
 
     return silk(
       new GraphQLObjectType({
         name: name + "Wrapper",
-        fields: { data: { type: gqlType } },
+        fields: { data: { type: new GraphQLNonNull(gqlType) } },
       }) as GraphQLOutputType,
-      (value) => ({ value: value.data })
+      async (value) => {
+        if (this.options?.input) {
+          const validatedData = await this.validateUpdateInput(value.data, [
+            "data",
+          ])
+          if (validatedData.issues) {
+            throw new Error(
+              `Validation failed: ${validatedData.issues.map((i) => i.message).join(", ")}`
+            )
+          }
+          return { value: validatedData.value }
+        }
+        return { value: value.data }
+      }
     )
+  }
+
+  protected buildUpdateInputType(name: string): GraphQLObjectType {
+    return new GraphQLObjectType({
+      name,
+      fields: () =>
+        mapValue(this.entity.meta.properties, (property, propertyName) => {
+          // Check visibility
+          if (
+            !MikroInputFactory.isPropertyVisible(
+              propertyName,
+              this.options?.input,
+              "update"
+            )
+          ) {
+            return mapValue.SKIP
+          }
+
+          // Get custom type if configured
+          const customSilk = MikroInputFactory.getPropertyConfig(
+            this.options?.input,
+            propertyName,
+            "update"
+          )
+          const type = customSilk
+            ? weaverContext.getGraphQLType(customSilk)
+            : MikroWeaver.getFieldType(property, this.entity)
+
+          if (type == null) return mapValue.SKIP
+
+          // For update operations, make all fields optional except primary keys
+          let finalType = type
+          if (
+            this.entity.meta.primaryKeys.includes(propertyName) &&
+            !isNonNullType(type)
+          ) {
+            finalType = new GraphQLNonNull(type)
+          } else if (
+            isNonNullType(type) &&
+            !this.entity.meta.primaryKeys.includes(propertyName)
+          ) {
+            finalType = type.ofType
+          }
+
+          return {
+            type: finalType,
+            description: property.comment,
+          } as GraphQLFieldConfig<any, any>
+        }),
+    })
+  }
+
+  protected async validateUpdateInput(
+    data: UpdateInput<InferEntity<TSchema>>,
+    path: ReadonlyArray<PropertyKey>
+  ): Promise<StandardSchemaV1.Result<UpdateInput<InferEntity<TSchema>>>> {
+    const result: any = {}
+    const issues: StandardSchemaV1.Issue[] = []
+
+    for (const [propertyName, value] of Object.entries(data)) {
+      const customSilk = MikroInputFactory.getPropertyConfig(
+        this.options?.input,
+        propertyName,
+        "update"
+      )
+      if (customSilk && customSilk["~standard"]) {
+        const validationResult = await customSilk["~standard"].validate(value)
+        if ("value" in validationResult) {
+          result[propertyName] = validationResult.value
+        }
+        if (validationResult.issues) {
+          issues.push(
+            ...validationResult.issues.map((issue) => ({
+              ...issue,
+              path: [...path, propertyName, ...(issue.path ?? [])],
+            }))
+          )
+        }
+      } else {
+        result[propertyName] = value
+      }
+    }
+
+    return { value: result, ...(issues.length > 0 && { issues }) }
   }
 
   public findOneFilter(): GraphQLSilk<
@@ -372,6 +555,17 @@ export class MikroInputFactory<
     const comparisonKeys = new Set<string>()
 
     Object.entries(properties).map(([key, property]) => {
+      // Check visibility for filters
+      if (
+        !MikroInputFactory.isPropertyVisible(
+          key,
+          this.options?.input,
+          "filters"
+        )
+      ) {
+        return mapValue.SKIP
+      }
+
       const type = MikroWeaver.getFieldType(property, this.entity)
       if (type == null) return mapValue.SKIP
       if (type instanceof GraphQLScalarType) comparisonKeys.add(key)
@@ -402,7 +596,18 @@ export class MikroInputFactory<
         new GraphQLObjectType({
           name,
           fields: () =>
-            mapValue(this.entity.meta.properties, (property) => {
+            mapValue(this.entity.meta.properties, (property, propertyName) => {
+              // Check visibility for filters (ordering is typically tied to filtering)
+              if (
+                !MikroInputFactory.isPropertyVisible(
+                  propertyName,
+                  this.options?.input,
+                  "filters"
+                )
+              ) {
+                return mapValue.SKIP
+              }
+
               const type = MikroWeaver.getFieldType(property, this.entity)
               if (type == null) return mapValue.SKIP
               return {
@@ -424,7 +629,18 @@ export class MikroInputFactory<
         new GraphQLObjectType({
           name,
           fields: () =>
-            mapValue(this.entity.meta.properties, (property) => {
+            mapValue(this.entity.meta.properties, (property, propertyName) => {
+              // Check visibility for filters
+              if (
+                !MikroInputFactory.isPropertyVisible(
+                  propertyName,
+                  this.options?.input,
+                  "filters"
+                )
+              ) {
+                return mapValue.SKIP
+              }
+
               const type = MikroWeaver.getFieldType(property, this.entity)
               if (type == null) return mapValue.SKIP
               return {
@@ -550,6 +766,76 @@ export class MikroInputFactory<
         })
       )
     )
+  }
+
+  public static isPropertyVisible(
+    propertyName: string,
+    behaviors: MikroFactoryPropertyBehaviors<any> | undefined,
+    operation: "filters" | "create" | "update"
+  ): boolean {
+    if (!behaviors) return true
+
+    const behavior = behaviors[propertyName]
+    const defaultBehavior = behaviors["*"]
+
+    // Direct boolean value
+    if (typeof behavior === "boolean") return behavior
+
+    // GraphQLSilk (has ~standard property)
+    if (behavior && typeof behavior === "object" && "~standard" in behavior) {
+      return true
+    }
+
+    // PropertyBehavior object
+    if (typeof behavior === "object") {
+      const operationConfig = behavior[operation]
+      if (typeof operationConfig === "boolean") return operationConfig
+      if (
+        operationConfig &&
+        typeof operationConfig === "object" &&
+        "~standard" in operationConfig
+      )
+        return true
+    }
+
+    // Check default behavior
+    if (typeof defaultBehavior === "boolean") return defaultBehavior
+
+    if (typeof defaultBehavior === "object") {
+      const operationConfig = defaultBehavior[operation]
+      if (typeof operationConfig === "boolean") return operationConfig
+    }
+
+    return true
+  }
+
+  public static getPropertyConfig<TEntity>(
+    behaviors: MikroFactoryPropertyBehaviors<TEntity> | undefined,
+    propertyName: keyof TEntity,
+    operation: "create" | "update"
+  ): GraphQLSilk<any, any> | undefined {
+    if (!behaviors) return undefined
+
+    const behavior = behaviors[propertyName]
+
+    // Direct GraphQLSilk
+    if (behavior && typeof behavior === "object" && "~standard" in behavior) {
+      return behavior as GraphQLSilk<any, any>
+    }
+
+    // PropertyBehavior object with operation-specific silk
+    if (typeof behavior === "object") {
+      const operationConfig = behavior[operation]
+      if (
+        operationConfig &&
+        typeof operationConfig === "object" &&
+        "~standard" in operationConfig
+      ) {
+        return operationConfig as GraphQLSilk<any, any>
+      }
+    }
+
+    return undefined
   }
 }
 

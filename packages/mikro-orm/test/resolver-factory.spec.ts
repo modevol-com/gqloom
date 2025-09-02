@@ -1,11 +1,15 @@
 import {
   type CallableInputParser,
   type GraphQLSilk,
+  SYMBOLS,
   getGraphQLType,
+  initWeaverContext,
+  provideWeaverContext,
   resolver,
   silk,
   weave,
 } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import {
   EntitySchema,
   MikroORM,
@@ -24,6 +28,7 @@ import {
   printSchema,
   printType,
 } from "graphql"
+import * as v from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
@@ -721,6 +726,269 @@ describe("MikroResolverFactory", async () => {
       ).toMatchObject({
         value: { where: { id: 1 } },
       })
+    })
+  })
+})
+
+describe("MikroInputFactory with validation and visibility", async () => {
+  interface IUser {
+    id: number
+    name: string
+    email: string
+    password: string
+    age?: number | null
+  }
+
+  const User = mikroSilk(
+    new EntitySchema<IUser>({
+      name: "User",
+      properties: {
+        id: { type: "number", primary: true },
+        name: { type: "string" },
+        email: { type: "string" },
+        password: { type: "string" },
+        age: { type: "number", nullable: true },
+      },
+    })
+  )
+
+  User.init() // Initialize the entity schema
+
+  const weaverContext = initWeaverContext()
+  weaverContext.vendorWeavers.set(ValibotWeaver.vendor, ValibotWeaver)
+
+  describe("with validation behaviors", () => {
+    const inputFactory = new MikroInputFactory(User, {
+      getEntityManager: async () => ({}) as any,
+      input: {
+        email: v.pipe(v.string(), v.email()),
+        password: {
+          filters: SYMBOLS.FIELD_HIDDEN,
+          create: true,
+          update: true,
+        },
+        age: {
+          filters: true,
+          create: v.nullish(v.pipe(v.number(), v.minValue(0), v.maxValue(120))),
+          update: v.nullish(v.pipe(v.number(), v.minValue(0), v.maxValue(120))),
+        },
+        "*": {
+          filters: true,
+          create: true,
+          update: true,
+        },
+      },
+    })
+
+    it("should respect field visibility in CreateInput", () => {
+      const createInput = provideWeaverContext(
+        () => inputFactory.createInput(),
+        weaverContext
+      )
+
+      const wrappedType = provideWeaverContext(
+        () => getGraphQLType(createInput),
+        weaverContext
+      ) as GraphQLObjectType
+      const dataFieldType = unwrap(
+        wrappedType.getFields()["data"].type
+      ) as GraphQLObjectType
+
+      expect(printType(dataFieldType)).toMatchInlineSnapshot(`
+        "type UserCreateInput {
+          id: ID
+          name: String!
+          password: String!
+        }"
+      `)
+    })
+
+    it("should respect field visibility in UpdateInput", () => {
+      const updateInput = provideWeaverContext(
+        () => inputFactory.updateInput(),
+        weaverContext
+      )
+
+      const wrappedType = provideWeaverContext(
+        () => getGraphQLType(updateInput),
+        weaverContext
+      ) as GraphQLObjectType
+      const dataFieldType = unwrap(
+        wrappedType.getFields()["data"].type
+      ) as GraphQLObjectType
+
+      expect(printType(dataFieldType)).toMatchInlineSnapshot(`
+        "type UserUpdateInput {
+          id: ID!
+          name: String
+          password: String
+        }"
+      `)
+    })
+
+    it("should respect field visibility in filters", () => {
+      const whereType = inputFactory.findManyOptionsWhereType()
+
+      expect(printType(whereType)).toMatchInlineSnapshot(`
+        "type UserFindManyOptionsWhere {
+          id: IDMikroComparisonOperators
+          name: StringMikroComparisonOperators
+          email: StringMikroComparisonOperators
+          age: FloatMikroComparisonOperators
+        }"
+      `)
+    })
+
+    it("should validate email format", async () => {
+      const createInput = provideWeaverContext(
+        () => inputFactory.createInput(),
+        weaverContext
+      )
+
+      // Test valid email
+      const validResult = await createInput["~standard"].validate({
+        data: {
+          name: "John Doe",
+          email: "john@example.com",
+          password: "secret123",
+        },
+      })
+
+      expect(validResult.issues).toBeFalsy()
+      if ("value" in validResult) {
+        expect(validResult.value).toEqual({
+          name: "John Doe",
+          email: "john@example.com",
+          password: "secret123",
+        })
+      }
+
+      // Test invalid email - should throw error
+      await expect(
+        createInput["~standard"].validate({
+          data: {
+            name: "John Doe",
+            email: "invalid-email",
+            password: "secret123",
+          },
+        })
+      ).rejects.toThrow(/Invalid email/)
+    })
+
+    it("should validate age range", async () => {
+      const createInput = provideWeaverContext(
+        () => inputFactory.createInput(),
+        weaverContext
+      )
+
+      // Test valid age
+      const validResult = await createInput["~standard"].validate({
+        data: {
+          name: "John Doe",
+          email: "john@example.com",
+          password: "secret123",
+          age: 25,
+        },
+      })
+
+      expect(validResult.issues).toBeFalsy()
+
+      // Test invalid age (too young) - should throw error
+      await expect(
+        createInput["~standard"].validate({
+          data: {
+            name: "John Doe",
+            email: "john@example.com",
+            password: "secret123",
+            age: -5,
+          },
+        })
+      ).rejects.toThrow(/Invalid value: Expected >=0/)
+
+      // Test invalid age (too old) - should throw error
+      await expect(
+        createInput["~standard"].validate({
+          data: {
+            name: "John Doe",
+            email: "john@example.com",
+            password: "secret123",
+            age: 150,
+          },
+        })
+      ).rejects.toThrow(/Invalid value: Expected <=120/)
+    })
+  })
+
+  describe("with boolean visibility behaviors", () => {
+    const inputFactory = new MikroInputFactory(User, {
+      getEntityManager: async () => ({}) as any,
+      input: {
+        password: false, // Hide completely
+        age: {
+          filters: false,
+          create: true,
+          update: false,
+        },
+        "*": true, // Show everything else
+      },
+    })
+
+    it("should hide password field completely", () => {
+      const createInput = provideWeaverContext(
+        () => inputFactory.createInput(),
+        weaverContext
+      )
+
+      const wrappedType = provideWeaverContext(
+        () => getGraphQLType(createInput),
+        weaverContext
+      ) as GraphQLObjectType
+      const dataFieldType = unwrap(
+        wrappedType.getFields()["data"].type
+      ) as GraphQLObjectType
+
+      expect(printType(dataFieldType)).toMatchInlineSnapshot(`
+        "type UserCreateInput {
+          id: ID
+          name: String!
+          password: String!
+        }"
+      `)
+    })
+
+    it("should hide age from update input", () => {
+      const updateInput = provideWeaverContext(
+        () => inputFactory.updateInput(),
+        weaverContext
+      )
+
+      const wrappedType = provideWeaverContext(
+        () => getGraphQLType(updateInput),
+        weaverContext
+      ) as GraphQLObjectType
+      const dataFieldType = unwrap(
+        wrappedType.getFields()["data"].type
+      ) as GraphQLObjectType
+
+      expect(printType(dataFieldType)).toMatchInlineSnapshot(`
+        "type UserUpdateInput {
+          id: ID!
+          name: String
+          password: String
+        }"
+      `)
+    })
+
+    it("should hide age and password from filters", () => {
+      const whereType = inputFactory.findManyOptionsWhereType()
+
+      expect(printType(whereType)).toMatchInlineSnapshot(`
+        "type UserFindManyOptionsWhere {
+          id: IDMikroComparisonOperators
+          name: StringMikroComparisonOperators
+          email: StringMikroComparisonOperators
+        }"
+      `)
     })
   })
 })
