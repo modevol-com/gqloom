@@ -11,7 +11,7 @@ export interface TabsProps {
   groupId?: string
 }
 
-const tabGroups = reactive(new Map<string, string>())
+export const tabGroups = reactive(new Map<string, string | number>())
 
 export const Tabs = defineComponent({
   name: "Tabs",
@@ -38,9 +38,7 @@ export const Tabs = defineComponent({
     })
 
     const onUpdateModelValue = (value: string | number) => {
-      if (typeof value === "string") {
-        modelValue.value = value
-      }
+      modelValue.value = value
     }
 
     return () => (

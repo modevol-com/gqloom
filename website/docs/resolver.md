@@ -2,7 +2,7 @@
 icon: RadioTower
 ---
 <script setup>
-import { InputSchemaCodes, inputSchema } from "@/components/input-schema.tsx"
+import { Tabs } from "@/components/tabs.tsx"
 </script>
 # Resolver
 
@@ -46,10 +46,10 @@ const helloResolver = resolver({
 ```
 
 In the code above, we have defined a `query` operation called `hello` which returns a non-null string.
-Here, we're using the type definition provided by `graphql.js` directly, which as you can see can be slightly verbose, and we could have chosen to simplify the code by using the schema library, we can choose to use <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> or <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span>:
+Here, we're using the type definition provided by `graphql.js` directly, which as you can see can be slightly verbose, and we could have chosen to simplify the code by using the schema library:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 We can define the return type of the `hello` operation using [valibot](./schema/valibot) to define the return type of the `hello` operation:
 
@@ -65,7 +65,7 @@ const helloResolver = resolver({
 In the code above, we use `v.string()` to define the return type of the `hello` operation. We can directly use the `valibot` schema as the `silk`.
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 We can define the return type of the `hello` operation using [zod](./schema/zod) to define the return type of the `hello` operation:
 
@@ -80,15 +80,15 @@ const helloResolver = resolver({
 
 In the code above, we use `z.string()` to define the return type of the `hello` operation, and the `zodSilk` function lets us use the Schema definition of `zod` as a `silk`.
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 ## Define the inputs to operations
 The `query`, `mutation`, and `subscription` operations can all accept input parameters.
 
 Let's add an input parameter `name` to the `hello` operation:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
@@ -108,7 +108,7 @@ Here, we use `v.nullish(v.string(), “World”)` to define the `name` parameter
 In the `resolve` function, we can get the value of the input parameter by the first parameter, and TypeScript will derive its type for us, in this case, we directly deconstruct to get the value of the `name` parameter.
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
@@ -131,14 +131,14 @@ Here, we use `z.string().nullish()` to define the `name` parameter, which is an 
 In the `resolve` function, we can get the value of the input parameter by the first parameter, and TypeScript will derive its type for us, in this case, we directly deconstruct to get the value of the `name` parameter.
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 ## Adding more information to operations
 
 We can also add more information to the action, such as `description`, `deprecationReason` and `extensions`:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
@@ -153,7 +153,7 @@ const helloResolver = resolver({
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
@@ -173,7 +173,7 @@ const helloResolver = resolver({
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 ## Object resolvers
 In GraphQL, we can define resolvers for fields on an object to add additional properties to the object and create relationships between objects.
@@ -183,8 +183,8 @@ When using `GQLoom`, we can use the `resolver.of` function to define object reso
 
 We start by defining two simple objects `User` and `Book`:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 import * as v from "valibot"
@@ -208,7 +208,7 @@ interface IBook extends v.InferOutput<typeof Book> {}
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 import * as z from "zod"
@@ -232,7 +232,7 @@ interface IBook extends z.infer<typeof Book> {}
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we have defined two objects `User` and `Book` which represent user and book.
 In `Book`, we define an `authorID` field, which represents the author ID of the book.
@@ -270,8 +270,8 @@ const bookMap: Map<number, IBook> = new Map(
 
 Next, we define a `bookResolver`:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 const User = v.object({
@@ -314,7 +314,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 const User = z.object({
@@ -357,15 +357,15 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we have used the `resolver.of` function to define `bookResolver`, which is an object resolver for resolving `Book` objects.
 In `bookResolver`, we define a `books` field, which is a query operation to get all the books.
 
 Next, we will add an additional field called `author` to the `Book` object to get the author of the book:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 const User = v.object({
@@ -410,7 +410,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 const User = z.object({
@@ -455,7 +455,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we used the `field` function to define the `author` field.
 The `field` function takes two parameters:
@@ -468,8 +468,8 @@ In GraphQL, we can define input parameters for fields in order to pass additiona
 
 In `GQLoom`, we can use the second argument of the `field` function to define the input parameters of a field.
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 const User = v.object({
@@ -520,7 +520,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 const User = z.object({
@@ -571,7 +571,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we used the `field` function to define the `signature` field.
 The second argument to the `field` function is an object which contains two fields:
@@ -580,8 +580,8 @@ The second argument to the `field` function is an object which contains two fiel
 
 The `bookResolver` object we just defined can be woven into a GraphQL schema using the [weave](./weave.md) function:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts
 import { weave } from '@gqloom/core'
@@ -591,7 +591,7 @@ export const schema = weave(ValibotWeaver, bookResolver)
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts
 import { weave } from '@gqloom/core'
@@ -601,7 +601,7 @@ export const schema = weave(ZodWeaver, bookResolver)
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 The resulting GraphQL schema is as follows:
 
@@ -630,8 +630,8 @@ When writing resolvers for database tables or other persistent data, we often ne
 Derived fields require selecting the data they depend on when retrieving data. We can use `field().derivedFrom()` to declare the dependent data.
 The derived dependencies will be used by `useResolvingFields()`, and this function is used to accurately obtain the fields required for the current query. 
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts
 import { field, resolver } from "@gqloom/core"
@@ -650,7 +650,7 @@ export const giraffeResolver = resolver.of(giraffes, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts
 import { field, resolver } from "@gqloom/core"
@@ -669,4 +669,4 @@ export const giraffeResolver = resolver.of(giraffes, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
