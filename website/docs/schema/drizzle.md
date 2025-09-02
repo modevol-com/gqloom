@@ -1,6 +1,6 @@
 # Drizzle
 <script setup lang="ts">
-import { Tabs, Tab } from '@/components/tabs'
+import { Tabs } from '@/components/tabs'
 </script>
 
 [Drizzle](https://orm.drizzle.team/) is a modern, type-safe TypeScript ORM designed for Node.js. It offers a concise and easy-to-use API, supports databases such as PostgreSQL, MySQL, and SQLite, and has powerful query builders, transaction processing, and database migration capabilities. At the same time, it remains lightweight and has no external dependencies, making it very suitable for database operation scenarios that require high performance and type safety.
@@ -13,7 +13,7 @@ import { Tabs, Tab } from '@/components/tabs'
 ## Installation
 
 <Tabs groupId="drizzle-api-version">
-<Tab title="Relational API v2">
+<template #Relational_API_v2>
 
 Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
 
@@ -34,8 +34,8 @@ bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
 ```
 :::
 
-</Tab>
-<Tab title="Relational API v1">
+</template>
+<template #Relational_API_v1>
 
 Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
 
@@ -56,7 +56,7 @@ bun add @gqloom/core @gqloom/drizzle
 ```
 :::
 
-</Tab>
+</template>
 </Tabs>
 
 ## Using Silk
@@ -284,7 +284,7 @@ export const usersResolver = resolver.of(users, {
 `gqloom/drizzle` provides a resolver factory `DrizzleResolverFactory` to easily create CRUD resolvers from Drizzle, and it also supports custom parameters and adding middleware.
 
 <Tabs groupId="drizzle-api-version">
-<Tab title="Relational API v2">
+<template #Relational_API_v2>
 
 ```ts [schema.ts]
 import { drizzleResolverFactory } from "@gqloom/drizzle"
@@ -298,8 +298,8 @@ const db = drizzle({
 const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
 
-</Tab>
-<Tab title="Relational API v1">
+</template>
+<template #Relational_API_v1>
 
 ```ts twoslash [schema.ts]
 // @filename: schema.ts
@@ -351,7 +351,7 @@ const db = drizzle({
 const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 ### Relationship Fields

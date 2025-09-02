@@ -1,5 +1,5 @@
 <script setup>
-import { Tabs, Tab } from "@/components/tabs"
+import { Tabs } from "@/components/tabs"
 </script>
 # 订阅（Subscription）
 
@@ -10,7 +10,7 @@ import { Tabs, Tab } from "@/components/tabs"
 在 `GQLoom` 中，我们使用 `subscription` 函数来定义一个订阅:
 
 <Tabs groupId='schema-builder'>
-<Tab title="valibot">
+<template #valibot>
 
 ```ts twoslash
 import { weave, resolver, subscription } from "@gqloom/core"
@@ -39,8 +39,8 @@ server.listen(4000, () => {
 })
 ```
 
-</Tab>
-<Tab title="zod">
+</template>
+<template #zod>
 
 ```ts twoslash
 import { weave, resolver, subscription } from "@gqloom/core"
@@ -69,7 +69,7 @@ server.listen(4000, () => {
 })
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 在上面的代码中，我们定义了一个 `countdown` 订阅，它接受一个 `seconds` 参数。
@@ -80,7 +80,7 @@ server.listen(4000, () => {
 我们还可以使用 [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started) 提供的发布/订阅（publish/subscribe）功能来更轻松地推送消息：
 
 <Tabs groupId='schema-builder'>
-<Tab title="valibot">
+<template #valibot>
 
 ```ts twoslash
 import { resolver, query, subscription } from "@gqloom/core"
@@ -104,8 +104,8 @@ const HelloResolver = resolver({
 })
 ```
 
-</Tab>
-<Tab title="zod">
+</template>
+<template #zod>
 
 ```ts twoslash
 import { resolver, query, subscription } from "@gqloom/zod"
@@ -129,7 +129,7 @@ const HelloResolver = resolver({
 })
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 在上面的代码中，我们定义了一个 `hello` 查询和一个 `listenGreeting` 订阅。

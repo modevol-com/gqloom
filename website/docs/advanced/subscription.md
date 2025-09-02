@@ -1,5 +1,5 @@
 <script setup>
-import { Tabs, Tab } from "@/components/tabs"
+import { Tabs } from "@/components/tabs"
 </script>
 # Subscription
 
@@ -10,7 +10,7 @@ In GraphQL, Subscription allows the server to push data to the client.
 In `GQLoom`, we use the `subscription` function to define a subscription:.
 
 <Tabs groupId='schema-builder'>
-<Tab title="valibot">
+<template #valibot>
 
 ```ts twoslash
 import { weave, resolver, subscription } from "@gqloom/core"
@@ -39,8 +39,8 @@ server.listen(4000, () => {
 })
 ```
 
-</Tab>
-<Tab title="zod">
+</template>
+<template #zod>
 
 ```ts twoslash
 import { weave, resolver, subscription } from "@gqloom/core"
@@ -69,7 +69,7 @@ server.listen(4000, () => {
 })
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the code above, we define a `countdown` subscription that accepts a `seconds` parameter.
@@ -80,7 +80,7 @@ We passed in an [asynchronous generator](https://developer.mozilla.org/docs/Web/
 We can also use the publish/subscribe feature provided by [GraphQL Yoga](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#getting-started) to push messages more easily:
 
 <Tabs groupId='schema-builder'>
-<Tab title="valibot">
+<template #valibot>
 
 ```ts twoslash
 import { resolver, query, subscription } from "@gqloom/core"
@@ -104,8 +104,8 @@ const HelloResolver = resolver({
 })
 ```
 
-</Tab>
-<Tab title="zod">
+</template>
+<template #zod>
 
 ```ts twoslash
 import { resolver, query, subscription } from "@gqloom/zod"
@@ -129,7 +129,7 @@ const HelloResolver = resolver({
 })
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the code above, we defined a `hello` query and a `listenGreeting` subscription.
