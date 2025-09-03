@@ -44,7 +44,7 @@ import {
   MikroInputFactory,
   MikroResolverFactory,
   type UpdateInput,
-} from "../src/resolver-factory"
+} from "../src/resolver-factory-deprecated"
 
 interface IGiraffe {
   id: string
