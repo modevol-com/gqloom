@@ -5263,6 +5263,14 @@ packages:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
+  valibot@1.0.0-beta.12:
+    resolution: {integrity: sha512-j3WIxJ0pmUFMfdfUECn3YnZPYOiG0yHYcFEa/+RVgo0I+MXE3ToLt7gNRLtY5pwGfgNmsmhenGZfU5suu9ijUA==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   valibot@1.1.0:
     resolution: {integrity: sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw==}
     peerDependencies:
@@ -10528,6 +10536,10 @@ snapshots:
   utils-merge@1.0.1: {}
 
   uuid@9.0.1: {}
+
+  valibot@1.0.0-beta.12(typescript@5.7.3):
+    optionalDependencies:
+      typescript: 5.7.3
 
   valibot@1.1.0(typescript@5.7.3):
     optionalDependencies:
