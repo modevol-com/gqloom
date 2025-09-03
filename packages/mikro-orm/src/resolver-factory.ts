@@ -192,8 +192,9 @@ export class MikroResolverFactory<
     if (output == null) throw new Error(`Property ${String(key)} is be hidden`)
     return new FieldFactoryWithResolve(silk(output), {
       ...options,
-      resolve: (_parent, _input) => {
-        // TODO: Implement
+      resolve: (parent) => {
+        const prop = parent[key] as ScalarReference<any>
+        return prop.load({ dataloader: true })
       },
     } as FieldOptions<any, any, any, any>)
   }

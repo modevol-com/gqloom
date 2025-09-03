@@ -30,7 +30,14 @@ import {
   printType,
 } from "graphql"
 import * as v from "valibot"
-import { assertType, describe, expect, expectTypeOf, it } from "vitest"
+import {
+  assertType,
+  beforeAll,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+} from "vitest"
 import { mikroSilk } from "../src"
 import {
   type FindOneFilter,
@@ -64,9 +71,11 @@ const ORMConfig = defineConfig({
 })
 
 describe("MikroResolverFactory", async () => {
-  const orm = await MikroORM.init(ORMConfig)
-  await orm.getSchemaGenerator().updateSchema()
-
+  let orm: MikroORM
+  beforeAll(async () => {
+    orm = await MikroORM.init(ORMConfig)
+    await orm.getSchemaGenerator().updateSchema()
+  })
   const bobbin = new MikroResolverFactory(Giraffe, () => orm.em)
   const inputFactory = new MikroInputFactory(Giraffe)
   describe("CreateMutation", () => {
@@ -165,14 +174,18 @@ describe("MikroResolverFactory", async () => {
 
   describe("UpdateMutation", async () => {
     const update = bobbin.updateMutation()
-    const giraffe = await RequestContext.create(orm.em, async () => {
-      const g = orm.em.create(Giraffe, {
-        name: "Foo",
-        birthday: new Date(),
-        height: 1,
+    let giraffe: IGiraffe
+
+    beforeAll(async () => {
+      giraffe = await RequestContext.create(orm.em, async () => {
+        const g = orm.em.create(Giraffe, {
+          name: "Foo",
+          birthday: new Date(),
+          height: 1,
+        })
+        await orm.em.persistAndFlush(g)
+        return g
       })
-      await orm.em.persistAndFlush(g)
-      return g
     })
 
     it("should infer input type", () => {
@@ -277,14 +290,17 @@ describe("MikroResolverFactory", async () => {
         },
       ],
     })
-    const giraffe = await RequestContext.create(orm.em, async () => {
-      const g = orm.em.create(Giraffe, {
-        name: "Foo",
-        birthday: new Date(),
-        height: 1,
+    let giraffe: IGiraffe
+    beforeAll(async () => {
+      giraffe = await RequestContext.create(orm.em, async () => {
+        const g = orm.em.create(Giraffe, {
+          name: "Foo",
+          birthday: new Date(),
+          height: 1,
+        })
+        await orm.em.persistAndFlush(g)
+        return g
       })
-      await orm.em.persistAndFlush(g)
-      return g
     })
     it("should infer input type", () => {
       bobbin.findOneQuery({
@@ -346,14 +362,17 @@ describe("MikroResolverFactory", async () => {
 
   describe("DeleteOneMutation", async () => {
     const deleteOne = bobbin.deleteOneMutation()
-    const giraffe = await RequestContext.create(orm.em, async () => {
-      const g = orm.em.create(Giraffe, {
-        name: "Foo",
-        birthday: new Date(),
-        height: 1,
+    let giraffe: IGiraffe
+    beforeAll(async () => {
+      giraffe = await RequestContext.create(orm.em, async () => {
+        const g = orm.em.create(Giraffe, {
+          name: "Foo",
+          birthday: new Date(),
+          height: 1,
+        })
+        await orm.em.persistAndFlush(g)
+        return g
       })
-      await orm.em.persistAndFlush(g)
-      return g
     })
 
     it("should infer output type", () => {
@@ -736,7 +755,7 @@ describe("MikroResolverFactory", async () => {
       properties: (p) => ({
         id: p.string().primary(),
         name: p.string(),
-        posts: () => p.oneToMany(_Post),
+        posts: () => p.oneToMany(_Post).mappedBy("author"),
       }),
     })
     const User = mikroSilk(_User)
@@ -752,34 +771,100 @@ describe("MikroResolverFactory", async () => {
     })
     const Post = mikroSilk(_Post)
 
+    let orm: MikroORM
+    beforeAll(async () => {
+      orm = await MikroORM.init({
+        entities: [User, Post],
+        dbName: ":memory:",
+        allowGlobalContext: true,
+      })
+      await orm.getSchemaGenerator().updateSchema()
+      const em = orm.em.fork()
+
+      // Create mock data
+      const u1 = em.create(User, { id: "u1", name: "User 1" })
+      const u2 = em.create(User, { id: "u2", name: "User 2" })
+      const u3 = em.create(User, { id: "u3", name: "User 3" })
+
+      const p1 = em.create(Post, {
+        id: "p1",
+        title: "Post 1",
+        content: "Content 1",
+        author: u1,
+      })
+      const p2 = em.create(Post, {
+        id: "p2",
+        title: "Post 2",
+        content: "Content 2",
+        author: u1,
+      })
+      const p3 = em.create(Post, {
+        id: "p3",
+        title: "Post 3",
+        content: "Content 3",
+        author: u2,
+      })
+      const p4 = em.create(Post, {
+        id: "p4",
+        title: "Post 4",
+        content: "Content 4",
+        author: u2,
+      })
+      const p5 = em.create(Post, {
+        id: "p5",
+        title: "Post 5",
+        content: "Content 5",
+        author: u3,
+      })
+      const p6 = em.create(Post, {
+        id: "p6",
+        title: "Post 6",
+        content: "Content 6",
+        author: u3,
+      })
+
+      await em.persistAndFlush([u1, u2, u3, p1, p2, p3, p4, p5, p6])
+    })
+
     const userFactory = new MikroResolverFactory(User, () => orm.em)
     const postFactory = new MikroResolverFactory(Post, () => orm.em)
 
-    it("should be able to create a relationField", () => {
-      const pf2 = userFactory.collectionField("posts")
-      expect(pf2).toBeDefined()
-      const af2 = postFactory.referenceField("author")
-      expect(af2).toBeDefined()
-      const cf2 = postFactory.scalarReferenceField("content")
-      expect(cf2).toBeDefined()
+    it("should be able to create a scalarReferenceField", () => {
+      let cf = postFactory.scalarReferenceField("content")
+      expect(cf).toBeDefined()
+      cf = postFactory.relationField("content")
+      expect(cf).toBeDefined()
+      expect(cf["~meta"].output).toBeTypeOf("object")
+      expect(cf["~meta"].operation).toEqual("field")
+      expect(cf["~meta"].resolve).toBeTypeOf("function")
+    })
 
-      const pf1 = userFactory.relationField("posts")
-      expect(pf1).toBeDefined()
-      expect(pf1["~meta"].output).toBeTypeOf("object")
-      expect(pf1["~meta"].operation).toEqual("field")
-      expect(pf1["~meta"].resolve).toBeTypeOf("function")
+    it("should resolve correctly for scalarReferenceField", async () => {
+      const cf = postFactory.relationField("content")
 
-      const af1 = postFactory.relationField("author")
-      expect(af1).toBeDefined()
-      expect(af1["~meta"].output).toBeTypeOf("object")
-      expect(af1["~meta"].operation).toEqual("field")
-      expect(af1["~meta"].resolve).toBeTypeOf("function")
+      const p1 = await orm.em.findOneOrFail(Post, "p1")
+      const ans = await cf["~meta"].resolve(p1)
+      expect(ans).toEqual("Content 1")
+    })
 
-      const cf1 = postFactory.relationField("content")
-      expect(cf1["~meta"].output).toBeTypeOf("object")
-      expect(cf1["~meta"].operation).toEqual("field")
-      expect(cf1["~meta"].resolve).toBeTypeOf("function")
-      expect(cf1).toBeDefined()
+    it("should be able to create a referenceField", () => {
+      let af = postFactory.referenceField("author")
+      expect(af).toBeDefined()
+      af = postFactory.relationField("author")
+      expect(af).toBeDefined()
+      expect(af["~meta"].output).toBeTypeOf("object")
+      expect(af["~meta"].operation).toEqual("field")
+      expect(af["~meta"].resolve).toBeTypeOf("function")
+    })
+
+    it("should be able to create a collectionField", () => {
+      let pf = userFactory.collectionField("posts")
+      expect(pf).toBeDefined()
+      pf = userFactory.relationField("posts")
+      expect(pf).toBeDefined()
+      expect(pf["~meta"].output).toBeTypeOf("object")
+      expect(pf["~meta"].operation).toEqual("field")
+      expect(pf["~meta"].resolve).toBeTypeOf("function")
     })
   })
 })
