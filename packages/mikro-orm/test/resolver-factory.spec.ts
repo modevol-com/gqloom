@@ -85,28 +85,29 @@ describe("MikroResolverFactory", async () => {
 
     it("should resolve correctly with filters", async () => {
       const query = userFactory.countQuery()
+      const executor = resolver({ query }).toExecutor()
       let answer
 
-      answer = await query["~meta"].resolve({})
+      answer = await executor.query({})
       expect(answer).toBe(5)
 
-      answer = await query["~meta"].resolve({
-        where: { age: { $gte: 30 } },
+      answer = await executor.query({
+        where: { age: { gte: 30 } },
       })
       expect(answer).toBe(2)
 
-      answer = await query["~meta"].resolve({
-        where: { age: { $lt: 30 } },
+      answer = await executor.query({
+        where: { age: { lt: 30 } },
       })
       expect(answer).toBe(3)
 
-      answer = await query["~meta"].resolve({
-        where: { age: { $in: [25, 30] } },
+      answer = await executor.query({
+        where: { age: { in: [25, 30] } },
       })
       expect(answer).toBe(2)
 
-      answer = await query["~meta"].resolve({
-        where: { name: { $like: "J%" } },
+      answer = await executor.query({
+        where: { name: { like: "J%" } },
       })
       expect(answer).toBe(2)
     })
