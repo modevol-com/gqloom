@@ -109,7 +109,7 @@ export type InferSelectArrayOptions<
 
 export interface CountQuery<
   TTable extends Table,
-  TInputI = SelectArrayArgs<TTable>,
+  TInputI = CountArgs<TTable>,
 > extends QueryFactoryWithResolve<
     CountArgs<TTable>,
     GraphQLSilk<number, number>,
