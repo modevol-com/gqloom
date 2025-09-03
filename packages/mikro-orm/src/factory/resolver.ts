@@ -32,13 +32,13 @@ export class MikroResolverFactory<TEntity extends object> {
     this.inputFactory = new MikroInputFactory(entityName, this.options)
     this.flushMiddleware = async (next) => {
       const result = await next()
-      const em = await this.getEm()
+      const em = await this.em()
       await em.flush()
       return result
     }
   }
 
-  protected getEm() {
+  protected em() {
     return this.options.getEntityManager()
   }
 
@@ -57,8 +57,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       ...options,
       resolve: async (args: CountArgs<TEntity>) => {
-        const em = await this.getEm()
-        return em.count(this.entityName, args.where, args)
+        return (await this.em()).count(this.entityName, args.where, args)
       },
     } as QueryOptions<any, any>)
   }
