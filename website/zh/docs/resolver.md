@@ -2,7 +2,7 @@
 icon: RadioTower
 ---
 <script setup>
-import { InputSchemaCodes, inputSchema } from "@/components/input-schema.tsx"
+import { Tabs } from "@/components/tabs.tsx"
 </script>
 # 解析器（Resolver）
 
@@ -48,8 +48,8 @@ const helloResolver = resolver({
 在上面的代码中，我们定义了一个名为 `hello` 的 `query` 操作，它返回一个非空字符串。
 在这里，我们直接使用 `graphql.js` 提供的类型定义，如你所见，这可能略显啰嗦，我们可以选择使用模式库来简化代码：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 我们可以使用 [valibot](./schema/valibot.md) 来定义 `hello` 操作的返回类型：
 
@@ -65,7 +65,7 @@ const helloResolver = resolver({
 在上面的代码中，我们使用 `v.sting()` 来定义 `hello` 操作的返回类型，我们可以直接把 `valibot` 的 Schema 作为`丝线`使用。
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 我们可以使用 [zod](./schema/zod.md) 来定义 `hello` 操作的返回类型：
 
@@ -80,15 +80,15 @@ const helloResolver = resolver({
 
 在上面的代码中，我们使用 `z.string()` 来定义 `hello` 操作的返回类型，`zodSilk` 函数让我们把 `zod` 的 Schema 定义作为`丝线`使用。
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 ## 定义操作的输入
 `query`、`mutation`、`subscription` 操作都可以接受输入参数。
 
 让我们为 `hello` 操作添加一个输入参数 `name`：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
@@ -108,7 +108,7 @@ const helloResolver = resolver({
 在 `resolve` 函数中，我们可以通过第一个参数来获取输入参数的值，TypeScript 将会为我们推导其类型，在这里，我们直接解构得到 `name` 参数的值。
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
@@ -131,14 +131,14 @@ const helloResolver = resolver({
 在 `resolve` 函数中，我们可以通过第一个参数来获取输入参数的值，TypeScript 将会为我们推导其类型，在这里，我们直接解构得到 `name` 参数的值。
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 ## 为操作添加更多信息
 
 我们还可以为操作添加更多信息，比如 `description`、`deprecationReason` 和 `extensions`：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/core'
@@ -153,7 +153,7 @@ const helloResolver = resolver({
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 import { resolver, query } from '@gqloom/zod'
@@ -173,7 +173,7 @@ const helloResolver = resolver({
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 ## 对象解析器
 在 GraphQL 中，我们可以为对象上的字段定义解析函数，以此为对象添加额外的属性以及创建对象之间的关系。
@@ -183,8 +183,8 @@ const helloResolver = resolver({
 
 我们首先定义两个简单对象 `User` 和 `Book`：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 import * as v from "valibot"
@@ -208,7 +208,7 @@ interface IBook extends v.InferOutput<typeof Book> {}
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 import * as z from "zod"
@@ -232,7 +232,7 @@ interface IBook extends z.infer<typeof Book> {}
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们定义了两个对象 `User` 和 `Book`，它们分别表示用户和书籍。
 在 `Book` 中，我们定义了一个 `authorID` 字段，它表示书籍的作者 ID。
@@ -270,8 +270,8 @@ const bookMap: Map<number, IBook> = new Map(
 
 接下来，我们定义一个 `bookResolver`：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 const User = v.object({
@@ -314,7 +314,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 const User = z.object({
@@ -357,15 +357,15 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们使用 `resolver.of` 函数来定义 `bookResolver`，它是一个对象解析器，用于解析 `Book` 对象。
 在 `bookResolver` 中，我们定义了一个 `books` 字段，它是一个查询操作，用于获取所有的书籍。
 
 接下来，我们将为 `Book` 对象添加一个名为 `author` 的额外字段用于获取书籍的作者：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 const User = v.object({
@@ -410,7 +410,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 const User = z.object({
@@ -455,7 +455,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们使用 `field` 函数来定义 `author` 字段。
 `field` 函数接受两个参数：
@@ -468,8 +468,8 @@ const bookResolver = resolver.of(Book, {
 
 在 `GQLoom` 中，我们可以使用 `field` 函数的第二个参数来定义字段的输入参数。
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts twoslash
 const User = v.object({
@@ -520,7 +520,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts twoslash
 const User = z.object({
@@ -571,7 +571,7 @@ const bookResolver = resolver.of(Book, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们使用 `field` 函数来定义 `signature` 字段。
 `field` 函数的第二个参数是一个对象，它包含两个字段：
@@ -580,8 +580,8 @@ const bookResolver = resolver.of(Book, {
 
 刚刚我们定义的 `bookResolver` 对象可以通过 [weave](./weave.md) 函数编织成 GraphQL schema：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts
 import { weave } from '@gqloom/core'
@@ -591,7 +591,7 @@ export const schema = weave(ValibotWeaver, bookResolver)
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts
 import { weave } from '@gqloom/core'
@@ -601,7 +601,7 @@ export const schema = weave(ZodWeaver, bookResolver)
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 最终得到的 GraphQL schema 如下：
 
@@ -630,8 +630,8 @@ type Query {
 派生属性要求在获取数据时选取其依赖的数据，我们可以使用 `field().derivedFrom()` 来声明所依赖的数据。
 派生依赖将被 `useResolvingFields()` 使用，这个函数用于精确获取当前查询所需要的字段。
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ```ts
 import { field, resolver } from "@gqloom/core"
@@ -650,7 +650,7 @@ export const giraffeResolver = resolver.of(giraffes, {
 ```
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ```ts
 import { field, resolver } from "@gqloom/core"
@@ -669,4 +669,4 @@ export const giraffeResolver = resolver.of(giraffes, {
 ```
 
 </template>
-</InputSchemaCodes>
+</Tabs>

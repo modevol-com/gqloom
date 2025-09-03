@@ -102,35 +102,35 @@ html.dark [data-title$="prisma"] {
   }
 }
 
-[data-title$="pnpm"] {
+[data-title="pnpm"] {
   &:before {
     content: "";
     --icon: url('https://api.iconify.design/vscode-icons/file-type-light-pnpm.svg');
   }
 }
 
-html.dark [data-title$="pnpm"] {
+html.dark [data-title="pnpm"] {
   &:before {
     content: "";
     --icon: url('https://api.iconify.design/vscode-icons/file-type-pnpm.svg');
   }
 }
 
-[data-title$="npm"] {
+[data-title="npm"] {
   &:before {
     content: "";
     --icon: url('https://api.iconify.design/vscode-icons/file-type-npm.svg');
   }
 }
 
-[data-title$="yarn"] {
+[data-title="yarn"] {
   &:before {
     content: "";
     --icon: url('https://api.iconify.design/vscode-icons/file-type-yarn.svg');
   }
 }
 
-[data-title$="bun"] {
+[data-title="bun"] {
   &:before {
     content: "";
     --icon: url('https://api.iconify.design/vscode-icons/file-type-bun.svg');

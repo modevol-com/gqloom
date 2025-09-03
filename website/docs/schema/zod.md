@@ -1,6 +1,6 @@
 # Zod
 <script setup lang="ts">
-import { Tabs, Tab } from '@/components/tabs'
+import { Tabs } from '@/components/tabs'
 </script>
 
 [Zod](https://zod.dev/) is a TypeScript-first schema declaration and validation library. I'm using the term "schema" to broadly refer to any data type, from a simple string to a complex nested object.
@@ -141,7 +141,7 @@ In the code above, we use the `collectNames` function to define the names for th
 #### Using `asObjectType`
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import { asObjectType } from "@gqloom/zod"
@@ -156,8 +156,8 @@ export const Cat = z
   .register(asObjectType, { name: "Cat" })
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { asObjectType } from "@gqloom/zod/v3"
@@ -172,7 +172,7 @@ export const Cat = z
   .superRefine(asObjectType({ name: "Cat" }))
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the code above, we used the `asObjectType` function to create a metadata and pass it into `superRefine()` to define a name for the object. The `asObjectType` function takes the complete GraphQL object type definition and returns a metadata.
@@ -182,7 +182,7 @@ In the code above, we used the `asObjectType` function to create a metadata and 
 With the `asObjectType` register, we can add more data to the object, such as `description`, `deprecationReason`, `extensions` and so on.
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import { asObjectType } from "@gqloom/zod"
@@ -200,8 +200,8 @@ export const Cat = z
   })
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { asObjectType } from "@gqloom/zod/v3"
@@ -221,7 +221,7 @@ export const Cat = z
   )
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the above code, we have added a `description` metadata to the `Cat` object which will be presented in the GraphQL Schema:
@@ -238,7 +238,7 @@ type Cat {
 We can also use the asField function to add metadata to a field, such as description, type, and so on.
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import { asField, asObjectType } from "@gqloom/zod"
@@ -260,8 +260,8 @@ export const Cat = z
   })
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { asField, asObjectType } from "@gqloom/zod/v3"
@@ -286,7 +286,7 @@ export const Cat = z
   )
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the above code, we added `type` and `description` metadata to the `age` field and ended up with the following GraphQL Schema:
@@ -307,7 +307,7 @@ type Cat {
 We can also use the `asObjectType` function to declare interfaces, for example:
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import * as z from "zod/v4"
@@ -331,8 +331,8 @@ const Orange = z
   .register(asObjectType, { name: "Orange", interfaces: [Fruit] })
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { asObjectType } from "@gqloom/zod/v3"
@@ -356,7 +356,7 @@ const Orange = z
   .superRefine(asObjectType({ name: "Orange", interfaces: [Fruit] }))
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the above code, we created an interface `Fruit` using the `asObjectType` function and declared the `Orange` object as an implementation of the `Fruit` interface using the `interfaces` option.
@@ -366,7 +366,7 @@ In the above code, we created an interface `Fruit` using the `asObjectType` func
 We can also omit fields by setting `type` to `null` using the `asField` function, for example:
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import { asField } from "@gqloom/zod"
@@ -379,8 +379,8 @@ const Dog = z.object({
 })
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { asField } from "@gqloom/zod/v3"
@@ -396,7 +396,7 @@ const Dog = z.object({
 })
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 The following GraphQL Schema will be generated:
@@ -414,7 +414,7 @@ type Dog {
 We recommend using `z.discriminatedUnion` to define union types, for example:
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import { asUnionType } from "@gqloom/zod"
@@ -439,8 +439,8 @@ const Animal = z
   .register(asUnionType, { name: "Animal" })
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { asUnionType } from "@gqloom/zod/v3"
@@ -465,7 +465,7 @@ const Animal = z
   .superRefine(asUnionType("Animal"))
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the above code, we have created a union type using the `z.discriminatedUnion` function. In the case of `Animal`, it distinguishes the specific type by the `__typename` field.
@@ -475,7 +475,7 @@ In the above code, we have created a union type using the `z.discriminatedUnion`
 We can also use `z.union` to define union types:
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import { z } from "zod/v4"
@@ -501,8 +501,8 @@ const Animal = z.union([Cat, Dog]).register(asUnionType, {
 collectNames({ Cat, Dog, Animal })
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { collectNames } from "@gqloom/core"
@@ -531,7 +531,7 @@ const Animal = z.union([Cat, Dog]).superRefine(
 collectNames({ Cat, Dog, Animal })
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 In the above code, we have created a union type using the `z.union` function. For `Animal`, we use the `resolveType` function to differentiate between specific types.
@@ -546,7 +546,7 @@ We can define enum types using `z.enum` or `z.nativeEnum`.
 In general, we prefer to use `z.enum` to define enumeration types, for example:
 
 <Tabs groupId="zod-version">
-<Tab title="zod-v4">
+<template #zod-v4>
 
 ```ts twoslash
 import { asEnumType } from "@gqloom/zod"
@@ -566,8 +566,8 @@ export const Fruit = z
 export type IFruit = z.infer<typeof Fruit>
 ```
 
-</Tab>
-<Tab title="zod-v3">
+</template>
+<template #zod-v3>
 
 ```ts twoslash
 import { asEnumType } from "@gqloom/zod/v3"
@@ -587,7 +587,7 @@ export const Fruit = z.enum(["apple", "banana", "orange"]).superRefine(
 export type IFruit = z.infer<typeof Fruit>
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 ## Customize Type Mappings

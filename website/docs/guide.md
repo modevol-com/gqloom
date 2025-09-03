@@ -3,7 +3,7 @@ icon: PencilRuler
 ---
 <script setup>
 import { GuideFiles } from '@/components/guide-files.tsx'
-import { InputSchemaCodes, inputSchema } from "@/components/input-schema.tsx"
+import { Tabs } from "@/components/tabs.tsx"
 </script>
 
 # Guide
@@ -118,43 +118,43 @@ yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 
 ### Hello World
 
-Let's write our first [resolver](./resolver), choose <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> or <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span>:
+Let's write our first [resolver](./resolver),we can choose to use `Valibot` or `Zod`:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/index-0.ts{ts twoslash} [src/resolvers/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/index-0.ts{ts twoslash} [src/resolvers/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 We need to weave this resolver into a GraphQL Schema and run it as an HTTP server:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/index-0.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/index-0.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 Great, we have already created a simple GraphQL application.
 Next, let's try to run this application. Add the `dev` script to the `package.json`: 
@@ -261,8 +261,8 @@ Now, we can use the user service in the resolver. We will create a user resolver
 
 After completing the user resolver, we also need to add it to the `resolvers` in the `src/resolvers/index.ts` file:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/user-0.ts{ts twoslash} [src/resolvers/user.ts]
@@ -271,7 +271,7 @@ After completing the user resolver, we also need to add it to the `resolvers` in
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/user-0.ts{ts twoslash} [src/resolvers/user.ts]
@@ -280,7 +280,7 @@ After completing the user resolver, we also need to add it to the `resolvers` in
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 Great, now let's try it in the playground:
 
@@ -340,22 +340,22 @@ Let's continue to try to retrieve the user we just created:
 
 First, let's add the `asyncContextProvider` middleware to enable asynchronous context: 
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/index.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/index.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 Next, let's try to add a simple login function and add a query operation to the user resolver:
 
@@ -363,22 +363,22 @@ Next, let's try to add a simple login function and add a query operation to the 
 
 To implement this query, we first need to have a login function. Let's write a simple one:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/contexts/index.ts{ts twoslash} [src/contexts/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/contexts/index.ts{ts twoslash} [src/contexts/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we created a [context](./context) function for getting the current user, which will return the information of the current user. We use `createMemoization()` to memoize this function, which ensures that this function is only executed once within the same request to avoid unnecessary database queries.
 
@@ -390,22 +390,22 @@ As you can see, this login function is very simple and is only used for demonstr
 
 Now, we add the new query operation in the resolver:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/user-1.ts{ts twoslash} [src/resolvers/user.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/user-1.ts{ts twoslash} [src/resolvers/user.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 If we directly call this new query in the playground, the application will give us an unauthorized error:
 
@@ -478,8 +478,8 @@ Next, we will add the business logic related to cats.
 
 We use the [resolver factory](./schema/drizzle#resolver-factory) to quickly create interfaces:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/cat-0.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -487,7 +487,7 @@ We use the [resolver factory](./schema/drizzle#resolver-factory) to quickly crea
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/cat-0.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -495,7 +495,7 @@ We use the [resolver factory](./schema/drizzle#resolver-factory) to quickly crea
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we used `drizzleResolverFactory()` to create `catResolverFactory` for quickly building resolvers.
 
@@ -504,22 +504,22 @@ In addition, we also added an additional `age` field for cats to get the age of 
 
 Next, let's try to add a `createCat` mutation. We want only logged-in users to access this interface, and the created cats will belong to the current user:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/cat-1.ts{24-45 ts twoslash} [src/resolvers/cat.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/cat-1.ts{26-40 ts twoslash} [src/resolvers/cat.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we used `catResolverFactory` to create a mutation that adds more data to the `cats` table, and we overwrote the input of this mutation. When validating the input, we used `useCurrentUser()` to get the ID of the currently logged-in user and pass it as the value of `ownerId` to the `cats` table.
 
@@ -601,8 +601,8 @@ We want to be able to get the owner of a cat when querying the cat, and also be 
 This is very easy to achieve in GraphQL.
 Let's add an additional `owner` field to `cats` and an additional `cats` field to `users`:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/cat.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -610,7 +610,7 @@ Let's add an additional `owner` field to `cats` and an additional `cats` field t
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/cat.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -618,7 +618,7 @@ Let's add an additional `owner` field to `cats` and an additional `cats` field t
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 In the above code, we used the resolver factory to create the `owner` field for `cats`; similarly, we also created the `cats` field for `users`.
 Behind the scenes, the relationship fields created by the resolver factory will use `DataLoader` to query from the database to avoid the N+1 problem.

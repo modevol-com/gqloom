@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "valibot": "1.0.0-beta.14"
+    "valibot": "1.1.0"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

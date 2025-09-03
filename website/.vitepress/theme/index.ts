@@ -6,7 +6,6 @@ import { Layout } from "./layout"
 import "../../css/tailwind.css"
 import "./style.css"
 import "./code-icons.css"
-import "../../css/input-schema.css"
 import "@shikijs/vitepress-twoslash/style.css"
 
 export default {

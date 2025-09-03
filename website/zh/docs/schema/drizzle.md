@@ -1,6 +1,6 @@
 # Drizzle
 <script setup lang="ts">
-import { Tabs, Tab } from '@/components/tabs'
+import { Tabs } from '@/components/tabs'
 </script>
 
 [Drizzle](https://orm.drizzle.team/) 是一个现代化的、类型安全的 TypeScript ORM，专为 Node.js 设计。它提供了简洁易用的 API，支持 PostgreSQL、MySQL 和 SQLite 等数据库，具备强大的查询构建器、事务处理和数据库迁移功能，同时保持轻量级和无外部依赖的特点，非常适合需要高性能和类型安全的数据库操作场景。
@@ -13,7 +13,7 @@ import { Tabs, Tab } from '@/components/tabs'
 ## 安装
 
 <Tabs groupId="drizzle-api-version">
-<Tab title="Relational API v2">
+<template #Relational_API_v2>
 
 请参考 Drizzle 的[入门指南](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started)安装 Drizzle 与对应的数据库集成。
 
@@ -34,8 +34,8 @@ bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
 ```
 :::
 
-</Tab>
-<Tab title="Relational API v1">
+</template>
+<template #Relational_API_v1>
 
 请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。
 
@@ -56,7 +56,7 @@ bun add @gqloom/core @gqloom/drizzle
 ```
 :::
 
-</Tab>
+</template>
 </Tabs>
 
 ## 使用丝线
@@ -284,7 +284,7 @@ export const usersResolver = resolver.of(users, {
 `gqloom/drizzle` 提供了解析器工厂 `DrizzleResolverFactory`，用于从 Drizzle 轻松地生成 CRUD 解析器，同时支持自定参数和添加中间件。
 
 <Tabs groupId="drizzle-api-version">
-<Tab title="Relational API v2">
+<template #Relational_API_v2>
 
 ```ts [schema.ts]
 import { drizzleResolverFactory } from "@gqloom/drizzle"
@@ -298,8 +298,8 @@ const db = drizzle({
 const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
 
-</Tab>
-<Tab title="Relational API v1">
+</template>
+<template #Relational_API_v1>
 
 ```ts twoslash [schema.ts]
 // @filename: schema.ts
@@ -351,7 +351,7 @@ const db = drizzle({
 const usersResolverFactory = drizzleResolverFactory(db, users)
 ```
 
-</Tab>
+</template>
 </Tabs>
 
 ### 关系字段
