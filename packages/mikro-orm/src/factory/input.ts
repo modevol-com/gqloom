@@ -19,7 +19,7 @@ import {
 } from "graphql"
 import { MikroWeaver } from ".."
 import type {
-  CountArgs,
+  CountQueryOptions,
   MikroFactoryPropertyBehaviors,
   MikroResolverFactoryOptions,
 } from "./type"
@@ -82,7 +82,7 @@ export class MikroInputFactory<TEntity extends object> {
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
     return weaverContext.memoNamedType(
-      new GraphQLObjectType<CountArgs<TEntity>>({
+      new GraphQLObjectType<CountQueryOptions<TEntity>>({
         name,
         fields: {
           where: { type: this.filter() },

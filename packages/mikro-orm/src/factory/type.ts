@@ -45,16 +45,46 @@ export type MikroFactoryPropertyBehaviors<TEntity> = {
   "*"?: PropertyBehavior<never> | boolean | undefined
 }
 
-export interface CountArgs<TEntity extends object>
+export type ComparisonOperators<TScalar> = {
+  eq?: TScalar
+  gt?: TScalar
+  gte?: TScalar
+  in?: TScalar[]
+  lt?: TScalar
+  lte?: TScalar
+  ne?: TScalar
+  nin?: TScalar[]
+  overlap?: TScalar[]
+  contains?: TScalar[]
+  contained?: TScalar[]
+  like?: TScalar extends string ? TScalar : never
+  re?: TScalar extends string ? TScalar : never
+  fulltext?: TScalar extends string ? TScalar : never
+  ilike?: TScalar extends string ? TScalar : never
+}
+
+export type FilterArgs<TEntity extends object> = {
+  [K in keyof TEntity]?: ComparisonOperators<TEntity[K]>
+} & {
+  and?: FilterArgs<TEntity>[]
+  or?: FilterArgs<TEntity>[]
+}
+
+export interface CountQueryArgs<TEntity extends object>
+  extends Pick<CountOptions<TEntity>, never> {
+  where?: FilterArgs<TEntity>
+}
+
+export interface CountQueryOptions<TEntity extends object>
   extends CountOptions<TEntity> {
   where?: FilterQuery<TEntity>
 }
 
 export interface CountQuery<
   TEntity extends object,
-  TInputI = CountArgs<TEntity>,
+  TInputI = CountQueryArgs<TEntity>,
 > extends QueryFactoryWithResolve<
-    CountArgs<TEntity>,
+    CountQueryOptions<TEntity>,
     GraphQLSilk<number, number>,
-    GraphQLSilk<CountArgs<TEntity>, TInputI>
+    GraphQLSilk<CountQueryOptions<TEntity>, TInputI>
   > {}

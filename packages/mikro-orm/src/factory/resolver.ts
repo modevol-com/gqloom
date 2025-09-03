@@ -10,12 +10,19 @@ import {
 import type { EntityManager, EntityName } from "@mikro-orm/core"
 import { GraphQLInt, GraphQLNonNull } from "graphql"
 import { MikroInputFactory } from "./input"
-import type { CountArgs, CountQuery, MikroResolverFactoryOptions } from "./type"
+import { MikroArgsTransformer } from "./transformer"
+import type {
+  CountQuery,
+  CountQueryArgs,
+  CountQueryOptions,
+  MikroResolverFactoryOptions,
+} from "./type"
 
 export class MikroResolverFactory<TEntity extends object> {
   public readonly options: MikroResolverFactoryOptions<TEntity>
   protected flushMiddleware: Middleware
   protected inputFactory: MikroInputFactory<TEntity>
+  protected transformer: MikroArgsTransformer<TEntity>
 
   public constructor(
     protected readonly entityName: EntityName<TEntity>,
@@ -30,6 +37,8 @@ export class MikroResolverFactory<TEntity extends object> {
     }
 
     this.inputFactory = new MikroInputFactory(entityName, this.options)
+    this.transformer = new MikroArgsTransformer(entityName)
+
     this.flushMiddleware = async (next) => {
       const result = await next()
       const em = await this.em()
@@ -42,21 +51,22 @@ export class MikroResolverFactory<TEntity extends object> {
     return this.options.getEntityManager()
   }
 
-  public countQuery<TInputI = CountArgs<TEntity>>({
+  public countQuery<TInputI = CountQueryArgs<TEntity>>({
     input,
     ...options
   }: GraphQLFieldOptions & {
-    input?: GraphQLSilk<CountArgs<TEntity>, TInputI>
+    input?: GraphQLSilk<CountQueryOptions<TEntity>, TInputI>
     middlewares?: Middleware<CountQuery<TEntity, TInputI>>[]
   } = {}): CountQuery<TEntity, TInputI> {
-    input ??= silk<CountArgs<TEntity>, CountArgs<TEntity>>(() =>
-      this.inputFactory.countArgs()
-    ) as GraphQLSilk<CountArgs<TEntity>, TInputI>
+    input ??= silk<CountQueryOptions<TEntity>, CountQueryArgs<TEntity>>(
+      () => this.inputFactory.countArgs(),
+      this.transformer.toCountOptions
+    ) as GraphQLSilk<CountQueryOptions<TEntity>, TInputI>
 
     return new QueryFactoryWithResolve(silk(new GraphQLNonNull(GraphQLInt)), {
       input,
       ...options,
-      resolve: async (args: CountArgs<TEntity>) => {
+      resolve: async (args: CountQueryOptions<TEntity>) => {
         return (await this.em()).count(this.entityName, args.where, args)
       },
     } as QueryOptions<any, any>)
