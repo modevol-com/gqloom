@@ -3,7 +3,7 @@ icon: PencilRuler
 ---
 <script setup>
 import { GuideFiles } from '@/components/guide-files.tsx'
-import { InputSchemaCodes, inputSchema } from "@/components/input-schema.tsx"
+import { Tabs } from "@/components/tabs.tsx"
 </script>
 
 # 入门指南
@@ -118,43 +118,43 @@ yarn add graphql graphql-yoga @gqloom/core zod @gqloom/zod
 
 ### 你好 世界
 
-让我们编写第一个 [解析器](./resolver)，可以选择使用 <span :class="[inputSchema==='valibot'?'input-schema-active':'input-schema']" @click="inputSchema='valibot'">Valibot</span> 或者 <span :class="[inputSchema==='zod'?'input-schema-active':'input-schema']"  @click="inputSchema='zod'">Zod</span> ：
+让我们编写第一个 [解析器](./resolver)，可以选择使用 `Valibot` 或者 `Zod` ：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/index-0.ts{ts twoslash} [src/resolvers/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/index-0.ts{ts twoslash} [src/resolvers/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 我们需要将这个解析器编织成 GraphQL Schema，并以 HTTP 服务器的形式运行它：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/index-0.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/index-0.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 很好，我们已经创建了一个简单的 GraphQL 应用。  
 接下来我们尝试运行这个应用，在 `package.json` 里添加 `dev` 脚本：
@@ -261,8 +261,8 @@ npx drizzle-kit push
 
 在完成用户解析器后，我们还需要将它添加到 `src/resolvers/index.ts` 文件里的 `resolvers` 中：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/user-0.ts{ts twoslash} [src/resolvers/user.ts]
@@ -271,7 +271,7 @@ npx drizzle-kit push
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/user-0.ts{ts twoslash} [src/resolvers/user.ts]
@@ -280,7 +280,7 @@ npx drizzle-kit push
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 很好，现在让我们在演练场尝试一下：
 
@@ -340,22 +340,22 @@ mutation {
 
 首先让我们为应用添加 `asyncContextProvider` 中间件来启用异步上下文：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/index.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/index.ts{ts twoslash} [src/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 接下来，让我们尝试添加一个简单的登录功能，再为用户解析器添加一个查询操作：
 
@@ -363,22 +363,22 @@ mutation {
 
 为了实现这个查询，首先得有登录功能，让我们来简单写一个：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/contexts/index.ts{ts twoslash} [src/contexts/index.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/contexts/index.ts{ts twoslash} [src/contexts/index.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们创建了一个用于获取当前用户的[上下文](./context)函数，它将返回当前用户的信息。我们使用 `createMemoization()` 将此函数记忆化，这确保在同一个请求内此函数仅执行一次，以避免多余的数据库查询。
 
@@ -390,22 +390,22 @@ mutation {
 
 现在，我们在解析器里添加新的查询操作：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/user-1.ts{ts twoslash} [src/resolvers/user.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/user-1.ts{ts twoslash} [src/resolvers/user.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 如果我们在演练场里之间调用这个新的查询，应用程序将给我们未认证的错误：
 
@@ -478,8 +478,8 @@ mutation {
 
 我们使用[解析器工厂](./schema/drizzle#解析器工厂)来快速创建接口：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/cat-0.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -487,7 +487,7 @@ mutation {
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/cat-0.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -495,7 +495,7 @@ mutation {
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们使用 `drizzleResolverFactory()` 创建了 `catResolverFactory`，用于快速构建解析器。
 
@@ -504,22 +504,22 @@ mutation {
 
 接下来，让我们尝试添加一个 `createCat` 的变更。我们希望只有登录用户能访问这个接口，并且被创建的猫咪将归属于当前用户:
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/cat-1.ts{24-45 ts twoslash} [src/resolvers/cat.ts]
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/cat-1.ts{26-40 ts twoslash} [src/resolvers/cat.ts]
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们使用 `catResolverFactory` 创建了一个向 `cats` 表格添加更多数据的变更，并且我们重写了这个变更的输入。在验证输入时，我们使用 `useCurrentUser()` 获取当前登录用户的 ID，并将作为 `ownerId` 的值传递给 `cats` 表格。
 
@@ -601,8 +601,8 @@ mutation {
 这在 GraphQL 中非常容易实现。  
 让我们为 `cats` 添加额外的 `owner` 字段，并为 `users` 添加额外的 `cats` 字段：
 
-<InputSchemaCodes>
-<template v-slot:valibot>
+<Tabs groupId="input-schema">
+<template #valibot>
 
 ::: code-group
 <<< @/snippets/guide-valibot/src/resolvers/cat.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -610,7 +610,7 @@ mutation {
 :::
 
 </template>
-<template v-slot:zod>
+<template #zod>
 
 ::: code-group
 <<< @/snippets/guide-zod/src/resolvers/cat.ts{ts twoslash} [src/resolvers/cat.ts]
@@ -618,7 +618,7 @@ mutation {
 :::
 
 </template>
-</InputSchemaCodes>
+</Tabs>
 
 在上面的代码中，我们使用解析器工厂为 `cats` 创建了 `owner` 字段；同样地，我们还为 `users` 创建了 `cats` 字段。  
 在幕后，解析器工厂创建的关系字段将使用 `DataLoader` 从数据库查询以避免 N+1 问题。
