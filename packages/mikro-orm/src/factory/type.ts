@@ -1,10 +1,12 @@
 import type {
   GraphQLSilk,
   MayPromise,
+  MutationFactoryWithResolve,
   QueryFactoryWithResolve,
 } from "@gqloom/core"
 import type {
   CountOptions,
+  CreateOptions,
   Cursor,
   EntityManager,
   FilterQuery,
@@ -12,6 +14,7 @@ import type {
   FindOneOptions,
   FindOptions,
   MetadataStorage,
+  RequiredEntityData,
 } from "@mikro-orm/core"
 
 export interface MikroResolverFactoryOptions<TEntity extends object> {
@@ -186,4 +189,23 @@ export interface FindOneOrFailQuery<
     FindOneQueryOptions<TEntity>,
     GraphQLSilk<TEntity, TEntity>,
     GraphQLSilk<FindOneQueryOptions<TEntity>, TInputI>
+  > {}
+
+export interface CreateMutationArgs<TEntity extends object>
+  extends Pick<CreateOptions<any>, never> {
+  data: RequiredEntityData<TEntity>
+}
+
+export interface CreateMutationOptions<TEntity extends object>
+  extends CreateOptions<any> {
+  data: RequiredEntityData<TEntity>
+}
+
+export interface CreateMutation<
+  TEntity extends object,
+  TInputI = CreateMutationArgs<TEntity>,
+> extends MutationFactoryWithResolve<
+    CreateMutationOptions<TEntity>,
+    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<CreateMutationOptions<TEntity>, TInputI>
   > {}

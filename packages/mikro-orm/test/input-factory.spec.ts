@@ -1,5 +1,7 @@
+import { silk } from "@gqloom/core"
 import { EntitySchema, type FilterQuery } from "@mikro-orm/libsql"
-import { GraphQLFloat, GraphQLString, printType } from "graphql"
+import { GraphQLFloat, GraphQLNonNull, GraphQLString, printType } from "graphql"
+import { GraphQLScalarType } from "graphql"
 import { describe, expect, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
@@ -231,6 +233,108 @@ describe("MikroInputFactory", () => {
     })
   })
 
+  describe("createInput", () => {
+    it("should generate CreateInput type for an entity", async () => {
+      const createInputType = inputFactory.createInput()
+      await expect(printType(createInputType)).toMatchFileSnapshot(
+        "./snapshots/UserCreateInput.graphql"
+      )
+    })
+
+    it("should respect field visibility in createInput", async () => {
+      const inputFactoryWithVisibility = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          password: false, // Hide password from create
+          age: {
+            create: false, // Hide age from create
+          },
+          "*": {
+            create: true, // Show everything else
+          },
+        },
+      })
+
+      const createInputType = inputFactoryWithVisibility.createInput()
+      await expect(printType(createInputType)).toMatchFileSnapshot(
+        "./snapshots/UserCreateInputWithVisibility.graphql"
+      )
+    })
+
+    it("should wrap required fields with GraphQLNonNull in createInput", async () => {
+      const createInputType = inputFactory.createInput()
+      const fields = createInputType.getFields()
+
+      expect(fields.id.type.toString()).toEqual("ID")
+      expect(fields.name.type.toString()).toEqual("String!")
+      expect(fields.email.type.toString()).toEqual("String!")
+      expect(fields.password.type.toString()).toEqual("String!")
+      expect(fields.age.type.toString()).toEqual("Float") // nullable field
+      expect(fields.isActive.type.toString()).toEqual("Boolean") // nullable field
+    })
+
+    it("should respect custom silk type for fields in createInput", async () => {
+      // Define a custom GraphQLScalarType that mirrors GraphQLFloat for testing purposes
+      const CustomFloatScalar = new GraphQLScalarType({
+        name: "CustomFloat",
+        serialize: GraphQLFloat.serialize,
+        parseValue: GraphQLFloat.parseValue,
+        parseLiteral: GraphQLFloat.parseLiteral,
+      })
+      const CustomAgeSilk = silk(CustomFloatScalar, (value: number) => ({
+        value: value * 10,
+      }))
+      const inputFactoryWithCustomType = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          age: {
+            create: CustomAgeSilk,
+          },
+        },
+      })
+
+      const createInputType = inputFactoryWithCustomType.createInput()
+      await expect(printType(createInputType)).toMatchFileSnapshot(
+        "./snapshots/UserCreateInputWithCustomAgeType.graphql"
+      )
+    })
+  })
+
+  describe("createArgs", () => {
+    it("should generate CreateArgs type for an entity", async () => {
+      const createArgsType = inputFactory.createArgs()
+      await expect(printType(createArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserCreateArgs.graphql"
+      )
+    })
+
+    it("should respect field visibility in createArgs (nested createInput)", async () => {
+      const inputFactoryWithVisibility = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          password: false, // Hide password from create
+          age: {
+            create: false, // Hide age from create
+          },
+          "*": {
+            create: true, // Show everything else
+          },
+        },
+      })
+
+      const createArgsType = inputFactoryWithVisibility.createArgs()
+      await expect(printType(createArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserCreateArgsWithVisibility.graphql"
+      )
+
+      // Verify that the createInput type within createArgs also respects visibility
+      const createInputType = inputFactoryWithVisibility.createInput()
+      await expect(printType(createInputType)).toMatchFileSnapshot(
+        "./snapshots/UserCreateInputNestedInCreateArgsWithVisibility.graphql"
+      )
+    })
+  })
+
   describe("comparisonOperatorsType", () => {
     it("should create operators type for String", async () => {
       const stringType =
@@ -266,6 +370,15 @@ describe("MikroInputFactory", () => {
       ).toBe(false)
       expect(
         MikroInputFactory.isPropertyVisible("email", behaviors, "filters")
+      ).toBe(true)
+    })
+
+    it("should respect GraphQLSilk behavior", () => {
+      const behaviors: MikroFactoryPropertyBehaviors<IUser> = {
+        name: { "~standard": "some_silk_value" as any }, // Simulate GraphQLSilk
+      }
+      expect(
+        MikroInputFactory.isPropertyVisible("name", behaviors, "filters")
       ).toBe(true)
     })
 
@@ -423,6 +536,49 @@ describe("MikroInputFactory", () => {
       const args: FilterArgs<IUser> = { and: [], or: [] }
       const expected = { $and: [], $or: [] }
       expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+  })
+
+  describe("getPropertyConfig", () => {
+    it("should return undefined by default", () => {
+      expect(
+        MikroInputFactory.getPropertyConfig(undefined, "name", "create")
+      ).toBeUndefined()
+    })
+
+    it("should return direct GraphQLSilk behavior", () => {
+      const customSilk = silk(new GraphQLNonNull(GraphQLString), (value) => ({
+        value,
+      }))
+      const behaviors: MikroFactoryPropertyBehaviors<IUser> = {
+        name: customSilk,
+      }
+      expect(
+        MikroInputFactory.getPropertyConfig(behaviors, "name", "create")
+      ).toBe(customSilk)
+    })
+
+    it("should return operation-specific GraphQLSilk behavior", () => {
+      const customSilk = silk(new GraphQLNonNull(GraphQLString), (value) => ({
+        value,
+      }))
+      const behaviors: MikroFactoryPropertyBehaviors<IUser> = {
+        name: {
+          create: customSilk,
+        },
+      }
+      expect(
+        MikroInputFactory.getPropertyConfig(behaviors, "name", "create")
+      ).toBe(customSilk)
+    })
+
+    it("should return undefined if no matching behavior", () => {
+      const behaviors: MikroFactoryPropertyBehaviors<IUser> = {
+        name: false, // Not a silk object
+      }
+      expect(
+        MikroInputFactory.getPropertyConfig(behaviors, "name", "create")
+      ).toBeUndefined()
     })
   })
 })

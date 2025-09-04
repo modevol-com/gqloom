@@ -3,6 +3,7 @@ import {
   type GraphQLSilk,
   type MayPromise,
   type Middleware,
+  MutationFactoryWithResolve,
   QueryFactoryWithResolve,
   type QueryOptions,
   getResolvingFields,
@@ -30,6 +31,9 @@ import type {
   CountQuery,
   CountQueryArgs,
   CountQueryOptions,
+  CreateMutation,
+  CreateMutationArgs,
+  CreateMutationOptions,
   FindAndCountQuery,
   FindByCursorQuery,
   FindByCursorQueryArgs,
@@ -278,8 +282,30 @@ export class MikroResolverFactory<TEntity extends object> {
     // TODO
   }
 
-  public createMutation() {
-    // TODO
+  public createMutation<TInputI = CreateMutationArgs<TEntity>>({
+    input,
+    middlewares,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<CreateMutationOptions<TEntity>, TInputI>
+    middlewares?: Middleware<CreateMutation<TEntity, TInputI>>[]
+  } = {}): CreateMutation<TEntity, TInputI> {
+    input ??= this.inputFactory.createArgsSilk() as GraphQLSilk<
+      CreateMutationOptions<TEntity>,
+      TInputI
+    >
+    const output = MikroWeaver.getGraphQLType(this.meta)
+    return new MutationFactoryWithResolve(silk(output), {
+      input,
+      middlewares: this.middlewaresWithFlush(middlewares),
+      ...options,
+      resolve: async (args) => {
+        const em = await this.em()
+        const instance = em.create(this.entityName, args.data)
+        em.persist(instance)
+        return instance
+      },
+    })
   }
 
   public insertMutation() {
@@ -304,5 +330,9 @@ export class MikroResolverFactory<TEntity extends object> {
 
   public upsertManyMutation() {
     // TODO
+  }
+
+  protected middlewaresWithFlush(middlewares?: Middleware[]): Middleware[] {
+    return [...(middlewares ?? []), this.flushMiddleware]
   }
 }

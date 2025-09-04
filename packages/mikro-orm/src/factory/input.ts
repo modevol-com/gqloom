@@ -21,11 +21,14 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
+  isNonNullType,
 } from "graphql"
 import { MikroWeaver } from ".."
 import type {
   CountQueryArgs,
   CountQueryOptions,
+  CreateMutationArgs,
+  CreateMutationOptions,
   FilterArgs,
   FindByCursorQueryArgs,
   FindByCursorQueryOptions,
@@ -214,6 +217,27 @@ export class MikroInputFactory<TEntity extends object> {
     )
   }
 
+  public createArgs() {
+    const name = `${this.metaName}CreateArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<CreateMutationArgs<TEntity>>({
+        name,
+        fields: {
+          data: { type: new GraphQLNonNull(this.createInput()) },
+        },
+      })
+    )
+  }
+
+  public createArgsSilk() {
+    return silk<CreateMutationOptions<TEntity>, CreateMutationArgs<TEntity>>(
+      () => this.createArgs(),
+      (args) => ({ value: { data: args.data } })
+    )
+  }
+
   public orderBy(): GraphQLObjectType {
     const name = `${this.metaName}OrderBy`
     return (
@@ -244,6 +268,52 @@ export class MikroInputFactory<TEntity extends object> {
         })
       )
     )
+  }
+
+  public createInput(): GraphQLObjectType {
+    const name = `${this.metaName}CreateInput`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return new GraphQLObjectType({
+      name,
+      fields: () =>
+        mapValue(this.meta.properties, (property, propertyName) => {
+          // Check visibility
+          if (
+            !MikroInputFactory.isPropertyVisible(
+              propertyName,
+              this.options?.input,
+              "create"
+            )
+          ) {
+            return mapValue.SKIP
+          }
+
+          // Get custom type if configured
+          const customSilk = MikroInputFactory.getPropertyConfig(
+            this.options?.input,
+            propertyName as keyof TEntity,
+            "create"
+          )
+          const type = customSilk
+            ? weaverContext.getGraphQLType(customSilk)
+            : MikroWeaver.getFieldType(property, this.meta)
+
+          if (type == null) return mapValue.SKIP
+
+          // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
+          const isRequired =
+            property.nullable !== true && !property.default && !property.primary
+          const finalType =
+            isRequired && !isNonNullType(type) ? new GraphQLNonNull(type) : type
+
+          return {
+            type: finalType,
+            description: property.comment,
+          } as GraphQLFieldConfig<any, any>
+        }),
+    })
   }
 
   protected transformFilters(args: FilterArgs<TEntity>): FilterQuery<TEntity>

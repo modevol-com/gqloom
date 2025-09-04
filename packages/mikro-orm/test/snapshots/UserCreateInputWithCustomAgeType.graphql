@@ -1,0 +1,7 @@
+type UserCreateInput {
+  id: ID
+  name: String!
+  email: String!
+  password: String!
+  isActive: Boolean
+}

@@ -37,7 +37,7 @@ const ORMConfig = defineConfig({
   allowGlobalContext: true,
 })
 
-describe("MikroResolverFactory", async () => {
+describe.concurrent("MikroResolverFactory", async () => {
   let orm: MikroORM
   beforeAll(async () => {
     orm = await MikroORM.init(ORMConfig)
@@ -765,6 +765,99 @@ describe("MikroResolverFactory", async () => {
       const schema = weave(r)
       await expect(printSchema(schema)).toMatchFileSnapshot(
         "./snapshots/findOneOrFailQuery.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("createMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+    it("should be created without error", async () => {
+      const mutation = userFactory.createMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should create entity correctly", async () => {
+      const create = userFactory.createMutation()
+      const executor = resolver({ create }).toExecutor()
+      const answer = await executor.create({
+        data: { name: "John Doe", email: "john@example.com", age: 25 },
+      })
+      expect(answer.name).toBe("John Doe")
+      expect(answer.email).toBe("john@example.com")
+      expect(answer.age).toBe(25)
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB).toBeDefined()
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const create = userFactory.createMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser>()
+            return { ...answer, name: answer.name.toUpperCase() }
+          },
+        ],
+      })
+
+      const executor = resolver({ create }).toExecutor()
+      const answer = await executor.create({
+        data: { name: "John Doe", email: "john@example.com", age: 25 },
+      })
+      expect(count).toBe(1)
+      expect(answer.name).toBe("JOHN DOE")
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB?.name).toBe("John Doe")
+    })
+
+    it("should use with custom input", async () => {
+      const create = userFactory.createMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+            email: v.string(),
+          }),
+          v.transform(({ username, email }) => ({
+            data: { name: username.toUpperCase(), email, age: 30 },
+          }))
+        ),
+      })
+
+      const executor = resolver({ create }).toExecutor()
+      const answer = await executor.create({
+        username: "john doe",
+        email: "john.doe@example.com",
+      })
+
+      expect(answer.name).toBe("JOHN DOE")
+      expect(answer.email).toBe("john.doe@example.com")
+      expect(answer.age).toBe(30)
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB?.name).toBe("JOHN DOE")
+      expect(fromDB?.email).toBe("john.doe@example.com")
+      expect(fromDB?.age).toBe(30)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        createMutation: userFactory.createMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/createMutation.graphql"
       )
     })
   })
