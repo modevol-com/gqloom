@@ -247,7 +247,7 @@ export class MikroResolverFactory<TEntity extends object> {
       ...options,
       resolve: async (args: FindOneQueryOptions<TEntity>) => {
         const em = await this.em()
-        return em.findOne(this.entityName, args.where ?? {}, args)
+        return em.findOne(this.entityName, args.where, args)
       },
     } as QueryOptions<any, any>)
   }
@@ -269,7 +269,7 @@ export class MikroResolverFactory<TEntity extends object> {
       ...options,
       resolve: async (args: FindOneQueryOptions<TEntity>) => {
         const em = await this.em()
-        return em.findOneOrFail(this.entityName, args.where ?? {}, args)
+        return em.findOneOrFail(this.entityName, args.where, args)
       },
     } as QueryOptions<any, any>)
   }

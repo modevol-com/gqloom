@@ -193,7 +193,7 @@ export class MikroInputFactory<TEntity extends object> {
       new GraphQLObjectType<FindOneQueryArgs<TEntity>>({
         name,
         fields: {
-          where: { type: this.filter() },
+          where: { type: new GraphQLNonNull(this.filter()) },
           orderBy: { type: this.orderBy() },
           offset: { type: GraphQLInt },
         },
@@ -246,13 +246,14 @@ export class MikroInputFactory<TEntity extends object> {
     )
   }
 
+  protected transformFilters(args: FilterArgs<TEntity>): FilterQuery<TEntity>
+  protected transformFilters(
+    args: FilterArgs<TEntity> | undefined
+  ): FilterQuery<TEntity> | undefined
   protected transformFilters(
     args: FilterArgs<TEntity> | undefined
   ): FilterQuery<TEntity> | undefined {
-    if (!args) {
-      return
-    }
-
+    if (!args) return
     const filters: FilterQuery<TEntity> = {}
     for (const key in args) {
       const newKey = key.startsWith("$")

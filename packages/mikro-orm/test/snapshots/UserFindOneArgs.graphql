@@ -1,5 +1,5 @@
 type UserFindOneArgs {
-  where: UserFilter
+  where: UserFilter!
   orderBy: UserOrderBy
   offset: Int
 }

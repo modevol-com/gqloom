@@ -1,12 +1,5 @@
 type Query {
-  findByCursorQuery(
-    where: UserFilter
-    orderBy: UserOrderBy
-    after: String
-    before: String
-    first: Int
-    last: Int
-  ): UserCursor
+  findByCursorQuery(where: UserFilter, orderBy: UserOrderBy, after: String, before: String, first: Int, last: Int): UserCursor
 }
 
 type UserCursor {
@@ -34,14 +27,10 @@ input UserFilter {
 }
 
 input IDMikroComparisonOperators {
-  """
-  Equals. Matches values that are equal to a specified value.
-  """
+  """Equals. Matches values that are equal to a specified value."""
   eq: ID
 
-  """
-  Greater. Matches values that are greater than a specified value.
-  """
+  """Greater. Matches values that are greater than a specified value."""
   gt: ID
 
   """
@@ -49,14 +38,10 @@ input IDMikroComparisonOperators {
   """
   gte: ID
 
-  """
-  Contains, Contains, Matches any of the values specified in an array.
-  """
+  """Contains, Contains, Matches any of the values specified in an array."""
   in: [ID!]
 
-  """
-  Lower, Matches values that are less than a specified value.
-  """
+  """Lower, Matches values that are less than a specified value."""
   lt: ID
 
   """
@@ -64,41 +49,27 @@ input IDMikroComparisonOperators {
   """
   lte: ID
 
-  """
-  Not equal. Matches all values that are not equal to a specified value.
-  """
+  """Not equal. Matches all values that are not equal to a specified value."""
   ne: ID
 
-  """
-  Not contains. Matches none of the values specified in an array.
-  """
+  """Not contains. Matches none of the values specified in an array."""
   nin: [ID!]
 
-  """
-  &&
-  """
+  """&&"""
   overlap: [ID!]
 
-  """
-  @>
-  """
+  """@>"""
   contains: [ID!]
 
-  """
-  <@
-  """
+  """<@"""
   contained: [ID!]
 }
 
 input StringMikroComparisonOperators {
-  """
-  Equals. Matches values that are equal to a specified value.
-  """
+  """Equals. Matches values that are equal to a specified value."""
   eq: String
 
-  """
-  Greater. Matches values that are greater than a specified value.
-  """
+  """Greater. Matches values that are greater than a specified value."""
   gt: String
 
   """
@@ -106,14 +77,10 @@ input StringMikroComparisonOperators {
   """
   gte: String
 
-  """
-  Contains, Contains, Matches any of the values specified in an array.
-  """
+  """Contains, Contains, Matches any of the values specified in an array."""
   in: [String!]
 
-  """
-  Lower, Matches values that are less than a specified value.
-  """
+  """Lower, Matches values that are less than a specified value."""
   lt: String
 
   """
@@ -121,61 +88,39 @@ input StringMikroComparisonOperators {
   """
   lte: String
 
-  """
-  Not equal. Matches all values that are not equal to a specified value.
-  """
+  """Not equal. Matches all values that are not equal to a specified value."""
   ne: String
 
-  """
-  Not contains. Matches none of the values specified in an array.
-  """
+  """Not contains. Matches none of the values specified in an array."""
   nin: [String!]
 
-  """
-  &&
-  """
+  """&&"""
   overlap: [String!]
 
-  """
-  @>
-  """
+  """@>"""
   contains: [String!]
 
-  """
-  <@
-  """
+  """<@"""
   contained: [String!]
 
-  """
-  Like. Uses LIKE operator
-  """
+  """Like. Uses LIKE operator"""
   like: String
 
-  """
-  Regexp. Uses REGEXP operator
-  """
+  """Regexp. Uses REGEXP operator"""
   re: String
 
-  """
-  Full text.	A driver specific full text search function.
-  """
+  """Full text.	A driver specific full text search function."""
   fulltext: String
 
-  """
-  ilike
-  """
+  """ilike"""
   ilike: String
 }
 
 input FloatMikroComparisonOperators {
-  """
-  Equals. Matches values that are equal to a specified value.
-  """
+  """Equals. Matches values that are equal to a specified value."""
   eq: Float
 
-  """
-  Greater. Matches values that are greater than a specified value.
-  """
+  """Greater. Matches values that are greater than a specified value."""
   gt: Float
 
   """
@@ -183,14 +128,10 @@ input FloatMikroComparisonOperators {
   """
   gte: Float
 
-  """
-  Contains, Contains, Matches any of the values specified in an array.
-  """
+  """Contains, Contains, Matches any of the values specified in an array."""
   in: [Float!]
 
-  """
-  Lower, Matches values that are less than a specified value.
-  """
+  """Lower, Matches values that are less than a specified value."""
   lt: Float
 
   """
@@ -198,29 +139,19 @@ input FloatMikroComparisonOperators {
   """
   lte: Float
 
-  """
-  Not equal. Matches all values that are not equal to a specified value.
-  """
+  """Not equal. Matches all values that are not equal to a specified value."""
   ne: Float
 
-  """
-  Not contains. Matches none of the values specified in an array.
-  """
+  """Not contains. Matches none of the values specified in an array."""
   nin: [Float!]
 
-  """
-  &&
-  """
+  """&&"""
   overlap: [Float!]
 
-  """
-  @>
-  """
+  """@>"""
   contains: [Float!]
 
-  """
-  <@
-  """
+  """<@"""
   contained: [Float!]
 }
 

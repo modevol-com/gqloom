@@ -162,12 +162,12 @@ export interface FindByCursorQuery<
 
 export interface FindOneQueryArgs<TEntity extends object>
   extends Pick<FindOneOptions<TEntity, any, any, any>, "orderBy" | "offset"> {
-  where?: FilterArgs<TEntity>
+  where: FilterArgs<TEntity>
 }
 
 export interface FindOneQueryOptions<TEntity extends object>
   extends FindOneOptions<TEntity, any, any, any> {
-  where?: FilterQuery<TEntity>
+  where: FilterQuery<TEntity>
 }
 
 export interface FindOneQuery<

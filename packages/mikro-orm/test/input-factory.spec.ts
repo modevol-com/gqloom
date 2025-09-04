@@ -1,4 +1,4 @@
-import { EntitySchema } from "@mikro-orm/libsql"
+import { EntitySchema, type FilterQuery } from "@mikro-orm/libsql"
 import { GraphQLFloat, GraphQLString, printType } from "graphql"
 import { describe, expect, it } from "vitest"
 import { mikroSilk } from "../src"
@@ -308,6 +308,10 @@ describe("MikroInputFactory", () => {
     class TestTransformer<
       TEntity extends object,
     > extends MikroInputFactory<TEntity> {
+      public transformFilters(args: FilterArgs<TEntity>): FilterQuery<TEntity>
+      public transformFilters(
+        args: FilterArgs<TEntity> | undefined
+      ): FilterQuery<TEntity> | undefined
       public transformFilters(args: FilterArgs<TEntity> | undefined) {
         return super.transformFilters(args)
       }

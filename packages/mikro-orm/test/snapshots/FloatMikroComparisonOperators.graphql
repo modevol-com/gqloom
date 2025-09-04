@@ -1,12 +1,8 @@
 type FloatMikroComparisonOperators {
-  """
-  Equals. Matches values that are equal to a specified value.
-  """
+  """Equals. Matches values that are equal to a specified value."""
   eq: Float
 
-  """
-  Greater. Matches values that are greater than a specified value.
-  """
+  """Greater. Matches values that are greater than a specified value."""
   gt: Float
 
   """
@@ -14,14 +10,10 @@ type FloatMikroComparisonOperators {
   """
   gte: Float
 
-  """
-  Contains, Contains, Matches any of the values specified in an array.
-  """
+  """Contains, Contains, Matches any of the values specified in an array."""
   in: [Float!]
 
-  """
-  Lower, Matches values that are less than a specified value.
-  """
+  """Lower, Matches values that are less than a specified value."""
   lt: Float
 
   """
@@ -29,28 +21,18 @@ type FloatMikroComparisonOperators {
   """
   lte: Float
 
-  """
-  Not equal. Matches all values that are not equal to a specified value.
-  """
+  """Not equal. Matches all values that are not equal to a specified value."""
   ne: Float
 
-  """
-  Not contains. Matches none of the values specified in an array.
-  """
+  """Not contains. Matches none of the values specified in an array."""
   nin: [Float!]
 
-  """
-  &&
-  """
+  """&&"""
   overlap: [Float!]
 
-  """
-  @>
-  """
+  """@>"""
   contains: [Float!]
 
-  """
-  <@
-  """
+  """<@"""
   contained: [Float!]
 }
