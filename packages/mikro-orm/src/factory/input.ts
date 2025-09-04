@@ -38,7 +38,8 @@ export class MikroInputFactory<TEntity extends object> {
     if (this.entityName instanceof EntitySchema) {
       return this.entityName.init().meta
     }
-    throw new Error("EntityName must be an EntitySchema") // FIXME
+    if (!this.options?.metadata) throw new Error("Metadata not found")
+    return this.options.metadata.get(this.entityName)
   }
 
   protected get metaName(): string {

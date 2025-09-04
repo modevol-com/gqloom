@@ -108,3 +108,17 @@ export interface FindQuery<
     GraphQLSilk<TEntity[], TEntity[]>,
     GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
   > {}
+
+export interface FindAndCountOutput<TEntity extends object> {
+  count: number
+  items: TEntity[]
+}
+
+export interface FindAndCountQuery<
+  TEntity extends object,
+  TInputI = FindQueryArgs<TEntity>,
+> extends QueryFactoryWithResolve<
+    FindQueryOptions<TEntity>,
+    GraphQLSilk<FindAndCountOutput<TEntity>, FindAndCountOutput<TEntity>>,
+    GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+  > {}

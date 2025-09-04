@@ -6,13 +6,20 @@ import {
   QueryFactoryWithResolve,
   type QueryOptions,
   silk,
+  weaverContext,
 } from "@gqloom/core"
 import {
   type EntityManager,
   type EntityName,
   EntitySchema,
 } from "@mikro-orm/core"
-import { GraphQLInt, GraphQLList, GraphQLNonNull } from "graphql"
+import {
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  type GraphQLOutputType,
+} from "graphql"
 import { MikroWeaver } from ".."
 import { MikroInputFactory } from "./input"
 import { MikroArgsTransformer } from "./transformer"
@@ -20,6 +27,7 @@ import type {
   CountQuery,
   CountQueryArgs,
   CountQueryOptions,
+  FindAndCountQuery,
   FindQuery,
   FindQueryArgs,
   FindQueryOptions,
@@ -31,14 +39,6 @@ export class MikroResolverFactory<TEntity extends object> {
   protected flushMiddleware: Middleware
   protected inputFactory: MikroInputFactory<TEntity>
   protected transformer: MikroArgsTransformer<TEntity>
-
-  protected get meta() {
-    if (this.entityName instanceof EntitySchema) {
-      return this.entityName.init().meta
-    }
-    if (!this.options.metadata) throw new Error("Metadata not found")
-    return this.options.metadata.get(this.entityName)
-  }
 
   public constructor(
     protected readonly entityName: EntityName<TEntity>,
@@ -61,6 +61,18 @@ export class MikroResolverFactory<TEntity extends object> {
       await em.flush()
       return result
     }
+  }
+
+  protected get meta() {
+    if (this.entityName instanceof EntitySchema) {
+      return this.entityName.init().meta
+    }
+    if (!this.options.metadata) throw new Error("Metadata not found")
+    return this.options.metadata.get(this.entityName)
+  }
+
+  protected get metaName(): string {
+    return this.meta.name ?? this.meta.className
   }
 
   protected em() {
@@ -114,8 +126,48 @@ export class MikroResolverFactory<TEntity extends object> {
     )
   }
 
-  public findAndCountQuery() {
-    // TODO
+  public findAndCountQuery<TInputI = FindQueryArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+    middlewares?: Middleware<FindAndCountQuery<TEntity, TInputI>>[]
+  } = {}): FindAndCountQuery<TEntity, TInputI> {
+    input ??= silk<FindQueryOptions<TEntity>, FindQueryArgs<TEntity>>(
+      () => this.inputFactory.findArgs(),
+      this.transformer.toFindOptions
+    ) as GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+
+    return new QueryFactoryWithResolve(silk(this.findAndCountQueryOutput()), {
+      input,
+      ...options,
+      resolve: async (args: FindQueryOptions<TEntity>) => {
+        const [items, count] = await (await this.em()).findAndCount(
+          this.entityName,
+          args.where ?? {},
+          args
+        )
+        return { items, count }
+      },
+    } as QueryOptions<any, any>)
+  }
+
+  protected findAndCountQueryOutput(): GraphQLOutputType {
+    const name = `${this.metaName}FindAndCount`
+    const existing = weaverContext.getNamedType(name)
+    if (existing != null) return existing
+    const output = MikroWeaver.getGraphQLType(this.meta)
+    return weaverContext.memoNamedType(
+      new GraphQLNonNull(
+        new GraphQLObjectType({
+          name,
+          fields: {
+            count: { type: new GraphQLNonNull(GraphQLInt) },
+            items: { type: new GraphQLNonNull(new GraphQLList(output)) },
+          },
+        })
+      )
+    )
   }
 
   public findByCursorQuery() {
