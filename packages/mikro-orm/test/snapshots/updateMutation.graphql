@@ -1,5 +1,5 @@
 type Mutation {
-  updateMutation(where: UserFilter, data: UserCreateInput!): Int!
+  updateMutation(where: UserFilter, data: UserUpdateInput!): Int!
 }
 
 input UserFilter {
@@ -138,9 +138,9 @@ input FloatMikroComparisonOperators {
   contained: [Float!]
 }
 
-input UserCreateInput {
+input UserUpdateInput {
   id: ID
-  name: String!
-  email: String!
+  name: String
+  email: String
   age: Float
 }

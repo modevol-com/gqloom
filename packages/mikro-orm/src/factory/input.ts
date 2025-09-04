@@ -323,7 +323,7 @@ export class MikroInputFactory<TEntity extends object> {
         name,
         fields: {
           where: { type: this.filter() },
-          data: { type: new GraphQLNonNull(this.createInput()) },
+          data: { type: new GraphQLNonNull(this.updateInput()) },
         },
       })
     )

@@ -1,4 +1,4 @@
 type UserUpdateArgs {
   where: UserFilter
-  data: UserCreateInput!
+  data: UserUpdateInput!
 }
