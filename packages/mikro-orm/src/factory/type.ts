@@ -112,7 +112,7 @@ export interface FindQuery<
   > {}
 
 export interface FindAndCountOutput<TEntity extends object> {
-  count: number
+  totalCount: number
   items: TEntity[]
 }
 
@@ -128,7 +128,7 @@ export interface FindAndCountQuery<
 export interface FindByCursorQueryArgs<TEntity extends object>
   extends Pick<
     FindByCursorOptions<TEntity, any, any, any, any>,
-    "orderBy" | "after" | "before" | "first" | "last"
+    "orderBy" | "after" | "before" | "first" | "last" | "includeCount"
   > {
   where?: FilterArgs<TEntity>
 }
@@ -138,11 +138,23 @@ export interface FindByCursorQueryOptions<TEntity extends object>
   where?: FilterQuery<TEntity>
 }
 
+export interface FindByCursorOutput<TEntity extends object>
+  extends Pick<
+    Cursor<TEntity>,
+    | "items"
+    | "totalCount"
+    | "hasPrevPage"
+    | "hasNextPage"
+    | "startCursor"
+    | "endCursor"
+    | "length"
+  > {}
+
 export interface FindByCursorQuery<
   TEntity extends object,
   TInputI = FindByCursorQueryArgs<TEntity>,
 > extends QueryFactoryWithResolve<
     FindByCursorQueryOptions<TEntity>,
-    GraphQLSilk<Cursor<TEntity>, Cursor<TEntity>>,
+    GraphQLSilk<FindByCursorOutput<TEntity>, Cursor<TEntity>>,
     GraphQLSilk<FindByCursorQueryOptions<TEntity>, TInputI>
   > {}

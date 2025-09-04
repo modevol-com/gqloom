@@ -5,20 +5,24 @@ import {
   type Middleware,
   QueryFactoryWithResolve,
   type QueryOptions,
+  getResolvingFields,
   silk,
   weaverContext,
 } from "@gqloom/core"
 import {
+  type Cursor,
   type EntityManager,
   type EntityName,
   EntitySchema,
 } from "@mikro-orm/core"
 import {
+  GraphQLBoolean,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   type GraphQLOutputType,
+  GraphQLString,
 } from "graphql"
 import { MikroWeaver } from ".."
 import { MikroInputFactory } from "./input"
@@ -27,6 +31,9 @@ import type {
   CountQueryArgs,
   CountQueryOptions,
   FindAndCountQuery,
+  FindByCursorQuery,
+  FindByCursorQueryArgs,
+  FindByCursorQueryOptions,
   FindQuery,
   FindQueryArgs,
   FindQueryOptions,
@@ -139,12 +146,12 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       ...options,
       resolve: async (args: FindQueryOptions<TEntity>) => {
-        const [items, count] = await (await this.em()).findAndCount(
+        const [items, totalCount] = await (await this.em()).findAndCount(
           this.entityName,
           args.where ?? {},
           args
         )
-        return { items, count }
+        return { items, totalCount }
       },
     } as QueryOptions<any, any>)
   }
@@ -159,7 +166,7 @@ export class MikroResolverFactory<TEntity extends object> {
         new GraphQLObjectType({
           name,
           fields: {
-            count: { type: new GraphQLNonNull(GraphQLInt) },
+            totalCount: { type: new GraphQLNonNull(GraphQLInt) },
             items: { type: new GraphQLNonNull(new GraphQLList(output)) },
           },
         })
@@ -167,8 +174,56 @@ export class MikroResolverFactory<TEntity extends object> {
     )
   }
 
-  public findByCursorQuery() {
-    // TODO
+  public findByCursorQuery<TInputI = FindByCursorQueryArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<FindByCursorQueryOptions<TEntity>, TInputI>
+    middlewares?: Middleware<FindByCursorQuery<TEntity, TInputI>>[]
+  } = {}): FindByCursorQuery<TEntity, TInputI> {
+    input ??= this.inputFactory.findByCursorArgsSilk() as GraphQLSilk<
+      FindByCursorQueryOptions<TEntity>,
+      TInputI
+    >
+
+    return new QueryFactoryWithResolve(silk(this.cursorOutput()), {
+      input,
+      ...options,
+      resolve: async (
+        { where, ...args }: FindByCursorQueryOptions<TEntity>,
+        payload
+      ) => {
+        const includeCount = (() => {
+          if (!payload) return true
+          return getResolvingFields(payload).selectedFields.has("totalCount")
+        })()
+        return (await this.em()).findByCursor(this.entityName, where ?? {}, {
+          ...args,
+          includeCount,
+        })
+      },
+    } as QueryOptions<any, any>)
+  }
+
+  protected cursorOutput(): GraphQLOutputType {
+    const name = `${this.metaName}Cursor`
+    const existing = weaverContext.getNamedType(name)
+    if (existing != null) return existing
+    const output = MikroWeaver.getGraphQLType(this.meta)
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<Cursor<TEntity>>({
+        name,
+        fields: {
+          items: { type: new GraphQLNonNull(new GraphQLList(output)) },
+          totalCount: { type: new GraphQLNonNull(GraphQLInt) },
+          hasPrevPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+          hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+          startCursor: { type: GraphQLString },
+          endCursor: { type: GraphQLString },
+          length: { type: GraphQLInt },
+        },
+      })
+    )
   }
 
   public findOneQuery() {

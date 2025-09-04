@@ -10,7 +10,7 @@ import { printSchema } from "graphql"
 import * as v from "valibot"
 import { beforeAll, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
-import { MikroResolverFactory } from "../src/factory"
+import { type FindByCursorOutput, MikroResolverFactory } from "../src/factory"
 
 interface IUser {
   id: number
@@ -577,19 +577,19 @@ describe("MikroResolverFactory", async () => {
     it("should resolve correctly with filters, sorting, and pagination", async () => {
       const query = userFactory.findAndCountQuery()
       const executor = resolver({ query }).toExecutor()
-      let answer: { items: IUser[]; count: number }
+      let answer: { items: IUser[]; totalCount: number }
 
       // No args
       answer = await executor.query({})
       expect(answer.items).toHaveLength(5)
-      expect(answer.count).toBe(5)
+      expect(answer.totalCount).toBe(5)
 
       // Where
       answer = await executor.query({
         where: { age: { gte: 30 } },
       })
       expect(answer.items).toHaveLength(2)
-      expect(answer.count).toBe(2)
+      expect(answer.totalCount).toBe(2)
       expect(answer.items.map((u) => u.name).sort()).toEqual([
         "Alice Johnson",
         "Jane Doe",
@@ -600,7 +600,7 @@ describe("MikroResolverFactory", async () => {
         orderBy: { age: "DESC" },
       })
       expect(answer.items).toHaveLength(5)
-      expect(answer.count).toBe(5)
+      expect(answer.totalCount).toBe(5)
       expect(answer.items.map((u) => u.name)).toEqual([
         "Alice Johnson",
         "Jane Doe",
@@ -615,7 +615,7 @@ describe("MikroResolverFactory", async () => {
         orderBy: { age: "ASC" },
       })
       expect(answer.items).toHaveLength(2)
-      expect(answer.count).toBe(5) // Limit only affects items, not total count
+      expect(answer.totalCount).toBe(5) // Limit only affects items, not total count
       expect(answer.items.map((u) => u.name)).toEqual(["Bob Smith", "John Doe"])
 
       // Offset
@@ -625,7 +625,7 @@ describe("MikroResolverFactory", async () => {
         orderBy: { age: "ASC" },
       })
       expect(answer.items).toHaveLength(2)
-      expect(answer.count).toBe(5) // Offset only affects items, not total count
+      expect(answer.totalCount).toBe(5) // Offset only affects items, not total count
       expect(answer.items.map((u) => u.name)).toEqual([
         "Charlie Brown",
         "Jane Doe",
@@ -647,10 +647,10 @@ describe("MikroResolverFactory", async () => {
 
       expect(query).toBeDefined()
       const executor = resolver({ query }).toExecutor()
-      let answer: { items: IUser[]; count: number }
+      let answer: { items: IUser[]; totalCount: number }
       answer = await executor.query({ minAge: 30 })
       expect(answer.items).toHaveLength(2)
-      expect(answer.count).toBe(2)
+      expect(answer.totalCount).toBe(2)
       expect(answer.items.map((u) => u.name)).toEqual([
         "Jane Doe",
         "Alice Johnson",
@@ -658,7 +658,7 @@ describe("MikroResolverFactory", async () => {
 
       answer = await executor.query({ minAge: null })
       expect(answer.items).toHaveLength(5)
-      expect(answer.count).toBe(5)
+      expect(answer.totalCount).toBe(5)
     })
 
     it("should be created with middlewares", async () => {
@@ -672,7 +672,7 @@ describe("MikroResolverFactory", async () => {
             const answer = await next()
             expectTypeOf(answer).toEqualTypeOf<{
               items: IUser[]
-              count: number
+              totalCount: number
             }>()
             return {
               ...answer,
@@ -689,7 +689,7 @@ describe("MikroResolverFactory", async () => {
       const answer = await executor.query({})
       expect(count).toBe(1)
       expect(answer.items.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
-      expect(answer.count).toBe(5)
+      expect(answer.totalCount).toBe(5)
     })
 
     it("should weave schema without error", () => {
@@ -703,8 +703,349 @@ describe("MikroResolverFactory", async () => {
         }
 
         type UserFindAndCount {
-          count: Int!
+          totalCount: Int!
           items: [User!]!
+        }
+
+        type User {
+          id: ID!
+          name: String!
+          email: String!
+          age: Float
+        }
+
+        input UserFilter {
+          id: IDMikroComparisonOperators
+          name: StringMikroComparisonOperators
+          email: StringMikroComparisonOperators
+          age: FloatMikroComparisonOperators
+        }
+
+        input IDMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: ID
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: ID
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: ID
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [ID!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: ID
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: ID
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: ID
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [ID!]
+
+          """&&"""
+          overlap: [ID!]
+
+          """@>"""
+          contains: [ID!]
+
+          """<@"""
+          contained: [ID!]
+        }
+
+        input StringMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: String
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: String
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: String
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [String!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: String
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: String
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: String
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [String!]
+
+          """&&"""
+          overlap: [String!]
+
+          """@>"""
+          contains: [String!]
+
+          """<@"""
+          contained: [String!]
+
+          """Like. Uses LIKE operator"""
+          like: String
+
+          """Regexp. Uses REGEXP operator"""
+          re: String
+
+          """Full text.	A driver specific full text search function."""
+          fulltext: String
+
+          """ilike"""
+          ilike: String
+        }
+
+        input FloatMikroComparisonOperators {
+          """Equals. Matches values that are equal to a specified value."""
+          eq: Float
+
+          """Greater. Matches values that are greater than a specified value."""
+          gt: Float
+
+          """
+          Greater or Equal. Matches values that are greater than or equal to a specified value.
+          """
+          gte: Float
+
+          """Contains, Contains, Matches any of the values specified in an array."""
+          in: [Float!]
+
+          """Lower, Matches values that are less than a specified value."""
+          lt: Float
+
+          """
+          Lower or equal, Matches values that are less than or equal to a specified value.
+          """
+          lte: Float
+
+          """Not equal. Matches all values that are not equal to a specified value."""
+          ne: Float
+
+          """Not contains. Matches none of the values specified in an array."""
+          nin: [Float!]
+
+          """&&"""
+          overlap: [Float!]
+
+          """@>"""
+          contains: [Float!]
+
+          """<@"""
+          contained: [Float!]
+        }
+
+        input UserOrderBy {
+          id: MikroQueryOrder
+          name: MikroQueryOrder
+          email: MikroQueryOrder
+          age: MikroQueryOrder
+        }
+
+        enum MikroQueryOrder {
+          ASC
+          ASC_NULLS_LAST
+          ASC_NULLS_FIRST
+          DESC
+          DESC_NULLS_LAST
+          DESC_NULLS_FIRST
+        }"
+      `)
+    })
+  })
+
+  describe.concurrent("findByCursorQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findByCursorQuery()
+      expect(query).toBeDefined()
+    })
+
+    it("should resolve correctly with filters, sorting, and pagination", async () => {
+      const query = userFactory.findByCursorQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: FindByCursorOutput<IUser>
+
+      // No args
+      answer = await executor.query({ orderBy: { id: "ASC" } })
+      expect(answer.items).toHaveLength(5)
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(false)
+
+      // Forward pagination
+      answer = await executor.query({
+        first: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual(["Bob Smith", "John Doe"])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(true)
+      expect(answer.hasPrevPage).toBe(false)
+      expect(answer.startCursor).toBeDefined()
+      expect(answer.endCursor).toBeDefined()
+
+      const after = answer.endCursor!
+
+      answer = await executor.query({
+        first: 2,
+        after,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Charlie Brown",
+        "Jane Doe",
+      ])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(true)
+      expect(answer.hasPrevPage).toBe(true)
+
+      const after2 = answer.endCursor!
+
+      answer = await executor.query({
+        first: 2,
+        after: after2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual(["Alice Johnson"])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(true)
+
+      // Backward pagination
+      answer = await executor.query({
+        last: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Jane Doe",
+        "Alice Johnson",
+      ])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(true)
+
+      const before = answer.startCursor!
+
+      answer = await executor.query({
+        last: 2,
+        before,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "John Doe",
+        "Charlie Brown",
+      ])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(true)
+      expect(answer.hasPrevPage).toBe(true)
+
+      // Where clause
+      answer = await executor.query({
+        where: { age: { gte: 30 } },
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Jane Doe",
+        "Alice Johnson",
+      ])
+      expect(answer.totalCount).toBe(2)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(false)
+    })
+
+    it("should be created with custom input", async () => {
+      const query = userFactory.findByCursorQuery({
+        input: v.pipe(
+          v.object({
+            minAge: v.nullish(v.number()),
+            first: v.optional(v.number(), 2),
+          }),
+          v.transform(({ minAge, first }) => ({
+            where: minAge != null ? { age: { $gte: minAge } } : {},
+            orderBy: { age: QueryOrder.ASC },
+            first,
+          }))
+        ),
+      })
+
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      let answer: FindByCursorOutput<IUser>
+      answer = await executor.query({ minAge: 30 })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(2)
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Jane Doe",
+        "Alice Johnson",
+      ])
+
+      answer = await executor.query({ minAge: null })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(5)
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findByCursorQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<FindByCursorOutput<IUser>>()
+            const items: IUser[] = answer.items.map((u) => ({
+              ...u,
+              name: u.name.toUpperCase(),
+            }))
+            return {
+              ...answer,
+              items,
+            }
+          },
+        ],
+      })
+
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ first: 1, orderBy: { id: "ASC" } })
+      expect(count).toBe(1)
+      expect(answer.items.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
+      expect(answer.totalCount).toBe(5)
+    })
+
+    it("should weave schema without error", () => {
+      const r = resolver({
+        findByCursorQuery: userFactory.findByCursorQuery(),
+      })
+      const schema = weave(r)
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          findByCursorQuery(where: UserFilter, orderBy: UserOrderBy, after: String, before: String, first: Int, last: Int): UserCursor
+        }
+
+        type UserCursor {
+          items: [User!]!
+          totalCount: Int!
+          hasPrevPage: Boolean!
+          hasNextPage: Boolean!
+          startCursor: String
+          endCursor: String
+          length: Int
         }
 
         type User {

@@ -210,6 +210,67 @@ describe("MikroInputFactory", () => {
     })
   })
 
+  describe("findByCursorArgs", () => {
+    it("should generate FindByCursorArgs type for an entity", () => {
+      const findByCursorArgsType = inputFactory.findByCursorArgs()
+      expect(printType(findByCursorArgsType)).toMatchInlineSnapshot(`
+        "type UserFindByCursorArgs {
+          where: UserFilter
+          orderBy: UserOrderBy
+          after: String
+          before: String
+          first: Int
+          last: Int
+        }"
+      `)
+    })
+
+    it("should respect field visibility in findByCursorArgs", () => {
+      const inputFactoryWithVisibility = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          password: false,
+          age: {
+            filters: false,
+          },
+        },
+      })
+
+      const findByCursorArgsType = inputFactoryWithVisibility.findByCursorArgs()
+      expect(printType(findByCursorArgsType)).toMatchInlineSnapshot(`
+        "type UserFindByCursorArgs {
+          where: UserFilter
+          orderBy: UserOrderBy
+          after: String
+          before: String
+          first: Int
+          last: Int
+        }"
+      `)
+
+      // Verify that the filter and orderBy types within findByCursorArgs also respect visibility
+      const filterType = inputFactoryWithVisibility.filter()
+      expect(printType(filterType)).toMatchInlineSnapshot(`
+        "type UserFilter {
+          id: IDMikroComparisonOperators
+          name: StringMikroComparisonOperators
+          email: StringMikroComparisonOperators
+          isActive: BooleanMikroComparisonOperators
+        }"
+      `)
+
+      const orderByType = inputFactoryWithVisibility.orderBy()
+      expect(printType(orderByType)).toMatchInlineSnapshot(`
+        "type UserOrderBy {
+          id: MikroQueryOrder
+          name: MikroQueryOrder
+          email: MikroQueryOrder
+          isActive: MikroQueryOrder
+        }"
+      `)
+    })
+  })
+
   describe("comparisonOperatorsType", () => {
     it("should create operators type for String", () => {
       const stringType =
