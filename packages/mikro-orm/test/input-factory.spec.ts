@@ -335,6 +335,33 @@ describe("MikroInputFactory", () => {
     })
   })
 
+  describe("insertArgs", () => {
+    it("should generate InsertArgs type for an entity", async () => {
+      const insertArgsType = inputFactory.insertArgs()
+      await expect(printType(insertArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserInsertArgs.graphql"
+      )
+    })
+  })
+
+  describe("insertManyArgs", () => {
+    it("should generate InsertManyArgs type for an entity", async () => {
+      const insertManyArgsType = inputFactory.insertManyArgs()
+      await expect(printType(insertManyArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserInsertManyArgs.graphql"
+      )
+    })
+  })
+
+  describe("deleteArgs", () => {
+    it("should generate DeleteArgs type for an entity", async () => {
+      const deleteArgsType = inputFactory.deleteArgs()
+      await expect(printType(deleteArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserDeleteArgs.graphql"
+      )
+    })
+  })
+
   describe("comparisonOperatorsType", () => {
     it("should create operators type for String", async () => {
       const stringType =

@@ -8,6 +8,7 @@ import type {
   CountOptions,
   CreateOptions,
   Cursor,
+  DeleteOptions,
   EntityManager,
   FilterQuery,
   FindByCursorOptions,
@@ -247,4 +248,23 @@ export interface InsertManyMutation<
     InsertManyMutationOptions<TEntity>,
     GraphQLSilk<TEntity[], TEntity[]>,
     GraphQLSilk<InsertManyMutationOptions<TEntity>, TInputI>
+  > {}
+
+export interface DeleteMutationArgs<TEntity extends object>
+  extends Pick<DeleteOptions<TEntity>, never> {
+  where: FilterArgs<TEntity>
+}
+
+export interface DeleteMutationOptions<TEntity extends object>
+  extends DeleteOptions<TEntity> {
+  where: FilterQuery<TEntity>
+}
+
+export interface DeleteMutation<
+  TEntity extends object,
+  TInputI = DeleteMutationArgs<TEntity>,
+> extends MutationFactoryWithResolve<
+    DeleteMutationOptions<TEntity>,
+    GraphQLSilk<number, number>,
+    GraphQLSilk<DeleteMutationOptions<TEntity>, TInputI>
   > {}

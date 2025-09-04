@@ -29,6 +29,8 @@ import type {
   CountQueryOptions,
   CreateMutationArgs,
   CreateMutationOptions,
+  DeleteMutationArgs,
+  DeleteMutationOptions,
   FilterArgs,
   FindByCursorQueryArgs,
   FindByCursorQueryOptions,
@@ -286,6 +288,27 @@ export class MikroInputFactory<TEntity extends object> {
     >(
       () => this.insertManyArgs(),
       (args) => ({ value: { data: args.data } })
+    )
+  }
+
+  public deleteArgs() {
+    const name = `${this.metaName}DeleteArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<DeleteMutationArgs<TEntity>>({
+        name,
+        fields: {
+          where: { type: this.filter() },
+        },
+      })
+    )
+  }
+
+  public deleteArgsSilk() {
+    return silk<DeleteMutationOptions<TEntity>, DeleteMutationArgs<TEntity>>(
+      () => this.deleteArgs(),
+      (args) => ({ value: { where: this.transformFilters(args.where) } })
     )
   }
 

@@ -35,6 +35,9 @@ import type {
   CreateMutation,
   CreateMutationArgs,
   CreateMutationOptions,
+  DeleteMutation,
+  DeleteMutationArgs,
+  DeleteMutationOptions,
   FindAndCountQuery,
   FindByCursorQuery,
   FindByCursorQueryArgs,
@@ -306,7 +309,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args) => {
+      resolve: async (args: CreateMutationOptions<any>) => {
         const em = await this.em()
         const instance = em.create(this.entityName, args.data)
         em.persist(instance)
@@ -332,7 +335,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args) => {
+      resolve: async (args: InsertMutationOptions<any>) => {
         const em = await this.em()
         const key = await em.insert(this.entityName, args.data, args)
         return em.findOneOrFail(this.entityName, key)
@@ -342,7 +345,6 @@ export class MikroResolverFactory<TEntity extends object> {
 
   public insertManyMutation<TInputI = InsertManyMutationArgs<TEntity>>({
     input,
-    middlewares,
     ...options
   }: GraphQLFieldOptions & {
     input?: GraphQLSilk<InsertManyMutationOptions<TEntity>, TInputI>
@@ -356,9 +358,8 @@ export class MikroResolverFactory<TEntity extends object> {
     const output = new GraphQLNonNull(new GraphQLList(entityType))
     return new MutationFactoryWithResolve(silk(output), {
       input,
-      middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args) => {
+      resolve: async (args: InsertManyMutationOptions<any>) => {
         const em = await this.em()
         const keys = await em.insertMany(this.entityName, args.data, args)
         return em.find(this.entityName, keys as any)
@@ -366,8 +367,28 @@ export class MikroResolverFactory<TEntity extends object> {
     } as MutationOptions<any, any>)
   }
 
-  public nativeDeleteMutation() {
-    // TODO
+  public deleteMutation<TInputI = DeleteMutationArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<DeleteMutationOptions<TEntity>, TInputI>
+    middlewares?: Middleware<DeleteMutation<TEntity, TInputI>>[]
+  } = {}): DeleteMutation<TEntity, TInputI> {
+    input ??= this.inputFactory.deleteArgsSilk() as GraphQLSilk<
+      DeleteMutationOptions<TEntity>,
+      TInputI
+    >
+    return new MutationFactoryWithResolve(
+      silk(new GraphQLNonNull(GraphQLInt)),
+      {
+        input,
+        ...options,
+        resolve: async (args: DeleteMutationOptions<TEntity>) => {
+          const em = await this.em()
+          return em.nativeDelete(this.entityName, args.where, args)
+        },
+      } as MutationOptions<any, any>
+    )
   }
 
   public nativeUpdateMutation() {

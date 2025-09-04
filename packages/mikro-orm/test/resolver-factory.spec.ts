@@ -1068,4 +1068,97 @@ describe.concurrent("MikroResolverFactory", async () => {
       )
     })
   })
+
+  describe.concurrent("deleteMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.deleteMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should delete entity correctly", async () => {
+      const deleteMutation = userFactory.deleteMutation()
+      const executor = resolver({ delete: deleteMutation }).toExecutor()
+      await orm.em.insert(User, {
+        name: "u1",
+        email: "user1@example.com",
+        age: 21,
+      })
+      expect(await orm.em.findOne(User, { name: "u1" })).toBeDefined()
+      const answer = await executor.delete({
+        where: { name: { eq: "u1" } },
+      })
+      expect(answer).toBe(1)
+      expect(await orm.em.findOne(User, { name: "u1" })).toBeNull()
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const deleteMutation = userFactory.deleteMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<number>()
+            return answer + 1
+          },
+        ],
+      })
+      const executor = resolver({ delete: deleteMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u2",
+        email: "user2@example.com",
+        age: 22,
+      })
+      const answer = await executor.delete({
+        where: { name: { eq: "u2" } },
+      })
+      expect(count).toBe(1)
+      expect(answer).toBe(2)
+    })
+
+    it("should use with custom input", async () => {
+      const deleteMutation = userFactory.deleteMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+          }),
+          v.transform(({ username }) => ({
+            where: { name: username },
+          }))
+        ),
+      })
+      const executor = resolver({ delete: deleteMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u4",
+        email: "user3@example.com",
+        age: 23,
+      })
+      const answer = await executor.delete({
+        username: "u4",
+      })
+      expect(answer).toBe(1)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        deleteMutation: userFactory.deleteMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/deleteMutation.graphql"
+      )
+    })
+  })
 })
