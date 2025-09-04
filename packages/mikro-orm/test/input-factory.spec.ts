@@ -362,6 +362,24 @@ describe("MikroInputFactory", () => {
     })
   })
 
+  describe("updateInput", () => {
+    it("should generate UpdateInput type for an entity", async () => {
+      const updateInputType = inputFactory.updateInput()
+      await expect(printType(updateInputType)).toMatchFileSnapshot(
+        "./snapshots/UserUpdateInput.graphql"
+      )
+    })
+  })
+
+  describe("updateArgs", () => {
+    it("should generate UpdateArgs type for an entity", async () => {
+      const updateArgsType = inputFactory.updateArgs()
+      await expect(printType(updateArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserUpdateArgs.graphql"
+      )
+    })
+  })
+
   describe("comparisonOperatorsType", () => {
     it("should create operators type for String", async () => {
       const stringType =

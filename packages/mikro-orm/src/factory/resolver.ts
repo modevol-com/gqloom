@@ -56,6 +56,9 @@ import type {
   InsertMutationArgs,
   InsertMutationOptions,
   MikroResolverFactoryOptions,
+  UpdateMutation,
+  UpdateMutationArgs,
+  UpdateMutationOptions,
 } from "./type"
 
 export class MikroResolverFactory<TEntity extends object> {
@@ -387,12 +390,33 @@ export class MikroResolverFactory<TEntity extends object> {
           const em = await this.em()
           return em.nativeDelete(this.entityName, args.where, args)
         },
-      } as MutationOptions<any, any>
+      } as MutationOptions<GraphQLSilk<number, number>, typeof input>
     )
   }
 
-  public nativeUpdateMutation() {
-    // TODO
+  public updateMutation<TInputI = UpdateMutationArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<UpdateMutationOptions<TEntity>, TInputI>
+    middlewares?: Middleware<UpdateMutation<TEntity, TInputI>>[]
+  } = {}): UpdateMutation<TEntity, TInputI> {
+    input ??= this.inputFactory.updateArgsSilk() as GraphQLSilk<
+      UpdateMutationOptions<TEntity>,
+      TInputI
+    >
+
+    return new MutationFactoryWithResolve(
+      silk(new GraphQLNonNull(GraphQLInt)),
+      {
+        input,
+        ...options,
+        resolve: async (args): Promise<number> => {
+          const em = await this.em()
+          return em.nativeUpdate(this.entityName, args.where, args.data, args)
+        },
+      } as MutationOptions<GraphQLSilk<number, number>, typeof input>
+    )
   }
 
   public upsertMutation() {

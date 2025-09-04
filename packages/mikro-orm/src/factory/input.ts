@@ -44,6 +44,8 @@ import type {
   InsertMutationOptions,
   MikroFactoryPropertyBehaviors,
   MikroResolverFactoryOptions,
+  UpdateMutationArgs,
+  UpdateMutationOptions,
 } from "./type"
 
 export class MikroInputFactory<TEntity extends object> {
@@ -312,6 +314,30 @@ export class MikroInputFactory<TEntity extends object> {
     )
   }
 
+  public updateArgs() {
+    const name = `${this.metaName}UpdateArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<UpdateMutationArgs<TEntity>>({
+        name,
+        fields: {
+          where: { type: this.filter() },
+          data: { type: new GraphQLNonNull(this.createInput()) },
+        },
+      })
+    )
+  }
+
+  public updateArgsSilk() {
+    return silk<UpdateMutationOptions<TEntity>, UpdateMutationArgs<TEntity>>(
+      () => this.updateArgs(),
+      (args) => ({
+        value: { where: this.transformFilters(args.where), data: args.data },
+      })
+    )
+  }
+
   public orderBy(): GraphQLObjectType {
     const name = `${this.metaName}OrderBy`
     return (
@@ -381,6 +407,54 @@ export class MikroInputFactory<TEntity extends object> {
             property.nullable !== true && !property.default && !property.primary
           const finalType =
             isRequired && !isNonNullType(type) ? new GraphQLNonNull(type) : type
+
+          return {
+            type: finalType,
+            description: property.comment,
+          } as GraphQLFieldConfig<any, any>
+        }),
+    })
+  }
+
+  public updateInput(): GraphQLObjectType {
+    const name = `${this.metaName}UpdateInput`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return new GraphQLObjectType({
+      name,
+      fields: () =>
+        mapValue(this.meta.properties, (property, propertyName) => {
+          // Check visibility
+          if (
+            !MikroInputFactory.isPropertyVisible(
+              propertyName,
+              this.options?.input,
+              "update"
+            )
+          ) {
+            return mapValue.SKIP
+          }
+
+          // Get custom type if configured
+          const customSilk = MikroInputFactory.getPropertyConfig(
+            this.options?.input,
+            propertyName as keyof TEntity,
+            "update"
+          )
+          const type = customSilk
+            ? weaverContext.getGraphQLType(customSilk)
+            : MikroWeaver.getFieldType(property, this.meta)
+
+          if (type == null) return mapValue.SKIP
+
+          // For update operations, make all fields optional except primary keys
+          let finalType = type
+          if (
+            isNonNullType(type) &&
+            !this.meta.primaryKeys.includes(propertyName)
+          ) {
+            finalType = type.ofType
+          }
 
           return {
             type: finalType,

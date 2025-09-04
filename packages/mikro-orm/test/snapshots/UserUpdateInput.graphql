@@ -1,0 +1,8 @@
+type UserUpdateInput {
+  id: ID
+  name: String
+  email: String
+  password: String
+  age: Float
+  isActive: Boolean
+}

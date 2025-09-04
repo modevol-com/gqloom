@@ -1161,4 +1161,106 @@ describe.concurrent("MikroResolverFactory", async () => {
       )
     })
   })
+
+  describe.concurrent("updateMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.updateMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should update entity correctly", async () => {
+      const updateMutation = userFactory.updateMutation()
+      const executor = resolver({ update: updateMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u5",
+        email: "user5@example.com",
+        age: 24,
+      })
+      const answer = await executor.update({
+        where: { name: { eq: "u5" } },
+        data: { age: 25 },
+      })
+      expect(answer).toBe(1)
+      expect(await orm.em.findOne(User, { name: "u5" })).toBeDefined()
+      expect((await orm.em.findOne(User, { name: "u5" }))?.age).toBe(25)
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const updateMutation = userFactory.updateMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<number>()
+            return answer + 1
+          },
+        ],
+      })
+
+      const executor = resolver({ update: updateMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u6",
+        email: "user6@example.com",
+        age: 26,
+      })
+      const answer = await executor.update({
+        where: { name: { eq: "u6" } },
+        data: { age: 27 },
+      })
+      expect(count).toBe(1)
+      expect(answer).toBe(2)
+      expect(await orm.em.findOne(User, { name: "u6" })).toBeDefined()
+      expect((await orm.em.findOne(User, { name: "u6" }))?.age).toBe(27)
+    })
+
+    it("should use with custom input", async () => {
+      const updateMutation = userFactory.updateMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+          }),
+          v.transform(({ username }) => ({
+            where: { name: username },
+            data: { age: 28 },
+          }))
+        ),
+      })
+      const executor = resolver({ update: updateMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u7",
+        email: "user7@example.com",
+        age: 29,
+      })
+      const answer = await executor.update({
+        username: "u7",
+      })
+      expect(answer).toBe(1)
+      expect(await orm.em.findOne(User, { name: "u7" })).toBeDefined()
+      expect((await orm.em.findOne(User, { name: "u7" }))?.age).toBe(28)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        updateMutation: userFactory.updateMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/updateMutation.graphql"
+      )
+    })
+  })
 })

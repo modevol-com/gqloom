@@ -9,6 +9,7 @@ import type {
   CreateOptions,
   Cursor,
   DeleteOptions,
+  EntityData,
   EntityManager,
   FilterQuery,
   FindByCursorOptions,
@@ -17,6 +18,7 @@ import type {
   MetadataStorage,
   NativeInsertUpdateOptions,
   RequiredEntityData,
+  UpdateOptions,
 } from "@mikro-orm/core"
 
 export interface MikroResolverFactoryOptions<TEntity extends object> {
@@ -267,4 +269,25 @@ export interface DeleteMutation<
     DeleteMutationOptions<TEntity>,
     GraphQLSilk<number, number>,
     GraphQLSilk<DeleteMutationOptions<TEntity>, TInputI>
+  > {}
+
+export interface UpdateMutationArgs<TEntity extends object>
+  extends Pick<UpdateOptions<TEntity>, never> {
+  data: EntityData<TEntity>
+  where: FilterArgs<TEntity>
+}
+
+export interface UpdateMutationOptions<TEntity extends object>
+  extends UpdateOptions<TEntity> {
+  data: EntityData<TEntity>
+  where: FilterQuery<TEntity>
+}
+
+export interface UpdateMutation<
+  TEntity extends object,
+  TInputI = UpdateMutationArgs<TEntity>,
+> extends MutationFactoryWithResolve<
+    UpdateMutationOptions<TEntity>,
+    GraphQLSilk<number, number>,
+    GraphQLSilk<UpdateMutationOptions<TEntity>, TInputI>
   > {}
