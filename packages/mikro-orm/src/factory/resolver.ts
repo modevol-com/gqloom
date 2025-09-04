@@ -4,6 +4,7 @@ import {
   type MayPromise,
   type Middleware,
   MutationFactoryWithResolve,
+  type MutationOptions,
   QueryFactoryWithResolve,
   type QueryOptions,
   getResolvingFields,
@@ -45,6 +46,12 @@ import type {
   FindQuery,
   FindQueryArgs,
   FindQueryOptions,
+  InsertManyMutation,
+  InsertManyMutationArgs,
+  InsertManyMutationOptions,
+  InsertMutation,
+  InsertMutationArgs,
+  InsertMutationOptions,
   MikroResolverFactoryOptions,
 } from "./type"
 
@@ -308,12 +315,55 @@ export class MikroResolverFactory<TEntity extends object> {
     })
   }
 
-  public insertMutation() {
-    // TODO
+  public insertMutation<TInputI = InsertMutationArgs<TEntity>>({
+    input,
+    middlewares,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertMutationOptions<TEntity>, TInputI>
+    middlewares?: Middleware<InsertMutation<TEntity, TInputI>>[]
+  } = {}): InsertMutation<TEntity, TInputI> {
+    input ??= this.inputFactory.insertArgsSilk() as GraphQLSilk<
+      InsertMutationOptions<TEntity>,
+      TInputI
+    >
+    const output = MikroWeaver.getGraphQLType(this.meta)
+    return new MutationFactoryWithResolve(silk(output), {
+      input,
+      middlewares: this.middlewaresWithFlush(middlewares),
+      ...options,
+      resolve: async (args) => {
+        const em = await this.em()
+        const key = await em.insert(this.entityName, args.data, args)
+        return em.findOneOrFail(this.entityName, key)
+      },
+    } as MutationOptions<any, any>)
   }
 
-  public insertManyMutation() {
-    // TODO
+  public insertManyMutation<TInputI = InsertManyMutationArgs<TEntity>>({
+    input,
+    middlewares,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<InsertManyMutationOptions<TEntity>, TInputI>
+    middlewares?: Middleware<InsertManyMutation<TEntity, TInputI>>[]
+  } = {}): InsertManyMutation<TEntity, TInputI> {
+    input ??= this.inputFactory.insertManyArgsSilk() as GraphQLSilk<
+      InsertManyMutationOptions<TEntity>,
+      TInputI
+    >
+    const entityType = MikroWeaver.getGraphQLType(this.meta)
+    const output = new GraphQLNonNull(new GraphQLList(entityType))
+    return new MutationFactoryWithResolve(silk(output), {
+      input,
+      middlewares: this.middlewaresWithFlush(middlewares),
+      ...options,
+      resolve: async (args) => {
+        const em = await this.em()
+        const keys = await em.insertMany(this.entityName, args.data, args)
+        return em.find(this.entityName, keys as any)
+      },
+    } as MutationOptions<any, any>)
   }
 
   public nativeDeleteMutation() {

@@ -1,0 +1,17 @@
+type Mutation {
+  insertManyMutation(data: [UserCreateInput]!): [User!]!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  age: Float
+}
+
+input UserCreateInput {
+  id: ID
+  name: String!
+  email: String!
+  age: Float
+}

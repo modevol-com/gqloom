@@ -861,4 +861,211 @@ describe.concurrent("MikroResolverFactory", async () => {
       )
     })
   })
+
+  describe.concurrent("insertMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should create entity correctly", async () => {
+      const insert = userFactory.insertMutation()
+      const executor = resolver({ insert }).toExecutor()
+      const answer = await executor.insert({
+        data: { name: "John Doe", email: "john@example.com", age: 25 },
+      })
+      expect(answer.name).toBe("John Doe")
+      expect(answer.email).toBe("john@example.com")
+      expect(answer.age).toBe(25)
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB).toBeDefined()
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const insert = userFactory.insertMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser>()
+            return { ...answer, name: answer.name.toUpperCase() }
+          },
+        ],
+      })
+
+      const executor = resolver({ insert }).toExecutor()
+      const answer = await executor.insert({
+        data: { name: "Jane Doe", email: "jane@example.com", age: 25 },
+      })
+      expect(count).toBe(1)
+      expect(answer.name).toBe("JANE DOE")
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB?.name).toBe("Jane Doe")
+    })
+
+    it("should use with custom input", async () => {
+      const insert = userFactory.insertMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+            email: v.string(),
+          }),
+          v.transform(({ username, email }) => ({
+            data: { name: username.toUpperCase(), email, age: 30 },
+          }))
+        ),
+      })
+
+      const executor = resolver({ insert }).toExecutor()
+      const answer = await executor.insert({
+        username: "jane doe",
+        email: "jane.doe@example.com",
+      })
+
+      expect(answer.name).toBe("JANE DOE")
+      expect(answer.email).toBe("jane.doe@example.com")
+      expect(answer.age).toBe(30)
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB?.name).toBe("JANE DOE")
+      expect(fromDB?.email).toBe("jane.doe@example.com")
+      expect(fromDB?.age).toBe(30)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        insertMutation: userFactory.insertMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/insertMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("insertManyMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertManyMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should create entities correctly", async () => {
+      const insertMany = userFactory.insertManyMutation()
+      const executor = resolver({ insertMany }).toExecutor()
+
+      const answer = await executor.insertMany({
+        data: [{ name: "User 1", email: "user1@example.com", age: 21 }],
+      })
+
+      expect(answer).toHaveLength(1)
+      expect(answer[0].name).toBe("User 1")
+      expect(answer[0].email).toBe("user1@example.com")
+      expect(answer[0].age).toBe(21)
+
+      const fromDB = await orm.em.find(User, {
+        id: answer.map((u) => u.id),
+      })
+      expect(fromDB).toHaveLength(1)
+      expect(fromDB[0].name).toBe("User 1")
+      expect(fromDB[0].email).toBe("user1@example.com")
+      expect(fromDB[0].age).toBe(21)
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const insertMany = userFactory.insertManyMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser[]>()
+            return answer.map((a: IUser) => ({
+              ...a,
+              name: a.name.toUpperCase(),
+            }))
+          },
+        ],
+      })
+
+      const executor = resolver({ insertMany }).toExecutor()
+      const answer = await executor.insertMany({
+        data: [{ name: "User 3", email: "user3@example.com", age: 23 }],
+      })
+      expect(count).toBe(1)
+      expect(answer[0].name).toBe("USER 3")
+
+      const fromDB = await orm.em.find(User, {
+        id: { $in: answer.map((u: IUser) => u.id) },
+      })
+      expect(fromDB).toHaveLength(1)
+      expect(fromDB[0].name).toBe("User 3")
+    })
+
+    it("should use with custom input", async () => {
+      const insertMany = userFactory.insertManyMutation({
+        input: v.pipe(
+          v.object({
+            users: v.array(
+              v.object({
+                username: v.string(),
+                email: v.string(),
+              })
+            ),
+          }),
+          v.transform(({ users }) => ({
+            data: users.map((u) => ({
+              name: u.username.toUpperCase(),
+              email: u.email,
+              age: 30,
+            })),
+          }))
+        ),
+      })
+
+      const executor = resolver({ insertMany }).toExecutor()
+      const answer = await executor.insertMany({
+        users: [{ username: "user 5", email: "user5@example.com" }],
+      })
+
+      expect(answer).toHaveLength(1)
+      expect(answer[0].name).toBe("USER 5")
+
+      const fromDB = await orm.em.find(User, {
+        id: { $in: answer.map((u: IUser) => u.id) },
+      })
+      expect(fromDB).toHaveLength(1)
+      expect(fromDB[0].name).toBe("USER 5")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        insertManyMutation: userFactory.insertManyMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/insertManyMutation.graphql"
+      )
+    })
+  })
 })

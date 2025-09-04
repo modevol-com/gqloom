@@ -14,6 +14,7 @@ import type {
   FindOneOptions,
   FindOptions,
   MetadataStorage,
+  NativeInsertUpdateOptions,
   RequiredEntityData,
 } from "@mikro-orm/core"
 
@@ -208,4 +209,42 @@ export interface CreateMutation<
     CreateMutationOptions<TEntity>,
     GraphQLSilk<TEntity, TEntity>,
     GraphQLSilk<CreateMutationOptions<TEntity>, TInputI>
+  > {}
+
+export interface InsertMutationArgs<TEntity extends object>
+  extends Pick<NativeInsertUpdateOptions<TEntity>, never> {
+  data: RequiredEntityData<TEntity>
+}
+
+export interface InsertMutationOptions<TEntity extends object>
+  extends NativeInsertUpdateOptions<TEntity> {
+  data: RequiredEntityData<TEntity>
+}
+
+export interface InsertMutation<
+  TEntity extends object,
+  TInputI = InsertMutationArgs<TEntity>,
+> extends MutationFactoryWithResolve<
+    InsertMutationOptions<TEntity>,
+    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<InsertMutationOptions<TEntity>, TInputI>
+  > {}
+
+export interface InsertManyMutationArgs<TEntity extends object>
+  extends Pick<NativeInsertUpdateOptions<TEntity>, never> {
+  data: RequiredEntityData<TEntity>[]
+}
+
+export interface InsertManyMutationOptions<TEntity extends object>
+  extends NativeInsertUpdateOptions<TEntity> {
+  data: RequiredEntityData<TEntity>[]
+}
+
+export interface InsertManyMutation<
+  TEntity extends object,
+  TInputI = InsertManyMutationArgs<TEntity>,
+> extends MutationFactoryWithResolve<
+    InsertManyMutationOptions<TEntity>,
+    GraphQLSilk<TEntity[], TEntity[]>,
+    GraphQLSilk<InsertManyMutationOptions<TEntity>, TInputI>
   > {}

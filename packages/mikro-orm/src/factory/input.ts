@@ -36,6 +36,10 @@ import type {
   FindOneQueryOptions,
   FindQueryArgs,
   FindQueryOptions,
+  InsertManyMutationArgs,
+  InsertManyMutationOptions,
+  InsertMutationArgs,
+  InsertMutationOptions,
   MikroFactoryPropertyBehaviors,
   MikroResolverFactoryOptions,
 } from "./type"
@@ -234,6 +238,53 @@ export class MikroInputFactory<TEntity extends object> {
   public createArgsSilk() {
     return silk<CreateMutationOptions<TEntity>, CreateMutationArgs<TEntity>>(
       () => this.createArgs(),
+      (args) => ({ value: { data: args.data } })
+    )
+  }
+
+  public insertArgs() {
+    const name = `${this.metaName}InsertArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<InsertMutationArgs<TEntity>>({
+        name,
+        fields: {
+          data: { type: new GraphQLNonNull(this.createInput()) },
+        },
+      })
+    )
+  }
+
+  public insertArgsSilk() {
+    return silk<InsertMutationOptions<TEntity>, InsertMutationArgs<TEntity>>(
+      () => this.insertArgs(),
+      (args) => ({ value: { data: args.data } })
+    )
+  }
+
+  public insertManyArgs() {
+    const name = `${this.metaName}InsertManyArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<InsertManyMutationArgs<TEntity>>({
+        name,
+        fields: {
+          data: {
+            type: new GraphQLNonNull(new GraphQLList(this.createInput())),
+          },
+        },
+      })
+    )
+  }
+
+  public insertManyArgsSilk() {
+    return silk<
+      InsertManyMutationOptions<TEntity>,
+      InsertManyMutationArgs<TEntity>
+    >(
+      () => this.insertManyArgs(),
       (args) => ({ value: { data: args.data } })
     )
   }
