@@ -8,9 +8,12 @@ import {
   type EntityMetadata,
   type EntityName,
   EntitySchema,
+  QueryOrder,
 } from "@mikro-orm/core"
 import {
+  GraphQLEnumType,
   type GraphQLFieldConfig,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -19,7 +22,8 @@ import {
 } from "graphql"
 import { MikroWeaver } from ".."
 import type {
-  CountQueryOptions,
+  CountQueryArgs,
+  FindQueryArgs,
   MikroFactoryPropertyBehaviors,
   MikroResolverFactoryOptions,
 } from "./type"
@@ -27,7 +31,7 @@ import type {
 export class MikroInputFactory<TEntity extends object> {
   public constructor(
     protected readonly entityName: EntityName<TEntity>,
-    protected readonly options?: MikroResolverFactoryOptions<TEntity>
+    protected readonly options?: Partial<MikroResolverFactoryOptions<TEntity>>
   ) {}
 
   protected get meta(): EntityMetadata {
@@ -82,12 +86,61 @@ export class MikroInputFactory<TEntity extends object> {
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
     return weaverContext.memoNamedType(
-      new GraphQLObjectType<CountQueryOptions<TEntity>>({
+      new GraphQLObjectType<CountQueryArgs<TEntity>>({
         name,
         fields: {
           where: { type: this.filter() },
         },
       })
+    )
+  }
+
+  public findArgs() {
+    const name = `${pascalCase(this.metaName)}FindArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<FindQueryArgs<TEntity>>({
+        name,
+        fields: {
+          where: { type: this.filter() },
+          orderBy: { type: this.orderBy() },
+          limit: { type: GraphQLInt },
+          offset: { type: GraphQLInt },
+        },
+      })
+    )
+  }
+
+  public orderBy(): GraphQLObjectType {
+    const name = `${this.metaName}OrderBy`
+    return (
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        new GraphQLObjectType({
+          name,
+          fields: () =>
+            mapValue(this.meta.properties, (property, propertyName) => {
+              // Check visibility for filters (ordering is typically tied to filtering)
+              if (
+                !MikroInputFactory.isPropertyVisible(
+                  propertyName,
+                  this.options?.input,
+                  "filters"
+                )
+              ) {
+                return mapValue.SKIP
+              }
+
+              const type = MikroWeaver.getFieldType(property, this.meta)
+              if (type == null) return mapValue.SKIP
+              return {
+                type: MikroInputFactory.queryOrderType(),
+                description: property.comment,
+              } as GraphQLFieldConfig<any, any>
+            }),
+        })
+      )
     )
   }
 
@@ -176,6 +229,27 @@ export class MikroInputFactory<TEntity extends object> {
                   },
                 }
               : {}),
+          },
+        })
+      )
+    )
+  }
+
+  public static queryOrderType(): GraphQLEnumType {
+    const name = `MikroQueryOrder`
+
+    return (
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        new GraphQLEnumType({
+          name,
+          values: {
+            ASC: { value: QueryOrder.ASC },
+            ASC_NULLS_LAST: { value: QueryOrder.ASC_NULLS_LAST },
+            ASC_NULLS_FIRST: { value: QueryOrder.ASC_NULLS_FIRST },
+            DESC: { value: QueryOrder.DESC },
+            DESC_NULLS_LAST: { value: QueryOrder.DESC_NULLS_LAST },
+            DESC_NULLS_FIRST: { value: QueryOrder.DESC_NULLS_FIRST },
           },
         })
       )

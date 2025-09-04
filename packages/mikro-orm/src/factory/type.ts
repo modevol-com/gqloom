@@ -7,6 +7,7 @@ import type {
   CountOptions,
   EntityManager,
   FilterQuery,
+  FindOptions,
   MetadataStorage,
 } from "@mikro-orm/core"
 
@@ -87,4 +88,23 @@ export interface CountQuery<
     CountQueryOptions<TEntity>,
     GraphQLSilk<number, number>,
     GraphQLSilk<CountQueryOptions<TEntity>, TInputI>
+  > {}
+
+export interface FindQueryArgs<TEntity extends object>
+  extends Pick<FindOptions<TEntity>, "orderBy" | "limit" | "offset"> {
+  where?: FilterArgs<TEntity>
+}
+
+export interface FindQueryOptions<TEntity extends object>
+  extends FindOptions<TEntity, any, any, any> {
+  where?: FilterQuery<TEntity> | null | undefined
+}
+
+export interface FindQuery<
+  TEntity extends object,
+  TInputI = FindQueryArgs<TEntity>,
+> extends QueryFactoryWithResolve<
+    FindQueryOptions<TEntity>,
+    GraphQLSilk<TEntity[], TEntity[]>,
+    GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
   > {}

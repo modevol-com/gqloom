@@ -7,14 +7,22 @@ import {
   type QueryOptions,
   silk,
 } from "@gqloom/core"
-import type { EntityManager, EntityName } from "@mikro-orm/core"
-import { GraphQLInt, GraphQLNonNull } from "graphql"
+import {
+  type EntityManager,
+  type EntityName,
+  EntitySchema,
+} from "@mikro-orm/core"
+import { GraphQLInt, GraphQLList, GraphQLNonNull } from "graphql"
+import { MikroWeaver } from ".."
 import { MikroInputFactory } from "./input"
 import { MikroArgsTransformer } from "./transformer"
 import type {
   CountQuery,
   CountQueryArgs,
   CountQueryOptions,
+  FindQuery,
+  FindQueryArgs,
+  FindQueryOptions,
   MikroResolverFactoryOptions,
 } from "./type"
 
@@ -23,6 +31,14 @@ export class MikroResolverFactory<TEntity extends object> {
   protected flushMiddleware: Middleware
   protected inputFactory: MikroInputFactory<TEntity>
   protected transformer: MikroArgsTransformer<TEntity>
+
+  protected get meta() {
+    if (this.entityName instanceof EntitySchema) {
+      return this.entityName.init().meta
+    }
+    if (!this.options.metadata) throw new Error("Metadata not found")
+    return this.options.metadata.get(this.entityName)
+  }
 
   public constructor(
     protected readonly entityName: EntityName<TEntity>,
@@ -72,8 +88,30 @@ export class MikroResolverFactory<TEntity extends object> {
     } as QueryOptions<any, any>)
   }
 
-  public findQuery() {
-    // TODO
+  public findQuery<TInputI = FindQueryArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+    middlewares?: Middleware<FindQuery<TEntity, TInputI>>[]
+  } = {}): FindQuery<TEntity, TInputI> {
+    input ??= silk<FindQueryOptions<TEntity>, FindQueryArgs<TEntity>>(
+      () => this.inputFactory.findArgs(),
+      this.transformer.toFindOptions
+    ) as GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+
+    const output = MikroWeaver.getGraphQLType(this.meta)
+
+    return new QueryFactoryWithResolve(
+      silk(new GraphQLNonNull(new GraphQLList(output))),
+      {
+        input,
+        ...options,
+        resolve: async (args: FindQueryOptions<TEntity>) => {
+          return (await this.em()).find(this.entityName, args.where ?? {}, args)
+        },
+      } as QueryOptions<any, any>
+    )
   }
 
   public findAndCountQuery() {

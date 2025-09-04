@@ -1,16 +1,35 @@
 import type { MayPromise, StandardSchemaV1 } from "@gqloom/core"
 import type { EntityName, FilterQuery } from "@mikro-orm/core"
-import type { CountQueryArgs, CountQueryOptions, FilterArgs } from "./type"
+import type {
+  CountQueryArgs,
+  CountQueryOptions,
+  FilterArgs,
+  FindQueryArgs,
+  FindQueryOptions,
+} from "./type"
 
 export class MikroArgsTransformer<TEntity extends object> {
   public toCountOptions: (
     args: CountQueryArgs<TEntity>
   ) => MayPromise<StandardSchemaV1.Result<CountQueryOptions<TEntity>>>
 
+  public toFindOptions: (
+    args: FindQueryArgs<TEntity>
+  ) => MayPromise<StandardSchemaV1.Result<FindQueryOptions<TEntity>>>
+
   public constructor(public readonly entityName: EntityName<TEntity>) {
     this.toCountOptions = (args) => ({
       value: {
         where: this.transformFilters(args.where),
+      },
+    })
+
+    this.toFindOptions = (args) => ({
+      value: {
+        where: this.transformFilters(args.where),
+        limit: args.limit,
+        offset: args.offset,
+        orderBy: args.orderBy,
       },
     })
   }

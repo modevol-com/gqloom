@@ -70,6 +70,97 @@ describe("MikroInputFactory", () => {
     })
   })
 
+  describe("orderBy", () => {
+    it("should generate OrderBy type for an entity", () => {
+      const orderByType = inputFactory.orderBy()
+      expect(printType(orderByType)).toMatchInlineSnapshot(`
+        "type UserOrderBy {
+          id: MikroQueryOrder
+          name: MikroQueryOrder
+          email: MikroQueryOrder
+          password: MikroQueryOrder
+          age: MikroQueryOrder
+        }"
+      `)
+    })
+
+    it("should respect field visibility in orderBy", () => {
+      const inputFactoryWithVisibility = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          password: false,
+          age: {
+            filters: false, // orderBy visibility is tied to filters
+          },
+        },
+      })
+
+      const orderByType = inputFactoryWithVisibility.orderBy()
+      expect(printType(orderByType)).toMatchInlineSnapshot(`
+        "type UserOrderBy {
+          id: MikroQueryOrder
+          name: MikroQueryOrder
+          email: MikroQueryOrder
+        }"
+      `)
+    })
+  })
+
+  describe("findArgs", () => {
+    it("should generate FindArgs type for an entity", () => {
+      const findArgsType = inputFactory.findArgs()
+      expect(printType(findArgsType)).toMatchInlineSnapshot(`
+        "type UserFindArgs {
+          where: UserFilter
+          orderBy: UserOrderBy
+          limit: Int
+          offset: Int
+        }"
+      `)
+    })
+
+    it("should respect field visibility in findArgs", () => {
+      const inputFactoryWithVisibility = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          password: false,
+          age: {
+            filters: false,
+          },
+        },
+      })
+
+      const findArgsType = inputFactoryWithVisibility.findArgs()
+      expect(printType(findArgsType)).toMatchInlineSnapshot(`
+        "type UserFindArgs {
+          where: UserFilter
+          orderBy: UserOrderBy
+          limit: Int
+          offset: Int
+        }"
+      `)
+
+      // Verify that the filter and orderBy types within findArgs also respect visibility
+      const filterType = inputFactoryWithVisibility.filter()
+      expect(printType(filterType)).toMatchInlineSnapshot(`
+        "type UserFilter {
+          id: IDMikroComparisonOperators
+          name: StringMikroComparisonOperators
+          email: StringMikroComparisonOperators
+        }"
+      `)
+
+      const orderByType = inputFactoryWithVisibility.orderBy()
+      expect(printType(orderByType)).toMatchInlineSnapshot(`
+        "type UserOrderBy {
+          id: MikroQueryOrder
+          name: MikroQueryOrder
+          email: MikroQueryOrder
+        }"
+      `)
+    })
+  })
+
   describe("countArgs", () => {
     it("should generate CountArgs type for an entity", () => {
       const countArgsType = inputFactory.countArgs()
