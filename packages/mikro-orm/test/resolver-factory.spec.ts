@@ -24,7 +24,7 @@ const User = mikroSilk(
   new EntitySchema<IUser>({
     name: "User",
     properties: {
-      id: { type: "number", primary: true },
+      id: { type: "number", primary: true, autoincrement: true },
       name: { type: "string" },
       email: { type: "string" },
       age: { type: "number", nullable: true },
@@ -1370,6 +1370,123 @@ describe.concurrent("MikroResolverFactory", async () => {
       const schema = weave(r)
       await expect(printSchema(schema)).toMatchFileSnapshot(
         "./snapshots/upsertMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("upsertManyMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.upsertManyMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should upsert many entities correctly", async () => {
+      const upsertManyMutation = userFactory.upsertManyMutation()
+      const executor = resolver({ upsertMany: upsertManyMutation }).toExecutor()
+      const answer = await executor.upsertMany({
+        data: [
+          { id: 3, name: "User 3", email: "user3@example.com", age: 23 },
+          { id: 4, name: "User 4", email: "user4@example.com", age: 24 },
+        ],
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer[0].name).toBe("User 3")
+      expect(answer[0].email).toBe("user3@example.com")
+      expect(answer[0].age).toBe(23)
+      expect(answer[1].name).toBe("User 4")
+      expect(answer[1].email).toBe("user4@example.com")
+      expect(answer[1].age).toBe(24)
+    })
+
+    it("should use with custom input", async () => {
+      const upsertManyMutation = userFactory.upsertManyMutation({
+        input: v.pipe(
+          v.object({
+            users: v.array(
+              v.object({
+                id: v.number(),
+                name: v.string(),
+                email: v.nullish(v.string()),
+                age: v.number(),
+              })
+            ),
+          }),
+
+          v.transform(({ users }) => ({
+            data: users.map((u) => ({
+              id: u.id,
+              name: u.name,
+              email: u.email ?? `${u.name}@example.com`,
+              age: u.age,
+            })),
+          }))
+        ),
+      })
+      const executor = resolver({ upsertMany: upsertManyMutation }).toExecutor()
+      const answer = await executor.upsertMany({
+        users: [
+          { id: 5, name: "User 3", email: "user3@example.com", age: 23 },
+          { id: 6, name: "User 4", email: "user4@example.com", age: 24 },
+        ],
+      })
+
+      expect(answer).toHaveLength(2)
+      expect(answer[0].name).toBe("User 3")
+      expect(answer[0].email).toBe("user3@example.com")
+      expect(answer[0].age).toBe(23)
+      expect(answer[1].name).toBe("User 4")
+      expect(answer[1].email).toBe("user4@example.com")
+      expect(answer[1].age).toBe(24)
+    })
+
+    it("should use with middlewares", async () => {
+      const upsertManyMutation = userFactory.upsertManyMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser[]>()
+            return answer.map((a: IUser) => ({
+              ...a,
+              name: a.name.toUpperCase(),
+            }))
+          },
+        ],
+      })
+
+      const executor = resolver({ upsertMany: upsertManyMutation }).toExecutor()
+      const answer = await executor.upsertMany({
+        data: [
+          { id: 7, name: "User 3", email: "user3@example.com", age: 23 },
+          { id: 8, name: "User 4", email: "user4@example.com", age: 24 },
+        ],
+      })
+
+      expect(answer).toHaveLength(2)
+      expect(answer[0].name).toBe("USER 3")
+      expect(answer[0].email).toBe("user3@example.com")
+      expect(answer[0].age).toBe(23)
+      expect(answer[1].name).toBe("USER 4")
+      expect(answer[1].email).toBe("user4@example.com")
+      expect(answer[1].age).toBe(24)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        upsertManyMutation: userFactory.upsertManyMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/upsertManyMutation.graphql"
       )
     })
   })

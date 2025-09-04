@@ -46,6 +46,8 @@ import type {
   MikroResolverFactoryOptions,
   UpdateMutationArgs,
   UpdateMutationOptions,
+  UpsertManyMutationArgs,
+  UpsertManyMutationOptions,
   UpsertMutationArgs,
   UpsertMutationOptions,
 } from "./type"
@@ -350,9 +352,15 @@ export class MikroInputFactory<TEntity extends object> {
         fields: {
           data: { type: new GraphQLNonNull(this.partialInput()) },
           onConflictAction: { type: MikroInputFactory.onConflictActionType() },
-          onConflictExcludeFields: { type: new GraphQLList(GraphQLString) },
-          onConflictFields: { type: new GraphQLList(GraphQLString) },
-          onConflictMergeFields: { type: new GraphQLList(GraphQLString) },
+          onConflictExcludeFields: {
+            type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+          },
+          onConflictFields: {
+            type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+          },
+          onConflictMergeFields: {
+            type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+          },
         },
       })
     )
@@ -362,6 +370,41 @@ export class MikroInputFactory<TEntity extends object> {
     return silk<UpsertMutationOptions<TEntity>, UpsertMutationArgs<TEntity>>(
       () => this.upsertArgs()
     )
+  }
+
+  public upsertManyArgs() {
+    const name = `${this.metaName}UpsertManyArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<UpsertManyMutationArgs<TEntity>>({
+        name,
+        fields: {
+          data: {
+            type: new GraphQLNonNull(
+              new GraphQLList(new GraphQLNonNull(this.partialInput()))
+            ),
+          },
+          onConflictAction: { type: MikroInputFactory.onConflictActionType() },
+          onConflictExcludeFields: {
+            type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+          },
+          onConflictFields: {
+            type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+          },
+          onConflictMergeFields: {
+            type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
+          },
+        },
+      })
+    )
+  }
+
+  public upsertManyArgsSilk() {
+    return silk<
+      UpsertManyMutationOptions<TEntity>,
+      UpsertManyMutationArgs<TEntity>
+    >(() => this.upsertManyArgs())
   }
 
   public orderBy(): GraphQLObjectType {

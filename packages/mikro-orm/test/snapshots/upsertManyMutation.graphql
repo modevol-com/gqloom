@@ -1,5 +1,5 @@
 type Mutation {
-  upsertMutation(data: UserPartialInput!, onConflictAction: MikroOnConflictAction, onConflictExcludeFields: [String!], onConflictFields: [String!], onConflictMergeFields: [String!]): User!
+  upsertManyMutation(data: [UserPartialInput!]!, onConflictAction: MikroOnConflictAction, onConflictExcludeFields: [String!], onConflictFields: [String!], onConflictMergeFields: [String!]): [User!]!
 }
 
 type User {

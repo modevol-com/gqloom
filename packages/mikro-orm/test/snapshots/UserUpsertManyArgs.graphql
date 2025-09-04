@@ -1,5 +1,5 @@
-type UserUpsertArgs {
-  data: UserPartialInput!
+type UserUpsertManyArgs {
+  data: [UserPartialInput!]!
   onConflictAction: MikroOnConflictAction
   onConflictExcludeFields: [String!]
   onConflictFields: [String!]

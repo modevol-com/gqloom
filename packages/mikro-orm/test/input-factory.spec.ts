@@ -389,6 +389,15 @@ describe("MikroInputFactory", () => {
     })
   })
 
+  describe("upsertManyArgs", () => {
+    it("should generate UpsertManyArgs type for an entity", async () => {
+      const upsertManyArgsType = inputFactory.upsertManyArgs()
+      await expect(printType(upsertManyArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserUpsertManyArgs.graphql"
+      )
+    })
+  })
+
   describe("comparisonOperatorsType", () => {
     it("should create operators type for String", async () => {
       const stringType =

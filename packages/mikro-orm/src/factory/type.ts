@@ -317,3 +317,28 @@ export interface UpsertMutation<
     GraphQLSilk<TEntity, TEntity>,
     GraphQLSilk<UpsertMutationOptions<TEntity>, TInputI>
   > {}
+
+export interface UpsertManyMutationArgs<TEntity extends object>
+  extends Pick<
+    UpsertOptions<TEntity>,
+    | "onConflictAction"
+    | "onConflictExcludeFields"
+    | "onConflictFields"
+    | "onConflictMergeFields"
+  > {
+  data: EntityData<TEntity>[]
+}
+
+export interface UpsertManyMutationOptions<TEntity extends object>
+  extends UpsertOptions<TEntity> {
+  data: EntityData<TEntity>[]
+}
+
+export interface UpsertManyMutation<
+  TEntity extends object,
+  TInputI = UpsertManyMutationArgs<TEntity>,
+> extends MutationFactoryWithResolve<
+    UpsertManyMutationOptions<TEntity>,
+    GraphQLSilk<TEntity[], TEntity[]>,
+    GraphQLSilk<UpsertManyMutationOptions<TEntity>, TInputI>
+  > {}
