@@ -5,8 +5,10 @@ import type {
 } from "@gqloom/core"
 import type {
   CountOptions,
+  Cursor,
   EntityManager,
   FilterQuery,
+  FindByCursorOptions,
   FindOptions,
   MetadataStorage,
 } from "@mikro-orm/core"
@@ -121,4 +123,26 @@ export interface FindAndCountQuery<
     FindQueryOptions<TEntity>,
     GraphQLSilk<FindAndCountOutput<TEntity>, FindAndCountOutput<TEntity>>,
     GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+  > {}
+
+export interface FindByCursorQueryArgs<TEntity extends object>
+  extends Pick<
+    FindByCursorOptions<TEntity, any, any, any, any>,
+    "orderBy" | "after" | "before" | "first" | "last"
+  > {
+  where?: FilterArgs<TEntity>
+}
+
+export interface FindByCursorQueryOptions<TEntity extends object>
+  extends FindByCursorOptions<TEntity, any, any, any, any> {
+  where?: FilterQuery<TEntity>
+}
+
+export interface FindByCursorQuery<
+  TEntity extends object,
+  TInputI = FindByCursorQueryArgs<TEntity>,
+> extends QueryFactoryWithResolve<
+    FindByCursorQueryOptions<TEntity>,
+    GraphQLSilk<Cursor<TEntity>, Cursor<TEntity>>,
+    GraphQLSilk<FindByCursorQueryOptions<TEntity>, TInputI>
   > {}

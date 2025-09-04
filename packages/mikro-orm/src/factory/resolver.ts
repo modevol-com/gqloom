@@ -22,7 +22,6 @@ import {
 } from "graphql"
 import { MikroWeaver } from ".."
 import { MikroInputFactory } from "./input"
-import { MikroArgsTransformer } from "./transformer"
 import type {
   CountQuery,
   CountQueryArgs,
@@ -38,7 +37,6 @@ export class MikroResolverFactory<TEntity extends object> {
   public readonly options: MikroResolverFactoryOptions<TEntity>
   protected flushMiddleware: Middleware
   protected inputFactory: MikroInputFactory<TEntity>
-  protected transformer: MikroArgsTransformer<TEntity>
 
   public constructor(
     protected readonly entityName: EntityName<TEntity>,
@@ -53,7 +51,6 @@ export class MikroResolverFactory<TEntity extends object> {
     }
 
     this.inputFactory = new MikroInputFactory(entityName, this.options)
-    this.transformer = new MikroArgsTransformer(entityName)
 
     this.flushMiddleware = async (next) => {
       const result = await next()
@@ -86,10 +83,10 @@ export class MikroResolverFactory<TEntity extends object> {
     input?: GraphQLSilk<CountQueryOptions<TEntity>, TInputI>
     middlewares?: Middleware<CountQuery<TEntity, TInputI>>[]
   } = {}): CountQuery<TEntity, TInputI> {
-    input ??= silk<CountQueryOptions<TEntity>, CountQueryArgs<TEntity>>(
-      () => this.inputFactory.countArgs(),
-      this.transformer.toCountOptions
-    ) as GraphQLSilk<CountQueryOptions<TEntity>, TInputI>
+    input ??= this.inputFactory.countArgsSilk() as GraphQLSilk<
+      CountQueryOptions<TEntity>,
+      TInputI
+    >
 
     return new QueryFactoryWithResolve(silk(new GraphQLNonNull(GraphQLInt)), {
       input,
@@ -107,10 +104,10 @@ export class MikroResolverFactory<TEntity extends object> {
     input?: GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
     middlewares?: Middleware<FindQuery<TEntity, TInputI>>[]
   } = {}): FindQuery<TEntity, TInputI> {
-    input ??= silk<FindQueryOptions<TEntity>, FindQueryArgs<TEntity>>(
-      () => this.inputFactory.findArgs(),
-      this.transformer.toFindOptions
-    ) as GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+    input ??= this.inputFactory.findArgsSilk() as GraphQLSilk<
+      FindQueryOptions<TEntity>,
+      TInputI
+    >
 
     const output = MikroWeaver.getGraphQLType(this.meta)
 
@@ -133,10 +130,10 @@ export class MikroResolverFactory<TEntity extends object> {
     input?: GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
     middlewares?: Middleware<FindAndCountQuery<TEntity, TInputI>>[]
   } = {}): FindAndCountQuery<TEntity, TInputI> {
-    input ??= silk<FindQueryOptions<TEntity>, FindQueryArgs<TEntity>>(
-      () => this.inputFactory.findArgs(),
-      this.transformer.toFindOptions
-    ) as GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
+    input ??= this.inputFactory.findArgsSilk() as GraphQLSilk<
+      FindQueryOptions<TEntity>,
+      TInputI
+    >
 
     return new QueryFactoryWithResolve(silk(this.findAndCountQueryOutput()), {
       input,

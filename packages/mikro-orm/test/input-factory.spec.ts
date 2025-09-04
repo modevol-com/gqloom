@@ -3,6 +3,7 @@ import { GraphQLFloat, GraphQLString, printType } from "graphql"
 import { describe, expect, it } from "vitest"
 import { mikroSilk } from "../src"
 import {
+  type FilterArgs,
   type MikroFactoryPropertyBehaviors,
   MikroInputFactory,
 } from "../src/factory"
@@ -13,6 +14,7 @@ interface IUser {
   email: string
   password: string
   age?: number | null
+  isActive?: boolean | null
 }
 
 const User = mikroSilk(
@@ -24,6 +26,7 @@ const User = mikroSilk(
       email: { type: "string" },
       password: { type: "string" },
       age: { type: "number", nullable: true },
+      isActive: { type: "boolean", nullable: true },
     },
   })
 )
@@ -41,6 +44,7 @@ describe("MikroInputFactory", () => {
           email: StringMikroComparisonOperators
           password: StringMikroComparisonOperators
           age: FloatMikroComparisonOperators
+          isActive: BooleanMikroComparisonOperators
         }"
       `)
     })
@@ -65,6 +69,7 @@ describe("MikroInputFactory", () => {
           id: IDMikroComparisonOperators
           name: StringMikroComparisonOperators
           email: StringMikroComparisonOperators
+          isActive: BooleanMikroComparisonOperators
         }"
       `)
     })
@@ -80,6 +85,7 @@ describe("MikroInputFactory", () => {
           email: MikroQueryOrder
           password: MikroQueryOrder
           age: MikroQueryOrder
+          isActive: MikroQueryOrder
         }"
       `)
     })
@@ -101,6 +107,7 @@ describe("MikroInputFactory", () => {
           id: MikroQueryOrder
           name: MikroQueryOrder
           email: MikroQueryOrder
+          isActive: MikroQueryOrder
         }"
       `)
     })
@@ -147,6 +154,7 @@ describe("MikroInputFactory", () => {
           id: IDMikroComparisonOperators
           name: StringMikroComparisonOperators
           email: StringMikroComparisonOperators
+          isActive: BooleanMikroComparisonOperators
         }"
       `)
 
@@ -156,6 +164,7 @@ describe("MikroInputFactory", () => {
           id: MikroQueryOrder
           name: MikroQueryOrder
           email: MikroQueryOrder
+          isActive: MikroQueryOrder
         }"
       `)
     })
@@ -195,6 +204,7 @@ describe("MikroInputFactory", () => {
           id: IDMikroComparisonOperators
           name: StringMikroComparisonOperators
           email: StringMikroComparisonOperators
+          isActive: BooleanMikroComparisonOperators
         }"
       `)
     })
@@ -356,6 +366,124 @@ describe("MikroInputFactory", () => {
       expect(
         MikroInputFactory.isPropertyVisible("email", behaviors, "filters")
       ).toBe(true)
+    })
+  })
+
+  describe("transformFilters", () => {
+    class TestTransformer<
+      TEntity extends object,
+    > extends MikroInputFactory<TEntity> {
+      public transformFilters(args: FilterArgs<TEntity> | undefined) {
+        return super.transformFilters(args)
+      }
+    }
+    const transformer = new TestTransformer(User)
+    it("should return undefined for undefined input", () => {
+      expect(transformer.transformFilters(undefined)).toBeUndefined()
+    })
+
+    it("should handle an empty filter object", () => {
+      expect(transformer.transformFilters({})).toEqual({})
+    })
+
+    it("should transform simple equality filter", () => {
+      const args: FilterArgs<IUser> = { name: { eq: "John" } }
+      const expected = { name: { $eq: "John" } }
+      expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should transform multiple simple filters", () => {
+      const args: FilterArgs<IUser> = { name: { eq: "John" }, age: { gt: 30 } }
+      const expected = { name: { $eq: "John" }, age: { $gt: 30 } }
+      expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should transform an 'and' condition", () => {
+      const args: FilterArgs<IUser> = {
+        and: [{ name: { like: "%Doe" } }, { age: { lte: 40 } }],
+      }
+      const expected = {
+        $and: [{ name: { $like: "%Doe" } }, { age: { $lte: 40 } }],
+      }
+      expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should transform an 'or' condition", () => {
+      const args: FilterArgs<IUser> = {
+        or: [{ isActive: { eq: true } }, { age: { in: [25, 35, 45] } }],
+      }
+      const expected = {
+        $or: [{ isActive: { $eq: true } }, { age: { $in: [25, 35, 45] } }],
+      }
+      expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should combine 'and'/'or' with root-level conditions", () => {
+      const args: FilterArgs<IUser> = {
+        name: { eq: "Admin" },
+        or: [{ age: { gt: 60 } }, { isActive: { eq: false } }],
+      }
+      const expected = {
+        name: { $eq: "Admin" },
+        $or: [{ age: { $gt: 60 } }, { isActive: { $eq: false } }],
+      }
+      expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should handle nested 'and' and 'or' conditions", () => {
+      const args: FilterArgs<IUser> = {
+        or: [
+          { name: { eq: "Jane" } },
+          {
+            and: [{ age: { gte: 20 } }, { age: { lt: 30 } }],
+          },
+        ],
+      }
+      const expected = {
+        $or: [
+          { name: { $eq: "Jane" } },
+          {
+            $and: [{ age: { $gte: 20 } }, { age: { $lt: 30 } }],
+          },
+        ],
+      }
+      expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should handle deeply nested logical operators", () => {
+      const args: FilterArgs<IUser> = {
+        and: [
+          { isActive: { eq: true } },
+          {
+            or: [
+              { age: { nin: [18, 19, 20] } },
+              {
+                and: [{ name: { ne: "Guest" } }, { id: { gt: 100 } }],
+              },
+            ],
+          },
+        ],
+      }
+      const expected = {
+        $and: [
+          { isActive: { $eq: true } },
+          {
+            $or: [
+              { age: { $nin: [18, 19, 20] } },
+              {
+                $and: [{ name: { $ne: "Guest" } }, { id: { $gt: 100 } }],
+              },
+            ],
+          },
+        ],
+      }
+      expect(transformer.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should return an empty object for empty logical operator arrays", () => {
+      const args: FilterArgs<IUser> = { and: [], or: [] }
+      const expected = { $and: [], $or: [] }
+      expect(transformer.transformFilters(args)).toEqual(expected)
     })
   })
 })

@@ -2,12 +2,14 @@ import {
   type GraphQLSilk,
   mapValue,
   pascalCase,
+  silk,
   weaverContext,
 } from "@gqloom/core"
 import {
   type EntityMetadata,
   type EntityName,
   EntitySchema,
+  type FilterQuery,
   QueryOrder,
 } from "@mikro-orm/core"
 import {
@@ -23,7 +25,12 @@ import {
 import { MikroWeaver } from ".."
 import type {
   CountQueryArgs,
+  CountQueryOptions,
+  FilterArgs,
+  FindByCursorQueryArgs,
+  FindByCursorQueryOptions,
   FindQueryArgs,
+  FindQueryOptions,
   MikroFactoryPropertyBehaviors,
   MikroResolverFactoryOptions,
 } from "./type"
@@ -96,6 +103,17 @@ export class MikroInputFactory<TEntity extends object> {
     )
   }
 
+  public countArgsSilk() {
+    return silk<CountQueryOptions<TEntity>, CountQueryArgs<TEntity>>(
+      () => this.countArgs(),
+      (args) => ({
+        value: {
+          where: this.transformFilters(args.where),
+        },
+      })
+    )
+  }
+
   public findArgs() {
     const name = `${pascalCase(this.metaName)}FindArgs`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
@@ -108,6 +126,58 @@ export class MikroInputFactory<TEntity extends object> {
           orderBy: { type: this.orderBy() },
           limit: { type: GraphQLInt },
           offset: { type: GraphQLInt },
+        },
+      })
+    )
+  }
+
+  public findArgsSilk() {
+    return silk<FindQueryOptions<TEntity>, FindQueryArgs<TEntity>>(
+      () => this.findArgs(),
+      (args) => ({
+        value: {
+          where: this.transformFilters(args.where),
+          orderBy: args.orderBy,
+          limit: args.limit,
+          offset: args.offset,
+        },
+      })
+    )
+  }
+
+  public findByCursorArgs() {
+    const name = `${pascalCase(this.metaName)}FindByCursorArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<FindByCursorQueryArgs<TEntity>>({
+        name,
+        fields: {
+          where: { type: this.filter() },
+          orderBy: { type: this.orderBy() },
+          after: { type: GraphQLString },
+          before: { type: GraphQLString },
+          first: { type: GraphQLInt },
+          last: { type: GraphQLInt },
+        },
+      })
+    )
+  }
+
+  public findByCursorArgsSilk() {
+    return silk<
+      FindByCursorQueryOptions<TEntity>,
+      FindByCursorQueryArgs<TEntity>
+    >(
+      () => this.findByCursorArgs(),
+      (args) => ({
+        value: {
+          where: this.transformFilters(args.where),
+          orderBy: args.orderBy,
+          after: args.after,
+          before: args.before,
+          first: args.first,
+          last: args.last,
         },
       })
     )
@@ -143,6 +213,47 @@ export class MikroInputFactory<TEntity extends object> {
         })
       )
     )
+  }
+
+  protected transformFilters(
+    args: FilterArgs<TEntity> | undefined
+  ): FilterQuery<TEntity> | undefined {
+    if (!args) {
+      return
+    }
+
+    const filters: FilterQuery<TEntity> = {}
+    for (const key in args) {
+      const newKey = key.startsWith("$")
+        ? key
+        : key === "and"
+          ? "$and"
+          : key === "or"
+            ? "$or"
+            : key
+      const value = (args as any)[key]
+      if (Array.isArray(value)) {
+        ;(filters as any)[newKey] = value.map((v) => this.transformFilters(v))
+      } else if (typeof value === "object" && value !== null) {
+        const subQuery: any = {}
+        for (const op in value) {
+          subQuery[`$${op}`] = value[op]
+        }
+        ;(filters as any)[newKey] = subQuery
+      } else {
+        ;(filters as any)[newKey] = value
+      }
+    }
+
+    const { $and, $or, ...where } = filters as any
+    const result: FilterQuery<TEntity> = where
+    if ($and) {
+      ;(result as any).$and = $and
+    }
+    if ($or) {
+      ;(result as any).$or = $or
+    }
+    return result
   }
 
   public static comparisonOperatorsType<TScalarType extends GraphQLScalarType>(
