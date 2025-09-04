@@ -1,4 +1,4 @@
-type UserCreateInput {
+type UserRequiredInput {
   id: ID
   name: String!
   email: String!

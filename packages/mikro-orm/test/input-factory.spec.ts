@@ -235,7 +235,7 @@ describe("MikroInputFactory", () => {
 
   describe("createInput", () => {
     it("should generate CreateInput type for an entity", async () => {
-      const createInputType = inputFactory.createInput()
+      const createInputType = inputFactory.requiredInput()
       await expect(printType(createInputType)).toMatchFileSnapshot(
         "./snapshots/UserCreateInput.graphql"
       )
@@ -255,14 +255,14 @@ describe("MikroInputFactory", () => {
         },
       })
 
-      const createInputType = inputFactoryWithVisibility.createInput()
+      const createInputType = inputFactoryWithVisibility.requiredInput()
       await expect(printType(createInputType)).toMatchFileSnapshot(
         "./snapshots/UserCreateInputWithVisibility.graphql"
       )
     })
 
     it("should wrap required fields with GraphQLNonNull in createInput", async () => {
-      const createInputType = inputFactory.createInput()
+      const createInputType = inputFactory.requiredInput()
       const fields = createInputType.getFields()
 
       expect(fields.id.type.toString()).toEqual("ID")
@@ -293,7 +293,7 @@ describe("MikroInputFactory", () => {
         },
       })
 
-      const createInputType = inputFactoryWithCustomType.createInput()
+      const createInputType = inputFactoryWithCustomType.requiredInput()
       await expect(printType(createInputType)).toMatchFileSnapshot(
         "./snapshots/UserCreateInputWithCustomAgeType.graphql"
       )
@@ -328,7 +328,7 @@ describe("MikroInputFactory", () => {
       )
 
       // Verify that the createInput type within createArgs also respects visibility
-      const createInputType = inputFactoryWithVisibility.createInput()
+      const createInputType = inputFactoryWithVisibility.requiredInput()
       await expect(printType(createInputType)).toMatchFileSnapshot(
         "./snapshots/UserCreateInputNestedInCreateArgsWithVisibility.graphql"
       )
@@ -364,7 +364,7 @@ describe("MikroInputFactory", () => {
 
   describe("updateInput", () => {
     it("should generate UpdateInput type for an entity", async () => {
-      const updateInputType = inputFactory.updateInput()
+      const updateInputType = inputFactory.partialInput()
       await expect(printType(updateInputType)).toMatchFileSnapshot(
         "./snapshots/UserUpdateInput.graphql"
       )
@@ -376,6 +376,15 @@ describe("MikroInputFactory", () => {
       const updateArgsType = inputFactory.updateArgs()
       await expect(printType(updateArgsType)).toMatchFileSnapshot(
         "./snapshots/UserUpdateArgs.graphql"
+      )
+    })
+  })
+
+  describe("upsertArgs", () => {
+    it("should generate UpsertArgs type for an entity", async () => {
+      const upsertArgsType = inputFactory.upsertArgs()
+      await expect(printType(upsertArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserUpsertArgs.graphql"
       )
     })
   })

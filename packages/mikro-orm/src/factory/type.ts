@@ -19,6 +19,7 @@ import type {
   NativeInsertUpdateOptions,
   RequiredEntityData,
   UpdateOptions,
+  UpsertOptions,
 } from "@mikro-orm/core"
 
 export interface MikroResolverFactoryOptions<TEntity extends object> {
@@ -290,4 +291,29 @@ export interface UpdateMutation<
     UpdateMutationOptions<TEntity>,
     GraphQLSilk<number, number>,
     GraphQLSilk<UpdateMutationOptions<TEntity>, TInputI>
+  > {}
+
+export interface UpsertMutationArgs<TEntity extends object>
+  extends Pick<
+    UpsertOptions<TEntity>,
+    | "onConflictAction"
+    | "onConflictExcludeFields"
+    | "onConflictFields"
+    | "onConflictMergeFields"
+  > {
+  data: EntityData<TEntity>
+}
+
+export interface UpsertMutationOptions<TEntity extends object>
+  extends UpsertOptions<TEntity> {
+  data: EntityData<TEntity>
+}
+
+export interface UpsertMutation<
+  TEntity extends object,
+  TInputI = UpsertMutationArgs<TEntity>,
+> extends MutationFactoryWithResolve<
+    UpsertMutationOptions<TEntity>,
+    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<UpsertMutationOptions<TEntity>, TInputI>
   > {}

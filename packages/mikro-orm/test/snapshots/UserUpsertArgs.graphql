@@ -1,0 +1,7 @@
+type UserUpsertArgs {
+  data: UserPartialInput!
+  onConflictAction: MikroOnConflictAction
+  onConflictExcludeFields: [String]
+  onConflictFields: [String]
+  onConflictMergeFields: [String]
+}

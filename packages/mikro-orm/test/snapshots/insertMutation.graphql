@@ -1,5 +1,5 @@
 type Mutation {
-  insertMutation(data: UserCreateInput!): User!
+  insertMutation(data: UserRequiredInput!): User!
 }
 
 type User {
@@ -9,7 +9,7 @@ type User {
   age: Float
 }
 
-input UserCreateInput {
+input UserRequiredInput {
   id: ID
   name: String!
   email: String!

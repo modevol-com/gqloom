@@ -4,6 +4,7 @@ import {
   MikroORM,
   QueryOrder,
   RequestContext,
+  type RequiredEntityData,
   defineConfig,
 } from "@mikro-orm/libsql"
 import { printSchema } from "graphql"
@@ -1260,6 +1261,115 @@ describe.concurrent("MikroResolverFactory", async () => {
       const schema = weave(r)
       await expect(printSchema(schema)).toMatchFileSnapshot(
         "./snapshots/updateMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("upsertMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.upsertMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should upsert entity correctly", async () => {
+      const upsertMutation = userFactory.upsertMutation()
+      const executor = resolver({ upsert: upsertMutation }).toExecutor()
+      let answer: IUser | null
+      answer = await executor.upsert({
+        data: {
+          id: 1,
+          age: 30,
+          name: "John Doe",
+          email: "john@example.com",
+        } satisfies RequiredEntityData<IUser>,
+      })
+
+      expect(answer).toBeDefined()
+      expect(answer.age).toBe(30)
+
+      answer = await orm.em.findOne(User, answer.id)
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(30)
+
+      answer = await executor.upsert({
+        data: { ...answer, age: 31 },
+      })
+
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(31)
+
+      answer = await orm.em.findOne(User, answer.id)
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(31)
+    })
+
+    it("should use with custom input", async () => {
+      const upsertMutation = userFactory.upsertMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+          }),
+          v.transform(({ username }) => ({
+            data: {
+              name: username,
+              age: 20,
+              email: `${username}@example.com`,
+            },
+          }))
+        ),
+      })
+      const executor = resolver({ upsert: upsertMutation }).toExecutor()
+      const answer = await executor.upsert({
+        username: "john doe",
+      })
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(20)
+      expect(answer?.email).toBe("john doe@example.com")
+      expect(answer?.name).toBe("john doe")
+    })
+
+    it("should use with middlewares", async () => {
+      const upsertMutation = userFactory.upsertMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser>()
+            return { ...answer, name: answer.name.toUpperCase() }
+          },
+        ],
+      })
+
+      const executor = resolver({ upsert: upsertMutation }).toExecutor()
+      const answer = await executor.upsert({
+        data: {
+          name: "john doe",
+          age: 20,
+          email: "john doe@example.com",
+        },
+      })
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(20)
+      expect(answer?.email).toBe("john doe@example.com")
+      expect(answer?.name).toBe("JOHN DOE")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        upsertMutation: userFactory.upsertMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/upsertMutation.graphql"
       )
     })
   })

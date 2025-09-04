@@ -46,6 +46,8 @@ import type {
   MikroResolverFactoryOptions,
   UpdateMutationArgs,
   UpdateMutationOptions,
+  UpsertMutationArgs,
+  UpsertMutationOptions,
 } from "./type"
 
 export class MikroInputFactory<TEntity extends object> {
@@ -233,7 +235,7 @@ export class MikroInputFactory<TEntity extends object> {
       new GraphQLObjectType<CreateMutationArgs<TEntity>>({
         name,
         fields: {
-          data: { type: new GraphQLNonNull(this.createInput()) },
+          data: { type: new GraphQLNonNull(this.requiredInput()) },
         },
       })
     )
@@ -254,7 +256,7 @@ export class MikroInputFactory<TEntity extends object> {
       new GraphQLObjectType<InsertMutationArgs<TEntity>>({
         name,
         fields: {
-          data: { type: new GraphQLNonNull(this.createInput()) },
+          data: { type: new GraphQLNonNull(this.requiredInput()) },
         },
       })
     )
@@ -276,7 +278,7 @@ export class MikroInputFactory<TEntity extends object> {
         name,
         fields: {
           data: {
-            type: new GraphQLNonNull(new GraphQLList(this.createInput())),
+            type: new GraphQLNonNull(new GraphQLList(this.requiredInput())),
           },
         },
       })
@@ -323,7 +325,7 @@ export class MikroInputFactory<TEntity extends object> {
         name,
         fields: {
           where: { type: this.filter() },
-          data: { type: new GraphQLNonNull(this.updateInput()) },
+          data: { type: new GraphQLNonNull(this.partialInput()) },
         },
       })
     )
@@ -335,6 +337,30 @@ export class MikroInputFactory<TEntity extends object> {
       (args) => ({
         value: { where: this.transformFilters(args.where), data: args.data },
       })
+    )
+  }
+
+  public upsertArgs() {
+    const name = `${this.metaName}UpsertArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<UpsertMutationArgs<TEntity>>({
+        name,
+        fields: {
+          data: { type: new GraphQLNonNull(this.partialInput()) },
+          onConflictAction: { type: MikroInputFactory.onConflictActionType() },
+          onConflictExcludeFields: { type: new GraphQLList(GraphQLString) },
+          onConflictFields: { type: new GraphQLList(GraphQLString) },
+          onConflictMergeFields: { type: new GraphQLList(GraphQLString) },
+        },
+      })
+    )
+  }
+
+  public upsertArgsSilk() {
+    return silk<UpsertMutationOptions<TEntity>, UpsertMutationArgs<TEntity>>(
+      () => this.upsertArgs()
     )
   }
 
@@ -370,8 +396,8 @@ export class MikroInputFactory<TEntity extends object> {
     )
   }
 
-  public createInput(): GraphQLObjectType {
-    const name = `${this.metaName}CreateInput`
+  public requiredInput(): GraphQLObjectType {
+    const name = `${this.metaName}RequiredInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
 
@@ -416,8 +442,8 @@ export class MikroInputFactory<TEntity extends object> {
     })
   }
 
-  public updateInput(): GraphQLObjectType {
-    const name = `${this.metaName}UpdateInput`
+  public partialInput(): GraphQLObjectType {
+    const name = `${this.metaName}PartialInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
     return new GraphQLObjectType({
@@ -616,6 +642,17 @@ export class MikroInputFactory<TEntity extends object> {
         })
       )
     )
+  }
+
+  public static onConflictActionType(): GraphQLEnumType {
+    const name = `MikroOnConflictAction`
+    return new GraphQLEnumType({
+      name,
+      values: {
+        ignore: { value: "ignore" },
+        merge: { value: "merge" },
+      },
+    })
   }
 
   public static isPropertyVisible(

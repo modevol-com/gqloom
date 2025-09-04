@@ -59,6 +59,9 @@ import type {
   UpdateMutation,
   UpdateMutationArgs,
   UpdateMutationOptions,
+  UpsertMutation,
+  UpsertMutationArgs,
+  UpsertMutationOptions,
 } from "./type"
 
 export class MikroResolverFactory<TEntity extends object> {
@@ -419,8 +422,28 @@ export class MikroResolverFactory<TEntity extends object> {
     )
   }
 
-  public upsertMutation() {
-    // TODO
+  public upsertMutation<TInputI = UpsertMutationArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<UpsertMutationOptions<TEntity>, TInputI>
+    middlewares?: Middleware<UpsertMutation<TEntity, TInputI>>[]
+  } = {}): UpsertMutation<TEntity, TInputI> {
+    input ??= this.inputFactory.upsertArgsSilk() as GraphQLSilk<
+      UpsertMutationOptions<TEntity>,
+      TInputI
+    >
+    return new MutationFactoryWithResolve(
+      silk(MikroWeaver.getGraphQLType(this.meta)),
+      {
+        input,
+        ...options,
+        resolve: async (args: UpsertMutationOptions<TEntity>) => {
+          const em = await this.em()
+          return em.upsert(this.entityName, args.data, args)
+        },
+      } as MutationOptions<any, typeof input>
+    )
   }
 
   public upsertManyMutation() {
