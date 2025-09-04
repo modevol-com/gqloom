@@ -35,21 +35,14 @@ describe("MikroInputFactory", () => {
   const inputFactory = new MikroInputFactory(User)
 
   describe("filter", () => {
-    it("should generate Filter type for an entity", () => {
+    it("should generate Filter type for an entity", async () => {
       const filterType = inputFactory.filter()
-      expect(printType(filterType)).toMatchInlineSnapshot(`
-        "type UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          password: StringMikroComparisonOperators
-          age: FloatMikroComparisonOperators
-          isActive: BooleanMikroComparisonOperators
-        }"
-      `)
+      await expect(printType(filterType)).toMatchFileSnapshot(
+        "./snapshots/UserFilter.graphql"
+      )
     })
 
-    it("should respect field visibility in filters", () => {
+    it("should respect field visibility in filters", async () => {
       const inputFactoryWithVisibility = new MikroInputFactory(User, {
         getEntityManager: async () => ({}) as any,
         input: {
@@ -64,33 +57,21 @@ describe("MikroInputFactory", () => {
       })
 
       const filterType = inputFactoryWithVisibility.filter()
-      expect(printType(filterType)).toMatchInlineSnapshot(`
-        "type UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          isActive: BooleanMikroComparisonOperators
-        }"
-      `)
+      await expect(printType(filterType)).toMatchFileSnapshot(
+        "./snapshots/UserFilterWithVisibility.graphql"
+      )
     })
   })
 
   describe("orderBy", () => {
-    it("should generate OrderBy type for an entity", () => {
+    it("should generate OrderBy type for an entity", async () => {
       const orderByType = inputFactory.orderBy()
-      expect(printType(orderByType)).toMatchInlineSnapshot(`
-        "type UserOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          email: MikroQueryOrder
-          password: MikroQueryOrder
-          age: MikroQueryOrder
-          isActive: MikroQueryOrder
-        }"
-      `)
+      await expect(printType(orderByType)).toMatchFileSnapshot(
+        "./snapshots/UserOrderBy.graphql"
+      )
     })
 
-    it("should respect field visibility in orderBy", () => {
+    it("should respect field visibility in orderBy", async () => {
       const inputFactoryWithVisibility = new MikroInputFactory(User, {
         getEntityManager: async () => ({}) as any,
         input: {
@@ -102,31 +83,21 @@ describe("MikroInputFactory", () => {
       })
 
       const orderByType = inputFactoryWithVisibility.orderBy()
-      expect(printType(orderByType)).toMatchInlineSnapshot(`
-        "type UserOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          email: MikroQueryOrder
-          isActive: MikroQueryOrder
-        }"
-      `)
+      await expect(printType(orderByType)).toMatchFileSnapshot(
+        "./snapshots/UserOrderByWithVisibility.graphql"
+      )
     })
   })
 
   describe("findArgs", () => {
-    it("should generate FindArgs type for an entity", () => {
+    it("should generate FindArgs type for an entity", async () => {
       const findArgsType = inputFactory.findArgs()
-      expect(printType(findArgsType)).toMatchInlineSnapshot(`
-        "type UserFindArgs {
-          where: UserFilter
-          orderBy: UserOrderBy
-          limit: Int
-          offset: Int
-        }"
-      `)
+      await expect(printType(findArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserFindArgs.graphql"
+      )
     })
 
-    it("should respect field visibility in findArgs", () => {
+    it("should respect field visibility in findArgs", async () => {
       const inputFactoryWithVisibility = new MikroInputFactory(User, {
         getEntityManager: async () => ({}) as any,
         input: {
@@ -138,49 +109,32 @@ describe("MikroInputFactory", () => {
       })
 
       const findArgsType = inputFactoryWithVisibility.findArgs()
-      expect(printType(findArgsType)).toMatchInlineSnapshot(`
-        "type UserFindArgs {
-          where: UserFilter
-          orderBy: UserOrderBy
-          limit: Int
-          offset: Int
-        }"
-      `)
+      await expect(printType(findArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserFindArgsWithVisibility.graphql"
+      )
 
       // Verify that the filter and orderBy types within findArgs also respect visibility
       const filterType = inputFactoryWithVisibility.filter()
-      expect(printType(filterType)).toMatchInlineSnapshot(`
-        "type UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          isActive: BooleanMikroComparisonOperators
-        }"
-      `)
+      await expect(printType(filterType)).toMatchFileSnapshot(
+        "./snapshots/UserFilterNestedInFindArgsWithVisibility.graphql"
+      )
 
       const orderByType = inputFactoryWithVisibility.orderBy()
-      expect(printType(orderByType)).toMatchInlineSnapshot(`
-        "type UserOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          email: MikroQueryOrder
-          isActive: MikroQueryOrder
-        }"
-      `)
+      await expect(printType(orderByType)).toMatchFileSnapshot(
+        "./snapshots/UserOrderByNestedInFindArgsWithVisibility.graphql"
+      )
     })
   })
 
   describe("countArgs", () => {
-    it("should generate CountArgs type for an entity", () => {
+    it("should generate CountArgs type for an entity", async () => {
       const countArgsType = inputFactory.countArgs()
-      expect(printType(countArgsType)).toMatchInlineSnapshot(`
-        "type UserCountArgs {
-          where: UserFilter
-        }"
-      `)
+      await expect(printType(countArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserCountArgs.graphql"
+      )
     })
 
-    it("should respect field visibility in countArgs", () => {
+    it("should respect field visibility in countArgs", async () => {
       const inputFactoryWithVisibility = new MikroInputFactory(User, {
         getEntityManager: async () => ({}) as any,
         input: {
@@ -192,40 +146,26 @@ describe("MikroInputFactory", () => {
       })
 
       const countArgsType = inputFactoryWithVisibility.countArgs()
-      expect(printType(countArgsType)).toMatchInlineSnapshot(`
-        "type UserCountArgs {
-          where: UserFilter
-        }"
-      `)
+      await expect(printType(countArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserCountArgsWithVisibility.graphql"
+      )
 
       const filterType = inputFactoryWithVisibility.filter()
-      expect(printType(filterType)).toMatchInlineSnapshot(`
-        "type UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          isActive: BooleanMikroComparisonOperators
-        }"
-      `)
+      await expect(printType(filterType)).toMatchFileSnapshot(
+        "./snapshots/UserFilterNestedInCountArgsWithVisibility.graphql"
+      )
     })
   })
 
   describe("findByCursorArgs", () => {
-    it("should generate FindByCursorArgs type for an entity", () => {
+    it("should generate FindByCursorArgs type for an entity", async () => {
       const findByCursorArgsType = inputFactory.findByCursorArgs()
-      expect(printType(findByCursorArgsType)).toMatchInlineSnapshot(`
-        "type UserFindByCursorArgs {
-          where: UserFilter
-          orderBy: UserOrderBy
-          after: String
-          before: String
-          first: Int
-          last: Int
-        }"
-      `)
+      await expect(printType(findByCursorArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserFindByCursorArgs.graphql"
+      )
     })
 
-    it("should respect field visibility in findByCursorArgs", () => {
+    it("should respect field visibility in findByCursorArgs", async () => {
       const inputFactoryWithVisibility = new MikroInputFactory(User, {
         getEntityManager: async () => ({}) as any,
         input: {
@@ -237,140 +177,74 @@ describe("MikroInputFactory", () => {
       })
 
       const findByCursorArgsType = inputFactoryWithVisibility.findByCursorArgs()
-      expect(printType(findByCursorArgsType)).toMatchInlineSnapshot(`
-        "type UserFindByCursorArgs {
-          where: UserFilter
-          orderBy: UserOrderBy
-          after: String
-          before: String
-          first: Int
-          last: Int
-        }"
-      `)
+      await expect(printType(findByCursorArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserFindByCursorArgsWithVisibility.graphql"
+      )
 
       // Verify that the filter and orderBy types within findByCursorArgs also respect visibility
       const filterType = inputFactoryWithVisibility.filter()
-      expect(printType(filterType)).toMatchInlineSnapshot(`
-        "type UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          isActive: BooleanMikroComparisonOperators
-        }"
-      `)
+      await expect(printType(filterType)).toMatchFileSnapshot(
+        "./snapshots/UserFilterNestedInFindByCursorArgsWithVisibility.graphql"
+      )
 
       const orderByType = inputFactoryWithVisibility.orderBy()
-      expect(printType(orderByType)).toMatchInlineSnapshot(`
-        "type UserOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          email: MikroQueryOrder
-          isActive: MikroQueryOrder
-        }"
-      `)
+      await expect(printType(orderByType)).toMatchFileSnapshot(
+        "./snapshots/UserOrderByNestedInFindByCursorArgsWithVisibility.graphql"
+      )
+    })
+  })
+
+  describe("findOneArgs", () => {
+    it("should generate FindOneArgs type for an entity", async () => {
+      const findOneArgsType = inputFactory.findOneArgs()
+      await expect(printType(findOneArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserFindOneArgs.graphql"
+      )
+    })
+
+    it("should respect field visibility in findOneArgs", async () => {
+      const inputFactoryWithVisibility = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          password: false,
+          age: {
+            filters: false,
+          },
+        },
+      })
+
+      const findOneArgsType = inputFactoryWithVisibility.findOneArgs()
+      await expect(printType(findOneArgsType)).toMatchFileSnapshot(
+        "./snapshots/UserFindOneArgsWithVisibility.graphql"
+      )
+
+      // Verify that the filter and orderBy types within findOneArgs also respect visibility
+      const filterType = inputFactoryWithVisibility.filter()
+      await expect(printType(filterType)).toMatchFileSnapshot(
+        "./snapshots/UserFilterNestedInFindOneArgsWithVisibility.graphql"
+      )
+
+      const orderByType = inputFactoryWithVisibility.orderBy()
+      await expect(printType(orderByType)).toMatchFileSnapshot(
+        "./snapshots/UserOrderByNestedInFindOneArgsWithVisibility.graphql"
+      )
     })
   })
 
   describe("comparisonOperatorsType", () => {
-    it("should create operators type for String", () => {
+    it("should create operators type for String", async () => {
       const stringType =
         MikroInputFactory.comparisonOperatorsType(GraphQLString)
-      expect(printType(stringType)).toMatchInlineSnapshot(`
-        "type StringMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: String
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: String
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: String
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [String!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: String
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: String
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: String
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [String!]
-
-          """&&"""
-          overlap: [String!]
-
-          """@>"""
-          contains: [String!]
-
-          """<@"""
-          contained: [String!]
-
-          """Like. Uses LIKE operator"""
-          like: String
-
-          """Regexp. Uses REGEXP operator"""
-          re: String
-
-          """Full text.	A driver specific full text search function."""
-          fulltext: String
-
-          """ilike"""
-          ilike: String
-        }"
-      `)
+      await expect(printType(stringType)).toMatchFileSnapshot(
+        "./snapshots/StringMikroComparisonOperators.graphql"
+      )
     })
 
-    it("should create operators type for Float", () => {
+    it("should create operators type for Float", async () => {
       const floatType = MikroInputFactory.comparisonOperatorsType(GraphQLFloat)
-      expect(printType(floatType)).toMatchInlineSnapshot(`
-        "type FloatMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: Float
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: Float
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: Float
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [Float!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: Float
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: Float
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: Float
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [Float!]
-
-          """&&"""
-          overlap: [Float!]
-
-          """@>"""
-          contains: [Float!]
-
-          """<@"""
-          contained: [Float!]
-        }"
-      `)
+      await expect(printType(floatType)).toMatchFileSnapshot(
+        "./snapshots/FloatMikroComparisonOperators.graphql"
+      )
     })
   })
 

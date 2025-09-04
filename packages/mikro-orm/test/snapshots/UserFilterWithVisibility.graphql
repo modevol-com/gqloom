@@ -1,0 +1,6 @@
+type UserFilter {
+  id: IDMikroComparisonOperators
+  name: StringMikroComparisonOperators
+  email: StringMikroComparisonOperators
+  isActive: BooleanMikroComparisonOperators
+}

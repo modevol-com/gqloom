@@ -151,150 +151,12 @@ describe("MikroResolverFactory", async () => {
       expect(count).toBe(1)
     })
 
-    it("should weave schema without error", () => {
+    it("should weave schema without error", async () => {
       const r = resolver({ countQuery: userFactory.countQuery() })
       const schema = weave(r)
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          countQuery(where: UserFilter): Int!
-        }
-
-        input UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          age: FloatMikroComparisonOperators
-        }
-
-        input IDMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: ID
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: ID
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: ID
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [ID!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: ID
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: ID
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: ID
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [ID!]
-
-          """&&"""
-          overlap: [ID!]
-
-          """@>"""
-          contains: [ID!]
-
-          """<@"""
-          contained: [ID!]
-        }
-
-        input StringMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: String
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: String
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: String
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [String!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: String
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: String
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: String
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [String!]
-
-          """&&"""
-          overlap: [String!]
-
-          """@>"""
-          contains: [String!]
-
-          """<@"""
-          contained: [String!]
-
-          """Like. Uses LIKE operator"""
-          like: String
-
-          """Regexp. Uses REGEXP operator"""
-          re: String
-
-          """Full text.	A driver specific full text search function."""
-          fulltext: String
-
-          """ilike"""
-          ilike: String
-        }
-
-        input FloatMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: Float
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: Float
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: Float
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [Float!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: Float
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: Float
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: Float
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [Float!]
-
-          """&&"""
-          overlap: [Float!]
-
-          """@>"""
-          contains: [Float!]
-
-          """<@"""
-          contained: [Float!]
-        }"
-      `)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/countQuery.graphql"
+      )
     })
   })
 
@@ -398,173 +260,12 @@ describe("MikroResolverFactory", async () => {
       expect(answer.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
     })
 
-    it("should weave schema without error", () => {
+    it("should weave schema without error", async () => {
       const r = resolver({ findQuery: userFactory.findQuery() })
       const schema = weave(r)
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          findQuery(where: UserFilter, orderBy: UserOrderBy, limit: Int, offset: Int): [User!]!
-        }
-
-        type User {
-          id: ID!
-          name: String!
-          email: String!
-          age: Float
-        }
-
-        input UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          age: FloatMikroComparisonOperators
-        }
-
-        input IDMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: ID
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: ID
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: ID
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [ID!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: ID
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: ID
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: ID
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [ID!]
-
-          """&&"""
-          overlap: [ID!]
-
-          """@>"""
-          contains: [ID!]
-
-          """<@"""
-          contained: [ID!]
-        }
-
-        input StringMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: String
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: String
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: String
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [String!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: String
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: String
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: String
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [String!]
-
-          """&&"""
-          overlap: [String!]
-
-          """@>"""
-          contains: [String!]
-
-          """<@"""
-          contained: [String!]
-
-          """Like. Uses LIKE operator"""
-          like: String
-
-          """Regexp. Uses REGEXP operator"""
-          re: String
-
-          """Full text.	A driver specific full text search function."""
-          fulltext: String
-
-          """ilike"""
-          ilike: String
-        }
-
-        input FloatMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: Float
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: Float
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: Float
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [Float!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: Float
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: Float
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: Float
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [Float!]
-
-          """&&"""
-          overlap: [Float!]
-
-          """@>"""
-          contains: [Float!]
-
-          """<@"""
-          contained: [Float!]
-        }
-
-        input UserOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          email: MikroQueryOrder
-          age: MikroQueryOrder
-        }
-
-        enum MikroQueryOrder {
-          ASC
-          ASC_NULLS_LAST
-          ASC_NULLS_FIRST
-          DESC
-          DESC_NULLS_LAST
-          DESC_NULLS_FIRST
-        }"
-      `)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findQuery.graphql"
+      )
     })
   })
 
@@ -692,180 +393,14 @@ describe("MikroResolverFactory", async () => {
       expect(answer.totalCount).toBe(5)
     })
 
-    it("should weave schema without error", () => {
+    it("should weave schema without error", async () => {
       const r = resolver({
         findAndCountQuery: userFactory.findAndCountQuery(),
       })
       const schema = weave(r)
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          findAndCountQuery(where: UserFilter, orderBy: UserOrderBy, limit: Int, offset: Int): UserFindAndCount!
-        }
-
-        type UserFindAndCount {
-          totalCount: Int!
-          items: [User!]!
-        }
-
-        type User {
-          id: ID!
-          name: String!
-          email: String!
-          age: Float
-        }
-
-        input UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          age: FloatMikroComparisonOperators
-        }
-
-        input IDMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: ID
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: ID
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: ID
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [ID!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: ID
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: ID
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: ID
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [ID!]
-
-          """&&"""
-          overlap: [ID!]
-
-          """@>"""
-          contains: [ID!]
-
-          """<@"""
-          contained: [ID!]
-        }
-
-        input StringMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: String
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: String
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: String
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [String!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: String
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: String
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: String
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [String!]
-
-          """&&"""
-          overlap: [String!]
-
-          """@>"""
-          contains: [String!]
-
-          """<@"""
-          contained: [String!]
-
-          """Like. Uses LIKE operator"""
-          like: String
-
-          """Regexp. Uses REGEXP operator"""
-          re: String
-
-          """Full text.	A driver specific full text search function."""
-          fulltext: String
-
-          """ilike"""
-          ilike: String
-        }
-
-        input FloatMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: Float
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: Float
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: Float
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [Float!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: Float
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: Float
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: Float
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [Float!]
-
-          """&&"""
-          overlap: [Float!]
-
-          """@>"""
-          contains: [Float!]
-
-          """<@"""
-          contained: [Float!]
-        }
-
-        input UserOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          email: MikroQueryOrder
-          age: MikroQueryOrder
-        }
-
-        enum MikroQueryOrder {
-          ASC
-          ASC_NULLS_LAST
-          ASC_NULLS_FIRST
-          DESC
-          DESC_NULLS_LAST
-          DESC_NULLS_FIRST
-        }"
-      `)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findAndCountQuery.graphql"
+      )
     })
   })
 
@@ -1028,185 +563,209 @@ describe("MikroResolverFactory", async () => {
       expect(answer.totalCount).toBe(5)
     })
 
-    it("should weave schema without error", () => {
+    it("should weave schema without error", async () => {
       const r = resolver({
         findByCursorQuery: userFactory.findByCursorQuery(),
       })
       const schema = weave(r)
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          findByCursorQuery(where: UserFilter, orderBy: UserOrderBy, after: String, before: String, first: Int, last: Int): UserCursor
-        }
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findByCursorQuery.graphql"
+      )
+    })
+  })
 
-        type UserCursor {
-          items: [User!]!
-          totalCount: Int!
-          hasPrevPage: Boolean!
-          hasNextPage: Boolean!
-          startCursor: String
-          endCursor: String
-          length: Int
-        }
+  describe.concurrent("findOneQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findOneQuery()
+      expect(query).toBeDefined()
+    })
 
-        type User {
-          id: ID!
-          name: String!
-          email: String!
-          age: Float
-        }
+    it("should resolve correctly with filters, sorting, and offset", async () => {
+      const query = userFactory.findOneQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: IUser | null
 
-        input UserFilter {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          email: StringMikroComparisonOperators
-          age: FloatMikroComparisonOperators
-        }
+      // No args (should return first by default order or undefined)
+      answer = await executor.query({
+        orderBy: { id: "ASC" },
+        where: { id: { gte: 1 } },
+      })
+      expect(answer?.name).toBe("John Doe")
 
-        input IDMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: ID
+      // Where
+      answer = await executor.query({
+        where: { name: { eq: "Jane Doe" } },
+      })
+      expect(answer?.name).toBe("Jane Doe")
 
-          """Greater. Matches values that are greater than a specified value."""
-          gt: ID
+      // OrderBy
+      answer = await executor.query({
+        orderBy: { age: "DESC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer?.name).toBe("Alice Johnson")
 
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: ID
+      // Offset
+      answer = await executor.query({
+        offset: 1,
+        orderBy: { age: "ASC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer?.name).toBe("John Doe")
 
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [ID!]
+      // No match
+      answer = await executor.query({
+        where: { name: { eq: "Non Existent" } },
+      })
+      expect(answer).toBeNull()
+    })
 
-          """Lower, Matches values that are less than a specified value."""
-          lt: ID
+    it("should be created with custom input", async () => {
+      const query = userFactory.findOneQuery({
+        input: v.pipe(
+          v.object({
+            userName: v.string(),
+          }),
+          v.transform(({ userName }) => ({
+            where: { name: { $eq: userName } },
+          }))
+        ),
+      })
 
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: ID
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      let answer: IUser | null
+      answer = await executor.query({ userName: "Bob Smith" })
+      expect(answer?.name).toBe("Bob Smith")
 
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: ID
+      answer = await executor.query({ userName: "Non Existent" })
+      expect(answer).toBeNull()
+    })
 
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [ID!]
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findOneQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser | null>()
+            return answer
+              ? { ...answer, name: answer.name.toUpperCase() }
+              : null
+          },
+        ],
+      })
 
-          """&&"""
-          overlap: [ID!]
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ where: { id: { eq: 1 } } })
+      expect(count).toBe(1)
+      expect(answer?.name).toBe("JOHN DOE")
+    })
 
-          """@>"""
-          contains: [ID!]
+    it("should weave schema without error", async () => {
+      const r = resolver({ findOneQuery: userFactory.findOneQuery() })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findOneQuery.graphql"
+      )
+    })
+  })
 
-          """<@"""
-          contained: [ID!]
-        }
+  describe.concurrent("findOneOrFailQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findOneOrFailQuery()
+      expect(query).toBeDefined()
+    })
 
-        input StringMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: String
+    it("should resolve correctly with filters, sorting, and offset", async () => {
+      const query = userFactory.findOneOrFailQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: IUser
 
-          """Greater. Matches values that are greater than a specified value."""
-          gt: String
+      // Where
+      answer = await executor.query({
+        where: { name: { eq: "Jane Doe" } },
+      })
+      expect(answer.name).toBe("Jane Doe")
 
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: String
+      // OrderBy
+      answer = await executor.query({
+        orderBy: { age: "DESC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer.name).toBe("Alice Johnson")
 
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [String!]
+      // Offset
+      answer = await executor.query({
+        offset: 1,
+        orderBy: { age: "ASC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer.name).toBe("John Doe")
+    })
 
-          """Lower, Matches values that are less than a specified value."""
-          lt: String
+    it("should throw an error if no entity is found", async () => {
+      const query = userFactory.findOneOrFailQuery()
+      const executor = resolver({ query }).toExecutor()
+      await expect(
+        executor.query({ where: { name: { eq: "Non Existent" } } })
+      ).rejects.toThrow("User not found ({ name: { '$eq': 'Non Existent' } })") // 更新错误信息
+    })
 
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: String
+    it("should be created with custom input", async () => {
+      const query = userFactory.findOneOrFailQuery({
+        input: v.pipe(
+          v.object({
+            userName: v.string(),
+          }),
+          v.transform(({ userName }) => ({
+            where: { name: { $eq: userName } },
+          }))
+        ),
+      })
 
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: String
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ userName: "Bob Smith" })
+      expect(answer.name).toBe("Bob Smith")
 
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [String!]
+      await expect(
+        executor.query({ userName: "Non Existent" })
+      ).rejects.toThrow("User not found ({ name: { '$eq': 'Non Existent' } })") // 更新错误信息
+    })
 
-          """&&"""
-          overlap: [String!]
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findOneOrFailQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser>()
+            return { ...answer, name: answer.name.toUpperCase() }
+          },
+        ],
+      })
 
-          """@>"""
-          contains: [String!]
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ where: { id: { eq: 1 } } })
+      expect(count).toBe(1)
+      expect(answer.name).toBe("JOHN DOE")
+    })
 
-          """<@"""
-          contained: [String!]
-
-          """Like. Uses LIKE operator"""
-          like: String
-
-          """Regexp. Uses REGEXP operator"""
-          re: String
-
-          """Full text.	A driver specific full text search function."""
-          fulltext: String
-
-          """ilike"""
-          ilike: String
-        }
-
-        input FloatMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: Float
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: Float
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: Float
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [Float!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: Float
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: Float
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: Float
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [Float!]
-
-          """&&"""
-          overlap: [Float!]
-
-          """@>"""
-          contains: [Float!]
-
-          """<@"""
-          contained: [Float!]
-        }
-
-        input UserOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          email: MikroQueryOrder
-          age: MikroQueryOrder
-        }
-
-        enum MikroQueryOrder {
-          ASC
-          ASC_NULLS_LAST
-          ASC_NULLS_FIRST
-          DESC
-          DESC_NULLS_LAST
-          DESC_NULLS_FIRST
-        }"
-      `)
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        findOneOrFailQuery: userFactory.findOneOrFailQuery(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findOneOrFailQuery.graphql"
+      )
     })
   })
 })

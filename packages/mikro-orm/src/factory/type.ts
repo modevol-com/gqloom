@@ -9,6 +9,7 @@ import type {
   EntityManager,
   FilterQuery,
   FindByCursorOptions,
+  FindOneOptions,
   FindOptions,
   MetadataStorage,
 } from "@mikro-orm/core"
@@ -157,4 +158,32 @@ export interface FindByCursorQuery<
     FindByCursorQueryOptions<TEntity>,
     GraphQLSilk<FindByCursorOutput<TEntity>, Cursor<TEntity>>,
     GraphQLSilk<FindByCursorQueryOptions<TEntity>, TInputI>
+  > {}
+
+export interface FindOneQueryArgs<TEntity extends object>
+  extends Pick<FindOneOptions<TEntity, any, any, any>, "orderBy" | "offset"> {
+  where?: FilterArgs<TEntity>
+}
+
+export interface FindOneQueryOptions<TEntity extends object>
+  extends FindOneOptions<TEntity, any, any, any> {
+  where?: FilterQuery<TEntity>
+}
+
+export interface FindOneQuery<
+  TEntity extends object,
+  TInputI = FindOneQueryArgs<TEntity>,
+> extends QueryFactoryWithResolve<
+    FindOneQueryOptions<TEntity>,
+    GraphQLSilk<TEntity | null, TEntity | null>,
+    GraphQLSilk<FindOneQueryOptions<TEntity>, TInputI>
+  > {}
+
+export interface FindOneOrFailQuery<
+  TEntity extends object,
+  TInputI = FindOneQueryArgs<TEntity>,
+> extends QueryFactoryWithResolve<
+    FindOneQueryOptions<TEntity>,
+    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<FindOneQueryOptions<TEntity>, TInputI>
   > {}

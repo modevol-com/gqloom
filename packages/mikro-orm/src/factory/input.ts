@@ -29,6 +29,8 @@ import type {
   FilterArgs,
   FindByCursorQueryArgs,
   FindByCursorQueryOptions,
+  FindOneQueryArgs,
+  FindOneQueryOptions,
   FindQueryArgs,
   FindQueryOptions,
   MikroFactoryPropertyBehaviors,
@@ -178,6 +180,35 @@ export class MikroInputFactory<TEntity extends object> {
           before: args.before,
           first: args.first,
           last: args.last,
+        },
+      })
+    )
+  }
+
+  public findOneArgs() {
+    const name = `${pascalCase(this.metaName)}FindOneArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<FindOneQueryArgs<TEntity>>({
+        name,
+        fields: {
+          where: { type: this.filter() },
+          orderBy: { type: this.orderBy() },
+          offset: { type: GraphQLInt },
+        },
+      })
+    )
+  }
+
+  public findOneArgsSilk() {
+    return silk<FindOneQueryOptions<TEntity>, FindOneQueryArgs<TEntity>>(
+      () => this.findOneArgs(),
+      (args) => ({
+        value: {
+          where: this.transformFilters(args.where),
+          orderBy: args.orderBy,
+          offset: args.offset,
         },
       })
     )

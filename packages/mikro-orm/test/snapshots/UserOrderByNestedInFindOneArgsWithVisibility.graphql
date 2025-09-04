@@ -1,0 +1,6 @@
+type UserOrderBy {
+  id: MikroQueryOrder
+  name: MikroQueryOrder
+  email: MikroQueryOrder
+  isActive: MikroQueryOrder
+}

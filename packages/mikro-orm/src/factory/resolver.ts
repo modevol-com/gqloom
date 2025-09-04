@@ -34,6 +34,10 @@ import type {
   FindByCursorQuery,
   FindByCursorQueryArgs,
   FindByCursorQueryOptions,
+  FindOneOrFailQuery,
+  FindOneQuery,
+  FindOneQueryArgs,
+  FindOneQueryOptions,
   FindQuery,
   FindQueryArgs,
   FindQueryOptions,
@@ -226,12 +230,48 @@ export class MikroResolverFactory<TEntity extends object> {
     )
   }
 
-  public findOneQuery() {
-    // TODO
+  public findOneQuery<TInputI = FindOneQueryArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<FindOneQueryOptions<TEntity>, TInputI>
+    middlewares?: Middleware<FindOneQuery<TEntity, TInputI>>[]
+  } = {}): FindOneQuery<TEntity, TInputI> {
+    input ??= this.inputFactory.findOneArgsSilk() as GraphQLSilk<
+      FindOneQueryOptions<TEntity>,
+      TInputI
+    >
+    const output = MikroWeaver.getGraphQLType(this.meta)
+    return new QueryFactoryWithResolve(silk.nullable(silk(output)), {
+      input,
+      ...options,
+      resolve: async (args: FindOneQueryOptions<TEntity>) => {
+        const em = await this.em()
+        return em.findOne(this.entityName, args.where ?? {}, args)
+      },
+    } as QueryOptions<any, any>)
   }
 
-  public findOneOrFailQuery() {
-    // TODO
+  public findOneOrFailQuery<TInputI = FindOneQueryArgs<TEntity>>({
+    input,
+    ...options
+  }: GraphQLFieldOptions & {
+    input?: GraphQLSilk<FindOneQueryOptions<TEntity>, TInputI>
+    middlewares?: Middleware<FindOneOrFailQuery<TEntity, TInputI>>[]
+  } = {}): FindOneOrFailQuery<TEntity, TInputI> {
+    input ??= this.inputFactory.findOneArgsSilk() as GraphQLSilk<
+      FindOneQueryOptions<TEntity>,
+      TInputI
+    >
+    const output = MikroWeaver.getGraphQLType(this.meta)
+    return new QueryFactoryWithResolve(silk.nonNull(silk(output)), {
+      input,
+      ...options,
+      resolve: async (args: FindOneQueryOptions<TEntity>) => {
+        const em = await this.em()
+        return em.findOneOrFail(this.entityName, args.where ?? {}, args)
+      },
+    } as QueryOptions<any, any>)
   }
 
   public assignMutation() {
