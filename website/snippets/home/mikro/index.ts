@@ -4,7 +4,7 @@ import { weave } from "@gqloom/core"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
 import { MikroORM } from "@mikro-orm/postgresql"
 import { createYoga } from "graphql-yoga"
-import { Post, User } from "./entities"
+import { Post, User } from "src/entities"
 
 const ormPromise = MikroORM.init({
   dbName: "gqloom",

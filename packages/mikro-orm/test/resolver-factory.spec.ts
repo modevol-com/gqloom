@@ -14,32 +14,32 @@ import { beforeAll, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import { type FindByCursorOutput, MikroResolverFactory } from "../src/factory"
 
-const _User = defineEntity({
+const UserEntity = defineEntity({
   name: "User",
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     name: p.string(),
     email: p.string(),
     age: p.integer().nullable(),
-    posts: () => p.oneToMany(_Post).mappedBy("author"),
+    posts: () => p.oneToMany(PostEntity).mappedBy("author"),
   }),
 })
 
-type IUser = InferEntity<typeof _User>
+type IUser = InferEntity<typeof UserEntity>
 
-const _Post = defineEntity({
+const PostEntity = defineEntity({
   name: "Post",
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
     content: p.string().lazy(),
-    author: () => p.manyToOne(_User),
+    author: () => p.manyToOne(UserEntity),
   }),
 })
 
-type IPost = InferEntity<typeof _Post>
+type IPost = InferEntity<typeof PostEntity>
 
-const [User, Post] = [mikroSilk(_User), mikroSilk(_Post)]
+const [User, Post] = [mikroSilk(UserEntity), mikroSilk(PostEntity)]
 
 const ORMConfig = defineConfig({
   entities: [User, Post],
