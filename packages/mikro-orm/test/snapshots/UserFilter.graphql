@@ -3,6 +3,6 @@ type UserFilter {
   name: StringComparisonOperators
   email: StringComparisonOperators
   password: StringComparisonOperators
-  age: FloatComparisonOperators
+  age: IntComparisonOperators
   isActive: BooleanComparisonOperators
 }

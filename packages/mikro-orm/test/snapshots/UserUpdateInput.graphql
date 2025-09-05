@@ -3,6 +3,6 @@ type UserPartialInput {
   name: String
   email: String
   password: String
-  age: Float
+  age: Int
   isActive: Boolean
 }

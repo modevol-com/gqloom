@@ -1,5 +1,5 @@
 import { silk } from "@gqloom/core"
-import { EntitySchema } from "@mikro-orm/libsql"
+import { defineEntity } from "@mikro-orm/libsql"
 import { GraphQLFloat, GraphQLNonNull, GraphQLString, printType } from "graphql"
 import { GraphQLScalarType } from "graphql"
 import { describe, expect, it } from "vitest"
@@ -20,16 +20,16 @@ interface IUser {
 }
 
 const User = mikroSilk(
-  new EntitySchema<IUser>({
+  defineEntity({
     name: "User",
-    properties: {
-      id: { type: "number", primary: true },
-      name: { type: "string" },
-      email: { type: "string" },
-      password: { type: "string" },
-      age: { type: "number", nullable: true },
-      isActive: { type: "boolean", nullable: true },
-    },
+    properties: (p) => ({
+      id: p.integer().primary().autoincrement(),
+      name: p.string(),
+      email: p.string(),
+      password: p.string(),
+      age: p.integer().nullable(),
+      isActive: p.boolean().nullable(),
+    }),
   })
 )
 
@@ -269,7 +269,7 @@ describe("MikroInputFactory", () => {
       expect(fields.name.type.toString()).toEqual("String!")
       expect(fields.email.type.toString()).toEqual("String!")
       expect(fields.password.type.toString()).toEqual("String!")
-      expect(fields.age.type.toString()).toEqual("Float") // nullable field
+      expect(fields.age.type.toString()).toEqual("Int") // nullable field
       expect(fields.isActive.type.toString()).toEqual("Boolean") // nullable field
     })
 
