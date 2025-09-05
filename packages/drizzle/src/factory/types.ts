@@ -107,10 +107,8 @@ export type InferSelectArrayOptions<
   TTable extends Table,
 > = Parameters<QueryBuilder<TDatabase, TTable["_"]["name"]>["findMany"]>[0]
 
-export interface CountQuery<
-  TTable extends Table,
-  TInputI = CountArgs<TTable>,
-> extends QueryFactoryWithResolve<
+export interface CountQuery<TTable extends Table, TInputI = CountArgs<TTable>>
+  extends QueryFactoryWithResolve<
     CountArgs<TTable>,
     GraphQLSilk<number, number>,
     GraphQLSilk<CountArgs<TTable>, TInputI>
