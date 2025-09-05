@@ -314,9 +314,9 @@ const postResolver = resolver.of(Post, {
 
 在上面的代码中，我们使用 `middlewares` 选项来定义中间件，`async (next) => { ... }` 定义了一个中间件，`useAuthedUser()` 是一个自定义的函数，用于获取当前登录的用户，如果用户未登录，则抛出一个错误，否则调用 `next()` 继续执行。
 
-### 创建 Resolver
+### 完整解析器
 
-你可以从解析器工厂中直接创建一个 Resolver：
+你可以从解析器工厂中直接创建一个完整解析器：
 
 ```ts
 // Readonly Resolver
@@ -326,10 +326,10 @@ const userQueriesResolver = userResolverFactory.queriesResolver()
 const userResolver = userResolverFactory.resolver()
 ```
 
-有两个用于创建 Resolver 的函数：
+有两个用于创建解析器的方法：
 
-- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的 Resolver。
-- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的 Resolver。
+- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的解析器。
+- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的解析器。
 
 ## 自定义类型映射
 

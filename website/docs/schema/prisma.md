@@ -314,7 +314,7 @@ const postResolver = resolver.of(Post, {
 
 In the above code, we use the `middlewares` option to define middleware. `async (next) => { ... }` defines a middleware. `useAuthedUser()` is a custom function used to get the currently logged-in user. If the user is not logged in, an error is thrown; otherwise, `next()` is called to continue execution.
 
-### Creating a Resolver
+### Complete Resolver
 
 You can directly create a Resolver from the resolver factory:
 
@@ -326,7 +326,7 @@ const userQueriesResolver = userResolverFactory.queriesResolver()
 const userResolver = userResolverFactory.resolver()
 ```
 
-There are two functions for creating Resolvers:
+There are two methods for creating Resolvers:
 
 - `usersResolverFactory.queriesResolver()`: Creates a Resolver that only includes queries and relational fields.
 - `usersResolverFactory.resolver()`: Creates a Resolver that includes all queries, mutations, and relational fields.

@@ -827,10 +827,10 @@ const usersQueriesResolver = usersResolverFactory.queriesResolver()
 const usersResolver = usersResolverFactory.resolver()
 ```
 
-有两个用于创建 Resolver 的函数：
+有两个用于创建解析器的方法：
 
-- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的 Resolver。
-- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的 Resolver。
+- `usersResolverFactory.queriesResolver()`: 创建一个只包含查询、关系字段的解析器。
+- `usersResolverFactory.resolver()`: 创建一个包含所有查询、变更和关系字段的解析器。
 
 ## 自定义类型映射
 
