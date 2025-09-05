@@ -1,34 +1,15 @@
+import { writeFileSync } from "node:fs"
 import { createServer } from "node:http"
+import path from "node:path"
 import { weave } from "@gqloom/core"
-import { MikroResolverFactory } from "@gqloom/mikro-orm"
-import { MikroORM } from "@mikro-orm/postgresql"
+import { asyncContextProvider } from "@gqloom/core/context"
+import { ValibotWeaver } from "@gqloom/valibot"
+import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { Post, User } from "./entities"
+import { userResolver } from "./resolver"
 
-const ormPromise = MikroORM.init({
-  dbName: "gqloom",
-  entities: [User, Post],
-  clientUrl: process.env.DATABASE_URL!,
-})
-
-ormPromise.then(async (orm) => {
-  await orm.getSchemaGenerator().updateSchema()
-})
-
-const userResolverFactory = new MikroResolverFactory(User, () =>
-  ormPromise.then((orm) => orm.em.fork())
-)
-
-const userResolver = userResolverFactory.resolver()
-
-const postResolverFactory = new MikroResolverFactory(Post, () =>
-  ormPromise.then((orm) => orm.em.fork())
-)
-
-const postResolver = postResolverFactory.resolver()
-
-const schema = weave(userResolver, postResolver)
-
+const schema = weave(asyncContextProvider, ValibotWeaver, userResolver)
+writeFileSync(path.join(__dirname, "schema.graphql"), printSchema(schema))
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
 server.listen(4000, () => {
