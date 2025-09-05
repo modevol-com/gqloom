@@ -1,4 +1,6 @@
 import {
+  FieldFactoryWithResolve,
+  type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type MayPromise,
@@ -12,10 +14,13 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
+  type Collection,
   type Cursor,
   type EntityManager,
   type EntityName,
+  type EntityProperty,
   EntitySchema,
+  ReferenceKind,
 } from "@mikro-orm/core"
 import {
   GraphQLBoolean,
@@ -29,6 +34,9 @@ import {
 import { MikroWeaver } from ".."
 import { MikroInputFactory } from "./input"
 import type {
+  CollectionField,
+  CollectionFieldArgs,
+  CollectionFieldOptions,
   CountQuery,
   CountQueryArgs,
   CountQueryOptions,
@@ -49,6 +57,8 @@ import type {
   FindQuery,
   FindQueryArgs,
   FindQueryOptions,
+  InferCollectionKeys,
+  InferRelationKeys,
   InsertManyMutation,
   InsertManyMutationArgs,
   InsertManyMutationOptions,
@@ -56,6 +66,7 @@ import type {
   InsertMutationArgs,
   InsertMutationOptions,
   MikroResolverFactoryOptions,
+  RelationField,
   UpdateMutation,
   UpdateMutationArgs,
   UpdateMutationOptions,
@@ -108,6 +119,103 @@ export class MikroResolverFactory<TEntity extends object> {
 
   protected em() {
     return this.options.getEntityManager()
+  }
+
+  protected getEntityMeta(entityName: EntityName<any>) {
+    if (entityName instanceof EntitySchema) {
+      return entityName.init().meta
+    }
+    if (!this.options.metadata) throw new Error("Metadata not found")
+    return this.options.metadata.get(entityName)
+  }
+
+  public relationField<TKey extends InferRelationKeys<TEntity>>(
+    key: TKey,
+    options: {
+      middlewares?: Middleware<RelationField<TEntity, TKey>>[]
+    } & GraphQLFieldOptions = {}
+  ): RelationField<TEntity, TKey> {
+    const property = (this.meta.properties as any)[key] as EntityProperty
+    if (property == null) throw new Error(`Property ${String(key)} not found`)
+
+    if (
+      property.kind === ReferenceKind.ONE_TO_MANY ||
+      property.kind === ReferenceKind.MANY_TO_MANY
+    ) {
+      return this.collectionField(key as any, options as any) as any
+    }
+
+    if (
+      property.kind === ReferenceKind.ONE_TO_ONE ||
+      property.kind === ReferenceKind.MANY_TO_ONE
+    ) {
+      //TODO: return this.referenceField(key as any, options as any) as any
+    }
+
+    if (!property.ref)
+      throw new Error(`Property ${String(key)} is not a reference field`)
+
+    //TODO: return this.scalarReferenceField(key as any, options as any) as any
+    throw new Error("TODO")
+  }
+
+  public collectionField<TKey extends InferCollectionKeys<TEntity>>(
+    key: TKey,
+    options?: {
+      middlewares?: Middleware<
+        CollectionField<TEntity, TKey, CollectionFieldArgs<TEntity, TKey>>
+      >[]
+    } & GraphQLFieldOptions
+  ): CollectionField<TEntity, TKey, CollectionFieldArgs<TEntity, TKey>>
+  public collectionField<TKey extends InferCollectionKeys<TEntity>, TInputI>(
+    key: TKey,
+    options: {
+      input: GraphQLSilk<CollectionFieldArgs<TEntity, TKey>, TInputI>
+      middlewares?: Middleware<CollectionField<TEntity, TKey, TInputI>>[]
+    } & GraphQLFieldOptions
+  ): CollectionField<TEntity, TKey, TInputI>
+  public collectionField<
+    TKey extends InferCollectionKeys<TEntity>,
+    TInputI = CollectionFieldArgs<TEntity, TKey>,
+  >(
+    key: TKey,
+    {
+      input,
+      ...options
+    }: {
+      input?: GraphQLSilk<CollectionFieldArgs<TEntity, TKey>, TInputI>
+      middlewares?: Middleware<CollectionField<TEntity, TKey, TInputI>>[]
+    } & GraphQLFieldOptions = {}
+  ): CollectionField<TEntity, TKey, TInputI> {
+    const property = (this.meta.properties as any)[key] as EntityProperty
+    if (property == null) throw new Error(`Property ${String(key)} not found`)
+    if (
+      property.kind !== ReferenceKind.ONE_TO_MANY &&
+      property.kind !== ReferenceKind.MANY_TO_MANY
+    )
+      throw new Error(`Property ${String(key)} is not a collection field`)
+    const targetEntity = this.getEntityMeta(property.entity())
+    input ??= this.inputFactory.collectionFieldArgsSilk(
+      targetEntity
+    ) as GraphQLSilk<CollectionFieldArgs<TEntity, TKey>, TInputI>
+    return new FieldFactoryWithResolve(
+      silk(
+        new GraphQLNonNull(
+          new GraphQLList(MikroWeaver.getGraphQLType(targetEntity))
+        )
+      ),
+      {
+        input,
+        ...options,
+        resolve: (
+          parent: TEntity,
+          args: CollectionFieldOptions<TEntity, TKey>
+        ) => {
+          const prop = (parent as any)[key] as Collection<any, any>
+          return prop.loadItems({ refresh: true, ...args })
+        },
+      } as FieldOptions<any, any, any, any>
+    )
   }
 
   public countQuery<TInputI = CountQueryArgs<TEntity>>({
@@ -295,10 +403,6 @@ export class MikroResolverFactory<TEntity extends object> {
         return em.findOneOrFail(this.entityName, args.where, args)
       },
     } as QueryOptions<any, any>)
-  }
-
-  public assignMutation() {
-    // TODO
   }
 
   public createMutation<TInputI = CreateMutationArgs<TEntity>>({

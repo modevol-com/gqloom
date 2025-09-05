@@ -1,10 +1,12 @@
 import type {
+  FieldFactoryWithResolve,
   GraphQLSilk,
   MayPromise,
   MutationFactoryWithResolve,
   QueryFactoryWithResolve,
 } from "@gqloom/core"
 import type {
+  Collection,
   CountOptions,
   CreateOptions,
   Cursor,
@@ -15,9 +17,12 @@ import type {
   FindByCursorOptions,
   FindOneOptions,
   FindOptions,
+  InitCollectionOptions,
   MetadataStorage,
   NativeInsertUpdateOptions,
+  Reference,
   RequiredEntityData,
+  ScalarReference,
   UpdateOptions,
   UpsertOptions,
 } from "@mikro-orm/core"
@@ -56,6 +61,106 @@ export type MikroFactoryPropertyBehaviors<TEntity> = {
    */
   "*"?: PropertyBehavior<never> | boolean | undefined
 }
+
+export type InferRelationKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends
+    | Reference<any>
+    | ScalarReference<any>
+    | Collection<any>
+    ? K
+    : never
+}[keyof TEntity]
+
+export type InferReferenceKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends
+    | Collection<any>
+    | ScalarReference<any>
+    ? never
+    : TEntity[K] extends Reference<any>
+      ? K
+      : never
+}[keyof TEntity]
+
+export type InferCollectionKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends Collection<any> ? K : never
+}[keyof TEntity]
+
+export type InferScalarReferenceKeys<TEntity> = {
+  [K in keyof TEntity]?: TEntity[K] extends ScalarReference<any> ? K : never
+}[keyof TEntity]
+
+export type RelationField<
+  TEntity extends object,
+  TKey,
+> = TKey extends InferCollectionKeys<TEntity>
+  ? CollectionField<TEntity, TKey>
+  : TKey extends InferReferenceKeys<TEntity>
+    ? ReferenceField<TEntity, TKey>
+    : TKey extends InferScalarReferenceKeys<TEntity>
+      ? ScalarReferenceField<TEntity, TKey>
+      : never
+
+export interface ReferenceField<TEntity extends object, TKey>
+  extends FieldFactoryWithResolve<
+    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<RelationEntity<TEntity, TKey>, RelationEntity<TEntity, TKey>>
+  > {}
+
+export interface CollectionFieldArgs<TEntity extends object, TKey>
+  extends Pick<
+    InitCollectionOptions<RelationEntity<TEntity, TKey>, any, any, any>,
+    never
+  > {
+  where?: RelationEntity<TEntity, TKey> extends object
+    ? FilterQuery<RelationEntity<TEntity, TKey>>
+    : never
+}
+
+export interface CollectionFieldOptions<TEntity extends object, TKey>
+  extends InitCollectionOptions<RelationEntity<TEntity, TKey>, any, any, any> {}
+
+export interface CollectionField<
+  TEntity extends object,
+  TKey,
+  TInputI = CollectionFieldArgs<TEntity, TKey>,
+> extends FieldFactoryWithResolve<
+    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<
+      RelationEntity<TEntity, TKey>[],
+      RelationEntity<TEntity, TKey>[]
+    >,
+    CollectionFieldOptions<TEntity, TKey>,
+    GraphQLSilk<CollectionFieldOptions<TEntity, TKey>, TInputI>
+  > {}
+
+export interface ScalarReferenceField<TEntity extends object, TKey>
+  extends FieldFactoryWithResolve<
+    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<RelationEntity<TEntity, TKey>, RelationEntity<TEntity, TKey>>
+  > {}
+
+type RelationEntity<TEntity extends object, TKey> = TKey extends keyof TEntity
+  ? UnwrapRef<TEntity[TKey]>
+  : never
+
+type UnwrapRef<T> = T extends ScalarReference<any>
+  ? UnwrapScalarReference<T>
+  : T extends Reference<any>
+    ? UnwrapReference<T>
+    : T extends Collection<any>
+      ? UnwrapCollection<T>
+      : T
+
+type UnwrapScalarReference<T extends ScalarReference<any>> =
+  T extends ScalarReference<infer Value> ? Value : T
+
+type UnwrapReference<T extends Reference<any>> = T extends Reference<
+  infer Value
+>
+  ? Value
+  : T
+
+type UnwrapCollection<T> = T extends Collection<infer Value> ? Value : T
 
 export type ComparisonOperators<TScalar> = {
   eq?: TScalar

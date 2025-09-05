@@ -6,14 +6,14 @@ type User {
   id: ID!
   name: String!
   email: String!
-  age: Float
+  age: Int
 }
 
 input UserFilter {
   id: IDMikroComparisonOperators
   name: StringMikroComparisonOperators
   email: StringMikroComparisonOperators
-  age: FloatMikroComparisonOperators
+  age: IntMikroComparisonOperators
 }
 
 input IDMikroComparisonOperators {
@@ -106,43 +106,43 @@ input StringMikroComparisonOperators {
   ilike: String
 }
 
-input FloatMikroComparisonOperators {
+input IntMikroComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
-  eq: Float
+  eq: Int
 
   """Greater. Matches values that are greater than a specified value."""
-  gt: Float
+  gt: Int
 
   """
   Greater or Equal. Matches values that are greater than or equal to a specified value.
   """
-  gte: Float
+  gte: Int
 
   """Contains, Contains, Matches any of the values specified in an array."""
-  in: [Float!]
+  in: [Int!]
 
   """Lower, Matches values that are less than a specified value."""
-  lt: Float
+  lt: Int
 
   """
   Lower or equal, Matches values that are less than or equal to a specified value.
   """
-  lte: Float
+  lte: Int
 
   """Not equal. Matches all values that are not equal to a specified value."""
-  ne: Float
+  ne: Int
 
   """Not contains. Matches none of the values specified in an array."""
-  nin: [Float!]
+  nin: [Int!]
 
   """&&"""
-  overlap: [Float!]
+  overlap: [Int!]
 
   """@>"""
-  contains: [Float!]
+  contains: [Int!]
 
   """<@"""
-  contained: [Float!]
+  contained: [Int!]
 }
 
 input UserOrderBy {

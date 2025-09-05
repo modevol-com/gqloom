@@ -1,24 +1,21 @@
-type Query {
-  findAndCountQuery(where: UserFilter, orderBy: UserOrderBy, limit: Int, offset: Int): UserFindAndCount!
-}
-
-type UserFindAndCount {
-  totalCount: Int!
-  items: [User!]!
-}
-
 type User {
   id: ID!
   name: String!
   email: String!
   age: Int
+  posts(where: PostFilter): [Post!]!
 }
 
-input UserFilter {
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+}
+
+input PostFilter {
   id: IDMikroComparisonOperators
-  name: StringMikroComparisonOperators
-  email: StringMikroComparisonOperators
-  age: IntMikroComparisonOperators
+  title: StringMikroComparisonOperators
+  content: StringMikroComparisonOperators
 }
 
 input IDMikroComparisonOperators {
@@ -109,59 +106,4 @@ input StringMikroComparisonOperators {
 
   """ilike"""
   ilike: String
-}
-
-input IntMikroComparisonOperators {
-  """Equals. Matches values that are equal to a specified value."""
-  eq: Int
-
-  """Greater. Matches values that are greater than a specified value."""
-  gt: Int
-
-  """
-  Greater or Equal. Matches values that are greater than or equal to a specified value.
-  """
-  gte: Int
-
-  """Contains, Contains, Matches any of the values specified in an array."""
-  in: [Int!]
-
-  """Lower, Matches values that are less than a specified value."""
-  lt: Int
-
-  """
-  Lower or equal, Matches values that are less than or equal to a specified value.
-  """
-  lte: Int
-
-  """Not equal. Matches all values that are not equal to a specified value."""
-  ne: Int
-
-  """Not contains. Matches none of the values specified in an array."""
-  nin: [Int!]
-
-  """&&"""
-  overlap: [Int!]
-
-  """@>"""
-  contains: [Int!]
-
-  """<@"""
-  contained: [Int!]
-}
-
-input UserOrderBy {
-  id: MikroQueryOrder
-  name: MikroQueryOrder
-  email: MikroQueryOrder
-  age: MikroQueryOrder
-}
-
-enum MikroQueryOrder {
-  ASC
-  ASC_NULLS_LAST
-  ASC_NULLS_FIRST
-  DESC
-  DESC_NULLS_LAST
-  DESC_NULLS_FIRST
 }

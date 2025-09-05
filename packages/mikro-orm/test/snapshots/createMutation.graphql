@@ -6,12 +6,12 @@ type User {
   id: ID!
   name: String!
   email: String!
-  age: Float
+  age: Int
 }
 
 input UserRequiredInput {
   id: ID
   name: String!
   email: String!
-  age: Float
+  age: Int
 }

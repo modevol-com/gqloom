@@ -6,14 +6,14 @@ type User {
   id: ID!
   name: String!
   email: String!
-  age: Float
+  age: Int
 }
 
 input UserPartialInput {
   id: ID
   name: String
   email: String
-  age: Float
+  age: Int
 }
 
 enum MikroOnConflictAction {

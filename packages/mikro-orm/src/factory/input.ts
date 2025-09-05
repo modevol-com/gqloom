@@ -25,6 +25,8 @@ import {
 } from "graphql"
 import { MikroWeaver } from ".."
 import type {
+  CollectionFieldArgs,
+  CollectionFieldOptions,
   CountQueryArgs,
   CountQueryOptions,
   CreateMutationArgs,
@@ -70,8 +72,35 @@ export class MikroInputFactory<TEntity extends object> {
     return this.meta.name ?? this.meta.className
   }
 
-  public filter(): GraphQLObjectType {
-    const name = `${this.metaName}Filter`
+  public collectionFieldArgs(targetEntity: EntityMetadata<any>) {
+    const name = `${targetEntity.name ?? targetEntity.className}CollectionFieldArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: () => ({
+          where: { type: this.filter(targetEntity) },
+        }),
+      })
+    )
+  }
+
+  public collectionFieldArgsSilk(targetEntity: EntityMetadata<any>) {
+    return silk<
+      CollectionFieldOptions<any, any>,
+      CollectionFieldArgs<any, any>
+    >(
+      () => this.collectionFieldArgs(targetEntity),
+      (args) => ({
+        value: { where: MikroInputFactory.transformFilters(args.where) },
+      })
+    )
+  }
+
+  public filter(meta?: EntityMetadata<any>): GraphQLObjectType {
+    meta ??= this.meta
+    const name = `${meta.name ?? meta.className}Filter`
 
     return (
       weaverContext.getNamedType(name) ??
@@ -79,19 +108,19 @@ export class MikroInputFactory<TEntity extends object> {
         new GraphQLObjectType({
           name,
           fields: () =>
-            mapValue(this.meta.properties, (property, propertyName) => {
+            mapValue(meta.properties, (property, propertyName) => {
               // Check visibility for filters
               if (
                 !MikroInputFactory.isPropertyVisible(
                   propertyName,
-                  this.options?.input,
+                  meta === this.meta ? this.options?.input : undefined,
                   "filters"
                 )
               ) {
                 return mapValue.SKIP
               }
 
-              const type = MikroWeaver.getFieldType(property, this.meta)
+              const type = MikroWeaver.getFieldType(property, meta)
               if (type == null) return mapValue.SKIP
               return {
                 type:
@@ -125,7 +154,7 @@ export class MikroInputFactory<TEntity extends object> {
       () => this.countArgs(),
       (args) => ({
         value: {
-          where: this.transformFilters(args.where),
+          where: MikroInputFactory.transformFilters(args.where),
         },
       })
     )
@@ -153,7 +182,7 @@ export class MikroInputFactory<TEntity extends object> {
       () => this.findArgs(),
       (args) => ({
         value: {
-          where: this.transformFilters(args.where),
+          where: MikroInputFactory.transformFilters(args.where),
           orderBy: args.orderBy,
           limit: args.limit,
           offset: args.offset,
@@ -189,7 +218,7 @@ export class MikroInputFactory<TEntity extends object> {
       () => this.findByCursorArgs(),
       (args) => ({
         value: {
-          where: this.transformFilters(args.where),
+          where: MikroInputFactory.transformFilters(args.where),
           orderBy: args.orderBy,
           after: args.after,
           before: args.before,
@@ -221,7 +250,7 @@ export class MikroInputFactory<TEntity extends object> {
       () => this.findOneArgs(),
       (args) => ({
         value: {
-          where: this.transformFilters(args.where),
+          where: MikroInputFactory.transformFilters(args.where),
           orderBy: args.orderBy,
           offset: args.offset,
         },
@@ -314,7 +343,9 @@ export class MikroInputFactory<TEntity extends object> {
   public deleteArgsSilk() {
     return silk<DeleteMutationOptions<TEntity>, DeleteMutationArgs<TEntity>>(
       () => this.deleteArgs(),
-      (args) => ({ value: { where: this.transformFilters(args.where) } })
+      (args) => ({
+        value: { where: MikroInputFactory.transformFilters(args.where) },
+      })
     )
   }
 
@@ -337,7 +368,10 @@ export class MikroInputFactory<TEntity extends object> {
     return silk<UpdateMutationOptions<TEntity>, UpdateMutationArgs<TEntity>>(
       () => this.updateArgs(),
       (args) => ({
-        value: { where: this.transformFilters(args.where), data: args.data },
+        value: {
+          where: MikroInputFactory.transformFilters(args.where),
+          data: args.data,
+        },
       })
     )
   }
@@ -533,15 +567,17 @@ export class MikroInputFactory<TEntity extends object> {
     })
   }
 
-  protected transformFilters(args: FilterArgs<TEntity>): FilterQuery<TEntity>
-  protected transformFilters(
+  public static transformFilters<TEntity extends object>(
+    args: FilterArgs<TEntity>
+  ): FilterQuery<TEntity>
+  public static transformFilters<TEntity extends object>(
     args: FilterArgs<TEntity> | undefined
   ): FilterQuery<TEntity> | undefined
-  protected transformFilters(
-    args: FilterArgs<TEntity> | undefined
-  ): FilterQuery<TEntity> | undefined {
+  public static transformFilters(
+    args: FilterArgs<any> | undefined
+  ): FilterQuery<any> | undefined {
     if (!args) return
-    const filters: FilterQuery<TEntity> = {}
+    const filters: FilterQuery<any> = {}
     for (const key in args) {
       const newKey = key.startsWith("$")
         ? key
@@ -565,7 +601,7 @@ export class MikroInputFactory<TEntity extends object> {
     }
 
     const { $and, $or, ...where } = filters as any
-    const result: FilterQuery<TEntity> = where
+    const result: FilterQuery<any> = where
     if ($and) {
       ;(result as any).$and = $and
     }

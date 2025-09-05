@@ -1,11 +1,12 @@
 import { resolver, weave } from "@gqloom/core"
 import {
-  EntitySchema,
+  type InferEntity,
   MikroORM,
   QueryOrder,
   RequestContext,
   type RequiredEntityData,
   defineConfig,
+  defineEntity,
 } from "@mikro-orm/libsql"
 import { printSchema } from "graphql"
 import * as v from "valibot"
@@ -13,27 +14,35 @@ import { beforeAll, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
 import { type FindByCursorOutput, MikroResolverFactory } from "../src/factory"
 
-interface IUser {
-  id: number
-  name: string
-  email: string
-  age?: number | null
-}
+const _User = defineEntity({
+  name: "User",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    name: p.string(),
+    email: p.string(),
+    age: p.integer().nullable(),
+    posts: () => p.oneToMany(_Post).mappedBy("author"),
+  }),
+})
 
-const User = mikroSilk(
-  new EntitySchema<IUser>({
-    name: "User",
-    properties: {
-      id: { type: "number", primary: true, autoincrement: true },
-      name: { type: "string" },
-      email: { type: "string" },
-      age: { type: "number", nullable: true },
-    },
-  })
-)
+type IUser = InferEntity<typeof _User>
+
+const _Post = defineEntity({
+  name: "Post",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    title: p.string(),
+    content: p.string().lazy(),
+    author: () => p.manyToOne(_User),
+  }),
+})
+
+type IPost = InferEntity<typeof _Post>
+
+const [User, Post] = [mikroSilk(_User), mikroSilk(_Post)]
 
 const ORMConfig = defineConfig({
-  entities: [User],
+  entities: [User, Post],
   dbName: ":memory:",
   allowGlobalContext: true,
 })
@@ -73,11 +82,138 @@ describe.concurrent("MikroResolverFactory", async () => {
           age: 28,
         }),
       ]
-      await orm.em.persistAndFlush(users)
+      const John = users[0]
+      const posts = [
+        orm.em.create(Post, {
+          title: "Post 1",
+          content: "Content 1",
+          author: John,
+        }),
+        orm.em.create(Post, {
+          title: "Post 2",
+          content: "Content 2",
+          author: John,
+        }),
+        orm.em.create(Post, {
+          title: "Archive 1",
+          content: "Archive 1",
+          author: John,
+        }),
+      ]
+      await orm.em.persistAndFlush([...users, ...posts])
     })
   })
 
   const userFactory = new MikroResolverFactory(User, () => orm.em)
+
+  describe.concurrent("relationField", () => {
+    it("should be created without error", async () => {
+      const field = userFactory.relationField("posts")
+      expect(field).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts"),
+      })
+      const userEx = r.toExecutor()
+
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      const answer = await userEx.posts(John, {})
+      expect(answer).toHaveLength(3)
+      expect(new Set(answer.map((p) => p.title))).toEqual(
+        new Set(["Post 1", "Post 2", "Archive 1"])
+      )
+    })
+
+    it("should work with custom input", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts", {
+          input: v.pipe(
+            v.object({
+              title: v.string(),
+            }),
+            v.transform(({ title }) => ({
+              where: { title: { $like: `%${title}%` } },
+            }))
+          ),
+        }),
+      })
+      const userEx = r.toExecutor()
+
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      let answer
+      answer = await userEx.posts(John, { title: "Post" })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toContain("Post 1")
+      expect(answer.map((p) => p.title)).toContain("Post 2")
+
+      answer = await userEx.posts(John, { title: "Archive" })
+      expect(answer).toHaveLength(1)
+      expect(answer[0].title).toBe("Archive 1")
+    })
+
+    it("should work with chain custom input", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts").input(
+          v.pipe(
+            v.object({
+              title: v.string(),
+            }),
+            v.transform(({ title }) => ({
+              where: { title: { $like: `%${title}%` } },
+            }))
+          )
+        ),
+      })
+      const userEx = r.toExecutor()
+
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      let answer
+      answer = await userEx.posts(John, { title: "Post" })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toContain("Post 1")
+      expect(answer.map((p) => p.title)).toContain("Post 2")
+
+      answer = await userEx.posts(John, { title: "Archive" })
+      expect(answer).toHaveLength(1)
+      expect(answer[0].title).toBe("Archive 1")
+    })
+
+    it("should work with middlewares", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts", {
+          middlewares: [
+            async ({ parseInput, next }) => {
+              const opts = await parseInput()
+              if (opts.issues) throw new Error("Invalid input")
+              const answer = await next()
+              expectTypeOf(answer).toEqualTypeOf<IPost[]>()
+              return answer.map((p) => ({ ...p, title: p.title.toUpperCase() }))
+            },
+          ],
+        }),
+      })
+
+      const userEx = r.toExecutor()
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      const answer = await userEx.posts(John, {})
+      expect(answer).toHaveLength(3)
+      expect(new Set(answer.map((p) => p.title))).toEqual(
+        new Set(["POST 1", "POST 2", "ARCHIVE 1"])
+      )
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts"),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/collectionField.graphql"
+      )
+    })
+  })
 
   describe.concurrent("countQuery", () => {
     it("should be created without error", async () => {
@@ -1266,10 +1402,20 @@ describe.concurrent("MikroResolverFactory", async () => {
   })
 
   describe.concurrent("upsertMutation", () => {
+    const User = defineEntity({
+      name: "User",
+      properties: (p) => ({
+        id: p.integer().primary().autoincrement(),
+        name: p.string(),
+        email: p.string(),
+        age: p.integer().nullable(),
+      }),
+    })
+    type IUser = InferEntity<typeof User>
     let orm: MikroORM
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
-      orm = await MikroORM.init(ORMConfig)
+      orm = await MikroORM.init({ ...ORMConfig, entities: [User] })
       await orm.getSchemaGenerator().updateSchema()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })

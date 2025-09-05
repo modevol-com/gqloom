@@ -1,5 +1,5 @@
 import { silk } from "@gqloom/core"
-import { EntitySchema, type FilterQuery } from "@mikro-orm/libsql"
+import { EntitySchema } from "@mikro-orm/libsql"
 import { GraphQLFloat, GraphQLNonNull, GraphQLString, printType } from "graphql"
 import { GraphQLScalarType } from "graphql"
 import { describe, expect, it } from "vitest"
@@ -481,36 +481,24 @@ describe("MikroInputFactory", () => {
   })
 
   describe("transformFilters", () => {
-    class TestTransformer<
-      TEntity extends object,
-    > extends MikroInputFactory<TEntity> {
-      public transformFilters(args: FilterArgs<TEntity>): FilterQuery<TEntity>
-      public transformFilters(
-        args: FilterArgs<TEntity> | undefined
-      ): FilterQuery<TEntity> | undefined
-      public transformFilters(args: FilterArgs<TEntity> | undefined) {
-        return super.transformFilters(args)
-      }
-    }
-    const transformer = new TestTransformer(User)
     it("should return undefined for undefined input", () => {
-      expect(transformer.transformFilters(undefined)).toBeUndefined()
+      expect(MikroInputFactory.transformFilters(undefined)).toBeUndefined()
     })
 
     it("should handle an empty filter object", () => {
-      expect(transformer.transformFilters({})).toEqual({})
+      expect(MikroInputFactory.transformFilters({})).toEqual({})
     })
 
     it("should transform simple equality filter", () => {
       const args: FilterArgs<IUser> = { name: { eq: "John" } }
       const expected = { name: { $eq: "John" } }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
     it("should transform multiple simple filters", () => {
       const args: FilterArgs<IUser> = { name: { eq: "John" }, age: { gt: 30 } }
       const expected = { name: { $eq: "John" }, age: { $gt: 30 } }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
     it("should transform an 'and' condition", () => {
@@ -520,7 +508,7 @@ describe("MikroInputFactory", () => {
       const expected = {
         $and: [{ name: { $like: "%Doe" } }, { age: { $lte: 40 } }],
       }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
     it("should transform an 'or' condition", () => {
@@ -530,7 +518,7 @@ describe("MikroInputFactory", () => {
       const expected = {
         $or: [{ isActive: { $eq: true } }, { age: { $in: [25, 35, 45] } }],
       }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
     it("should combine 'and'/'or' with root-level conditions", () => {
@@ -542,7 +530,7 @@ describe("MikroInputFactory", () => {
         name: { $eq: "Admin" },
         $or: [{ age: { $gt: 60 } }, { isActive: { $eq: false } }],
       }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
     it("should handle nested 'and' and 'or' conditions", () => {
@@ -562,7 +550,7 @@ describe("MikroInputFactory", () => {
           },
         ],
       }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
     it("should handle deeply nested logical operators", () => {
@@ -592,13 +580,13 @@ describe("MikroInputFactory", () => {
           },
         ],
       }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
     it("should return an empty object for empty logical operator arrays", () => {
       const args: FilterArgs<IUser> = { and: [], or: [] }
       const expected = { $and: [], $or: [] }
-      expect(transformer.transformFilters(args)).toEqual(expected)
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
   })
 
