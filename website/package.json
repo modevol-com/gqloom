@@ -27,7 +27,7 @@
     "@gqloom/yup": "workspace:*",
     "@gqloom/zod": "workspace:*",
     "@mikro-orm/core": "^6.5.1",
-    "@mikro-orm/postgresql": "^6.5.1",
+    "@mikro-orm/libsql": "^6.5.1",
     "@shikijs/vitepress-twoslash": "^3.11.0",
     "@vitejs/plugin-vue-jsx": "^5.1.0",
     "concurrently": "^9.2.1",

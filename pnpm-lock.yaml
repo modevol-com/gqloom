@@ -249,7 +249,7 @@ importers:
         version: 6.5.1
       '@mikro-orm/libsql':
         specifier: ^6.5.1
-        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)
+        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
@@ -421,7 +421,7 @@ importers:
         version: 6.5.1
       '@mikro-orm/libsql':
         specifier: ^6.5.1
-        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)
+        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       valibot:
         specifier: 1.0.0-beta.12
         version: 1.0.0-beta.12(typescript@5.7.3)
@@ -553,9 +553,9 @@ importers:
       '@mikro-orm/core':
         specifier: ^6.5.1
         version: 6.5.1
-      '@mikro-orm/postgresql':
+      '@mikro-orm/libsql':
         specifier: ^6.5.1
-        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(sqlite3@5.1.7)
+        version: 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
       '@shikijs/vitepress-twoslash':
         specifier: ^3.11.0
         version: 3.11.0(typescript@5.7.3)
@@ -1579,12 +1579,6 @@ packages:
 
   '@mikro-orm/libsql@6.5.1':
     resolution: {integrity: sha512-V8Ld+MBmIItFf/vAUuiayrigKJ3GDOH2kkNlneTf5N2TTmxTXgWxbAbFejAnE+/PR1STnP796NDHCCbQ0rCJNA==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      '@mikro-orm/core': ^6.0.0
-
-  '@mikro-orm/postgresql@6.5.1':
-    resolution: {integrity: sha512-yM/v7uhRInsSV4v2/9MMcF6e60fkeN3OhDvcUr4QnBVZ070QRzkLXbJKWmtT+fG/VldvjS61Lv/ZriD8S+9SCA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -4475,10 +4469,6 @@ packages:
     resolution: {integrity: sha512-6faShkdFugNQCLwucjPcY5ARoW1SlbnrZjmGl0IrrqewpvxvhSLHimCVzqeuULCbG0fQv7Dtk1yDbG3xv7Veog==}
     engines: {node: '>=12'}
 
-  postgres-array@3.0.4:
-    resolution: {integrity: sha512-nAUSGfSDGOaOAEGwqsRY27GPOea7CNipJPOA7lPbdEpx5Kg3qzdP0AaWC5MlhTWV9s4hFX39nomVZ+C4tnGOJQ==}
-    engines: {node: '>=12'}
-
   postgres-bytea@1.0.0:
     resolution: {integrity: sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w==}
     engines: {node: '>=0.10.0'}
@@ -4501,10 +4491,6 @@ packages:
 
   postgres-interval@3.0.0:
     resolution: {integrity: sha512-BSNDnbyZCXSxgA+1f5UU2GmwhoI0aU5yMxRGO8CdFEcY2BQF9xm/7MqKnYoM1nJDk8nONNWDk9WeSmePFhQdlw==}
-    engines: {node: '>=12'}
-
-  postgres-interval@4.0.2:
-    resolution: {integrity: sha512-EMsphSQ1YkQqKZL2cuG0zHkmjCCzQqQ71l2GXITqRwjhRleCdv00bDk/ktaSi0LnlaPzAc3535KTrjXsTdtx7A==}
     engines: {node: '>=12'}
 
   postgres-range@1.1.4:
@@ -6502,7 +6488,7 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/libsql@6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)':
+  '@mikro-orm/libsql@6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)':
     dependencies:
       '@mikro-orm/core': 6.5.1
       '@mikro-orm/knex': 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
@@ -6515,25 +6501,6 @@ snapshots:
       - mysql
       - mysql2
       - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
-
-  '@mikro-orm/postgresql@6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(sqlite3@5.1.7)':
-    dependencies:
-      '@mikro-orm/core': 6.5.1
-      '@mikro-orm/knex': 6.5.1(@mikro-orm/core@6.5.1)(better-sqlite3@11.8.1)(libsql@0.5.20)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
-      pg: 8.13.2
-      postgres-array: 3.0.4
-      postgres-date: 2.1.0
-      postgres-interval: 4.0.2
-    transitivePeerDependencies:
-      - better-sqlite3
-      - libsql
-      - mariadb
-      - mysql
-      - mysql2
       - pg-native
       - sqlite3
       - supports-color
@@ -9642,8 +9609,6 @@ snapshots:
 
   postgres-array@3.0.2: {}
 
-  postgres-array@3.0.4: {}
-
   postgres-bytea@1.0.0: {}
 
   postgres-bytea@3.0.0:
@@ -9659,8 +9624,6 @@ snapshots:
       xtend: 4.0.2
 
   postgres-interval@3.0.0: {}
-
-  postgres-interval@4.0.2: {}
 
   postgres-range@1.1.4: {}
 

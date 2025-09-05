@@ -2,14 +2,13 @@
 import { createServer } from "node:http"
 import { weave } from "@gqloom/core"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
-import { MikroORM } from "@mikro-orm/postgresql"
+import { MikroORM } from "@mikro-orm/libsql"
 import { createYoga } from "graphql-yoga"
 import { Post, User } from "src/entities"
 
 const ormPromise = MikroORM.init({
-  dbName: "gqloom",
+  dbName: ":memory:",
   entities: [User, Post],
-  clientUrl: process.env.DATABASE_URL!,
 })
 
 const userResolverFactory = new MikroResolverFactory(User, () =>

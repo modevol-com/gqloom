@@ -28,9 +28,7 @@ export const userResolver = resolver.of(User, {
       return user
     }),
 
-  posts: field(Post.list(), {
-    resolve: (user) => {
-      return useEm().find(Post, { author: user.id })
-    },
+  posts: field(Post.list()).resolve((user) => {
+    return useEm().find(Post, { author: user.id })
   }),
 })
