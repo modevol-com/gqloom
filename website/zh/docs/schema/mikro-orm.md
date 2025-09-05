@@ -261,14 +261,14 @@ const PostEntity = defineEntity({
 export interface IPost extends InferEntity<typeof PostEntity> {}
 export const Post = mikroSilk(PostEntity)
 
-// ---cut---
 // @filename: resolver.ts
+// ---cut---
 import { field, resolver } from "@gqloom/core"
 import * as v from "valibot"
 import { User, type IUser } from "./entities"
 
 export const userResolver = resolver.of(User, {
-  fullName: field(v.string()).resolve((user: IUser) => {
+  fullName: field(v.string()).resolve((user) => {
     return `Mr/Ms ${user.name}`
   }),
 })
