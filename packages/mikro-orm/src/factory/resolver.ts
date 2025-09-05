@@ -20,6 +20,7 @@ import {
   type EntityName,
   type EntityProperty,
   EntitySchema,
+  type Reference,
   ReferenceKind,
 } from "@mikro-orm/core"
 import {
@@ -58,7 +59,7 @@ import type {
   FindQueryArgs,
   FindQueryOptions,
   InferCollectionKeys,
-  InferRelationKeys,
+  InferReferenceKeys,
   InsertManyMutation,
   InsertManyMutationArgs,
   InsertManyMutationOptions,
@@ -66,7 +67,7 @@ import type {
   InsertMutationArgs,
   InsertMutationOptions,
   MikroResolverFactoryOptions,
-  RelationField,
+  ReferenceField,
   UpdateMutation,
   UpdateMutationArgs,
   UpdateMutationOptions,
@@ -129,36 +130,6 @@ export class MikroResolverFactory<TEntity extends object> {
     return this.options.metadata.get(entityName)
   }
 
-  public relationField<TKey extends InferRelationKeys<TEntity>>(
-    key: TKey,
-    options: {
-      middlewares?: Middleware<RelationField<TEntity, TKey>>[]
-    } & GraphQLFieldOptions = {}
-  ): RelationField<TEntity, TKey> {
-    const property = (this.meta.properties as any)[key] as EntityProperty
-    if (property == null) throw new Error(`Property ${String(key)} not found`)
-
-    if (
-      property.kind === ReferenceKind.ONE_TO_MANY ||
-      property.kind === ReferenceKind.MANY_TO_MANY
-    ) {
-      return this.collectionField(key as any, options as any) as any
-    }
-
-    if (
-      property.kind === ReferenceKind.ONE_TO_ONE ||
-      property.kind === ReferenceKind.MANY_TO_ONE
-    ) {
-      //TODO: return this.referenceField(key as any, options as any) as any
-    }
-
-    if (!property.ref)
-      throw new Error(`Property ${String(key)} is not a reference field`)
-
-    //TODO: return this.scalarReferenceField(key as any, options as any) as any
-    throw new Error("TODO")
-  }
-
   public collectionField<TKey extends InferCollectionKeys<TEntity>>(
     key: TKey,
     options?: {
@@ -213,6 +184,32 @@ export class MikroResolverFactory<TEntity extends object> {
         ) => {
           const prop = (parent as any)[key] as Collection<any, any>
           return prop.loadItems({ refresh: true, ...args })
+        },
+      } as FieldOptions<any, any, any, any>
+    )
+  }
+
+  public referenceField<TKey extends InferReferenceKeys<TEntity>>(
+    key: TKey,
+    options: {
+      middlewares?: Middleware<ReferenceField<TEntity, TKey>>[]
+    } & GraphQLFieldOptions = {}
+  ): ReferenceField<TEntity, TKey> {
+    const property = (this.meta.properties as any)[key] as EntityProperty
+    if (property == null) throw new Error(`Property ${String(key)} not found`)
+    if (
+      property.kind !== ReferenceKind.ONE_TO_ONE &&
+      property.kind !== ReferenceKind.MANY_TO_ONE
+    )
+      throw new Error(`Property ${String(key)} is not a reference field`)
+    const targetEntity = this.getEntityMeta(property.entity())
+    return new FieldFactoryWithResolve(
+      silk.nullable(silk(MikroWeaver.getGraphQLType(targetEntity))),
+      {
+        ...options,
+        resolve: (parent) => {
+          const prop = (parent as any)[key] as Reference<any>
+          return prop.load()
         },
       } as FieldOptions<any, any, any, any>
     )

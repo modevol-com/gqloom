@@ -105,10 +105,11 @@ describe.concurrent("MikroResolverFactory", async () => {
   })
 
   const userFactory = new MikroResolverFactory(User, () => orm.em)
+  const postFactory = new MikroResolverFactory(Post, () => orm.em)
 
-  describe.concurrent("relationField", () => {
+  describe.concurrent("collectionField", () => {
     it("should be created without error", async () => {
-      const field = userFactory.relationField("posts")
+      const field = userFactory.collectionField("posts")
       expect(field).toBeDefined()
     })
 
@@ -211,6 +212,53 @@ describe.concurrent("MikroResolverFactory", async () => {
       const schema = weave(r)
       await expect(printSchema(schema)).toMatchFileSnapshot(
         "./snapshots/collectionField.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("referenceField", () => {
+    it("should be created without error", async () => {
+      const field = postFactory.referenceField("author")
+      expect(field).toBeDefined()
+    })
+
+    it("should resolve correctly", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author"),
+      })
+      const postEx = r.toExecutor()
+      const post = await orm.em.findOneOrFail(Post, { title: "Post 1" })
+      const answer = await postEx.author(post)
+      expect(answer).toBeDefined()
+      expect(answer?.name).toBe("John Doe")
+    })
+
+    it("should work with middlewares", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author", {
+          middlewares: [
+            async ({ next }) => {
+              const answer = await next()
+              expectTypeOf(answer).toEqualTypeOf<IUser>()
+              return answer
+            },
+          ],
+        }),
+      })
+      const postEx = r.toExecutor()
+      const post = await orm.em.findOneOrFail(Post, { title: "Post 1" })
+      const answer = await postEx.author(post)
+      expect(answer).toBeDefined()
+      expect(answer?.name).toBe("John Doe")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author"),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/referenceField.graphql"
       )
     })
   })
