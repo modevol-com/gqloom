@@ -261,7 +261,7 @@ const PostEntity = defineEntity({
 export interface IPost extends InferEntity<typeof PostEntity> {}
 export const Post = mikroSilk(PostEntity)
 
-
+// ---cut---
 // @filename: resolver.ts
 import { field, resolver } from "@gqloom/core"
 import * as v from "valibot"
@@ -444,12 +444,12 @@ export const postResolver = resolver.of(Post, {
 ### 查询
 
 解析器工厂预置了常用的查询：
-  - `countQuery`
-  - `findQuery`
-  - `findAndCountQuery`
-  - `findByCursorQuery`
-  - `findOneQuery`
-  - `findOneOrFailQuery`
+  - [countQuery](https://mikro-orm.io/api/core/class/EntityRepository#count)
+  - [findQuery](https://mikro-orm.io/api/core/class/EntityRepository#find)
+  - [findAndCountQuery](https://mikro-orm.io/api/core/class/EntityRepository#findAndCount)
+  - [findByCursorQuery](https://mikro-orm.io/api/core/class/EntityRepository#findByCursor)
+  - [findOneQuery](https://mikro-orm.io/api/core/class/EntityRepository#findOne)
+  - [findOneOrFailQuery](https://mikro-orm.io/api/core/class/EntityRepository#findOneOrFail)
 
 你可以直接使用它们：
 
@@ -514,13 +514,13 @@ export const userResolver = resolver.of(User, {
 ### 变更
 
 解析器工厂预置了常用的变更：
-  - `createMutation`
-  - `insertMutation`
-  - `insertManyMutation`
-  - `deleteMutation`
-  - `updateMutation`
-  - `upsertMutation`
-  - `upsertManyMutation`
+  - [createMutation](https://mikro-orm.io/api/core/class/EntityRepository#create)
+  - [insertMutation](https://mikro-orm.io/api/core/class/EntityRepository#insert)
+  - [insertManyMutation](https://mikro-orm.io/api/core/class/EntityRepository#insertMany)
+  - [deleteMutation](https://mikro-orm.io/api/core/class/EntityRepository#nativeDelete)
+  - [updateMutation](https://mikro-orm.io/api/core/class/EntityRepository#nativeUpdate)
+  - [upsertMutation](https://mikro-orm.io/api/core/class/EntityRepository#upsert)
+  - [upsertManyMutation](https://mikro-orm.io/api/core/class/EntityRepository#upsertMany)
 
 你可以直接使用它们：
 
@@ -776,24 +776,7 @@ export const mikroWeaverConfig = MikroWeaver.config({
 
 在编织 GraphQL Schema 时传入配置到 weave 函数中：
 
-```ts twoslash
-// @filename: config.ts
-import { MikroWeaver } from "@gqloom/mikro-orm"
-import { GraphQLDateTime } from "graphql-scalars"
-
-export const mikroWeaverConfig = MikroWeaver.config({
-  presetGraphQLType: (property) => {
-    if (property.type === "datetime") {
-      return GraphQLDateTime
-    }
-  },
-})
-// @filename: index.ts
-import { weave } from "@gqloom/core"
-import { mikroWeaverConfig } from "./config"
-// @ts-expect-error
-import { userResolver, postResolver } from "./resolver"
-
+```ts
 export const schema = weave(mikroWeaverConfig, userResolver, postResolver)
 ```
 
