@@ -13,12 +13,12 @@ type Post {
 }
 
 input PostFilter {
-  id: IDMikroComparisonOperators
-  title: StringMikroComparisonOperators
-  content: StringMikroComparisonOperators
+  id: IDComparisonOperators
+  title: StringComparisonOperators
+  content: StringComparisonOperators
 }
 
-input IDMikroComparisonOperators {
+input IDComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: ID
 
@@ -57,7 +57,7 @@ input IDMikroComparisonOperators {
   contained: [ID!]
 }
 
-input StringMikroComparisonOperators {
+input StringComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: String
 

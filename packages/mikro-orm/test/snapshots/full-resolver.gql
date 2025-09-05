@@ -1,0 +1,215 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  posts(where: PostFilter): [Post!]!
+}
+
+input PostFilter {
+  id: IDComparisonOperators
+  title: StringComparisonOperators
+  content: StringComparisonOperators
+}
+
+input IDComparisonOperators {
+  """Equals. Matches values that are equal to a specified value."""
+  eq: ID
+
+  """Greater. Matches values that are greater than a specified value."""
+  gt: ID
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: ID
+
+  """Contains, Contains, Matches any of the values specified in an array."""
+  in: [ID!]
+
+  """Lower, Matches values that are less than a specified value."""
+  lt: ID
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: ID
+
+  """Not equal. Matches all values that are not equal to a specified value."""
+  ne: ID
+
+  """Not contains. Matches none of the values specified in an array."""
+  nin: [ID!]
+
+  """&&"""
+  overlap: [ID!]
+
+  """@>"""
+  contains: [ID!]
+
+  """<@"""
+  contained: [ID!]
+}
+
+input StringComparisonOperators {
+  """Equals. Matches values that are equal to a specified value."""
+  eq: String
+
+  """Greater. Matches values that are greater than a specified value."""
+  gt: String
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: String
+
+  """Contains, Contains, Matches any of the values specified in an array."""
+  in: [String!]
+
+  """Lower, Matches values that are less than a specified value."""
+  lt: String
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: String
+
+  """Not equal. Matches all values that are not equal to a specified value."""
+  ne: String
+
+  """Not contains. Matches none of the values specified in an array."""
+  nin: [String!]
+
+  """&&"""
+  overlap: [String!]
+
+  """@>"""
+  contains: [String!]
+
+  """<@"""
+  contained: [String!]
+
+  """Like. Uses LIKE operator"""
+  like: String
+
+  """Regexp. Uses REGEXP operator"""
+  re: String
+
+  """Full text.	A driver specific full text search function."""
+  fulltext: String
+
+  """ilike"""
+  ilike: String
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User
+}
+
+type Query {
+  countUser(where: UserFilter): Int!
+  findUser(where: UserFilter, orderBy: UserOrderBy, limit: Int, offset: Int): [User!]!
+  findUserByCursor(where: UserFilter, orderBy: UserOrderBy, after: String, before: String, first: Int, last: Int): UserCursor
+  findOneUser(where: UserFilter!, orderBy: UserOrderBy, offset: Int): User
+  findOneUserOrFail(where: UserFilter!, orderBy: UserOrderBy, offset: Int): User!
+  countPost(where: PostFilter): Int!
+  findPost(where: PostFilter, orderBy: PostOrderBy, limit: Int, offset: Int): [Post!]!
+  findPostByCursor(where: PostFilter, orderBy: PostOrderBy, after: String, before: String, first: Int, last: Int): PostCursor
+  findOnePost(where: PostFilter!, orderBy: PostOrderBy, offset: Int): Post
+  findOnePostOrFail(where: PostFilter!, orderBy: PostOrderBy, offset: Int): Post!
+}
+
+input UserFilter {
+  id: IDComparisonOperators
+  name: StringComparisonOperators
+  email: StringComparisonOperators
+}
+
+input UserOrderBy {
+  id: QueryOrder
+  name: QueryOrder
+  email: QueryOrder
+}
+
+enum QueryOrder {
+  ASC
+  ASC_NULLS_LAST
+  ASC_NULLS_FIRST
+  DESC
+  DESC_NULLS_LAST
+  DESC_NULLS_FIRST
+}
+
+type UserCursor {
+  items: [User!]!
+  totalCount: Int!
+  hasPrevPage: Boolean!
+  hasNextPage: Boolean!
+  startCursor: String
+  endCursor: String
+  length: Int
+}
+
+input PostOrderBy {
+  id: QueryOrder
+  title: QueryOrder
+  content: QueryOrder
+}
+
+type PostCursor {
+  items: [Post!]!
+  totalCount: Int!
+  hasPrevPage: Boolean!
+  hasNextPage: Boolean!
+  startCursor: String
+  endCursor: String
+  length: Int
+}
+
+type Mutation {
+  createUser(data: UserRequiredInput!): User!
+  insertUser(data: UserRequiredInput!): User!
+  insertManyUser(data: [UserRequiredInput]!): [User!]!
+  deleteUser(where: UserFilter): Int!
+  updateUser(where: UserFilter, data: UserPartialInput!): Int!
+  upsertUser(data: UserPartialInput!, onConflictAction: MikroOnConflictAction, onConflictExcludeFields: [String!], onConflictFields: [String!], onConflictMergeFields: [String!]): User!
+  upsertManyUser(data: [UserPartialInput!]!, onConflictAction: MikroOnConflictAction, onConflictExcludeFields: [String!], onConflictFields: [String!], onConflictMergeFields: [String!]): [User!]!
+  createPost(data: PostRequiredInput!): Post!
+  insertPost(data: PostRequiredInput!): Post!
+  insertManyPost(data: [PostRequiredInput]!): [Post!]!
+  deletePost(where: PostFilter): Int!
+  updatePost(where: PostFilter, data: PostPartialInput!): Int!
+  upsertPost(data: PostPartialInput!, onConflictAction: MikroOnConflictAction, onConflictExcludeFields: [String!], onConflictFields: [String!], onConflictMergeFields: [String!]): Post!
+  upsertManyPost(data: [PostPartialInput!]!, onConflictAction: MikroOnConflictAction, onConflictExcludeFields: [String!], onConflictFields: [String!], onConflictMergeFields: [String!]): [Post!]!
+}
+
+input UserRequiredInput {
+  id: ID
+  name: String!
+  email: String!
+}
+
+input UserPartialInput {
+  id: ID
+  name: String
+  email: String
+}
+
+enum MikroOnConflictAction {
+  ignore
+  merge
+}
+
+input PostRequiredInput {
+  id: ID
+  title: String!
+  content: String!
+}
+
+input PostPartialInput {
+  id: ID
+  title: String
+  content: String
+}

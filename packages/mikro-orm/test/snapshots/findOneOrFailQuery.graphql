@@ -10,13 +10,13 @@ type User {
 }
 
 input UserFilter {
-  id: IDMikroComparisonOperators
-  name: StringMikroComparisonOperators
-  email: StringMikroComparisonOperators
-  age: IntMikroComparisonOperators
+  id: IDComparisonOperators
+  name: StringComparisonOperators
+  email: StringComparisonOperators
+  age: IntComparisonOperators
 }
 
-input IDMikroComparisonOperators {
+input IDComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: ID
 
@@ -55,7 +55,7 @@ input IDMikroComparisonOperators {
   contained: [ID!]
 }
 
-input StringMikroComparisonOperators {
+input StringComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: String
 
@@ -106,7 +106,7 @@ input StringMikroComparisonOperators {
   ilike: String
 }
 
-input IntMikroComparisonOperators {
+input IntComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: Int
 
@@ -146,13 +146,13 @@ input IntMikroComparisonOperators {
 }
 
 input UserOrderBy {
-  id: MikroQueryOrder
-  name: MikroQueryOrder
-  email: MikroQueryOrder
-  age: MikroQueryOrder
+  id: QueryOrder
+  name: QueryOrder
+  email: QueryOrder
+  age: QueryOrder
 }
 
-enum MikroQueryOrder {
+enum QueryOrder {
   ASC
   ASC_NULLS_LAST
   ASC_NULLS_FIRST

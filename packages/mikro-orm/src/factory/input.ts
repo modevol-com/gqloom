@@ -477,94 +477,102 @@ export class MikroInputFactory<TEntity extends object> {
     const name = `${this.metaName}RequiredInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: () =>
+          mapValue(this.meta.properties, (property, propertyName) => {
+            // Check visibility
+            if (
+              !MikroInputFactory.isPropertyVisible(
+                propertyName,
+                this.options?.input,
+                "create"
+              )
+            ) {
+              return mapValue.SKIP
+            }
 
-    return new GraphQLObjectType({
-      name,
-      fields: () =>
-        mapValue(this.meta.properties, (property, propertyName) => {
-          // Check visibility
-          if (
-            !MikroInputFactory.isPropertyVisible(
-              propertyName,
+            // Get custom type if configured
+            const customSilk = MikroInputFactory.getPropertyConfig(
               this.options?.input,
+              propertyName as keyof TEntity,
               "create"
             )
-          ) {
-            return mapValue.SKIP
-          }
+            const type = customSilk
+              ? weaverContext.getGraphQLType(customSilk)
+              : MikroWeaver.getFieldType(property, this.meta)
 
-          // Get custom type if configured
-          const customSilk = MikroInputFactory.getPropertyConfig(
-            this.options?.input,
-            propertyName as keyof TEntity,
-            "create"
-          )
-          const type = customSilk
-            ? weaverContext.getGraphQLType(customSilk)
-            : MikroWeaver.getFieldType(property, this.meta)
+            if (type == null) return mapValue.SKIP
 
-          if (type == null) return mapValue.SKIP
+            // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
+            const isRequired =
+              property.nullable !== true &&
+              !property.default &&
+              !property.primary
+            const finalType =
+              isRequired && !isNonNullType(type)
+                ? new GraphQLNonNull(type)
+                : type
 
-          // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
-          const isRequired =
-            property.nullable !== true && !property.default && !property.primary
-          const finalType =
-            isRequired && !isNonNullType(type) ? new GraphQLNonNull(type) : type
-
-          return {
-            type: finalType,
-            description: property.comment,
-          } as GraphQLFieldConfig<any, any>
-        }),
-    })
+            return {
+              type: finalType,
+              description: property.comment,
+            } as GraphQLFieldConfig<any, any>
+          }),
+      })
+    )
   }
 
   public partialInput(): GraphQLObjectType {
     const name = `${this.metaName}PartialInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
-    return new GraphQLObjectType({
-      name,
-      fields: () =>
-        mapValue(this.meta.properties, (property, propertyName) => {
-          // Check visibility
-          if (
-            !MikroInputFactory.isPropertyVisible(
-              propertyName,
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType({
+        name,
+        fields: () =>
+          mapValue(this.meta.properties, (property, propertyName) => {
+            // Check visibility
+            if (
+              !MikroInputFactory.isPropertyVisible(
+                propertyName,
+                this.options?.input,
+                "update"
+              )
+            ) {
+              return mapValue.SKIP
+            }
+
+            // Get custom type if configured
+            const customSilk = MikroInputFactory.getPropertyConfig(
               this.options?.input,
+              propertyName as keyof TEntity,
               "update"
             )
-          ) {
-            return mapValue.SKIP
-          }
+            const type = customSilk
+              ? weaverContext.getGraphQLType(customSilk)
+              : MikroWeaver.getFieldType(property, this.meta)
 
-          // Get custom type if configured
-          const customSilk = MikroInputFactory.getPropertyConfig(
-            this.options?.input,
-            propertyName as keyof TEntity,
-            "update"
-          )
-          const type = customSilk
-            ? weaverContext.getGraphQLType(customSilk)
-            : MikroWeaver.getFieldType(property, this.meta)
+            if (type == null) return mapValue.SKIP
 
-          if (type == null) return mapValue.SKIP
+            // For update operations, make all fields optional except primary keys
+            let finalType = type
+            if (
+              isNonNullType(type) &&
+              !this.meta.primaryKeys.includes(propertyName)
+            ) {
+              finalType = type.ofType
+            }
 
-          // For update operations, make all fields optional except primary keys
-          let finalType = type
-          if (
-            isNonNullType(type) &&
-            !this.meta.primaryKeys.includes(propertyName)
-          ) {
-            finalType = type.ofType
-          }
-
-          return {
-            type: finalType,
-            description: property.comment,
-          } as GraphQLFieldConfig<any, any>
-        }),
-    })
+            return {
+              type: finalType,
+              description: property.comment,
+            } as GraphQLFieldConfig<any, any>
+          }),
+      })
+    )
   }
 
   public static transformFilters<TEntity extends object>(
@@ -615,7 +623,7 @@ export class MikroInputFactory<TEntity extends object> {
     type: TScalarType
   ): GraphQLObjectType {
     // https://mikro-orm.io/docs/query-conditions#comparison
-    const name = `${type.name}MikroComparisonOperators`
+    const name = `${type.name}ComparisonOperators`
 
     return (
       weaverContext.getNamedType(name) ??
@@ -703,7 +711,7 @@ export class MikroInputFactory<TEntity extends object> {
   }
 
   public static queryOrderType(): GraphQLEnumType {
-    const name = `MikroQueryOrder`
+    const name = `QueryOrder`
 
     return (
       weaverContext.getNamedType(name) ??
@@ -725,13 +733,18 @@ export class MikroInputFactory<TEntity extends object> {
 
   public static onConflictActionType(): GraphQLEnumType {
     const name = `MikroOnConflictAction`
-    return new GraphQLEnumType({
-      name,
-      values: {
-        ignore: { value: "ignore" },
-        merge: { value: "merge" },
-      },
-    })
+    return (
+      weaverContext.getNamedType(name) ??
+      weaverContext.memoNamedType(
+        new GraphQLEnumType({
+          name,
+          values: {
+            ignore: { value: "ignore" },
+            merge: { value: "merge" },
+          },
+        })
+      )
+    )
   }
 
   public static isPropertyVisible(

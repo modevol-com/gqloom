@@ -101,7 +101,7 @@ export class MikroWeaver {
     const config = MikroWeaver.ObjectConfigMap.get(meta)
     const name = entityName ?? meta.className ?? config?.name
 
-    const existing = weaverContext.getNamedType(name)
+    const existing = weaverContext.getGraphQLType(meta)
     if (existing != null) return new GraphQLNonNull(existing)
 
     const properties = meta.properties
@@ -110,7 +110,8 @@ export class MikroWeaver {
     const originFields = originType?.getFields()
 
     return new GraphQLNonNull(
-      weaverContext.memoNamedType(
+      weaverContext.memoGraphQLType(
+        meta,
         new GraphQLObjectType({
           name: name ?? meta.className,
           ...config,

@@ -152,14 +152,11 @@ describe("MikroResolverFactory", async () => {
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Mutation {
-          create(data: GiraffeCreateInput!): Giraffe!
+          create(data: GiraffeCreateInput!): GiraffeFindOneFilter!
         }
 
-        type Giraffe {
+        type GiraffeFindOneFilter {
           id: ID!
-          name: String!
-          birthday: String!
-          height: Float
         }
 
         input GiraffeCreateInput {
@@ -257,14 +254,11 @@ describe("MikroResolverFactory", async () => {
       const schema = weave(r)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Mutation {
-          update(data: GiraffeUpdateInput!): Giraffe!
+          update(data: GiraffeUpdateInput!): GiraffeFindOneFilter!
         }
 
-        type Giraffe {
+        type GiraffeFindOneFilter {
           id: ID!
-          name: String!
-          birthday: String!
-          height: Float
         }
 
         input GiraffeUpdateInput {
@@ -563,15 +557,12 @@ describe("MikroResolverFactory", async () => {
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {
-          findMany(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [Giraffe!]!
-          findMany2(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [Giraffe!]!
+          findMany(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [GiraffeFindOneFilter!]!
+          findMany2(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [GiraffeFindOneFilter!]!
         }
 
-        type Giraffe {
+        type GiraffeFindOneFilter {
           id: ID!
-          name: String!
-          birthday: String!
-          height: Float
         }
 
         input GiraffeFindManyOptionsWhere {

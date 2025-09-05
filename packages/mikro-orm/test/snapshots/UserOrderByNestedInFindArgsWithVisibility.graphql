@@ -1,6 +1,6 @@
 type UserOrderBy {
-  id: MikroQueryOrder
-  name: MikroQueryOrder
-  email: MikroQueryOrder
-  isActive: MikroQueryOrder
+  id: QueryOrder
+  name: QueryOrder
+  email: QueryOrder
+  isActive: QueryOrder
 }

@@ -1,4 +1,4 @@
-type FloatMikroComparisonOperators {
+type FloatComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: Float
 

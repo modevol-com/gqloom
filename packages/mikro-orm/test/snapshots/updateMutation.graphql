@@ -3,13 +3,13 @@ type Mutation {
 }
 
 input UserFilter {
-  id: IDMikroComparisonOperators
-  name: StringMikroComparisonOperators
-  email: StringMikroComparisonOperators
-  age: IntMikroComparisonOperators
+  id: IDComparisonOperators
+  name: StringComparisonOperators
+  email: StringComparisonOperators
+  age: IntComparisonOperators
 }
 
-input IDMikroComparisonOperators {
+input IDComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: ID
 
@@ -48,7 +48,7 @@ input IDMikroComparisonOperators {
   contained: [ID!]
 }
 
-input StringMikroComparisonOperators {
+input StringComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: String
 
@@ -99,7 +99,7 @@ input StringMikroComparisonOperators {
   ilike: String
 }
 
-input IntMikroComparisonOperators {
+input IntComparisonOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: Int
 

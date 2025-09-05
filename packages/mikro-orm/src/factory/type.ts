@@ -63,18 +63,13 @@ export type MikroFactoryPropertyBehaviors<TEntity> = {
 }
 
 export type InferRelationKeys<TEntity> = {
-  [K in keyof TEntity]?: TEntity[K] extends
-    | Reference<any>
-    | ScalarReference<any>
-    | Collection<any>
+  [K in keyof TEntity]?: TEntity[K] extends Reference<any> | Collection<any>
     ? K
     : never
 }[keyof TEntity]
 
 export type InferReferenceKeys<TEntity> = {
-  [K in keyof TEntity]?: TEntity[K] extends
-    | Collection<any>
-    | ScalarReference<any>
+  [K in keyof TEntity]?: TEntity[K] extends Collection<any>
     ? never
     : TEntity[K] extends Reference<any>
       ? K
@@ -96,9 +91,7 @@ export type RelationField<
   ? CollectionField<TEntity, TKey>
   : TKey extends InferReferenceKeys<TEntity>
     ? ReferenceField<TEntity, TKey>
-    : TKey extends InferScalarReferenceKeys<TEntity>
-      ? ScalarReferenceField<TEntity, TKey>
-      : never
+    : never
 
 export interface ReferenceField<TEntity extends object, TKey>
   extends FieldFactoryWithResolve<
@@ -131,12 +124,6 @@ export interface CollectionField<
     >,
     CollectionFieldOptions<TEntity, TKey>,
     GraphQLSilk<CollectionFieldOptions<TEntity, TKey>, TInputI>
-  > {}
-
-export interface ScalarReferenceField<TEntity extends object, TKey>
-  extends FieldFactoryWithResolve<
-    GraphQLSilk<TEntity, TEntity>,
-    GraphQLSilk<RelationEntity<TEntity, TKey>, RelationEntity<TEntity, TKey>>
   > {}
 
 type RelationEntity<TEntity extends object, TKey> = TKey extends keyof TEntity
@@ -447,3 +434,48 @@ export interface UpsertManyMutation<
     GraphQLSilk<TEntity[], TEntity[]>,
     GraphQLSilk<UpsertManyMutationOptions<TEntity>, TInputI>
   > {}
+
+export type MikroRelationsResolver<TEntity extends object> = {
+  [K in NonNullable<InferRelationKeys<TEntity>>]: TEntity[K] extends Collection<
+    any,
+    any
+  >
+    ? CollectionField<TEntity, K>
+    : TEntity[K] extends Reference<any>
+      ? ReferenceField<TEntity, K>
+      : never
+}
+
+export type MikroQueriesResolver<
+  TEntity extends object,
+  TName extends string,
+> = MikroRelationsResolver<TEntity> & {
+  [key in `count${Capitalize<TName>}`]: CountQuery<TEntity>
+} & {
+  [key in `find${Capitalize<TName>}`]: FindQuery<TEntity>
+} & {
+  [key in `find${Capitalize<TName>}ByCursor`]: FindByCursorQuery<TEntity>
+} & {
+  [key in `findOne${Capitalize<TName>}`]: FindOneQuery<TEntity>
+} & {
+  [key in `findOne${Capitalize<TName>}OrFail`]: FindOneOrFailQuery<TEntity>
+}
+
+export type MikroResolver<
+  TEntity extends object,
+  TEntityName extends string,
+> = MikroQueriesResolver<TEntity, TEntityName> & {
+  [key in `create${Capitalize<TEntityName>}`]: CreateMutation<TEntity>
+} & {
+  [key in `insert${Capitalize<TEntityName>}`]: InsertMutation<TEntity>
+} & {
+  [key in `insertMany${Capitalize<TEntityName>}`]: InsertManyMutation<TEntity>
+} & {
+  [key in `delete${Capitalize<TEntityName>}`]: DeleteMutation<TEntity>
+} & {
+  [key in `update${Capitalize<TEntityName>}`]: UpdateMutation<TEntity>
+} & {
+  [key in `upsert${Capitalize<TEntityName>}`]: UpsertMutation<TEntity>
+} & {
+  [key in `upsertMany${Capitalize<TEntityName>}`]: UpsertManyMutation<TEntity>
+}

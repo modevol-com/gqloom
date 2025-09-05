@@ -1,8 +1,8 @@
 type UserFilter {
-  id: IDMikroComparisonOperators
-  name: StringMikroComparisonOperators
-  email: StringMikroComparisonOperators
-  password: StringMikroComparisonOperators
-  age: FloatMikroComparisonOperators
-  isActive: BooleanMikroComparisonOperators
+  id: IDComparisonOperators
+  name: StringComparisonOperators
+  email: StringComparisonOperators
+  password: StringComparisonOperators
+  age: FloatComparisonOperators
+  isActive: BooleanComparisonOperators
 }

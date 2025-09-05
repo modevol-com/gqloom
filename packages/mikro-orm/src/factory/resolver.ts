@@ -7,9 +7,13 @@ import {
   type Middleware,
   MutationFactoryWithResolve,
   type MutationOptions,
+  type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
+  type ResolverOptionsWithExtensions,
+  capitalize,
   getResolvingFields,
+  loom,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -66,6 +70,8 @@ import type {
   InsertMutation,
   InsertMutationArgs,
   InsertMutationOptions,
+  MikroQueriesResolver,
+  MikroResolver,
   MikroResolverFactoryOptions,
   ReferenceField,
   UpdateMutation,
@@ -576,6 +582,131 @@ export class MikroResolverFactory<TEntity extends object> {
         },
       } as MutationOptions<any, typeof input>
     )
+  }
+
+  public queriesResolver(
+    options?: ResolverOptionsWithExtensions
+  ): ObjectChainResolver<
+    GraphQLSilk<TEntity, TEntity>,
+    MikroQueriesResolver<TEntity, string>
+  >
+  public queriesResolver<TName extends string>(
+    name: TName,
+    options?: ResolverOptionsWithExtensions
+  ): ObjectChainResolver<
+    GraphQLSilk<TEntity, TEntity>,
+    MikroQueriesResolver<TEntity, TName>
+  >
+  public queriesResolver(
+    optionsOrName?: ResolverOptionsWithExtensions | string,
+    options?: ResolverOptionsWithExtensions
+  ): ObjectChainResolver<
+    GraphQLSilk<TEntity, TEntity>,
+    MikroQueriesResolver<TEntity, string>
+  > {
+    const name =
+      typeof optionsOrName === "string" ? optionsOrName : this.metaName
+    options ??= typeof optionsOrName === "object" ? optionsOrName : undefined
+    const output = silk(MikroWeaver.getGraphQLType(this.meta))
+    return loom.resolver.of(
+      output,
+      {
+        [`count${capitalize(name)}`]: this.countQuery(),
+        [`find${capitalize(name)}`]: this.findQuery(),
+        [`find${capitalize(name)}ByCursor`]: this.findByCursorQuery(),
+        [`findOne${capitalize(name)}`]: this.findOneQuery(),
+        [`findOne${capitalize(name)}OrFail`]: this.findOneOrFailQuery(),
+        ...Object.fromEntries(
+          Object.entries(this.meta.properties)
+            .filter(([_, property]) => {
+              const prop = property as EntityProperty
+              return (
+                prop.kind === ReferenceKind.ONE_TO_ONE ||
+                prop.kind === ReferenceKind.MANY_TO_ONE
+              )
+            })
+            .map(([key]) => [key, this.referenceField(key as any) as any])
+        ),
+        ...Object.fromEntries(
+          Object.entries(this.meta.properties)
+            .filter(([_, property]) => {
+              const prop = property as EntityProperty
+              return (
+                prop.kind === ReferenceKind.ONE_TO_MANY ||
+                prop.kind === ReferenceKind.MANY_TO_MANY
+              )
+            })
+            .map(([key]) => [key, this.collectionField(key as any) as any])
+        ),
+      },
+      options as ResolverOptionsWithExtensions<any> | undefined
+    ) as any
+  }
+
+  public resolver(
+    options?: ResolverOptionsWithExtensions
+  ): ObjectChainResolver<
+    GraphQLSilk<TEntity, TEntity>,
+    MikroResolver<TEntity, string>
+  >
+  public resolver<TName extends string>(
+    name: TName,
+    options?: ResolverOptionsWithExtensions
+  ): ObjectChainResolver<
+    GraphQLSilk<TEntity, TEntity>,
+    MikroResolver<TEntity, TName>
+  >
+  public resolver(
+    optionsOrName?: ResolverOptionsWithExtensions | string,
+    options?: ResolverOptionsWithExtensions
+  ): ObjectChainResolver<
+    GraphQLSilk<TEntity, TEntity>,
+    MikroResolver<TEntity, string>
+  > {
+    const name =
+      typeof optionsOrName === "string" ? optionsOrName : this.metaName
+    options ??= typeof optionsOrName === "object" ? optionsOrName : undefined
+    const output = silk(MikroWeaver.getGraphQLType(this.meta))
+    return loom.resolver.of(
+      output,
+      {
+        [`count${capitalize(name)}`]: this.countQuery(),
+        [`find${capitalize(name)}`]: this.findQuery(),
+        [`find${capitalize(name)}ByCursor`]: this.findByCursorQuery(),
+        [`findOne${capitalize(name)}`]: this.findOneQuery(),
+        [`findOne${capitalize(name)}OrFail`]: this.findOneOrFailQuery(),
+        [`create${capitalize(name)}`]: this.createMutation(),
+        [`insert${capitalize(name)}`]: this.insertMutation(),
+        [`insertMany${capitalize(name)}`]: this.insertManyMutation(),
+        [`delete${capitalize(name)}`]: this.deleteMutation(),
+        [`update${capitalize(name)}`]: this.updateMutation(),
+        [`upsert${capitalize(name)}`]: this.upsertMutation(),
+        [`upsertMany${capitalize(name)}`]: this.upsertManyMutation(),
+        ...Object.fromEntries(
+          Object.entries(this.meta.properties)
+            .filter(([_, property]) => {
+              const prop = property as EntityProperty
+              return (
+                prop.kind === ReferenceKind.ONE_TO_ONE ||
+                prop.kind === ReferenceKind.MANY_TO_ONE
+              )
+            })
+            .map(([key]) => [key, this.referenceField(key as any) as any])
+        ),
+        ...Object.fromEntries(
+          Object.entries(this.meta.properties)
+            .filter(([_, property]) => {
+              const prop = property as EntityProperty
+              return (
+                prop.kind === ReferenceKind.ONE_TO_MANY ||
+                prop.kind === ReferenceKind.MANY_TO_MANY
+              )
+            })
+            .map(([key]) => [key, this.collectionField(key as any) as any])
+        ),
+      },
+      options as ResolverOptionsWithExtensions<any> | undefined
+    ) as any
   }
 
   protected middlewaresWithFlush(middlewares?: Middleware[]): Middleware[] {

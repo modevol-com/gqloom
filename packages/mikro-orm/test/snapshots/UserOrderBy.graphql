@@ -1,8 +1,8 @@
 type UserOrderBy {
-  id: MikroQueryOrder
-  name: MikroQueryOrder
-  email: MikroQueryOrder
-  password: MikroQueryOrder
-  age: MikroQueryOrder
-  isActive: MikroQueryOrder
+  id: QueryOrder
+  name: QueryOrder
+  email: QueryOrder
+  password: QueryOrder
+  age: QueryOrder
+  isActive: QueryOrder
 }
