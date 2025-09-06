@@ -8,13 +8,15 @@ import {
 import {
   type EntityMetadata,
   type EntityName,
-  EntitySchema,
+  type EntityProperty,
   type FilterQuery,
   QueryOrder,
+  ReferenceKind,
 } from "@mikro-orm/core"
 import {
   GraphQLEnumType,
   type GraphQLFieldConfig,
+  GraphQLID,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -24,6 +26,7 @@ import {
   isNonNullType,
 } from "graphql"
 import { MikroWeaver } from ".."
+import { getMetadata } from "../helper"
 import type {
   CollectionFieldArgs,
   CollectionFieldOptions,
@@ -61,11 +64,7 @@ export class MikroInputFactory<TEntity extends object> {
   ) {}
 
   protected get meta(): EntityMetadata {
-    if (this.entityName instanceof EntitySchema) {
-      return this.entityName.init().meta
-    }
-    if (!this.options?.metadata) throw new Error("Metadata not found")
-    return this.options.metadata.get(this.entityName)
+    return getMetadata(this.entityName, this.options?.metadata)
   }
 
   protected get metaName(): string {
@@ -501,15 +500,20 @@ export class MikroInputFactory<TEntity extends object> {
             )
             const type = customSilk
               ? weaverContext.getGraphQLType(customSilk)
-              : MikroWeaver.getFieldType(property, this.meta)
+              : (MikroWeaver.getFieldType(property, this.meta) ??
+                MikroInputFactory.relationPropertyAsId(property))
 
             if (type == null) return mapValue.SKIP
 
             // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
             const isRequired =
               property.nullable !== true &&
-              !property.default &&
-              !property.primary
+              property.default === undefined &&
+              !property.primary &&
+              !property.onCreate &&
+              property.kind !== ReferenceKind.MANY_TO_MANY &&
+              property.kind !== ReferenceKind.ONE_TO_MANY
+
             const finalType =
               isRequired && !isNonNullType(type)
                 ? new GraphQLNonNull(type)
@@ -553,7 +557,8 @@ export class MikroInputFactory<TEntity extends object> {
             )
             const type = customSilk
               ? weaverContext.getGraphQLType(customSilk)
-              : MikroWeaver.getFieldType(property, this.meta)
+              : (MikroWeaver.getFieldType(property, this.meta) ??
+                MikroInputFactory.relationPropertyAsId(property))
 
             if (type == null) return mapValue.SKIP
 
@@ -573,6 +578,22 @@ export class MikroInputFactory<TEntity extends object> {
           }),
       })
     )
+  }
+
+  protected static relationPropertyAsId(property: EntityProperty<any, any>) {
+    if (
+      property.kind === ReferenceKind.MANY_TO_ONE ||
+      property.kind === ReferenceKind.ONE_TO_ONE
+    ) {
+      return GraphQLID
+    }
+
+    if (
+      property.kind === ReferenceKind.ONE_TO_MANY ||
+      property.kind === ReferenceKind.MANY_TO_MANY
+    ) {
+      return new GraphQLList(GraphQLID)
+    }
   }
 
   public static transformFilters<TEntity extends object>(

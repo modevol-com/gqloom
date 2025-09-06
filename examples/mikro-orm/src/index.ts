@@ -6,9 +6,15 @@ import { asyncContextProvider } from "@gqloom/core/context"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { userResolver } from "./resolver"
+import { postResolver, userResolver } from "./resolver"
 
-const schema = weave(asyncContextProvider, ValibotWeaver, userResolver)
+const schema = weave(
+  asyncContextProvider,
+  ValibotWeaver,
+  userResolver,
+  postResolver
+)
+
 writeFileSync(path.join(__dirname, "schema.graphql"), printSchema(schema))
 const yoga = createYoga({ schema })
 const server = createServer(yoga)

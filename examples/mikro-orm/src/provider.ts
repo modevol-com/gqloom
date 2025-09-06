@@ -7,7 +7,7 @@ export let orm: MikroORM
 
 export const ormPromise = MikroORM.init({
   entities: [User, Post],
-  dbName: ":memory:",
+  dbName: "./examples/mikro-orm/local.db",
   debug: true,
 }).then(async (o) => {
   orm = o

@@ -189,12 +189,14 @@ input UserRequiredInput {
   id: ID
   name: String!
   email: String!
+  posts: [ID]
 }
 
 input UserPartialInput {
   id: ID
   name: String
   email: String
+  posts: [ID]
 }
 
 enum MikroOnConflictAction {
@@ -206,10 +208,12 @@ input PostRequiredInput {
   id: ID
   title: String!
   content: String!
+  author: ID!
 }
 
 input PostPartialInput {
   id: ID
   title: String
   content: String
+  author: ID
 }

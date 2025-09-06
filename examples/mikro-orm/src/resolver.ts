@@ -1,34 +1,41 @@
-import { field, mutation, query, resolver } from "@gqloom/core"
+import { field, query, resolver } from "@gqloom/core"
+import { MikroResolverFactory } from "@gqloom/mikro-orm"
+import { useSelectedFields } from "@gqloom/mikro-orm/context"
 import * as v from "valibot"
 import { Post, User } from "./entities"
-import { flusher, useEm } from "./provider"
+import { useEm } from "./provider"
+
+const userFactory = new MikroResolverFactory(User, useEm)
 
 export const userResolver = resolver.of(User, {
   user: query(User.nullable())
     .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return useEm().findOne(User, { id })
-    }),
-
-  users: query(User.list()).resolve(() => {
-    return useEm().findAll(User, {})
-  }),
-
-  createUser: mutation(User)
-    .input({
-      data: v.object({
-        name: v.string(),
-        email: v.string(),
-      }),
-    })
-    .use(flusher)
-    .resolve(async ({ data }) => {
-      const user = useEm().create(User, data)
-      useEm().persist(user)
+    .resolve(async ({ id }) => {
+      const user = await useEm().findOne(
+        User,
+        { id },
+        { fields: useSelectedFields() }
+      )
       return user
     }),
 
-  posts: field(Post.list()).resolve((user) => {
-    return useEm().find(Post, { author: user.id })
+  users: query(User.list()).resolve(() => {
+    return useEm().findAll(User, { fields: useSelectedFields() })
   }),
+
+  createUser: userFactory.createMutation(),
+
+  posts: field(Post.list())
+    .derivedFrom("id")
+    .resolve((user) => {
+      return useEm().find(
+        Post,
+        { author: user.id },
+        { fields: useSelectedFields() }
+      )
+    }),
 })
+
+const postFactory = new MikroResolverFactory(Post, useEm)
+
+export const postResolver = postFactory.resolver()

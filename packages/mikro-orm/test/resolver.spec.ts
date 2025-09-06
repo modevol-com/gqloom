@@ -79,8 +79,10 @@ describe("Mikro Resolver", () => {
 
     const userEx = userResolver.toExecutor()
     const postEx = postResolver.toExecutor()
-    expectTypeOf(userEx.posts).returns.resolves.toEqualTypeOf<IPost[]>()
-    expectTypeOf(postEx.author).returns.resolves.toEqualTypeOf<IUser>()
+    expectTypeOf(userEx.posts).returns.resolves.toEqualTypeOf<
+      Partial<IPost>[]
+    >()
+    expectTypeOf(postEx.author).returns.resolves.toEqualTypeOf<Partial<IUser>>()
     await expect(printSchema(schema)).toMatchFileSnapshot(
       "./snapshots/full-resolver.gql"
     )
@@ -173,7 +175,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\`",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\`, \`u0\`.\`email\` from \`user\` as \`u0\`",
         ]
       `)
     })
@@ -199,7 +201,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1'",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\` from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1'",
         ]
       `)
     })
@@ -229,7 +231,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\` order by \`u0\`.\`name\` desc",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\` from \`user\` as \`u0\` order by \`u0\`.\`name\` desc",
         ]
       `)
     })
@@ -253,7 +255,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\` order by \`u0\`.\`id\` asc limit 1 offset 1",
+          "[query] select \`u0\`.\`id\` from \`user\` as \`u0\` order by \`u0\`.\`id\` asc limit 1 offset 1",
         ]
       `)
     })
@@ -295,7 +297,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1' limit 1",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\` from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1' limit 1",
         ]
       `)
     })
@@ -319,7 +321,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1' limit 1",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\` from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1' limit 1",
         ]
       `)
       await expect(
@@ -373,7 +375,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1'",
+          "[query] select \`u0\`.\`id\`, \`p1\`.\`id\` as \`p1__id\`, \`p1\`.\`title\` as \`p1__title\`, \`p1\`.\`author_id\` as \`p1__author_id\` from \`user\` as \`u0\` left join \`post\` as \`p1\` on \`u0\`.\`id\` = \`p1\`.\`author_id\` where \`u0\`.\`name\` = 'User 1'",
           "[query] select \`p0\`.\`id\`, \`p0\`.\`title\`, \`p0\`.\`author_id\` from \`post\` as \`p0\` where \`p0\`.\`author_id\` in (1)",
         ]
       `)
@@ -501,7 +503,7 @@ describe("Mikro Resolver", () => {
       expect(logs).toMatchInlineSnapshot(`
         [
           "[query] insert into \`user\` (\`email\`, \`name\`) values ('new@test.com', 'New User') returning \`id\`",
-          "[query] select \`u0\`.* from \`user\` as \`u0\` where \`u0\`.\`id\` = 1 limit 1",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\`, \`u0\`.\`email\` from \`user\` as \`u0\` where \`u0\`.\`id\` = 1 limit 1",
         ]
       `)
     })
@@ -534,7 +536,7 @@ describe("Mikro Resolver", () => {
       expect(logs).toMatchInlineSnapshot(`
         [
           "[query] insert into \`user\` (\`name\`, \`email\`) values ('New User 1', 'new1@test.com'), ('New User 2', 'new2@test.com') returning \`id\`",
-          "[query] select \`u0\`.* from \`user\` as \`u0\` where \`u0\`.\`id\` in (2)",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\` from \`user\` as \`u0\` where \`u0\`.\`id\` in (2)",
         ]
       `)
     })

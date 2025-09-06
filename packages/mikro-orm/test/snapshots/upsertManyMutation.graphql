@@ -14,6 +14,7 @@ input UserPartialInput {
   name: String
   email: String
   age: Int
+  posts: [ID]
 }
 
 enum MikroOnConflictAction {

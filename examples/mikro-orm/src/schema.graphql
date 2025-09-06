@@ -13,18 +13,317 @@ type Post {
   updatedAt: String!
   published: Boolean!
   title: String!
+  content: String!
+  author: User
 }
 
 type Query {
   user(id: Float!): User
   users: [User!]!
+  countPost(where: PostFilter): Int!
+  findPost(
+    where: PostFilter
+    orderBy: PostOrderBy
+    limit: Int
+    offset: Int
+  ): [Post!]!
+  findPostByCursor(
+    where: PostFilter
+    orderBy: PostOrderBy
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): PostCursor
+  findOnePost(where: PostFilter!, orderBy: PostOrderBy, offset: Int): Post
+  findOnePostOrFail(
+    where: PostFilter!
+    orderBy: PostOrderBy
+    offset: Int
+  ): Post!
+}
+
+input PostFilter {
+  id: IDComparisonOperators
+  createdAt: StringComparisonOperators
+  updatedAt: StringComparisonOperators
+  published: BooleanComparisonOperators
+  title: StringComparisonOperators
+  content: StringComparisonOperators
+}
+
+input IDComparisonOperators {
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: ID
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: ID
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: ID
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [ID!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: ID
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: ID
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: ID
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [ID!]
+
+  """
+  &&
+  """
+  overlap: [ID!]
+
+  """
+  @>
+  """
+  contains: [ID!]
+
+  """
+  <@
+  """
+  contained: [ID!]
+}
+
+input StringComparisonOperators {
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: String
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: String
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: String
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [String!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: String
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: String
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: String
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [String!]
+
+  """
+  &&
+  """
+  overlap: [String!]
+
+  """
+  @>
+  """
+  contains: [String!]
+
+  """
+  <@
+  """
+  contained: [String!]
+
+  """
+  Like. Uses LIKE operator
+  """
+  like: String
+
+  """
+  Regexp. Uses REGEXP operator
+  """
+  re: String
+
+  """
+  Full text.	A driver specific full text search function.
+  """
+  fulltext: String
+
+  """
+  ilike
+  """
+  ilike: String
+}
+
+input BooleanComparisonOperators {
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: Boolean
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: Boolean
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: Boolean
+
+  """
+  Contains, Contains, Matches any of the values specified in an array.
+  """
+  in: [Boolean!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: Boolean
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: Boolean
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: Boolean
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [Boolean!]
+
+  """
+  &&
+  """
+  overlap: [Boolean!]
+
+  """
+  @>
+  """
+  contains: [Boolean!]
+
+  """
+  <@
+  """
+  contained: [Boolean!]
+}
+
+input PostOrderBy {
+  id: QueryOrder
+  createdAt: QueryOrder
+  updatedAt: QueryOrder
+  published: QueryOrder
+  title: QueryOrder
+  content: QueryOrder
+}
+
+enum QueryOrder {
+  ASC
+  ASC_NULLS_LAST
+  ASC_NULLS_FIRST
+  DESC
+  DESC_NULLS_LAST
+  DESC_NULLS_FIRST
+}
+
+type PostCursor {
+  items: [Post!]!
+  totalCount: Int!
+  hasPrevPage: Boolean!
+  hasNextPage: Boolean!
+  startCursor: String
+  endCursor: String
+  length: Int
 }
 
 type Mutation {
-  createUser(data: CreateUserDataInput!): User!
+  createUser(data: UserRequiredInput!): User!
+  createPost(data: PostRequiredInput!): Post!
+  insertPost(data: PostRequiredInput!): Post!
+  insertManyPost(data: [PostRequiredInput]!): [Post!]!
+  deletePost(where: PostFilter): Int!
+  updatePost(where: PostFilter, data: PostPartialInput!): Int!
+  upsertPost(
+    data: PostPartialInput!
+    onConflictAction: MikroOnConflictAction
+    onConflictExcludeFields: [String!]
+    onConflictFields: [String!]
+    onConflictMergeFields: [String!]
+  ): Post!
+  upsertManyPost(
+    data: [PostPartialInput!]!
+    onConflictAction: MikroOnConflictAction
+    onConflictExcludeFields: [String!]
+    onConflictFields: [String!]
+    onConflictMergeFields: [String!]
+  ): [Post!]!
 }
 
-input CreateUserDataInput {
-  name: String!
+input UserRequiredInput {
+  id: ID
+  createdAt: String
   email: String!
+  name: String!
+  role: String
+  posts: [ID]
+}
+
+input PostRequiredInput {
+  id: ID
+  createdAt: String
+  updatedAt: String
+  published: Boolean
+  title: String!
+  content: String!
+  author: ID!
+}
+
+input PostPartialInput {
+  id: ID
+  createdAt: String
+  updatedAt: String
+  published: Boolean
+  title: String
+  content: String
+  author: ID
+}
+
+enum MikroOnConflictAction {
+  ignore
+  merge
 }

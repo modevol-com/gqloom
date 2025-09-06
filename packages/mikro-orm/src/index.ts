@@ -10,11 +10,13 @@ import {
 } from "@gqloom/core"
 import {
   type EntityMetadata,
+  type EntityName,
   type EntityProperty,
   type EntitySchema,
   type PropertyOptions,
+  Reference,
   ReferenceKind,
-  type RequiredEntityData,
+  ScalarReference,
   Type,
   types,
 } from "@mikro-orm/core"
@@ -31,6 +33,7 @@ import {
   type GraphQLOutputType,
   GraphQLString,
 } from "graphql"
+import { getMetadata } from "./helper"
 import type {
   InferEntity,
   MikroSilkConfig,
@@ -46,23 +49,23 @@ export class MikroWeaver {
    * @param schema Mikro Entity Schema
    * @returns GraphQL Silk Like Mikro Entity Schema
    */
-  public static unravel<TSchema extends EntitySchema>(
-    schema: TSchema
-  ): EntitySchemaSilk<TSchema> {
+  public static unravel<TEntityName extends EntityName<any> & object>(
+    schema: TEntityName
+  ): EntitySchemaSilk<TEntityName> {
     return Object.assign(schema, {
       "~standard": {
         version: 1,
         vendor: MikroWeaver.vendor,
         validate: (value: unknown) => ({
-          value: value as InferEntity<TSchema>,
+          value: value as InferEntity<TEntityName>,
         }),
-      } satisfies StandardSchemaV1.Props<InferEntity<TSchema>, unknown>,
+      } satisfies StandardSchemaV1.Props<InferEntity<TEntityName>, unknown>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLTypeBySelf,
       nullable() {
         return silk.nullable(this as unknown as GraphQLSilk)
       },
       list() {
-        return silk.list(this) as GraphQLSilk<InferEntity<TSchema>[]>
+        return silk.list(this) as GraphQLSilk<InferEntity<TEntityName>[]>
       },
     })
   }
@@ -155,7 +158,25 @@ export class MikroWeaver {
     if (gqlType == null) return
     gqlType = nonNull(gqlType)
 
-    return { type: gqlType, description: property.comment }
+    const resolveReference = (parent: any) => {
+      const prop = (parent as any)[property.name]
+      if (prop instanceof Reference) {
+        return prop.load({ dataloader: true })
+      }
+      if (prop instanceof ScalarReference) {
+        return prop.load({ dataloader: true })
+      }
+      return prop
+    }
+
+    return {
+      type: gqlType,
+      description: property.comment,
+      resolve:
+        property.ref || property.kind !== ReferenceKind.SCALAR
+          ? resolveReference
+          : undefined,
+    }
 
     function getGraphQLTypeByProperty() {
       let gqlType = MikroWeaver.getFieldType(property, entity)
@@ -193,7 +214,7 @@ export class MikroWeaver {
       typeof entityConfig?.fields === "function"
         ? entityConfig.fields()
         : entityConfig?.fields
-    const fieldConfig = fieldsConfig?.[property.name]
+    const fieldConfig = (fieldsConfig as any)?.[property.name]
     if (fieldConfig !== undefined) {
       if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return
       let type: GraphQLOutputType | undefined | null | false
@@ -306,27 +327,30 @@ export class MikroWeaver {
  * @param config GraphQL Object Type Config
  * @returns GraphQL Silk Like Mikro Entity Schema
  */
-export function mikroSilk<TSchema extends EntitySchema>(
-  schema: TSchema,
-  config?: MikroSilkConfig<TSchema>
-): EntitySchemaSilk<TSchema> {
-  if (config) MikroWeaver.asObjectType(schema.init().meta, config)
-  return MikroWeaver.unravel(schema)
+export function mikroSilk<TEntityName extends EntityName<any> & object>(
+  entityName: TEntityName,
+  config?: MikroSilkConfig<InferEntity<TEntityName>>
+): EntitySchemaSilk<TEntityName> {
+  const meta = getMetadata(entityName, config?.metadata)
+  if (config) MikroWeaver.asObjectType(meta, config)
+  return MikroWeaver.unravel(entityName)
 }
 
-export type EntitySchemaSilk<TSchema extends EntitySchema> = TSchema &
-  GraphQLSilk<
-    InferEntity<TSchema>,
-    RequiredEntityData<InferEntity<TSchema>>
-  > & {
-    nullable: () => GraphQLSilk<
-      InferEntity<TSchema> | null | undefined,
-      InferEntity<TSchema> | null | undefined
-    >
-    list: () => GraphQLSilk<InferEntity<TSchema>[], InferEntity<TSchema>[]>
-  }
-
-export type EntitySilk<TEntity> = EntitySchemaSilk<EntitySchema<TEntity>>
+export type EntitySchemaSilk<TEntityName extends EntityName<any>> =
+  TEntityName &
+    GraphQLSilk<
+      Partial<InferEntity<TEntityName>>,
+      Partial<InferEntity<TEntityName>>
+    > & {
+      nullable: () => GraphQLSilk<
+        Partial<InferEntity<TEntityName>> | null | undefined,
+        Partial<InferEntity<TEntityName>> | null | undefined
+      >
+      list: () => GraphQLSilk<
+        Partial<InferEntity<TEntityName>>[],
+        Partial<InferEntity<TEntityName>>[]
+      >
+    }
 
 export * from "./entity-schema"
 export * from "./factory"

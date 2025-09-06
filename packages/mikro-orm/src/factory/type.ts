@@ -95,8 +95,11 @@ export type RelationField<
 
 export interface ReferenceField<TEntity extends object, TKey>
   extends FieldFactoryWithResolve<
-    GraphQLSilk<TEntity, TEntity>,
-    GraphQLSilk<RelationEntity<TEntity, TKey>, RelationEntity<TEntity, TKey>>
+    GraphQLSilk<Partial<TEntity>, Partial<TEntity>>,
+    GraphQLSilk<
+      Partial<RelationEntity<TEntity, TKey>>,
+      Partial<RelationEntity<TEntity, TKey>>
+    >
   > {}
 
 export interface CollectionFieldArgs<TEntity extends object, TKey>
@@ -117,10 +120,10 @@ export interface CollectionField<
   TKey,
   TInputI = CollectionFieldArgs<TEntity, TKey>,
 > extends FieldFactoryWithResolve<
-    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<Partial<TEntity>, Partial<TEntity>>,
     GraphQLSilk<
-      RelationEntity<TEntity, TKey>[],
-      RelationEntity<TEntity, TKey>[]
+      Partial<RelationEntity<TEntity, TKey>>[],
+      Partial<RelationEntity<TEntity, TKey>>[]
     >,
     CollectionFieldOptions<TEntity, TKey>,
     GraphQLSilk<CollectionFieldOptions<TEntity, TKey>, TInputI>
@@ -208,13 +211,13 @@ export interface FindQuery<
   TInputI = FindQueryArgs<TEntity>,
 > extends QueryFactoryWithResolve<
     FindQueryOptions<TEntity>,
-    GraphQLSilk<TEntity[], TEntity[]>,
+    GraphQLSilk<Partial<TEntity>[], Partial<TEntity>[]>,
     GraphQLSilk<FindQueryOptions<TEntity>, TInputI>
   > {}
 
 export interface FindAndCountOutput<TEntity extends object> {
   totalCount: number
-  items: TEntity[]
+  items: Partial<TEntity>[]
 }
 
 export interface FindAndCountQuery<
@@ -242,14 +245,15 @@ export interface FindByCursorQueryOptions<TEntity extends object>
 export interface FindByCursorOutput<TEntity extends object>
   extends Pick<
     Cursor<TEntity>,
-    | "items"
     | "totalCount"
     | "hasPrevPage"
     | "hasNextPage"
     | "startCursor"
     | "endCursor"
     | "length"
-  > {}
+  > {
+  items: Partial<TEntity>[]
+}
 
 export interface FindByCursorQuery<
   TEntity extends object,
@@ -275,7 +279,7 @@ export interface FindOneQuery<
   TInputI = FindOneQueryArgs<TEntity>,
 > extends QueryFactoryWithResolve<
     FindOneQueryOptions<TEntity>,
-    GraphQLSilk<TEntity | null, TEntity | null>,
+    GraphQLSilk<Partial<TEntity> | null, Partial<TEntity> | null>,
     GraphQLSilk<FindOneQueryOptions<TEntity>, TInputI>
   > {}
 
@@ -284,7 +288,7 @@ export interface FindOneOrFailQuery<
   TInputI = FindOneQueryArgs<TEntity>,
 > extends QueryFactoryWithResolve<
     FindOneQueryOptions<TEntity>,
-    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<Partial<TEntity>, Partial<TEntity>>,
     GraphQLSilk<FindOneQueryOptions<TEntity>, TInputI>
   > {}
 
@@ -322,7 +326,7 @@ export interface InsertMutation<
   TInputI = InsertMutationArgs<TEntity>,
 > extends MutationFactoryWithResolve<
     InsertMutationOptions<TEntity>,
-    GraphQLSilk<TEntity, TEntity>,
+    GraphQLSilk<Partial<TEntity>, Partial<TEntity>>,
     GraphQLSilk<InsertMutationOptions<TEntity>, TInputI>
   > {}
 
@@ -341,7 +345,7 @@ export interface InsertManyMutation<
   TInputI = InsertManyMutationArgs<TEntity>,
 > extends MutationFactoryWithResolve<
     InsertManyMutationOptions<TEntity>,
-    GraphQLSilk<TEntity[], TEntity[]>,
+    GraphQLSilk<Partial<TEntity>[], Partial<TEntity>[]>,
     GraphQLSilk<InsertManyMutationOptions<TEntity>, TInputI>
   > {}
 

@@ -7,6 +7,10 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "source": {
+        "types": "./src/index.ts",
+        "default": "./src/index.ts"
+      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -14,6 +18,20 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      }
+    },
+    "./context": {
+      "source": {
+        "types": "./src/context.ts",
+        "default": "./src/context.ts"
+      },
+      "import": {
+        "types": "./dist/context.d.ts",
+        "default": "./dist/context.js"
+      },
+      "require": {
+        "types": "./dist/context.d.cts",
+        "default": "./dist/context.cjs"
       }
     }
   },

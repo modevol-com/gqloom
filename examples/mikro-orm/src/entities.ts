@@ -25,6 +25,7 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
+    content: p.string().lazy(),
     author: () => p.manyToOne(UserEntity),
   }),
 })

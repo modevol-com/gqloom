@@ -189,8 +189,11 @@ describe.concurrent("MikroResolverFactory", async () => {
               const opts = await parseInput()
               if (opts.issues) throw new Error("Invalid input")
               const answer = await next()
-              expectTypeOf(answer).toEqualTypeOf<IPost[]>()
-              return answer.map((p) => ({ ...p, title: p.title.toUpperCase() }))
+              expectTypeOf(answer).toEqualTypeOf<Partial<IPost>[]>()
+              return answer.map((p) => ({
+                ...p,
+                title: p.title?.toUpperCase(),
+              }))
             },
           ],
         }),
@@ -239,7 +242,7 @@ describe.concurrent("MikroResolverFactory", async () => {
           middlewares: [
             async ({ next }) => {
               const answer = await next()
-              expectTypeOf(answer).toEqualTypeOf<IUser>()
+              expectTypeOf(answer).toEqualTypeOf<Partial<IUser>>()
               return answer
             },
           ],
@@ -354,7 +357,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     it("should resolve correctly with filters, sorting, and pagination", async () => {
       const query = userFactory.findQuery()
       const executor = resolver({ query }).toExecutor()
-      let answer: IUser[]
+      let answer: Partial<IUser>[]
 
       // No args
       answer = await executor.query({})
@@ -415,7 +418,7 @@ describe.concurrent("MikroResolverFactory", async () => {
 
       expect(query).toBeDefined()
       const executor = resolver({ query }).toExecutor()
-      let answer: IUser[]
+      let answer: Partial<IUser>[]
       answer = await executor.query({ minAge: 30 })
       expect(answer).toHaveLength(2)
       expect(answer.map((u) => u.name)).toEqual(["Jane Doe", "Alice Johnson"])
@@ -433,8 +436,8 @@ describe.concurrent("MikroResolverFactory", async () => {
             if (opts.issues) throw new Error("Invalid input")
             count++
             const answer = await next()
-            expectTypeOf(answer).toEqualTypeOf<IUser[]>()
-            return answer.map((u) => ({ ...u, name: u.name.toUpperCase() }))
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>[]>()
+            return answer.map((u) => ({ ...u, name: u.name?.toUpperCase() }))
           },
         ],
       })
@@ -463,7 +466,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     it("should resolve correctly with filters, sorting, and pagination", async () => {
       const query = userFactory.findAndCountQuery()
       const executor = resolver({ query }).toExecutor()
-      let answer: { items: IUser[]; totalCount: number }
+      let answer: { items: Partial<IUser>[]; totalCount: number }
 
       // No args
       answer = await executor.query({})
@@ -533,7 +536,7 @@ describe.concurrent("MikroResolverFactory", async () => {
 
       expect(query).toBeDefined()
       const executor = resolver({ query }).toExecutor()
-      let answer: { items: IUser[]; totalCount: number }
+      let answer: { items: Partial<IUser>[]; totalCount: number }
       answer = await executor.query({ minAge: 30 })
       expect(answer.items).toHaveLength(2)
       expect(answer.totalCount).toBe(2)
@@ -557,14 +560,14 @@ describe.concurrent("MikroResolverFactory", async () => {
             count++
             const answer = await next()
             expectTypeOf(answer).toEqualTypeOf<{
-              items: IUser[]
+              items: Partial<IUser>[]
               totalCount: number
             }>()
             return {
               ...answer,
               items: answer.items.map((u) => ({
                 ...u,
-                name: u.name.toUpperCase(),
+                name: u.name?.toUpperCase(),
               })),
             }
           },
@@ -729,9 +732,9 @@ describe.concurrent("MikroResolverFactory", async () => {
             count++
             const answer = await next()
             expectTypeOf(answer).toEqualTypeOf<FindByCursorOutput<IUser>>()
-            const items: IUser[] = answer.items.map((u) => ({
+            const items: Partial<IUser>[] = answer.items.map((u) => ({
               ...u,
-              name: u.name.toUpperCase(),
+              name: u.name?.toUpperCase(),
             }))
             return {
               ...answer,
@@ -768,7 +771,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     it("should resolve correctly with filters, sorting, and offset", async () => {
       const query = userFactory.findOneQuery()
       const executor = resolver({ query }).toExecutor()
-      let answer: IUser | null
+      let answer: Partial<IUser> | null
 
       // No args (should return first by default order or undefined)
       answer = await executor.query({
@@ -819,7 +822,7 @@ describe.concurrent("MikroResolverFactory", async () => {
 
       expect(query).toBeDefined()
       const executor = resolver({ query }).toExecutor()
-      let answer: IUser | null
+      let answer: Partial<IUser> | null
       answer = await executor.query({ userName: "Bob Smith" })
       expect(answer?.name).toBe("Bob Smith")
 
@@ -836,9 +839,9 @@ describe.concurrent("MikroResolverFactory", async () => {
             if (opts.issues) throw new Error("Invalid input")
             count++
             const answer = await next()
-            expectTypeOf(answer).toEqualTypeOf<IUser | null>()
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser> | null>()
             return answer
-              ? { ...answer, name: answer.name.toUpperCase() }
+              ? { ...answer, name: answer.name?.toUpperCase() }
               : null
           },
         ],
@@ -868,7 +871,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     it("should resolve correctly with filters, sorting, and offset", async () => {
       const query = userFactory.findOneOrFailQuery()
       const executor = resolver({ query }).toExecutor()
-      let answer: IUser
+      let answer: Partial<IUser>
 
       // Where
       answer = await executor.query({
@@ -931,8 +934,8 @@ describe.concurrent("MikroResolverFactory", async () => {
             if (opts.issues) throw new Error("Invalid input")
             count++
             const answer = await next()
-            expectTypeOf(answer).toEqualTypeOf<IUser>()
-            return { ...answer, name: answer.name.toUpperCase() }
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>>()
+            return { ...answer, name: answer.name?.toUpperCase() }
           },
         ],
       })
@@ -991,7 +994,7 @@ describe.concurrent("MikroResolverFactory", async () => {
             count++
             const answer = await next()
             expectTypeOf(answer).toEqualTypeOf<IUser>()
-            return { ...answer, name: answer.name.toUpperCase() }
+            return { ...answer, name: answer.name?.toUpperCase() }
           },
         ],
       })
@@ -1070,7 +1073,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer.email).toBe("john@example.com")
       expect(answer.age).toBe(25)
 
-      const fromDB = await orm.em.findOne(User, answer.id)
+      const fromDB = await orm.em.findOne(User, answer.id!)
       expect(fromDB).toBeDefined()
     })
 
@@ -1083,8 +1086,8 @@ describe.concurrent("MikroResolverFactory", async () => {
             if (opts.issues) throw new Error("Invalid input")
             count++
             const answer = await next()
-            expectTypeOf(answer).toEqualTypeOf<IUser>()
-            return { ...answer, name: answer.name.toUpperCase() }
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>>()
+            return { ...answer, name: answer.name?.toUpperCase() }
           },
         ],
       })
@@ -1096,7 +1099,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(count).toBe(1)
       expect(answer.name).toBe("JANE DOE")
 
-      const fromDB = await orm.em.findOne(User, answer.id)
+      const fromDB = await orm.em.findOne(User, answer.id!)
       expect(fromDB?.name).toBe("Jane Doe")
     })
 
@@ -1123,7 +1126,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer.email).toBe("jane.doe@example.com")
       expect(answer.age).toBe(30)
 
-      const fromDB = await orm.em.findOne(User, answer.id)
+      const fromDB = await orm.em.findOne(User, answer.id!)
       expect(fromDB?.name).toBe("JANE DOE")
       expect(fromDB?.email).toBe("jane.doe@example.com")
       expect(fromDB?.age).toBe(30)
@@ -1167,7 +1170,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer[0].age).toBe(21)
 
       const fromDB = await orm.em.find(User, {
-        id: answer.map((u) => u.id),
+        id: answer.map((u) => u.id!),
       })
       expect(fromDB).toHaveLength(1)
       expect(fromDB[0].name).toBe("User 1")
@@ -1184,10 +1187,10 @@ describe.concurrent("MikroResolverFactory", async () => {
             if (opts.issues) throw new Error("Invalid input")
             count++
             const answer = await next()
-            expectTypeOf(answer).toEqualTypeOf<IUser[]>()
-            return answer.map((a: IUser) => ({
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>[]>()
+            return answer.map((a) => ({
               ...a,
-              name: a.name.toUpperCase(),
+              name: a.name?.toUpperCase(),
             }))
           },
         ],
@@ -1201,7 +1204,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer[0].name).toBe("USER 3")
 
       const fromDB = await orm.em.find(User, {
-        id: { $in: answer.map((u: IUser) => u.id) },
+        id: { $in: answer.map((u) => u.id!) },
       })
       expect(fromDB).toHaveLength(1)
       expect(fromDB[0].name).toBe("User 3")
@@ -1237,7 +1240,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer[0].name).toBe("USER 5")
 
       const fromDB = await orm.em.find(User, {
-        id: { $in: answer.map((u: IUser) => u.id) },
+        id: { $in: answer.map((u) => u.id!) },
       })
       expect(fromDB).toHaveLength(1)
       expect(fromDB[0].name).toBe("USER 5")

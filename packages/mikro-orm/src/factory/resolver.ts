@@ -37,6 +37,7 @@ import {
   GraphQLString,
 } from "graphql"
 import { MikroWeaver } from ".."
+import { getMetadata, getSelectedFields } from "../helper"
 import { MikroInputFactory } from "./input"
 import type {
   CollectionField,
@@ -113,11 +114,7 @@ export class MikroResolverFactory<TEntity extends object> {
   }
 
   protected get meta() {
-    if (this.entityName instanceof EntitySchema) {
-      return this.entityName.init().meta
-    }
-    if (!this.options.metadata) throw new Error("Metadata not found")
-    return this.options.metadata.get(this.entityName)
+    return getMetadata(this.entityName, this.options?.metadata)
   }
 
   protected get metaName(): string {
@@ -186,10 +183,15 @@ export class MikroResolverFactory<TEntity extends object> {
         ...options,
         resolve: (
           parent: TEntity,
-          args: CollectionFieldOptions<TEntity, TKey>
+          args: CollectionFieldOptions<TEntity, TKey>,
+          payload
         ) => {
           const prop = (parent as any)[key] as Collection<any, any>
-          return prop.loadItems({ refresh: true, ...args })
+          return prop.loadItems({
+            refresh: true,
+            fields: getSelectedFields(payload),
+            ...args,
+          })
         },
       } as FieldOptions<any, any, any, any>
     )
@@ -213,9 +215,12 @@ export class MikroResolverFactory<TEntity extends object> {
       silk.nullable(silk(MikroWeaver.getGraphQLType(targetEntity))),
       {
         ...options,
-        resolve: (parent) => {
+        resolve: (parent, _args, payload) => {
           const prop = (parent as any)[key] as Reference<any>
-          return prop.load()
+          return prop.load({
+            dataloader: true,
+            fields: getSelectedFields(payload),
+          })
         },
       } as FieldOptions<any, any, any, any>
     )
@@ -261,8 +266,11 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: async (args: FindQueryOptions<TEntity>) => {
-          return (await this.em()).find(this.entityName, args.where ?? {}, args)
+        resolve: async (args: FindQueryOptions<TEntity>, payload) => {
+          return (await this.em()).find(this.entityName, args.where ?? {}, {
+            fields: getSelectedFields(payload),
+            ...args,
+          })
         },
       } as QueryOptions<any, any>
     )
@@ -283,11 +291,14 @@ export class MikroResolverFactory<TEntity extends object> {
     return new QueryFactoryWithResolve(silk(this.findAndCountQueryOutput()), {
       input,
       ...options,
-      resolve: async (args: FindQueryOptions<TEntity>) => {
+      resolve: async (args: FindQueryOptions<TEntity>, payload) => {
         const [items, totalCount] = await (await this.em()).findAndCount(
           this.entityName,
           args.where ?? {},
-          args
+          {
+            fields: getSelectedFields(payload),
+            ...args,
+          }
         )
         return { items, totalCount }
       },
@@ -335,9 +346,14 @@ export class MikroResolverFactory<TEntity extends object> {
           if (!payload) return true
           return getResolvingFields(payload).selectedFields.has("totalCount")
         })()
+        // if (payload) {
+        //   const resolvingFields = getResolvingFields(payload)
+        //   console.log("🧐 resolvingFields: ", resolvingFields)
+        // }
         return (await this.em()).findByCursor(this.entityName, where ?? {}, {
-          ...args,
+          // fields: getSelectedFields(payload), // FIXME
           includeCount,
+          ...args,
         })
       },
     } as QueryOptions<any, any>)
@@ -379,9 +395,12 @@ export class MikroResolverFactory<TEntity extends object> {
     return new QueryFactoryWithResolve(silk.nullable(silk(output)), {
       input,
       ...options,
-      resolve: async (args: FindOneQueryOptions<TEntity>) => {
+      resolve: async (args: FindOneQueryOptions<TEntity>, payload) => {
         const em = await this.em()
-        return em.findOne(this.entityName, args.where, args)
+        return em.findOne(this.entityName, args.where, {
+          fields: getSelectedFields(payload),
+          ...args,
+        })
       },
     } as QueryOptions<any, any>)
   }
@@ -401,9 +420,12 @@ export class MikroResolverFactory<TEntity extends object> {
     return new QueryFactoryWithResolve(silk.nonNull(silk(output)), {
       input,
       ...options,
-      resolve: async (args: FindOneQueryOptions<TEntity>) => {
+      resolve: async (args: FindOneQueryOptions<TEntity>, payload) => {
         const em = await this.em()
-        return em.findOneOrFail(this.entityName, args.where, args)
+        return em.findOneOrFail(this.entityName, args.where, {
+          fields: getSelectedFields(payload),
+          ...args,
+        })
       },
     } as QueryOptions<any, any>)
   }
@@ -451,10 +473,13 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args: InsertMutationOptions<any>) => {
+      resolve: async (args: InsertMutationOptions<any>, payload) => {
         const em = await this.em()
         const key = await em.insert(this.entityName, args.data, args)
-        return em.findOneOrFail(this.entityName, key)
+        return em.findOneOrFail(this.entityName, key, {
+          fields: getSelectedFields(payload),
+          ...args,
+        })
       },
     } as MutationOptions<any, any>)
   }
@@ -475,10 +500,13 @@ export class MikroResolverFactory<TEntity extends object> {
     return new MutationFactoryWithResolve(silk(output), {
       input,
       ...options,
-      resolve: async (args: InsertManyMutationOptions<any>) => {
+      resolve: async (args: InsertManyMutationOptions<any>, payload) => {
         const em = await this.em()
         const keys = await em.insertMany(this.entityName, args.data, args)
-        return em.find(this.entityName, keys as any)
+        return em.find(this.entityName, keys as any, {
+          fields: getSelectedFields(payload),
+          ...args,
+        })
       },
     } as MutationOptions<any, any>)
   }

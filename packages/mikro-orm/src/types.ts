@@ -1,8 +1,9 @@
 import type { WeaverConfig } from "@gqloom/core"
 import type { SYMBOLS } from "@gqloom/core"
 import type {
+  EntityName,
   EntityProperty,
-  EntitySchema,
+  MetadataStorage,
   PropertyOptions,
 } from "@mikro-orm/core"
 import type {
@@ -15,8 +16,8 @@ export interface GQLoomMikroFieldExtensions {
   mikroProperty?: PropertyOptions<any>
 }
 
-export type InferEntity<TSchema extends EntitySchema<any, any>> =
-  TSchema extends EntitySchema<infer TEntity, any> ? TEntity : never
+export type InferEntity<TEntityName extends EntityName<any>> =
+  TEntityName extends EntityName<infer TEntity> ? TEntity : never
 
 export interface MikroWeaverConfigOptions {
   presetGraphQLType?: (
@@ -30,10 +31,10 @@ export interface MikroWeaverConfig
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.mikro-orm"
 }
 
-export interface MikroSilkConfig<TSchema extends EntitySchema<any, any>>
+export interface MikroSilkConfig<TEntity extends object>
   extends Partial<Omit<GraphQLObjectTypeConfig<any, any>, "fields">> {
   fields?: ValueOrGetter<{
-    [K in keyof InferEntity<TSchema>]?:
+    [K in keyof TEntity]?:
       | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
           /**
            * The type of the field, set to `null` to hide the field
@@ -47,6 +48,7 @@ export interface MikroSilkConfig<TSchema extends EntitySchema<any, any>>
       | typeof SYMBOLS.FIELD_HIDDEN
       | undefined
   }>
+  metadata?: MetadataStorage
 }
 
 export type ValueOrGetter<T> = T | (() => T)

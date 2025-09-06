@@ -39,7 +39,7 @@ import {
   GraphQLScalarType,
   GraphQLString,
 } from "graphql"
-import { type EntitySchemaSilk, type EntitySilk, mikroSilk } from "."
+import { type EntitySchemaSilk, mikroSilk } from "."
 import type { GQLoomMikroFieldExtensions } from "./types"
 import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
 
@@ -499,3 +499,5 @@ type NullishKeys<T> = Exclude<
 export interface WithNullable {
   nullable: true
 }
+
+export type EntitySilk<TEntity> = EntitySchemaSilk<EntitySchema<TEntity>>
