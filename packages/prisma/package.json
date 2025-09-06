@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/prisma",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "GQLoom integration with Prisma",
   "type": "module",
   "main": "./dist/index.js",
