@@ -9,7 +9,7 @@
 
 ## 安装
 
-请参考 MikroORM 的[入门指南](https://mikro-orm.io/docs/installation)安装 MikroORM 与对应的数据库驱动。
+请参考 MikroORM 的[入门指南](https://mikro-orm.io/docs/quick-start)安装 MikroORM 与对应的数据库驱动。
 
 在完成 MikroORM 安装后，安装 `@gqloom/mikro-orm`：
 
@@ -32,7 +32,46 @@ bun add @gqloom/core @gqloom/mikro-orm
 
 只需要使用 `mikroSilk` 包裹 MikroORM Entity，我们就可以轻松地将它们作为[丝线](../silk)使用。
 
-```ts twoslash title="entities.ts"
+::: code-group
+
+```ts twoslash [使用丝线]
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { type InferEntity, defineEntity } from "@mikro-orm/core"
+
+const UserEntity = defineEntity({
+  name: "User",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    createdAt: p.datetime().onCreate(() => new Date()),
+    email: p.string(),
+    name: p.string(),
+    role: p.string().$type<"admin" | "user">().default("user"),
+    posts: () => p.oneToMany(PostEntity).mappedBy("author"),
+  }),
+})
+export interface IUser extends InferEntity<typeof UserEntity> {}
+
+const PostEntity = defineEntity({
+  name: "Post",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    createdAt: p.datetime().onCreate(() => new Date()),
+    updatedAt: p
+      .datetime()
+      .onCreate(() => new Date())
+      .onUpdate(() => new Date()),
+    published: p.boolean().default(false),
+    title: p.string(),
+    author: () => p.manyToOne(UserEntity),
+  }),
+})
+export interface IPost extends InferEntity<typeof PostEntity> {}
+// ---cut---
+export const User = mikroSilk(UserEntity)
+export const Post = mikroSilk(PostEntity)
+```
+
+```ts twoslash [完整文件]
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { type InferEntity, defineEntity } from "@mikro-orm/core"
 
@@ -68,6 +107,8 @@ export interface IPost extends InferEntity<typeof PostEntity> {}
 export const User = mikroSilk(UserEntity)
 export const Post = mikroSilk(PostEntity)
 ```
+
+:::
 
 在解析器中使用它们之前，我们需要初始化 MikroORM 并提供一个请求作用域的 Entity Manager。
 
@@ -107,7 +148,7 @@ export const Post = mikroSilk(PostEntity)
 // @filename: index.ts
 // ---cut---
 import type { Middleware } from "@gqloom/core"
-import { createMemoization } from "@gqloom/core/context"
+import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
@@ -117,14 +158,18 @@ export const ormPromise = MikroORM.init({
   entities: [User, Post],
   dbName: ":memory:",
   debug: true,
-}).then(async (o: MikroORM) => {
+}).then(async (o) => {
   orm = o
   await orm.getSchemaGenerator().updateSchema()
 })
 
 export const useEm = createMemoization(() => orm.em.fork())
 
-export const flusher: Middleware = async (next) => {
+export const useSelectedFields = () => {
+  return Array.from(useResolvingFields()?.selectedFields ?? ["*"]) as []
+}
+
+export const flusher: Middleware = async ({ next }) => {
   const result = await next()
   await useEm().flush()
   return result
@@ -168,7 +213,7 @@ export const User = mikroSilk(UserEntity)
 export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import type { Middleware } from "@gqloom/core"
-import { createMemoization } from "@gqloom/core/context"
+import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post as PostEntity, User as UserEntity } from "./entities"
 export let orm: MikroORM
@@ -180,7 +225,10 @@ export const ormPromise = MikroORM.init({
   await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
-export const flusher: Middleware = async (next) => {
+export const useSelectedFields = () => {
+  return Array.from(useResolvingFields()?.selectedFields ?? ["*"]) as []
+}
+export const flusher: Middleware = async ({ next }) => {
   const result = await next()
   await useEm().flush()
   return result
@@ -190,17 +238,22 @@ export const flusher: Middleware = async (next) => {
 import { field, mutation, query, resolver } from "@gqloom/core"
 import * as v from "valibot"
 import { Post, User } from "./entities"
-import { flusher, useEm } from "./provider"
+import { flusher, useEm, useSelectedFields } from "./provider"
 
 export const userResolver = resolver.of(User, {
   user: query(User.nullable())
     .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return useEm().findOne(User, { id })
+    .resolve(async ({ id }) => {
+      const user = await useEm().findOne(
+        User,
+        { id },
+        { fields: useSelectedFields() }
+      )
+      return user
     }),
 
   users: query(User.list()).resolve(() => {
-    return useEm().findAll(User, {})
+    return useEm().findAll(User, { fields: useSelectedFields() })
   }),
 
   createUser: mutation(User)
@@ -217,15 +270,23 @@ export const userResolver = resolver.of(User, {
       return user
     }),
 
-  posts: field(Post.list()).resolve((user) => {
-    return useEm().find(Post, { author: user.id })
-  }),
+  posts: field(Post.list())
+    .derivedFrom("id")
+    .resolve((user) => {
+      return useEm().find(
+        Post,
+        { author: user.id },
+        { fields: useSelectedFields() }
+      )
+    }),
 })
 ```
 
 如上面的代码所示，我们可以直接在 `resolver` 里使用 `mikroSilk` 包裹的 MikroORM 实体。在这里我们使用了 `User` 作为 `resolver.of` 的父类型，并定义了 `user` 和 `users` 两个查询，以及一个 `createUser` 变更。
 
-所有数据库操作都通过 `useEm()` 获取的请求作用域 Entity Manager 来执行。对于变更操作，我们使用了一个 `flusher` 中间件，它会在变更操作成功后自动调用 `em.flush()` 来将更改持久化到数据库。
+所有数据库操作都通过 `useEm()` 获取的请求作用域 Entity Manager 来执行。  
+对于变更操作，我们使用了一个 `flusher` 中间件，它会在变更操作成功后自动调用 `em.flush()` 来将更改持久化到数据库。  
+我们还通过 `useSelectedFields()` 函数来确保只选择 GraphQL 查询中请求的字段，这有助于优化数据库查询性能。此函数需要[启用上下文](../context)。
 
 ### 派生字段
 
@@ -265,14 +326,17 @@ export const Post = mikroSilk(PostEntity)
 // ---cut---
 import { field, resolver } from "@gqloom/core"
 import * as v from "valibot"
-import { User, type IUser } from "./entities"
+import { type IUser, User } from "./entities"
 
 export const userResolver = resolver.of(User, {
-  fullName: field(v.string()).resolve((user) => {
-    return `Mr/Ms ${user.name}`
-  }),
+  display: field(v.string())
+    .derivedFrom("name", "email")
+    .resolve((user) => {
+      return `${user.name} <${user.email}>`
+    }),
 })
 ```
+注意：派生字段需要使用 `derivedFrom` 方法声明所依赖的列，以便 `useSelectedFields` 方法能正确地选取所需要的列。
 
 ### 隐藏字段
 
@@ -581,9 +645,50 @@ export const postResolver = resolver.of(Post, {
 
 在上面的代码中，我们使用 `postResolverFactory.createMutation()` 来定义 `createPost` 变更。工厂将自动创建输入类型和解析函数。
 
-### 自定义输入
+### 自定义输入字段
 
-解析器工厂预置的查询和变更支持自定义输入，你可以通过 `input` 选项来定义输入类型：
+解析器工厂默认预置的输入是可以配置的，通过在构造 `MikroResolverFactory` 时传入 `input` 选项，可以配置各个字段的输入验证行为和展示行为：
+
+```ts twoslash
+import { createMemoization } from "@gqloom/core/context"
+import { type InferEntity, defineEntity } from "@mikro-orm/core"
+import { EntityManager } from "@mikro-orm/libsql"
+
+const User = defineEntity({
+  name: "User",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    createdAt: p.datetime().onCreate(() => new Date()),
+    email: p.string(),
+    name: p.string(),
+    password: p.string().nullable(),
+    role: p.string().$type<"admin" | "user">().default("user"),
+  }),
+})
+export interface IUser extends InferEntity<typeof User> {}
+
+const useEm = createMemoization(() => ({}) as EntityManager)
+
+// ---cut---
+import { field } from "@gqloom/core"
+import { MikroResolverFactory } from "@gqloom/mikro-orm"
+import * as v from "valibot"
+const userFactory = new MikroResolverFactory(User, {
+  getEntityManager: useEm,
+  input: {
+    email: v.pipe(v.string(), v.email()), // 验证邮箱格式 [!code hl]
+    password: {
+      filters: field.hidden, // 在查询过滤器中隐藏该字段 [!code hl]
+      create: v.pipe(v.string(), v.minLength(6)), // 在创建时验证最小长度为6 [!code hl]
+      update: v.pipe(v.string(), v.minLength(6)), // 在更新时验证最小长度为6 [!code hl]
+    },
+  },
+})
+```
+
+### 自定义输入对象
+
+解析器工厂预置的查询和变更支持自定义输入对象，你可以通过 `input` 选项来定义输入类型：
 
 ```ts twoslash
 // @filename: entities.ts
@@ -624,12 +729,12 @@ import { useEm } from "./provider"
 export const userResolverFactory = new MikroResolverFactory(User, useEm)
 
 export const userResolver = resolver.of(User, {
-  user: userResolverFactory.findOneQuery({
-    input: v.pipe(
+  user: userResolverFactory.findOneQuery().input(
+    v.pipe(
       v.object({ id: v.number() }),
       v.transform(({ id }) => ({ where: { id } }))
     )
-  }),
+  ),
 })
 ```
 

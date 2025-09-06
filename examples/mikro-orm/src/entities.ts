@@ -8,6 +8,7 @@ const UserEntity = defineEntity({
     createdAt: p.datetime().onCreate(() => new Date()),
     email: p.string(),
     name: p.string(),
+    password: p.string().nullable(),
     role: p.string().$type<"admin" | "user">().default("user"),
     posts: () => p.oneToMany(PostEntity).mappedBy("author"),
   }),

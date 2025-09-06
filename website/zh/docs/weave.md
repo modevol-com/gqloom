@@ -187,7 +187,7 @@ export const schema = weave(
 ```
 
 ```ts twoslash [zod]
-import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/zod'
+import { resolver, mutation, weave, GraphQLSchemaLoom } from '@gqloom/core'
 import * as z from "zod"
 
 const Cat = z.object({
