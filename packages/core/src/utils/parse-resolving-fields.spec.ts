@@ -11,7 +11,10 @@ import {
 import { describe, expect, it } from "vitest"
 import { field, query, resolver, silk, weave } from "../../src"
 import { asyncContextProvider, useResolverPayload } from "../context"
-import { parseResolvingFields } from "./parse-resolving-fields"
+import {
+  getDeepResolvingFields,
+  parseResolvingFields,
+} from "./parse-resolving-fields"
 
 describe("parseResolvingFields", () => {
   let info: GraphQLResolveInfo
@@ -1141,5 +1144,164 @@ describe("parseResolvingFields with maxDepth", () => {
     expect(fields).toEqual(
       new Set(["id", "profile", "profile.email", "profile.address"])
     )
+  })
+})
+
+describe("getDeepResolvingFields", () => {
+  let userInfo: GraphQLResolveInfo
+
+  const Address = silk(
+    new GraphQLObjectType({
+      name: "Address",
+      fields: {
+        street: { type: new GraphQLNonNull(GraphQLString) },
+        city: { type: new GraphQLNonNull(GraphQLString) },
+      },
+    })
+  )
+
+  const Profile = silk(
+    new GraphQLObjectType({
+      name: "Profile",
+      fields: {
+        email: { type: new GraphQLNonNull(GraphQLString) },
+        phone: { type: new GraphQLNonNull(GraphQLString) },
+      },
+    })
+  )
+
+  const User = silk(
+    new GraphQLObjectType({
+      name: "User",
+      fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+      },
+    })
+  )
+
+  const rootResolver = resolver({
+    user: query(User).resolve(() => {
+      userInfo = useResolverPayload()!.info
+      return {
+        id: "1",
+        name: "Test User",
+      }
+    }),
+  })
+
+  const userFieldResolver = resolver.of(User, {
+    profile: field(Profile).resolve(() => {
+      return {
+        email: "test@example.com",
+        phone: "1234567890",
+      }
+    }),
+  })
+
+  const profileFieldResolver = resolver.of(Profile, {
+    address: field(Address).resolve(() => {
+      return {
+        street: "123 Main St",
+        city: "Test City",
+      }
+    }),
+  })
+
+  const schema = weave(
+    asyncContextProvider,
+    rootResolver,
+    userFieldResolver,
+    profileFieldResolver
+  )
+
+  it("should handle field selection at multiple levels", async () => {
+    await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user {
+            id
+            name
+            profile {
+              email
+              address {
+                city
+              }
+            }
+          }
+        }
+      `),
+    })
+
+    const fieldsMap = getDeepResolvingFields({ info: userInfo })
+    expect(fieldsMap.size).toBe(3)
+
+    const rootResolvingFields = fieldsMap.get("")
+    expect(rootResolvingFields).toBeDefined()
+    expect(rootResolvingFields?.requestedFields).toEqual(
+      new Set(["id", "name", "profile"])
+    )
+
+    const profileResolvingFields = fieldsMap.get("profile")
+    expect(profileResolvingFields).toBeDefined()
+    expect(profileResolvingFields?.requestedFields).toEqual(
+      new Set(["email", "address"])
+    )
+
+    const addressResolvingFields = fieldsMap.get("profile.address")
+    expect(addressResolvingFields).toBeDefined()
+    expect(addressResolvingFields?.requestedFields).toEqual(new Set(["city"]))
+  })
+
+  it("should parse up to specified depth with maxDepth", async () => {
+    await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user {
+            id
+            profile {
+              email
+              address {
+                street
+                city
+              }
+            }
+          }
+        }
+      `),
+    })
+
+    const fieldsMap = getDeepResolvingFields({ info: userInfo }, 2)
+    expect(fieldsMap.size).toBe(2)
+
+    const rootResolvingFields = fieldsMap.get("")
+    expect(rootResolvingFields).toBeDefined()
+    expect(rootResolvingFields?.requestedFields).toEqual(
+      new Set(["id", "profile"])
+    )
+
+    const profileResolvingFields = fieldsMap.get("profile")
+    expect(profileResolvingFields).toBeDefined()
+    expect(profileResolvingFields?.requestedFields).toEqual(
+      new Set(["email", "address"])
+    )
+
+    expect(fieldsMap.has("profile.address")).toBe(false)
+  })
+
+  it("should return an empty map for a query with no selections", async () => {
+    await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user
+        }
+      `),
+    })
+
+    const fieldsMap = getDeepResolvingFields({ info: userInfo })
+    expect(fieldsMap.size).toBe(0)
   })
 })
