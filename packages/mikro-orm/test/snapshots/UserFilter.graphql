@@ -1,0 +1,8 @@
+type UserFilter {
+  id: IDComparisonOperators
+  name: StringComparisonOperators
+  email: StringComparisonOperators
+  password: StringComparisonOperators
+  age: IntComparisonOperators
+  isActive: BooleanComparisonOperators
+}

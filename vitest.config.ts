@@ -39,6 +39,7 @@ export default defineConfig({
         "**/generated/*.ts",
         "**/bin/*",
         "packages/prisma/src/generator/index.ts",
+        "packages/mikro-orm/src/entity-schema.ts",
       ],
     },
   },

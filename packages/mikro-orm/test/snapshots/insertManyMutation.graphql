@@ -1,0 +1,18 @@
+type Mutation {
+  insertManyMutation(data: [UserRequiredInput]!): [User!]!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  age: Int
+}
+
+input UserRequiredInput {
+  id: ID
+  name: String!
+  email: String!
+  age: Int
+  posts: [ID]
+}

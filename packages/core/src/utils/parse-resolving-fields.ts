@@ -2,8 +2,10 @@ import type { GraphQLResolveInfo, SelectionSetNode } from "graphql"
 import {
   type ArgumentNode,
   type DirectiveNode,
+  type GraphQLOutputType,
   Kind,
   type SelectionNode,
+  isInterfaceType,
   isObjectType,
 } from "graphql"
 import type { ResolverPayload } from "../resolver"
@@ -33,6 +35,82 @@ export interface ResolvingFields {
 }
 
 /**
+ * Analyzes and processes field resolution in a GraphQL query deeply.
+ *
+ * @param payload - The resolver payload containing the current field resolution context
+ * @param [maxDepth=Infinity] - Maximum depth of nested fields to parse
+ * @returns A map of field paths to their resolving fields
+ */
+export function getDeepResolvingFields(
+  payload: Pick<ResolverPayload, "info">,
+  maxDepth: number = Infinity
+): Map<string, ResolvingFields> {
+  const result = new Map<string, ResolvingFields>()
+  const requestedFieldsByPath = ResolvingFieldsParser.parseDeep(
+    payload.info,
+    maxDepth
+  )
+
+  const rootType = unwrapType(payload.info.returnType)
+
+  for (const [path, requestedFields] of requestedFieldsByPath.entries()) {
+    let currentType: GraphQLOutputType = rootType
+    if (path) {
+      const pathParts = path.split(".")
+      let tempType: GraphQLOutputType | undefined = rootType
+      for (const part of pathParts) {
+        const unwrapped = unwrapType(tempType)
+        if (isObjectType(unwrapped) || isInterfaceType(unwrapped)) {
+          const field = unwrapped.getFields()[part]
+          if (field) {
+            tempType = field.type
+          } else {
+            tempType = undefined
+            break
+          }
+        } else {
+          tempType = undefined
+          break
+        }
+      }
+      if (!tempType) continue
+      currentType = tempType
+    }
+
+    const unwrappedCurrentType = unwrapType(currentType)
+
+    if (isObjectType(unwrappedCurrentType)) {
+      const derivedFields = new Set<string>()
+      const derivedDependencies = new Set<string>()
+      const objectFields = unwrappedCurrentType.getFields()
+      for (const requestedFieldName of requestedFields) {
+        const field = objectFields[requestedFieldName]
+        if (field) {
+          const deps = field.extensions?.[DERIVED_DEPENDENCIES]
+          if (deps && Array.isArray(deps) && deps.length > 0) {
+            derivedFields.add(requestedFieldName)
+            for (const d of deps) derivedDependencies.add(d)
+          }
+        }
+      }
+
+      const selectedFields = new Set<string>(requestedFields)
+      for (const f of derivedFields) selectedFields.delete(f)
+      for (const d of derivedDependencies) selectedFields.add(d)
+
+      result.set(path, {
+        requestedFields,
+        derivedFields,
+        derivedDependencies,
+        selectedFields,
+      })
+    }
+  }
+
+  return result
+}
+
+/**
  * Analyzes and processes field resolution in a GraphQL query.
  *
  * @param payload - The resolver payload containing the current field resolution context
@@ -48,12 +126,12 @@ export function getResolvingFields(
 
   if (isObjectType(resolvingObject)) {
     const objectFields = resolvingObject.getFields()
-    for (const requestedFieldName of requestedFields) {
-      const field = objectFields[requestedFieldName]
+    for (const fieldName of requestedFields) {
+      const field = objectFields[fieldName]
       if (field) {
         const deps = field.extensions?.[DERIVED_DEPENDENCIES]
-        if (deps && Array.isArray(deps) && deps.length > 0) {
-          derivedFields.add(requestedFieldName)
+        if (deps && Array.isArray(deps)) {
+          derivedFields.add(fieldName)
           for (const d of deps) derivedDependencies.add(d)
         }
       }
@@ -81,15 +159,15 @@ export function parseResolvingFields(
   info: GraphQLResolveInfo,
   maxDepth: number = 1
 ): Set<string> {
-  return new ResolvingFieldsParser(info, maxDepth).parse()
+  return ResolvingFieldsParser.parse(info, maxDepth)
 }
 
 /**
  * Class responsible for parsing GraphQL resolve info to extract all requested fields.
  */
 class ResolvingFieldsParser {
-  /** Store unique field paths */
-  private fields = new Set<string>()
+  /** Store unique field paths grouped by parent path */
+  private fields = new Map<string, Set<string>>()
   /** Track visited fragments to prevent circular references */
   private visitedFragments = new Set<string>()
   /** The GraphQL resolve info object */
@@ -97,21 +175,54 @@ class ResolvingFieldsParser {
   /** Maximum depth of nested fields to parse */
   private maxDepth: number
 
-  public constructor(info: GraphQLResolveInfo, maxDepth: number) {
+  public static parse(info: GraphQLResolveInfo, maxDepth: number): Set<string> {
+    return new ResolvingFieldsParser(info, maxDepth).parse()
+  }
+
+  public static parseDeep(
+    info: GraphQLResolveInfo,
+    maxDepth: number
+  ): Map<string, Set<string>> {
+    return new ResolvingFieldsParser(info, maxDepth).parseDeep()
+  }
+
+  protected constructor(info: GraphQLResolveInfo, maxDepth: number) {
     this.info = info
     this.maxDepth = maxDepth
+    // Start collecting fields from the root nodes
+    for (const fieldNode of this.info.fieldNodes) {
+      this.collectFields(fieldNode.selectionSet, "", 0)
+    }
+  }
+
+  /**
+   * Parses the GraphQL resolve info to extract all requested fields into a flat set.
+   * @returns A Set of field paths
+   */
+  protected parse(): Set<string> {
+    const flatFields = new Set<string>()
+    for (const [path, fieldSet] of this.fields.entries()) {
+      for (const fieldName of fieldSet) {
+        const fullPath = path ? `${path}.${fieldName}` : fieldName
+        flatFields.add(fullPath)
+      }
+    }
+
+    // Add intermediate paths that are objects themselves
+    for (const path of this.fields.keys()) {
+      if (path) {
+        flatFields.add(path)
+      }
+    }
+
+    return flatFields
   }
 
   /**
    * Parses the GraphQL resolve info to extract all requested fields.
-   * @returns A Set of field paths
+   * @returns A map of field paths to their requested fields
    */
-  public parse(): Set<string> {
-    // Start collecting fields from the root nodes
-    for (const fieldNode of this.info.fieldNodes) {
-      this.collectFields(fieldNode.selectionSet)
-    }
-
+  protected parseDeep(): Map<string, Set<string>> {
     return this.fields
   }
 
@@ -131,6 +242,11 @@ class ResolvingFieldsParser {
     if (!selectionSet?.selections.length || currentDepth >= this.maxDepth)
       return
 
+    if (!this.fields.has(parentPath)) {
+      this.fields.set(parentPath, new Set<string>())
+    }
+    const currentFields = this.fields.get(parentPath)!
+
     for (const selection of selectionSet.selections) {
       // Skip if directives indicate this node should be excluded
       if (!this.shouldIncludeNode(selection)) continue
@@ -139,14 +255,14 @@ class ResolvingFieldsParser {
         case Kind.FIELD: {
           // Handle regular fields
           const fieldName = selection.name.value
-          const fieldPath = parentPath
-            ? `${parentPath}.${fieldName}`
-            : fieldName
-          this.fields.add(fieldPath)
+          currentFields.add(fieldName)
 
           // Process nested fields if they exist
           const hasSelectionSet = selection.selectionSet != null
           if (hasSelectionSet) {
+            const fieldPath = parentPath
+              ? `${parentPath}.${fieldName}`
+              : fieldName
             this.collectFields(
               selection.selectionSet,
               fieldPath,

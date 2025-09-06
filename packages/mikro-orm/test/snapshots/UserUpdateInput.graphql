@@ -1,0 +1,8 @@
+type UserPartialInput {
+  id: ID
+  name: String
+  email: String
+  password: String
+  age: Int
+  isActive: Boolean
+}

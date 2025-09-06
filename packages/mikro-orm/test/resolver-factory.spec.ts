@@ -1,744 +1,1690 @@
+import { resolver, weave } from "@gqloom/core"
 import {
-  type CallableInputParser,
-  type GraphQLSilk,
-  getGraphQLType,
-  resolver,
-  silk,
-  weave,
-} from "@gqloom/core"
-import {
-  EntitySchema,
+  type InferEntity,
   MikroORM,
+  QueryOrder,
   RequestContext,
   type RequiredEntityData,
   defineConfig,
+  defineEntity,
 } from "@mikro-orm/libsql"
-import {
-  GraphQLFloat,
-  GraphQLList,
-  type GraphQLNamedType,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  type GraphQLOutputType,
-  GraphQLString,
-  printSchema,
-  printType,
-} from "graphql"
-import { assertType, describe, expect, expectTypeOf, it } from "vitest"
+import { printSchema } from "graphql"
+import * as v from "valibot"
+import { beforeAll, describe, expect, expectTypeOf, it } from "vitest"
 import { mikroSilk } from "../src"
-import {
-  type FindOneFilter,
-  MikroInputFactory,
-  MikroResolverFactory,
-  type UpdateInput,
-} from "../src/resolver-factory"
+import { type FindByCursorOutput, MikroResolverFactory } from "../src/factory"
 
-interface IGiraffe {
-  id: string
-  name: string
-  birthday: Date
-  height?: number | null
-}
-
-const Giraffe = mikroSilk(
-  new EntitySchema<IGiraffe>({
-    name: "Giraffe",
-    properties: {
-      id: { type: "number", primary: true },
-      name: { type: "string" },
-      birthday: { type: "Date" },
-      height: { type: "number", nullable: true },
-    },
-  })
-)
-const ORMConfig = defineConfig({
-  entities: [Giraffe],
-  dbName: ":memory:",
-  // debug: true,
+const UserEntity = defineEntity({
+  name: "User",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    name: p.string(),
+    email: p.string(),
+    age: p.integer().nullable(),
+    posts: () => p.oneToMany(PostEntity).mappedBy("author"),
+  }),
 })
 
-describe("MikroResolverFactory", async () => {
-  const orm = await MikroORM.init(ORMConfig)
-  await orm.getSchemaGenerator().updateSchema()
+type IUser = InferEntity<typeof UserEntity>
 
-  const bobbin = new MikroResolverFactory(Giraffe, () => orm.em)
-  const inputFactory = new MikroInputFactory(Giraffe)
-  describe("CreateMutation", () => {
-    const create = bobbin.createMutation()
-    it("should infer Input type", () => {
-      bobbin.createMutation({
-        input: silk<Omit<IGiraffe, "height" | "id">>(
-          new GraphQLObjectType({ name: "CreateGiraffeInput", fields: {} })
-        ),
-      })
-      const executor = resolver({ create }).toExecutor()
-      expectTypeOf(executor.create)
-        .parameter(0)
-        .toEqualTypeOf<{ data: RequiredEntityData<IGiraffe> }>()
-    })
+const PostEntity = defineEntity({
+  name: "Post",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    title: p.string(),
+    content: p.string().lazy(),
+    author: () => p.manyToOne(UserEntity),
+  }),
+})
 
-    it("should infer Output type", () => {
-      expectTypeOf(
-        create["~meta"].resolve
-      ).returns.resolves.toEqualTypeOf<IGiraffe>()
-    })
+type IPost = InferEntity<typeof PostEntity>
 
-    it("should create Create Default Input", () => {
-      const inputWarperSilk = inputFactory.createInput()
-      expect(printSilk(inputWarperSilk)).toMatchInlineSnapshot(`
-        "type GiraffeCreateInputWrapper {
-          data: GiraffeCreateInput!
-        }"
-      `)
+const [User, Post] = [mikroSilk(UserEntity), mikroSilk(PostEntity)]
 
-      const inputType = unwrap(
-        (getGraphQLType(inputWarperSilk) as GraphQLObjectType).getFields()[
-          "data"
-        ].type
-      )
+const ORMConfig = defineConfig({
+  entities: [User, Post],
+  dbName: ":memory:",
+  allowGlobalContext: true,
+})
 
-      expect(printType(inputType)).toMatchInlineSnapshot(`
-        "type GiraffeCreateInput {
-          id: ID
-          name: String!
-          birthday: String!
-          height: Float
-        }"
-      `)
-    })
+describe.concurrent("MikroResolverFactory", async () => {
+  let orm: MikroORM
+  beforeAll(async () => {
+    orm = await MikroORM.init(ORMConfig)
+    await orm.getSchemaGenerator().updateSchema()
 
-    it("should do create", async () => {
-      const executor = resolver({ create }).toExecutor()
-      const one = await RequestContext.create(orm.em, () =>
-        executor.create({
-          data: {
-            name: "Foo",
-            birthday: new Date(),
-          },
-        })
-      )
-
-      expect(one).toEqual({
-        id: one.id,
-        name: "Foo",
-        birthday: expect.any(Date),
-      })
-
-      expect(await orm.em.fork().findOne(Giraffe, one.id)).toEqual({
-        id: one.id,
-        height: null,
-        name: "Foo",
-        birthday: expect.any(Date),
-      })
-    })
-
-    it("should weave schema without error", () => {
-      const r = resolver({ create })
-      const schema = weave(r)
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
-          create(data: GiraffeCreateInput!): Giraffe!
-        }
-
-        type Giraffe {
-          id: ID!
-          name: String!
-          birthday: String!
-          height: Float
-        }
-
-        input GiraffeCreateInput {
-          id: ID
-          name: String!
-          birthday: String!
-          height: Float
-        }"
-      `)
+    // Create test data
+    await RequestContext.create(orm.em, async () => {
+      const users = [
+        orm.em.create(User, {
+          name: "John Doe",
+          email: "john@example.com",
+          age: 25,
+        }),
+        orm.em.create(User, {
+          name: "Jane Doe",
+          email: "jane@example.com",
+          age: 30,
+        }),
+        orm.em.create(User, {
+          name: "Bob Smith",
+          email: "bob@example.com",
+          age: 20,
+        }),
+        orm.em.create(User, {
+          name: "Alice Johnson",
+          email: "alice@example.com",
+          age: 35,
+        }),
+        orm.em.create(User, {
+          name: "Charlie Brown",
+          email: "charlie@example.com",
+          age: 28,
+        }),
+      ]
+      const John = users[0]
+      const posts = [
+        orm.em.create(Post, {
+          title: "Post 1",
+          content: "Content 1",
+          author: John,
+        }),
+        orm.em.create(Post, {
+          title: "Post 2",
+          content: "Content 2",
+          author: John,
+        }),
+        orm.em.create(Post, {
+          title: "Archive 1",
+          content: "Archive 1",
+          author: John,
+        }),
+      ]
+      await orm.em.persistAndFlush([...users, ...posts])
     })
   })
 
-  describe("UpdateMutation", async () => {
-    const update = bobbin.updateMutation()
-    const giraffe = await RequestContext.create(orm.em, async () => {
-      const g = orm.em.create(Giraffe, {
-        name: "Foo",
-        birthday: new Date(),
-        height: 1,
-      })
-      await orm.em.persistAndFlush(g)
-      return g
+  const userFactory = new MikroResolverFactory(User, () => orm.em)
+  const postFactory = new MikroResolverFactory(Post, () => orm.em)
+
+  describe.concurrent("collectionField", () => {
+    it("should be created without error", async () => {
+      const field = userFactory.collectionField("posts")
+      expect(field).toBeDefined()
     })
 
-    it("should infer input type", () => {
-      bobbin.updateMutation({
-        input: silk<Omit<IGiraffe, "height">>(
-          new GraphQLObjectType({ name: "UpdateGiraffeInput", fields: {} })
+    it("should resolve correctly", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts"),
+      })
+      const userEx = r.toExecutor()
+
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      const answer = await userEx.posts(John, {})
+      expect(answer).toHaveLength(3)
+      expect(new Set(answer.map((p) => p.title))).toEqual(
+        new Set(["Post 1", "Post 2", "Archive 1"])
+      )
+    })
+
+    it("should work with custom input", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts", {
+          input: v.pipe(
+            v.object({
+              title: v.string(),
+            }),
+            v.transform(({ title }) => ({
+              where: { title: { $like: `%${title}%` } },
+            }))
+          ),
+        }),
+      })
+      const userEx = r.toExecutor()
+
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      let answer
+      answer = await userEx.posts(John, { title: "Post" })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toContain("Post 1")
+      expect(answer.map((p) => p.title)).toContain("Post 2")
+
+      answer = await userEx.posts(John, { title: "Archive" })
+      expect(answer).toHaveLength(1)
+      expect(answer[0].title).toBe("Archive 1")
+    })
+
+    it("should work with chain custom input", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts").input(
+          v.pipe(
+            v.object({
+              title: v.string(),
+            }),
+            v.transform(({ title }) => ({
+              where: { title: { $like: `%${title}%` } },
+            }))
+          )
         ),
       })
-      const executor = resolver({ update }).toExecutor()
-      expectTypeOf(executor.update)
-        .parameter(0)
-        .toEqualTypeOf<{ data: UpdateInput<IGiraffe> }>()
+      const userEx = r.toExecutor()
+
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      let answer
+      answer = await userEx.posts(John, { title: "Post" })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((p) => p.title)).toContain("Post 1")
+      expect(answer.map((p) => p.title)).toContain("Post 2")
+
+      answer = await userEx.posts(John, { title: "Archive" })
+      expect(answer).toHaveLength(1)
+      expect(answer[0].title).toBe("Archive 1")
     })
 
-    it("should infer output type", () => {
-      expectTypeOf(
-        update["~meta"].resolve
-      ).returns.resolves.toEqualTypeOf<IGiraffe>()
-    })
-
-    it("should create Update Default Input", () => {
-      const inputWarperSilk = inputFactory.updateInput()
-      expect(printSilk(inputWarperSilk)).toMatchInlineSnapshot(`
-        "type GiraffeUpdateInputWrapper {
-          data: GiraffeUpdateInput!
-        }"
-      `)
-
-      const inputType = unwrap(
-        (getGraphQLType(inputWarperSilk) as GraphQLObjectType).getFields()[
-          "data"
-        ].type
-      )
-
-      expect(printType(inputType)).toMatchInlineSnapshot(`
-        "type GiraffeUpdateInput {
-          id: ID!
-          name: String
-          birthday: String
-          height: Float
-        }"
-      `)
-    })
-
-    it("should do update", async () => {
-      const executor = resolver({ update }).toExecutor()
-      await RequestContext.create(orm.em, () =>
-        executor.update({
-          data: {
-            id: giraffe.id,
-            height: 2,
-          },
-        })
-      )
-      const g = await RequestContext.create(orm.em, () =>
-        orm.em.findOne(Giraffe, giraffe.id)
-      )
-
-      expect(g).toEqual({
-        id: giraffe.id,
-        name: "Foo",
-        birthday: expect.any(Date),
-        height: 2,
-      })
-    })
-
-    it("should weave schema without error", () => {
-      const r = resolver({ update })
-      const schema = weave(r)
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Mutation {
-          update(data: GiraffeUpdateInput!): Giraffe!
-        }
-
-        type Giraffe {
-          id: ID!
-          name: String!
-          birthday: String!
-          height: Float
-        }
-
-        input GiraffeUpdateInput {
-          id: ID!
-          name: String
-          birthday: String
-          height: Float
-        }"
-      `)
-    })
-  })
-
-  describe("FindOneQuery", async () => {
-    const findOne = bobbin.findOneQuery({
-      middlewares: [
-        async (opts) => {
-          assertType<
-            CallableInputParser<
-              GraphQLSilk<FindOneFilter<IGiraffe>, FindOneFilter<IGiraffe>>
-            >
-          >(opts.parseInput)
-          return opts.next()
-        },
-      ],
-    })
-    const giraffe = await RequestContext.create(orm.em, async () => {
-      const g = orm.em.create(Giraffe, {
-        name: "Foo",
-        birthday: new Date(),
-        height: 1,
-      })
-      await orm.em.persistAndFlush(g)
-      return g
-    })
-    it("should infer input type", () => {
-      bobbin.findOneQuery({
-        input: silk<Omit<IGiraffe, "height">>(
-          new GraphQLObjectType({ name: "FindOneGiraffeInput", fields: {} })
-        ),
-      })
-
-      resolver({
-        findOne: bobbin.findOneQuery({
+    it("should work with middlewares", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts", {
           middlewares: [
-            async (next) => {
-              assertType<
-                CallableInputParser<
-                  GraphQLSilk<FindOneFilter<IGiraffe>, FindOneFilter<IGiraffe>>
-                >
-              >(next.parseInput)
-              return next()
+            async ({ parseInput, next }) => {
+              const opts = await parseInput()
+              if (opts.issues) throw new Error("Invalid input")
+              const answer = await next()
+              expectTypeOf(answer).toEqualTypeOf<Partial<IPost>[]>()
+              return answer.map((p) => ({
+                ...p,
+                title: p.title?.toUpperCase(),
+              }))
             },
           ],
         }),
       })
 
-      expectTypeOf(findOne["~meta"].resolve)
-        .parameter(0)
-        .toEqualTypeOf<FindOneFilter<IGiraffe>>()
-    })
-
-    it("should infer output type", () => {
-      expectTypeOf(
-        findOne["~meta"].resolve
-      ).returns.resolves.toEqualTypeOf<IGiraffe>()
-    })
-
-    it("should create FindOneOptions", () => {
-      const silk = inputFactory.findOneFilter()
-      expect(printSilk(silk)).toMatchInlineSnapshot(`
-        "type GiraffeFindOneFilter {
-          id: ID!
-        }"
-      `)
-    })
-
-    it("should do findOne", async () => {
-      const g = await RequestContext.create(orm.em, () =>
-        findOne["~meta"].resolve({
-          id: giraffe.id,
-        })
+      const userEx = r.toExecutor()
+      const John = await orm.em.findOneOrFail(User, { name: "John Doe" })
+      const answer = await userEx.posts(John, {})
+      expect(answer).toHaveLength(3)
+      expect(new Set(answer.map((p) => p.title))).toEqual(
+        new Set(["POST 1", "POST 2", "ARCHIVE 1"])
       )
+    })
 
-      expect(g).toEqual({
-        id: giraffe.id,
-        name: "Foo",
-        birthday: expect.any(Date),
-        height: 1,
+    it("should weave schema without error", async () => {
+      const r = resolver.of(User, {
+        posts: userFactory.collectionField("posts"),
       })
-    })
-  })
-
-  describe("DeleteOneMutation", async () => {
-    const deleteOne = bobbin.deleteOneMutation()
-    const giraffe = await RequestContext.create(orm.em, async () => {
-      const g = orm.em.create(Giraffe, {
-        name: "Foo",
-        birthday: new Date(),
-        height: 1,
-      })
-      await orm.em.persistAndFlush(g)
-      return g
-    })
-
-    it("should infer output type", () => {
-      expectTypeOf(
-        deleteOne["~meta"].resolve
-      ).returns.resolves.toEqualTypeOf<IGiraffe | null>()
-    })
-
-    it("should do delete one", async () => {
-      const executor = resolver({ deleteOne }).toExecutor()
-      const g1 = await RequestContext.create(orm.em, () =>
-        executor.deleteOne({
-          id: giraffe.id,
-        })
-      )
-
-      expect(g1).toEqual({
-        id: giraffe.id,
-        name: "Foo",
-        birthday: expect.any(Date),
-        height: 1,
-      })
-
-      const g2 = await RequestContext.create(orm.em, () =>
-        executor.deleteOne({
-          id: giraffe.id,
-        })
-      )
-
-      expect(g2).toBeNull()
-    })
-  })
-
-  describe("FindManyQuery", () => {
-    const findMany = bobbin.findManyQuery()
-    it("should create operators type", () => {
-      const stringType =
-        MikroInputFactory.comparisonOperatorsType(GraphQLString)
-      expect(printType(stringType)).toMatchInlineSnapshot(`
-        "type StringMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: String
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: String
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: String
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [String!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: String
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: String
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: String
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [String!]
-
-          """&&"""
-          overlap: [String!]
-
-          """@>"""
-          contains: [String!]
-
-          """<@"""
-          contained: [String!]
-
-          """Like. Uses LIKE operator"""
-          like: String
-
-          """Regexp. Uses REGEXP operator"""
-          re: String
-
-          """Full text.	A driver specific full text search function."""
-          fulltext: String
-
-          """ilike"""
-          ilike: String
-        }"
-      `)
-
-      const floatType = MikroInputFactory.comparisonOperatorsType(GraphQLFloat)
-      expect(printType(floatType)).toMatchInlineSnapshot(`
-        "type FloatMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: Float
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: Float
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: Float
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [Float!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: Float
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: Float
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: Float
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [Float!]
-
-          """&&"""
-          overlap: [Float!]
-
-          """@>"""
-          contains: [Float!]
-
-          """<@"""
-          contained: [Float!]
-        }"
-      `)
-    })
-
-    it("should create FindManyOptionsWhereType", () => {
-      const whereType = inputFactory.findManyOptionsWhereType()
-      expect(printType(whereType)).toMatchInlineSnapshot(`
-        "type GiraffeFindManyOptionsWhere {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          birthday: StringMikroComparisonOperators
-          height: FloatMikroComparisonOperators
-        }"
-      `)
-    })
-
-    it("should create QueryOrderType", () => {
-      const queryOrderType = MikroInputFactory.queryOrderType()
-      expect(printType(queryOrderType)).toMatchInlineSnapshot(`
-        "enum MikroQueryOrder {
-          ASC
-          ASC_NULLS_LAST
-          ASC_NULLS_FIRST
-          DESC
-          DESC_NULLS_LAST
-          DESC_NULLS_FIRST
-        }"
-      `)
-    })
-
-    it("should create FindManyOptionsOrderBy", () => {
-      const orderBy = inputFactory.findManyOptionsOrderByType()
-      expect(printType(orderBy)).toMatchInlineSnapshot(`
-        "type GiraffeFindManyOptionsOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          birthday: MikroQueryOrder
-          height: MikroQueryOrder
-        }"
-      `)
-    })
-
-    it("should create FindManyOptions", () => {
-      const options = inputFactory.findManyOptions()
-      expect(printSilk(options)).toMatchInlineSnapshot(`
-        "type GiraffeFindManyOptions {
-          where: GiraffeFindManyOptionsWhere
-          orderBy: GiraffeFindManyOptionsOrderBy
-          skip: Int
-          limit: Int
-        }"
-      `)
-    })
-
-    it("should weave schema without error", () => {
-      const r = resolver({ findMany, findMany2: findMany })
       const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/collectionField.graphql"
+      )
+    })
+  })
 
-      expect(printSchema(schema)).toMatchInlineSnapshot(`
-        "type Query {
-          findMany(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [Giraffe!]!
-          findMany2(where: GiraffeFindManyOptionsWhere, orderBy: GiraffeFindManyOptionsOrderBy, skip: Int, limit: Int): [Giraffe!]!
-        }
-
-        type Giraffe {
-          id: ID!
-          name: String!
-          birthday: String!
-          height: Float
-        }
-
-        input GiraffeFindManyOptionsWhere {
-          id: IDMikroComparisonOperators
-          name: StringMikroComparisonOperators
-          birthday: StringMikroComparisonOperators
-          height: FloatMikroComparisonOperators
-        }
-
-        input IDMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: ID
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: ID
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: ID
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [ID!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: ID
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: ID
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: ID
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [ID!]
-
-          """&&"""
-          overlap: [ID!]
-
-          """@>"""
-          contains: [ID!]
-
-          """<@"""
-          contained: [ID!]
-        }
-
-        input StringMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: String
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: String
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: String
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [String!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: String
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: String
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: String
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [String!]
-
-          """&&"""
-          overlap: [String!]
-
-          """@>"""
-          contains: [String!]
-
-          """<@"""
-          contained: [String!]
-
-          """Like. Uses LIKE operator"""
-          like: String
-
-          """Regexp. Uses REGEXP operator"""
-          re: String
-
-          """Full text.	A driver specific full text search function."""
-          fulltext: String
-
-          """ilike"""
-          ilike: String
-        }
-
-        input FloatMikroComparisonOperators {
-          """Equals. Matches values that are equal to a specified value."""
-          eq: Float
-
-          """Greater. Matches values that are greater than a specified value."""
-          gt: Float
-
-          """
-          Greater or Equal. Matches values that are greater than or equal to a specified value.
-          """
-          gte: Float
-
-          """Contains, Contains, Matches any of the values specified in an array."""
-          in: [Float!]
-
-          """Lower, Matches values that are less than a specified value."""
-          lt: Float
-
-          """
-          Lower or equal, Matches values that are less than or equal to a specified value.
-          """
-          lte: Float
-
-          """Not equal. Matches all values that are not equal to a specified value."""
-          ne: Float
-
-          """Not contains. Matches none of the values specified in an array."""
-          nin: [Float!]
-
-          """&&"""
-          overlap: [Float!]
-
-          """@>"""
-          contains: [Float!]
-
-          """<@"""
-          contained: [Float!]
-        }
-
-        input GiraffeFindManyOptionsOrderBy {
-          id: MikroQueryOrder
-          name: MikroQueryOrder
-          birthday: MikroQueryOrder
-          height: MikroQueryOrder
-        }
-
-        enum MikroQueryOrder {
-          ASC
-          ASC_NULLS_LAST
-          ASC_NULLS_FIRST
-          DESC
-          DESC_NULLS_LAST
-          DESC_NULLS_FIRST
-        }"
-      `)
+  describe.concurrent("referenceField", () => {
+    it("should be created without error", async () => {
+      const field = postFactory.referenceField("author")
+      expect(field).toBeDefined()
     })
 
-    it("should convert to mikro condition", () => {
-      const FindManyOptions = inputFactory.findManyOptions()
+    it("should resolve correctly", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author"),
+      })
+      const postEx = r.toExecutor()
+      const post = await orm.em.findOneOrFail(Post, { title: "Post 1" })
+      const answer = await postEx.author(post)
+      expect(answer).toBeDefined()
+      expect(answer?.name).toBe("John Doe")
+    })
 
-      expect(
-        silk.parse(FindManyOptions, {
-          where: { id: { eq: 1 } },
-        })
-      ).toMatchObject({
-        value: { where: { id: { $eq: 1 } } },
+    it("should work with middlewares", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author", {
+          middlewares: [
+            async ({ next }) => {
+              const answer = await next()
+              expectTypeOf(answer).toEqualTypeOf<Partial<IUser>>()
+              return answer
+            },
+          ],
+        }),
+      })
+      const postEx = r.toExecutor()
+      const post = await orm.em.findOneOrFail(Post, { title: "Post 1" })
+      const answer = await postEx.author(post)
+      expect(answer).toBeDefined()
+      expect(answer?.name).toBe("John Doe")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author"),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/referenceField.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("countQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.countQuery()
+      expect(query).toBeDefined()
+    })
+
+    it("should resolve correctly with filters", async () => {
+      const query = userFactory.countQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer
+
+      answer = await executor.query({})
+      expect(answer).toBe(5)
+
+      answer = await executor.query({
+        where: { age: { gte: 30 } },
+      })
+      expect(answer).toBe(2)
+
+      answer = await executor.query({
+        where: { age: { lt: 30 } },
+      })
+      expect(answer).toBe(3)
+
+      answer = await executor.query({
+        where: { age: { in: [25, 30] } },
+      })
+      expect(answer).toBe(2)
+
+      answer = await executor.query({
+        where: { name: { like: "J%" } },
+      })
+      expect(answer).toBe(2)
+    })
+
+    it("should be created with custom input", async () => {
+      const query = userFactory.countQuery({
+        input: v.pipe(
+          v.object({
+            age: v.nullish(v.number()),
+          }),
+          v.transform(({ age }) => ({
+            where: age != null ? { age: { $eq: age } } : undefined,
+          }))
+        ),
       })
 
-      expect(
-        silk.parse(FindManyOptions, {
-          where: { id: 1 },
-        })
-      ).toMatchObject({
-        value: { where: { id: 1 } },
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      expect(await executor.query({ age: 25 })).toBe(1)
+      expect(await executor.query({ age: null })).toBe(5)
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.countQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<number>()
+            return answer
+          },
+        ],
       })
+
+      const executor = resolver({ query }).toExecutor()
+      await executor.query({})
+      expect(count).toBe(1)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({ countQuery: userFactory.countQuery() })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/countQuery.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("findQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findQuery()
+      expect(query).toBeDefined()
+    })
+
+    it("should resolve correctly with filters, sorting, and pagination", async () => {
+      const query = userFactory.findQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: Partial<IUser>[]
+
+      // No args
+      answer = await executor.query({})
+      expect(answer).toHaveLength(5)
+
+      // Where
+      answer = await executor.query({
+        where: { age: { gte: 30 } },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((u) => u.name).sort()).toEqual([
+        "Alice Johnson",
+        "Jane Doe",
+      ])
+
+      // OrderBy
+      answer = await executor.query({
+        orderBy: { age: "DESC" },
+      })
+      expect(answer.map((u) => u.name)).toEqual([
+        "Alice Johnson",
+        "Jane Doe",
+        "Charlie Brown",
+        "John Doe",
+        "Bob Smith",
+      ])
+
+      // Limit
+      answer = await executor.query({
+        limit: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((u) => u.name)).toEqual(["Bob Smith", "John Doe"])
+
+      // Offset
+      answer = await executor.query({
+        limit: 2,
+        offset: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((u) => u.name)).toEqual(["Charlie Brown", "Jane Doe"])
+    })
+
+    it("should be created with custom input", async () => {
+      const query = userFactory.findQuery({
+        input: v.pipe(
+          v.object({
+            minAge: v.nullish(v.number()),
+          }),
+          v.transform(({ minAge }) => ({
+            where: minAge != null ? { age: { $gte: minAge } } : {},
+            orderBy: { age: QueryOrder.ASC },
+          }))
+        ),
+      })
+
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      let answer: Partial<IUser>[]
+      answer = await executor.query({ minAge: 30 })
+      expect(answer).toHaveLength(2)
+      expect(answer.map((u) => u.name)).toEqual(["Jane Doe", "Alice Johnson"])
+
+      answer = await executor.query({ minAge: null })
+      expect(answer).toHaveLength(5)
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>[]>()
+            return answer.map((u) => ({ ...u, name: u.name?.toUpperCase() }))
+          },
+        ],
+      })
+
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({})
+      expect(count).toBe(1)
+      expect(answer.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({ findQuery: userFactory.findQuery() })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findQuery.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("findAndCountQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findAndCountQuery()
+      expect(query).toBeDefined()
+    })
+
+    it("should resolve correctly with filters, sorting, and pagination", async () => {
+      const query = userFactory.findAndCountQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: { items: Partial<IUser>[]; totalCount: number }
+
+      // No args
+      answer = await executor.query({})
+      expect(answer.items).toHaveLength(5)
+      expect(answer.totalCount).toBe(5)
+
+      // Where
+      answer = await executor.query({
+        where: { age: { gte: 30 } },
+      })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(2)
+      expect(answer.items.map((u) => u.name).sort()).toEqual([
+        "Alice Johnson",
+        "Jane Doe",
+      ])
+
+      // OrderBy
+      answer = await executor.query({
+        orderBy: { age: "DESC" },
+      })
+      expect(answer.items).toHaveLength(5)
+      expect(answer.totalCount).toBe(5)
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Alice Johnson",
+        "Jane Doe",
+        "Charlie Brown",
+        "John Doe",
+        "Bob Smith",
+      ])
+
+      // Limit
+      answer = await executor.query({
+        limit: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(5) // Limit only affects items, not total count
+      expect(answer.items.map((u) => u.name)).toEqual(["Bob Smith", "John Doe"])
+
+      // Offset
+      answer = await executor.query({
+        limit: 2,
+        offset: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(5) // Offset only affects items, not total count
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Charlie Brown",
+        "Jane Doe",
+      ])
+    })
+
+    it("should be created with custom input", async () => {
+      const query = userFactory.findAndCountQuery({
+        input: v.pipe(
+          v.object({
+            minAge: v.nullish(v.number()),
+          }),
+          v.transform(({ minAge }) => ({
+            where: minAge != null ? { age: { $gte: minAge } } : {},
+            orderBy: { age: QueryOrder.ASC },
+          }))
+        ),
+      })
+
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      let answer: { items: Partial<IUser>[]; totalCount: number }
+      answer = await executor.query({ minAge: 30 })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(2)
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Jane Doe",
+        "Alice Johnson",
+      ])
+
+      answer = await executor.query({ minAge: null })
+      expect(answer.items).toHaveLength(5)
+      expect(answer.totalCount).toBe(5)
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findAndCountQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<{
+              items: Partial<IUser>[]
+              totalCount: number
+            }>()
+            return {
+              ...answer,
+              items: answer.items.map((u) => ({
+                ...u,
+                name: u.name?.toUpperCase(),
+              })),
+            }
+          },
+        ],
+      })
+
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({})
+      expect(count).toBe(1)
+      expect(answer.items.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
+      expect(answer.totalCount).toBe(5)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        findAndCountQuery: userFactory.findAndCountQuery(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findAndCountQuery.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("findByCursorQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findByCursorQuery()
+      expect(query).toBeDefined()
+    })
+
+    it("should resolve correctly with filters, sorting, and pagination", async () => {
+      const query = userFactory.findByCursorQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: FindByCursorOutput<IUser>
+
+      // No args
+      answer = await executor.query({ orderBy: { id: "ASC" } })
+      expect(answer.items).toHaveLength(5)
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(false)
+
+      // Forward pagination
+      answer = await executor.query({
+        first: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual(["Bob Smith", "John Doe"])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(true)
+      expect(answer.hasPrevPage).toBe(false)
+      expect(answer.startCursor).toBeDefined()
+      expect(answer.endCursor).toBeDefined()
+
+      const after = answer.endCursor!
+
+      answer = await executor.query({
+        first: 2,
+        after,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Charlie Brown",
+        "Jane Doe",
+      ])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(true)
+      expect(answer.hasPrevPage).toBe(true)
+
+      const after2 = answer.endCursor!
+
+      answer = await executor.query({
+        first: 2,
+        after: after2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual(["Alice Johnson"])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(true)
+
+      // Backward pagination
+      answer = await executor.query({
+        last: 2,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Jane Doe",
+        "Alice Johnson",
+      ])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(true)
+
+      const before = answer.startCursor!
+
+      answer = await executor.query({
+        last: 2,
+        before,
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "John Doe",
+        "Charlie Brown",
+      ])
+      expect(answer.totalCount).toBe(5)
+      expect(answer.hasNextPage).toBe(true)
+      expect(answer.hasPrevPage).toBe(true)
+
+      // Where clause
+      answer = await executor.query({
+        where: { age: { gte: 30 } },
+        orderBy: { age: "ASC" },
+      })
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Jane Doe",
+        "Alice Johnson",
+      ])
+      expect(answer.totalCount).toBe(2)
+      expect(answer.hasNextPage).toBe(false)
+      expect(answer.hasPrevPage).toBe(false)
+    })
+
+    it("should be created with custom input", async () => {
+      const query = userFactory.findByCursorQuery({
+        input: v.pipe(
+          v.object({
+            minAge: v.nullish(v.number()),
+            first: v.optional(v.number(), 2),
+          }),
+          v.transform(({ minAge, first }) => ({
+            where: minAge != null ? { age: { $gte: minAge } } : {},
+            orderBy: { age: QueryOrder.ASC },
+            first,
+          }))
+        ),
+      })
+
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      let answer: FindByCursorOutput<IUser>
+      answer = await executor.query({ minAge: 30 })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(2)
+      expect(answer.items.map((u) => u.name)).toEqual([
+        "Jane Doe",
+        "Alice Johnson",
+      ])
+
+      answer = await executor.query({ minAge: null })
+      expect(answer.items).toHaveLength(2)
+      expect(answer.totalCount).toBe(5)
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findByCursorQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<FindByCursorOutput<IUser>>()
+            const items: Partial<IUser>[] = answer.items.map((u) => ({
+              ...u,
+              name: u.name?.toUpperCase(),
+            }))
+            return {
+              ...answer,
+              items,
+            }
+          },
+        ],
+      })
+
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ first: 1, orderBy: { id: "ASC" } })
+      expect(count).toBe(1)
+      expect(answer.items.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
+      expect(answer.totalCount).toBe(5)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        findByCursorQuery: userFactory.findByCursorQuery(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findByCursorQuery.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("findOneQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findOneQuery()
+      expect(query).toBeDefined()
+    })
+
+    it("should resolve correctly with filters, sorting, and offset", async () => {
+      const query = userFactory.findOneQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: Partial<IUser> | null
+
+      // No args (should return first by default order or undefined)
+      answer = await executor.query({
+        orderBy: { id: "ASC" },
+        where: { id: { gte: 1 } },
+      })
+      expect(answer?.name).toBe("John Doe")
+
+      // Where
+      answer = await executor.query({
+        where: { name: { eq: "Jane Doe" } },
+      })
+      expect(answer?.name).toBe("Jane Doe")
+
+      // OrderBy
+      answer = await executor.query({
+        orderBy: { age: "DESC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer?.name).toBe("Alice Johnson")
+
+      // Offset
+      answer = await executor.query({
+        offset: 1,
+        orderBy: { age: "ASC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer?.name).toBe("John Doe")
+
+      // No match
+      answer = await executor.query({
+        where: { name: { eq: "Non Existent" } },
+      })
+      expect(answer).toBeNull()
+    })
+
+    it("should be created with custom input", async () => {
+      const query = userFactory.findOneQuery({
+        input: v.pipe(
+          v.object({
+            userName: v.string(),
+          }),
+          v.transform(({ userName }) => ({
+            where: { name: { $eq: userName } },
+          }))
+        ),
+      })
+
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      let answer: Partial<IUser> | null
+      answer = await executor.query({ userName: "Bob Smith" })
+      expect(answer?.name).toBe("Bob Smith")
+
+      answer = await executor.query({ userName: "Non Existent" })
+      expect(answer).toBeNull()
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findOneQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser> | null>()
+            return answer
+              ? { ...answer, name: answer.name?.toUpperCase() }
+              : null
+          },
+        ],
+      })
+
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ where: { id: { eq: 1 } } })
+      expect(count).toBe(1)
+      expect(answer?.name).toBe("JOHN DOE")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({ findOneQuery: userFactory.findOneQuery() })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findOneQuery.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("findOneOrFailQuery", () => {
+    it("should be created without error", async () => {
+      const query = userFactory.findOneOrFailQuery()
+      expect(query).toBeDefined()
+    })
+
+    it("should resolve correctly with filters, sorting, and offset", async () => {
+      const query = userFactory.findOneOrFailQuery()
+      const executor = resolver({ query }).toExecutor()
+      let answer: Partial<IUser>
+
+      // Where
+      answer = await executor.query({
+        where: { name: { eq: "Jane Doe" } },
+      })
+      expect(answer.name).toBe("Jane Doe")
+
+      // OrderBy
+      answer = await executor.query({
+        orderBy: { age: "DESC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer.name).toBe("Alice Johnson")
+
+      // Offset
+      answer = await executor.query({
+        offset: 1,
+        orderBy: { age: "ASC" },
+        where: { id: { gte: 1 } }, // 添加一个有效的 where 条件
+      })
+      expect(answer.name).toBe("John Doe")
+    })
+
+    it("should throw an error if no entity is found", async () => {
+      const query = userFactory.findOneOrFailQuery()
+      const executor = resolver({ query }).toExecutor()
+      await expect(
+        executor.query({ where: { name: { eq: "Non Existent" } } })
+      ).rejects.toThrow("User not found ({ name: { '$eq': 'Non Existent' } })") // 更新错误信息
+    })
+
+    it("should be created with custom input", async () => {
+      const query = userFactory.findOneOrFailQuery({
+        input: v.pipe(
+          v.object({
+            userName: v.string(),
+          }),
+          v.transform(({ userName }) => ({
+            where: { name: { $eq: userName } },
+          }))
+        ),
+      })
+
+      expect(query).toBeDefined()
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ userName: "Bob Smith" })
+      expect(answer.name).toBe("Bob Smith")
+
+      await expect(
+        executor.query({ userName: "Non Existent" })
+      ).rejects.toThrow("User not found ({ name: { '$eq': 'Non Existent' } })") // 更新错误信息
+    })
+
+    it("should be created with middlewares", async () => {
+      let count = 0
+      const query = userFactory.findOneOrFailQuery({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>>()
+            return { ...answer, name: answer.name?.toUpperCase() }
+          },
+        ],
+      })
+
+      const executor = resolver({ query }).toExecutor()
+      const answer = await executor.query({ where: { id: { eq: 1 } } })
+      expect(count).toBe(1)
+      expect(answer.name).toBe("JOHN DOE")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        findOneOrFailQuery: userFactory.findOneOrFailQuery(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/findOneOrFailQuery.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("createMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+    it("should be created without error", async () => {
+      const mutation = userFactory.createMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should create entity correctly", async () => {
+      const create = userFactory.createMutation()
+      const executor = resolver({ create }).toExecutor()
+      const answer = await executor.create({
+        data: { name: "John Doe", email: "john@example.com", age: 25 },
+      })
+      expect(answer.name).toBe("John Doe")
+      expect(answer.email).toBe("john@example.com")
+      expect(answer.age).toBe(25)
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB).toBeDefined()
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const create = userFactory.createMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser>()
+            return { ...answer, name: answer.name?.toUpperCase() }
+          },
+        ],
+      })
+
+      const executor = resolver({ create }).toExecutor()
+      const answer = await executor.create({
+        data: { name: "John Doe", email: "john@example.com", age: 25 },
+      })
+      expect(count).toBe(1)
+      expect(answer.name).toBe("JOHN DOE")
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB?.name).toBe("John Doe")
+    })
+
+    it("should use with custom input", async () => {
+      const create = userFactory.createMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+            email: v.string(),
+          }),
+          v.transform(({ username, email }) => ({
+            data: { name: username.toUpperCase(), email, age: 30 },
+          }))
+        ),
+      })
+
+      const executor = resolver({ create }).toExecutor()
+      const answer = await executor.create({
+        username: "john doe",
+        email: "john.doe@example.com",
+      })
+
+      expect(answer.name).toBe("JOHN DOE")
+      expect(answer.email).toBe("john.doe@example.com")
+      expect(answer.age).toBe(30)
+
+      const fromDB = await orm.em.findOne(User, answer.id)
+      expect(fromDB?.name).toBe("JOHN DOE")
+      expect(fromDB?.email).toBe("john.doe@example.com")
+      expect(fromDB?.age).toBe(30)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        createMutation: userFactory.createMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/createMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("insertMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should create entity correctly", async () => {
+      const insert = userFactory.insertMutation()
+      const executor = resolver({ insert }).toExecutor()
+      const answer = await executor.insert({
+        data: { name: "John Doe", email: "john@example.com", age: 25 },
+      })
+      expect(answer.name).toBe("John Doe")
+      expect(answer.email).toBe("john@example.com")
+      expect(answer.age).toBe(25)
+
+      const fromDB = await orm.em.findOne(User, answer.id!)
+      expect(fromDB).toBeDefined()
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const insert = userFactory.insertMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>>()
+            return { ...answer, name: answer.name?.toUpperCase() }
+          },
+        ],
+      })
+
+      const executor = resolver({ insert }).toExecutor()
+      const answer = await executor.insert({
+        data: { name: "Jane Doe", email: "jane@example.com", age: 25 },
+      })
+      expect(count).toBe(1)
+      expect(answer.name).toBe("JANE DOE")
+
+      const fromDB = await orm.em.findOne(User, answer.id!)
+      expect(fromDB?.name).toBe("Jane Doe")
+    })
+
+    it("should use with custom input", async () => {
+      const insert = userFactory.insertMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+            email: v.string(),
+          }),
+          v.transform(({ username, email }) => ({
+            data: { name: username.toUpperCase(), email, age: 30 },
+          }))
+        ),
+      })
+
+      const executor = resolver({ insert }).toExecutor()
+      const answer = await executor.insert({
+        username: "jane doe",
+        email: "jane.doe@example.com",
+      })
+
+      expect(answer.name).toBe("JANE DOE")
+      expect(answer.email).toBe("jane.doe@example.com")
+      expect(answer.age).toBe(30)
+
+      const fromDB = await orm.em.findOne(User, answer.id!)
+      expect(fromDB?.name).toBe("JANE DOE")
+      expect(fromDB?.email).toBe("jane.doe@example.com")
+      expect(fromDB?.age).toBe(30)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        insertMutation: userFactory.insertMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/insertMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("insertManyMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+    it("should be created without error", async () => {
+      const mutation = userFactory.insertManyMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should create entities correctly", async () => {
+      const insertMany = userFactory.insertManyMutation()
+      const executor = resolver({ insertMany }).toExecutor()
+
+      const answer = await executor.insertMany({
+        data: [{ name: "User 1", email: "user1@example.com", age: 21 }],
+      })
+
+      expect(answer).toHaveLength(1)
+      expect(answer[0].name).toBe("User 1")
+      expect(answer[0].email).toBe("user1@example.com")
+      expect(answer[0].age).toBe(21)
+
+      const fromDB = await orm.em.find(User, {
+        id: answer.map((u) => u.id!),
+      })
+      expect(fromDB).toHaveLength(1)
+      expect(fromDB[0].name).toBe("User 1")
+      expect(fromDB[0].email).toBe("user1@example.com")
+      expect(fromDB[0].age).toBe(21)
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const insertMany = userFactory.insertManyMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<Partial<IUser>[]>()
+            return answer.map((a) => ({
+              ...a,
+              name: a.name?.toUpperCase(),
+            }))
+          },
+        ],
+      })
+
+      const executor = resolver({ insertMany }).toExecutor()
+      const answer = await executor.insertMany({
+        data: [{ name: "User 3", email: "user3@example.com", age: 23 }],
+      })
+      expect(count).toBe(1)
+      expect(answer[0].name).toBe("USER 3")
+
+      const fromDB = await orm.em.find(User, {
+        id: { $in: answer.map((u) => u.id!) },
+      })
+      expect(fromDB).toHaveLength(1)
+      expect(fromDB[0].name).toBe("User 3")
+    })
+
+    it("should use with custom input", async () => {
+      const insertMany = userFactory.insertManyMutation({
+        input: v.pipe(
+          v.object({
+            users: v.array(
+              v.object({
+                username: v.string(),
+                email: v.string(),
+              })
+            ),
+          }),
+          v.transform(({ users }) => ({
+            data: users.map((u) => ({
+              name: u.username.toUpperCase(),
+              email: u.email,
+              age: 30,
+            })),
+          }))
+        ),
+      })
+
+      const executor = resolver({ insertMany }).toExecutor()
+      const answer = await executor.insertMany({
+        users: [{ username: "user 5", email: "user5@example.com" }],
+      })
+
+      expect(answer).toHaveLength(1)
+      expect(answer[0].name).toBe("USER 5")
+
+      const fromDB = await orm.em.find(User, {
+        id: { $in: answer.map((u) => u.id!) },
+      })
+      expect(fromDB).toHaveLength(1)
+      expect(fromDB[0].name).toBe("USER 5")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        insertManyMutation: userFactory.insertManyMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/insertManyMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("deleteMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.deleteMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should delete entity correctly", async () => {
+      const deleteMutation = userFactory.deleteMutation()
+      const executor = resolver({ delete: deleteMutation }).toExecutor()
+      await orm.em.insert(User, {
+        name: "u1",
+        email: "user1@example.com",
+        age: 21,
+      })
+      expect(await orm.em.findOne(User, { name: "u1" })).toBeDefined()
+      const answer = await executor.delete({
+        where: { name: { eq: "u1" } },
+      })
+      expect(answer).toBe(1)
+      expect(await orm.em.findOne(User, { name: "u1" })).toBeNull()
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const deleteMutation = userFactory.deleteMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<number>()
+            return answer + 1
+          },
+        ],
+      })
+      const executor = resolver({ delete: deleteMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u2",
+        email: "user2@example.com",
+        age: 22,
+      })
+      const answer = await executor.delete({
+        where: { name: { eq: "u2" } },
+      })
+      expect(count).toBe(1)
+      expect(answer).toBe(2)
+    })
+
+    it("should use with custom input", async () => {
+      const deleteMutation = userFactory.deleteMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+          }),
+          v.transform(({ username }) => ({
+            where: { name: username },
+          }))
+        ),
+      })
+      const executor = resolver({ delete: deleteMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u4",
+        email: "user3@example.com",
+        age: 23,
+      })
+      const answer = await executor.delete({
+        username: "u4",
+      })
+      expect(answer).toBe(1)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        deleteMutation: userFactory.deleteMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/deleteMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("updateMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.updateMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should update entity correctly", async () => {
+      const updateMutation = userFactory.updateMutation()
+      const executor = resolver({ update: updateMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u5",
+        email: "user5@example.com",
+        age: 24,
+      })
+      const answer = await executor.update({
+        where: { name: { eq: "u5" } },
+        data: { age: 25 },
+      })
+      expect(answer).toBe(1)
+      expect(await orm.em.findOne(User, { name: "u5" })).toBeDefined()
+      expect((await orm.em.findOne(User, { name: "u5" }))?.age).toBe(25)
+    })
+
+    it("should use with middlewares", async () => {
+      let count = 0
+      const updateMutation = userFactory.updateMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            count++
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<number>()
+            return answer + 1
+          },
+        ],
+      })
+
+      const executor = resolver({ update: updateMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u6",
+        email: "user6@example.com",
+        age: 26,
+      })
+      const answer = await executor.update({
+        where: { name: { eq: "u6" } },
+        data: { age: 27 },
+      })
+      expect(count).toBe(1)
+      expect(answer).toBe(2)
+      expect(await orm.em.findOne(User, { name: "u6" })).toBeDefined()
+      expect((await orm.em.findOne(User, { name: "u6" }))?.age).toBe(27)
+    })
+
+    it("should use with custom input", async () => {
+      const updateMutation = userFactory.updateMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+          }),
+          v.transform(({ username }) => ({
+            where: { name: username },
+            data: { age: 28 },
+          }))
+        ),
+      })
+      const executor = resolver({ update: updateMutation }).toExecutor()
+
+      await orm.em.insert(User, {
+        name: "u7",
+        email: "user7@example.com",
+        age: 29,
+      })
+      const answer = await executor.update({
+        username: "u7",
+      })
+      expect(answer).toBe(1)
+      expect(await orm.em.findOne(User, { name: "u7" })).toBeDefined()
+      expect((await orm.em.findOne(User, { name: "u7" }))?.age).toBe(28)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        updateMutation: userFactory.updateMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/updateMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("upsertMutation", () => {
+    const User = defineEntity({
+      name: "User",
+      properties: (p) => ({
+        id: p.integer().primary().autoincrement(),
+        name: p.string(),
+        email: p.string(),
+        age: p.integer().nullable(),
+      }),
+    })
+    type IUser = InferEntity<typeof User>
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init({ ...ORMConfig, entities: [User] })
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.upsertMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should upsert entity correctly", async () => {
+      const upsertMutation = userFactory.upsertMutation()
+      const executor = resolver({ upsert: upsertMutation }).toExecutor()
+      let answer: IUser | null
+      answer = await executor.upsert({
+        data: {
+          id: 1,
+          age: 30,
+          name: "John Doe",
+          email: "john@example.com",
+        } satisfies RequiredEntityData<IUser>,
+      })
+
+      expect(answer).toBeDefined()
+      expect(answer.age).toBe(30)
+
+      answer = await orm.em.findOne(User, answer.id)
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(30)
+
+      answer = await executor.upsert({
+        data: { ...answer, age: 31 },
+      })
+
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(31)
+
+      answer = await orm.em.findOne(User, answer.id)
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(31)
+    })
+
+    it("should use with custom input", async () => {
+      const upsertMutation = userFactory.upsertMutation({
+        input: v.pipe(
+          v.object({
+            username: v.string(),
+          }),
+          v.transform(({ username }) => ({
+            data: {
+              name: username,
+              age: 20,
+              email: `${username}@example.com`,
+            },
+          }))
+        ),
+      })
+      const executor = resolver({ upsert: upsertMutation }).toExecutor()
+      const answer = await executor.upsert({
+        username: "john doe",
+      })
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(20)
+      expect(answer?.email).toBe("john doe@example.com")
+      expect(answer?.name).toBe("john doe")
+    })
+
+    it("should use with middlewares", async () => {
+      const upsertMutation = userFactory.upsertMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser>()
+            return { ...answer, name: answer.name.toUpperCase() }
+          },
+        ],
+      })
+
+      const executor = resolver({ upsert: upsertMutation }).toExecutor()
+      const answer = await executor.upsert({
+        data: {
+          name: "john doe",
+          age: 20,
+          email: "john doe@example.com",
+        },
+      })
+      expect(answer).toBeDefined()
+      expect(answer?.age).toBe(20)
+      expect(answer?.email).toBe("john doe@example.com")
+      expect(answer?.name).toBe("JOHN DOE")
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        upsertMutation: userFactory.upsertMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/upsertMutation.graphql"
+      )
+    })
+  })
+
+  describe.concurrent("upsertManyMutation", () => {
+    let orm: MikroORM
+    let userFactory: MikroResolverFactory<IUser>
+    beforeAll(async () => {
+      orm = await MikroORM.init(ORMConfig)
+      await orm.getSchemaGenerator().updateSchema()
+      userFactory = new MikroResolverFactory(User, () => orm.em)
+    })
+
+    it("should be created without error", async () => {
+      const mutation = userFactory.upsertManyMutation()
+      expect(mutation).toBeDefined()
+    })
+
+    it("should upsert many entities correctly", async () => {
+      const upsertManyMutation = userFactory.upsertManyMutation()
+      const executor = resolver({ upsertMany: upsertManyMutation }).toExecutor()
+      const answer = await executor.upsertMany({
+        data: [
+          { id: 3, name: "User 3", email: "user3@example.com", age: 23 },
+          { id: 4, name: "User 4", email: "user4@example.com", age: 24 },
+        ],
+      })
+      expect(answer).toHaveLength(2)
+      expect(answer[0].name).toBe("User 3")
+      expect(answer[0].email).toBe("user3@example.com")
+      expect(answer[0].age).toBe(23)
+      expect(answer[1].name).toBe("User 4")
+      expect(answer[1].email).toBe("user4@example.com")
+      expect(answer[1].age).toBe(24)
+    })
+
+    it("should use with custom input", async () => {
+      const upsertManyMutation = userFactory.upsertManyMutation({
+        input: v.pipe(
+          v.object({
+            users: v.array(
+              v.object({
+                id: v.number(),
+                name: v.string(),
+                email: v.nullish(v.string()),
+                age: v.number(),
+              })
+            ),
+          }),
+
+          v.transform(({ users }) => ({
+            data: users.map((u) => ({
+              id: u.id,
+              name: u.name,
+              email: u.email ?? `${u.name}@example.com`,
+              age: u.age,
+            })),
+          }))
+        ),
+      })
+      const executor = resolver({ upsertMany: upsertManyMutation }).toExecutor()
+      const answer = await executor.upsertMany({
+        users: [
+          { id: 5, name: "User 3", email: "user3@example.com", age: 23 },
+          { id: 6, name: "User 4", email: "user4@example.com", age: 24 },
+        ],
+      })
+
+      expect(answer).toHaveLength(2)
+      expect(answer[0].name).toBe("User 3")
+      expect(answer[0].email).toBe("user3@example.com")
+      expect(answer[0].age).toBe(23)
+      expect(answer[1].name).toBe("User 4")
+      expect(answer[1].email).toBe("user4@example.com")
+      expect(answer[1].age).toBe(24)
+    })
+
+    it("should use with middlewares", async () => {
+      const upsertManyMutation = userFactory.upsertManyMutation({
+        middlewares: [
+          async ({ parseInput, next }) => {
+            const opts = await parseInput()
+            if (opts.issues) throw new Error("Invalid input")
+            const answer = await next()
+            expectTypeOf(answer).toEqualTypeOf<IUser[]>()
+            return answer.map((a: IUser) => ({
+              ...a,
+              name: a.name.toUpperCase(),
+            }))
+          },
+        ],
+      })
+
+      const executor = resolver({ upsertMany: upsertManyMutation }).toExecutor()
+      const answer = await executor.upsertMany({
+        data: [
+          { id: 7, name: "User 3", email: "user3@example.com", age: 23 },
+          { id: 8, name: "User 4", email: "user4@example.com", age: 24 },
+        ],
+      })
+
+      expect(answer).toHaveLength(2)
+      expect(answer[0].name).toBe("USER 3")
+      expect(answer[0].email).toBe("user3@example.com")
+      expect(answer[0].age).toBe(23)
+      expect(answer[1].name).toBe("USER 4")
+      expect(answer[1].email).toBe("user4@example.com")
+      expect(answer[1].age).toBe(24)
+    })
+
+    it("should weave schema without error", async () => {
+      const r = resolver({
+        upsertManyMutation: userFactory.upsertManyMutation(),
+      })
+      const schema = weave(r)
+      await expect(printSchema(schema)).toMatchFileSnapshot(
+        "./snapshots/upsertManyMutation.graphql"
+      )
     })
   })
 })
-
-function printSilk(silk: GraphQLSilk) {
-  const gqlType = getGraphQLType(silk)
-  if (gqlType instanceof GraphQLNonNull) {
-    return printType(gqlType.ofType as GraphQLNamedType)
-  }
-  return printType(gqlType as GraphQLNamedType)
-}
-
-function unwrap(gqlType: GraphQLOutputType) {
-  if (gqlType instanceof GraphQLNonNull) {
-    return unwrap(gqlType.ofType)
-  }
-  if (gqlType instanceof GraphQLList) {
-    return unwrap(gqlType.ofType)
-  }
-  return gqlType
-}

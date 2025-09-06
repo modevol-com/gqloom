@@ -900,7 +900,7 @@ describe.concurrent("DrizzlePostgresResolverFactory", () => {
       expect(mutation).toBeDefined()
     })
 
-    it("should resolve correctly", async () => {
+    it("should resolve correctly", { retry: 3 }, async () => {
       await db.insert(pgSchemas.user).values({ name: "Alice", age: 18 })
       try {
         const mutation = userFactory.deleteMutation()

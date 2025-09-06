@@ -12,7 +12,8 @@
       "**/generated/**/*",
       "packages/prisma/test/client/**/*",
       "coverage/",
-      "**/*.css"
+      "**/*.css",
+      "**/snapshots/**/*"
     ]
   },
   "formatter": {

@@ -1,0 +1,109 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  age: Int
+  posts(where: PostFilter): [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+}
+
+input PostFilter {
+  id: IDComparisonOperators
+  title: StringComparisonOperators
+  content: StringComparisonOperators
+}
+
+input IDComparisonOperators {
+  """Equals. Matches values that are equal to a specified value."""
+  eq: ID
+
+  """Greater. Matches values that are greater than a specified value."""
+  gt: ID
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: ID
+
+  """Contains, Contains, Matches any of the values specified in an array."""
+  in: [ID!]
+
+  """Lower, Matches values that are less than a specified value."""
+  lt: ID
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: ID
+
+  """Not equal. Matches all values that are not equal to a specified value."""
+  ne: ID
+
+  """Not contains. Matches none of the values specified in an array."""
+  nin: [ID!]
+
+  """&&"""
+  overlap: [ID!]
+
+  """@>"""
+  contains: [ID!]
+
+  """<@"""
+  contained: [ID!]
+}
+
+input StringComparisonOperators {
+  """Equals. Matches values that are equal to a specified value."""
+  eq: String
+
+  """Greater. Matches values that are greater than a specified value."""
+  gt: String
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: String
+
+  """Contains, Contains, Matches any of the values specified in an array."""
+  in: [String!]
+
+  """Lower, Matches values that are less than a specified value."""
+  lt: String
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: String
+
+  """Not equal. Matches all values that are not equal to a specified value."""
+  ne: String
+
+  """Not contains. Matches none of the values specified in an array."""
+  nin: [String!]
+
+  """&&"""
+  overlap: [String!]
+
+  """@>"""
+  contains: [String!]
+
+  """<@"""
+  contained: [String!]
+
+  """Like. Uses LIKE operator"""
+  like: String
+
+  """Regexp. Uses REGEXP operator"""
+  re: String
+
+  """Full text.	A driver specific full text search function."""
+  fulltext: String
+
+  """ilike"""
+  ilike: String
+}
