@@ -110,7 +110,7 @@ export const Cat = z.object({
 
 ```ts twoslash
 import * as z from "zod"
-import { collectNames } from "@gqloom/zod"
+import { collectNames } from "@gqloom/core"
 
 export const Cat = z.object({
   name: z.string(),
@@ -125,7 +125,7 @@ collectNames({ Cat })
 
 ```ts twoslash
 import * as z from "zod"
-import { collectNames } from "@gqloom/zod"
+import { collectNames } from "@gqloom/core"
 
 export const { Cat } = collectNames({
   Cat: z.object({
@@ -479,7 +479,8 @@ const Animal = z
 
 ```ts twoslash
 import { z } from "zod/v4"
-import { asUnionType, collectNames } from "@gqloom/zod"
+import { collectNames } from "@gqloom/core"
+import { asUnionType } from "@gqloom/zod"
 
 const Cat = z.object({
   name: z.string(),

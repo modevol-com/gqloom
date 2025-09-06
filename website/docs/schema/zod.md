@@ -110,7 +110,7 @@ In the code above we are still using the `__typename` literal to define the name
 
 ```ts twoslash
 import * as z from "zod"
-import { collectNames } from "@gqloom/zod"
+import { collectNames } from "@gqloom/core"
 
 export const Cat = z.object({
   name: z.string(),
@@ -125,7 +125,7 @@ In the above code, we are using the `collectNames` function to define names for 
 
 ```ts twoslash
 import * as z from "zod"
-import { collectNames } from "@gqloom/zod"
+import { collectNames } from "@gqloom/core"
 
 export const { Cat } = collectNames({
   Cat: z.object({
@@ -479,7 +479,8 @@ We can also use `z.union` to define union types:
 
 ```ts twoslash
 import { z } from "zod/v4"
-import { asUnionType, collectNames } from "@gqloom/zod"
+import { collectNames } from "@gqloom/core"
+import { asUnionType } from "@gqloom/zod"
 
 const Cat = z.object({
   name: z.string(),
