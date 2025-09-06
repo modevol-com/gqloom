@@ -11,8 +11,9 @@ import {
   QueryFactoryWithResolve,
   type QueryOptions,
   type ResolverOptionsWithExtensions,
+  type ResolvingFields,
   capitalize,
-  getResolvingFields,
+  getDeepResolvingFields,
   loom,
   silk,
   weaverContext,
@@ -342,16 +343,17 @@ export class MikroResolverFactory<TEntity extends object> {
         { where, ...args }: FindByCursorQueryOptions<TEntity>,
         payload
       ) => {
-        const includeCount = (() => {
-          if (!payload) return true
-          return getResolvingFields(payload).selectedFields.has("totalCount")
-        })()
-        // if (payload) {
-        //   const resolvingFields = getResolvingFields(payload)
-        //   console.log("🧐 resolvingFields: ", resolvingFields)
-        // }
+        const deepFields = payload
+          ? getDeepResolvingFields(payload)
+          : new Map<string, ResolvingFields>()
+        const includeCount = deepFields
+          .get("")
+          ?.selectedFields.has("totalCount")
+        const fields = Array.from(
+          deepFields.get("items")?.selectedFields ?? ["*"]
+        )
         return (await this.em()).findByCursor(this.entityName, where ?? {}, {
-          // fields: getSelectedFields(payload), // FIXME
+          fields,
           includeCount,
           ...args,
         })

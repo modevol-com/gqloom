@@ -412,7 +412,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.* from \`user\` as \`u0\` order by \`u0\`.\`id\` asc limit 2",
+          "[query] select \`u0\`.\`id\` from \`user\` as \`u0\` order by \`u0\`.\`id\` asc limit 2",
         ]
       `)
     })
