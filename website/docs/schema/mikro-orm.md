@@ -673,6 +673,7 @@ const useEm = createMemoization(() => ({}) as EntityManager)
 import { field } from "@gqloom/core"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
 import * as v from "valibot"
+
 const userFactory = new MikroResolverFactory(User, {
   getEntityManager: useEm,
   input: {
