@@ -342,6 +342,7 @@ describe("Mikro Resolver", () => {
             posts {
               id
               title
+              content
               author {
                 name
               }
@@ -358,6 +359,7 @@ describe("Mikro Resolver", () => {
                   "author": {
                     "name": "User 1",
                   },
+                  "content": "Content 1",
                   "id": "1",
                   "title": "Post 1",
                 },
@@ -365,6 +367,7 @@ describe("Mikro Resolver", () => {
                   "author": {
                     "name": "User 1",
                   },
+                  "content": "Content 2",
                   "id": "2",
                   "title": "Post 2",
                 },
@@ -377,6 +380,8 @@ describe("Mikro Resolver", () => {
         [
           "[query] select \`u0\`.\`id\`, \`p1\`.\`id\` as \`p1__id\`, \`p1\`.\`title\` as \`p1__title\`, \`p1\`.\`author_id\` as \`p1__author_id\` from \`user\` as \`u0\` left join \`post\` as \`p1\` on \`u0\`.\`id\` = \`p1\`.\`author_id\` where \`u0\`.\`name\` = 'User 1'",
           "[query] select \`p0\`.\`id\`, \`p0\`.\`title\`, \`p0\`.\`author_id\` from \`post\` as \`p0\` where \`p0\`.\`author_id\` in (1)",
+          "[query] select \`p0\`.\`id\`, \`p0\`.\`content\` from \`post\` as \`p0\` where \`p0\`.\`id\` in (1)",
+          "[query] select \`p0\`.\`id\`, \`p0\`.\`content\` from \`post\` as \`p0\` where \`p0\`.\`id\` in (2)",
         ]
       `)
     })
@@ -392,6 +397,7 @@ describe("Mikro Resolver", () => {
             endCursor
             hasNextPage
             hasPrevPage
+            totalCount
           }
         }
       `)
@@ -407,12 +413,14 @@ describe("Mikro Resolver", () => {
               },
             ],
             "startCursor": "WzFd",
+            "totalCount": 3,
           },
         }
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
           "[query] select \`u0\`.\`id\` from \`user\` as \`u0\` order by \`u0\`.\`id\` asc limit 2",
+          "[query] select count(*) as \`count\` from \`user\` as \`u0\`",
         ]
       `)
     })
