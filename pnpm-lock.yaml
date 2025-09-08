@@ -63,10 +63,10 @@ importers:
         version: 0.2.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@hono/graphql-server':
         specifier: ^0.5.1
-        version: 0.5.1(hono@4.7.2)
+        version: 0.5.1(hono@4.9.6)
       '@hono/node-server':
         specifier: ^1.13.8
-        version: 1.13.8(hono@4.7.2)
+        version: 1.13.8(hono@4.9.6)
       fastify:
         specifier: ^5.4.0
         version: 5.4.0
@@ -77,8 +77,8 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       hono:
-        specifier: ^4.7.2
-        version: 4.7.2
+        specifier: ^4.9.6
+        version: 4.9.6
       mercurius:
         specifier: ^16.2.0
         version: 16.2.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
@@ -3458,8 +3458,8 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  hono@4.7.2:
-    resolution: {integrity: sha512-8V5XxoOF6SI12jkHkzX/6aLBMU5GEF5g387EjVSQipS0DlxWgWGSMeEayY3CRBjtTUQYwLHx9JYouWqKzy2Vng==}
+  hono@4.9.6:
+    resolution: {integrity: sha512-doVjXhSFvYZ7y0dNokjwwSahcrAfdz+/BCLvAMa/vHLzjj8+CFyV5xteThGUsKdkaasgN+gF2mUxao+SGLpUeA==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -6305,14 +6305,14 @@ snapshots:
       '@repeaterjs/repeater': 3.0.6
       tslib: 2.8.1
 
-  '@hono/graphql-server@0.5.1(hono@4.7.2)':
+  '@hono/graphql-server@0.5.1(hono@4.9.6)':
     dependencies:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-      hono: 4.7.2
+      hono: 4.9.6
 
-  '@hono/node-server@1.13.8(hono@4.7.2)':
+  '@hono/node-server@1.13.8(hono@4.9.6)':
     dependencies:
-      hono: 4.7.2
+      hono: 4.9.6
 
   '@iconify-json/simple-icons@1.2.49':
     dependencies:
@@ -8436,7 +8436,7 @@ snapshots:
 
   he@1.2.0: {}
 
-  hono@4.7.2: {}
+  hono@4.9.6: {}
 
   hookable@5.5.3: {}
 
