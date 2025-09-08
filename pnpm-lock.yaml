@@ -65,8 +65,8 @@ importers:
         specifier: ^0.5.1
         version: 0.5.1(hono@4.9.6)
       '@hono/node-server':
-        specifier: ^1.13.8
-        version: 1.13.8(hono@4.9.6)
+        specifier: ^1.19.1
+        version: 1.19.1(hono@4.9.6)
       fastify:
         specifier: ^5.4.0
         version: 5.4.0
@@ -1388,8 +1388,8 @@ packages:
     peerDependencies:
       hono: '>=3.0.0'
 
-  '@hono/node-server@1.13.8':
-    resolution: {integrity: sha512-fsn8ucecsAXUoVxrUil0m13kOEq4mkX4/4QozCqmY+HpGfKl74OYSn8JcMA8GnG0ClfdRI4/ZSeG7zhFaVg+wg==}
+  '@hono/node-server@1.19.1':
+    resolution: {integrity: sha512-h44e5s+ByUriaRIbeS/C74O8v90m0A95luyYQGMF7KEn96KkYMXO7bZAwombzTpjQTU4e0TkU8U1WBIXlwuwtA==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
@@ -6310,7 +6310,7 @@ snapshots:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
       hono: 4.9.6
 
-  '@hono/node-server@1.13.8(hono@4.9.6)':
+  '@hono/node-server@1.19.1(hono@4.9.6)':
     dependencies:
       hono: 4.9.6
 
