@@ -80,6 +80,7 @@ In `GQLoom`, validation of parser output is not performed by default. However, w
 
 ```ts twoslash
 import { silk, type Middleware } from "@gqloom/core"
+import { GraphQLError } from "graphql"
 
 export const outputValidator: Middleware = async (opts) => {
   const output = await opts.next()

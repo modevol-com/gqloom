@@ -80,6 +80,7 @@ export const zodExceptionFilter: Middleware = async (next) => {
 
 ```ts twoslash
 import { silk, type Middleware } from "@gqloom/core"
+import { GraphQLError } from "graphql"
 
 export const outputValidator: Middleware = async (opts) => {
   const output = await opts.next()
