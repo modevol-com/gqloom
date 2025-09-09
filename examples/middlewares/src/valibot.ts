@@ -5,11 +5,10 @@ import * as v from "valibot"
 import { ValibotExceptionFilter, outputValidator } from "./middlewares"
 
 const helloResolver = resolver({
-  hello: query(v.pipe(v.string(), v.minLength(10)), {
-    input: { name: v.string() },
-    resolve: ({ name }) => `Hello, ${name}`,
-    middlewares: [outputValidator],
-  }),
+  hello: query(v.pipe(v.string(), v.minLength(10)))
+    .input({ name: v.string() })
+    .use(outputValidator)
+    .resolve(({ name }) => `Hello, ${name}`),
 })
 
 export const schema = weave(
