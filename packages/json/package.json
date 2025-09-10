@@ -1,7 +1,7 @@
 {
-  "name": "@gqloom/yup",
+  "name": "@gqloom/json",
   "version": "0.10.0",
-  "description": "Create GraphQL schema and resolvers easily using using Yup!",
+  "description": "Create GraphQL schema and resolvers easily using using JSON Schema!",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,28 +27,29 @@
     "graphql",
     "schema",
     "typescript",
-    "yup",
+    "json-schema",
     "validation",
     "validate"
   ],
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "graphql": ">= 16.8.0",
     "@gqloom/core": ">= 0.10.0",
-    "yup": ">= 1.0.0"
+    "graphql": ">= 16.8.0"
   },
   "devDependencies": {
-    "yup": "^1.4.0",
     "@gqloom/core": "workspace:*"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
     "type": "git",
     "url": "https://github.com/modevol-com/gqloom.git",
-    "directory": "packages/yup"
+    "directory": "packages/json"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "json-schema-to-ts": "^3.1.1"
   }
 }
