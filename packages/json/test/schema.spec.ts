@@ -153,6 +153,26 @@ describe("JSONWeaver", () => {
     )
   })
 
+  it("should be able to serialized", () => {
+    const Dog = jsonSilk({
+      title: "Dog",
+      type: "object",
+      properties: { name: { type: "string" } },
+    })
+    const serialized = JSON.stringify(Dog, null, 2)
+    expect(serialized).toMatchInlineSnapshot(`
+      "{
+        "title": "Dog",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }"
+    `)
+  })
+
   describe("should avoid duplicate", () => {
     it("should avoid duplicate object", () => {
       const Dog = jsonSilk({

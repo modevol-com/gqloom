@@ -2,6 +2,7 @@ import {
   type GraphQLSilk,
   LoomObjectType,
   SYMBOLS,
+  type StandardSchemaV1,
   mapValue,
   weaverContext,
 } from "@gqloom/core"
@@ -23,8 +24,6 @@ import {
 import type { FromSchema, JSONSchema } from "json-schema-to-ts"
 import type { JSONWeaverConfig } from "./types"
 
-type ObjectJSONSchema = Exclude<JSONSchema, boolean>
-
 export class JSONWeaver {
   public static vendor = "json"
 
@@ -40,15 +39,26 @@ export class JSONWeaver {
     const config =
       weaverContext.value?.getConfig<JSONWeaverConfig>("gqloom.json")
 
-    return Object.assign(schema, {
-      [SYMBOLS.GET_GRAPHQL_TYPE]: config
-        ? function (this: ObjectJSONSchema) {
+    Object.defineProperty(schema, "~standard", {
+      value: {
+        version: 1,
+        vendor: "gqloom.json",
+        validate: (value: unknown) => ({ value: value as TData }),
+      } satisfies StandardSchemaV1.Props<TData, TData>,
+      enumerable: false,
+    })
+
+    Object.defineProperty(schema, SYMBOLS.GET_GRAPHQL_TYPE, {
+      value: config
+        ? function (this: JSONSchema) {
             return weaverContext.useConfig(config, () =>
               JSONWeaver.getGraphQLTypeBySelf.call(this)
             )
           }
         : JSONWeaver.getGraphQLTypeBySelf,
-    }) as any
+      enumerable: false,
+    })
+    return schema as JSONSilk<TSchema, TData>
   }
 
   public static getGraphQLType(schema: JSONSchema): GraphQLOutputType {
