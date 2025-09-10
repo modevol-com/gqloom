@@ -33,9 +33,10 @@ export class JSONWeaver {
    * @param schema JSON Schema
    * @returns GraphQL Silk Like JSON Schema
    */
-  public static unravel<TSchema extends JSONSchema>(
-    schema: TSchema
-  ): JSONSilk<TSchema> {
+  public static unravel<
+    const TSchema extends JSONSchema,
+    TData = FromSchema<TSchema>,
+  >(schema: TSchema): JSONSilk<TSchema, TData> {
     const config =
       weaverContext.value?.getConfig<JSONWeaverConfig>("gqloom.json")
 
@@ -47,7 +48,7 @@ export class JSONWeaver {
             )
           }
         : JSONWeaver.getGraphQLTypeBySelf,
-    }) as JSONSilk<TSchema>
+    }) as any
   }
 
   public static getGraphQLType(schema: JSONSchema): GraphQLOutputType {
@@ -207,5 +208,14 @@ export class JSONWeaver {
   }
 }
 
-export type JSONSilk<TSchema extends JSONSchema> = TSchema &
-  GraphQLSilk<FromSchema<TSchema>, FromSchema<TSchema>>
+type JSONSilk<
+  TSchema extends JSONSchema,
+  TData = FromSchema<TSchema>,
+> = TSchema & GraphQLSilk<TData, TData>
+
+export function jsonSilk<
+  const TSchema extends JSONSchema,
+  TData = FromSchema<TSchema>,
+>(schema: TSchema): JSONSilk<TSchema, TData> {
+  return JSONWeaver.unravel(schema) as any
+}

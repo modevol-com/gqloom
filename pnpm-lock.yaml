@@ -406,6 +406,9 @@ importers:
 
   packages/json:
     dependencies:
+      graphql:
+        specifier: '>= 16.8.0'
+        version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
       json-schema-to-ts:
         specifier: ^3.1.1
         version: 3.1.1
@@ -413,6 +416,9 @@ importers:
       '@gqloom/core':
         specifier: workspace:*
         version: link:../core
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
 
   packages/mikro-orm:
     dependencies:

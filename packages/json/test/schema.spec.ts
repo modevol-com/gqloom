@@ -1,3 +1,5 @@
+import { type Loom, field, query, resolver, silk, weave } from "@gqloom/core"
+import Ajv from "ajv"
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -7,10 +9,11 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  printSchema,
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { JSONWeaver } from "../src"
+import { JSONWeaver, jsonSilk } from "../src"
 
 const getGraphQLType = JSONWeaver.getGraphQLType
 
@@ -130,10 +133,106 @@ describe("JSONWeaver", () => {
     )
     expect(printed).toEqual("union Animal = Cat | Dog")
   })
+
+  it("should work with ajv", () => {
+    const Dog = jsonSilk({
+      title: "Dog",
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        birthday: { type: "string" },
+      },
+      required: ["name", "birthday"],
+      additionalProperties: false,
+    })
+    const ajv = new Ajv()
+    const validate = ajv.compile(Dog)
+    expect(validate({ name: "Fido", birthday: "2012-12-12" })).toBe(true)
+    expect(validate({ name: "Fido", birthday: "2012-12-12", age: 10 })).toBe(
+      false
+    )
+  })
+
+  describe("should avoid duplicate", () => {
+    it("should avoid duplicate object", () => {
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+        },
+        required: ["name", "birthday"],
+        additionalProperties: false,
+      })
+
+      const Cat = jsonSilk({
+        title: "Cat",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+          friend: Dog,
+        },
+        required: ["name", "birthday"],
+        additionalProperties: false,
+      })
+
+      const r1 = resolver.of(Dog, {
+        dog: query(silk.nullable(Dog), () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        cat: query(Cat, () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        dogs: query(silk.list(silk.nullable(Dog)), () => [
+          { name: "Fido", birthday: "2012-12-12" },
+          { name: "Rover", birthday: "2012-12-12" },
+        ]),
+        mustDog: query(Dog, () => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        mustDogs: query(silk.list(Dog), () => []),
+        age: field(jsonSilk({ type: "number" })).resolve((dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+        }
+
+        type Query {
+          dog: Dog
+          cat: Cat!
+          dogs: [Dog]!
+          mustDog: Dog!
+          mustDogs: [Dog!]!
+        }
+
+        type Cat {
+          name: String!
+          birthday: String!
+          friend: Dog
+        }"
+      `)
+    })
+  })
 })
 
 function printJSONSchema(schema: Parameters<typeof getGraphQLType>[0]): string {
   let gqlType = getGraphQLType(schema)
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
+}
+
+function printResolver(...resolvers: Loom.Resolver[]): string {
+  const schema = weave(...resolvers)
+  return printSchema(schema)
 }

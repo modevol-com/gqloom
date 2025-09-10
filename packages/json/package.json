@@ -38,7 +38,8 @@
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
-    "@gqloom/core": "workspace:*"
+    "@gqloom/core": "workspace:*",
+    "ajv": "^8.17.1"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
