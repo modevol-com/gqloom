@@ -275,7 +275,7 @@ describe("JSONWeaver", () => {
 
   describe("should avoid duplicate", () => {
     it("should avoid duplicate object", () => {
-      const Dog = jsonSilk({
+      const Dog = {
         title: "Dog",
         type: "object",
         properties: {
@@ -284,9 +284,9 @@ describe("JSONWeaver", () => {
         },
         required: ["name", "birthday"],
         additionalProperties: false,
-      })
+      } as const
 
-      const Cat = jsonSilk({
+      const Cat = {
         title: "Cat",
         type: "object",
         properties: {
@@ -296,26 +296,26 @@ describe("JSONWeaver", () => {
         },
         required: ["name", "birthday"],
         additionalProperties: false,
-      })
+      } as const
 
-      const r1 = resolver.of(Dog, {
-        dog: query(silk.nullable(Dog), () => ({
+      const r1 = resolver.of(jsonSilk(Dog), {
+        dog: query(silk.nullable(jsonSilk(Dog)), () => ({
           name: "",
           birthday: "2012-12-12",
         })),
-        cat: query(Cat, () => ({
+        cat: query(jsonSilk(Cat), () => ({
           name: "",
           birthday: "2012-12-12",
         })),
-        dogs: query(silk.list(silk.nullable(Dog)), () => [
+        dogs: query(silk.list(silk.nullable(jsonSilk(Dog))), () => [
           { name: "Fido", birthday: "2012-12-12" },
           { name: "Rover", birthday: "2012-12-12" },
         ]),
-        mustDog: query(Dog, () => ({
+        mustDog: query(jsonSilk(Dog), () => ({
           name: "",
           birthday: "2012-12-12",
         })),
-        mustDogs: query(silk.list(Dog), () => []),
+        mustDogs: query(silk.list(jsonSilk(Dog)), () => []),
         age: field(jsonSilk({ type: "number" })).resolve((dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),

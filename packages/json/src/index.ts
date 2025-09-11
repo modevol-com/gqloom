@@ -54,25 +54,29 @@ export class JSONWeaver {
     const config =
       weaverContext.value?.getConfig<JSONWeaverConfig>("gqloom.json")
 
-    Object.defineProperty(schema, "~standard", {
-      value: {
-        version: 1,
-        vendor: "gqloom.json",
-        validate: (value: unknown) => ({ value: value as TData }),
-      } satisfies StandardSchemaV1.Props<TData, TData>,
-      enumerable: false,
-    })
+    if (typeof schema === "object" && !("~standard" in schema)) {
+      Object.defineProperty(schema, "~standard", {
+        value: {
+          version: 1,
+          vendor: "gqloom.json",
+          validate: (value: unknown) => ({ value: value as TData }),
+        } satisfies StandardSchemaV1.Props<TData, TData>,
+        enumerable: false,
+      })
+    }
 
-    Object.defineProperty(schema, SYMBOLS.GET_GRAPHQL_TYPE, {
-      value: config
-        ? function (this: JSONSchema) {
-            return weaverContext.useConfig(config, () =>
-              JSONWeaver.getGraphQLTypeBySelf.call(this)
-            )
-          }
-        : JSONWeaver.getGraphQLTypeBySelf,
-      enumerable: false,
-    })
+    if (typeof schema === "object" && !(SYMBOLS.GET_GRAPHQL_TYPE in schema)) {
+      Object.defineProperty(schema, SYMBOLS.GET_GRAPHQL_TYPE, {
+        value: config
+          ? function (this: JSONSchema) {
+              return weaverContext.useConfig(config, () =>
+                JSONWeaver.getGraphQLTypeBySelf.call(this)
+              )
+            }
+          : JSONWeaver.getGraphQLTypeBySelf,
+        enumerable: false,
+      })
+    }
     return schema as JSONSilk<TSchema, TData>
   }
 
