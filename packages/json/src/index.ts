@@ -129,61 +129,61 @@ export class JSONWeaver {
 
     // Handle allOf - creates interfaces and implementing objects
     if (schema.allOf) {
-      const name = schema.title ?? schema.$id
-      if (!name) {
-        throw new Error("allOf schema must have a name (from title or $id)")
-      }
-
-      // Find the first schema that could be an interface (has title and properties)
-      const interfaceSchema = schema.allOf.find((s) => {
+      // Find all schemas that could be interfaces (have title and properties)
+      const interfaceSchemas = schema.allOf.filter((s) => {
         const subSchema = s as JSONSchema
         return (
           typeof subSchema === "object" &&
           subSchema.title &&
           subSchema.properties
         )
-      }) as JSONSchema | undefined
+      }) as JSONSchema[]
 
-      if (interfaceSchema && typeof interfaceSchema === "object") {
-        // Create interface object type first, then convert to interface
-        const interfaceObjectType =
-          JSONWeaver.toMemoriedGraphQLType(interfaceSchema)
-        const interfaceType = ensureInterfaceType(interfaceObjectType)
+      // Always merge all schemas in allOf
+      const mergedProperties: Record<string, any> = {}
+      const mergedRequired: string[] = []
 
-        // Merge all schemas to create the implementing object
-        const mergedProperties: Record<string, any> = {}
-        const mergedRequired: string[] = []
-
-        for (const subSchema of schema.allOf) {
-          const s = subSchema as JSONSchema
-          if (typeof s === "object" && s.properties) {
-            Object.assign(mergedProperties, s.properties)
-            if (s.required) {
-              mergedRequired.push(...s.required)
-            }
+      for (const subSchema of schema.allOf) {
+        const s = subSchema as JSONSchema
+        if (typeof s === "object" && s.properties) {
+          Object.assign(mergedProperties, s.properties)
+          if (s.required) {
+            mergedRequired.push(...s.required)
           }
         }
+      }
 
-        // Create the merged schema and reuse existing object logic
-        const mergedSchema: JSONSchema = {
-          title: name,
-          type: "object",
-          properties: mergedProperties,
-          required: mergedRequired,
-          description: schema.description,
-        }
+      // Create the merged schema and reuse existing object logic
+      const mergedSchema: JSONSchema = {
+        title: schema.title,
+        type: "object",
+        properties: mergedProperties,
+        required: mergedRequired,
+        description: schema.description,
+      }
 
-        // Create the object type using existing logic
-        const objectType = JSONWeaver.toGraphQLTypeInner(
-          mergedSchema
-        ) as GraphQLObjectType
+      // Create the object type using existing logic
+      const objectType = JSONWeaver.toGraphQLTypeInner(
+        mergedSchema
+      ) as GraphQLObjectType
 
-        // Return new object type with interface
+      // If there are interfaces, create object type with interfaces
+      if (interfaceSchemas.length > 0) {
+        // Create interface types for all interface schemas
+        const interfaceTypes = interfaceSchemas.map((interfaceSchema) => {
+          const interfaceObjectType =
+            JSONWeaver.toMemoriedGraphQLType(interfaceSchema)
+          return ensureInterfaceType(interfaceObjectType)
+        })
+
         return new GraphQLObjectType({
           ...objectType.toConfig(),
-          interfaces: [interfaceType],
+          interfaces: interfaceTypes,
         })
       }
+
+      // If no interfaces, just return the merged object type
+      return objectType
     }
 
     if (schema.oneOf || schema.anyOf) {

@@ -614,6 +614,116 @@ describe("JSONWeaver", () => {
       `)
     })
 
+    it("should handle multiple interfaces", () => {
+      const Named = jsonSilk({
+        title: "Named",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+      })
+
+      const Colored = jsonSilk({
+        title: "Colored",
+        type: "object",
+        properties: {
+          color: { type: "string" },
+        },
+        required: ["color"],
+      })
+
+      const Orange = jsonSilk({
+        title: "Orange",
+        allOf: [
+          Named,
+          Colored,
+          {
+            type: "object",
+            properties: {
+              sweetness: { type: "number" },
+            },
+            required: ["sweetness"],
+          },
+        ],
+      })
+
+      const r = resolver.of(Orange, {
+        orange: query(Orange, () => ({
+          name: "Orange",
+          color: "orange",
+          sweetness: 8,
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Orange implements Named & Colored {
+          name: String!
+          color: String!
+          sweetness: Float!
+        }
+
+        interface Named {
+          name: String!
+        }
+
+        interface Colored {
+          color: String!
+        }
+
+        type Query {
+          orange: Orange!
+        }"
+      `)
+    })
+
+    it("should handle allOf without interfaces (just property merging)", () => {
+      const BasicInfo = {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          age: { type: "number" },
+        },
+        required: ["name"],
+      } as const
+
+      const ContactInfo = {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          phone: { type: "string" },
+        },
+        required: ["email"],
+      } as const
+
+      const Person = jsonSilk({
+        title: "Person",
+        allOf: [BasicInfo, ContactInfo],
+      })
+
+      const r = resolver.of(Person, {
+        person: query(Person, () => ({
+          name: "John",
+          age: 30,
+          email: "john@example.com",
+          phone: "123-456-7890",
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Person {
+          name: String!
+          age: Float
+          email: String!
+          phone: String
+        }
+
+        type Query {
+          person: Person!
+        }"
+      `)
+    })
+
     it("should avoid duplicate interfaces", () => {
       const Fruit = jsonSilk({
         title: "Fruit",
