@@ -8,6 +8,7 @@ import {
   type GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
+  GraphQLScalarType,
   GraphQLString,
   printSchema,
   printType,
@@ -243,6 +244,606 @@ describe("JSONWeaver", () => {
         }"
       `)
     })
+  })
+
+  describe("should handle input types", () => {
+    it("should convert object schema to input type for mutations", () => {
+      const DogInput = jsonSilk({
+        title: "DogInput",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+        },
+        required: ["name", "birthday"],
+        additionalProperties: false,
+      })
+
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+        },
+        required: ["name", "birthday"],
+        additionalProperties: false,
+      })
+
+      const r1 = resolver.of(Dog, {
+        createDog: query(Dog, {
+          input: DogInput,
+          resolve: (data) => ({ ...data }),
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+          birthday: String!
+        }
+
+        type Query {
+          createDog(name: String!, birthday: String!): Dog!
+        }"
+      `)
+    })
+
+    it("should handle nested input objects", () => {
+      const AddressInput = jsonSilk({
+        title: "AddressInput",
+        type: "object",
+        properties: {
+          street: { type: "string" },
+          city: { type: "string" },
+        },
+        required: ["street", "city"],
+      })
+
+      const PersonInput = jsonSilk({
+        title: "PersonInput",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          address: AddressInput,
+        },
+        required: ["name", "address"],
+      })
+
+      const Person = jsonSilk({
+        title: "Person",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          address: {
+            type: "object",
+            properties: {
+              street: { type: "string" },
+              city: { type: "string" },
+            },
+            required: ["street", "city"],
+          },
+        },
+        required: ["name", "address"],
+      })
+
+      const r1 = resolver.of(Person, {
+        createPerson: query(Person, {
+          input: { data: PersonInput },
+          resolve: ({ data }) => ({ ...data }),
+        }),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Person {
+          name: String!
+          address: PersonAddress!
+        }
+
+        type PersonAddress {
+          street: String!
+          city: String!
+        }
+
+        type Query {
+          createPerson(data: PersonInput!): Person!
+        }
+
+        input PersonInput {
+          name: String!
+          address: AddressInput!
+        }
+
+        input AddressInput {
+          street: String!
+          city: String!
+        }"
+      `)
+    })
+
+    it("should handle array inputs", () => {
+      const DogInput = jsonSilk({
+        title: "DogInput",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+      })
+
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+      })
+
+      const r1 = resolver.of(Dog, {
+        createDogs: query(
+          jsonSilk({
+            type: "array",
+            items: Dog,
+          }),
+          {
+            input: {
+              dogs: jsonSilk({
+                type: "array",
+                items: DogInput,
+              }),
+            },
+            resolve: ({ dogs }) => dogs,
+          }
+        ),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+        }
+
+        type Query {
+          createDogs(dogs: [DogInput!]!): [Dog!]!
+        }
+
+        input DogInput {
+          name: String!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate input types", () => {
+      const DogInput = jsonSilk({
+        title: "DogInput",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+        },
+        required: ["name"],
+        additionalProperties: false,
+      })
+
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+        },
+        required: ["name"],
+        additionalProperties: false,
+      })
+
+      const r1 = resolver.of(Dog, {
+        createDog: query(Dog, {
+          input: DogInput,
+          resolve: (data) => ({
+            ...data,
+            birthday: data.birthday || "unknown",
+          }),
+        }),
+        updateDog: query(Dog, {
+          input: { data: DogInput, id: jsonSilk({ type: "string" }) },
+          resolve: ({ data }) => ({
+            ...data,
+            birthday: data.birthday || "unknown",
+          }),
+        }),
+        createDogs: query(
+          jsonSilk({
+            type: "array",
+            items: Dog,
+          }),
+          {
+            input: {
+              dogs: jsonSilk({
+                type: "array",
+                items: DogInput,
+              }),
+            },
+            resolve: ({ dogs }) =>
+              dogs.map((dog) => ({
+                ...dog,
+                birthday: dog.birthday || "unknown",
+              })),
+          }
+        ),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+          birthday: String
+        }
+
+        type Query {
+          createDog(name: String!, birthday: String): Dog!
+          updateDog(data: DogInput!, id: String!): Dog!
+          createDogs(dogs: [DogInput!]!): [Dog!]!
+        }
+
+        input DogInput {
+          name: String!
+          birthday: String
+        }"
+      `)
+    })
+  })
+
+  describe("should handle allOf interfaces", () => {
+    it("should convert allOf to GraphQL interface", () => {
+      const Fruit = jsonSilk({
+        title: "Fruit",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          color: { type: "string" },
+          price: { type: "number" },
+        },
+        required: ["name", "color", "price"],
+        description: "Some fruits you might like",
+      })
+
+      const Orange = jsonSilk({
+        title: "Orange",
+        allOf: [
+          Fruit,
+          {
+            type: "object",
+            properties: {
+              sweetness: { type: "number" },
+            },
+            required: ["sweetness"],
+          },
+        ],
+      })
+
+      const r = resolver.of(Orange, {
+        orange: query(Orange, () => ({
+          name: "Orange",
+          color: "orange",
+          price: 1.5,
+          sweetness: 8,
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Orange implements Fruit {
+          name: String!
+          color: String!
+          price: Float!
+          sweetness: Float!
+        }
+
+        """Some fruits you might like"""
+        interface Fruit {
+          name: String!
+          color: String!
+          price: Float!
+        }
+
+        type Query {
+          orange: Orange!
+        }"
+      `)
+    })
+
+    it("should handle object implementing interface via allOf", () => {
+      const Fruit = jsonSilk({
+        title: "Fruit",
+        type: "object",
+        properties: {
+          color: { type: "string" },
+        },
+        required: ["color"],
+      })
+
+      const Orange = jsonSilk({
+        title: "Orange",
+        allOf: [
+          Fruit,
+          {
+            type: "object",
+            properties: {
+              flavor: { type: "string" },
+            },
+            required: ["flavor"],
+          },
+        ],
+      })
+
+      const Apple = jsonSilk({
+        title: "Apple",
+        allOf: [
+          Fruit,
+          {
+            type: "object",
+            properties: {
+              flavor: { type: "string" },
+            },
+          },
+        ],
+      })
+
+      const r1 = resolver({
+        orange: query(Orange, () => ({ color: "orange", flavor: "sweet" })),
+        apple: query(Apple, () => ({ color: "red", flavor: "crisp" })),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          orange: Orange!
+          apple: Apple!
+        }
+
+        type Orange implements Fruit {
+          color: String!
+          flavor: String!
+        }
+
+        interface Fruit {
+          color: String!
+        }
+
+        type Apple implements Fruit {
+          color: String!
+          flavor: String
+        }"
+      `)
+    })
+
+    it("should avoid duplicate interfaces", () => {
+      const Fruit = jsonSilk({
+        title: "Fruit",
+        type: "object",
+        properties: {
+          color: { type: "string" },
+        },
+      })
+
+      const Orange = jsonSilk({
+        title: "Orange",
+        allOf: [
+          Fruit,
+          {
+            type: "object",
+            properties: {
+              flavor: { type: "string" },
+            },
+            required: ["flavor"],
+          },
+        ],
+      })
+
+      const Apple = jsonSilk({
+        title: "Apple",
+        allOf: [
+          Fruit,
+          {
+            type: "object",
+            properties: {
+              flavor: { type: "string" },
+            },
+          },
+        ],
+      })
+
+      const r1 = resolver({
+        orange: query(silk.nullable(Orange), () => ({
+          color: "orange",
+          flavor: "sweet",
+        })),
+        oranges: query(silk.list(silk.nullable(Orange)), () => []),
+        apple: query(silk.nullable(Apple), () => ({
+          color: "red",
+          flavor: "crisp",
+        })),
+        apples: query(silk.list(Apple), () => []),
+        mustOrange: query(Orange, () => ({ color: "orange", flavor: "sweet" })),
+        mustApples: query(silk.list(Apple), () => []),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          orange: Orange
+          oranges: [Orange]!
+          apple: Apple
+          apples: [Apple!]!
+          mustOrange: Orange!
+          mustApples: [Apple!]!
+        }
+
+        type Orange implements Fruit {
+          color: String
+          flavor: String!
+        }
+
+        interface Fruit {
+          color: String
+        }
+
+        type Apple implements Fruit {
+          color: String
+          flavor: String
+        }"
+      `)
+    })
+  })
+
+  describe("should handle custom type mapping", () => {
+    it("should support preset GraphQL types via config", () => {
+      const GraphQLDate = new GraphQLScalarType<Date, string>({
+        name: "Date",
+      })
+
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string", format: "date" },
+        },
+        required: ["name"],
+      })
+
+      const config = JSONWeaver.config({
+        presetGraphQLType: (schema) => {
+          if (typeof schema === "object" && schema.format === "date")
+            return GraphQLDate
+        },
+      })
+
+      const r1 = resolver({ dog: query(Dog, () => ({}) as any) })
+      const schema1 = weave(r1, config)
+
+      expect(printSchema(schema1)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog!
+        }
+
+        type Dog {
+          name: String!
+          birthday: Date
+        }
+
+        scalar Date"
+      `)
+    })
+
+    it("should handle custom scalar types", () => {
+      const GraphQLUUID = new GraphQLScalarType<string, string>({
+        name: "UUID",
+      })
+
+      const User = jsonSilk({
+        title: "User",
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string" },
+        },
+        required: ["id", "name"],
+      })
+
+      const config = JSONWeaver.config({
+        presetGraphQLType: (schema) => {
+          if (typeof schema === "object" && schema.format === "uuid")
+            return GraphQLUUID
+        },
+      })
+
+      const r1 = resolver({ user: query(User, () => ({}) as any) })
+      const schema1 = weave(r1, config)
+
+      expect(printSchema(schema1)).toMatchInlineSnapshot(`
+        "type Query {
+          user: User!
+        }
+
+        type User {
+          id: UUID!
+          name: String!
+        }
+
+        scalar UUID"
+      `)
+    })
+
+    it("should use config to override default type mappings", () => {
+      const GraphQLLongString = new GraphQLScalarType<string, string>({
+        name: "LongString",
+      })
+
+      const Post = jsonSilk({
+        title: "Post",
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          content: { type: "string", maxLength: 10000 },
+        },
+        required: ["title", "content"],
+      })
+
+      const config = JSONWeaver.config({
+        presetGraphQLType: (schema) => {
+          if (
+            typeof schema === "object" &&
+            schema.type === "string" &&
+            schema.maxLength &&
+            schema.maxLength > 1000
+          ) {
+            return GraphQLLongString
+          }
+        },
+      })
+
+      const r1 = resolver({ post: query(Post, () => ({}) as any) })
+      const schema1 = weave(r1, config)
+
+      expect(printSchema(schema1)).toMatchInlineSnapshot(`
+        "type Query {
+          post: Post!
+        }
+
+        type Post {
+          title: String!
+          content: LongString!
+        }
+
+        scalar LongString"
+      `)
+    })
+  })
+
+  describe.todo("should handle hidden fields", () => {
+    it.todo("should exclude fields marked as hidden")
+    it.todo("should support field.hidden configuration")
+  })
+
+  describe.todo("should handle discriminated unions", () => {
+    it.todo("should handle oneOf with discriminator property")
+    it.todo("should provide resolveType function for discriminated unions")
+    it.todo("should validate discriminator values")
+  })
+
+  describe.todo("should handle field merging and extension", () => {
+    it.todo("should merge fields from multiple resolvers")
+    it.todo("should allow extending object types with additional fields")
+    it.todo("should handle field conflicts properly")
+  })
+
+  describe.todo("should handle runtime execution", () => {
+    it.todo("should execute queries with enum values")
+    it.todo("should validate input data against schema")
+    it.todo("should handle default values in execution")
+  })
+
+  describe.todo("should handle complex schema patterns", () => {
+    it.todo("should handle conditional schemas (if/then/else)")
+    it.todo("should handle schema composition with definitions")
+    it.todo("should handle recursive schemas")
   })
 })
 
