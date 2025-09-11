@@ -1026,27 +1026,68 @@ describe("JSONWeaver", () => {
     })
   })
 
-  describe.todo("should handle hidden fields", () => {
-    it.todo("should exclude fields marked as hidden")
-    it.todo("should support field.hidden configuration")
-  })
+  describe("should handle field merging and extension", () => {
+    it("should support field.hidden configuration", () => {
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+        },
+      })
 
-  describe.todo("should handle field merging and extension", () => {
-    it.todo("should merge fields from multiple resolvers")
-    it.todo("should allow extending object types with additional fields")
-    it.todo("should handle field conflicts properly")
-  })
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog, () => ({})),
+        birthday: field.hidden,
+      })
 
-  describe.todo("should handle runtime execution", () => {
-    it.todo("should execute queries with enum values")
-    it.todo("should validate input data against schema")
-    it.todo("should handle default values in execution")
-  })
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String
+        }
 
-  describe.todo("should handle complex schema patterns", () => {
-    it.todo("should handle conditional schemas (if/then/else)")
-    it.todo("should handle schema composition with definitions")
-    it.todo("should handle recursive schemas")
+        type Query {
+          dog: Dog!
+        }"
+      `)
+    })
+    it("should merge fields from multiple resolvers", () => {
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          birthday: { type: "string" },
+        },
+      })
+
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog, () => ({})),
+        home: field(jsonSilk({ type: "string" })).resolve(() => ""),
+      })
+
+      const r2 = resolver.of(Dog, {
+        hobby: field(
+          jsonSilk({ type: "array", items: { type: "string" } })
+        ).resolve(() => []),
+      })
+
+      const schema = weave(r1, r2)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String
+          birthday: String
+          home: String!
+          hobby: [String!]!
+        }
+
+        type Query {
+          dog: Dog!
+        }"
+      `)
+    })
   })
 })
 
