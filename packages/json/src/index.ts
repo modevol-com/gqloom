@@ -218,7 +218,7 @@ export class JSONWeaver {
   }
 }
 
-type JSONSilk<
+export type JSONSilk<
   TSchema extends JSONSchema,
   TData = FromSchema<TSchema>,
 > = TSchema & GraphQLSilk<TData, TData>
