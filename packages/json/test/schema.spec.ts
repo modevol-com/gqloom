@@ -10,6 +10,8 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
+  execute as executeGraphQL,
+  parse,
   printSchema,
   printType,
 } from "graphql"
@@ -64,7 +66,7 @@ describe("JSONWeaver", () => {
   })
 
   it("should handle object", () => {
-    const CatSchema = {
+    const Cat = jsonSilk({
       title: "Cat",
       type: "object",
       properties: {
@@ -73,15 +75,15 @@ describe("JSONWeaver", () => {
         loveFish: { type: ["boolean", "null"] },
       },
       required: ["name", "age"],
-    } as const
+    })
 
-    const gqlType = getGraphQLType(CatSchema)
+    const gqlType = getGraphQLType(Cat)
     expect(gqlType).toBeInstanceOf(GraphQLNonNull)
     expect((gqlType as GraphQLNonNull<any>).ofType).toBeInstanceOf(
       GraphQLObjectType
     )
 
-    expect(printJSONSchema(CatSchema)).toMatchInlineSnapshot(`
+    expect(printJSONSchema(Cat)).toMatchInlineSnapshot(`
       "type Cat {
         name: String!
         age: Int!
@@ -91,13 +93,13 @@ describe("JSONWeaver", () => {
   })
 
   it("should handle enum", () => {
-    const FruitSchema = {
+    const Fruit = jsonSilk({
       title: "Fruit",
       description: "Some fruits you might like",
       enum: ["apple", "banana", "orange"],
-    } as const
+    })
 
-    expect(printJSONSchema(FruitSchema)).toMatchInlineSnapshot(`
+    expect(printJSONSchema(Fruit)).toMatchInlineSnapshot(`
       """"Some fruits you might like"""
       enum Fruit {
         apple
@@ -108,31 +110,128 @@ describe("JSONWeaver", () => {
   })
 
   it("should handle oneOf as union", () => {
-    const CatSchema = {
-      title: "Cat",
+    const Cat = jsonSilk({
       type: "object",
       properties: {
+        __typename: { const: "Cat" },
         name: { type: "string" },
+        loveFish: { type: "boolean" },
       },
-    } as const
-    const DogSchema = {
-      title: "Dog",
+    })
+    const Dog = jsonSilk({
       type: "object",
       properties: {
+        __typename: { const: "Dog" },
         name: { type: "string" },
+        loveBone: { type: "boolean" },
       },
-    } as const
-    const AnimalSchema = {
+    })
+    const Animal = jsonSilk({
       title: "Animal",
-      oneOf: [CatSchema, DogSchema],
-    } as const
+      oneOf: [Cat, Dog],
+    })
 
-    const gqlType = getGraphQLType(AnimalSchema)
+    const gqlType = getGraphQLType(Animal)
     expect(gqlType).toBeInstanceOf(GraphQLNonNull)
     const printed = printType(
       (gqlType as GraphQLNonNull<any>).ofType as GraphQLNamedType
     )
     expect(printed).toEqual("union Animal = Cat | Dog")
+  })
+
+  it("should handle oneOf as union - integration test", async () => {
+    // Define the types
+    const Cat = jsonSilk({
+      type: "object",
+      properties: {
+        __typename: { const: "Cat" },
+        name: { type: "string" },
+        loveFish: { type: "boolean" },
+      },
+      required: ["name", "loveFish"],
+    })
+    const Dog = jsonSilk({
+      type: "object",
+      properties: {
+        __typename: { const: "Dog" },
+        name: { type: "string" },
+        loveBone: { type: "boolean" },
+      },
+      required: ["name", "loveBone"],
+    })
+    const Animal = jsonSilk({
+      title: "Animal",
+      oneOf: [Cat, Dog],
+    })
+
+    // Mock data
+    const animals = [
+      { __typename: "Cat" as const, name: "Fluffy", loveFish: true },
+      { __typename: "Dog" as const, name: "Rex", loveBone: false },
+      { __typename: "Cat" as const, name: "Whiskers", loveFish: false },
+    ]
+
+    // Define array type using Animal union
+    const AnimalsArray = jsonSilk({
+      type: "array",
+      items: Animal,
+    })
+
+    // Create resolver
+    const animalResolver = resolver({
+      animals: query(AnimalsArray).resolve(() => animals),
+    })
+
+    // Create schema
+    const schema = weave(animalResolver)
+
+    // Test the schema structure
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        animals: [Animal!]!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        name: String!
+        loveFish: Boolean!
+      }
+
+      type Dog {
+        name: String!
+        loveBone: Boolean!
+      }"
+    `)
+
+    // Execute query
+    const result = await executeGraphQL({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          animals {
+            __typename
+            ... on Cat {
+              name
+              loveFish
+            }
+            ... on Dog {
+              name
+              loveBone
+            }
+          }
+        }
+      `),
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(result.data).toEqual({
+      animals: [
+        { __typename: "Cat", name: "Fluffy", loveFish: true },
+        { __typename: "Dog", name: "Rex", loveBone: false },
+        { __typename: "Cat", name: "Whiskers", loveFish: false },
+      ],
+    })
   })
 
   it("should work with ajv", () => {
@@ -678,23 +777,23 @@ describe("JSONWeaver", () => {
     })
 
     it("should handle allOf without interfaces (just property merging)", () => {
-      const BasicInfo = {
+      const BasicInfo = jsonSilk({
         type: "object",
         properties: {
           name: { type: "string" },
           age: { type: "number" },
         },
         required: ["name"],
-      } as const
+      })
 
-      const ContactInfo = {
+      const ContactInfo = jsonSilk({
         type: "object",
         properties: {
           email: { type: "string" },
           phone: { type: "string" },
         },
         required: ["email"],
-      } as const
+      })
 
       const Person = jsonSilk({
         title: "Person",
@@ -930,12 +1029,6 @@ describe("JSONWeaver", () => {
   describe.todo("should handle hidden fields", () => {
     it.todo("should exclude fields marked as hidden")
     it.todo("should support field.hidden configuration")
-  })
-
-  describe.todo("should handle discriminated unions", () => {
-    it.todo("should handle oneOf with discriminator property")
-    it.todo("should provide resolveType function for discriminated unions")
-    it.todo("should validate discriminator values")
   })
 
   describe.todo("should handle field merging and extension", () => {

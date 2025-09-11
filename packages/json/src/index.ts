@@ -254,7 +254,22 @@ export class JSONWeaver {
         return new GraphQLList(itemType)
       }
       case "object": {
-        const name = schema.title ?? schema.$id ?? LoomObjectType.AUTO_ALIASING
+        const __typename = (() => {
+          if (!schema.properties?.__typename) return undefined
+          const typenameSchema = schema.properties?.__typename as JSONSchema
+          if (
+            typeof typenameSchema === "object" &&
+            typenameSchema.const &&
+            typeof typenameSchema.const === "string"
+          )
+            return typenameSchema.const
+        })()
+        // Try to extract name from __typename const value first
+        const name =
+          schema.title ??
+          __typename ??
+          schema.$id ??
+          LoomObjectType.AUTO_ALIASING
 
         return new GraphQLObjectType({
           name,
