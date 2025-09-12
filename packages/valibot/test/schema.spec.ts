@@ -71,6 +71,9 @@ describe("ValibotWeaver", () => {
     schema = v.optional(v.pipe(v.string(), v.uuid()))
     expect(getGraphQLType(schema)).toEqual(GraphQLID)
 
+    schema = v.optional(v.pipe(v.string(), v.nanoid()))
+    expect(getGraphQLType(schema)).toEqual(GraphQLID)
+
     schema = v.optional(v.pipe(v.string(), v.cuid2()))
     expect(getGraphQLType(schema)).toEqual(GraphQLID)
 
