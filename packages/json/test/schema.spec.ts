@@ -273,6 +273,108 @@ describe("JSONWeaver", () => {
     `)
   })
 
+  it("should handle optional fields that are non-null by default", () => {
+    const MyObject = jsonSilk({
+      title: "MyObject",
+      type: "object",
+      properties: {
+        optionalString: { type: "string" },
+      },
+    })
+    const printed = printJSONSchema(MyObject)
+    expect(printed).toContain("optionalString: String") // Not String!
+    expect(printed).toMatchInlineSnapshot(`
+      "type MyObject {
+        optionalString: String
+      }"
+    `)
+  })
+
+  describe("error handling", () => {
+    it("should throw for boolean schema", () => {
+      expect(() => getGraphQLType(true)).toThrow(
+        "Boolean JSON schemas are not supported"
+      )
+      expect(() => getGraphQLType(false)).toThrow(
+        "Boolean JSON schemas are not supported"
+      )
+    })
+
+    it("should throw for union type without name", () => {
+      const Cat = jsonSilk({
+        type: "object",
+        properties: { name: { type: "string" } },
+      })
+      const Dog = jsonSilk({
+        type: "object",
+        properties: { name: { type: "string" } },
+      })
+      const Animal = { oneOf: [Cat, Dog] }
+      expect(() => getGraphQLType(Animal)).toThrow(
+        "Union type must have a name (from title or $id)"
+      )
+    })
+
+    it("should throw for union type with non-object member", () => {
+      const Cat = jsonSilk({
+        title: "Cat",
+        type: "object",
+        properties: { name: { type: "string" } },
+      })
+      const Age = { type: "integer" } as const
+      const Animal = jsonSilk({ title: "Animal", oneOf: [Cat, Age] })
+      const r = resolver({ animal: query(Animal, () => ({})) })
+      expect(() => weave(r)).toThrow(
+        "Union type member of Animal must be an object type"
+      )
+    })
+
+    it("should throw for enum type without name", () => {
+      const Fruit = { enum: ["apple", "banana"] }
+      expect(() => getGraphQLType(Fruit)).toThrow(
+        "Enum type must have a name (from title or $id)"
+      )
+    })
+
+    it("should throw for invalid array schema", () => {
+      expect(() => getGraphQLType({ type: "array" })).toThrow(
+        "Array schema must have a single object in 'items'"
+      )
+      expect(() => getGraphQLType({ type: "array", items: true })).toThrow(
+        "Array schema must have a single object in 'items'"
+      )
+      expect(() =>
+        getGraphQLType({ type: "array", items: [{ type: "string" }] })
+      ).toThrow("Array schema must have a single object in 'items'")
+    })
+
+    it("should throw for boolean schema in properties", () => {
+      const MyObject = jsonSilk({
+        title: "MyObject",
+        type: "object",
+        properties: {
+          a: true,
+        },
+      })
+      const r = resolver({ obj: query(MyObject, () => ({})) })
+      expect(() => weave(r)).toThrow(
+        "Boolean JSON schemas are not supported in properties"
+      )
+    })
+
+    it("should throw for standalone null type", () => {
+      expect(() => getGraphQLType({ type: "null" })).toThrow(
+        "Standalone 'null' type is not supported"
+      )
+    })
+
+    it("should throw for unsupported schema type", () => {
+      expect(() => getGraphQLType({})).toThrow(
+        "Unsupported JSON schema type: undefined"
+      )
+    })
+  })
+
   describe("should avoid duplicate", () => {
     it("should avoid duplicate object", () => {
       const Dog = {
