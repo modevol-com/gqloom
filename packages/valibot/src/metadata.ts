@@ -136,7 +136,12 @@ export class ValibotMetadataCollector {
     return pipe.some((item) => item.type === "integer")
   }
 
-  public static IDActionTypes: Set<string> = new Set(["cuid2", "nanoid", "ulid", "uuid"])
+  public static IDActionTypes: Set<string> = new Set([
+    "cuid2",
+    "nanoid",
+    "ulid",
+    "uuid",
+  ])
 
   public static isID(...schemas: PipedSchema[]): boolean {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
