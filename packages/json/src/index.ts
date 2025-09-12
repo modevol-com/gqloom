@@ -98,9 +98,11 @@ export class JSONWeaver {
 
     const type = schema.type
     const isNullable =
-      typeof schema.default === "undefined" &&
-      Array.isArray(type) &&
-      type.includes("null")
+      typeof schema.default !== "undefined" ||
+      (Array.isArray(type) && type.includes("null")) ||
+      [...(schema.anyOf ?? []), ...(schema.oneOf ?? [])].some(
+        (s) => typeof s === "object" && s && s.type === "null"
+      )
 
     if (isNullable) {
       return isNonNullType(gqlType) ? gqlType.ofType : gqlType
@@ -191,7 +193,23 @@ export class JSONWeaver {
     }
 
     if (schema.oneOf || schema.anyOf) {
-      const schemas = schema.oneOf ?? schema.anyOf!
+      const schemas = (schema.oneOf ?? schema.anyOf!).filter((s) => {
+        const subSchema = s as JSONSchema
+        if (typeof subSchema !== "object" || !subSchema) return true
+        return subSchema.type !== "null"
+      })
+
+      if (schemas.length === 1) {
+        const unwrappedSchema = {
+          ...(schemas[0] as object),
+          // Carry over parent schema's metadata
+          title: schema.title,
+          $id: schema.$id,
+          description: schema.description,
+        }
+        return JSONWeaver.toGraphQLTypeInner(unwrappedSchema)
+      }
+
       const name = schema.title ?? schema.$id
       if (!name) {
         throw new Error("Union type must have a name (from title or $id)")
@@ -328,3 +346,5 @@ export function jsonSilk<
 >(schema: TSchema): JSONSilk<TSchema, TData> {
   return JSONWeaver.unravel(schema) as any
 }
+
+export type { JSONSchema, FromSchema }

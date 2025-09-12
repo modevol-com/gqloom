@@ -39,7 +39,8 @@
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "ajv": "^8.17.1"
+    "ajv": "^8.17.1",
+    "typebox": "^1.0.4"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

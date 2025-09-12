@@ -37,10 +37,10 @@ describe("JSONWeaver", () => {
     )
   })
 
-  it("should handle default value as non-nullable", () => {
+  it("should handle type with default value as nullable", () => {
     expect(
       getGraphQLType({ type: ["string", "null"], default: "" })
-    ).toBeInstanceOf(GraphQLNonNull)
+    ).not.toBeInstanceOf(GraphQLNonNull)
   })
 
   it("should handle array", () => {
