@@ -287,11 +287,7 @@ export class JSONWeaver {
             return typenameSchema.const
         })()
         // Try to extract name from __typename const value first
-        const name =
-          schema.title ??
-          __typename ??
-          schema.$id ??
-          LoomObjectType.AUTO_ALIASING
+        const name = schema.title ?? __typename ?? LoomObjectType.AUTO_ALIASING
 
         return new GraphQLObjectType({
           name,

@@ -65,33 +65,6 @@ describe("JSONWeaver", () => {
     ).toEqual(new GraphQLList(new GraphQLNonNull(GraphQLString)))
   })
 
-  it("should handle object", () => {
-    const Cat = jsonSilk({
-      title: "Cat",
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        age: { type: "integer" },
-        loveFish: { type: ["boolean", "null"] },
-      },
-      required: ["name", "age"],
-    })
-
-    const gqlType = getGraphQLType(Cat)
-    expect(gqlType).toBeInstanceOf(GraphQLNonNull)
-    expect((gqlType as GraphQLNonNull<any>).ofType).toBeInstanceOf(
-      GraphQLObjectType
-    )
-
-    expect(printJSONSchema(Cat)).toMatchInlineSnapshot(`
-      "type Cat {
-        name: String!
-        age: Int!
-        loveFish: Boolean
-      }"
-    `)
-  })
-
   it("should handle enum", () => {
     const Fruit = jsonSilk({
       title: "Fruit",
@@ -375,7 +348,34 @@ describe("JSONWeaver", () => {
     })
   })
 
-  describe("should avoid duplicate", () => {
+  describe("should handle object", () => {
+    it("should handle object", () => {
+      const Cat = jsonSilk({
+        title: "Cat",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          age: { type: "integer" },
+          loveFish: { type: ["boolean", "null"] },
+        },
+        required: ["name", "age"],
+      })
+
+      const gqlType = getGraphQLType(Cat)
+      expect(gqlType).toBeInstanceOf(GraphQLNonNull)
+      expect((gqlType as GraphQLNonNull<any>).ofType).toBeInstanceOf(
+        GraphQLObjectType
+      )
+
+      expect(printJSONSchema(Cat)).toMatchInlineSnapshot(`
+      "type Cat {
+        name: String!
+        age: Int!
+        loveFish: Boolean
+      }"
+    `)
+    })
+
     it("should avoid duplicate object", () => {
       const Dog = {
         title: "Dog",
@@ -442,6 +442,36 @@ describe("JSONWeaver", () => {
           name: String!
           birthday: String!
           friend: Dog
+        }"
+      `)
+    })
+
+    it("should handle title as name", () => {
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: { name: { type: "string" } },
+      })
+      expect(printJSONSchema(Dog)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String
+        }"
+      `)
+    })
+
+    it("should handle __typename as name", () => {
+      const Dog = jsonSilk({
+        title: "Dog",
+        type: "object",
+        properties: {
+          __typename: { const: "Dog" },
+          name: { type: "string" },
+        },
+      })
+
+      expect(printJSONSchema(Dog)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String
         }"
       `)
     })
