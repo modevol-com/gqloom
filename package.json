@@ -33,7 +33,7 @@
     "graphql": "^16.8.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.7",
-    "tsdown": "^0.14.2",
+    "tsdown": "^0.15.1",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
