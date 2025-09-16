@@ -252,11 +252,167 @@ describe("arktype", () => {
       `)
     })
 
-    it.todo("should handle nested input objects")
+    it("should handle nested input objects", () => {
+      const AddressInput = type({
+        "__typename?": "'AddressInput'",
+        street: "string",
+        city: "string",
+      })
 
-    it.todo("should handle array inputs")
+      const PersonInput = type({
+        "__typename?": "'PersonInput'",
+        name: "string",
+        address: AddressInput,
+      })
 
-    it.todo("should avoid duplicate input types")
+      const Person = type({
+        "__typename?": "'Person'",
+        name: "string",
+        address: {
+          "__typename?": "'Address'",
+          street: "string",
+          city: "string",
+        },
+      })
+
+      const r1 = resolver.of(Person, {
+        createPerson: query(Person)
+          .input({ data: PersonInput })
+          .resolve(({ data }) => ({
+            name: data.name,
+            address: {
+              street: data.address.street,
+              city: data.address.city,
+            },
+          })),
+      })
+
+      const schema = weave(arktypeWeaver, r1)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Person {
+          address: Address!
+          name: String!
+        }
+
+        type Address {
+          city: String!
+          street: String!
+        }
+
+        type Query {
+          createPerson(data: PersonInput!): Person!
+        }
+
+        input PersonInput {
+          address: AddressInput!
+          name: String!
+        }
+
+        input AddressInput {
+          city: String!
+          street: String!
+        }"
+      `)
+    })
+
+    it("should handle array inputs", () => {
+      const DogInput = type({
+        "__typename?": "'DogInput'",
+        name: "string",
+      })
+
+      const Dog = type({
+        "__typename?": "'Dog'",
+        name: "string",
+      })
+
+      const r1 = resolver.of(Dog, {
+        createDogs: query(silk.list(Dog))
+          .input({
+            dogs: silk.list(DogInput),
+          })
+          .resolve(({ dogs }) => dogs.map((dog) => ({ name: dog.name }))),
+      })
+
+      const schema = weave(arktypeWeaver, r1)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+        }
+
+        type Query {
+          createDogs(dogs: [DogInput!]!): [Dog!]!
+        }
+
+        input DogInput {
+          name: String!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate input types", () => {
+      const DogInput = type({
+        "__typename?": "'DogInput'",
+        name: "string",
+        "birthday?": "string",
+      })
+
+      const Dog = type({
+        "__typename?": "'Dog'",
+        name: "string",
+        "birthday?": "string",
+      })
+
+      const r1 = resolver.of(Dog, {
+        createDog: query(Dog)
+          .input(DogInput)
+          .resolve((data) => ({
+            name: data.name,
+            birthday: data.birthday || "unknown",
+          })),
+        updateDog: query(Dog)
+          .input({
+            data: DogInput,
+            id: type("string"),
+          })
+          .resolve(({ data }) => ({
+            name: data.name,
+            birthday: data.birthday || "unknown",
+          })),
+        createDogs: query(silk.list(Dog))
+          .input({
+            dogs: silk.list(DogInput),
+          })
+          .resolve(({ dogs }) =>
+            dogs.map((dog: any) => ({
+              name: dog.name,
+              birthday: dog.birthday || "unknown",
+            }))
+          ),
+      })
+
+      const schema = weave(arktypeWeaver, r1)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+          birthday: String
+        }
+
+        type Query {
+          createDog(name: String!, birthday: String): Dog!
+          updateDog(data: DogInput!, id: String!): Dog!
+          createDogs(dogs: [DogInput!]!): [Dog!]!
+        }
+
+        input DogInput {
+          name: String!
+          birthday: String
+        }"
+      `)
+    })
   })
 })
 
