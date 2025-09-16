@@ -10,8 +10,12 @@ import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLInt,
+  GraphQLList,
+  type GraphQLNamedType,
   GraphQLNonNull,
+  GraphQLObjectType,
   GraphQLString,
+  printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
 import { type JSONSchema, JSONWeaver } from "../src"
@@ -35,6 +39,43 @@ describe("arktype", () => {
       new GraphQLNonNull(GraphQLBoolean)
     )
   })
+
+  it("should handle array", () => {
+    expect(getGraphQLType(type("string[]"))).toEqual(
+      new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
+    )
+
+    expect(getGraphQLType(type("(string|null)[]"))).toEqual(
+      new GraphQLNonNull(new GraphQLList(GraphQLString))
+    )
+
+    expect(getGraphQLType(type("string[] | null"))).toEqual(
+      new GraphQLList(new GraphQLNonNull(GraphQLString))
+    )
+  })
+
+  it("should handle object", () => {
+    const Cat = type({
+      "__typename?": "'Cat'",
+      name: "string",
+      age: "number",
+      "loveFish?": "boolean",
+    })
+
+    const gqlType = getGraphQLType(Cat)
+    expect(gqlType).toBeInstanceOf(GraphQLNonNull)
+    expect((gqlType as GraphQLNonNull<any>).ofType).toBeInstanceOf(
+      GraphQLObjectType
+    )
+
+    expect(printArktypeSchema(Cat)).toMatchInlineSnapshot(`
+      "type Cat {
+        age: Float!
+        name: String!
+        loveFish: Boolean
+      }"
+    `)
+  })
 })
 
 const arktypeWeaver: SchemaWeaver = {
@@ -47,4 +88,10 @@ function getGraphQLType(type: GraphQLSilk) {
   const context = initWeaverContext()
   context.vendorWeavers.set(arktypeWeaver.vendor, arktypeWeaver)
   return provideWeaverContext(() => silk.getType(type), context)
+}
+
+function printArktypeSchema(type: Type) {
+  let gqlType = getGraphQLType(type)
+  while ("ofType" in gqlType) gqlType = gqlType.ofType
+  return printType(gqlType as GraphQLNamedType)
 }
