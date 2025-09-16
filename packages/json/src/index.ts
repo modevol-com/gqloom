@@ -117,9 +117,14 @@ export class JSONWeaver {
     if (typeof schema === "boolean") {
       throw new Error("Boolean JSON schemas are not supported")
     }
-    const existing = weaverContext.getGraphQLType(schema)
+
+    const name = schema.title ?? JSONWeaver.getTypeName(schema)
+    const existing =
+      weaverContext.getGraphQLType(schema) ??
+      (name ? weaverContext.getNamedType(name) : undefined)
     if (existing) return existing
     const gqlType = JSONWeaver.toGraphQLTypeInner(schema)
+    if (name) weaverContext.memoNamedType(gqlType)
     return weaverContext.memoGraphQLType(schema, gqlType)
   }
 
@@ -210,7 +215,7 @@ export class JSONWeaver {
         return JSONWeaver.toGraphQLTypeInner(unwrappedSchema)
       }
 
-      const name = schema.title ?? schema.$id
+      const name = schema.title
       if (!name) {
         throw new Error("Union type must have a name (from title or $id)")
       }
@@ -235,7 +240,7 @@ export class JSONWeaver {
       : schema.type
 
     if (schema.enum) {
-      const name = schema.title ?? schema.$id
+      const name = schema.title
       if (!name) {
         throw new Error("Enum type must have a name (from title or $id)")
       }
@@ -276,18 +281,10 @@ export class JSONWeaver {
         return new GraphQLList(itemType)
       }
       case "object": {
-        const __typename = (() => {
-          if (!schema.properties?.__typename) return undefined
-          const typenameSchema = schema.properties?.__typename as JSONSchema
-          if (
-            typeof typenameSchema === "object" &&
-            typenameSchema.const &&
-            typeof typenameSchema.const === "string"
-          )
-            return typenameSchema.const
-        })()
-        // Try to extract name from __typename const value first
-        const name = schema.title ?? __typename ?? LoomObjectType.AUTO_ALIASING
+        const name =
+          schema.title ??
+          JSONWeaver.getTypeName(schema) ??
+          LoomObjectType.AUTO_ALIASING
 
         return new GraphQLObjectType({
           name,
@@ -328,6 +325,18 @@ export class JSONWeaver {
         )
     }
     throw new Error(`Unsupported JSON schema type: ${String(type)}`)
+  }
+
+  protected static getTypeName(schema: JSONSchema): string | undefined {
+    if (typeof schema !== "object") return undefined
+    if (!schema.properties?.__typename) return undefined
+    const typenameSchema = schema.properties?.__typename as JSONSchema
+    if (
+      typeof typenameSchema === "object" &&
+      typenameSchema.const &&
+      typeof typenameSchema.const === "string"
+    )
+      return typenameSchema.const
   }
 }
 

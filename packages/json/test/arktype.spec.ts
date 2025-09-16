@@ -1,9 +1,14 @@
 import {
   type GraphQLSilk,
+  type Loom,
   type SchemaWeaver,
+  field,
   initWeaverContext,
   provideWeaverContext,
+  query,
+  resolver,
   silk,
+  weave,
 } from "@gqloom/core"
 import { type Type, type } from "arktype"
 import {
@@ -15,6 +20,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  printSchema,
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
@@ -76,6 +82,55 @@ describe("arktype", () => {
       }"
     `)
   })
+
+  it("should avoid duplicate object", () => {
+    const Dog = type({
+      "__typename?": "'Dog'",
+      name: "string",
+      birthday: "string",
+    })
+
+    const Cat = type({
+      "__typename?": "'Cat'",
+      name: "string",
+      birthday: "string",
+    })
+
+    const r1 = resolver.of(Dog, {
+      dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
+      cat: query(Cat, () => ({ name: "", birthday: "2012-12-12" })),
+      dogs: query(silk.list(Dog), () => [
+        { name: "", birthday: "2012-12-12" },
+        { name: "", birthday: "2012-12-12" },
+      ]),
+      mustDog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
+      mustDogs: query(silk.list(Dog), () => []),
+      age: field(type("number.integer"), (dog) => {
+        return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+      }),
+    })
+
+    expect(printResolver(r1)).toMatchInlineSnapshot(`
+      "type Dog {
+        birthday: String!
+        name: String!
+        age: Int!
+      }
+
+      type Query {
+        dog: Dog!
+        cat: Cat!
+        dogs: [Dog!]!
+        mustDog: Dog!
+        mustDogs: [Dog!]!
+      }
+
+      type Cat {
+        birthday: String!
+        name: String!
+      }"
+    `)
+  })
 })
 
 const arktypeWeaver: SchemaWeaver = {
@@ -94,4 +149,9 @@ function printArktypeSchema(type: Type) {
   let gqlType = getGraphQLType(type)
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
+}
+
+function printResolver(...resolvers: Loom.Resolver[]): string {
+  const schema = weave(arktypeWeaver, ...resolvers)
+  return printSchema(schema)
 }
