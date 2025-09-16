@@ -284,7 +284,7 @@ describe("JSONWeaver", () => {
       })
       const Animal = { oneOf: [Cat, Dog] }
       expect(() => getGraphQLType(Animal)).toThrow(
-        "Union type must have a name (from title or $id)"
+        "Union type must have a name"
       )
     })
 
@@ -304,9 +304,7 @@ describe("JSONWeaver", () => {
 
     it("should throw for enum type without name", () => {
       const Fruit = { enum: ["apple", "banana"] }
-      expect(() => getGraphQLType(Fruit)).toThrow(
-        "Enum type must have a name (from title or $id)"
-      )
+      expect(() => getGraphQLType(Fruit)).toThrow("Enum type must have a name")
     })
 
     it("should throw for invalid array schema", () => {

@@ -2,6 +2,7 @@ import {
   type GraphQLSilk,
   type Loom,
   type SchemaWeaver,
+  collectNames,
   field,
   initWeaverContext,
   provideWeaverContext,
@@ -9,6 +10,7 @@ import {
   resolver,
   silk,
   weave,
+  weaverContext,
 } from "@gqloom/core"
 import { type Type, type } from "arktype"
 import {
@@ -20,6 +22,8 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  execute as executeGraphQL,
+  parse,
   printSchema,
   printType,
 } from "graphql"
@@ -131,12 +135,109 @@ describe("arktype", () => {
       }"
     `)
   })
+
+  it("should handle enum", () => {
+    const Fruit = type("'apple' | 'banana' | 'orange'")
+    collectNames({ Fruit })
+
+    expect(printArktypeSchema(Fruit)).toMatchInlineSnapshot(`
+      "enum Fruit {
+        apple
+        banana
+        orange
+      }"
+    `)
+  })
+
+  it("should handle union as GraphQLUnionType", async () => {
+    const Cat = type({
+      __typename: "'Cat'",
+      name: "string",
+      loveFish: "boolean",
+    })
+    const Dog = type({
+      __typename: "'Dog'",
+      name: "string",
+      loveBone: "boolean",
+    })
+    const Animal = Cat.or(Dog)
+    collectNames({ Cat, Dog, Animal })
+
+    const gqlType = getGraphQLType(Animal)
+    expect(gqlType).toBeInstanceOf(GraphQLNonNull)
+    const printed = printType(
+      (gqlType as GraphQLNonNull<any>).ofType as GraphQLNamedType
+    )
+    expect(printed).toEqual("union Animal = Cat | Dog")
+
+    const animals = [
+      { __typename: "Cat" as const, name: "Fluffy", loveFish: true },
+      { __typename: "Dog" as const, name: "Rex", loveBone: false },
+      { __typename: "Cat" as const, name: "Whiskers", loveFish: false },
+    ]
+
+    const animalResolver = resolver({
+      animals: query(silk.list(Animal)).resolve(() => animals),
+    })
+
+    const schema = weave(arktypeWeaver, animalResolver)
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        animals: [Animal!]!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        loveFish: Boolean!
+        name: String!
+      }
+
+      type Dog {
+        loveBone: Boolean!
+        name: String!
+      }"
+    `)
+
+    const result = await executeGraphQL({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          animals {
+            __typename
+            ... on Cat {
+              name
+              loveFish
+            }
+            ... on Dog {
+              name
+              loveBone
+            }
+          }
+        }
+      `),
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(result.data).toEqual({
+      animals: [
+        { __typename: "Cat", name: "Fluffy", loveFish: true },
+        { __typename: "Dog", name: "Rex", loveBone: false },
+        { __typename: "Cat", name: "Whiskers", loveFish: false },
+      ],
+    })
+  })
 })
 
 const arktypeWeaver: SchemaWeaver = {
   vendor: "arktype",
-  getGraphQLType: (type: Type) =>
-    JSONWeaver.getGraphQLType(type.toJsonSchema() as JSONSchema),
+  getGraphQLType: (type: Type) => {
+    const jsonSchema = type.toJsonSchema()
+    const name = weaverContext.names.get(type)
+    if (name) weaverContext.names.set(jsonSchema, name)
+    return JSONWeaver.getGraphQLType(jsonSchema as JSONSchema)
+  },
 }
 
 function getGraphQLType(type: GraphQLSilk) {

@@ -118,7 +118,11 @@ export class JSONWeaver {
       throw new Error("Boolean JSON schemas are not supported")
     }
 
-    const name = schema.title ?? JSONWeaver.getTypeName(schema)
+    const name =
+      schema.title ??
+      weaverContext.names.get(schema) ??
+      JSONWeaver.getTypeName(schema)
+
     const existing =
       weaverContext.getGraphQLType(schema) ??
       (name ? weaverContext.getNamedType(name) : undefined)
@@ -215,9 +219,9 @@ export class JSONWeaver {
         return JSONWeaver.toGraphQLTypeInner(unwrappedSchema)
       }
 
-      const name = schema.title
+      const name = schema.title ?? weaverContext.names.get(schema)
       if (!name) {
-        throw new Error("Union type must have a name (from title or $id)")
+        throw new Error("Union type must have a name")
       }
       return new GraphQLUnionType({
         name,
@@ -240,9 +244,9 @@ export class JSONWeaver {
       : schema.type
 
     if (schema.enum) {
-      const name = schema.title
+      const name = schema.title ?? weaverContext.names.get(schema)
       if (!name) {
-        throw new Error("Enum type must have a name (from title or $id)")
+        throw new Error("Enum type must have a name")
       }
       const values: GraphQLEnumValueConfigMap = {}
       for (const value of schema.enum as (string | number)[]) {
@@ -283,6 +287,7 @@ export class JSONWeaver {
       case "object": {
         const name =
           schema.title ??
+          weaverContext.names.get(schema) ??
           JSONWeaver.getTypeName(schema) ??
           LoomObjectType.AUTO_ALIASING
 
