@@ -228,6 +228,36 @@ describe("arktype", () => {
       ],
     })
   })
+
+  describe("should handle input types", () => {
+    it("should convert object schema to input type for mutations", () => {
+      const DogInput = type({
+        "__typename?": "'DogInput'",
+        name: "string",
+        birthday: "string",
+      })
+
+      const r1 = resolver({
+        createDog: query(type("string"))
+          .input(DogInput)
+          .resolve((data) => data.name),
+      })
+
+      const schema = weave(arktypeWeaver, r1)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          createDog(birthday: String!, name: String!): String!
+        }"
+      `)
+    })
+
+    it.todo("should handle nested input objects")
+
+    it.todo("should handle array inputs")
+
+    it.todo("should avoid duplicate input types")
+  })
 })
 
 const arktypeWeaver: SchemaWeaver = {

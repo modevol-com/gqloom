@@ -191,7 +191,8 @@ export function parseSilk<TSilk extends GraphQLSilk>(
 }
 
 export function isSilk(target: any): target is GraphQLSilk {
-  if (typeof target !== "object") return false
+  if (typeof target !== "object" && typeof target !== "function") return false
+
   if (target == null) return false
   if (GET_GRAPHQL_TYPE in target) return true
   if (!("~standard" in target)) return false

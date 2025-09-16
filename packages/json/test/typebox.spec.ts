@@ -346,13 +346,17 @@ describe("typeSilk", () => {
       )
 
       const Person = typeSilk(
-        Type.Object({
-          name: Type.String(),
-          address: Type.Object({
-            street: Type.String(),
-            city: Type.String(),
-          }),
-        })
+        Type.Object(
+          {
+            name: Type.String(),
+            address: Type.Object({
+              __typename: Type.Optional(Type.Literal("Address")),
+              street: Type.String(),
+              city: Type.String(),
+            }),
+          },
+          { title: "Person" }
+        )
       )
 
       const r1 = resolver.of(Person, {
@@ -363,18 +367,18 @@ describe("typeSilk", () => {
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
-        "type __gqloom_auto_aliasing {
+        "type Person {
           name: String!
-          address: __gqloom_auto_aliasingAddress!
+          address: Address!
         }
 
-        type __gqloom_auto_aliasingAddress {
+        type Address {
           street: String!
           city: String!
         }
 
         type Query {
-          createPerson(data: PersonInput!): __gqloom_auto_aliasing!
+          createPerson(data: PersonInput!): Person!
         }
 
         input PersonInput {
