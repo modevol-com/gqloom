@@ -1,7 +1,8 @@
-# Zod
 <script setup lang="ts">
 import { Tabs } from '@/components/tabs'
 </script>
+
+# Zod
 
 [Zod](https://zod.dev/) 是 TypeScript 优先的 Schema 声明和验证库。这里的 “Schema” 一词泛指任何数据类型，从简单的字符串到复杂的嵌套对象。
 

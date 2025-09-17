@@ -1,7 +1,8 @@
-# Zod
 <script setup lang="ts">
 import { Tabs } from '@/components/tabs'
 </script>
+
+# Zod
 
 [Zod](https://zod.dev/) is a TypeScript-first schema declaration and validation library. I'm using the term "schema" to broadly refer to any data type, from a simple string to a complex nested object.
 

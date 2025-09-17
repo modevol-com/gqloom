@@ -474,6 +474,7 @@ The following table lists the default mappings between Valibot types and GraphQL
 | `v.pipe(v.number(), v.integer())` | `GraphQLInt`        |
 | `v.string()`                      | `GraphQLString`     |
 | `v.pipe(v.string(), v.cuid2())`   | `GraphQLID`         |
+| `v.pipe(v.string(), v.nanoid())`  | `GraphQLID`         |
 | `v.pipe(v.string(), v.ulid())`    | `GraphQLID`         |
 | `v.pipe(v.string(), v.uuid())`    | `GraphQLID`         |
 | `v.union()`                       | `GraphQLUnionType`  |

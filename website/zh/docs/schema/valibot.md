@@ -23,7 +23,7 @@ bun add @gqloom/core valibot @gqloom/valibot
 
 ## 定义简单标量
 
-在 GQLoom 中，可以直接 Valibot Schema 作为[丝线](../silk)使用：
+在 GQLoom 中，可以直接将 Valibot Schema 作为[丝线](../silk)使用：
 
 ```ts twoslash
 import * as v from "valibot"
@@ -474,6 +474,7 @@ export const schema = weave(valibotWeaverConfig, helloResolver)
 | `v.pipe(v.number(), v.integer())` | `GraphQLInt`        |
 | `v.string()`                      | `GraphQLString`     |
 | `v.pipe(v.string(), v.cuid2())`   | `GraphQLID`         |
+| `v.pipe(v.string(), v.nanoid())`  | `GraphQLID`         |
 | `v.pipe(v.string(), v.ulid())`    | `GraphQLID`         |
 | `v.pipe(v.string(), v.uuid())`    | `GraphQLID`         |
 | `v.union()`                       | `GraphQLUnionType`  |
