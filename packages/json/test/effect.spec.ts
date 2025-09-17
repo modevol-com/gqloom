@@ -235,14 +235,226 @@ describe("effect/Schema", () => {
     })
   })
 
-  describe.todo("should handle input types", () => {
-    it.todo("should convert object schema to input type for mutations")
+  describe("should handle input types", () => {
+    it("should convert object schema to input type for mutations", () => {
+      const DogInput = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.tag("DogInput"),
+          name: Schema.String,
+          birthday: Schema.String,
+        })
+      )
 
-    it.todo("should handle nested input objects")
+      const r1 = resolver({
+        createDog: query(Schema.standardSchemaV1(Schema.String))
+          .input(DogInput)
+          .resolve((data) => data.name),
+      })
 
-    it.todo("should handle array inputs")
+      const schema = weave(effectWeaver, r1)
 
-    it.todo("should avoid duplicate input types")
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Query {
+          createDog(name: String!, birthday: String!): String!
+        }"
+      `)
+    })
+
+    it("should handle nested input objects", async () => {
+      const AddressInput = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.optional(Schema.Literal("AddressInput")),
+          street: Schema.String,
+          city: Schema.String,
+        })
+      )
+
+      const PersonInput = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.optional(Schema.Literal("PersonInput")),
+          name: Schema.String,
+          address: AddressInput,
+        })
+      )
+
+      const Person = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.tag("Person"),
+          name: Schema.String,
+          address: Schema.Struct({
+            __typename: Schema.tag("Address"),
+            street: Schema.String,
+            city: Schema.String,
+          }),
+        })
+      )
+
+      const r1 = resolver.of(Person, {
+        createPerson: query(Person)
+          .input({ data: PersonInput })
+          .resolve(({ data }) => ({
+            __typename: "Person",
+            name: data.name,
+            address: {
+              __typename: "Address",
+              street: data.address.street,
+              city: data.address.city,
+            },
+          })),
+      })
+
+      const schema = weave(effectWeaver, r1)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Person {
+          name: String!
+          address: Address!
+        }
+
+        type Address {
+          street: String!
+          city: String!
+        }
+
+        type Query {
+          createPerson(data: PersonInput!): Person!
+        }
+
+        input PersonInput {
+          name: String!
+          address: AddressInput!
+        }
+
+        input AddressInput {
+          street: String!
+          city: String!
+        }"
+      `)
+
+      const result = await execute({
+        schema,
+        document: parse(/* GraphQL */ `
+          query {
+            createPerson(data: { name: "John", address: { street: "123 Main St", city: "Anytown" } }) {
+              name
+              address {
+                street
+                city
+              }
+            }
+          }
+        `),
+      })
+
+      if (result.errors) {
+        throw result.errors[0]
+      }
+      expect(result.data).toEqual({
+        createPerson: {
+          name: "John",
+          address: { street: "123 Main St", city: "Anytown" },
+        },
+      })
+    })
+
+    it("should handle array inputs", () => {
+      const DogInput = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.optional(Schema.Literal("DogInput")),
+          name: Schema.String,
+        })
+      )
+
+      const Dog = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.optional(Schema.Literal("Dog")),
+          name: Schema.String,
+        })
+      )
+
+      const r1 = resolver.of(Dog, {
+        createDogs: query(silk.list(Dog))
+          .input({ dogs: Schema.standardSchemaV1(Schema.Array(DogInput)) })
+          .resolve(({ dogs }) => dogs.map((dog) => ({ name: dog.name }))),
+      })
+
+      const schema = weave(effectWeaver, r1)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+        }
+
+        type Query {
+          createDogs(dogs: [DogInput!]!): [Dog!]!
+        }
+
+        input DogInput {
+          name: String!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate input types", () => {
+      const DogInput = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.optional(Schema.Literal("DogInput")),
+          name: Schema.String,
+          birthday: Schema.optional(Schema.String),
+        })
+      )
+
+      const Dog = Schema.standardSchemaV1(
+        Schema.Struct({
+          __typename: Schema.optional(Schema.Literal("Dog")),
+          name: Schema.String,
+          birthday: Schema.optional(Schema.String),
+        })
+      )
+
+      const r1 = resolver.of(Dog, {
+        createDog: query(Dog)
+          .input(DogInput)
+          .resolve((data) => ({
+            name: data.name,
+            birthday: data.birthday || "unknown",
+          })),
+        updateDog: query(Dog)
+          .input({ data: DogInput, id: Schema.standardSchemaV1(Schema.String) })
+          .resolve(({ data }) => ({
+            name: data.name,
+            birthday: data.birthday || "unknown",
+          })),
+        createDogs: query(silk.list(Dog))
+          .input({ dogs: Schema.standardSchemaV1(Schema.Array(DogInput)) })
+          .resolve(({ dogs }) =>
+            dogs.map((dog) => ({
+              name: dog.name,
+              birthday: dog.birthday || "unknown",
+            }))
+          ),
+      })
+
+      const schema = weave(effectWeaver, r1)
+
+      expect(printSchema(schema)).toMatchInlineSnapshot(`
+        "type Dog {
+          name: String!
+          birthday: String
+        }
+
+        type Query {
+          createDog(name: String!, birthday: String): Dog!
+          updateDog(data: DogInput!, id: String!): Dog!
+          createDogs(dogs: [DogInput!]!): [Dog!]!
+        }
+
+        input DogInput {
+          name: String!
+          birthday: String
+        }"
+      `)
+    })
   })
 })
 
