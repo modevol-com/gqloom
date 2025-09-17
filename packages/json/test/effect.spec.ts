@@ -1,9 +1,15 @@
 import {
   type GraphQLSilk,
+  type Loom,
   type SchemaWeaver,
+  collectNames,
+  field,
   initWeaverContext,
   provideWeaverContext,
+  query,
+  resolver,
   silk,
+  weave,
 } from "@gqloom/core"
 import * as JSONSchema from "effect/JSONSchema"
 import * as Schema from "effect/Schema"
@@ -15,6 +21,9 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  execute,
+  parse,
+  printSchema,
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
@@ -84,11 +93,147 @@ describe("effect/Schema", () => {
     `)
   })
 
-  it.todo("should avoid duplicate object")
+  it("should avoid duplicate object", () => {
+    const Dog = Schema.standardSchemaV1(
+      Schema.Struct({
+        __typename: Schema.tag("Dog"),
+        name: Schema.String,
+        birthday: Schema.String,
+      })
+    )
 
-  it.todo("should handle enum")
+    const r1 = resolver.of(Dog, {
+      dog: query(Dog).resolve(() => ({
+        __typename: "Dog",
+        name: "",
+        birthday: "2012-12-12",
+      })),
+      dogs: query(silk.list(Dog)).resolve(() => [
+        { __typename: "Dog", name: "", birthday: "2012-12-12" },
+        { __typename: "Dog", name: "", birthday: "2012-12-12" },
+      ]),
+      mustDog: query(Dog).resolve(() => ({
+        __typename: "Dog",
+        name: "",
+        birthday: "2012-12-12",
+      })),
+      mustDogs: query(silk.list(Dog)).resolve(() => []),
+      age: field(Schema.standardSchemaV1(Schema.Number), (dog) => {
+        return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+      }),
+    })
 
-  it.todo("should handle union as GraphQLUnionType")
+    expect(printResolver(r1)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String!
+        birthday: String!
+        age: Float!
+      }
+
+      type Query {
+        dog: Dog!
+        dogs: [Dog!]!
+        mustDog: Dog!
+        mustDogs: [Dog!]!
+      }"
+    `)
+  })
+
+  it("should handle enum", () => {
+    const Fruit = Schema.standardSchemaV1(
+      Schema.Literal("apple", "banana", "orange")
+    )
+    collectNames({ Fruit })
+
+    expect(printEffectSchema(Fruit)).toMatchInlineSnapshot(`
+      "enum Fruit {
+        apple
+        banana
+        orange
+      }"
+    `)
+  })
+
+  it("should handle union as GraphQLUnionType", async () => {
+    const Cat = Schema.standardSchemaV1(
+      Schema.Struct({
+        __typename: Schema.tag("Cat"),
+        name: Schema.String,
+        loveFish: Schema.Boolean,
+      })
+    )
+    const Dog = Schema.standardSchemaV1(
+      Schema.Struct({
+        __typename: Schema.tag("Dog"),
+        name: Schema.String,
+        loveBone: Schema.Boolean,
+      })
+    )
+    const Animal = Schema.standardSchemaV1(Schema.Union(Cat, Dog))
+    collectNames({ Cat, Dog, Animal })
+
+    expect(printEffectSchema(Animal)).toMatchInlineSnapshot(`
+      "union Animal = Cat | Dog"
+    `)
+
+    const animals = [
+      { __typename: "Cat" as const, name: "Fluffy", loveFish: true },
+      { __typename: "Dog" as const, name: "Rex", loveBone: false },
+      { __typename: "Cat" as const, name: "Whiskers", loveFish: false },
+    ]
+
+    const animalResolver = resolver({
+      animals: query(silk.list(Animal)).resolve(() => animals),
+    })
+
+    const schema = weave(effectWeaver, animalResolver)
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        animals: [Animal!]!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        name: String!
+        loveFish: Boolean!
+      }
+
+      type Dog {
+        name: String!
+        loveBone: Boolean!
+      }"
+    `)
+
+    const result = await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          animals {
+            __typename
+            ... on Cat {
+              name
+              loveFish
+            }
+            ... on Dog {
+              name
+              loveBone
+            }
+          }
+        }
+      `),
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(result.data).toEqual({
+      animals: [
+        { __typename: "Cat", name: "Fluffy", loveFish: true },
+        { __typename: "Dog", name: "Rex", loveBone: false },
+        { __typename: "Cat", name: "Whiskers", loveFish: false },
+      ],
+    })
+  })
 
   describe.todo("should handle input types", () => {
     it.todo("should convert object schema to input type for mutations")
@@ -119,4 +264,9 @@ function printEffectSchema(type: GraphQLSilk) {
   let gqlType = getGraphQLType(type)
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
+}
+
+function printResolver(...resolvers: Loom.Resolver[]): string {
+  const schema = weave(effectWeaver, ...resolvers)
+  return printSchema(schema)
 }
