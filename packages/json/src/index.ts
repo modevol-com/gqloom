@@ -350,6 +350,15 @@ export class JSONWeaver {
       typeof typenameSchema.const === "string"
     )
       return typenameSchema.const
+
+    if (
+      typeof typenameSchema === "object" &&
+      typenameSchema.enum &&
+      Array.isArray(typenameSchema.enum) &&
+      typenameSchema.enum.length === 1
+    ) {
+      return typenameSchema.enum[0]
+    }
   }
 
   protected static getCollectedName(schema: JSONSchema): string | undefined {
