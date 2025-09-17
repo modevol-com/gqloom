@@ -422,6 +422,9 @@ importers:
       arktype:
         specifier: ^2.1.22
         version: 2.1.22
+      effect:
+        specifier: ^3.17.13
+        version: 3.17.13
       typebox:
         specifier: ^1.0.4
         version: 1.0.4
@@ -3064,6 +3067,9 @@ packages:
 
   effect@3.16.12:
     resolution: {integrity: sha512-N39iBk0K71F9nb442TLbTkjl24FLUzuvx2i1I2RsEAQsdAdUTuUoW0vlfUXgkMTUOnYqKnWcFfqw4hK4Pw27hg==}
+
+  effect@3.17.13:
+    resolution: {integrity: sha512-JMz5oBxs/6mu4FP9Csjub4jYMUwMLrp+IzUmSDVIzn2NoeoyOXMl7x1lghfr3dLKWffWrdnv/d8nFFdgrHXPqw==}
 
   electron-to-chromium@1.5.208:
     resolution: {integrity: sha512-ozZyibehoe7tOhNaf16lKmljVf+3npZcJIEbJRVftVsmAg5TeA1mGS9dVCZzOwr2xT7xK15V0p7+GZqSPgkuPg==}
@@ -7929,6 +7935,11 @@ snapshots:
   ee-first@1.1.1: {}
 
   effect@3.16.12:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.2
+
+  effect@3.17.13:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.2

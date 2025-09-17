@@ -41,6 +41,7 @@
     "@gqloom/core": "workspace:*",
     "ajv": "^8.17.1",
     "arktype": "^2.1.22",
+    "effect": "^3.17.13",
     "typebox": "^1.0.4"
   },
   "homepage": "https://gqloom.dev/",

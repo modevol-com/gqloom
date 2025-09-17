@@ -80,7 +80,15 @@ export class JSONWeaver {
     return schema as JSONSilk<TSchema, TData>
   }
 
-  public static getGraphQLType(schema: JSONSchema): GraphQLOutputType {
+  protected static sourceTypeMap = new Map<JSONSchema, any>()
+
+  public static getGraphQLType(
+    schema: JSONSchema,
+    { source }: { source?: any } = {}
+  ): GraphQLOutputType {
+    if (source) {
+      JSONWeaver.sourceTypeMap.set(schema, source)
+    }
     return JSONWeaver.toNullableGraphQLType(schema)
   }
 
@@ -120,7 +128,7 @@ export class JSONWeaver {
 
     const name =
       schema.title ??
-      weaverContext.names.get(schema) ??
+      JSONWeaver.getCollectedName(schema) ??
       JSONWeaver.getTypeName(schema)
 
     const existing =
@@ -219,7 +227,7 @@ export class JSONWeaver {
         return JSONWeaver.toGraphQLTypeInner(unwrappedSchema)
       }
 
-      const name = schema.title ?? weaverContext.names.get(schema)
+      const name = schema.title ?? JSONWeaver.getCollectedName(schema)
       if (!name) {
         throw new Error("Union type must have a name")
       }
@@ -244,7 +252,7 @@ export class JSONWeaver {
       : schema.type
 
     if (schema.enum) {
-      const name = schema.title ?? weaverContext.names.get(schema)
+      const name = schema.title ?? JSONWeaver.getCollectedName(schema)
       if (!name) {
         throw new Error("Enum type must have a name")
       }
@@ -287,7 +295,7 @@ export class JSONWeaver {
       case "object": {
         const name =
           schema.title ??
-          weaverContext.names.get(schema) ??
+          JSONWeaver.getCollectedName(schema) ??
           JSONWeaver.getTypeName(schema) ??
           LoomObjectType.AUTO_ALIASING
 
@@ -342,6 +350,15 @@ export class JSONWeaver {
       typeof typenameSchema.const === "string"
     )
       return typenameSchema.const
+  }
+
+  protected static getCollectedName(schema: JSONSchema): string | undefined {
+    if (typeof schema !== "object") return undefined
+    const name = weaverContext.names.get(schema)
+    if (name) return name
+    const source = JSONWeaver.sourceTypeMap.get(schema)
+    if (source == null) return undefined
+    return weaverContext.names.get(source)
   }
 }
 

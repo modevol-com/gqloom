@@ -10,7 +10,6 @@ import {
   resolver,
   silk,
   weave,
-  weaverContext,
 } from "@gqloom/core"
 import { type Type, type } from "arktype"
 import {
@@ -418,12 +417,10 @@ describe("arktype", () => {
 
 const arktypeWeaver: SchemaWeaver = {
   vendor: "arktype",
-  getGraphQLType: (type: Type) => {
-    const jsonSchema = type.toJsonSchema()
-    const name = weaverContext.names.get(type)
-    if (name) weaverContext.names.set(jsonSchema, name)
-    return JSONWeaver.getGraphQLType(jsonSchema as JSONSchema)
-  },
+  getGraphQLType: (type: Type) =>
+    JSONWeaver.getGraphQLType(type.toJsonSchema() as JSONSchema, {
+      source: type,
+    }),
 }
 
 function getGraphQLType(type: GraphQLSilk) {
