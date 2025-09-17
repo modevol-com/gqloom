@@ -560,6 +560,9 @@ importers:
       '@gqloom/federation':
         specifier: workspace:*
         version: link:../packages/federation
+      '@gqloom/json':
+        specifier: workspace:*
+        version: link:../packages/json
       '@gqloom/mikro-orm':
         specifier: workspace:*
         version: link:../packages/mikro-orm
@@ -611,6 +614,9 @@ importers:
       mercurius:
         specifier: ^16.2.0
         version: 16.2.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      typebox:
+        specifier: ^1.0.4
+        version: 1.0.4
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.7.3)
