@@ -12,6 +12,7 @@ export const projectConfig = defineProject({
     alias: [
       alias("core"),
       alias("federation"),
+      alias("json"),
       alias("mikro-orm"),
       alias("prisma"),
       alias("valibot"),

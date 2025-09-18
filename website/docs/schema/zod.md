@@ -596,7 +596,8 @@ export type IFruit = z.infer<typeof Fruit>
 
 To accommodate more Zod types, we can extend GQLoom to add more type mappings to it.
 
-First we use `ZodWeaver.config` to define the type mapping configuration. Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars](https://the-guild.dev/graphql/scalars) and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
+First we use `ZodWeaver.config` to define the type mapping configuration.   
+Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars](https://the-guild.dev/graphql/scalars) and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
 
 ```ts twoslash
 import {

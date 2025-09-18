@@ -46,6 +46,10 @@ export default [
         link: "/zh/docs/schema/zod",
       },
       {
+        text: "JSON Schema",
+        link: "/zh/docs/schema/json",
+      },
+      {
         text: "Yup",
         link: "/zh/docs/schema/yup",
       },

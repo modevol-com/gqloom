@@ -88,6 +88,31 @@ html.dark [data-title$=".json"]:before {
   }
 }
 
+[data-title="json-schema" i] {
+  &:before {
+    content: "";
+    --icon: url('https://json-schema.org/favicon.ico');
+  }
+}
+
+html.dark [data-title="json-schema" i] {
+  &:before {
+    content: "";
+    --icon: url('https://json-schema.org/favicon-white.ico');
+  }
+}
+
+[data-title="typebox" i] {
+  &:before {
+    content: "";
+    --icon: url('https://raw.githubusercontent.com/sinclairzx81/typebox/refs/heads/main/design/website/resources/image/typebox.svg');
+  }
+}
+
+html.dark [data-title="typebox" i]:before {
+  filter: invert(1);
+}
+
 [data-title$="prisma"] {
   &:before {
     content: "";

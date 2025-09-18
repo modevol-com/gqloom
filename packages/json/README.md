@@ -10,37 +10,36 @@ The responsibility of GQLoom is to weave these runtime types into a GraphQL Sche
 When developing backend applications with GQLoom, you only need to write types using the Schema libraries you're familiar with. Modern Schema libraries will infer TypeScript types for you, and GQLoom will weave GraphQL types for you.
 In addition, the **resolver factory** of GQLoom can create CRUD interfaces for `Prisma`, `MikroORM`, and `Drizzle`, and supports custom input and adding middleware.
 
-# @gqloom/yup
+# @gqloom/json
 
-This package provides GQLoom integration with [Yup](https://github.com/jquense/yup) to weave Yup Schema to GraphQL Schema.
+This package provides GQLoom integration with [JSON Schema](https://json-schema.org/) to weave JSON Schema to GraphQL Schema.
 
 ## Installation
 
 ```bash
 # use npm
-npm i @gqloom/core yup @gqloom/yup
+npm i @gqloom/core @gqloom/json
 
 # use pnpm
-pnpm add @gqloom/core yup @gqloom/yup
+pnpm add @gqloom/core @gqloom/json
 
 # use yarn
-yarn add @gqloom/core yup @gqloom/yup
+yarn add @gqloom/core @gqloom/json
 ```
 
 ## Hello World
 
 ```ts
 import { query, resolver, weave } from "@gqloom/core"
-import { yupSilk } from "@gqloom/yup"
-import { string } from "yup"
+import { jsonSilk } from "@gqloom/json"
 
 const helloResolver = resolver({
-  hello: query(yupSilk(string()))
-    .input({ name: yupSilk(string().default("World")) })
+  hello: query(jsonSilk({ type: "string" }))
+    .input({ name: jsonSilk({ type: "string" }) })
     .resolve(({ name }) => `Hello, ${name}!`),
 })
 
 export const schema = weave(helloResolver)
 ```
 
-Read more at [GQLoom Document](https://gqloom.dev/docs/schema/yup).
+Read more at [GQLoom Document](https://gqloom.dev/docs/schema/json).

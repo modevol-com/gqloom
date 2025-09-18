@@ -335,7 +335,8 @@ const Fruit = mixed()
 
 To accommodate more Yup types, we can extend GQLoom to add more type mappings to it.
 
-First we use `YupWeaver.config` to define the type mapping configuration. Here we import `GraphQLDateTime` from [graphql-scalars](https://the-guild.dev/graphql/scalars), and when we encounter a `date` type, we map it to the matching GraphQL scalar.
+First we use `YupWeaver.config` to define the type mapping configuration.   
+Here we import `GraphQLDateTime` from [graphql-scalars](https://the-guild.dev/graphql/scalars), and when we encounter a `date` type, we map it to the matching GraphQL scalar.
 ```ts twoslash
 import { GraphQLDateTime } from "graphql-scalars"
 import { YupWeaver } from "@gqloom/yup"

@@ -105,8 +105,8 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
 }
 
 export type ListSilk<TSilk extends GraphQLSilk<any, any>> = GraphQLSilk<
-  EnsureArray<StandardSchemaV1.InferOutput<TSilk>>,
-  EnsureArray<StandardSchemaV1.InferOutput<TSilk>>
+  Array<StandardSchemaV1.InferOutput<TSilk>>,
+  Array<StandardSchemaV1.InferOutput<TSilk>>
 >
 
 /**
@@ -191,7 +191,8 @@ export function parseSilk<TSilk extends GraphQLSilk>(
 }
 
 export function isSilk(target: any): target is GraphQLSilk {
-  if (typeof target !== "object") return false
+  if (typeof target !== "object" && typeof target !== "function") return false
+
   if (target == null) return false
   if (GET_GRAPHQL_TYPE in target) return true
   if (!("~standard" in target)) return false
@@ -251,4 +252,3 @@ type InferObjectSourceByVariants<T extends GraphQLVariants<GraphQLObjectType>> =
       : T extends GraphQLObjectType<infer TSource>
         ? TSource | null | undefined
         : never
-type EnsureArray<T> = T extends Array<infer U> ? U[] : T[]
