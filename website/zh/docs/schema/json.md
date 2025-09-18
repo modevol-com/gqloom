@@ -274,22 +274,26 @@ export function typeSilk<T extends TSchema>(
 // ---cut---
 import { Type } from "typebox"
 
-const Cat = Type.Object(
-  {
-    __typename: Type.Literal("Cat"),
-    name: Type.String(),
-    loveFish: Type.Boolean(),
-  },
-  { title: "Cat" }
+const Cat = typeSilk(
+  Type.Object(
+    {
+      __typename: Type.Literal("Cat"),
+      name: Type.String(),
+      loveFish: Type.Boolean(),
+    },
+    { title: "Cat" }
+  )
 )
 
-const Dog = Type.Object(
-  {
-    __typename: Type.Literal("Dog"),
-    name: Type.String(),
-    loveBone: Type.Boolean(),
-  },
-  { title: "Dog" }
+const Dog = typeSilk(
+  Type.Object(
+    {
+      __typename: Type.Literal("Dog"),
+      name: Type.String(),
+      loveBone: Type.Boolean(),
+    },
+    { title: "Dog" }
+  )
 )
 
 const Animal = typeSilk(Type.Union([Cat, Dog], { title: "Animal" }))

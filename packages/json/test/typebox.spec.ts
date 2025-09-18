@@ -142,20 +142,24 @@ describe("typeSilk", () => {
   })
 
   it("should avoid duplicate object", () => {
-    const Dog = Type.Object(
-      {
-        name: Type.String(),
-        birthday: Type.String(),
-      },
-      { title: "Dog", additionalProperties: false }
+    const Dog = typeSilk(
+      Type.Object(
+        {
+          name: Type.String(),
+          birthday: Type.String(),
+        },
+        { title: "Dog", additionalProperties: false }
+      )
     )
 
-    const Cat = Type.Object(
-      {
-        name: Type.String(),
-        birthday: Type.String(),
-      },
-      { title: "Cat", additionalProperties: false }
+    const Cat = typeSilk(
+      Type.Object(
+        {
+          name: Type.String(),
+          birthday: Type.String(),
+        },
+        { title: "Cat", additionalProperties: false }
+      )
     )
 
     const r1 = resolver.of(typeSilk(Dog), {
@@ -222,22 +226,28 @@ describe("typeSilk", () => {
   })
 
   it("should handle union as GraphQLUnionType", async () => {
-    const Cat = Type.Object(
-      {
-        __typename: Type.Literal("Cat"),
-        name: Type.String(),
-        loveFish: Type.Boolean(),
-      },
-      { title: "Cat" }
+    const Cat = typeSilk(
+      Type.Object(
+        {
+          __typename: Type.Literal("Cat"),
+          name: Type.String(),
+          loveFish: Type.Boolean(),
+        },
+        { title: "Cat" }
+      )
     )
-    const Dog = Type.Object(
-      {
-        __typename: Type.Literal("Dog"),
-        name: Type.String(),
-        loveBone: Type.Boolean(),
-      },
-      { title: "Dog" }
+
+    const Dog = typeSilk(
+      Type.Object(
+        {
+          __typename: Type.Literal("Dog"),
+          name: Type.String(),
+          loveBone: Type.Boolean(),
+        },
+        { title: "Dog" }
+      )
     )
+
     const Animal = typeSilk(Type.Union([Cat, Dog], { title: "Animal" }))
 
     const gqlType = getGraphQLType(Animal)
