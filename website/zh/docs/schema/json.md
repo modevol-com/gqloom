@@ -72,7 +72,7 @@ const IntScalar = jsonSilk({ type: "integer" })
 </template>
 <template #TypeBox>
 
-由于 `TypeBox` 不遵守 [Standard Schema](github.com/standard-schema/standard-schema)，我们需要使用额外的函数包裹 `TypeBox` 的 Schema 使其能在 GQLoom 中使用：
+由于 `TypeBox` 不遵守 [Standard Schema](https://github.com/standard-schema/standard-schema)，我们需要使用额外的函数包裹 `TypeBox` 的 Schema 使其能在 GQLoom 中使用：
 
 ```ts twoslash
 import { type TSchema, type Static } from "typebox"
