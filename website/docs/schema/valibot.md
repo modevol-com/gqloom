@@ -395,7 +395,8 @@ export const FruitE = v.pipe(
 
 To accommodate more Valibot types, we can extend GQLoom to add more type mappings.
 
-First we use `ValibotWeaver.config` to define the type mapping configuration. Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars] and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
+First we use `ValibotWeaver.config` to define the type mapping configuration.   
+Here we import the `GraphQLDateTime`, `GraphQLJSON` and `GraphQLJSONObject` scalars from [graphql-scalars] and map them to the matching GraphQL scalars when encountering the `date`, `any` and `record` types.
 
 ```ts twoslash
 import {

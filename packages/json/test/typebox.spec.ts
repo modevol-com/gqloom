@@ -114,6 +114,31 @@ describe("typeSilk", () => {
         loveFish: Boolean
       }"
     `)
+
+    const Cat2 = typeSilk(
+      Type.Object(
+        {
+          __typename: Type.Optional(Type.Literal("Cat")),
+          name: Type.String(),
+          age: Type.Integer(),
+          loveFish: Type.Optional(
+            Type.Boolean({ description: "Does the cat love fish?" })
+          ),
+        },
+        { description: "A cute cat" }
+      )
+    )
+
+    expect(printTypeboxSchema(Cat2)).toMatchInlineSnapshot(`
+      """"A cute cat"""
+      type Cat {
+        name: String!
+        age: Int!
+
+        """Does the cat love fish?"""
+        loveFish: Boolean
+      }"
+    `)
   })
 
   it("should avoid duplicate object", () => {
@@ -180,17 +205,10 @@ describe("typeSilk", () => {
 
   it("should handle enum", () => {
     const Fruit = typeSilk(
-      Type.Enum(
-        {
-          apple: "apple",
-          banana: "banana",
-          orange: "orange",
-        },
-        {
-          title: "Fruit",
-          description: "Some fruits you might like",
-        }
-      )
+      Type.Enum(["apple", "banana", "orange"], {
+        title: "Fruit",
+        description: "Some fruits you might like",
+      })
     )
 
     expect(printTypeboxSchema(Fruit)).toMatchInlineSnapshot(`

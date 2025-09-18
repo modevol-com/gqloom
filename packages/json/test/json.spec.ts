@@ -372,6 +372,32 @@ describe("JSONWeaver", () => {
         loveFish: Boolean
       }"
     `)
+
+      const Cat2 = jsonSilk({
+        type: "object",
+        description: "A cute cat",
+        properties: {
+          __typename: { const: "Cat" },
+          name: { type: "string" },
+          age: { type: "integer" },
+          loveFish: {
+            type: ["boolean", "null"],
+            description: "Does the cat love fish?",
+          },
+        },
+        required: ["name", "age"],
+      })
+
+      expect(printJSONSchema(Cat2)).toMatchInlineSnapshot(`
+        """"A cute cat"""
+        type Cat {
+          name: String!
+          age: Int!
+
+          """Does the cat love fish?"""
+          loveFish: Boolean
+        }"
+      `)
     })
 
     it("should avoid duplicate object", () => {

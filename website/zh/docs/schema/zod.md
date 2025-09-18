@@ -596,7 +596,8 @@ export type IFruit = z.infer<typeof Fruit>
 
 为了适应更多的 Zod 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
 
-首先我们使用 `ZodWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
+首先我们使用 `ZodWeaver.config` 来定义类型映射的配置。  
+这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`、`GraphQLJSON` 和 `GraphQLJSONObject` 标量，当遇到 `date`、`any` 和 `record` 类型时，我们将其映射到对应的 GraphQL 标量。
 
 ```ts twoslash
 import {
