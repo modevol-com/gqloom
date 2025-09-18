@@ -34,7 +34,7 @@ const HomeSchemaLibrary = defineComponent({
       <section class={["px-6 flex flex-col items-center", props.class]}>
         <h2 class="!text-3xl !font-bold !tracking-wider">{title.value}</h2>
         <div class="flex flex-col lg:flex-row gap-x-8 mt-12">
-          <div class="flex flex-col items-center max-w-[90vw]">
+          <div class="flex flex-col items-center max-w-[90vw] w-144">
             <div class={["vp-doc w-full", styles["code-wrapper"]].join(" ")}>
               {slots.schemaLibraries?.()}
             </div>

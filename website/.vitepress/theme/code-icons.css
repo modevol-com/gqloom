@@ -88,6 +88,20 @@ html.dark [data-title$=".json"]:before {
   }
 }
 
+[data-title="json-schema" i] {
+  &:before {
+    content: "";
+    --icon: url('https://json-schema.org/favicon.ico');
+  }
+}
+
+html.dark [data-title="json-schema" i] {
+  &:before {
+    content: "";
+    --icon: url('https://json-schema.org/favicon-white.ico');
+  }
+}
+
 [data-title$="prisma"] {
   &:before {
     content: "";
