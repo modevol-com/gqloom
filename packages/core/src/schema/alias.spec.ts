@@ -13,7 +13,7 @@ import { LoomObjectType } from "./object"
 import { weave } from "./schema-loom"
 
 describe("alias", () => {
-  it("should auto assign alias", () => {
+  it("should auto assign alias for objects", () => {
     const Bar = new GraphQLObjectType({
       name: AUTO_ALIASING,
       fields: {
@@ -35,7 +35,7 @@ describe("alias", () => {
   `)
   })
 
-  it("should auto assign alias for operations", () => {
+  it("should auto assign alias for objects in operations", () => {
     const Foo = new GraphQLObjectType({
       name: AUTO_ALIASING,
       fields: () => ({
@@ -171,6 +171,55 @@ describe("alias", () => {
         apple
         banana
         orange
+      }"
+    `)
+  })
+
+  it("should auto assign alias for enums", () => {
+    const Fruit = new GraphQLEnumType({
+      name: AUTO_ALIASING,
+      values: {
+        apple: { value: "apple" },
+        banana: { value: "banana" },
+        orange: { value: "orange" },
+      },
+    })
+
+    const Bar = new GraphQLObjectType<{ fruit: string }>({
+      name: "Bar",
+      fields: {
+        fruit: { type: Fruit },
+      },
+    })
+    const r = resolver({
+      fruit: query(silk.list(silk(Fruit)), () => ["apple"]),
+
+      bar: query(silk(Bar), () => ({ fruit: "apple" })),
+
+      createBar: mutation(silk(Bar))
+        .input({ fruit: silk(Fruit) })
+        .resolve(({ fruit }) => fruit),
+    })
+
+    const schema = weave(r)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        fruit: [Fruit]!
+        bar: Bar
+      }
+
+      enum Fruit {
+        apple
+        banana
+        orange
+      }
+
+      type Bar {
+        fruit: Fruit
+      }
+
+      type Mutation {
+        createBar(fruit: Fruit): Bar
       }"
     `)
   })
