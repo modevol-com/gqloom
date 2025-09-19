@@ -3,6 +3,7 @@ import {
   GraphQLEnumType,
   GraphQLObjectType,
   GraphQLString,
+  GraphQLUnionType,
   printSchema,
   printType,
 } from "graphql"
@@ -224,5 +225,146 @@ describe("alias", () => {
     `)
   })
 
-  it.todo("should auto assign alias for unions")
+  it("should auto assign alias for unions in Object", () => {
+    const Dog = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+        loveBone: { type: GraphQLBoolean },
+      },
+    })
+
+    const Cat = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+        loveFish: { type: GraphQLBoolean },
+      },
+    })
+
+    const Animal = new GraphQLUnionType({
+      name: AUTO_ALIASING,
+      types: [Dog, Cat],
+    })
+
+    const Foo = new LoomObjectType({
+      name: "Foo",
+      fields: {
+        animal: { type: Animal },
+      },
+    })
+
+    expect(printType(Foo)).toMatchInlineSnapshot(`
+      "type Foo {
+        animal: FooAnimal
+      }"
+    `)
+  })
+
+  it("should auto assign alias for unions in Operation", () => {
+    const Dog = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+        loveBone: { type: GraphQLBoolean },
+      },
+    })
+
+    const Cat = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+        loveFish: { type: GraphQLBoolean },
+      },
+    })
+
+    const Animal = new GraphQLUnionType({
+      name: AUTO_ALIASING,
+      types: [Dog, Cat],
+    })
+
+    const r = resolver({
+      animal: query(silk(Animal), () => ({ name: "Rex", loveBone: true })),
+    })
+
+    const schema = weave(r)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal
+      }
+
+      union Animal = Animal1 | Animal2
+
+      type Animal1 {
+        name: String
+        loveBone: Boolean
+      }
+
+      type Animal2 {
+        name: String
+        loveFish: Boolean
+      }"
+    `)
+  })
+
+  it("should auto assign alias for unions", () => {
+    const Dog = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+        loveBone: { type: GraphQLBoolean },
+      },
+    })
+
+    const Cat = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+        loveFish: { type: GraphQLBoolean },
+      },
+    })
+
+    const Animal = new GraphQLUnionType({
+      name: AUTO_ALIASING,
+      types: [Dog, Cat],
+    })
+
+    const Foo = new GraphQLObjectType({
+      name: "Foo",
+      fields: {
+        animal: { type: Animal },
+      },
+    })
+
+    const r = resolver({
+      animal: query(silk(Animal), () => ({ name: "Rex", loveBone: true })),
+      foo: query(silk(Foo), () => ({
+        animal: { name: "Rex", loveBone: true },
+      })),
+    })
+
+    const schema = weave(r)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal
+        foo: Foo
+      }
+
+      union Animal = Animal1 | Animal2
+
+      type Animal1 {
+        name: String
+        loveBone: Boolean
+      }
+
+      type Animal2 {
+        name: String
+        loveFish: Boolean
+      }
+
+      type Foo {
+        animal: Animal
+      }"
+    `)
+  })
 })

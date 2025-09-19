@@ -413,7 +413,13 @@ export function getCacheType(
     const unionType = new GraphQLUnionType({
       ...config,
       types: config.types.map(
-        (type) => getCacheType(type, options) as GraphQLObjectType
+        (type, i) =>
+          getCacheType(type, {
+            ...options,
+            fieldName: options.fieldName
+              ? `${options.fieldName}${i + 1}`
+              : undefined,
+          }) as GraphQLObjectType
       ),
     })
     context.loomUnionMap?.set(gqlType, unionType)
