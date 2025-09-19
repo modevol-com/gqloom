@@ -1,6 +1,6 @@
 import {
+  AUTO_ALIASING,
   type GraphQLSilk,
-  LoomObjectType,
   SYMBOLS,
   type StandardSchemaV1,
   ensureInterfaceType,
@@ -297,7 +297,7 @@ export class JSONWeaver {
           schema.title ??
           JSONWeaver.getCollectedName(schema) ??
           JSONWeaver.getTypeName(schema) ??
-          LoomObjectType.AUTO_ALIASING
+          AUTO_ALIASING
 
         return new GraphQLObjectType({
           name,

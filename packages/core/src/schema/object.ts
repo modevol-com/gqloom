@@ -31,6 +31,7 @@ import {
   pascalCase,
   toObjMap,
 } from "../utils"
+import { AUTO_ALIASING } from "../utils/constants"
 import { inputToArgs } from "./input"
 import {
   type WeaverContext,
@@ -42,8 +43,6 @@ import {
 export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, Loom.BaseField>()
   protected hiddenFields = new Set<string>()
-
-  public static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
   protected globalOptions?: ResolverOptions
@@ -81,7 +80,7 @@ export class LoomObjectType extends GraphQLObjectType {
     this.weaverContext = options.weaverContext ?? initWeaverContext()
     this.resolvers = new Map()
 
-    if (this.name !== LoomObjectType.AUTO_ALIASING) {
+    if (this.name !== AUTO_ALIASING) {
       this.hasExplicitName = true
     }
   }
@@ -98,11 +97,15 @@ export class LoomObjectType extends GraphQLObjectType {
     this.renameByAliases()
   }
 
-  protected renameByAliases() {
+  protected renameByAliases(alias?: string) {
     let name: string | undefined
-    for (const alias of this.aliases) {
-      if (name === undefined || alias.length < name.length) {
-        name = alias
+    if (alias) {
+      name = alias.length < this.name.length ? alias : this.name
+    } else {
+      for (const alias of this.aliases) {
+        if (name === undefined || alias.length < name.length) {
+          name = alias
+        }
       }
     }
     if (name) this.name = name

@@ -1,11 +1,11 @@
 import {
+  AUTO_ALIASING,
   SYMBOLS,
   ensureInterfaceType,
   mapValue,
   weave,
   weaverContext,
 } from "@gqloom/core"
-import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -165,8 +165,7 @@ export class ZodWeaver {
     }
 
     if (isZodObject(schema)) {
-      const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
-        getObjectConfig(schema)
+      const { name = AUTO_ALIASING, ...objectConfig } = getObjectConfig(schema)
 
       return new GraphQLObjectType({
         name,

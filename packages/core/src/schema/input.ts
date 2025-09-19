@@ -17,8 +17,7 @@ import {
   isUnionType,
 } from "graphql"
 import { type GraphQLSilk, getGraphQLType, isSilk } from "../resolver"
-import { mapValue, pascalCase, tryIn } from "../utils"
-import { LoomObjectType } from "./object"
+import { AUTO_ALIASING, mapValue, pascalCase, tryIn } from "../utils"
 import type { CoreSchemaWeaverConfig } from "./types"
 import { provideWeaverContext, weaverContext } from "./weaver-context"
 
@@ -96,7 +95,7 @@ export function ensureInputObjectType(
 
   const { astNode, extensionASTNodes, fields, ...config } = object.toConfig()
   let name = object.name
-  if (name === LoomObjectType.AUTO_ALIASING) {
+  if (name === AUTO_ALIASING) {
     name = `${pascalCase(options?.fieldName ?? "")}Input`
   }
   const getInputObjectName =

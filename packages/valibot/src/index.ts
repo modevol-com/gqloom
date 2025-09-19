@@ -1,4 +1,5 @@
 import {
+  AUTO_ALIASING,
   type GraphQLSilk,
   SYMBOLS,
   ensureInterfaceType,
@@ -6,7 +7,6 @@ import {
   weave,
   weaverContext,
 } from "@gqloom/core"
-import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -184,7 +184,7 @@ export class ValibotWeaver {
             ...wrappers
           )
         }
-        const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
+        const { name = AUTO_ALIASING, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
 
         return new GraphQLObjectType({

@@ -14,6 +14,7 @@ import {
   silk,
   subscription,
 } from "../resolver"
+import { AUTO_ALIASING } from "../utils"
 import { LoomObjectType } from "./object"
 import { weave } from "./schema-loom"
 
@@ -60,7 +61,7 @@ describe("LoomObjectType", () => {
   describe("alias", () => {
     it("should auto assign alias", () => {
       const Bar = new GraphQLObjectType({
-        name: LoomObjectType.AUTO_ALIASING,
+        name: AUTO_ALIASING,
         fields: {
           hello: { type: GraphQLString },
         },
@@ -82,20 +83,20 @@ describe("LoomObjectType", () => {
 
     it("should auto assign alias for operations", () => {
       const Foo = new GraphQLObjectType({
-        name: LoomObjectType.AUTO_ALIASING,
+        name: AUTO_ALIASING,
         fields: () => ({
           baz: { type: Baz },
         }),
       })
       const Bar = new GraphQLObjectType({
-        name: LoomObjectType.AUTO_ALIASING,
+        name: AUTO_ALIASING,
         fields: {
           hello: { type: GraphQLString },
           foo: { type: Foo },
         },
       })
       const Baz = new GraphQLObjectType({
-        name: LoomObjectType.AUTO_ALIASING,
+        name: AUTO_ALIASING,
         fields: {
           bar: { type: GraphQLString },
         },

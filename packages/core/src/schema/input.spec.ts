@@ -14,8 +14,8 @@ import {
 } from "graphql"
 import { describe, expect, it } from "vitest"
 import { mutation, resolver, silk } from "../resolver"
+import { AUTO_ALIASING } from "../utils/constants"
 import { ensureInputObjectType, ensureInputType, inputToArgs } from "./input"
-import { LoomObjectType } from "./object"
 import { weave } from "./schema-loom"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
@@ -185,13 +185,13 @@ describe("inputToArgs", () => {
 
   it("should auto assign alias for inputs", () => {
     const Foo = new GraphQLObjectType({
-      name: LoomObjectType.AUTO_ALIASING,
+      name: AUTO_ALIASING,
       fields: () => ({
         baz: { type: Baz },
       }),
     })
     const Bar = new GraphQLObjectType({
-      name: LoomObjectType.AUTO_ALIASING,
+      name: AUTO_ALIASING,
       fields: {
         hello: { type: GraphQLString },
         foo: { type: Foo },

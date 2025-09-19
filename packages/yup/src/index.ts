@@ -1,4 +1,5 @@
 import {
+  AUTO_ALIASING,
   type GraphQLSilk,
   SYMBOLS,
   type StandardSchemaV1,
@@ -8,7 +9,6 @@ import {
   mapValue,
   weaverContext,
 } from "@gqloom/core"
-import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -131,7 +131,7 @@ export class YupWeaver {
           objectConfig.name ??
           description.label ??
           weaverContext.names.get(schema) ??
-          LoomObjectType.AUTO_ALIASING
+          AUTO_ALIASING
 
         const existing = weaverContext.getNamedType(name)
         if (existing) return existing
