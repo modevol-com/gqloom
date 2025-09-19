@@ -187,7 +187,11 @@ export class ZodWeaver {
     }
 
     if (isZodEnum(schema)) {
-      const { name, valuesConfig, ...enumConfig } = getEnumConfig(schema)
+      const {
+        name = AUTO_ALIASING,
+        valuesConfig,
+        ...enumConfig
+      } = getEnumConfig(schema)
 
       const values: GraphQLEnumValueConfigMap = {}
 
@@ -200,11 +204,6 @@ export class ZodWeaver {
         values[key] = { value, ...valuesConfig?.[key] }
       })
 
-      if (!name)
-        throw new Error(
-          `Enum (${Object.keys(values).join(", ")}) must have a name`
-        )
-
       return new GraphQLEnumType({
         name,
         values,
@@ -213,7 +212,7 @@ export class ZodWeaver {
     }
 
     if (isZodUnion(schema)) {
-      const { name, ...unionConfig } = getUnionConfig(schema)
+      const { name = AUTO_ALIASING, ...unionConfig } = getUnionConfig(schema)
 
       const types = (schema._zod.def.options as $ZodType[]).map((s) => {
         const gqlType = ZodWeaver.toMemoriedGraphQLType(s)
@@ -223,13 +222,7 @@ export class ZodWeaver {
         )
       })
 
-      if (!name)
-        throw new Error(
-          `Union (${types.map((t) => t.name).join(", ")}) must have a name`
-        )
-
       return new GraphQLUnionType({
-        // TODO: resolve type
         resolveType: isZodDiscriminatedUnion(schema)
           ? resolveTypeByDiscriminatedUnion(schema)
           : undefined,

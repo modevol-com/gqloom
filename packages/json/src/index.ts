@@ -227,10 +227,8 @@ export class JSONWeaver {
         return JSONWeaver.toGraphQLTypeInner(unwrappedSchema)
       }
 
-      const name = schema.title ?? JSONWeaver.getCollectedName(schema)
-      if (!name) {
-        throw new Error("Union type must have a name")
-      }
+      const name =
+        schema.title ?? JSONWeaver.getCollectedName(schema) ?? AUTO_ALIASING
       return new GraphQLUnionType({
         name,
         description: schema.description,
@@ -252,10 +250,8 @@ export class JSONWeaver {
       : schema.type
 
     if (schema.enum) {
-      const name = schema.title ?? JSONWeaver.getCollectedName(schema)
-      if (!name) {
-        throw new Error("Enum type must have a name")
-      }
+      const name =
+        schema.title ?? JSONWeaver.getCollectedName(schema) ?? AUTO_ALIASING
       const values: GraphQLEnumValueConfigMap = {}
       for (const value of schema.enum as (string | number)[]) {
         if (typeof value === "string" || typeof value === "number") {

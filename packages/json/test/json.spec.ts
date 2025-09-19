@@ -273,21 +273,6 @@ describe("JSONWeaver", () => {
       )
     })
 
-    it("should throw for union type without name", () => {
-      const Cat = jsonSilk({
-        type: "object",
-        properties: { name: { type: "string" } },
-      })
-      const Dog = jsonSilk({
-        type: "object",
-        properties: { name: { type: "string" } },
-      })
-      const Animal = { oneOf: [Cat, Dog] }
-      expect(() => getGraphQLType(Animal)).toThrow(
-        "Union type must have a name"
-      )
-    })
-
     it("should throw for union type with non-object member", () => {
       const Cat = jsonSilk({
         title: "Cat",
@@ -300,11 +285,6 @@ describe("JSONWeaver", () => {
       expect(() => weave(r)).toThrow(
         "Union type member of Animal must be an object type"
       )
-    })
-
-    it("should throw for enum type without name", () => {
-      const Fruit = { enum: ["apple", "banana"] }
-      expect(() => getGraphQLType(Fruit)).toThrow("Enum type must have a name")
     })
 
     it("should throw for invalid array schema", () => {
