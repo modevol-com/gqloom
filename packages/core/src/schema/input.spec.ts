@@ -19,7 +19,7 @@ import { ensureInputObjectType, ensureInputType, inputToArgs } from "./input"
 import { weave } from "./schema-loom"
 import { initWeaverContext, provideWeaverContext } from "./weaver-context"
 
-const nil = undefined
+const testOptions = { fieldName: "Test" }
 
 describe("toInputObjectType", () => {
   const Dog: GraphQLObjectType = new GraphQLObjectType({
@@ -31,7 +31,7 @@ describe("toInputObjectType", () => {
     }),
   })
   it("should convert ObjectType to InputObjectType", () => {
-    const DogInput = ensureInputObjectType(Dog, nil)
+    const DogInput = ensureInputObjectType(Dog, testOptions)
     expect(isInputObjectType(DogInput)).toBe(true)
     expect(printType(DogInput)).toMatchInlineSnapshot(`
       "input Dog {
@@ -44,8 +44,8 @@ describe("toInputObjectType", () => {
 
   it("should return same InputObjectType for same ObjectType", () => {
     provideWeaverContext(() => {
-      expect(ensureInputObjectType(Dog, nil)).toBe(
-        ensureInputObjectType(Dog, nil)
+      expect(ensureInputObjectType(Dog, testOptions)).toBe(
+        ensureInputObjectType(Dog, testOptions)
       )
     }, initWeaverContext())
   })
@@ -53,28 +53,28 @@ describe("toInputObjectType", () => {
 
 describe("ensureInputType", () => {
   it("should ensure Scalar Type", () => {
-    expect(ensureInputType(GraphQLString, nil)).toBe(GraphQLString)
-    expect(ensureInputType(GraphQLInt, nil)).toBe(GraphQLInt)
-    expect(ensureInputType(GraphQLFloat, nil)).toBe(GraphQLFloat)
-    expect(ensureInputType(GraphQLBoolean, nil)).toBe(GraphQLBoolean)
-    expect(ensureInputType(GraphQLID, nil)).toBe(GraphQLID)
+    expect(ensureInputType(GraphQLString, testOptions)).toBe(GraphQLString)
+    expect(ensureInputType(GraphQLInt, testOptions)).toBe(GraphQLInt)
+    expect(ensureInputType(GraphQLFloat, testOptions)).toBe(GraphQLFloat)
+    expect(ensureInputType(GraphQLBoolean, testOptions)).toBe(GraphQLBoolean)
+    expect(ensureInputType(GraphQLID, testOptions)).toBe(GraphQLID)
   })
 
   it("should ensure List", () => {
-    expect(ensureInputType(new GraphQLList(GraphQLString), nil)).toEqual(
-      new GraphQLList(GraphQLString)
-    )
-    expect(ensureInputType(new GraphQLList(GraphQLInt), nil)).toEqual(
+    expect(
+      ensureInputType(new GraphQLList(GraphQLString), testOptions)
+    ).toEqual(new GraphQLList(GraphQLString))
+    expect(ensureInputType(new GraphQLList(GraphQLInt), testOptions)).toEqual(
       new GraphQLList(GraphQLInt)
     )
   })
   it("should ensure NonNull", () => {
-    expect(ensureInputType(new GraphQLNonNull(GraphQLString), nil)).toEqual(
-      new GraphQLNonNull(GraphQLString)
-    )
-    expect(ensureInputType(new GraphQLNonNull(GraphQLInt), nil)).toEqual(
-      new GraphQLNonNull(GraphQLInt)
-    )
+    expect(
+      ensureInputType(new GraphQLNonNull(GraphQLString), testOptions)
+    ).toEqual(new GraphQLNonNull(GraphQLString))
+    expect(
+      ensureInputType(new GraphQLNonNull(GraphQLInt), testOptions)
+    ).toEqual(new GraphQLNonNull(GraphQLInt))
   })
   it("should ensure Input Object", () => {
     const Dog = new GraphQLObjectType({
@@ -92,9 +92,9 @@ describe("ensureInputType", () => {
       },
     })
     expect(
-      printType(ensureInputType(Dog, nil) as GraphQLInputObjectType)
+      printType(ensureInputType(Dog, testOptions) as GraphQLInputObjectType)
     ).toEqual(printType(DogInput))
-    expect(ensureInputType(DogInput, nil)).toBe(DogInput)
+    expect(ensureInputType(DogInput, testOptions)).toBe(DogInput)
   })
 
   it("should prevent Union Type", () => {
@@ -104,7 +104,7 @@ describe("ensureInputType", () => {
           name: "Dog",
           types: [],
         }),
-        nil
+        testOptions
       )
     }).toThrow("Cannot convert union type Dog to input type")
   })
@@ -129,14 +129,16 @@ describe("inputToArgs", () => {
   const IntSilk = silk<number, number>(GraphQLInt)
 
   it("should convert record", () => {
-    expect(inputToArgs({ name: StringSilk, age: IntSilk }, nil)).toMatchObject({
+    expect(
+      inputToArgs({ name: StringSilk, age: IntSilk }, testOptions)
+    ).toMatchObject({
       name: { type: GraphQLString },
       age: { type: GraphQLInt },
     })
   })
 
   it("should convert ObjectType", () => {
-    expect(inputToArgs(DogSilk, nil)).toMatchObject({
+    expect(inputToArgs(DogSilk, testOptions)).toMatchObject({
       name: { type: GraphQLString },
       age: { type: GraphQLInt },
     })
@@ -144,7 +146,7 @@ describe("inputToArgs", () => {
 
   it("should convert nested ObjectType", () => {
     const input = { dog: DogSilk }
-    const args = inputToArgs(input, nil)
+    const args = inputToArgs(input, testOptions)
     expect(args).toMatchObject({
       dog: { type: { name: "Dog" } },
     })
@@ -162,7 +164,7 @@ describe("inputToArgs", () => {
       dog: IDog
     }
     const HunterSilk = silk<IHunter, IHunter>(Hunter)
-    const hunterArgs = inputToArgs(HunterSilk, nil)
+    const hunterArgs = inputToArgs(HunterSilk, testOptions)
     expect(hunterArgs).toMatchObject({
       name: { type: GraphQLString },
       dog: { type: { name: "Dog" } },
@@ -171,14 +173,14 @@ describe("inputToArgs", () => {
   })
 
   it("should accept undefined", () => {
-    expect(inputToArgs(undefined, nil)).toBe(undefined)
+    expect(inputToArgs(undefined, testOptions)).toBe(undefined)
   })
 
   it("should prevent ScalarType", () => {
-    expect(() => inputToArgs(StringSilk, nil)).toThrow(
+    expect(() => inputToArgs(StringSilk, testOptions)).toThrow(
       "Cannot convert String to input type"
     )
-    expect(() => inputToArgs(IntSilk, nil)).toThrow(
+    expect(() => inputToArgs(IntSilk, testOptions)).toThrow(
       "Cannot convert Int to input type"
     )
   })

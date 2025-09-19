@@ -9,6 +9,7 @@ import {
   GraphQLNonNull,
   type GraphQLObjectType,
   type GraphQLType,
+  isEnumType,
   isInputObjectType,
   isInterfaceType,
   isListType,
@@ -18,16 +19,17 @@ import {
 } from "graphql"
 import { type GraphQLSilk, getGraphQLType, isSilk } from "../resolver"
 import { AUTO_ALIASING, mapValue, pascalCase, tryIn } from "../utils"
+import { setAlias } from "./alias"
 import type { CoreSchemaWeaverConfig } from "./types"
 import { provideWeaverContext, weaverContext } from "./weaver-context"
 
 interface EnsureInputOptions {
-  fieldName?: string
+  fieldName: string
 }
 
 export function inputToArgs(
   input: GraphQLSilk | Record<string, GraphQLSilk> | undefined | void,
-  options: EnsureInputOptions | undefined
+  options: EnsureInputOptions
 ): GraphQLFieldConfigArgumentMap | undefined {
   if (input === undefined) return undefined
   if (isSilk(input)) {
@@ -35,10 +37,7 @@ export function inputToArgs(
     if (isNonNullType(inputType)) inputType = inputType.ofType
     if (isObjectType(inputType)) {
       return mapValue(inputType.toConfig().fields, (it, key) => {
-        let fieldName
-        if (options?.fieldName) {
-          fieldName = `${pascalCase(options.fieldName)}${pascalCase(key)}`
-        }
+        const fieldName = `${pascalCase(options.fieldName)}${pascalCase(key)}`
         return toInputFieldConfig(it, { fieldName })
       })
     }
@@ -47,10 +46,8 @@ export function inputToArgs(
   const args: GraphQLFieldConfigArgumentMap = {}
   Object.entries(input).forEach(([name, field]) => {
     tryIn(() => {
-      let fieldName
-      if (options?.fieldName) {
-        fieldName = `${pascalCase(options.fieldName)}${pascalCase(name)}`
-      }
+      const fieldName = `${pascalCase(options.fieldName)}${pascalCase(name)}`
+
       args[name] = {
         ...field,
         type: ensureInputType(field, { fieldName }),
@@ -62,7 +59,7 @@ export function inputToArgs(
 
 export function ensureInputType(
   silkOrType: GraphQLType | GraphQLSilk,
-  options: EnsureInputOptions | undefined
+  options: EnsureInputOptions
 ): GraphQLInputType {
   const gqlType = (() => {
     if (isSilk(silkOrType)) {
@@ -81,12 +78,19 @@ export function ensureInputType(
   }
   if (isObjectType(gqlType) || isInterfaceType(gqlType))
     return ensureInputObjectType(gqlType, options)
+  if (isEnumType(gqlType)) {
+    if (gqlType.name === AUTO_ALIASING) {
+      const alias = `${pascalCase(options.fieldName)}Input`
+      setAlias(gqlType, alias, weaverContext)
+    }
+    return gqlType
+  }
   return gqlType
 }
 
 export function ensureInputObjectType(
   object: GraphQLObjectType | GraphQLInterfaceType | GraphQLInputObjectType,
-  options: EnsureInputOptions | undefined
+  options: EnsureInputOptions
 ): GraphQLInputObjectType {
   if (isInputObjectType(object)) return object
 
@@ -96,7 +100,7 @@ export function ensureInputObjectType(
   const { astNode, extensionASTNodes, fields, ...config } = object.toConfig()
   let name = object.name
   if (name === AUTO_ALIASING) {
-    name = `${pascalCase(options?.fieldName ?? "")}Input`
+    name = `${pascalCase(options.fieldName)}Input`
   }
   const getInputObjectName =
     weaverContext.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
@@ -121,7 +125,7 @@ export function ensureInputObjectType(
 
 function toInputFieldConfig(
   { astNode, resolve, ...config }: GraphQLFieldConfig<any, any>,
-  options: EnsureInputOptions | undefined
+  options: EnsureInputOptions
 ): GraphQLInputFieldConfig {
   return { ...config, type: ensureInputType(config.type, options) }
 }

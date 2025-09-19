@@ -11,6 +11,7 @@ import {
   GraphQLUnionType,
   type ThunkObjMap,
   assertName,
+  isEnumType,
   isListType,
   isNonNullType,
   isObjectType,
@@ -32,6 +33,7 @@ import {
   toObjMap,
 } from "../utils"
 import { AUTO_ALIASING } from "../utils/constants"
+import { setAlias } from "./alias"
 import { inputToArgs } from "./input"
 import {
   type WeaverContext,
@@ -80,35 +82,15 @@ export class LoomObjectType extends GraphQLObjectType {
     this.weaverContext = options.weaverContext ?? initWeaverContext()
     this.resolvers = new Map()
 
-    if (this.name !== AUTO_ALIASING) {
-      this.hasExplicitName = true
+    if (this.name === AUTO_ALIASING) {
+      this.weaverContext.autoAliasTypes.add(this)
     }
   }
 
-  protected hasExplicitName?: boolean
-  protected _aliases: string[] = []
-  public get aliases(): string[] {
-    return this._aliases
-  }
-
-  public addAlias(name: string) {
-    if (this.hasExplicitName) return
-    this._aliases.push(name)
-    this.renameByAliases()
-  }
-
-  protected renameByAliases(alias?: string) {
-    let name: string | undefined
-    if (alias) {
-      name = alias.length < this.name.length ? alias : this.name
-    } else {
-      for (const alias of this.aliases) {
-        if (name === undefined || alias.length < name.length) {
-          name = alias
-        }
-      }
-    }
-    if (name) this.name = name
+  public addAlias(alias?: string) {
+    if (!this.weaverContext.autoAliasTypes.has(this) || !alias) return
+    const name = alias.length < this.name.length ? alias : this.name
+    this.name = name
   }
 
   public hideField(name: string) {
@@ -193,7 +175,7 @@ export class LoomObjectType extends GraphQLObjectType {
       ...extract(field),
       type: outputType,
       args: inputToArgs(field["~meta"].input, {
-        fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
+        fieldName: parentName(this.name) + fieldName,
       }),
       resolve,
       ...(subscribe ? { subscribe } : {}),
@@ -405,6 +387,12 @@ export function getCacheType(
   } = {}
 ): GraphQLOutputType {
   const context = options.weaverContext ?? weaverContext
+
+  const getAlias = () => {
+    if (!options.fieldName || !options.parent) return
+    return parentName(options.parent.name) + pascalCase(options.fieldName)
+  }
+
   if (gqlType instanceof LoomObjectType) return gqlType
   if (isObjectType(gqlType)) {
     const gqlObject = context.loomObjectMap?.get(gqlType)
@@ -412,11 +400,7 @@ export function getCacheType(
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
-    if (options.fieldName && options.parent) {
-      loomObject.addAlias(
-        parentName(options.parent.name) + pascalCase(options.fieldName)
-      )
-    }
+    setAlias(loomObject, getAlias(), context)
     return loomObject
   } else if (isListType(gqlType)) {
     return new GraphQLList(getCacheType(gqlType.ofType, options))
@@ -433,7 +417,11 @@ export function getCacheType(
       ),
     })
     context.loomUnionMap?.set(gqlType, unionType)
+    setAlias(unionType, getAlias(), context)
     return unionType
+  } else if (isEnumType(gqlType)) {
+    setAlias(gqlType, getAlias(), context)
+    return gqlType
   }
   return gqlType
 }

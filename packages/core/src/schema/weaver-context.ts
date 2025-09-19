@@ -1,6 +1,7 @@
 import {
   type GraphQLInputObjectType,
   type GraphQLInterfaceType,
+  type GraphQLNamedType,
   type GraphQLObjectType,
   type GraphQLOutputType,
   type GraphQLUnionType,
@@ -36,12 +37,14 @@ export interface WeaverContext {
   ): TGraphQLType
   getNamedType<T extends GraphQLOutputType>(name: string): T | undefined
   names: WeakMap<object, string>
+  autoAliasTypes: WeakSet<GraphQLNamedType>
   vendorWeavers: Map<string, SchemaWeaver>
 }
 
 let ref: WeaverContext | undefined
 
 const names = new WeakMap<object, string>()
+const autoAliasTypes = new WeakSet<GraphQLNamedType>()
 
 export interface WeaverConfig {
   [WEAVER_CONFIG]: string | symbol
@@ -69,6 +72,7 @@ export function initWeaverContext(): WeaverContext {
       this.configs.delete(key)
     },
     names,
+    autoAliasTypes,
     namedTypes: new Map<string, GraphQLOutputType>(),
     memoNamedType(gqlTypeValue) {
       const gqlType = gqlTypeValue as GraphQLOutputType
@@ -98,6 +102,7 @@ type GlobalContextRequiredKeys =
   | "deleteConfig"
   | "getNamedType"
   | "memoNamedType"
+  | "autoAliasTypes"
 
 export interface GlobalWeaverContext
   extends Partial<Omit<WeaverContext, GlobalContextRequiredKeys>>,
@@ -168,6 +173,7 @@ export const weaverContext: GlobalWeaverContext = {
     return result
   },
   names,
+  autoAliasTypes,
 
   getNamedType(name) {
     return ref?.getNamedType(name)
