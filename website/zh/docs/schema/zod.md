@@ -75,6 +75,8 @@ export const Cat = z.object({
 
 ## 名称和更多元数据
 
+<!--@include: ./parts/naming.info.md-->
+
 ### 为对象定义名称
 
 在 `GQLoom` 中，我们有多种方法来为对象定义名称。

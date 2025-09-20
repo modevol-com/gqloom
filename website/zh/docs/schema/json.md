@@ -170,6 +170,8 @@ const Cat = typeSilk(
 
 ### 为对象命名
 
+<!--@include: ./parts/naming.info.md-->
+
 我们可以使用 JSON Schema 的 `title` 属性为对象命名，比如上面的示例代码；也可以使用 `__typename` 字面量来为对象命名：
 
 <Tabs groupId="json-schema-builder">

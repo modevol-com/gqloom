@@ -77,6 +77,8 @@ export const Cat = z.object({
 
 ### Defining names for objects
 
+<!--@include: ./parts/naming.info.md-->
+
 In `GQLoom` we have multiple ways to define names for objects.
 
 #### Using `__typename` literal
