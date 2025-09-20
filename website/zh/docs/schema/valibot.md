@@ -72,6 +72,8 @@ export const Cat = v.object({
 
 ### 为对象定义名称
 
+<!--@include: ./parts/naming.info.md-->
+
 在 `GQLoom` 中，我们有多种方法来为对象定义名称。
 
 #### 使用 `__typename` 字面量

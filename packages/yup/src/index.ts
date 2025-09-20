@@ -1,4 +1,5 @@
 import {
+  AUTO_ALIASING,
   type GraphQLSilk,
   SYMBOLS,
   type StandardSchemaV1,
@@ -8,7 +9,6 @@ import {
   mapValue,
   weaverContext,
 } from "@gqloom/core"
-import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -131,7 +131,7 @@ export class YupWeaver {
           objectConfig.name ??
           description.label ??
           weaverContext.names.get(schema) ??
-          LoomObjectType.AUTO_ALIASING
+          AUTO_ALIASING
 
         const existing = weaverContext.getNamedType(name)
         if (existing) return existing
@@ -192,8 +192,8 @@ export class YupWeaver {
         const name =
           description.meta?.asUnionType?.name ??
           description.label ??
-          weaverContext.names.get(unionSchema)
-        if (!name) throw new Error("union type must have a name")
+          weaverContext.names.get(unionSchema) ??
+          AUTO_ALIASING
         const existing = weaverContext.getNamedType(name)
         if (existing) return existing
 
@@ -250,12 +250,9 @@ export class YupWeaver {
     if (!YupWeaver.isEnumType(description)) return null
     const meta: GQLoomMetadata | undefined = description.meta
 
-    const name = description.meta?.asEnumType?.name ?? description.label
+    const name =
+      description.meta?.asEnumType?.name ?? description.label ?? AUTO_ALIASING
 
-    if (!name)
-      throw new Error(
-        `enum type ${description.oneOf.join("|")} must have a name`
-      )
     const existing = weaverContext.getNamedType<GraphQLEnumType>(name)
     if (existing) return existing
 

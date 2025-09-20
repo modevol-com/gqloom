@@ -170,6 +170,8 @@ const Cat = typeSilk(
 
 ### Naming Objects
 
+<!--@include: ./parts/naming.info.md-->
+
 We can use the `title` property of JSON Schema to name an object, as in the example code above; we can also use a `__typename` literal to name it:
 
 <Tabs groupId="json-schema-builder">

@@ -1,4 +1,5 @@
 import {
+  AUTO_ALIASING,
   type GraphQLSilk,
   SYMBOLS,
   ensureInterfaceType,
@@ -6,7 +7,6 @@ import {
   weave,
   weaverContext,
 } from "@gqloom/core"
-import { LoomObjectType } from "@gqloom/core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -131,8 +131,11 @@ export class ValibotWeaver {
         return GraphQLString
       case "enum":
       case "picklist": {
-        const { name, valuesConfig, ...enumConfig } =
-          ValibotMetadataCollector.getEnumConfig(schema, ...wrappers) ?? {}
+        const {
+          name = AUTO_ALIASING,
+          valuesConfig,
+          ...enumConfig
+        } = ValibotMetadataCollector.getEnumConfig(schema, ...wrappers) ?? {}
 
         const values: GraphQLEnumValueConfigMap = {}
         if (schema.type === "picklist") {
@@ -146,12 +149,6 @@ export class ValibotWeaver {
             values[key] = { value, ...valuesConfig?.[key] }
           })
         }
-        if (!name)
-          throw new Error(
-            `Enum (${Object.values(values)
-              .map((it) => it.value)
-              .join(", ")}) must have a name`
-          )
 
         return new GraphQLEnumType({
           name,
@@ -184,7 +181,7 @@ export class ValibotWeaver {
             ...wrappers
           )
         }
-        const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
+        const { name = AUTO_ALIASING, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
 
         return new GraphQLObjectType({
@@ -234,9 +231,8 @@ export class ValibotWeaver {
       }
       case "union":
       case "variant": {
-        const { name, ...unionConfig } =
+        const { name = AUTO_ALIASING, ...unionConfig } =
           ValibotMetadataCollector.getUnionConfig(schema, ...wrappers) ?? {}
-        if (!name) throw new Error("Union type must have a name")
 
         const options =
           schema.type === "variant" ? flatVariant(schema) : schema.options
