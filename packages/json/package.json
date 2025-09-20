@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/json",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Create GraphQL schema and resolvers easily using using JSON Schema!",
   "type": "module",
   "main": "./dist/index.js",
@@ -34,7 +34,7 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.11.1",
+    "@gqloom/core": ">= 0.12.0",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {

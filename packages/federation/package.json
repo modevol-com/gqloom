@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/federation",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Building subGraphs with GQLoom",
   "type": "module",
   "main": "./dist/index.js",
