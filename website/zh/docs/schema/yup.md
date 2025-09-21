@@ -36,19 +36,34 @@ declare module "yup" {
 
 ## 定义简单标量
 
-在 GQLoom 中，可以使用 `yupSilk` 将 Yup Schema 作为[丝线](../silk)使用：
+在 GQLoom 中，可以直接将 Yup Schema 作为[丝线](../silk)使用：
 
 ```ts twoslash
 import { number, string, boolean } from "yup"
-import { yupSilk } from "@gqloom/yup"
 
-const StringScalar = yupSilk(string())
+const StringScalar = string() // GraphQLString
 
-const BooleanScalar = yupSilk(boolean())
+const BooleanScalar = boolean() // GraphQLBoolean
 
-const FloadtScalar = yupSilk(number())
+const FloatScalar = number() // GraphQLFloat
 
-const IntScalar = yupSilk(number().integer())
+const IntScalar = number().integer() // GraphQLInt
+```
+
+## 编织
+
+为了让 `GQLoom` 能正确地将 Yup Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/yup` 的 `YupWeaver`。
+
+```ts twoslash
+import { weave, resolver, query } from "@gqloom/core"
+import { YupWeaver } from "@gqloom/yup"
+import { string } from "yup"
+
+export const helloResolver = resolver({
+  hello: query(string(), () => "Hello, World!"),
+})
+
+export const schema = weave(YupWeaver, helloResolver)
 ```
 
 ## 定义对象
@@ -67,6 +82,8 @@ export const Cat = object({
 ## 名称和更多元数据
 
 ### 为对象定义名称
+
+<!--@include: ./parts/naming.info.md-->
 
 #### 使用 `label()`
 

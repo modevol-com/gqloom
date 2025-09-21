@@ -36,19 +36,34 @@ declare module "yup" {
 
 ## Defining simple scalars
 
-Yup Schema can be used as a [silk](../silk) in GQLoom using `yupSilk`:
+Yup Schema can be used directly as a [silk](../silk) in GQLoom:
 
 ```ts twoslash
 import { number, string, boolean } from "yup"
-import { yupSilk } from "@gqloom/yup"
 
-const StringScalar = yupSilk(string())
+const StringScalar = string() // GraphQLString
 
-const BooleanScalar = yupSilk(boolean())
+const BooleanScalar = boolean() // GraphQLBoolean
 
-const FloadtScalar = yupSilk(number())
+const FloatScalar = number() // GraphQLFloat
 
-const IntScalar = yupSilk(number().integer())
+const IntScalar = number().integer() // GraphQLInt
+```
+
+## Weaving
+
+For `GQLoom` to properly weave Yup Schema into GraphQL Schema, we need to add `YupWeaver` from `@gqloom/yup` when using the `weave` function.
+
+```ts twoslash
+import { weave, resolver, query } from "@gqloom/core"
+import { YupWeaver } from "@gqloom/yup"
+import { string } from "yup"
+
+export const helloResolver = resolver({
+  hello: query(string(), () => "Hello, World!"),
+})
+
+export const schema = weave(YupWeaver, helloResolver)
 ```
 
 ## Defining objects
@@ -67,6 +82,8 @@ export const Cat = object({
 ## Names and more metadata
 
 ### Defining names for objects
+
+<!--@include: ./parts/naming.info.md-->
 
 #### Using `label()`
 
