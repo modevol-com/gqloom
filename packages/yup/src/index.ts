@@ -2,7 +2,6 @@ import {
   AUTO_ALIASING,
   type GraphQLSilk,
   SYMBOLS,
-  type StandardSchemaV1,
   deepMerge,
   ensureInterfaceType,
   isSilk,
@@ -36,7 +35,6 @@ import {
   type Reference,
   Schema,
   type SchemaDescription,
-  ValidationError,
   isSchema,
 } from "yup"
 import type {
@@ -50,6 +48,12 @@ export * from "./types"
 export * from "./union"
 
 export class YupWeaver {
+  public static vendor = "yup"
+
+  public static getGraphQLType(schema: Schema): GraphQLOutputType {
+    return YupWeaver.toNullableGraphQLType(schema)
+  }
+
   /**
    * get GraphQL Silk from Yup Schema
    * @param schema Yup Schema
@@ -60,22 +64,18 @@ export class YupWeaver {
   ): TSchema & GraphQLSilk<InferType<TSchema>, InferType<TSchema>> {
     const config = weaverContext.value?.getConfig<YupWeaverConfig>("gqloom.yup")
     return Object.assign(schema, {
-      "~standard": {
-        version: 1,
-        vendor: "gqloom.yup",
-        validate: (value) => parseYup(schema, value),
-      } satisfies StandardSchemaV1.Props<
-        InferType<TSchema>,
-        InferType<TSchema>
-      >,
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema) {
             return weaverContext.useConfig(config, () =>
-              getGraphQLType.call(this)
+              YupWeaver.getGraphQLTypeBySelf.call(this)
             )
           }
-        : getGraphQLType,
+        : YupWeaver.getGraphQLTypeBySelf,
     })
+  }
+
+  public static getGraphQLTypeBySelf(this: Schema) {
+    return YupWeaver.toNullableGraphQLType(this)
   }
 
   public static toNullableGraphQLType(schema: Schema) {
@@ -232,7 +232,7 @@ export class YupWeaver {
 
     return list.map((yupSchema) =>
       ensureInterfaceType(
-        getGraphQLType.call(yupSchema),
+        YupWeaver.getGraphQLType(yupSchema),
         yupSchema.describe().meta?.asInterfaceType
       )
     )
@@ -327,6 +327,7 @@ export class YupWeaver {
 
 /**
  * get GraphQL Silk from Yup Schema
+ * @deprecated Use YupWeaver instead
  * @param schema Yup Schema
  * @returns GraphQL Silk Like Yup Schema
  */
@@ -336,11 +337,15 @@ export function yupSilk<TSchema extends Schema<any, any, any, any>>(
 
 /**
  * get GraphQL Silk from Yup Schema
+ * @deprecated Use YupWeaver instead
  * @param silk GraphQL Silk
  * @returns GraphQL Silk
  */
 export function yupSilk<TSilk extends GraphQLSilk>(silk: TSilk): TSilk
 
+/**
+ * @deprecated Use YupWeaver instead
+ */
 export function yupSilk(schema: Schema<any, any, any, any> | GraphQLSilk) {
   if (isSilk(schema)) return schema
   return YupWeaver.unravel(schema)
@@ -349,40 +354,6 @@ export function yupSilk(schema: Schema<any, any, any, any> | GraphQLSilk) {
 yupSilk.isSilk = (schema: any) => isSilk(schema) || isSchema(schema)
 
 export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
-
-function getGraphQLType(this: Schema) {
-  return YupWeaver.toNullableGraphQLType(this)
-}
-
-async function parseYup(
-  schema: Schema,
-  input: any
-): Promise<StandardSchemaV1.Result<any>> {
-  try {
-    const value = await schema.validate(input, {
-      strict: true,
-      abortEarly: false,
-      stripUnknown: true,
-    })
-    return { value }
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return { issues: issuesFromValidationError(error) }
-    }
-    return {
-      issues: [{ message: error?.toString() ?? "Invalid input" }],
-    }
-  }
-}
-
-function issuesFromValidationError(
-  err: ValidationError
-): StandardSchemaV1.Issue[] {
-  return [err, ...err.inner].map((e) => ({
-    message: e.message,
-    ...(e.path && { path: [e.path] }),
-  }))
-}
 
 export * from "./types"
 export {

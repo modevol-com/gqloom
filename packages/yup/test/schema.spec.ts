@@ -2,7 +2,9 @@ import {
   type GQLoomExtensions,
   type Loom,
   field,
-  getGraphQLType,
+  getGraphQLType as getGraphQLTypeCore,
+  initWeaverContext,
+  provideWeaverContext,
   query,
   resolver,
   weave,
@@ -162,11 +164,10 @@ describe("YupWeaver", () => {
     })
 
     const r1 = resolver({ dog: query(yupSilk(Dog), () => ({})) })
-    const schema1 = weave(r1, config)
+    const schema1 = weave(YupWeaver, r1, config)
 
-    const ySilk = YupWeaver.useConfig(config)
-    const r2 = resolver({ dog: query(ySilk(Dog), () => ({})) })
-    const schema2 = weave(r2)
+    const r2 = resolver({ dog: query(Dog, () => ({})) })
+    const schema2 = weave(YupWeaver.config(config), YupWeaver, r2)
 
     expect(printSchema(schema2)).toEqual(printSchema(schema1))
 
@@ -673,11 +674,20 @@ describe("YupWeaver", () => {
   })
 })
 
+function getGraphQLType(schema: Schema) {
+  const context = initWeaverContext()
+  context.vendorWeavers.set(YupWeaver.vendor, YupWeaver)
+  return provideWeaverContext(
+    () => getGraphQLTypeCore(yupSilk(schema)),
+    context
+  )
+}
+
 function printYupSilk(schema: Schema): string {
   return printType(getGraphQLType(yupSilk(schema)) as GraphQLNamedType)
 }
 
 function printResolver(...resolvers: Loom.Resolver[]): string {
-  const schema = weave(...resolvers)
+  const schema = weave(YupWeaver, ...resolvers)
   return printSchema(schema)
 }

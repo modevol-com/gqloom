@@ -16,7 +16,7 @@ import {
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { type InferType, boolean, date, number, object, string } from "yup"
-import { union, yupSilk } from "../src"
+import { YupWeaver, union, yupSilk } from "../src"
 
 describe("yup resolver", () => {
   const Giraffe = object({
@@ -162,7 +162,7 @@ describe("yup resolver", () => {
       })),
     })
 
-    const schema = weave(animalResolver)
+    const schema = weave(YupWeaver, animalResolver)
 
     let result: any
     result = await graphql({
@@ -317,7 +317,7 @@ describe("yup resolver", () => {
         })),
       })
 
-      const schema = weave(animalResolver)
+      const schema = weave(YupWeaver, animalResolver)
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {
           cat: Cat
@@ -346,7 +346,7 @@ describe("yup resolver", () => {
         }),
       })
 
-      const schema = weave(animalResolver)
+      const schema = weave(YupWeaver, animalResolver)
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {
