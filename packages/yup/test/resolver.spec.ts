@@ -16,7 +16,7 @@ import {
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import { type InferType, boolean, date, number, object, string } from "yup"
-import { YupWeaver, union, yupSilk } from "../src"
+import { YupWeaver, union } from "../src"
 
 describe("yup resolver", () => {
   const Giraffe = object({
@@ -41,8 +41,8 @@ describe("yup resolver", () => {
 
   collectNames({ Cat, Dog }, { Giraffe, GiraffeInput })
 
-  const createGiraffe = mutation(yupSilk(Giraffe), {
-    input: yupSilk(GiraffeInput),
+  const createGiraffe = mutation(Giraffe, {
+    input: GiraffeInput,
     resolve: (data) => ({
       name: data.name ?? "Giraffe",
       birthday: data.birthday ?? new Date(),
@@ -54,13 +54,13 @@ describe("yup resolver", () => {
     createGiraffe: createGiraffe,
   })
 
-  const giraffeResolver = resolver.of(yupSilk(Giraffe), {
-    age: field(yupSilk(number()), async (giraffe) => {
+  const giraffeResolver = resolver.of(Giraffe, {
+    age: field(number(), async (giraffe) => {
       return new Date().getFullYear() - giraffe.birthday.getFullYear()
     }),
 
-    giraffe: query(yupSilk(Giraffe), {
-      input: { name: yupSilk(string().required()) },
+    giraffe: query(Giraffe, {
+      input: { name: string().required() },
       resolve: ({ name }) => ({
         name,
         birthday: new Date(),
@@ -68,8 +68,8 @@ describe("yup resolver", () => {
       }),
     }),
 
-    greeting: field(yupSilk(string()), {
-      input: { myName: yupSilk(string()) },
+    greeting: field(string(), {
+      input: { myName: string() },
       resolve: (giraffe, { myName }) =>
         `Hello, ${myName ?? "my friend"}! My name is ${giraffe.name}.`,
     }),
@@ -149,13 +149,13 @@ describe("yup resolver", () => {
     collectNames({ Animal, Cat, Dog })
 
     const animalResolver = resolver({
-      cat: query(yupSilk(Animal), () => ({
+      cat: query(Animal, () => ({
         name: "Kitty",
         age: 1,
         loveFish: true,
       })),
 
-      dog: query(yupSilk(Animal), () => ({
+      dog: query(Animal, () => ({
         name: "Sadie",
         age: 2,
         loveBone: true,
@@ -240,12 +240,12 @@ describe("yup resolver", () => {
 
     const horseResolver = resolver.of(Horse, {
       createHorse,
-      hello: field(yupSilk(string()), (horse) => {
+      hello: field(string(), (horse) => {
         assertType<IHorse>(horse)
         return `Neh! Neh! --${horse.name}`
       }),
       horse: query(Horse, {
-        input: { name: yupSilk(string().required()) },
+        input: { name: string().required() },
         resolve: ({ name }) => ({
           name,
           age: 1,
@@ -311,7 +311,7 @@ describe("yup resolver", () => {
       })
 
       const animalResolver = resolver({
-        cat: query(yupSilk(Cat), () => ({
+        cat: query(Cat, () => ({
           name: "Kitty",
           age: 1,
         })),
@@ -336,12 +336,12 @@ describe("yup resolver", () => {
         age: number(),
       })
       const animalResolver = resolver({
-        cat: query(yupSilk(Cat), () => ({
+        cat: query(Cat, () => ({
           name: "Kitty",
           age: 1,
         })),
-        addCat: mutation(yupSilk(Cat), {
-          input: yupSilk(object({ data: Cat })),
+        addCat: mutation(Cat, {
+          input: object({ data: Cat }),
           resolve: ({ data }) => data,
         }),
       })
