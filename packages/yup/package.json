@@ -34,13 +34,13 @@
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "graphql": ">= 16.8.0",
     "@gqloom/core": ">= 0.10.0",
-    "yup": ">= 1.0.0"
+    "graphql": ">= 16.8.0",
+    "yup": ">= 1.7.0"
   },
   "devDependencies": {
-    "yup": "^1.4.0",
-    "@gqloom/core": "workspace:*"
+    "@gqloom/core": "workspace:*",
+    "yup": "^1.7.0"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

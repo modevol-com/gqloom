@@ -2,7 +2,9 @@ import {
   type GQLoomExtensions,
   type Loom,
   field,
-  getGraphQLType,
+  getGraphQLType as getGraphQLTypeCore,
+  initWeaverContext,
+  provideWeaverContext,
   query,
   resolver,
   weave,
@@ -53,9 +55,9 @@ const GraphQLDate = new GraphQLScalarType({
 describe("YupWeaver", () => {
   it("should handle scalar", () => {
     expect(getGraphQLType(yupSilk(string()))).toEqual(GraphQLString)
-    expect(getGraphQLType(yupSilk(boolean()))).toEqual(GraphQLBoolean)
-    expect(getGraphQLType(yupSilk(number()))).toEqual(GraphQLFloat)
-    expect(getGraphQLType(yupSilk(number().integer()))).toEqual(GraphQLInt)
+    expect(getGraphQLType(boolean())).toEqual(GraphQLBoolean)
+    expect(getGraphQLType(number())).toEqual(GraphQLFloat)
+    expect(getGraphQLType(number().integer())).toEqual(GraphQLInt)
   })
 
   it("should keep default value in extensions", () => {
@@ -63,7 +65,7 @@ describe("YupWeaver", () => {
       foo: string().optional().default("foo"),
     }).label("ObjectType")
 
-    const objectSilk = yupSilk(objectType)
+    const objectSilk = objectType
     const objectGqlType = getGraphQLType(objectSilk) as GraphQLObjectType
 
     expect(objectGqlType.getFields().foo).toMatchObject({
@@ -79,7 +81,7 @@ describe("YupWeaver", () => {
         .meta({ asField: { extensions: { defaultValue: fooGetter } } }),
     }).label("ObjectType")
 
-    const objectE1Silk = yupSilk(objectE1Type)
+    const objectE1Silk = objectE1Type
     const objectE1GqlType = getGraphQLType(objectE1Silk) as GraphQLObjectType
 
     expect(objectE1GqlType.getFields().foo).toMatchObject({
@@ -89,21 +91,17 @@ describe("YupWeaver", () => {
 
   it("should handle custom type", () => {
     expect(
-      getGraphQLType(
-        yupSilk(date().meta({ asField: { type: () => GraphQLDate } }))
-      )
+      getGraphQLType(date().meta({ asField: { type: () => GraphQLDate } }))
     ).toEqual(GraphQLDate)
   })
 
   it("should handle hidden field", () => {
-    const Dog1 = yupSilk(
-      object({
-        name: string(),
-        birthday: date().meta({ asField: { type: null } }),
-      }).label("Dog")
-    )
+    const Dog1 = object({
+      name: string(),
+      birthday: date().meta({ asField: { type: null } }),
+    }).label("Dog")
 
-    expect(printYupSilk(Dog1)).toMatchInlineSnapshot(`
+    expect(print(Dog1)).toMatchInlineSnapshot(`
       "type Dog {
         name: String
       }"
@@ -124,12 +122,10 @@ describe("YupWeaver", () => {
       }"
     `)
 
-    const Dog2 = yupSilk(
-      object({
-        name: string(),
-        birthday: date().meta({ asField: { type: field.hidden } }),
-      }).label("Dog")
-    )
+    const Dog2 = object({
+      name: string(),
+      birthday: date().meta({ asField: { type: field.hidden } }),
+    }).label("Dog")
 
     const r2 = resolver.of(Dog2, {
       dog: query(Dog2, () => ({})),
@@ -161,12 +157,11 @@ describe("YupWeaver", () => {
       },
     })
 
-    const r1 = resolver({ dog: query(yupSilk(Dog), () => ({})) })
-    const schema1 = weave(r1, config)
+    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const schema1 = weave(YupWeaver, r1, config)
 
-    const ySilk = YupWeaver.useConfig(config)
-    const r2 = resolver({ dog: query(ySilk(Dog), () => ({})) })
-    const schema2 = weave(r2)
+    const r2 = resolver({ dog: query(Dog, () => ({})) })
+    const schema2 = weave(YupWeaver.config(config), YupWeaver, r2)
 
     expect(printSchema(schema2)).toEqual(printSchema(schema1))
 
@@ -185,52 +180,50 @@ describe("YupWeaver", () => {
   })
 
   it("should handle non null", () => {
-    const s = getGraphQLType(yupSilk(string().required()))
+    const s = getGraphQLType(string().required())
     expect(s).toBeInstanceOf(GraphQLNonNull)
     expect(s).toMatchObject({ ofType: GraphQLString })
 
-    const b = getGraphQLType(yupSilk(boolean().required()))
+    const b = getGraphQLType(boolean().required())
     expect(b).toBeInstanceOf(GraphQLNonNull)
     expect(b).toMatchObject({ ofType: GraphQLBoolean })
 
-    const f = getGraphQLType(yupSilk(number().required()))
+    const f = getGraphQLType(number().required())
     expect(f).toBeInstanceOf(GraphQLNonNull)
     expect(f).toMatchObject({ ofType: GraphQLFloat })
 
-    const i = getGraphQLType(yupSilk(number().required().integer()))
+    const i = getGraphQLType(number().required().integer())
     expect(i).toBeInstanceOf(GraphQLNonNull)
     expect(i).toMatchObject({ ofType: GraphQLInt })
 
     const d = getGraphQLType(
-      yupSilk(
-        date()
-          .meta({ asField: { type: () => GraphQLDate } })
-          .required()
-      )
+      date()
+        .meta({ asField: { type: () => GraphQLDate } })
+        .required()
     )
     expect(d).toBeInstanceOf(GraphQLNonNull)
     expect(d).toMatchObject({ ofType: GraphQLDate })
   })
 
   it("should handle array", () => {
-    const s = getGraphQLType(yupSilk(array().of(string())))
+    const s = getGraphQLType(array().of(string()))
     expect(s).toBeInstanceOf(GraphQLList)
     expect(s).toMatchObject({ ofType: GraphQLString })
 
-    const b = getGraphQLType(yupSilk(array().of(boolean())))
+    const b = getGraphQLType(array().of(boolean()))
     expect(b).toBeInstanceOf(GraphQLList)
     expect(b).toMatchObject({ ofType: GraphQLBoolean })
 
-    const f = getGraphQLType(yupSilk(array(number())))
+    const f = getGraphQLType(array(number()))
     expect(f).toBeInstanceOf(GraphQLList)
     expect(f).toMatchObject({ ofType: GraphQLFloat })
 
-    const i = getGraphQLType(yupSilk(array(number().integer())))
+    const i = getGraphQLType(array(number().integer()))
     expect(i).toBeInstanceOf(GraphQLList)
     expect(i).toMatchObject({ ofType: GraphQLInt })
 
     const d = getGraphQLType(
-      yupSilk(array(date().meta({ asField: { type: () => GraphQLDate } })))
+      array(date().meta({ asField: { type: () => GraphQLDate } }))
     )
     expect(d).toBeInstanceOf(GraphQLList)
     expect(d).toMatchObject({ ofType: GraphQLDate })
@@ -253,7 +246,7 @@ describe("YupWeaver", () => {
       .label("Giraffe")
       .meta({ asObjectType: { description: "A giraffe" } })
 
-    expect(printYupSilk(Giraffe)).toMatchInlineSnapshot(`
+    expect(print(Giraffe)).toMatchInlineSnapshot(`
       """"A giraffe"""
       type Giraffe {
         name: String!
@@ -321,9 +314,9 @@ describe("YupWeaver", () => {
 
     expectTypeOf<InferType<typeof fruitE>>().toEqualTypeOf<Fruit | undefined>()
 
-    expect(printYupSilk(fruitM)).toEqual(printYupSilk(fruitS))
-    expect(printYupSilk(fruitE)).toEqual(printYupSilk(fruitM))
-    expect(printYupSilk(fruitE)).toMatchInlineSnapshot(`
+    expect(print(fruitM)).toEqual(print(fruitS))
+    expect(print(fruitE)).toEqual(print(fruitM))
+    expect(print(fruitE)).toMatchInlineSnapshot(`
       """"Some fruits you might like"""
       enum Fruit {
         """Apple is red"""
@@ -349,13 +342,11 @@ describe("YupWeaver", () => {
       .meta({ description: "Fruit Interface" })
       .label("Fruit")
 
-    const Orange = yupSilk(
-      object({
-        name: string().required(),
-        color: string().required(),
-        prize: number().required(),
-      })
-    )
+    const Orange = object({
+      name: string().required(),
+      color: string().required(),
+      prize: number().required(),
+    })
       .meta({ asObjectType: { interfaces: [Fruit] } })
       .label("Orange")
 
@@ -363,7 +354,7 @@ describe("YupWeaver", () => {
       orange: query(Orange, () => 0 as any),
     })
 
-    expect(printYupSilk(Orange)).toMatchInlineSnapshot(`
+    expect(print(Orange)).toMatchInlineSnapshot(`
       "type Orange implements Fruit {
         name: String!
         color: String!
@@ -404,11 +395,9 @@ describe("YupWeaver", () => {
       height: number().required(),
     }).label("Dog")
 
-    const Animal = yupSilk(
-      union([Cat, Dog])
-        .label("Animal")
-        .meta({ description: "Do you love animals ?" })
-    )
+    const Animal = union([Cat, Dog])
+      .label("Animal")
+      .meta({ description: "Do you love animals ?" })
 
     const simpleResolver = resolver({
       animal: query(Animal, () => 0 as any),
@@ -435,22 +424,20 @@ describe("YupWeaver", () => {
 
   describe("should avoid duplicate", () => {
     it("should merge field from multiple resolver", () => {
-      const Dog = yupSilk(
-        object({
-          name: string().required(),
-          birthday: string().required(),
-        }).label("Dog")
-      )
+      const Dog = object({
+        name: string().required(),
+        birthday: string().required(),
+      }).label("Dog")
 
       const r1 = resolver.of(Dog, {
         dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-        age: field(yupSilk(number()), (dog) => {
+        age: field(number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
 
       const r2 = resolver.of(Dog, {
-        greeting: field(yupSilk(string()), (dog) => {
+        greeting: field(string(), (dog) => {
           return `Hello ${dog.name}`
         }),
       })
@@ -470,27 +457,25 @@ describe("YupWeaver", () => {
     })
 
     it("should avoid duplicate object", () => {
-      const Dog = yupSilk(
-        object({
-          name: string().required(),
-          birthday: string().required(),
-        }).label("Dog")
-      )
+      const Dog = object({
+        name: string().required(),
+        birthday: string().required(),
+      }).label("Dog")
 
       const r1 = resolver.of(Dog, {
         dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-        dogs: query(yupSilk(array(Dog)), {
+        dogs: query(array(Dog), {
           resolve: () => [
             { name: "Fido", birthday: "2012-12-12" },
             { name: "Rover", birthday: "2012-12-12" },
           ],
         }),
-        mustDog: query(yupSilk(Dog.required()), () => ({
+        mustDog: query(Dog.required(), () => ({
           name: "",
           birthday: "2012-12-12",
         })),
-        mustDogs: query(yupSilk(array(Dog.required())), () => []),
-        age: field(yupSilk(number()), (dog) => {
+        mustDogs: query(array(Dog.required()), () => []),
+        age: field(number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
@@ -521,28 +506,28 @@ describe("YupWeaver", () => {
 
       const DogInput = Dog.clone().label("DogInput")
 
-      const r1 = resolver.of(yupSilk(Dog), {
-        unwrap: query(yupSilk(Dog), {
-          input: yupSilk(DogInput),
+      const r1 = resolver.of(Dog, {
+        unwrap: query(Dog, {
+          input: DogInput,
           resolve: (data) => data,
         }),
-        dog: query(yupSilk(Dog), {
-          input: { data: yupSilk(DogInput) },
+        dog: query(Dog, {
+          input: { data: DogInput },
           resolve: ({ data }) => data,
         }),
-        dogs: query(yupSilk(array(Dog.required())), {
+        dogs: query(array(Dog.required()), {
           input: {
-            data: yupSilk(array(DogInput)),
-            required: yupSilk(array(DogInput.required())),
-            names: yupSilk(array(string().required()).required()),
+            data: array(DogInput),
+            required: array(DogInput.required()),
+            names: array(string().required()).required(),
           },
           resolve: ({ data }) => data,
         }),
-        mustDog: query(yupSilk(Dog.required()), {
-          input: { data: yupSilk(DogInput.required()) },
+        mustDog: query(Dog.required(), {
+          input: { data: DogInput.required() },
           resolve: ({ data }) => data,
         }),
-        age: field(yupSilk(number()), (dog) => {
+        age: field(number(), (dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
@@ -573,10 +558,10 @@ describe("YupWeaver", () => {
     it("should avoid duplicate enum", () => {
       const Fruit = string().oneOf(["apple", "banana", "orange"]).label("Fruit")
       const r1 = resolver({
-        fruit: query(yupSilk(Fruit), () => "apple" as const),
-        fruits: query(yupSilk(array(Fruit)), () => []),
-        mustFruit: query(yupSilk(Fruit.required()), () => "apple" as const),
-        mustFruits: query(yupSilk(array(Fruit.required())), () => []),
+        fruit: query(Fruit, () => "apple" as const),
+        fruits: query(array(Fruit), () => []),
+        mustFruit: query(Fruit.required(), () => "apple" as const),
+        mustFruits: query(array(Fruit.required()), () => []),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -606,12 +591,12 @@ describe("YupWeaver", () => {
         .meta({ asObjectType: { interfaces: [Fruit.clone()] } })
 
       const r1 = resolver({
-        apple: query(yupSilk(Apple), () => ({ flavor: "" })),
-        apples: query(yupSilk(array(Apple)), () => []),
-        orange: query(yupSilk(Orange), () => ({ flavor: "" })),
-        oranges: query(yupSilk(array(Orange)), () => []),
-        mustOrange: query(yupSilk(Orange.required()), () => ({ flavor: "" })),
-        mustOranges: query(yupSilk(array(Orange.required())), () => []),
+        apple: query(Apple, () => ({ flavor: "" })),
+        apples: query(array(Apple), () => []),
+        orange: query(Orange, () => ({ flavor: "" })),
+        oranges: query(array(Orange), () => []),
+        mustOrange: query(Orange.required(), () => ({ flavor: "" })),
+        mustOranges: query(array(Orange.required()), () => []),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -646,10 +631,10 @@ describe("YupWeaver", () => {
       const Fruit = union([Apple, Orange]).label("Fruit")
 
       const r1 = resolver({
-        fruit: query(yupSilk(Fruit), () => ({ flavor: "" })),
-        fruits: query(yupSilk(array(Fruit)), () => []),
-        mustFruit: query(yupSilk(Fruit.required()), () => ({ flavor: "" })),
-        mustFruits: query(yupSilk(array(Fruit.required())), () => []),
+        fruit: query(Fruit, () => ({ flavor: "" })),
+        fruits: query(array(Fruit), () => []),
+        mustFruit: query(Fruit.required(), () => ({ flavor: "" })),
+        mustFruits: query(array(Fruit.required()), () => []),
       })
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
@@ -673,11 +658,17 @@ describe("YupWeaver", () => {
   })
 })
 
-function printYupSilk(schema: Schema): string {
-  return printType(getGraphQLType(yupSilk(schema)) as GraphQLNamedType)
+function getGraphQLType(schema: Schema) {
+  const context = initWeaverContext()
+  context.vendorWeavers.set(YupWeaver.vendor, YupWeaver)
+  return provideWeaverContext(() => getGraphQLTypeCore(schema), context)
+}
+
+function print(schema: Schema): string {
+  return printType(getGraphQLType(schema) as GraphQLNamedType)
 }
 
 function printResolver(...resolvers: Loom.Resolver[]): string {
-  const schema = weave(...resolvers)
+  const schema = weave(YupWeaver, ...resolvers)
   return printSchema(schema)
 }

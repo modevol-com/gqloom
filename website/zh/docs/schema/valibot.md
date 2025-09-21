@@ -37,7 +37,7 @@ const FloatScalar = v.number() // GraphQLFloat
 const IntScalar = v.pipe(v.number(), v.integer()) // GraphQLInt
 ```
 
-## 编织 | Weave
+## 编织
 
 为了让 `GQLoom` 能正确地将 Valibot Schema 编织到 GraphQL Schema，我们在使用 `weave` 函数时，需要添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
 
