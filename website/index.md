@@ -15,7 +15,6 @@ import { Home, ormTab } from '@/components/home.tsx'
 <<< @/snippets/home/zod.ts{ts twoslash} [zod]
 <<< @/snippets/home/yup.ts{ts twoslash} [yup]
 <<< @/snippets/home/json.ts{ts twoslash} [json-schema]
-<<< @/snippets/home/typebox.ts{ts twoslash} [typebox]
 :::
 
 </template>
