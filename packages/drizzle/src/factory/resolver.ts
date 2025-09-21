@@ -305,7 +305,7 @@ export abstract class DrizzleResolverFactory<
       } else if (operatorName in arrayOperators) {
         const operator =
           arrayOperators[operatorName as keyof typeof arrayOperators]
-        variants.push(operator(column, operatorValue))
+        variants.push(operator(column as any, operatorValue))
       } else if (operatorName in nullOperators) {
         const operator =
           nullOperators[operatorName as keyof typeof nullOperators]

@@ -246,7 +246,7 @@ describe("resolver by mysql", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into \`drizzle_user\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
         "
       `)
     })
@@ -286,9 +286,9 @@ describe("resolver by mysql", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into \`drizzle_user\` (\`id\`, \`name\`, \`age\`, \`email\`) values (default, ?, default, default)
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`id\` = ? limit ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` \`drizzle_user\` where \`drizzle_user\`.\`id\` = ? limit ?
         update \`drizzle_user\` set \`name\` = ? where \`drizzle_user\`.\`id\` = ?
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
         "
       `)
     })
@@ -324,9 +324,9 @@ describe("resolver by mysql", () => {
       expect(deletedUser).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
         delete from \`drizzle_user\` where \`drizzle_user\`.\`id\` = ?
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
         "
       `)
     })
@@ -362,9 +362,9 @@ describe("resolver by mysql", () => {
       expect(p).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
+        select \`id\`, \`name\`, \`age\`, \`email\` from \`drizzle_user\` \`drizzle_user\` where \`drizzle_user\`.\`name\` = ? limit ?
         insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, ?)
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
         "
       `)
     })
@@ -405,9 +405,9 @@ describe("resolver by mysql", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
         update \`drizzle_post\` set \`title\` = ? where \`drizzle_post\`.\`id\` = ?
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` \`drizzle_post\` where \`drizzle_post\`.\`title\` = ? limit ?
         "
       `)
     })
@@ -447,9 +447,9 @@ describe("resolver by mysql", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into \`drizzle_post\` (\`id\`, \`title\`, \`content\`, \`authorId\`) values (default, ?, default, default)
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
         delete from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ?
-        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
+        select \`id\`, \`title\`, \`content\`, \`authorId\` from \`drizzle_post\` \`drizzle_post\` where \`drizzle_post\`.\`id\` = ? limit ?
         "
       `)
     })

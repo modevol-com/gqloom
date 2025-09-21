@@ -231,7 +231,7 @@ describe("resolver by sqlite", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into "user" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name"
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        select "id", "name", "age", "email" from "user" "user" where "user"."name" = ? limit ?
         "
       `)
     })
@@ -381,7 +381,7 @@ describe("resolver by sqlite", () => {
         "
         insert into "user" ("id", "name", "age", "email") values (null, ?, null, null) returning "id", "name", "age", "email"
         update "user" set "name" = ? where "user"."id" = ? returning "id", "name"
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        select "id", "name", "age", "email" from "user" "user" where "user"."name" = ? limit ?
         "
       `)
     })
@@ -416,9 +416,9 @@ describe("resolver by sqlite", () => {
       expect(deletedUser).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        select "id", "name", "age", "email" from "user" "user" where "user"."name" = ? limit ?
         delete from "user" where "user"."id" = ? returning "id", "name"
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        select "id", "name", "age", "email" from "user" "user" where "user"."name" = ? limit ?
         "
       `)
     })
@@ -454,9 +454,9 @@ describe("resolver by sqlite", () => {
       expect(p).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name", "age", "email" from "user" where "user"."name" = ? limit ?
+        select "id", "name", "age", "email" from "user" "user" where "user"."name" = ? limit ?
         insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, ?) returning "id", "title", "authorId"
-        select "id", "title", "content", "authorId" from "post" where "post"."title" = ? limit ?
+        select "id", "title", "content", "authorId" from "post" "post" where "post"."title" = ? limit ?
         "
       `)
     })
@@ -495,7 +495,7 @@ describe("resolver by sqlite", () => {
         "
         insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
         update "post" set "title" = ? where "post"."id" = ? returning "id", "title"
-        select "id", "title", "content", "authorId" from "post" where "post"."title" = ? limit ?
+        select "id", "title", "content", "authorId" from "post" "post" where "post"."title" = ? limit ?
         "
       `)
     })
@@ -533,7 +533,7 @@ describe("resolver by sqlite", () => {
         "
         insert into "post" ("id", "title", "content", "authorId") values (null, ?, null, null) returning "id", "title", "content", "authorId"
         delete from "post" where "post"."id" = ? returning "id", "title"
-        select "id", "title", "content", "authorId" from "post" where "post"."id" = ? limit ?
+        select "id", "title", "content", "authorId" from "post" "post" where "post"."id" = ? limit ?
         "
       `)
     })

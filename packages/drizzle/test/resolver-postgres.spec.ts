@@ -241,7 +241,7 @@ describe("resolver by postgres", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into "drizzle_user" ("id", "name", "age", "email") values (default, $1, default, default) returning "id", "name"
-        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        select "id", "name", "age", "email" from "drizzle_user" "drizzle_user" where "drizzle_user"."name" = $1 limit $2
         "
       `)
     })
@@ -396,9 +396,9 @@ describe("resolver by postgres", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into "drizzle_user" ("id", "name", "age", "email") values (default, $1, default, default) returning "id", "name", "age", "email"
-        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."id" = $1 limit $2
+        select "id", "name", "age", "email" from "drizzle_user" "drizzle_user" where "drizzle_user"."id" = $1 limit $2
         update "drizzle_user" set "name" = $1 where "drizzle_user"."id" = $2 returning "id", "name"
-        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        select "id", "name", "age", "email" from "drizzle_user" "drizzle_user" where "drizzle_user"."name" = $1 limit $2
         "
       `)
     })
@@ -433,9 +433,9 @@ describe("resolver by postgres", () => {
       expect(deletedUser).toBeUndefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        select "id", "name", "age", "email" from "drizzle_user" "drizzle_user" where "drizzle_user"."name" = $1 limit $2
         delete from "drizzle_user" where "drizzle_user"."id" = $1 returning "id", "name"
-        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        select "id", "name", "age", "email" from "drizzle_user" "drizzle_user" where "drizzle_user"."name" = $1 limit $2
         "
       `)
     })
@@ -471,9 +471,9 @@ describe("resolver by postgres", () => {
       expect(p).toBeDefined()
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        select "id", "name", "age", "email" from "drizzle_user" where "drizzle_user"."name" = $1 limit $2
+        select "id", "name", "age", "email" from "drizzle_user" "drizzle_user" where "drizzle_user"."name" = $1 limit $2
         insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, $2) returning "id", "title", "authorId"
-        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."title" = $1 limit $2
+        select "id", "title", "content", "authorId" from "drizzle_post" "drizzle_post" where "drizzle_post"."title" = $1 limit $2
         "
       `)
     })
@@ -515,9 +515,9 @@ describe("resolver by postgres", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, default) returning "id", "title", "content", "authorId"
-        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        select "id", "title", "content", "authorId" from "drizzle_post" "drizzle_post" where "drizzle_post"."id" = $1 limit $2
         update "drizzle_post" set "title" = $1 where "drizzle_post"."id" = $2 returning "id", "title"
-        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."title" = $1 limit $2
+        select "id", "title", "content", "authorId" from "drizzle_post" "drizzle_post" where "drizzle_post"."title" = $1 limit $2
         "
       `)
     })
@@ -558,9 +558,9 @@ describe("resolver by postgres", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         insert into "drizzle_post" ("id", "title", "content", "authorId") values (default, $1, default, default) returning "id", "title", "content", "authorId"
-        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        select "id", "title", "content", "authorId" from "drizzle_post" "drizzle_post" where "drizzle_post"."id" = $1 limit $2
         delete from "drizzle_post" where "drizzle_post"."id" = $1 returning "id", "title"
-        select "id", "title", "content", "authorId" from "drizzle_post" where "drizzle_post"."id" = $1 limit $2
+        select "id", "title", "content", "authorId" from "drizzle_post" "drizzle_post" where "drizzle_post"."id" = $1 limit $2
         "
       `)
     })
