@@ -90,7 +90,7 @@ importers:
         version: 0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        version: 0.11.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/valibot':
         specifier: latest
         version: 0.12.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(valibot@1.1.0(typescript@5.9.2))
@@ -102,7 +102,7 @@ importers:
         version: 16.4.7
       drizzle-orm:
         specifier: ^0.44.5
-        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
+        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -133,7 +133,7 @@ importers:
         version: 0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        version: 0.11.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/zod':
         specifier: latest
         version: 0.12.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(zod@4.1.5)
@@ -145,7 +145,7 @@ importers:
         version: 16.4.7
       drizzle-orm:
         specifier: ^0.44.5
-        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
+        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -182,7 +182,7 @@ importers:
         version: 16.4.7
       drizzle-seed:
         specifier: ^0.3.1
-        version: 0.3.1(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))
+        version: 0.3.1(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -204,7 +204,7 @@ importers:
         version: 0.31.4
       drizzle-orm:
         specifier: ^0.44.5
-        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
+        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
       tsx:
         specifier: ^4.20.3
         version: 4.20.3
@@ -279,8 +279,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/valibot
       '@prisma/client':
-        specifier: 6.14.0
-        version: 6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
+        specifier: 6.16.2
+        version: 6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -351,7 +351,7 @@ importers:
         version: 0.31.4
       drizzle-orm:
         specifier: ^0.44.5
-        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
+        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -470,8 +470,8 @@ importers:
         specifier: workspace:*
         version: link:../zod
       '@prisma/client':
-        specifier: ^6.14.0
-        version: 6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
+        specifier: ^6.16.2
+        version: 6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.6.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
@@ -598,7 +598,7 @@ importers:
         version: 0.31.4
       drizzle-orm:
         specifier: ^0.44.5
-        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
+        version: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
       fastify:
         specifier: ^5.4.0
         version: 5.4.0
@@ -1669,8 +1669,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@prisma/client@6.14.0':
-    resolution: {integrity: sha512-8E/Nk3eL5g7RQIg/LUj1ICyDmhD053STjxrPxUtCRybs2s/2sOEcx9NpITuAOPn07HEpWBfhAVe1T/HYWXUPOw==}
+  '@prisma/client@6.16.2':
+    resolution: {integrity: sha512-E00PxBcalMfYO/TWnXobBVUai6eW/g5OsifWQsQDzJYm7yaY+IRLo7ZLsaefi0QkTpxfuhFcQ/w180i6kX3iJw==}
     engines: {node: '>=18.18'}
     peerDependencies:
       prisma: '*'
@@ -6283,10 +6283,10 @@ snapshots:
     dependencies:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
-  '@gqloom/drizzle@0.11.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
+  '@gqloom/drizzle@0.11.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
       '@gqloom/core': 0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
-      drizzle-orm: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
+      drizzle-orm: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
   '@gqloom/valibot@0.12.0(@gqloom/core@0.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)))(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))(valibot@1.1.0(typescript@5.9.2))':
@@ -6673,7 +6673,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)':
+  '@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)':
     optionalDependencies:
       prisma: 6.15.0(magicast@0.3.5)(typescript@5.9.2)
       typescript: 5.9.2
@@ -7943,10 +7943,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7):
+  drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7):
     optionalDependencies:
       '@libsql/client': 0.15.10
-      '@prisma/client': 6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
+      '@prisma/client': 6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
       '@types/pg': 8.11.10
       better-sqlite3: 11.8.1
       knex: 3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7)
@@ -7955,11 +7955,11 @@ snapshots:
       prisma: 6.15.0(magicast@0.3.5)(typescript@5.9.2)
       sqlite3: 5.1.7
 
-  drizzle-seed@0.3.1(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)):
+  drizzle-seed@0.3.1(drizzle-orm@0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)):
     dependencies:
       pure-rand: 6.1.0
     optionalDependencies:
-      drizzle-orm: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.14.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
+      drizzle-orm: 0.44.5(@libsql/client@0.15.10)(@prisma/client@6.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2))(@types/pg@8.11.10)(better-sqlite3@11.8.1)(knex@3.1.0(better-sqlite3@11.8.1)(mysql2@3.14.1)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.14.1)(pg@8.13.2)(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(sqlite3@5.1.7)
 
   dset@3.1.3: {}
 
