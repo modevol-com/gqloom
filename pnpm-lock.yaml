@@ -460,8 +460,8 @@ importers:
         specifier: '>= 16.8.0'
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
       ts-morph:
-        specifier: ^25.0.0
-        version: 25.0.1
+        specifier: ^27.0.0
+        version: 27.0.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -2073,8 +2073,8 @@ packages:
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
 
-  '@ts-morph/common@0.26.0':
-    resolution: {integrity: sha512-/RmKAtctStXqM5nECMQ46duT74Hoig/DBzhWXGHcodlDNrgRbsbwwHqSKFNbca6z9Xt/CUWMeXOsC9QEN1+rqw==}
+  '@ts-morph/common@0.28.0':
+    resolution: {integrity: sha512-4w6X/oFmvXcwux6y6ExfM/xSqMHw20cYwFJH+BlYrtGa6nwY9qGq8GXnUs1sVYeF2o/KT3S8hAH6sKBI3VOkBg==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -5195,8 +5195,8 @@ packages:
   ts-algebra@2.0.0:
     resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
 
-  ts-morph@25.0.1:
-    resolution: {integrity: sha512-QJEiTdnz1YjrB3JFhd626gX4rKHDLSjSVMvGGG4v7ONc3RBwa0Eei98G9AT9uNFDMtV54JyuXsFeC+OH0n6bXQ==}
+  ts-morph@27.0.0:
+    resolution: {integrity: sha512-xcqelpTR5PCuZMs54qp9DE3t7tPgA2v/P1/qdW4ke5b3Y5liTGTYj6a/twT35EQW/H5okRqp1UOqwNlgg0K0eQ==}
 
   tsdown@0.15.1:
     resolution: {integrity: sha512-USTr2wS5OIyohR8Sp09rp5mXVwOX4YvVRqarS9I9jIhF+PqgtVSMXG4vBrHGY1OficNcLT5Z75pSoxd2uU+BYg==}
@@ -7003,11 +7003,11 @@ snapshots:
   '@tootallnate/once@1.1.2':
     optional: true
 
-  '@ts-morph/common@0.26.0':
+  '@ts-morph/common@0.28.0':
     dependencies:
-      fast-glob: 3.3.3
-      minimatch: 9.0.5
+      minimatch: 10.0.3
       path-browserify: 1.0.1
+      tinyglobby: 0.2.15
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -10496,9 +10496,9 @@ snapshots:
 
   ts-algebra@2.0.0: {}
 
-  ts-morph@25.0.1:
+  ts-morph@27.0.0:
     dependencies:
-      '@ts-morph/common': 0.26.0
+      '@ts-morph/common': 0.28.0
       code-block-writer: 13.0.3
 
   tsdown@0.15.1(@typescript/native-preview@7.0.0-dev.20250721.1)(typescript@5.9.2):
