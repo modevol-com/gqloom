@@ -62,6 +62,15 @@ describe("ZodWeaver", () => {
       GraphQLBoolean
     )
 
+    expect(
+      getGraphQLType(
+        z
+          .boolean()
+          .nullable()
+          .transform((x) => x ?? false)
+      )
+    ).toEqual(GraphQLBoolean)
+
     expect(getGraphQLType(z.date().nullable())).toEqual(GraphQLString)
 
     expect(

@@ -49,6 +49,7 @@ import {
   isZodLiteral,
   isZodNumber,
   isZodObject,
+  isZodPipe,
   isZodString,
   isZodType,
   isZodUnion,
@@ -86,20 +87,18 @@ export class ZodWeaver {
   }
 
   protected static toNullableGraphQLType(schema: $ZodType): GraphQLOutputType {
-    const nullable = (ofType: GraphQLOutputType) => {
-      if (
-        (["null", "nullable", "optional"] as $ZodTypeDef["type"][]).includes(
-          schema._zod.def.type
-        )
-      )
-        return ofType
-      if (isNonNullType(ofType)) return ofType
-      return new GraphQLNonNull(ofType)
+    while (isZodPipe(schema)) {
+      schema = schema._zod.def.in
     }
-
     const gqlType = ZodWeaver.toMemoriedGraphQLType(schema)
 
-    return nullable(gqlType)
+    const isNullable = (
+      ["null", "nullable", "optional"] as $ZodTypeDef["type"][]
+    ).includes(schema._zod.def.type)
+    if (isNullable) return gqlType
+
+    if (isNonNullType(gqlType)) return gqlType
+    return new GraphQLNonNull(gqlType)
   }
 
   protected static toMemoriedGraphQLType(schema: $ZodType): GraphQLOutputType {
@@ -230,6 +229,10 @@ export class ZodWeaver {
         name,
         ...unionConfig,
       })
+    }
+
+    if (isZodPipe(schema)) {
+      return ZodWeaver.toNullableGraphQLType(schema._zod.def.in)
     }
 
     throw new Error(`zod type ${schema.constructor.name} is not supported`)
