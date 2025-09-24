@@ -4,6 +4,9 @@ import {
   type Loom,
   type SchemaWeaver,
   collectNames,
+  field,
+  query,
+  resolver,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -28,9 +31,6 @@ import {
   asField,
   asObjectType,
   asUnionType,
-  field,
-  query,
-  resolver,
 } from "../src"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 
@@ -62,6 +62,15 @@ describe("ZodWeaver", () => {
     expect(getGraphQLType(z.boolean().default(false).nullable())).toEqual(
       GraphQLBoolean
     )
+
+    expect(
+      getGraphQLType(
+        z
+          .boolean()
+          .nullable()
+          .transform((x) => x ?? false)
+      )
+    ).toEqual(GraphQLBoolean)
 
     expect(getGraphQLType(z.date().nullable())).toEqual(GraphQLString)
 

@@ -18,6 +18,7 @@ import type {
   $ZodNumber,
   $ZodObject,
   $ZodOptional,
+  $ZodPipe,
   $ZodShape,
   $ZodString,
   $ZodType,
@@ -145,6 +146,10 @@ export function isZodNullish(
   schema: unknown
 ): schema is $ZodOptional | $ZodNullable {
   return isZodOptional(schema) || isZodNullable(schema)
+}
+
+export function isZodPipe(schema: unknown): schema is $ZodPipe {
+  return isZodType(schema) && schema._zod.def.type === "pipe"
 }
 
 export function getDescription(schema: $ZodType): string | undefined {
