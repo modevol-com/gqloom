@@ -62,5 +62,5 @@ jobs:
       - name: Test
         run: pnpm test
         env:
-          MYSQL_URL: mysql://root@localhost:3306/test
-          POSTGRESQL_URL: postgresql://postgres@localhost:5432/test
+          MYSQL_URL: mysql://root@localhost:3306/mysql
+          POSTGRESQL_URL: postgresql://postgres@localhost:5432/postgres

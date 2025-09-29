@@ -604,7 +604,7 @@ describe.concurrent("DrizzleResolverFactory", () => {
 })
 
 describe
-  .runIf(process.env.MYSQL_URL)
+  .runIf(config.mysqlUrl)
   .concurrent("DrizzleMySQLResolverFactory", () => {
     const schema = {
       drizzle_user: mysqlSchemas.user,
@@ -762,7 +762,7 @@ describe
   })
 
 describe
-  .runIf(process.env.POSTGRESQL_URL)
+  .runIf(config.postgresUrl)
   .concurrent("DrizzlePostgresResolverFactory", () => {
     const schema = {
       drizzle_user: pgSchemas.user,
