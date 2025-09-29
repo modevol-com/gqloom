@@ -29,7 +29,7 @@
     "@gqloom/zod": "workspace:*",
     "@mikro-orm/core": "^6.5.2",
     "@mikro-orm/libsql": "^6.5.1",
-    "@shikijs/vitepress-twoslash": "^3.11.0",
+    "@shikijs/vitepress-twoslash": "^3.13.0",
     "@vitejs/plugin-vue-jsx": "^5.1.0",
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.4",
