@@ -20,7 +20,7 @@ const schema = {
   postsRelations,
 }
 
-describe("resolver by mysql", () => {
+describe.runIf(process.env.MYSQL_URL)("resolver by mysql", () => {
   let db: MySql2Database<typeof schema>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema

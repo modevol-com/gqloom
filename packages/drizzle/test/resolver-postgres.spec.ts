@@ -19,7 +19,7 @@ const schema = {
   postsRelations,
 }
 
-describe("resolver by postgres", () => {
+describe.runIf(process.env.POSTGRESQL_URL)("resolver by postgres", () => {
   let db: NodePgDatabase<typeof schema>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
