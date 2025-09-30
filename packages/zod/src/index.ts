@@ -93,7 +93,7 @@ export class ZodWeaver {
     const gqlType = ZodWeaver.toMemoriedGraphQLType(schema)
 
     const isNullable = (
-      ["null", "nullable", "optional"] as $ZodTypeDef["type"][]
+      ["null", "nullable", "optional", "default"] as $ZodTypeDef["type"][]
     ).includes(schema._zod.def.type)
     if (isNullable) return gqlType
 

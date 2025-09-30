@@ -74,6 +74,8 @@ describe("ZodWeaver", () => {
 
     expect(getGraphQLType(z.date().nullable())).toEqual(GraphQLString)
 
+    expect(getGraphQLType(z.int().default(10))).toEqual(GraphQLInt)
+
     expect(getGraphQLType(z.cuid().nullable())).toEqual(GraphQLID)
     expect(getGraphQLType(z.cuid2().nullable())).toEqual(GraphQLID)
     expect(getGraphQLType(z.ulid().nullable())).toEqual(GraphQLID)
