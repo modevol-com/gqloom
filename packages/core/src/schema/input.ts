@@ -81,7 +81,7 @@ export function ensureInputType(
   if (isEnumType(gqlType)) {
     if (gqlType.name === AUTO_ALIASING) {
       const alias = `${pascalCase(options.fieldName)}Input`
-      setAlias(gqlType, alias, weaverContext)
+      setAlias(gqlType, alias)
     }
     return gqlType
   }

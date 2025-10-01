@@ -36,7 +36,7 @@ import { AUTO_ALIASING } from "../utils/constants"
 import { setAlias } from "./alias"
 import { inputToArgs } from "./input"
 import {
-  type WeaverContext,
+  WeaverContext,
   initWeaverContext,
   provideWeaverContext,
   weaverContext,
@@ -83,12 +83,12 @@ export class LoomObjectType extends GraphQLObjectType {
     this.resolvers = new Map()
 
     if (this.name === AUTO_ALIASING) {
-      this.weaverContext.autoAliasTypes.add(this)
+      WeaverContext.autoAliasTypes.add(this)
     }
   }
 
   public addAlias(alias?: string) {
-    if (!this.weaverContext.autoAliasTypes.has(this) || !alias) return
+    if (!WeaverContext.autoAliasTypes.has(this) || !alias) return
     const name = alias.length < this.name.length ? alias : this.name
     this.name = name
   }
@@ -400,7 +400,7 @@ export function getCacheType(
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
-    setAlias(loomObject, getAlias(), context)
+    setAlias(loomObject, getAlias())
     return loomObject
   } else if (isListType(gqlType)) {
     return new GraphQLList(getCacheType(gqlType.ofType, options))
@@ -423,10 +423,10 @@ export function getCacheType(
       ),
     })
     context.loomUnionMap?.set(gqlType, unionType)
-    setAlias(unionType, getAlias(), context)
+    setAlias(unionType, getAlias())
     return unionType
   } else if (isEnumType(gqlType)) {
-    setAlias(gqlType, getAlias(), context)
+    setAlias(gqlType, getAlias())
     return gqlType
   }
   return gqlType
