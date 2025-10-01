@@ -10,6 +10,7 @@ import {
   isScalarType,
   isUnionType,
 } from "graphql"
+import { AUTO_ALIASING } from "../utils/constants"
 import { WEAVER_CONFIG } from "../utils/symbols"
 import type { LoomObjectType } from "./object"
 import type { SchemaWeaver } from "./schema-weaver"
@@ -83,6 +84,20 @@ export class WeaverContext {
     name: string
   ): T | undefined {
     return this.namedTypes.get(name) as T | undefined
+  }
+
+  public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
+    if (namedType.name === AUTO_ALIASING) {
+      WeaverContext.autoAliasTypes.add(namedType)
+    }
+
+    if (!WeaverContext.autoAliasTypes.has(namedType) || !alias) return
+
+    if (namedType.name === AUTO_ALIASING) {
+      namedType.name = alias
+    }
+    namedType.name =
+      alias.length < namedType.name.length ? alias : namedType.name
   }
 
   public static provide<T>(func: () => T, value: WeaverContext | undefined): T {
@@ -200,6 +215,20 @@ export class GlobalWeaverContext
   >(origin: object, gqlType: TGraphQLType) {
     this.GraphQLTypes.set(origin, gqlType)
     return gqlType
+  }
+
+  public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
+    if (namedType.name === AUTO_ALIASING) {
+      this.autoAliasTypes.add(namedType)
+    }
+
+    if (!this.autoAliasTypes.has(namedType) || !alias) return
+
+    if (namedType.name === AUTO_ALIASING) {
+      namedType.name = alias
+    }
+    namedType.name =
+      alias.length < namedType.name.length ? alias : namedType.name
   }
 }
 

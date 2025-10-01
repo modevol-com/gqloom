@@ -33,7 +33,6 @@ import {
   toObjMap,
 } from "../utils"
 import { AUTO_ALIASING } from "../utils/constants"
-import { setAlias } from "./alias"
 import { inputToArgs } from "./input"
 import {
   WeaverContext,
@@ -400,7 +399,7 @@ export function getCacheType(
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
-    setAlias(loomObject, getAlias())
+    context.setAlias(loomObject, getAlias())
     return loomObject
   } else if (isListType(gqlType)) {
     return new GraphQLList(getCacheType(gqlType.ofType, options))
@@ -423,10 +422,10 @@ export function getCacheType(
       ),
     })
     context.loomUnionMap?.set(gqlType, unionType)
-    setAlias(unionType, getAlias())
+    context.setAlias(unionType, getAlias())
     return unionType
   } else if (isEnumType(gqlType)) {
-    setAlias(gqlType, getAlias())
+    context.setAlias(gqlType, getAlias())
     return gqlType
   }
   return gqlType
