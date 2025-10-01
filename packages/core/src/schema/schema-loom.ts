@@ -121,7 +121,13 @@ export class GraphQLSchemaLoom {
     return this
   }
 
+  // TODO
+  protected setAutomatedAlias() {
+    return
+  }
+
   public weaveGraphQLSchema(): GraphQLSchema {
+    this.setAutomatedAlias()
     const { query, mutation, subscription, types } = this
     const config =
       this.context.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
