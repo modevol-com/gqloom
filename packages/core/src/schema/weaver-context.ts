@@ -6,6 +6,8 @@ import {
   type GraphQLOutputType,
   type GraphQLUnionType,
   isEnumType,
+  isInputObjectType,
+  isInterfaceType,
   isObjectType,
   isScalarType,
   isUnionType,
@@ -86,18 +88,68 @@ export class WeaverContext {
     return this.namedTypes.get(name) as T | undefined
   }
 
+  protected static readonly namedTypes = {
+    Object: "Object",
+    Union: "Union",
+    Enum: "Enum",
+    Interface: "Interface",
+    Scalar: "Scalar",
+  } as const
+
+  protected aliasCounters: Partial<
+    Record<keyof typeof WeaverContext.namedTypes, number>
+  > = {}
+
   public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
     if (namedType.name === AUTO_ALIASING) {
       WeaverContext.autoAliasTypes.add(namedType)
     }
 
-    if (!WeaverContext.autoAliasTypes.has(namedType) || !alias) return
+    if (!WeaverContext.autoAliasTypes.has(namedType)) return namedType.name
+
+    if (WeaverContext.higherPriorityThan(alias, namedType.name) < 0) {
+      if (alias) return (namedType.name = alias)
+    }
 
     if (namedType.name === AUTO_ALIASING) {
-      namedType.name = alias
+      if (isObjectType(namedType) || isInputObjectType(namedType)) {
+        this.aliasCounters["Object"] ??= 0
+        return (namedType.name = `Object${++this.aliasCounters["Object"]}`)
+      } else if (isUnionType(namedType)) {
+        this.aliasCounters["Union"] ??= 0
+        return (namedType.name = `Union${++this.aliasCounters["Union"]}`)
+      } else if (isEnumType(namedType)) {
+        this.aliasCounters["Enum"] ??= 0
+        return (namedType.name = `Enum${++this.aliasCounters["Enum"]}`)
+      } else if (isInterfaceType(namedType)) {
+        this.aliasCounters["Interface"] ??= 0
+        return (namedType.name = `Interface${++this.aliasCounters["Interface"]}`)
+      } else if (isScalarType(namedType)) {
+        this.aliasCounters["Scalar"] ??= 0
+        return (namedType.name = `Scalar${++this.aliasCounters["Scalar"]}`)
+      }
     }
-    namedType.name =
-      alias.length < namedType.name.length ? alias : namedType.name
+  }
+
+  /**
+   * @returns -1 if a is better than b, 1 if b is better than a, 0 if they are equal
+   */
+  protected static higherPriorityThan(
+    a: string | undefined,
+    b: string | undefined
+  ) {
+    // AUTO_ALIASING or empty is the lowest priority
+    if (a === AUTO_ALIASING || a === undefined) {
+      return 1
+    } else if (b === AUTO_ALIASING || b === undefined) {
+      return -1
+    }
+
+    const compareLength = a.length - b.length
+    if (compareLength !== 0) return compareLength
+    const compareLocale = a.localeCompare(b)
+    if (compareLocale !== 0) return compareLocale
+    return 0
   }
 
   public static provide<T>(func: () => T, value: WeaverContext | undefined): T {
@@ -218,17 +270,7 @@ export class GlobalWeaverContext
   }
 
   public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
-    if (namedType.name === AUTO_ALIASING) {
-      this.autoAliasTypes.add(namedType)
-    }
-
-    if (!this.autoAliasTypes.has(namedType) || !alias) return
-
-    if (namedType.name === AUTO_ALIASING) {
-      namedType.name = alias
-    }
-    namedType.name =
-      alias.length < namedType.name.length ? alias : namedType.name
+    return WeaverContext.ref?.setAlias(namedType, alias)
   }
 }
 

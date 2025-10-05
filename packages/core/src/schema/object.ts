@@ -12,9 +12,11 @@ import {
   type ThunkObjMap,
   assertName,
   isEnumType,
+  isInterfaceType,
   isListType,
   isNonNullType,
   isObjectType,
+  isScalarType,
   isUnionType,
   resolveObjMapThunk,
 } from "graphql"
@@ -115,15 +117,18 @@ export class LoomObjectType extends GraphQLObjectType {
     this.extensions = deepMerge(this.extensions, extensions)
   }
 
-  private extraFieldMap?: GraphQLFieldMap<any, any>
-  public override getFields(): GraphQLFieldMap<any, any> {
+  protected collectedFieldNames() {
     const fieldsBySuper = super.getFields()
-
     Object.entries(fieldsBySuper).forEach(
       ([fieldName, field]) =>
         (field.type = this.getCacheType(field.type, fieldName))
     )
+  }
 
+  private extraFieldMap?: GraphQLFieldMap<any, any>
+  public override getFields(): GraphQLFieldMap<any, any> {
+    const fieldsBySuper = super.getFields()
+    this.collectedFieldNames()
     const extraFields = provideWeaverContext(
       () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
@@ -416,7 +421,7 @@ export function getCacheType(
           getCacheType(type, {
             ...options,
             fieldName: options.fieldName
-              ? `${options.fieldName}${i + 1}`
+              ? `${options.fieldName}Item${i + 1}`
               : undefined,
           }) as GraphQLObjectType
       ),
@@ -424,7 +429,11 @@ export function getCacheType(
     context.loomUnionMap?.set(gqlType, unionType)
     context.setAlias(unionType, getAlias())
     return unionType
-  } else if (isEnumType(gqlType)) {
+  } else if (
+    isEnumType(gqlType) ||
+    isInterfaceType(gqlType) ||
+    isScalarType(gqlType)
+  ) {
     context.setAlias(gqlType, getAlias())
     return gqlType
   }

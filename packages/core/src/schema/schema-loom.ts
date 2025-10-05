@@ -2,10 +2,9 @@ import {
   type GraphQLNamedType,
   GraphQLSchema,
   type GraphQLSchemaConfig,
-  isEnumType,
+  isListType,
   isNonNullType,
   isObjectType,
-  isUnionType,
 } from "graphql"
 import {
   type GraphQLSilk,
@@ -16,7 +15,7 @@ import {
 } from "../resolver"
 import type { Middleware } from "../utils"
 import { FIELD_HIDDEN, IS_RESOLVER, WEAVER_CONFIG } from "../utils/symbols"
-import { LoomObjectType } from "./object"
+import { LoomObjectType, getCacheType } from "./object"
 import { type SchemaWeaver, isSchemaVendorWeaver } from "./schema-weaver"
 import type {
   CoreSchemaWeaverConfig,
@@ -94,24 +93,12 @@ export class GraphQLSchemaLoom {
   }
 
   public addType(silk: GraphQLSilk) {
-    const gqlType = provideWeaverContext(() => {
-      let gqlType = getGraphQLType(silk)
-      if (isNonNullType(gqlType)) gqlType = gqlType.ofType
-
-      if (isObjectType(gqlType)) {
-        const existing = this.context.loomObjectMap.get(gqlType)
-        if (existing != null) return existing
-        const extraObject = new LoomObjectType(gqlType, this.fieldOptions)
-        this.context.loomObjectMap.set(gqlType, extraObject)
-        return extraObject
-      } else if (isUnionType(gqlType) || isEnumType(gqlType)) {
-        return gqlType
-      }
-
-      throw new Error(
-        `${(gqlType as any)?.name ?? gqlType.toString()} is not a named type`
-      )
+    let gqlType = provideWeaverContext(() => {
+      const gqlType = getGraphQLType(silk)
+      return getCacheType(gqlType)
     }, this.context)
+    while (isNonNullType(gqlType) || isListType(gqlType))
+      gqlType = gqlType.ofType
     this.types.add(gqlType)
     return this
   }
@@ -121,13 +108,7 @@ export class GraphQLSchemaLoom {
     return this
   }
 
-  // TODO
-  protected setAutomatedAlias() {
-    return
-  }
-
   public weaveGraphQLSchema(): GraphQLSchema {
-    this.setAutomatedAlias()
     const { query, mutation, subscription, types } = this
     const config =
       this.context.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
@@ -152,12 +133,11 @@ export class GraphQLSchemaLoom {
       if (parent == null) return undefined
       let gqlType = getGraphQLType(parent)
 
-      if (isNonNullType(gqlType)) gqlType = gqlType.ofType
+      while (isNonNullType(gqlType) || isListType(gqlType))
+        gqlType = gqlType.ofType
 
       if (!isObjectType(gqlType)) {
-        throw new Error(
-          `${(gqlType as any)?.name ?? gqlType.toString()} is not an object type`
-        )
+        throw new Error(`${gqlType.name} is not an object type`)
       }
 
       const existing = this.context.loomObjectMap.get(gqlType)
