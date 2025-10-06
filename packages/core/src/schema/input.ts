@@ -19,7 +19,6 @@ import {
 } from "graphql"
 import { type GraphQLSilk, getGraphQLType, isSilk } from "../resolver"
 import { AUTO_ALIASING, mapValue, pascalCase, tryIn } from "../utils"
-import { setAlias } from "./alias"
 import type { CoreSchemaWeaverConfig } from "./types"
 import { provideWeaverContext, weaverContext } from "./weaver-context"
 
@@ -81,7 +80,7 @@ export function ensureInputType(
   if (isEnumType(gqlType)) {
     if (gqlType.name === AUTO_ALIASING) {
       const alias = `${pascalCase(options.fieldName)}Input`
-      setAlias(gqlType, alias, weaverContext)
+      weaverContext.setAlias(gqlType, alias)
     }
     return gqlType
   }

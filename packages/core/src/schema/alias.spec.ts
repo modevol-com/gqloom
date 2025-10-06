@@ -1,7 +1,9 @@
 import {
   GraphQLBoolean,
   GraphQLEnumType,
+  GraphQLInterfaceType,
   GraphQLObjectType,
+  GraphQLScalarType,
   GraphQLString,
   GraphQLUnionType,
   printSchema,
@@ -90,6 +92,22 @@ describe("alias", () => {
 
       type Subscription {
         watchBar: Bar
+      }"
+    `)
+  })
+
+  it("should auto assign alias for objects independently", () => {
+    const Bar = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        hello: { type: GraphQLString },
+      },
+    })
+
+    const schema = weave(silk(Bar))
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Object1 {
+        hello: String
       }"
     `)
   })
@@ -225,6 +243,26 @@ describe("alias", () => {
     `)
   })
 
+  it("should auto assign alias for enums independently", () => {
+    const Fruit = new GraphQLEnumType({
+      name: AUTO_ALIASING,
+      values: {
+        apple: { value: "apple" },
+        banana: { value: "banana" },
+        orange: { value: "orange" },
+      },
+    })
+
+    const schema = weave(silk(Fruit))
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "enum Enum1 {
+        apple
+        banana
+        orange
+      }"
+    `)
+  })
+
   it("should auto assign alias for unions in Object", () => {
     const Dog = new GraphQLObjectType({
       name: AUTO_ALIASING,
@@ -293,14 +331,14 @@ describe("alias", () => {
         animal: Animal
       }
 
-      union Animal = Animal1 | Animal2
+      union Animal = AnimalItem1 | AnimalItem2
 
-      type Animal1 {
+      type AnimalItem1 {
         name: String
         loveBone: Boolean
       }
 
-      type Animal2 {
+      type AnimalItem2 {
         name: String
         loveFish: Boolean
       }"
@@ -350,14 +388,14 @@ describe("alias", () => {
         foo: Foo
       }
 
-      union Animal = Animal1 | Animal2
+      union Animal = AnimalItem1 | AnimalItem2
 
-      type Animal1 {
+      type AnimalItem1 {
         name: String
         loveBone: Boolean
       }
 
-      type Animal2 {
+      type AnimalItem2 {
         name: String
         loveFish: Boolean
       }
@@ -365,6 +403,58 @@ describe("alias", () => {
       type Foo {
         animal: Animal
       }"
+    `)
+  })
+
+  it("should auto assign alias for unions independently", () => {
+    const Dog = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+        loveBone: { type: GraphQLBoolean },
+      },
+    })
+
+    const Animal = new GraphQLUnionType({
+      name: AUTO_ALIASING,
+      types: [Dog],
+    })
+
+    const schema = weave(silk(Animal))
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "union Union1 = Object1
+
+      type Object1 {
+        name: String
+        loveBone: Boolean
+      }"
+    `)
+  })
+
+  it("should auto assign alias for interface", () => {
+    const Bar = new GraphQLInterfaceType({
+      name: AUTO_ALIASING,
+      fields: {
+        name: { type: GraphQLString },
+      },
+    })
+
+    const schema = weave(silk(Bar))
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "interface Interface1 {
+        name: String
+      }"
+    `)
+  })
+
+  it("should auto assign alias for scalars", () => {
+    const Foo = new GraphQLScalarType({
+      name: AUTO_ALIASING,
+    })
+
+    const schema = weave(silk(Foo))
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "scalar Scalar1"
     `)
   })
 })

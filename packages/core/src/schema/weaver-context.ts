@@ -6,216 +6,275 @@ import {
   type GraphQLOutputType,
   type GraphQLUnionType,
   isEnumType,
+  isInputObjectType,
+  isInterfaceType,
   isObjectType,
   isScalarType,
   isUnionType,
 } from "graphql"
+import { AUTO_ALIASING } from "../utils/constants"
 import { WEAVER_CONFIG } from "../utils/symbols"
 import type { LoomObjectType } from "./object"
 import type { SchemaWeaver } from "./schema-weaver"
 
-export interface WeaverContext {
-  id: number
-  loomObjectMap: Map<GraphQLObjectType, LoomObjectType>
-  loomUnionMap: Map<GraphQLUnionType, GraphQLUnionType>
-  inputMap: Map<
+export class WeaverContext {
+  public static increasingID = 1
+  public static names = new WeakMap<object, string>()
+  public static autoAliasTypes = new WeakSet<GraphQLNamedType>()
+  private static _ref: WeaverContext | undefined
+
+  public static get ref(): WeaverContext | undefined {
+    return WeaverContext._ref
+  }
+
+  public id: number
+  public loomObjectMap: Map<GraphQLObjectType, LoomObjectType>
+  public loomUnionMap: Map<GraphQLUnionType, GraphQLUnionType>
+  public inputMap: Map<
     GraphQLObjectType | GraphQLInterfaceType,
     GraphQLInputObjectType
   >
-  interfaceMap: Map<GraphQLObjectType, GraphQLInterfaceType>
-  configs: Map<string | symbol, WeaverConfig>
-  getConfig: <TConfig extends WeaverConfig>(
+  public interfaceMap: Map<GraphQLObjectType, GraphQLInterfaceType>
+  public configs: Map<string | symbol, WeaverConfig>
+  public namedTypes: Map<string, GraphQLOutputType>
+  public vendorWeavers: Map<string, SchemaWeaver>
+
+  public constructor() {
+    this.id = WeaverContext.increasingID++
+    this.loomObjectMap = new Map()
+    this.loomUnionMap = new Map()
+    this.inputMap = new Map()
+    this.interfaceMap = new Map()
+    this.configs = new Map()
+    this.namedTypes = new Map<string, GraphQLOutputType>()
+    this.vendorWeavers = new Map()
+  }
+
+  public getConfig<TConfig extends WeaverConfig>(
     key: TConfig[typeof WEAVER_CONFIG]
-  ) => TConfig | undefined
-  setConfig<TConfig extends WeaverConfig>(config: TConfig): void
-  deleteConfig: <TConfig extends WeaverConfig>(
+  ): TConfig | undefined {
+    return this.configs.get(key) as TConfig | undefined
+  }
+
+  public setConfig<TConfig extends WeaverConfig>(config: TConfig): void {
+    const key = config[WEAVER_CONFIG]
+    this.configs.set(key, config)
+  }
+
+  public deleteConfig<TConfig extends WeaverConfig>(
     key: TConfig[typeof WEAVER_CONFIG]
-  ) => void
-  namedTypes: Map<string, GraphQLOutputType>
-  memoNamedType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
-    gqlType: TGraphQLType
-  ): TGraphQLType
-  getNamedType<T extends GraphQLOutputType>(name: string): T | undefined
-  names: WeakMap<object, string>
-  autoAliasTypes: WeakSet<GraphQLNamedType>
-  vendorWeavers: Map<string, SchemaWeaver>
+  ): void {
+    this.configs.delete(key)
+  }
+
+  public memoNamedType<
+    TGraphQLType extends GraphQLOutputType = GraphQLOutputType,
+  >(gqlTypeValue: TGraphQLType): TGraphQLType {
+    const gqlType = gqlTypeValue as GraphQLOutputType
+    if (
+      isObjectType(gqlType) ||
+      isUnionType(gqlType) ||
+      isEnumType(gqlType) ||
+      isScalarType(gqlType)
+    ) {
+      this.namedTypes.set(gqlType.name, gqlType)
+    }
+    return gqlTypeValue
+  }
+
+  public getNamedType<T extends GraphQLOutputType>(
+    name: string
+  ): T | undefined {
+    return this.namedTypes.get(name) as T | undefined
+  }
+
+  protected static readonly namedTypes = {
+    Object: "Object",
+    Union: "Union",
+    Enum: "Enum",
+    Interface: "Interface",
+    Scalar: "Scalar",
+  } as const
+
+  protected aliasCounters: Partial<
+    Record<keyof typeof WeaverContext.namedTypes, number>
+  > = {}
+
+  public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
+    if (namedType.name === AUTO_ALIASING) {
+      WeaverContext.autoAliasTypes.add(namedType)
+    }
+
+    if (!WeaverContext.autoAliasTypes.has(namedType)) return namedType.name
+
+    if (WeaverContext.higherPriorityThan(alias, namedType.name) < 0) {
+      if (alias) return (namedType.name = alias)
+    }
+
+    if (namedType.name === AUTO_ALIASING) {
+      if (isObjectType(namedType) || isInputObjectType(namedType)) {
+        this.aliasCounters["Object"] ??= 0
+        return (namedType.name = `Object${++this.aliasCounters["Object"]}`)
+      } else if (isUnionType(namedType)) {
+        this.aliasCounters["Union"] ??= 0
+        return (namedType.name = `Union${++this.aliasCounters["Union"]}`)
+      } else if (isEnumType(namedType)) {
+        this.aliasCounters["Enum"] ??= 0
+        return (namedType.name = `Enum${++this.aliasCounters["Enum"]}`)
+      } else if (isInterfaceType(namedType)) {
+        this.aliasCounters["Interface"] ??= 0
+        return (namedType.name = `Interface${++this.aliasCounters["Interface"]}`)
+      } else if (isScalarType(namedType)) {
+        this.aliasCounters["Scalar"] ??= 0
+        return (namedType.name = `Scalar${++this.aliasCounters["Scalar"]}`)
+      }
+    }
+  }
+
+  /**
+   * @returns -1 if a is better than b, 1 if b is better than a, 0 if they are equal
+   */
+  protected static higherPriorityThan(
+    a: string | undefined,
+    b: string | undefined
+  ) {
+    // AUTO_ALIASING or empty is the lowest priority
+    if (a === AUTO_ALIASING || a === undefined) {
+      return 1
+    } else if (b === AUTO_ALIASING || b === undefined) {
+      return -1
+    }
+
+    const compareLength = a.length - b.length
+    if (compareLength !== 0) return compareLength
+    const compareLocale = a.localeCompare(b)
+    if (compareLocale !== 0) return compareLocale
+    return 0
+  }
+
+  public static provide<T>(func: () => T, value: WeaverContext | undefined): T {
+    const lastRef = WeaverContext._ref
+    WeaverContext._ref = value
+    try {
+      return func()
+    } finally {
+      WeaverContext._ref = lastRef
+    }
+  }
 }
 
-let ref: WeaverContext | undefined
+export const initWeaverContext = (): WeaverContext => new WeaverContext()
 
-const names = new WeakMap<object, string>()
-const autoAliasTypes = new WeakSet<GraphQLNamedType>()
+export const provideWeaverContext = Object.assign(WeaverContext.provide, {
+  inherit: <T>(func: () => T) => {
+    const weaverContextRef = WeaverContext.ref
+    return () => WeaverContext.provide(func, weaverContextRef)
+  },
+})
 
 export interface WeaverConfig {
   [WEAVER_CONFIG]: string | symbol
   vendorWeaver?: SchemaWeaver
 }
 
-export function initWeaverContext(): WeaverContext {
-  return {
-    id: initWeaverContext.increasingID++,
-    loomObjectMap: new Map(),
-    loomUnionMap: new Map(),
-    inputMap: new Map(),
-    interfaceMap: new Map(),
-    configs: new Map(),
-    getConfig<TConfig extends WeaverConfig>(
-      key: TConfig[typeof WEAVER_CONFIG]
-    ) {
-      return this.configs.get(key) as TConfig | undefined
-    },
-    setConfig(config) {
-      const key = config[WEAVER_CONFIG]
-      this.configs.set(key, config)
-    },
-    deleteConfig(key) {
-      this.configs.delete(key)
-    },
-    names,
-    autoAliasTypes,
-    namedTypes: new Map<string, GraphQLOutputType>(),
-    memoNamedType(gqlTypeValue) {
-      const gqlType = gqlTypeValue as GraphQLOutputType
-      if (
-        isObjectType(gqlType) ||
-        isUnionType(gqlType) ||
-        isEnumType(gqlType) ||
-        isScalarType(gqlType)
-      ) {
-        this.namedTypes.set(gqlType.name, gqlType)
-      }
-      return gqlTypeValue
-    },
-    getNamedType<T extends GraphQLOutputType>(name: string) {
-      return this.namedTypes.get(name) as T | undefined
-    },
-    vendorWeavers: new Map(),
-  }
-}
-
-initWeaverContext.increasingID = 1
-
 type GlobalContextRequiredKeys =
-  | "names"
   | "getConfig"
   | "setConfig"
   | "deleteConfig"
   | "getNamedType"
   | "memoNamedType"
-  | "autoAliasTypes"
 
-export interface GlobalWeaverContext
-  extends Partial<Omit<WeaverContext, GlobalContextRequiredKeys>>,
-    Pick<WeaverContext, GlobalContextRequiredKeys> {
-  value?: WeaverContext
-  useConfig<TConfig extends WeaverConfig, TCallback extends () => any>(
+export class GlobalWeaverContext
+  implements
+    Partial<Omit<WeaverContext, GlobalContextRequiredKeys>>,
+    Pick<WeaverContext, GlobalContextRequiredKeys>
+{
+  public GraphQLTypes = new WeakMap<object, GraphQLOutputType>()
+
+  public get id() {
+    return WeaverContext.ref?.id
+  }
+  public get loomObjectMap() {
+    return WeaverContext.ref?.loomObjectMap
+  }
+  public get loomUnionMap() {
+    return WeaverContext.ref?.loomUnionMap
+  }
+  public get inputMap() {
+    return WeaverContext.ref?.inputMap
+  }
+  public get interfaceMap() {
+    return WeaverContext.ref?.interfaceMap
+  }
+  public get configs() {
+    return WeaverContext.ref?.configs
+  }
+  public get vendorWeavers() {
+    return WeaverContext.ref?.vendorWeavers
+  }
+  public get names() {
+    return WeaverContext.names
+  }
+  public get autoAliasTypes() {
+    return WeaverContext.autoAliasTypes
+  }
+  public get value() {
+    return WeaverContext.ref
+  }
+
+  public getConfig<TConfig extends WeaverConfig>(
+    key: TConfig[typeof WEAVER_CONFIG]
+  ): TConfig | undefined {
+    return WeaverContext.ref?.getConfig(key)
+  }
+  public setConfig(config: WeaverConfig): void {
+    WeaverContext.ref?.setConfig(config)
+  }
+  public deleteConfig(key: string | symbol): void {
+    WeaverContext.ref?.deleteConfig(key)
+  }
+  public useConfig<TConfig extends WeaverConfig, TCallback extends () => any>(
     config: TConfig,
     callback: TCallback
-  ): ReturnType<TCallback>
-
-  GraphQLTypes: WeakMap<object, GraphQLOutputType>
-  getGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
-    origin: object
-  ): TGraphQLType | undefined
-  memoGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
-    origin: object,
-    gqlType: TGraphQLType
-  ): TGraphQLType
-}
-
-export const weaverContext: GlobalWeaverContext = {
-  get id() {
-    return ref?.id
-  },
-  get loomObjectMap() {
-    return ref?.loomObjectMap
-  },
-  get loomUnionMap() {
-    return ref?.loomUnionMap
-  },
-  get inputMap() {
-    return ref?.inputMap
-  },
-  get interfaceMap() {
-    return ref?.interfaceMap
-  },
-
-  get configs() {
-    return ref?.configs
-  },
-
-  get vendorWeavers() {
-    return ref?.vendorWeavers
-  },
-
-  getConfig(key) {
-    return ref?.getConfig(key)
-  },
-  setConfig(config) {
-    ref?.setConfig(config)
-  },
-  deleteConfig(key) {
-    ref?.deleteConfig(key)
-  },
-  get value() {
-    return ref
-  },
-  useConfig<TConfig extends WeaverConfig, TCallback extends () => any>(
-    config: TConfig,
-    callback: TCallback
-  ) {
-    const context = weaverContext.value ?? initWeaverContext()
+  ): ReturnType<TCallback> {
+    const context = this.value ?? initWeaverContext()
     context.setConfig(config)
 
     const result = provideWeaverContext(callback, context)
 
     context.deleteConfig(config[WEAVER_CONFIG])
     return result
-  },
-  names,
-  autoAliasTypes,
+  }
 
-  getNamedType(name) {
-    return ref?.getNamedType(name)
-  },
-  memoNamedType(gqlType) {
-    return ref?.memoNamedType(gqlType) ?? gqlType
-  },
+  public getNamedType<T extends GraphQLOutputType>(
+    name: string
+  ): T | undefined {
+    return WeaverContext.ref?.getNamedType(name) as T | undefined
+  }
+  public memoNamedType<
+    TGraphQLType extends GraphQLOutputType = GraphQLOutputType,
+  >(gqlType: TGraphQLType): TGraphQLType {
+    return WeaverContext.ref?.memoNamedType(gqlType) ?? gqlType
+  }
 
-  GraphQLTypes: new WeakMap(),
-
-  getGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
-    origin: object
-  ): TGraphQLType | undefined {
+  public getGraphQLType<
+    TGraphQLType extends GraphQLOutputType = GraphQLOutputType,
+  >(origin: object): TGraphQLType | undefined {
     return this.GraphQLTypes.get(origin) as TGraphQLType | undefined
-  },
-
-  memoGraphQLType<TGraphQLType extends GraphQLOutputType = GraphQLOutputType>(
-    origin: object,
-    gqlType: TGraphQLType
-  ) {
+  }
+  public memoGraphQLType<
+    TGraphQLType extends GraphQLOutputType = GraphQLOutputType,
+  >(origin: object, gqlType: TGraphQLType) {
     this.GraphQLTypes.set(origin, gqlType)
     return gqlType
-  },
-}
+  }
 
-export function provideWeaverContext<T>(
-  func: () => T,
-  value: WeaverContext | undefined
-): T {
-  const lastRef = ref
-  ref = value
-  try {
-    return func()
-  } finally {
-    ref = lastRef
+  public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
+    return WeaverContext.ref?.setAlias(namedType, alias)
   }
 }
 
-provideWeaverContext.inherit = <T>(func: () => T) => {
-  const weaverContextRef = weaverContext.value
-  return () => provideWeaverContext(func, weaverContextRef)
-}
+export const weaverContext = new GlobalWeaverContext()
 
 /**
  * collect names for schemas
@@ -228,7 +287,7 @@ export function collectNames<TRecords extends Record<string, object>[]>(
   const namesRecord = {} as any
   for (const namesItem of namesList) {
     for (const [name, schema] of Object.entries(namesItem)) {
-      names.set(schema, name)
+      WeaverContext.names.set(schema, name)
       namesRecord[name] = schema
     }
   }
@@ -245,7 +304,7 @@ export function collectName<TSchema extends object>(
   name: string,
   schema: TSchema
 ): TSchema {
-  names.set(schema, name)
+  WeaverContext.names.set(schema, name)
   return schema
 }
 

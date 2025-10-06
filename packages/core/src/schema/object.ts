@@ -12,9 +12,11 @@ import {
   type ThunkObjMap,
   assertName,
   isEnumType,
+  isInterfaceType,
   isListType,
   isNonNullType,
   isObjectType,
+  isScalarType,
   isUnionType,
   resolveObjMapThunk,
 } from "graphql"
@@ -33,10 +35,9 @@ import {
   toObjMap,
 } from "../utils"
 import { AUTO_ALIASING } from "../utils/constants"
-import { setAlias } from "./alias"
 import { inputToArgs } from "./input"
 import {
-  type WeaverContext,
+  WeaverContext,
   initWeaverContext,
   provideWeaverContext,
   weaverContext,
@@ -83,12 +84,12 @@ export class LoomObjectType extends GraphQLObjectType {
     this.resolvers = new Map()
 
     if (this.name === AUTO_ALIASING) {
-      this.weaverContext.autoAliasTypes.add(this)
+      WeaverContext.autoAliasTypes.add(this)
     }
   }
 
   public addAlias(alias?: string) {
-    if (!this.weaverContext.autoAliasTypes.has(this) || !alias) return
+    if (!WeaverContext.autoAliasTypes.has(this) || !alias) return
     const name = alias.length < this.name.length ? alias : this.name
     this.name = name
   }
@@ -116,15 +117,18 @@ export class LoomObjectType extends GraphQLObjectType {
     this.extensions = deepMerge(this.extensions, extensions)
   }
 
-  private extraFieldMap?: GraphQLFieldMap<any, any>
-  public override getFields(): GraphQLFieldMap<any, any> {
+  protected collectedFieldNames() {
     const fieldsBySuper = super.getFields()
-
     Object.entries(fieldsBySuper).forEach(
       ([fieldName, field]) =>
         (field.type = this.getCacheType(field.type, fieldName))
     )
+  }
 
+  private extraFieldMap?: GraphQLFieldMap<any, any>
+  public override getFields(): GraphQLFieldMap<any, any> {
+    const fieldsBySuper = super.getFields()
+    this.collectedFieldNames()
     const extraFields = provideWeaverContext(
       () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
@@ -400,7 +404,7 @@ export function getCacheType(
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
-    setAlias(loomObject, getAlias(), context)
+    context.setAlias(loomObject, getAlias())
     return loomObject
   } else if (isListType(gqlType)) {
     return new GraphQLList(getCacheType(gqlType.ofType, options))
@@ -417,16 +421,20 @@ export function getCacheType(
           getCacheType(type, {
             ...options,
             fieldName: options.fieldName
-              ? `${options.fieldName}${i + 1}`
+              ? `${options.fieldName}Item${i + 1}`
               : undefined,
           }) as GraphQLObjectType
       ),
     })
     context.loomUnionMap?.set(gqlType, unionType)
-    setAlias(unionType, getAlias(), context)
+    context.setAlias(unionType, getAlias())
     return unionType
-  } else if (isEnumType(gqlType)) {
-    setAlias(gqlType, getAlias(), context)
+  } else if (
+    isEnumType(gqlType) ||
+    isInterfaceType(gqlType) ||
+    isScalarType(gqlType)
+  ) {
+    context.setAlias(gqlType, getAlias())
     return gqlType
   }
   return gqlType
