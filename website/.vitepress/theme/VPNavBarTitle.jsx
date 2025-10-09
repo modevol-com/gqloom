@@ -1,4 +1,3 @@
-import { cn } from "@/css"
 import { useData } from "vitepress"
 import VPImage from "vitepress/dist/client/theme-default/components/VPImage.vue"
 import VPNavBarSearch from "vitepress/dist/client/theme-default/components/VPNavBarSearch.vue"
@@ -6,6 +5,7 @@ import { useLangs } from "vitepress/dist/client/theme-default/composables/langs.
 import { useLayout } from "vitepress/dist/client/theme-default/composables/layout.js"
 import { normalizeLink } from "vitepress/dist/client/theme-default/support/utils.js"
 import { computed, defineComponent } from "vue"
+import { cn } from "@/css"
 
 export default defineComponent((_props, { slots }) => {
   const { site, theme } = useData()

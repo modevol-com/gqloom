@@ -1,18 +1,19 @@
 import {
-  type GraphQLSilk,
-  type Loom,
-  type SchemaWeaver,
   collectNames,
   field,
+  type GraphQLSilk,
   initWeaverContext,
+  type Loom,
   provideWeaverContext,
   query,
   resolver,
+  type SchemaWeaver,
   silk,
   weave,
 } from "@gqloom/core"
 import { type Type, type } from "arktype"
 import {
+  execute as executeGraphQL,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLInt,
@@ -21,7 +22,6 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  execute as executeGraphQL,
   parse,
   printSchema,
   printType,

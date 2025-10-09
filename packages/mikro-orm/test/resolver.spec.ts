@@ -1,10 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { weave } from "@gqloom/core"
-import { type InferEntity, defineEntity } from "@mikro-orm/core"
-import { MikroORM, defineConfig } from "@mikro-orm/libsql"
+import { defineEntity, type InferEntity } from "@mikro-orm/core"
+import { defineConfig, MikroORM } from "@mikro-orm/libsql"
 import {
-  type GraphQLSchema,
   execute as executeGraphQL,
+  type GraphQLSchema,
   parse,
   printSchema,
 } from "graphql"

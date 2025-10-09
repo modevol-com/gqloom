@@ -1,10 +1,10 @@
 import {
   AUTO_ALIASING,
-  type GraphQLSilk,
-  SYMBOLS,
-  type StandardSchemaV1,
   ensureInterfaceType,
+  type GraphQLSilk,
   mapValue,
+  type StandardSchemaV1,
+  SYMBOLS,
   weaverContext,
 } from "@gqloom/core"
 import {

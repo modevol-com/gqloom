@@ -1,12 +1,12 @@
 import { resolver, weave } from "@gqloom/core"
 import {
+  defineConfig,
+  defineEntity,
   type InferEntity,
   MikroORM,
   QueryOrder,
   RequestContext,
   type RequiredEntityData,
-  defineConfig,
-  defineEntity,
 } from "@mikro-orm/libsql"
 import { printSchema } from "graphql"
 import * as v from "valibot"

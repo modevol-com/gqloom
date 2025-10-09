@@ -1,4 +1,4 @@
-import { type SYMBOLS, deepMerge, weaverContext } from "@gqloom/core"
+import { deepMerge, type SYMBOLS, weaverContext } from "@gqloom/core"
 import type {
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfig,

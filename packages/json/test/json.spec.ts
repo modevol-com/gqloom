@@ -1,6 +1,7 @@
-import { type Loom, field, query, resolver, silk, weave } from "@gqloom/core"
+import { field, type Loom, query, resolver, silk, weave } from "@gqloom/core"
 import Ajv from "ajv"
 import {
+  execute as executeGraphQL,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLInt,
@@ -10,7 +11,6 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
-  execute as executeGraphQL,
   parse,
   printSchema,
   printType,

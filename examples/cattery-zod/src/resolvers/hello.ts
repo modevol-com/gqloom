@@ -1,5 +1,4 @@
-import { query } from "@gqloom/core"
-import { resolver } from "@gqloom/core"
+import { query, resolver } from "@gqloom/core"
 import { z } from "zod"
 
 export const helloResolver = resolver({

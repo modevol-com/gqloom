@@ -1,8 +1,12 @@
+import type { ResolverPayload } from "@gqloom/core"
 import {
+  EasyDataLoader,
   FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
+  getMemoizationMap,
+  loom,
   type Middleware,
   MutationFactoryWithResolve,
   type MutationOptions,
@@ -11,12 +15,8 @@ import {
   type QueryOptions,
   type ResolverOptionsWithExtensions,
   type StandardSchemaV1,
-  getMemoizationMap,
-  loom,
   silk,
 } from "@gqloom/core"
-import { EasyDataLoader } from "@gqloom/core"
-import type { ResolverPayload } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
 import { PrismaActionArgsWeaver } from "./type-weaver"

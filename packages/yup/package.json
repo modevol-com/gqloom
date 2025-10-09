@@ -21,7 +21,9 @@
     "build": "tsdown",
     "check:type": "tsgo --noEmit"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "gqloom",
     "graphql",

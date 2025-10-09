@@ -1,11 +1,11 @@
 import {
   AUTO_ALIASING,
-  type GraphQLSilk,
-  SYMBOLS,
   deepMerge,
   ensureInterfaceType,
+  type GraphQLSilk,
   isSilk,
   mapValue,
+  SYMBOLS,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -23,19 +23,19 @@ import {
   type GraphQLOutputType,
   GraphQLString,
   GraphQLUnionType,
-  type ThunkReadonlyArray,
   isNonNullType,
   isObjectType,
+  type ThunkReadonlyArray,
 } from "graphql"
 import {
   type ArraySchema,
-  type ISchema,
   type InferType,
+  type ISchema,
+  isSchema,
   type ObjectSchema,
   type Reference,
   Schema,
   type SchemaDescription,
-  isSchema,
 } from "yup"
 import type {
   GQLoomMetadata,
@@ -355,13 +355,13 @@ yupSilk.isSilk = (schema: any) => isSilk(schema) || isSchema(schema)
 
 export type YupSchemaIO = [Schema, "__outputType", "__outputType"]
 
-export * from "./types"
 export {
   collectName,
   collectNames,
-  weave,
-  silk,
   getGraphQLType,
   parseSilk,
   SchemaWeaver,
+  silk,
+  weave,
 } from "@gqloom/core"
+export * from "./types"

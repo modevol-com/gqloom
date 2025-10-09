@@ -1,4 +1,5 @@
 import {
+  assertName,
   type GraphQLArgument,
   type GraphQLFieldConfig,
   type GraphQLFieldConfigArgumentMap,
@@ -9,8 +10,6 @@ import {
   type GraphQLObjectTypeConfig,
   type GraphQLOutputType,
   GraphQLUnionType,
-  type ThunkObjMap,
-  assertName,
   isEnumType,
   isInterfaceType,
   isListType,
@@ -19,12 +18,13 @@ import {
   isScalarType,
   isUnionType,
   resolveObjMapThunk,
+  type ThunkObjMap,
 } from "graphql"
 import {
-  type Loom,
-  type ResolverOptions,
   createInputParser,
   getGraphQLType,
+  type Loom,
+  type ResolverOptions,
 } from "../resolver"
 import {
   applyMiddlewares,
@@ -37,9 +37,9 @@ import {
 import { AUTO_ALIASING } from "../utils/constants"
 import { inputToArgs } from "./input"
 import {
-  WeaverContext,
   initWeaverContext,
   provideWeaverContext,
+  WeaverContext,
   weaverContext,
 } from "./weaver-context"
 

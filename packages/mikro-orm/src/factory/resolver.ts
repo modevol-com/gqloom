@@ -1,8 +1,11 @@
 import {
+  capitalize,
   FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
+  getDeepResolvingFields,
+  loom,
   type MayPromise,
   type Middleware,
   MutationFactoryWithResolve,
@@ -12,9 +15,6 @@ import {
   type QueryOptions,
   type ResolverOptionsWithExtensions,
   type ResolvingFields,
-  capitalize,
-  getDeepResolvingFields,
-  loom,
   silk,
   weaverContext,
 } from "@gqloom/core"

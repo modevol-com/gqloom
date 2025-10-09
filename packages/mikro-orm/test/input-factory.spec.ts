@@ -1,7 +1,12 @@
 import { silk } from "@gqloom/core"
 import { defineEntity } from "@mikro-orm/libsql"
-import { GraphQLFloat, GraphQLNonNull, GraphQLString, printType } from "graphql"
-import { GraphQLScalarType } from "graphql"
+import {
+  GraphQLFloat,
+  GraphQLNonNull,
+  GraphQLScalarType,
+  GraphQLString,
+  printType,
+} from "graphql"
 import { describe, expect, it } from "vitest"
 import { mikroSilk } from "../src"
 import {

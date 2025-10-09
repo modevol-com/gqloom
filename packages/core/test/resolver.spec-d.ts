@@ -7,7 +7,7 @@ import {
   GraphQLString,
 } from "graphql"
 import { describe, expectTypeOf, it } from "vitest"
-import { type InferInputI, getStandardValue } from "../src/resolver"
+import { getStandardValue, type InferInputI } from "../src/resolver"
 import { loom } from "../src/resolver/resolver"
 import { silk } from "../src/resolver/silk"
 import type { RequireKeys } from "../src/utils"

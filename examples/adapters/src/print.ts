@@ -1,5 +1,5 @@
-import * as fs from "fs"
 import { weave } from "@gqloom/core"
+import * as fs from "fs"
 import { lexicographicSortSchema, printSchema } from "graphql"
 import { helloResolver } from "./resolvers"
 

@@ -1,10 +1,10 @@
 import {
   type GraphQLSilk,
-  SYMBOLS,
-  type StandardSchemaV1,
   initWeaverContext,
   mapValue,
   provideWeaverContext,
+  type StandardSchemaV1,
+  SYMBOLS,
   silk,
   weaverContext,
 } from "@gqloom/core"

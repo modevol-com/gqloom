@@ -1,9 +1,9 @@
 import { createServer } from "node:http"
 import {
-  ValibotWeaver,
   query,
   resolver,
   subscription,
+  ValibotWeaver,
   weave,
 } from "@gqloom/valibot"
 import { createPubSub, createYoga } from "graphql-yoga"

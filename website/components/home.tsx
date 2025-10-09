@@ -1,12 +1,12 @@
 import { Icon } from "@iconify/vue"
 import { useData } from "vitepress"
-import { type SlotsType, computed, defineComponent, ref } from "vue"
+import { computed, defineComponent, ref, type SlotsType } from "vue"
 import { FeatureCard } from "./feature-card"
 import { FlowingLines } from "./flowing-lines"
 import { Highlight } from "./highlight"
+import styles from "./home.module.css"
 import * as textEn from "./home-text-en"
 import * as textZh from "./home-text-zh"
-import styles from "./home.module.css"
 import { RuntimeTypes } from "./runtime-types"
 
 const HomeSchemaLibrary = defineComponent({

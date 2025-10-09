@@ -1,5 +1,5 @@
 import { mikroSilk } from "@gqloom/mikro-orm"
-import { type InferEntity, defineEntity } from "@mikro-orm/core"
+import { defineEntity, type InferEntity } from "@mikro-orm/core"
 
 const UserEntity = defineEntity({
   name: "User",

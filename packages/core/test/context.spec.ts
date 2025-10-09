@@ -1,18 +1,18 @@
 import {
   type ExecutionResult,
+  execute,
   GraphQLFloat,
   GraphQLInt,
   GraphQLObjectType,
   GraphQLString,
-  execute,
   parse,
 } from "graphql"
 import { beforeAll, describe, expect, it } from "vitest"
 import {
   type Loom,
+  loom,
   type Middleware,
   type ResolverPayload,
-  loom,
   silk,
   weave,
 } from "../src"

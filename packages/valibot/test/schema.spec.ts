@@ -1,13 +1,14 @@
+import type { Loom, SchemaWeaver } from "@gqloom/core"
 import {
+  field,
   type GQLoomExtensions,
   GraphQLSchemaLoom,
-  field,
   query,
   resolver,
   weave,
 } from "@gqloom/core"
-import type { Loom, SchemaWeaver } from "@gqloom/core"
 import {
+  execute,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
@@ -18,7 +19,6 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
-  execute,
   parse,
   printSchema,
   printType,
@@ -26,11 +26,11 @@ import {
 import * as v from "valibot"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import {
-  ValibotWeaver,
   asEnumType,
   asField,
   asObjectType,
   asUnionType,
+  ValibotWeaver,
 } from "../src"
 import type { PipedSchema } from "../src/types"
 

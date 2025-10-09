@@ -16,7 +16,7 @@ import {
 } from "graphql"
 import * as v from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
-import { ValibotWeaver, asUnionType } from "../src"
+import { asUnionType, ValibotWeaver } from "../src"
 
 describe("valibot resolver", () => {
   const Giraffe = v.object({

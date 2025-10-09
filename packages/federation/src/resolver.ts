@@ -1,10 +1,15 @@
 import {
+  applyMiddlewares,
   ChainResolver,
+  createInputParser,
   EasyDataLoader,
   type Executor,
+  filterMiddlewares,
   type GraphQLSilk,
+  getMemoizationMap,
   type Loom,
   type LoomObjectType,
+  loom,
   type MayPromise,
   type Middleware,
   ObjectChainResolver,
@@ -13,15 +18,10 @@ import {
   type ResolverOptions,
   type ResolverOptionsWithExtensions,
   type ResolverPayload,
-  type SYMBOLS,
   type StandardSchemaV1,
-  type ValueOf,
-  applyMiddlewares,
-  createInputParser,
-  filterMiddlewares,
-  getMemoizationMap,
-  loom,
+  type SYMBOLS,
   silk,
+  type ValueOf,
 } from "@gqloom/core"
 import { GraphQLID, type GraphQLObjectTypeExtensions } from "graphql"
 import type { ResolveReferenceExtension } from "."

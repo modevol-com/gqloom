@@ -1,9 +1,9 @@
 import {
   AUTO_ALIASING,
-  type GraphQLSilk,
-  SYMBOLS,
   ensureInterfaceType,
+  type GraphQLSilk,
   mapValue,
+  SYMBOLS,
   weave,
   weaverContext,
 } from "@gqloom/core"

@@ -1,12 +1,12 @@
 import {
+  collectNames,
+  field,
   type GQLoomExtensions,
   GraphQLSchemaLoom,
   type Loom,
-  type SchemaWeaver,
-  collectNames,
-  field,
   query,
   resolver,
+  type SchemaWeaver,
 } from "@gqloom/core"
 import {
   GraphQLBoolean,
@@ -26,11 +26,11 @@ import { describe, expect, expectTypeOf, it } from "vitest"
 import * as z3 from "zod/v3"
 import * as z from "zod/v4"
 import {
-  ZodWeaver,
   asEnumType,
   asField,
   asObjectType,
   asUnionType,
+  ZodWeaver,
 } from "../src"
 import { resolveTypeByDiscriminatedUnion } from "../src/utils"
 

@@ -1,11 +1,11 @@
-import { SYMBOLS, mapValue, pascalCase, weaverContext } from "@gqloom/core"
+import { mapValue, pascalCase, SYMBOLS, weaverContext } from "@gqloom/core"
 import {
   type Column,
+  getTableColumns,
+  getTableName,
   type InferInsertModel,
   type InferSelectModel,
   type Table,
-  getTableColumns,
-  getTableName,
 } from "drizzle-orm"
 import {
   GraphQLBoolean,

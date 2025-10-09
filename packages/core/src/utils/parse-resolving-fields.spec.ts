@@ -1,11 +1,11 @@
 import {
+  execute,
   GraphQLInterfaceType,
   GraphQLNonNull,
   GraphQLObjectType,
   type GraphQLResolveInfo,
   GraphQLString,
   GraphQLUnionType,
-  execute,
   parse,
 } from "graphql"
 import { describe, expect, it } from "vitest"

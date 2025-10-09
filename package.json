@@ -18,14 +18,16 @@
     "ci:publish": "pnpm -F @gqloom/* publish"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json}": ["biome check --no-errors-on-unmatched --write"],
+    "*.{ts,tsx,js,jsx,json}": [
+      "biome check --no-errors-on-unmatched --write"
+    ],
     "*.{json,toml,graphql,gql,css}": "biome format --no-errors-on-unmatched --write"
   },
   "keywords": [],
   "author": "xcfox",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.2.5",
     "@graphql-tools/utils": "^10.1.3",
     "@types/node": "^24.3.0",
     "@typescript/native-preview": "7.0.0-dev.20250721.1",

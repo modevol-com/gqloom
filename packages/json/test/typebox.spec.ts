@@ -1,14 +1,15 @@
 import {
+  field,
   type GraphQLSilk,
   type Loom,
-  SYMBOLS,
-  field,
   query,
   resolver,
+  SYMBOLS,
   silk,
   weave,
 } from "@gqloom/core"
 import {
+  execute as executeGraphQL,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLInt,
@@ -17,7 +18,6 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  execute as executeGraphQL,
   parse,
   printSchema,
   printType,

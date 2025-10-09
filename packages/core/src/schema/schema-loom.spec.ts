@@ -9,8 +9,7 @@ import {
   printSchema,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { getGraphQLType, silk } from "../resolver"
-import { loom } from "../resolver"
+import { getGraphQLType, loom, silk } from "../resolver"
 import { WEAVER_CONFIG } from "../utils/symbols"
 import { ensureInterfaceType } from "./interface"
 import { GraphQLSchemaLoom, weave } from "./schema-loom"

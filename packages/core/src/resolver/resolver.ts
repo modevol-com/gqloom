@@ -1,21 +1,21 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type { GraphQLObjectTypeConfig } from "graphql"
 import {
-  type MayPromise,
-  type Middleware,
-  type OmitInUnion,
-  type ValueOf,
   applyMiddlewares,
   filterMiddlewares,
   getFieldOptions,
   getOperationOptions,
   getSubscriptionOptions,
+  type MayPromise,
+  type Middleware,
   mapValue,
   meta,
+  type OmitInUnion,
+  type ValueOf,
 } from "../utils"
 import { DERIVED_DEPENDENCIES } from "../utils/constants"
 import { FIELD_HIDDEN, IS_RESOLVER } from "../utils/symbols"
-import { type InferInputI, createInputParser } from "./input"
+import { createInputParser, type InferInputI } from "./input"
 import {
   FieldChainFactory,
   MutationChainFactory,

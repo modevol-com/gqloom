@@ -11,10 +11,11 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 
-import * as fs from "fs"
-import * as path from "path"
 import { asyncContextProvider } from "@gqloom/core/context"
+import * as fs from "fs"
 import { printSchema } from "graphql"
+import * as path from "path"
+
 if (process.env.NODE_ENV !== "production") {
   fs.writeFileSync(
     path.resolve(__dirname, "../schema.graphql"),

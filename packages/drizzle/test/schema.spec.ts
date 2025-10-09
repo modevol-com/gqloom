@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from "@gqloom/core"
 import {
   field,
   getGraphQLType,
@@ -6,12 +7,11 @@ import {
   silk,
   weave,
 } from "@gqloom/core"
-import type { StandardSchemaV1 } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
-import { pgTable } from "drizzle-orm/pg-core"
 import * as pg from "drizzle-orm/pg-core"
-import { sqliteTable } from "drizzle-orm/sqlite-core"
+import { pgTable } from "drizzle-orm/pg-core"
 import * as sqlite from "drizzle-orm/sqlite-core"
+import { sqliteTable } from "drizzle-orm/sqlite-core"
 import {
   GraphQLNonNull,
   type GraphQLObjectType,

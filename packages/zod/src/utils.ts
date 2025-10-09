@@ -6,7 +6,6 @@ import type {
   GraphQLUnionTypeConfig,
 } from "graphql"
 import type {
-  util,
   $ZodArray,
   $ZodBoolean,
   $ZodDate,
@@ -23,6 +22,7 @@ import type {
   $ZodString,
   $ZodType,
   $ZodUnion,
+  util,
 } from "zod/v4/core"
 import { ZodWeaver } from "."
 import { asEnumType, asField, asObjectType, asUnionType } from "./metadata"
