@@ -1,5 +1,5 @@
 // @paths: {"src/*": ["snippets/dataloader/src/*"]}
-import { LoomDataLoader, field, query, resolver } from "@gqloom/core"
+import { field, LoomDataLoader, query, resolver } from "@gqloom/core"
 import { createMemoization } from "@gqloom/core/context"
 import { inArray } from "drizzle-orm"
 import { db } from "src/db"

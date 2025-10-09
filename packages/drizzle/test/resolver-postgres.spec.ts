@@ -1,12 +1,12 @@
 import { weave } from "@gqloom/core"
 import { eq } from "drizzle-orm"
-import { type NodePgDatabase, drizzle } from "drizzle-orm/node-postgres"
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres"
 import {
   type GraphQLSchema,
   lexicographicSortSchema,
   printSchema,
 } from "graphql"
-import { type YogaServerInstance, createYoga } from "graphql-yoga"
+import { createYoga, type YogaServerInstance } from "graphql-yoga"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"

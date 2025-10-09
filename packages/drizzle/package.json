@@ -32,7 +32,9 @@
     "check:type": "tsgo --noEmit",
     "push": "drizzle-kit push --config=drizzle-mysql.config.ts && drizzle-kit push --config=drizzle-postgres.config.ts && drizzle-kit push --config=drizzle-sqlite.config.ts && drizzle-kit push --config=drizzle-sqlite-1.config.ts"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "gqloom",
     "graphql",

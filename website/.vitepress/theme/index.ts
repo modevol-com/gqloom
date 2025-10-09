@@ -1,6 +1,5 @@
 import TwoslashFloatingVue from "@shikijs/vitepress-twoslash/client"
-import type { Theme } from "vitepress"
-import type { EnhanceAppContext } from "vitepress"
+import type { EnhanceAppContext, Theme } from "vitepress"
 import DefaultTheme from "vitepress/theme-without-fonts"
 import { Layout } from "./layout"
 import "../../css/tailwind.css"

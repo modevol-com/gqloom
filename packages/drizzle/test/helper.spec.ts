@@ -1,10 +1,9 @@
 import { field, query, resolver, silk, weave } from "@gqloom/core"
-import type { Table } from "drizzle-orm"
-import type { Column } from "drizzle-orm"
+import type { Column, Table } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import * as mysql from "drizzle-orm/mysql-core"
 import * as pg from "drizzle-orm/pg-core"
-import { GraphQLString, execute, parse } from "graphql"
+import { execute, GraphQLString, parse } from "graphql"
 import { beforeEach, describe, expect, it } from "vitest"
 import {
   getEnumNameByColumn,

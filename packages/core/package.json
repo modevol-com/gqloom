@@ -39,7 +39,9 @@
     "build": "tsdown",
     "check:type": "tsgo --noEmit"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "peerDependencies": {
     "graphql": ">= 16.8.0"
   },

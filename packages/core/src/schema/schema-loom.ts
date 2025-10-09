@@ -8,24 +8,24 @@ import {
 } from "graphql"
 import {
   type GraphQLSilk,
-  type Loom,
-  type ResolverOptions,
   getGraphQLType,
   isSilk,
+  type Loom,
+  type ResolverOptions,
 } from "../resolver"
 import type { Middleware } from "../utils"
 import { FIELD_HIDDEN, IS_RESOLVER, WEAVER_CONFIG } from "../utils/symbols"
-import { LoomObjectType, getCacheType } from "./object"
-import { type SchemaWeaver, isSchemaVendorWeaver } from "./schema-weaver"
+import { getCacheType, LoomObjectType } from "./object"
+import { isSchemaVendorWeaver, type SchemaWeaver } from "./schema-weaver"
 import type {
   CoreSchemaWeaverConfig,
   CoreSchemaWeaverConfigOptions,
 } from "./types"
 import {
-  type WeaverConfig,
-  type WeaverContext,
   initWeaverContext,
   provideWeaverContext,
+  type WeaverConfig,
+  type WeaverContext,
 } from "./weaver-context"
 
 interface SchemaWeaverParameters

@@ -3,9 +3,9 @@ import { onlyMemoization } from "../utils/context"
 import { CONTEXT_MAP_KEY } from "../utils/symbols"
 import {
   ContextMemoization,
-  InjectableContext,
   createContext,
   createMemoization,
+  InjectableContext,
   resolverPayloadStorage,
   useContext,
   useMemoizationMap,

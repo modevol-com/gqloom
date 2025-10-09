@@ -3,9 +3,9 @@ import { assert, describe, expect, it } from "vitest"
 import {
   GraphQLSchemaLoom,
   type Loom,
+  loom,
   type Middleware,
   type ResolverPayload,
-  loom,
   silk,
   weave,
 } from "../src"

@@ -21,7 +21,9 @@
     "build": "tsdown",
     "check:type": "tsgo --noEmit"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "peerDependencies": {
     "@apollo/subgraph": ">= 2.0.0",
     "@gqloom/core": ">= 0.10.0",

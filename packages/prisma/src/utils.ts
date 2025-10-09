@@ -1,4 +1,4 @@
-import { type ResolverPayload, getResolvingFields } from "@gqloom/core"
+import { getResolvingFields, type ResolverPayload } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import {
   GraphQLBoolean,

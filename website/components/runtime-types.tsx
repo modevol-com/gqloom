@@ -1,4 +1,3 @@
-import { cn } from "@/css"
 import { useData } from "vitepress"
 import {
   type CSSProperties,
@@ -9,6 +8,7 @@ import {
   ref,
   watch,
 } from "vue"
+import { cn } from "@/css"
 
 const runtimeTypeItems = [
   {

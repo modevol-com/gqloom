@@ -1,8 +1,8 @@
-import { GraphQLInputObjectType, printSchema } from "graphql"
 import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
+  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -10,6 +10,7 @@ import {
   GraphQLString,
   GraphQLUnionType,
   isInputObjectType,
+  printSchema,
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"

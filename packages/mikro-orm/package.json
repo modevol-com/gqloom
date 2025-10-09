@@ -39,8 +39,16 @@
     "build": "tsdown",
     "check:type": "tsgo --noEmit"
   },
-  "files": ["dist"],
-  "keywords": ["gqloom", "graphql", "schema", "typescript", "mikro-orm"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "gqloom",
+    "graphql",
+    "schema",
+    "typescript",
+    "mikro-orm"
+  ],
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {

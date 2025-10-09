@@ -1,19 +1,20 @@
 import {
-  type GraphQLSilk,
-  type Loom,
-  type SchemaWeaver,
   collectNames,
   field,
+  type GraphQLSilk,
   initWeaverContext,
+  type Loom,
   provideWeaverContext,
   query,
   resolver,
+  type SchemaWeaver,
   silk,
   weave,
 } from "@gqloom/core"
 import * as JSONSchema from "effect/JSONSchema"
 import * as Schema from "effect/Schema"
 import {
+  execute,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLList,
@@ -21,7 +22,6 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  execute,
   parse,
   printSchema,
   printType,

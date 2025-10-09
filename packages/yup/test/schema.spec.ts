@@ -1,9 +1,9 @@
 import {
-  type GQLoomExtensions,
-  type Loom,
   field,
+  type GQLoomExtensions,
   getGraphQLType as getGraphQLTypeCore,
   initWeaverContext,
+  type Loom,
   provideWeaverContext,
   query,
   resolver,
@@ -25,17 +25,17 @@ import {
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import {
-  type InferType,
-  type Schema,
   array,
   boolean,
   date,
+  type InferType,
   mixed,
   number,
   object,
+  type Schema,
   string,
 } from "yup"
-import { type GQLoomMetadata, YupWeaver, union, yupSilk } from "../src/index"
+import { type GQLoomMetadata, union, YupWeaver, yupSilk } from "../src/index"
 
 declare module "yup" {
   export interface CustomSchemaMetadata extends GQLoomMetadata {}

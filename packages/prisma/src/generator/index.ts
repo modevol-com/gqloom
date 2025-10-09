@@ -1,6 +1,6 @@
+import { generatorHandler } from "@prisma/generator-helper"
 import * as fs from "fs"
 import * as path from "path"
-import { generatorHandler } from "@prisma/generator-helper"
 import { genJSFile } from "./js"
 import { genTsDeclaration } from "./ts"
 

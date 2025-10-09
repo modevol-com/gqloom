@@ -1,8 +1,8 @@
 import {
   AUTO_ALIASING,
-  SYMBOLS,
   ensureInterfaceType,
   mapValue,
+  SYMBOLS,
   weave,
   weaverContext,
 } from "@gqloom/core"
@@ -294,6 +294,6 @@ export class ZodWeaver {
   }
 }
 
-export * from "./types"
 export * from "./metadata"
 export * from "./re-export"
+export * from "./types"

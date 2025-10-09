@@ -3,10 +3,10 @@ import { GraphQLString } from "graphql"
 import { describe, expect, it } from "vitest"
 import { createInputParser, silk } from "../resolver"
 import {
-  type Middleware,
-  type MiddlewareOptions,
   applyMiddlewares,
   filterMiddlewares,
+  type Middleware,
+  type MiddlewareOptions,
 } from "./middleware"
 
 function initOptions(): MiddlewareOptions {
@@ -99,13 +99,9 @@ describe("middleware", async () => {
       return next()
     }
 
-    const result = await applyMiddlewares(
-      initOptions(),
-      () => {
-        return asyncLocalStorage.getStore()?.cat
-      },
-      [provideCat, consumeCat]
-    )
+    const result = await applyMiddlewares(initOptions(), () => {
+      return asyncLocalStorage.getStore()?.cat
+    }, [provideCat, consumeCat])
 
     expect(result).toBe("meow")
   })

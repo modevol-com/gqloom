@@ -3,10 +3,10 @@ import { printSchema } from "graphql"
 import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import {
-  ValibotMetadataCollector,
-  ValibotWeaver,
   asEnumType,
   asObjectType,
+  ValibotMetadataCollector,
+  ValibotWeaver,
 } from "../src"
 
 describe("asObjectType", () => {

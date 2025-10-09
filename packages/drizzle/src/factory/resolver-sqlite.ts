@@ -165,10 +165,7 @@ export class DrizzleSQLiteResolverFactory<
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(
-    options: {
-      name?: TTableName
-      middlewares?: Middleware[]
-    } = {}
+    options: { name?: TTableName; middlewares?: Middleware[] } = {}
   ): ObjectChainResolver<
     GraphQLSilk<SelectiveTable<TTable>, SelectiveTable<TTable>>,
     DrizzleResolverReturningItems<TDatabase, TTable, TTableName>

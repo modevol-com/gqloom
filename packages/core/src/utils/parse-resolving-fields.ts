@@ -3,10 +3,10 @@ import {
   type ArgumentNode,
   type DirectiveNode,
   type GraphQLOutputType,
-  Kind,
-  type SelectionNode,
   isInterfaceType,
   isObjectType,
+  Kind,
+  type SelectionNode,
 } from "graphql"
 import type { ResolverPayload } from "../resolver"
 import { DERIVED_DEPENDENCIES } from "./constants"

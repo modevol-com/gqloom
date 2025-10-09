@@ -96,7 +96,12 @@ export function ensureInputObjectType(
   const existing = weaverContext.inputMap?.get(object)
   if (existing != null) return existing
 
-  const { astNode, extensionASTNodes, fields, ...config } = object.toConfig()
+  const {
+    astNode: _1,
+    extensionASTNodes: _2,
+    fields,
+    ...config
+  } = object.toConfig()
   let name = object.name
   if (name === AUTO_ALIASING) {
     name = `${pascalCase(options.fieldName)}Input`

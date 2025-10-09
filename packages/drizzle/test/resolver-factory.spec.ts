@@ -1,5 +1,5 @@
 import { resolver } from "@gqloom/core"
-import { type InferSelectModel, eq, inArray, sql } from "drizzle-orm"
+import { eq, type InferSelectModel, inArray, sql } from "drizzle-orm"
 import {
   type LibSQLDatabase,
   drizzle as sqliteDrizzle,

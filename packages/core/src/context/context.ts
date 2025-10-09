@@ -2,9 +2,9 @@ import { AsyncLocalStorage } from "node:async_hooks"
 import type { ResolverPayload } from "../resolver/types"
 import type { Middleware } from "../utils"
 import {
-  type OnlyMemoizationPayload,
   getMemoizationMap,
   isOnlyMemoryPayload,
+  type OnlyMemoizationPayload,
   onlyMemoization,
 } from "../utils/context"
 import { bindAsyncIterator, isAsyncIterator } from "./async-iterator"

@@ -9,12 +9,12 @@ import {
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import * as z from "zod/v4"
 import {
-  ZodWeaver,
   asUnionType,
   field,
   mutation,
   query,
   resolver,
+  ZodWeaver,
 } from "../src/index"
 
 describe("zod resolver", () => {

@@ -1,10 +1,10 @@
 import { ApolloServer } from "@apollo/server"
 import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
 import {
-  type RequireKeys,
-  type ResolvingFields,
   field,
   query,
+  type RequireKeys,
+  type ResolvingFields,
   silk,
 } from "@gqloom/core"
 import {

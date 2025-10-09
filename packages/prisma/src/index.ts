@@ -1,7 +1,7 @@
 import {
   type GraphQLSilk,
-  SYMBOLS,
   notNullish,
+  SYMBOLS,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -182,5 +182,5 @@ export class PrismaWeaver {
 }
 
 export * from "./resolver-factory"
-export * from "./types"
 export * from "./type-weaver"
+export * from "./types"

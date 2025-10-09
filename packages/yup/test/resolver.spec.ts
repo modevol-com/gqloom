@@ -15,8 +15,8 @@ import {
   printSchema,
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
-import { type InferType, boolean, date, number, object, string } from "yup"
-import { YupWeaver, union } from "../src"
+import { boolean, date, type InferType, number, object, string } from "yup"
+import { union, YupWeaver } from "../src"
 
 describe("yup resolver", () => {
   const Giraffe = object({

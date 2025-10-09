@@ -1,11 +1,11 @@
 import {
   AUTO_ALIASING,
-  type GQLoomExtensions,
-  type GraphQLSilk,
-  SYMBOLS,
   deepMerge,
   ensureInterfaceType,
+  type GQLoomExtensions,
+  type GraphQLSilk,
   mapValue,
+  SYMBOLS,
   weave,
   weaverContext,
 } from "@gqloom/core"
@@ -66,8 +66,7 @@ import type {
   ZodWeaverConfig,
   ZodWeaverConfigOptions,
 } from "./types"
-import { ZodIDKinds } from "./utils"
-import { resolveTypeByDiscriminatedUnion } from "./utils"
+import { resolveTypeByDiscriminatedUnion, ZodIDKinds } from "./utils"
 
 export class ZodWeaver {
   public static vendor = "zod"
@@ -405,5 +404,5 @@ export class ZodWeaver {
   }
 }
 
-export * from "./types"
 export * from "./metadata"
+export * from "./types"
