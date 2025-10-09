@@ -5,7 +5,13 @@ import {
   TabsRoot,
   TabsTrigger,
 } from "reka-ui"
-import { computed, defineComponent, reactive } from "vue"
+import {
+  type ComponentPublicInstance,
+  computed,
+  defineComponent,
+  reactive,
+  ref,
+} from "vue"
 
 export interface TabsProps {
   groupId?: string
@@ -37,12 +43,33 @@ export const Tabs = defineComponent({
       },
     })
 
+    const tabsRootRef = ref<ComponentPublicInstance | null>(null)
     const onUpdateModelValue = (value: string | number) => {
+      // Record Tabs component position relative to viewport before switching
+      const tabsComponent = tabsRootRef.value
+      if (tabsComponent && tabsComponent.$el) {
+        const tabsElement = tabsComponent.$el as HTMLElement
+        const rectBefore = tabsElement.getBoundingClientRect()
+        const offsetTopBefore = rectBefore.top
+
+        // Adjust scroll position in next frame to maintain Tabs component viewport position
+        requestAnimationFrame(() => {
+          const rectAfter = tabsElement.getBoundingClientRect()
+          const offsetTopAfter = rectAfter.top
+
+          const scrollAdjustment = offsetTopAfter - offsetTopBefore
+          if (scrollAdjustment !== 0) {
+            window.scrollBy(0, scrollAdjustment)
+          }
+        })
+      }
+
       modelValue.value = value
     }
 
     return () => (
       <TabsRoot
+        ref={tabsRootRef}
         defaultValue={props.groupId ? undefined : defaultValue.value}
         modelValue={modelValue.value}
         onUpdate:modelValue={props.groupId ? onUpdateModelValue : undefined}
