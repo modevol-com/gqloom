@@ -6,7 +6,6 @@ const scriptDir = __dirname
 const projectRoot = path.join(scriptDir, "..")
 const prismaDir = path.join(projectRoot, "prisma")
 const schemaPath = path.join(prismaDir, "schema.prisma")
-const outputSqlPath = path.join(prismaDir, "CREATE_TABLES.sql")
 const outputJsonPath = path.join(prismaDir, "CREATE_TABLES.json")
 const migrationsDir = path.join(prismaDir, "migrations")
 const devDbPath = path.join(prismaDir, "dev.db")
@@ -19,8 +18,6 @@ const sql = execSync(
     stdio: ["pipe", "pipe", "pipe"],
   }
 )
-
-fs.writeFileSync(outputSqlPath, sql, "utf-8")
 
 const statements = sql
   .split(";")

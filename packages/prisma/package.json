@@ -41,8 +41,8 @@
     "build": "tsdown",
     "check:type": "tsgo --noEmit",
     "init": "node scripts/init_tables.cjs",
-    "generate": "pnpm build && prisma generate",
-    "push": "pnpm build && pnpm generate && pnpm run init"
+    "generate": "pnpm build && prisma generate && pnpm run init",
+    "push": "pnpm build && pnpm generate"
   },
   "bin": {
     "prisma-gqloom": "./bin/generator.cjs"
