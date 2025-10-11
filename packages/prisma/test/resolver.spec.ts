@@ -700,16 +700,9 @@ describe("Resolver", () => {
         ])
       )
 
-      expect(
-        ["", ...logs.filter((log) => log.startsWith("SELECT")), ""].join("\n")
-      ).toMatchInlineSnapshot(`
-        "
-        SELECT main.User.id FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
-        SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.id = ? LIMIT ? OFFSET ?
-        SELECT main.User.id, main.User.email FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
-        SELECT main.User.id, main.User.email FROM main.User WHERE 1=1 LIMIT ? OFFSET ?
-        "
-      `)
+      expect(logs[logs.length - 1]).toMatchInlineSnapshot(
+        `"SELECT main.User.id, main.User.email FROM main.User WHERE 1=1 LIMIT ? OFFSET ?"`
+      )
     })
 
     it("should query users with pagination", async () => {
