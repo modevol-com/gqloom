@@ -47,6 +47,19 @@
     },
     "overrides": {
       "pg": "^8.13.2"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "@apollo/protobufjs",
+      "@prisma/client",
+      "@prisma/engines",
+      "@tailwindcss/oxide",
+      "esbuild",
+      "prisma",
+      "sqlite3",
+      "vue-demi"
+    ],
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }

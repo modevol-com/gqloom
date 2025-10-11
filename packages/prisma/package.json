@@ -40,9 +40,9 @@
   "scripts": {
     "build": "tsdown",
     "check:type": "tsgo --noEmit",
-    "init": "exec prisma migrate dev --name init",
-    "generate": "pnpm build && prisma generate",
-    "push": "pnpm build && pnpm generate && pnpm run init"
+    "init": "node scripts/init_tables.cjs",
+    "generate": "pnpm build && prisma generate && pnpm run init",
+    "push": "pnpm build && pnpm generate"
   },
   "bin": {
     "prisma-gqloom": "./bin/generator.cjs"
@@ -67,9 +67,12 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/zod": "workspace:*",
-    "@prisma/client": "^6.16.2",
+    "@prisma/adapter-better-sqlite3": "^6.17.1",
+    "@prisma/client": "^6.17.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.4.1",
     "graphql-yoga": "^5.6.0",
-    "prisma": "^6.14.0",
+    "prisma": "^6.17.1",
     "zod": "4.1.5"
   },
   "homepage": "https://gqloom.dev/",
@@ -82,7 +85,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@prisma/generator-helper": "^6.1.0",
+    "@prisma/generator-helper": "^6.17.1",
     "ts-morph": "^27.0.0"
   }
 }

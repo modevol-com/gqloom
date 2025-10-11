@@ -2,8 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
-  output       = "../test/client"
+  provider   = "prisma-client"
+  output     = "../test/client"
+  engineType = "client"
 }
 
 generator gqloom {
@@ -76,12 +77,12 @@ model Sheep {
 
   shepherdFirstName String
   shepherdLastName  String
-  shepherd         Dog    @relation(fields: [shepherdFirstName, shepherdLastName], references: [firstName, lastName])
+  shepherd          Dog    @relation(fields: [shepherdFirstName, shepherdLastName], references: [firstName, lastName])
 
   @@id([firstCode, lastCode])
 }
 
 model KeyValue {
-  id String @id
+  id    String @id
   value String
 }
