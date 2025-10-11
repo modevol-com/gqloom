@@ -12,7 +12,7 @@
   "dependencies": {
     "@apollo/server": "^4.12.2",
     "@gqloom/core": "^0.2.0",
-    "@hono/graphql-server": "^0.5.1",
+    "@hono/graphql-server": "^0.7.0",
     "@hono/node-server": "^1.19.1",
     "fastify": "^5.4.0",
     "graphql": "^16.8.1",
