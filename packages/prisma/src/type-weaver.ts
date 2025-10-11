@@ -176,7 +176,7 @@ export class PrismaTypeWeaver {
     schema: DMMF.Schema
   ): Map<string, DMMF.InputType> {
     const map = new Map<string, DMMF.InputType>()
-    for (const inputType of schema.inputObjectTypes.prisma) {
+    for (const inputType of schema.inputObjectTypes.prisma ?? []) {
       map.set(inputType.name, inputType)
     }
     return map
@@ -186,7 +186,7 @@ export class PrismaTypeWeaver {
     schema: DMMF.Schema
   ): Map<string, DMMF.SchemaEnum> {
     const map = new Map<string, DMMF.SchemaEnum>()
-    for (const enumType of schema.enumTypes.prisma) {
+    for (const enumType of schema.enumTypes.prisma ?? []) {
       map.set(enumType.name, enumType)
     }
     return map
