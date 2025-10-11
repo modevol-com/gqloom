@@ -47,7 +47,6 @@ export interface GQLoomGeneratorConfig {
 generatorHandler({
   onManifest: () => ({
     prettyName: "GQLoom integration",
-    requiresGenerators: ["prisma-client-js"],
     defaultOutput,
   }),
   onGenerate: async (options) => {
@@ -57,11 +56,18 @@ generatorHandler({
     config.moduleFile ??= "index.js"
     config.typesFiles ??= ["index.d.ts"]
 
-    const prismaLocation =
-      config.clientOutput ??
-      options.otherGenerators.find(
-        (gen) => gen.provider.value === "prisma-client-js"
-      )!.output!.value!
+    const prismaClientGenerator = options.otherGenerators.find(
+      (gen) =>
+        gen.provider.value === "prisma-client" ||
+        gen.provider.value === "prisma-client-js"
+    )
+
+    let prismaLocation =
+      config.clientOutput ?? prismaClientGenerator!.output!.value!
+
+    if (prismaClientGenerator?.provider.value === "prisma-client") {
+      prismaLocation += "/client.ts"
+    }
 
     const models = Object.create(null)
     for (const model of options.dmmf.datamodel.models) {

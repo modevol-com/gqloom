@@ -40,7 +40,7 @@
   "scripts": {
     "build": "tsdown",
     "check:type": "tsgo --noEmit",
-    "init": "exec prisma migrate dev --name init",
+    "init": "node scripts/init_tables.cjs",
     "generate": "pnpm build && prisma generate",
     "push": "pnpm build && pnpm generate && pnpm run init"
   },
@@ -67,7 +67,10 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/zod": "workspace:*",
+    "@prisma/adapter-better-sqlite3": "^6.17.1",
     "@prisma/client": "^6.17.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.4.1",
     "graphql-yoga": "^5.6.0",
     "prisma": "^6.17.1",
     "zod": "4.1.5"

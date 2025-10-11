@@ -5,6 +5,7 @@ import {
   weave,
 } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
+import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
 import { printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
 import {
@@ -17,13 +18,14 @@ import {
   it,
 } from "vitest"
 import * as z from "zod"
+import CREATE_TABLES from "../prisma/CREATE_TABLES.json"
 import {
   type InferPrismaDelegate,
   type PrismaModelSilk,
   PrismaResolverFactory,
   type SelectiveModel,
 } from "../src"
-import { PrismaClient } from "./client"
+import { PrismaClient } from "./client/client"
 import * as g from "./generated"
 
 const { resolver, query } = loom
@@ -49,9 +51,15 @@ class TestablePrismaModelResolverFactory<
 }
 
 describe("PrismaModelPrismaResolverFactory", () => {
-  const db = new PrismaClient()
+  const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+  const db = new PrismaClient({ adapter })
 
   beforeAll(async () => {
+    // Initialize database tables
+    for (const statement of CREATE_TABLES) {
+      await db.$executeRawUnsafe(statement)
+    }
+
     let times = 0
     while (true) {
       try {

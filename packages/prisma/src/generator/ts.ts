@@ -1,4 +1,5 @@
 import type { DMMF } from "@prisma/generator-helper"
+import * as path from "path"
 import { Project, VariableDeclarationKind } from "ts-morph"
 import type { GQLoomGeneratorConfig } from "."
 
@@ -18,8 +19,23 @@ export function genTsDeclaration(
     isTypeOnly: true,
   })
 
+  // Calculate relative path from output file to Prisma client location
+  const outputDir = path.dirname(config.outputFile)
+  let prismaClientPath = config.prismaLocation ?? "@prisma/client"
+
+  // Convert absolute path to relative path
+  if (path.isAbsolute(prismaClientPath)) {
+    let relativePath = path.relative(outputDir, prismaClientPath)
+    // Ensure the path starts with ./ or ../
+    if (!relativePath.startsWith(".")) {
+      relativePath = `./${relativePath}`
+    }
+    // Normalize path separators for cross-platform compatibility
+    prismaClientPath = relativePath.split(path.sep).join("/")
+  }
+
   sourceFile.addImportDeclaration({
-    moduleSpecifier: config.prismaLocation ?? "@prisma/client",
+    moduleSpecifier: prismaClientPath,
     namedImports: [
       ...dmmf.datamodel.models.map((m) => ({
         name: m.name,

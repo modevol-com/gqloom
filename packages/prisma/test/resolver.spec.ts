@@ -1,4 +1,5 @@
 import { weave } from "@gqloom/core"
+import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
 import { lexicographicSortSchema, printSchema, printType } from "graphql"
 import { createYoga } from "graphql-yoga"
 import {
@@ -10,14 +11,23 @@ import {
   expect,
   it,
 } from "vitest"
+import CREATE_TABLES from "../prisma/CREATE_TABLES.json"
 import { PrismaResolverFactory } from "../src"
-import { type Prisma, PrismaClient } from "./client"
+import { type Prisma, PrismaClient } from "./client/client"
 import * as p from "./generated"
 
 describe("Resolver", () => {
-  const db = new PrismaClient()
+  const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+  const db = new PrismaClient({
+    adapter,
+    log: [{ emit: "event", level: "query" }],
+  })
   const userBobbin = new PrismaResolverFactory(p.User, db)
   const userResolver = userBobbin.resolver()
+
+  beforeAll(async () => {
+    await initDb(db)
+  })
 
   it("should be able to create ResolverFactory", () => {
     expect(userResolver).toBeDefined()
@@ -150,7 +160,7 @@ describe("Resolver", () => {
   })
 
   it("should be able to weave schema", async () => {
-    const schema = weaveSchema()
+    const schema = weaveSchema(db)
 
     expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
       "type User {
@@ -170,6 +180,7 @@ describe("Resolver", () => {
 
   describe("mutations", () => {
     beforeAll(async () => {
+      await initDb(db)
       let times = 0
       while (true) {
         try {
@@ -194,7 +205,7 @@ describe("Resolver", () => {
     })
 
     let logs: string[] = []
-    const schema = weaveSchema((e) => {
+    const schema = weaveSchema(db, (e) => {
       logs.push(e.query.replaceAll("`", ""))
     })
     const yoga = createYoga({ schema })
@@ -323,7 +334,6 @@ describe("Resolver", () => {
 
         expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
           "
-          BEGIN IMMEDIATE
           SELECT main.User.id FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
           INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id
           INSERT INTO main.Post (title, published, authorId) VALUES (?,?,?) RETURNING id AS id
@@ -361,6 +371,7 @@ describe("Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        INSERT INTO main.User (email) VALUES (?) RETURNING id AS id, email AS email, name AS name
         DELETE FROM main.User WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email
         "
       `)
@@ -427,6 +438,8 @@ describe("Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        INSERT INTO main.User (email) VALUES (?) RETURNING id AS id, email AS email, name AS name
+        INSERT INTO main.Post (title, published, authorId) VALUES (?,?,?) RETURNING id AS id, title AS title, content AS content, published AS published, authorId AS authorId, publishedById AS publishedById
         UPDATE main.Post SET title = ? WHERE (main.Post.id = ? AND 1=1) RETURNING id AS id, title AS title
         "
       `)
@@ -519,6 +532,7 @@ describe("Resolver", () => {
 
   describe("queries", () => {
     beforeAll(async () => {
+      await initDb(db)
       let times = 0
       while (true) {
         try {
@@ -542,9 +556,8 @@ describe("Resolver", () => {
       })
     })
     let logs: string[] = []
-    const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
 
-    const schema = weaveSchema((e) => {
+    const schema = weaveSchema(db, (e) => {
       logs.push(e.query.replaceAll("`", ""))
     })
     const yoga = createYoga({ schema })
@@ -687,8 +700,13 @@ describe("Resolver", () => {
         ])
       )
 
-      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+      expect(
+        ["", ...logs.filter((log) => log.startsWith("SELECT")), ""].join("\n")
+      ).toMatchInlineSnapshot(`
         "
+        SELECT main.User.id FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
+        SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.id = ? LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.email FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
         SELECT main.User.id, main.User.email FROM main.User WHERE 1=1 LIMIT ? OFFSET ?
         "
       `)
@@ -923,11 +941,15 @@ describe("Resolver", () => {
   })
 })
 
-function weaveSchema(log?: (query: Prisma.QueryEvent) => void) {
-  const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
-  db.$on("query", (e) => {
-    log?.(e)
-  })
+function weaveSchema(
+  db: PrismaClient,
+  log?: (query: Prisma.QueryEvent) => void
+) {
+  if (log) {
+    db.$on("query" as never, (e) => {
+      log(e)
+    })
+  }
   const userResolver = new PrismaResolverFactory(p.User, db).resolver()
   const postResolver = new PrismaResolverFactory(p.Post, db).resolver()
   const profileResolver = new PrismaResolverFactory(p.Profile, db).resolver()
@@ -941,4 +963,13 @@ function weaveSchema(log?: (query: Prisma.QueryEvent) => void) {
     dogResolver
   )
   return schema
+}
+
+const initDbs = new WeakSet<PrismaClient>()
+async function initDb(db: PrismaClient) {
+  if (initDbs.has(db)) return
+  for (const statement of CREATE_TABLES) {
+    await db.$executeRawUnsafe(statement)
+  }
+  initDbs.add(db)
 }
