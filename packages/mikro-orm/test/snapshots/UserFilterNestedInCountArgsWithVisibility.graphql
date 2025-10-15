@@ -3,4 +3,19 @@ type UserFilter {
   name: StringComparisonOperators
   email: StringComparisonOperators
   isActive: BooleanComparisonOperators
+
+  """
+  Joins query clauses with a logical AND returns all documents that match the conditions of both clauses.
+  """
+  AND: [UserFilter!]
+
+  """
+  Joins query clauses with a logical OR returns all documents that match the conditions of either clause.
+  """
+  OR: [UserFilter!]
+
+  """
+  Inverts the effect of a query expression and returns documents that do not match the query expression.
+  """
+  NOT: UserFilter
 }

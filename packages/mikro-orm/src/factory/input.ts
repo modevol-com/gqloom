@@ -106,8 +106,9 @@ export class MikroInputFactory<TEntity extends object> {
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
-          fields: () =>
-            mapValue(meta.properties, (property, propertyName) => {
+          fields: () => ({
+            // Entity property fields
+            ...mapValue(meta.properties, (property, propertyName) => {
               // Check visibility for filters
               if (
                 !MikroInputFactory.isPropertyVisible(
@@ -129,6 +130,24 @@ export class MikroInputFactory<TEntity extends object> {
                 description: property.comment,
               } as GraphQLFieldConfig<any, any>
             }),
+
+            // Logical operators
+            AND: {
+              type: new GraphQLList(new GraphQLNonNull(this.filter(meta))),
+              description:
+                "Joins query clauses with a logical AND returns all documents that match the conditions of both clauses.",
+            },
+            OR: {
+              type: new GraphQLList(new GraphQLNonNull(this.filter(meta))),
+              description:
+                "Joins query clauses with a logical OR returns all documents that match the conditions of either clause.",
+            },
+            NOT: {
+              type: this.filter(meta),
+              description:
+                "Inverts the effect of a query expression and returns documents that do not match the query expression.",
+            },
+          }),
         })
       )
     )
@@ -610,32 +629,42 @@ export class MikroInputFactory<TEntity extends object> {
     for (const key in args) {
       const newKey = key.startsWith("$")
         ? key
-        : key === "and"
+        : key === "AND"
           ? "$and"
-          : key === "or"
+          : key === "OR"
             ? "$or"
-            : key
+            : key === "NOT"
+              ? "$not"
+              : key
       const value = (args as any)[key]
       if (Array.isArray(value)) {
         ;(filters as any)[newKey] = value.map((v) => this.transformFilters(v))
       } else if (typeof value === "object" && value !== null) {
-        const subQuery: any = {}
-        for (const op in value) {
-          subQuery[`$${op}`] = value[op]
+        // Handle NOT operator recursively
+        if (key === "NOT") {
+          ;(filters as any)[newKey] = this.transformFilters(value)
+        } else {
+          const subQuery: any = {}
+          for (const op in value) {
+            subQuery[`$${op}`] = value[op]
+          }
+          ;(filters as any)[newKey] = subQuery
         }
-        ;(filters as any)[newKey] = subQuery
       } else {
         ;(filters as any)[newKey] = value
       }
     }
 
-    const { $and, $or, ...where } = filters as any
+    const { $and, $or, $not, ...where } = filters as any
     const result: FilterQuery<any> = where
     if ($and) {
       ;(result as any).$and = $and
     }
     if ($or) {
       ;(result as any).$or = $or
+    }
+    if ($not) {
+      ;(result as any).$not = $not
     }
     return result
   }

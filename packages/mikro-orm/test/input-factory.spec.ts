@@ -1,5 +1,9 @@
 import { silk } from "@gqloom/core"
-import { defineEntity } from "@mikro-orm/libsql"
+import {
+  defineEntity,
+  type FilterQuery,
+  type InferEntity,
+} from "@mikro-orm/libsql"
 import {
   GraphQLFloat,
   GraphQLNonNull,
@@ -15,15 +19,6 @@ import {
   MikroInputFactory,
 } from "../src/factory"
 
-interface IUser {
-  id: number
-  name: string
-  email: string
-  password: string
-  age?: number | null
-  isActive?: boolean | null
-}
-
 const User = mikroSilk(
   defineEntity({
     name: "User",
@@ -37,6 +32,8 @@ const User = mikroSilk(
     }),
   })
 )
+
+interface IUser extends InferEntity<typeof User> {}
 
 describe("MikroInputFactory", () => {
   const inputFactory = new MikroInputFactory(User)
@@ -506,91 +503,89 @@ describe("MikroInputFactory", () => {
       expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
-    it("should transform an 'and' condition", () => {
+    it("should return an empty object for empty logical operator arrays", () => {
+      const args: FilterArgs<IUser> = { AND: [], OR: [] }
+      const expected = { $and: [], $or: [] }
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should transform uppercase 'AND' condition", () => {
       const args: FilterArgs<IUser> = {
-        and: [{ name: { like: "%Doe" } }, { age: { lte: 40 } }],
+        AND: [{ name: { like: "%Doe" } }, { age: { lte: 40 } }],
       }
-      const expected = {
+      const expected: FilterQuery<IUser> = {
         $and: [{ name: { $like: "%Doe" } }, { age: { $lte: 40 } }],
       }
       expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
-    it("should transform an 'or' condition", () => {
+    it("should transform uppercase 'OR' condition", () => {
       const args: FilterArgs<IUser> = {
-        or: [{ isActive: { eq: true } }, { age: { in: [25, 35, 45] } }],
+        OR: [{ isActive: { eq: true } }, { age: { in: [25, 35, 45] } }],
       }
-      const expected = {
+      const expected: FilterQuery<IUser> = {
         $or: [{ isActive: { $eq: true } }, { age: { $in: [25, 35, 45] } }],
       }
       expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
-    it("should combine 'and'/'or' with root-level conditions", () => {
+    it("should transform uppercase 'NOT' condition", () => {
       const args: FilterArgs<IUser> = {
-        name: { eq: "Admin" },
-        or: [{ age: { gt: 60 } }, { isActive: { eq: false } }],
+        NOT: { name: { eq: "Guest" } },
       }
-      const expected = {
-        name: { $eq: "Admin" },
-        $or: [{ age: { $gt: 60 } }, { isActive: { $eq: false } }],
+      const expected: FilterQuery<IUser> = {
+        $not: { name: { $eq: "Guest" } },
       }
       expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
-    it("should handle nested 'and' and 'or' conditions", () => {
+    it("should combine uppercase logical operators with root-level conditions", () => {
       const args: FilterArgs<IUser> = {
-        or: [
+        name: { eq: "Admin" },
+        OR: [{ age: { gt: 60 } }, { isActive: { eq: false } }],
+        NOT: { email: { like: "%test%" } },
+      }
+      const expected: FilterQuery<IUser> = {
+        name: { $eq: "Admin" },
+        $or: [{ age: { $gt: 60 } }, { isActive: { $eq: false } }],
+        $not: { email: { $like: "%test%" } },
+      }
+      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
+    })
+
+    it("should handle nested uppercase logical operators", () => {
+      const args: FilterArgs<IUser> = {
+        OR: [
           { name: { eq: "Jane" } },
           {
-            and: [{ age: { gte: 20 } }, { age: { lt: 30 } }],
+            AND: [{ age: { gte: 20 } }, { age: { lt: 30 } }],
           },
         ],
+        NOT: { isActive: { eq: false } },
       }
-      const expected = {
+      const expected: FilterQuery<IUser> = {
         $or: [
           { name: { $eq: "Jane" } },
           {
             $and: [{ age: { $gte: 20 } }, { age: { $lt: 30 } }],
           },
         ],
+        $not: { isActive: { $eq: false } },
       }
       expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
 
-    it("should handle deeply nested logical operators", () => {
+    it("should handle mixed case logical operators", () => {
       const args: FilterArgs<IUser> = {
-        and: [
-          { isActive: { eq: true } },
-          {
-            or: [
-              { age: { nin: [18, 19, 20] } },
-              {
-                and: [{ name: { ne: "Guest" } }, { id: { gt: 100 } }],
-              },
-            ],
-          },
-        ],
+        AND: [{ name: { eq: "John" } }],
+        OR: [{ age: { gt: 30 } }],
+        NOT: { isActive: { eq: false } },
       }
-      const expected = {
-        $and: [
-          { isActive: { $eq: true } },
-          {
-            $or: [
-              { age: { $nin: [18, 19, 20] } },
-              {
-                $and: [{ name: { $ne: "Guest" } }, { id: { $gt: 100 } }],
-              },
-            ],
-          },
-        ],
+      const expected: FilterQuery<IUser> = {
+        $and: [{ name: { $eq: "John" } }],
+        $or: [{ age: { $gt: 30 } }],
+        $not: { isActive: { $eq: false } },
       }
-      expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
-    })
-
-    it("should return an empty object for empty logical operator arrays", () => {
-      const args: FilterArgs<IUser> = { and: [], or: [] }
-      const expected = { $and: [], $or: [] }
       expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
   })

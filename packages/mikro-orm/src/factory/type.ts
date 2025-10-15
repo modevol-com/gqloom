@@ -173,8 +173,9 @@ export type ComparisonOperators<TScalar> = {
 export type FilterArgs<TEntity extends object> = {
   [K in keyof TEntity]?: ComparisonOperators<TEntity[K]>
 } & {
-  and?: FilterArgs<TEntity>[]
-  or?: FilterArgs<TEntity>[]
+  AND?: FilterArgs<TEntity>[]
+  OR?: FilterArgs<TEntity>[]
+  NOT?: FilterArgs<TEntity>
 }
 
 export interface CountQueryArgs<TEntity extends object>
