@@ -96,17 +96,75 @@ GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验�
 </template>
 <template #JSON_Schema>
 
+<!--@include: ../snippets/install-json-schema.md-->
+
 </template>
 <template #graphql.js>
+
+::: code-group
+```sh [npm]
+npm i graphql @gqloom/core
+```
+```sh [pnpm]
+pnpm add graphql @gqloom/core
+```
+```sh [yarn]
+yarn add graphql @gqloom/core
+```
+```sh [bun]
+bun add graphql @gqloom/core
+```
+```sh [deno]
+deno add npm:graphql npm:@gqloom/core
+```
+:::
 
 </template>
 <template #TypeBox>
 
+<!--@include: ../snippets/install-typebox.md-->
+
 </template>
 <template #ArkType>
 
+::: code-group
+```sh [npm]
+npm i graphql @gqloom/core arktype @gqloom/json
+```
+```sh [pnpm]
+pnpm add graphql @gqloom/core arktype @gqloom/json
+```
+```sh [yarn]
+yarn add graphql @gqloom/core arktype @gqloom/json
+```
+```sh [bun]
+bun add graphql @gqloom/core arktype @gqloom/json
+```
+```sh [deno]
+deno add npm:graphql npm:@gqloom/core npm:arktype npm:@gqloom/json
+```
+:::
+
 </template>
 <template #Effect_Schema>
+
+::: code-group
+```sh [npm]
+npm i graphql @gqloom/core effect @gqloom/json
+```
+```sh [pnpm]
+pnpm add graphql @gqloom/core effect @gqloom/json
+```
+```sh [yarn]
+yarn add graphql @gqloom/core effect @gqloom/json
+```
+```sh [bun]
+bun add graphql @gqloom/core effect @gqloom/json
+```
+```sh [deno]
+deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
+```
+:::
 
 </template>
 </Tabs>
