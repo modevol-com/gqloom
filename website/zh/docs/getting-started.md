@@ -81,11 +81,17 @@ GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验�
 </template>
 <template #Valibot>
 
+<!--@include: ../snippets/install-valibot.md-->
+
 </template>
 <template #Zod>
 
+<!--@include: ../snippets/install-zod.md-->
+
 </template>
 <template #Yup>
+
+<!--@include: ../snippets/install-yup.md-->
 
 </template>
 <template #JSON_Schema>

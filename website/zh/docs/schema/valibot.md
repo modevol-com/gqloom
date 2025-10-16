@@ -6,20 +6,7 @@
 
 ## 安装
 
-::: code-group
-```sh [npm]
-npm i @gqloom/core valibot @gqloom/valibot
-```
-```sh [pnpm]
-pnpm add @gqloom/core valibot @gqloom/valibot
-```
-```sh [yarn]
-yarn add @gqloom/core valibot @gqloom/valibot
-```
-```sh [bun]
-bun add @gqloom/core valibot @gqloom/valibot
-```
-:::
+<!--@include: ../../snippets/install-valibot.md-->
 
 ## 定义简单标量
 
