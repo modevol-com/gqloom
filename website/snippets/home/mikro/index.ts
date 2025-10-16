@@ -4,7 +4,7 @@ import { weave } from "@gqloom/core"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
 import { MikroORM } from "@mikro-orm/libsql"
 import { createYoga } from "graphql-yoga"
-import { Post, User } from "src/entities"
+import { Post, User } from "./entities"
 
 const ormPromise = MikroORM.init({
   dbName: ":memory:",
@@ -30,3 +30,13 @@ const server = createServer(yoga)
 server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
+
+// ---cut-after---
+import fs from "node:fs"
+import path from "node:path"
+import { lexicographicSortSchema, printSchema } from "graphql"
+
+fs.writeFileSync(
+  path.join(import.meta.dirname, "schema.graphql"),
+  printSchema(lexicographicSortSchema(schema))
+)
