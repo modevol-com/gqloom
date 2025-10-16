@@ -4,12 +4,14 @@ import { weave } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { createYoga } from "graphql-yoga"
-import * as tables from "src/schema"
+import { Post, User } from "src/schema"
 
-const db = drizzle(process.env.DATABASE_URL!, { schema: tables })
+const db = drizzle(process.env.DATABASE_URL!, {
+  schema: { users: User, posts: Post },
+})
 
-const userResolver = drizzleResolverFactory(db, tables.users).resolver()
-const postResolver = drizzleResolverFactory(db, tables.posts).resolver()
+const userResolver = drizzleResolverFactory(db, User).resolver()
+const postResolver = drizzleResolverFactory(db, Post).resolver()
 
 const schema = weave(userResolver, postResolver)
 

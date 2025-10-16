@@ -1,37 +1,45 @@
 import { drizzleSilk } from "@gqloom/drizzle"
 import { relations } from "drizzle-orm"
-import * as t from "drizzle-orm/pg-core"
+import {
+  boolean,
+  integer,
+  pgEnum,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core"
 
-export const roleEnum = t.pgEnum("role", ["user", "admin"])
+export const roleEnum = pgEnum("role", ["user", "admin"])
 
-export const users = drizzleSilk(
-  t.pgTable("users", {
-    id: t.serial().primaryKey(),
-    createdAt: t.timestamp().defaultNow(),
-    email: t.text().unique().notNull(),
-    name: t.text(),
+export const User = drizzleSilk(
+  pgTable("users", {
+    id: serial().primaryKey(),
+    createdAt: timestamp().defaultNow(),
+    email: text().unique().notNull(),
+    name: text(),
     role: roleEnum().default("user"),
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
+export const usersRelations = relations(User, ({ many }) => ({
+  posts: many(Post),
 }))
 
-export const posts = drizzleSilk(
-  t.pgTable("posts", {
-    id: t.serial().primaryKey(),
-    createdAt: t.timestamp().defaultNow(),
-    updatedAt: t
-      .timestamp()
+export const Post = drizzleSilk(
+  pgTable("posts", {
+    id: serial().primaryKey(),
+    createdAt: timestamp().defaultNow(),
+    updatedAt: timestamp()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
-    published: t.boolean().default(false),
-    title: t.varchar({ length: 255 }).notNull(),
-    authorId: t.integer(),
+    published: boolean().default(false),
+    title: varchar({ length: 255 }).notNull(),
+    authorId: integer(),
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+export const postsRelations = relations(Post, ({ one }) => ({
+  author: one(User, { fields: [Post.authorId], references: [User.id] }),
 }))

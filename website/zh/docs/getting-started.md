@@ -169,22 +169,65 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 </template>
 </Tabs>
 
+此外，我们还需要选择一个[适配器](./advanced/adapters)来运行我们的 GraphQL 服务器。  
+这里我们选择 `graphql-yoga` 适配器。
+
+<!--@include: ../snippets/install-yoga.md-->
+
 ## 你好，世界
 
 <Tabs groupId="favorite-orm-and-validation-library">
 <template #MikroORM>
 
+在 GQLoom 中，使用 `MikroORM` 的最简单的方法是使用[解析器工厂](./schema/mikro-orm#解析器工厂)，只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
+
 <!--@include: @/snippets/home/mikro.md-->
+
+我们也可以使用 `MikroORM` 的实体建构解析器：
+
+<<< @/snippets/home/mikro/resolver.ts{ts twoslash}
 
 </template>
 <template #Drizzle>
 
+在 GQLoom 中，使用 `Drizzle` 的最简单的方法是使用[解析器工厂](./schema/drizzle#解析器工厂)，只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
+
 <!--@include: @/snippets/home/drizzle.md-->
+
+我们也可以使用 `Drizzle` 的表建构解析器：
+
+<<< @/snippets/home/drizzle/resolver.ts{ts twoslash}
 
 </template>
 <template #Prisma>
 
+在 GQLoom 中，使用 `Prisma` 的最简单的方法是使用[解析器工厂](./schema/prisma#解析器工厂)，只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
+
 <!--@include: @/snippets/home/prisma.md-->
+
+我们也可以使用 `Prisma` 的模型建构解析器：
+
+```ts
+import { field, query, resolver } from "@gqloom/core"
+import * as v from "valibot"
+import { Post, User } from "./generated/gqloom"
+
+export const userResolver = resolver.of(User, {
+  user: query(User.nullable())
+    .input({ id: v.number() })
+    .resolve(({ id }) => {
+      return db.user.findUnique({ where: { id } })
+    }),
+
+  posts: field(Post.list())
+    .derivedFrom("id")
+    .resolve(async (users) => {
+      return (
+        (await db.user.findUnique({ where: { id: users.id } }).posts()) ?? []
+      )
+    }),
+})
+```
 
 </template>
 <template #Valibot>
