@@ -66,11 +66,17 @@ GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验�
 <Tabs groupId="favorite-orm-and-validation-library">
 <template #MikroORM>
 
+<!--@include: ../snippets/install-mikro.md-->
+
 </template>
 <template #Drizzle>
 
+<!--@include: ../snippets/install-drizzle.md-->
+
 </template>
 <template #Prisma>
+
+<!--@include: ../snippets/install-prisma.md-->
 
 </template>
 <template #Valibot>

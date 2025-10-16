@@ -9,24 +9,7 @@
 
 ## 安装
 
-请参考 MikroORM 的[入门指南](https://mikro-orm.io/docs/quick-start)安装 MikroORM 与对应的数据库驱动。
-
-在完成 MikroORM 安装后，安装 `@gqloom/mikro-orm`：
-
-::: code-group
-```sh [npm]
-npm i @gqloom/core @gqloom/mikro-orm
-```
-```sh [pnpm]
-pnpm add @gqloom/core @gqloom/mikro-orm
-```
-```sh [yarn]
-yarn add @gqloom/core @gqloom/mikro-orm
-```
-```sh [bun]
-bun add @gqloom/core @gqloom/mikro-orm
-```
-:::
+<!--@include: ../../snippets/install-mikro.md-->
 
 ## 使用丝线
 

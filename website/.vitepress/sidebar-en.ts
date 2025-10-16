@@ -54,16 +54,16 @@ export default [
         link: "/docs/schema/yup",
       },
       {
+        text: "MikroORM",
+        link: "/docs/schema/mikro-orm",
+      },
+      {
         text: "Drizzle",
         link: "/docs/schema/drizzle",
       },
       {
         text: "Prisma",
         link: "/docs/schema/prisma",
-      },
-      {
-        text: "MikroORM",
-        link: "/docs/schema/mikro-orm",
       },
     ],
   },
