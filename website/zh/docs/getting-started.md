@@ -174,11 +174,17 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 <Tabs groupId="favorite-orm-and-validation-library">
 <template #MikroORM>
 
+<!--@include: @/snippets/home/mikro.md-->
+
 </template>
 <template #Drizzle>
 
+<!--@include: @/snippets/home/drizzle.md-->
+
 </template>
 <template #Prisma>
+
+<!--@include: @/snippets/home/prisma.md-->
 
 </template>
 <template #Valibot>

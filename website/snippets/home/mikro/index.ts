@@ -1,27 +1,20 @@
 // @paths: {"src/*": ["snippets/home/mikro/*"]}
 import { createServer } from "node:http"
 import { weave } from "@gqloom/core"
+import { createMemoization } from "@gqloom/core/context"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
 import { MikroORM } from "@mikro-orm/libsql"
 import { createYoga } from "graphql-yoga"
-import { Post, User } from "./entities"
+import { Post, User } from "src/entities"
 
 const ormPromise = MikroORM.init({
   dbName: ":memory:",
   entities: [User, Post],
 })
+const useEm = createMemoization(async () => (await ormPromise).em.fork())
 
-const userResolverFactory = new MikroResolverFactory(User, () =>
-  ormPromise.then((orm) => orm.em.fork())
-)
-
-const userResolver = userResolverFactory.resolver()
-
-const postResolverFactory = new MikroResolverFactory(Post, () =>
-  ormPromise.then((orm) => orm.em.fork())
-)
-
-const postResolver = postResolverFactory.resolver()
+const userResolver = new MikroResolverFactory(User, useEm).resolver()
+const postResolver = new MikroResolverFactory(Post, useEm).resolver()
 
 const schema = weave(userResolver, postResolver)
 
