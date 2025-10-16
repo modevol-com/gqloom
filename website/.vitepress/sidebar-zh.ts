@@ -6,8 +6,8 @@ export default [
     link: "/zh/docs/",
   },
   {
-    text: "入门指南",
-    link: "/zh/docs/guide",
+    text: "快速上手",
+    link: "/zh/docs/getting-started",
   },
   {
     text: "丝线（Silk）",

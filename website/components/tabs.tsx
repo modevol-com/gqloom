@@ -11,6 +11,7 @@ import {
   defineComponent,
   reactive,
   ref,
+  watch,
 } from "vue"
 
 export interface TabsProps {
@@ -44,6 +45,28 @@ export const Tabs = defineComponent({
     })
 
     const tabsRootRef = ref<ComponentPublicInstance | null>(null)
+    const tabsListRef = ref<HTMLElement | null>(null)
+    const tabTriggerRefs = new Map<string, HTMLElement>()
+
+    // Scroll the selected tab to 1/5 position from the left edge of the container
+    const scrollToCenter = (tabValue: string | number) => {
+      const container = tabsListRef.value
+      const triggerElement = tabTriggerRefs.get(String(tabValue))
+
+      if (!container || !triggerElement) return
+
+      const containerWidth = container.clientWidth
+      const triggerOffsetLeft = triggerElement.offsetLeft
+
+      // Calculate the scroll position to place the element's left edge at 1/5 of container width
+      const targetScrollLeft = triggerOffsetLeft - containerWidth / 5
+
+      container.scrollTo({
+        left: targetScrollLeft,
+        behavior: "smooth",
+      })
+    }
+
     const onUpdateModelValue = (value: string | number) => {
       // Record Tabs component position relative to viewport before switching
       const tabsComponent = tabsRootRef.value
@@ -64,23 +87,57 @@ export const Tabs = defineComponent({
         })
       }
 
-      modelValue.value = value
+      // Update modelValue (only update global state when groupId exists)
+      if (props.groupId) {
+        modelValue.value = value
+      }
+
+      // Scroll the selected tab to center
+      requestAnimationFrame(() => {
+        scrollToCenter(value)
+      })
     }
+
+    // Watch modelValue changes and auto-scroll when changed externally
+    watch(modelValue, (newValue) => {
+      if (newValue) {
+        requestAnimationFrame(() => {
+          scrollToCenter(newValue)
+        })
+      }
+    })
 
     return () => (
       <TabsRoot
         ref={tabsRootRef}
         defaultValue={props.groupId ? undefined : defaultValue.value}
         modelValue={modelValue.value}
-        onUpdate:modelValue={props.groupId ? onUpdateModelValue : undefined}
+        onUpdate:modelValue={onUpdateModelValue}
         class="mt-4"
       >
-        <TabsList class="vp-raw relative flex items-center gap-4 border-b border-b-slate-200 dark:border-b-slate-700">
+        <TabsList
+          ref={(el) => {
+            if (el) {
+              // TabsList might be a component, need to get its $el property
+              const element = (el as any).$el || el
+              tabsListRef.value = element as HTMLElement
+            }
+          }}
+          class="vp-raw relative flex items-center gap-4 border-b border-b-slate-200 dark:border-b-slate-700 overflow-x-auto overflow-y-hidden scrollbar-hide"
+        >
           {tabTitles.value.map((title) => (
             <TabsTrigger
               key={title}
               value={title}
-              class="cursor-pointer x-2 py-1 font-medium text-slate-500 data-[state=active]:text-pink-600 dark:text-slate-400 dark:data-[state=active]:text-rose-400"
+              ref={(el) => {
+                if (el) {
+                  const element = (el as any).$el as HTMLElement
+                  if (element) {
+                    tabTriggerRefs.set(title, element)
+                  }
+                }
+              }}
+              class="cursor-pointer px-2 py-1 font-medium text-slate-500 data-[state=active]:text-pink-600 dark:text-slate-400 dark:data-[state=active]:text-rose-400 whitespace-nowrap flex-shrink-0"
             >
               {title.replace(/_/g, " ")}
             </TabsTrigger>
