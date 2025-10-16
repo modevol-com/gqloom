@@ -7,6 +7,7 @@ import {
   type GraphQLSilk,
   getMemoizationMap,
   loom,
+  type MayPromise,
   type Middleware,
   MutationFactoryWithResolve,
   type MutationOptions,
@@ -46,19 +47,32 @@ export class PrismaResolverFactory<
   TClient extends PrismaClient,
 > {
   protected modelData: PrismaModelMeta
-  protected delegate: InferPrismaDelegate<TClient, TModelSilk["name"]>
   protected typeWeaver: PrismaActionArgsWeaver
 
   public constructor(
     protected readonly silk: TModelSilk,
-    protected readonly client: TClient
+    protected readonly client:
+      | MayPromise<TClient>
+      | ((payload: ResolverPayload | undefined) => MayPromise<TClient>)
   ) {
     this.modelData = silk.meta
-    this.delegate = PrismaResolverFactory.getDelegate(
-      silk.model.name,
-      client
-    ) as InferPrismaDelegate<TClient, TModelSilk["name"]>
     this.typeWeaver = new PrismaActionArgsWeaver(silk)
+  }
+
+  protected async getDelegate(
+    payload: ResolverPayload | undefined,
+    name: string = this.silk.model.name
+  ): Promise<InferPrismaDelegate<TClient, TModelSilk["name"]>> {
+    if (typeof this.client === "function") {
+      return PrismaResolverFactory.getDelegate(
+        name,
+        await this.client(payload)
+      ) as InferPrismaDelegate<TClient, TModelSilk["name"]>
+    }
+    return PrismaResolverFactory.getDelegate(
+      name,
+      await this.client
+    ) as InferPrismaDelegate<TClient, TModelSilk["name"]>
   }
 
   public relationField<TKey extends keyof NonNullable<TModelSilk["relations"]>>(
@@ -74,10 +88,7 @@ export class PrismaResolverFactory<
       )
 
     const targetModel = this.modelData.models[field.type]
-    const delegate = PrismaResolverFactory.getDelegate(
-      targetModel.name,
-      this.client
-    )
+
     let relationFromFields = field.relationFromFields
     let relationToFields = field.relationToFields
     if (relationFromFields?.length === 0) {
@@ -94,8 +105,7 @@ export class PrismaResolverFactory<
       field.relationName == null ||
       relationFromFields == null ||
       relationToFields == null ||
-      targetModel == null ||
-      delegate == null
+      targetModel == null
     )
       throw new Error(`Field ${String(key)} is not a relation`)
     const getKeyByReference = (item: any) => {
@@ -147,7 +157,10 @@ export class PrismaResolverFactory<
           const relationTo = Object.fromEntries(
             relationToFields.map((f) => [f, true])
           )
-
+          const delegate = await this.getDelegate(
+            inputs[0]?.[1],
+            targetModel.name
+          )
           const list = await (delegate as any).findMany({
             select: { ...select, ...relationTo },
             where,
@@ -171,7 +184,7 @@ export class PrismaResolverFactory<
     return new FieldFactoryWithResolve(output, {
       ...options,
       dependencies: relationFromFields,
-      resolve: (parent, _input, payload) => {
+      resolve: async (parent, _input, payload) => {
         const loader = (() => {
           if (!payload) return initLoader()
           const memoMap = getMemoizationMap(payload)
@@ -297,7 +310,8 @@ export class PrismaResolverFactory<
       {
         ...options,
         input,
-        resolve: (input) => this.delegate.count(input),
+        resolve: async (input, payload) =>
+          (await this.getDelegate(payload)).count(input),
       } as QueryOptions<any, any>
     )
   }
@@ -327,8 +341,8 @@ export class PrismaResolverFactory<
     return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.findFirst({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).findFirst({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -360,8 +374,8 @@ export class PrismaResolverFactory<
     return new QueryFactoryWithResolve(output.list(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.findMany({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).findMany({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -393,8 +407,8 @@ export class PrismaResolverFactory<
     return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.findUnique({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).findUnique({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -424,8 +438,8 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.create({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).create({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -457,7 +471,8 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input) => this.delegate.createMany(input),
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).createMany(input),
     } as MutationOptions<any, any>)
   }
 
@@ -488,7 +503,7 @@ export class PrismaResolverFactory<
         // we should return null if the row is not found
         // https://github.com/prisma/prisma/issues/4072
         try {
-          return await this.delegate.delete({
+          return await (await this.getDelegate(payload)).delete({
             select: getSelectedFields(this.silk, payload),
             ...input,
           })
@@ -522,8 +537,8 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: async (input) => {
-        return await this.delegate.deleteMany(input)
+      resolve: async (input, payload) => {
+        return (await this.getDelegate(payload)).deleteMany(input)
       },
     } as MutationOptions<any, any>)
   }
@@ -549,8 +564,8 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.update({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).update({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -581,7 +596,8 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input) => this.delegate.updateMany(input),
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).updateMany(input),
     } as MutationOptions<any, any>)
   }
 
@@ -606,7 +622,8 @@ export class PrismaResolverFactory<
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input) => this.delegate.upsert(input),
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).upsert(input),
     } as MutationOptions<any, any>)
   }
 
@@ -620,7 +637,6 @@ export class PrismaResolverFactory<
       lowerCase in client
         ? (client as PrismaClient & Record<string, unknown>)[lowerCase]
         : null
-
     if (!delegate) {
       throw new Error(`Unable to find delegate for model ${modelName}`)
     }

@@ -20,7 +20,6 @@ import {
 import * as z from "zod"
 import CREATE_TABLES from "../prisma/CREATE_TABLES.json"
 import {
-  type InferPrismaDelegate,
   type PrismaModelSilk,
   PrismaResolverFactory,
   type SelectiveModel,
@@ -44,10 +43,6 @@ class TestablePrismaModelResolverFactory<
   }
 
   public name?: TModelSilk["name"]
-
-  public get modelDelegate(): InferPrismaDelegate<TClient, TModelSilk["name"]> {
-    return this.delegate
-  }
 }
 
 describe("PrismaModelPrismaResolverFactory", () => {
@@ -123,7 +118,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("relationField", () => {
-    const UserBobbin = new PrismaResolverFactory(g.User, db)
+    const UserBobbin = new PrismaResolverFactory(g.User, async () => db)
     const PostBobbin = new PrismaResolverFactory(g.Post, db)
     const r1 = resolver.of(g.User, {
       users: query(g.User.list(), () => db.user.findMany()),
