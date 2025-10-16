@@ -4,6 +4,7 @@ import type {
   MayPromise,
   MutationFactoryWithResolve,
   QueryFactoryWithResolve,
+  ResolverPayload,
 } from "@gqloom/core"
 import type {
   Collection,
@@ -28,7 +29,9 @@ import type {
 } from "@mikro-orm/core"
 
 export interface MikroResolverFactoryOptions<TEntity extends object> {
-  getEntityManager: () => MayPromise<EntityManager>
+  getEntityManager: (
+    payload: ResolverPayload | undefined
+  ) => MayPromise<EntityManager>
   input?: MikroFactoryPropertyBehaviors<TEntity>
   metadata?: MetadataStorage
 }

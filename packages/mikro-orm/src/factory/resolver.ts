@@ -14,6 +14,7 @@ import {
   QueryFactoryWithResolve,
   type QueryOptions,
   type ResolverOptionsWithExtensions,
+  type ResolverPayload,
   type ResolvingFields,
   silk,
   weaverContext,
@@ -96,7 +97,7 @@ export class MikroResolverFactory<TEntity extends object> {
     protected readonly entityName: EntityName<TEntity>,
     optionsOrGetEntityManager:
       | MikroResolverFactoryOptions<TEntity>
-      | (() => MayPromise<EntityManager>)
+      | ((payload: ResolverPayload | undefined) => MayPromise<EntityManager>)
   ) {
     if (typeof optionsOrGetEntityManager === "function") {
       this.options = { getEntityManager: optionsOrGetEntityManager }
@@ -108,7 +109,7 @@ export class MikroResolverFactory<TEntity extends object> {
 
     this.flushMiddleware = async (next) => {
       const result = await next()
-      const em = await this.em()
+      const em = await this.em(next.payload)
       await em.flush()
       return result
     }
@@ -122,8 +123,8 @@ export class MikroResolverFactory<TEntity extends object> {
     return this.meta.name ?? this.meta.className
   }
 
-  protected em() {
-    return this.options.getEntityManager()
+  protected em(payload: ResolverPayload | undefined) {
+    return this.options.getEntityManager(payload)
   }
 
   protected getEntityMeta(entityName: EntityName<any>) {
@@ -242,8 +243,8 @@ export class MikroResolverFactory<TEntity extends object> {
     return new QueryFactoryWithResolve(silk(new GraphQLNonNull(GraphQLInt)), {
       input,
       ...options,
-      resolve: async (args: CountQueryOptions<TEntity>) => {
-        return (await this.em()).count(this.entityName, args.where, args)
+      resolve: async (args: CountQueryOptions<TEntity>, payload) => {
+        return (await this.em(payload)).count(this.entityName, args.where, args)
       },
     } as QueryOptions<any, any>)
   }
@@ -268,10 +269,14 @@ export class MikroResolverFactory<TEntity extends object> {
         input,
         ...options,
         resolve: async (args: FindQueryOptions<TEntity>, payload) => {
-          return (await this.em()).find(this.entityName, args.where ?? {}, {
-            fields: getSelectedFields(payload),
-            ...args,
-          })
+          return (await this.em(payload)).find(
+            this.entityName,
+            args.where ?? {},
+            {
+              fields: getSelectedFields(payload),
+              ...args,
+            }
+          )
         },
       } as QueryOptions<any, any>
     )
@@ -293,7 +298,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       ...options,
       resolve: async (args: FindQueryOptions<TEntity>, payload) => {
-        const [items, totalCount] = await (await this.em()).findAndCount(
+        const [items, totalCount] = await (await this.em(payload)).findAndCount(
           this.entityName,
           args.where ?? {},
           {
@@ -352,11 +357,15 @@ export class MikroResolverFactory<TEntity extends object> {
         const fields = Array.from(
           deepFields.get("items")?.selectedFields ?? ["*"]
         )
-        return (await this.em()).findByCursor(this.entityName, where ?? {}, {
-          fields,
-          includeCount,
-          ...args,
-        })
+        return (await this.em(payload)).findByCursor(
+          this.entityName,
+          where ?? {},
+          {
+            fields,
+            includeCount,
+            ...args,
+          }
+        )
       },
     } as QueryOptions<any, any>)
   }
@@ -398,7 +407,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       ...options,
       resolve: async (args: FindOneQueryOptions<TEntity>, payload) => {
-        const em = await this.em()
+        const em = await this.em(payload)
         return em.findOne(this.entityName, args.where, {
           fields: getSelectedFields(payload),
           ...args,
@@ -423,7 +432,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       ...options,
       resolve: async (args: FindOneQueryOptions<TEntity>, payload) => {
-        const em = await this.em()
+        const em = await this.em(payload)
         return em.findOneOrFail(this.entityName, args.where, {
           fields: getSelectedFields(payload),
           ...args,
@@ -449,8 +458,8 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args: CreateMutationOptions<any>) => {
-        const em = await this.em()
+      resolve: async (args: CreateMutationOptions<any>, payload) => {
+        const em = await this.em(payload)
         const instance = em.create(this.entityName, args.data)
         em.persist(instance)
         return instance
@@ -476,7 +485,7 @@ export class MikroResolverFactory<TEntity extends object> {
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
       resolve: async (args: InsertMutationOptions<any>, payload) => {
-        const em = await this.em()
+        const em = await this.em(payload)
         const key = await em.insert(this.entityName, args.data, args)
         return em.findOneOrFail(this.entityName, key, {
           fields: getSelectedFields(payload),
@@ -503,7 +512,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       ...options,
       resolve: async (args: InsertManyMutationOptions<any>, payload) => {
-        const em = await this.em()
+        const em = await this.em(payload)
         const keys = await em.insertMany(this.entityName, args.data, args)
         return em.find(this.entityName, keys as any, {
           fields: getSelectedFields(payload),
@@ -529,8 +538,8 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: async (args: DeleteMutationOptions<TEntity>) => {
-          const em = await this.em()
+        resolve: async (args: DeleteMutationOptions<TEntity>, payload) => {
+          const em = await this.em(payload)
           return em.nativeDelete(this.entityName, args.where, args)
         },
       } as MutationOptions<GraphQLSilk<number, number>, typeof input>
@@ -554,8 +563,8 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: async (args): Promise<number> => {
-          const em = await this.em()
+        resolve: async (args, payload): Promise<number> => {
+          const em = await this.em(payload)
           return em.nativeUpdate(this.entityName, args.where, args.data, args)
         },
       } as MutationOptions<GraphQLSilk<number, number>, typeof input>
@@ -578,8 +587,8 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: async (args: UpsertMutationOptions<TEntity>) => {
-          const em = await this.em()
+        resolve: async (args: UpsertMutationOptions<TEntity>, payload) => {
+          const em = await this.em(payload)
           return em.upsert(this.entityName, args.data, args)
         },
       } as MutationOptions<any, typeof input>
@@ -606,8 +615,8 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: async (args: UpsertManyMutationOptions<TEntity>) => {
-          const em = await this.em()
+        resolve: async (args: UpsertManyMutationOptions<TEntity>, payload) => {
+          const em = await this.em(payload)
           return em.upsertMany(this.entityName, args.data, args)
         },
       } as MutationOptions<any, typeof input>
