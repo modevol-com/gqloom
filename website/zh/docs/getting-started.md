@@ -64,6 +64,16 @@ deno init # 初始化项目
 GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验证库！
 
 <Tabs groupId="favorite-orm-and-validation-library">
+<template #Valibot>
+
+<!--@include: ../snippets/install-valibot.md-->
+
+</template>
+<template #Zod>
+
+<!--@include: ../snippets/install-zod.md-->
+
+</template>
 <template #MikroORM>
 
 <!--@include: ../snippets/install-mikro.md-->
@@ -77,16 +87,6 @@ GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验�
 <template #Prisma>
 
 <!--@include: ../snippets/install-prisma.md-->
-
-</template>
-<template #Valibot>
-
-<!--@include: ../snippets/install-valibot.md-->
-
-</template>
-<template #Zod>
-
-<!--@include: ../snippets/install-zod.md-->
 
 </template>
 <template #Yup>
@@ -177,9 +177,60 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 ## 你好，世界
 
 <Tabs groupId="favorite-orm-and-validation-library">
+<template #Valibot>
+
+```ts twoslash
+import { resolver, query, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+import { createYoga } from "graphql-yoga"
+import { createServer } from "node:http"
+import * as v from "valibot"
+
+const helloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello, ${name}!`),
+})
+
+const schema = weave(ValibotWeaver, helloResolver)
+
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</template>
+<template #Zod>
+
+```ts twoslash
+import { resolver, query, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import { createYoga } from "graphql-yoga"
+import { createServer } from "node:http"
+import * as z from "zod"
+
+const helloResolver = resolver({
+  hello: query(z.string())
+    .input({ name: z.string().nullish().transform((value) => value ?? "World") })
+    .resolve(({ name }) => `Hello, ${name}!`),
+})
+
+const schema = weave(ZodWeaver, helloResolver)
+
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
+</template>
 <template #MikroORM>
 
-在 GQLoom 中，使用 `MikroORM` 的最简单的方法是使用[解析器工厂](./schema/mikro-orm#解析器工厂)，只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
+在 GQLoom 中，使用 `MikroORM` 的最简单的方法是使用[解析器工厂](./schema/mikro-orm#解析器工厂)，  
+只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
 
 <!--@include: @/snippets/home/mikro.md-->
 
@@ -190,7 +241,8 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 </template>
 <template #Drizzle>
 
-在 GQLoom 中，使用 `Drizzle` 的最简单的方法是使用[解析器工厂](./schema/drizzle#解析器工厂)，只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
+在 GQLoom 中，使用 `Drizzle` 的最简单的方法是使用[解析器工厂](./schema/drizzle#解析器工厂)，  
+只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
 
 <!--@include: @/snippets/home/drizzle.md-->
 
@@ -201,7 +253,8 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 </template>
 <template #Prisma>
 
-在 GQLoom 中，使用 `Prisma` 的最简单的方法是使用[解析器工厂](./schema/prisma#解析器工厂)，只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
+在 GQLoom 中，使用 `Prisma` 的最简单的方法是使用[解析器工厂](./schema/prisma#解析器工厂)，  
+只需要几行代码就可以创建包含完整增删改查功能的 GraphQL 应用：
 
 <!--@include: @/snippets/home/prisma.md-->
 
@@ -230,19 +283,77 @@ export const userResolver = resolver.of(User, {
 ```
 
 </template>
-<template #Valibot>
-
-</template>
-<template #Zod>
-
-</template>
 <template #Yup>
+
+```ts twoslash
+import { resolver, query, weave } from "@gqloom/core"
+import { YupWeaver } from "@gqloom/yup"
+import { createYoga } from "graphql-yoga"
+import { createServer } from "node:http"
+import { string } from "yup"
+
+const helloResolver = resolver({
+  hello: query(string().required())
+    .input({ name: string().default("World") })
+    .resolve(({ name }) => `Hello, ${name}!`),
+})
+
+const schema = weave(YupWeaver, helloResolver)
+
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
 
 </template>
 <template #JSON_Schema>
 
+```ts twoslash
+import { resolver, query, weave } from "@gqloom/core"
+import { jsonSilk } from "@gqloom/json"
+import { createYoga } from "graphql-yoga"
+import { createServer } from "node:http"
+
+const helloResolver = resolver({
+  hello: query(jsonSilk({ type: "string" }))
+    .input({ name: jsonSilk({ type: "string" }) })
+    .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
+})
+
+const schema = weave(helloResolver)
+
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
+
 </template>
 <template #graphql.js>
+
+```ts twoslash
+import { resolver, query, weave, silk } from "@gqloom/core"
+import { createYoga } from "graphql-yoga"
+import { createServer } from "node:http"
+import { GraphQLNonNull, GraphQLString } from "graphql"
+
+const helloResolver = resolver({
+  hello: query(silk(new GraphQLNonNull(GraphQLString)))
+    .input({ name: silk(GraphQLString) })
+    .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
+})
+
+const schema = weave(helloResolver)
+
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})
+```
 
 </template>
 <template #TypeBox>
