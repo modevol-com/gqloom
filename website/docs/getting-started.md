@@ -169,7 +169,7 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 </template>
 </Tabs>
 
-In addition, we need to choose an [adapter](./advanced/adapters) to run our GraphQL server.  
+In addition, we need to choose an [adapter](./advanced/adapters/) to run our GraphQL server.  
 Here we choose the [graphql-yoga](https://the-guild.dev/graphql/yoga-server) adapter.
 
 <!--@include: ../snippets/install-yoga.md-->
