@@ -310,59 +310,27 @@ server.listen(4000, () => {
 </template>
 <template #JSON_Schema>
 
-```ts twoslash
-import { resolver, query, weave } from "@gqloom/core"
-import { jsonSilk } from "@gqloom/json"
-import { createYoga } from "graphql-yoga"
-import { createServer } from "node:http"
-
-const helloResolver = resolver({
-  hello: query(jsonSilk({ type: "string" }))
-    .input({ name: jsonSilk({ type: "string" }) })
-    .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
-})
-
-const schema = weave(helloResolver)
-
-const yoga = createYoga({ schema })
-const server = createServer(yoga)
-server.listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql")
-})
-```
+<<< @/snippets/code/hello-json.ts{ts twoslash}
 
 </template>
 <template #graphql.js>
 
-```ts twoslash
-import { resolver, query, weave, silk } from "@gqloom/core"
-import { createYoga } from "graphql-yoga"
-import { createServer } from "node:http"
-import { GraphQLNonNull, GraphQLString } from "graphql"
-
-const helloResolver = resolver({
-  hello: query(silk(new GraphQLNonNull(GraphQLString)))
-    .input({ name: silk(GraphQLString) })
-    .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
-})
-
-const schema = weave(helloResolver)
-
-const yoga = createYoga({ schema })
-const server = createServer(yoga)
-server.listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql")
-})
-```
+<<< @/snippets/code/hello-graphql-js.ts{ts twoslash}
 
 </template>
 <template #TypeBox>
 
+<<< @/snippets/code/hello-typebox.ts{ts twoslash}
+
 </template>
 <template #ArkType>
 
+<<< @/snippets/code/hello-arktype.ts{ts twoslash}
+
 </template>
 <template #Effect_Schema>
+
+<<< @/snippets/code/hello-effect.ts{ts twoslash}
 
 </template>
 </Tabs>
