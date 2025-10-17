@@ -131,6 +131,9 @@ export class PrismaResolverFactory<
             relationFromFields.length,
             relationToFields.length
           )
+          if (length === 0) {
+            return inputs.map(() => (field.isList ? [] : null))
+          }
           const where = (() => {
             if (length === 1) {
               const field = relationToFields[0]

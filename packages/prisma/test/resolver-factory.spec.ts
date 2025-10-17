@@ -192,6 +192,54 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
     })
 
+    it("should handle many-to-many relations with empty relationFromFields/relationToFields", { retry: 6 }, async () => {
+      const PostWithCategoriesBobbin = new PrismaResolverFactory(g.Post, db)
+      const CategoryBobbin = new PrismaResolverFactory(g.Category, db)
+
+      const r3 = resolver.of(g.Post, {
+        posts: query(g.Post.list(), () => db.post.findMany()),
+        categories: PostWithCategoriesBobbin.relationField("categories"),
+      })
+
+      const r4 = resolver.of(g.Category, {
+        categories: query(g.Category.list(), () => db.category.findMany()),
+        posts: CategoryBobbin.relationField("posts"),
+      })
+
+      const testSchema = weave(r3, r4)
+      const testYoga = createYoga({ schema: testSchema })
+
+      const response = await testYoga.fetch("http://localhost/graphql", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              posts {
+                title
+                categories {
+                  id
+                }
+              }
+            }
+          `,
+        }),
+      })
+
+      if (response.status !== 200) throw new Error("unexpected")
+      const json = await response.json()
+      expect(json.data.posts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            title: expect.any(String),
+            categories: [],
+          }),
+        ])
+      )
+    })
+
     it("should be able to create a relationField", async () => {
       const postsField = UserBobbin.relationField("posts")
       expect(postsField).toBeDefined()
