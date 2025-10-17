@@ -6,8 +6,8 @@ export default [
     link: "/docs/",
   },
   {
-    text: "Guide",
-    link: "/docs/guide",
+    text: "Getting Started",
+    link: "/docs/getting-started",
   },
   {
     text: "Silk",

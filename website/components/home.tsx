@@ -270,12 +270,12 @@ const Hero = defineComponent({
       if (lang.value === "zh")
         return {
           star: "在 GitHub 点亮繁星",
-          start: "入门指南",
+          start: "快速上手",
           description: "愉快且高效地建构 GraphQL 服务",
         }
       return {
         star: "Star on GitHub",
-        start: "Guide",
+        start: "Getting Started",
         description: "Build GraphQL server enjoyably and efficiently",
       }
     })
@@ -311,7 +311,7 @@ const Hero = defineComponent({
               {texts.value.star}
             </a>
             <a
-              href="./docs/guide.html"
+              href="./docs/getting-started.html"
               class="no-underline hover:scale-105 ease-out text-nowrap transition duration-300 !text-white px-6 py-3 flex items-center font-medium bg-gradient-to-r to-pink-600 from-orange-400 rounded-full hover:to-pink-500 hover:from-amber-300"
             >
               <span>{texts.value.start}</span>
