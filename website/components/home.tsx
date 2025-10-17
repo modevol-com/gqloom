@@ -93,7 +93,7 @@ const HomeFeatures = defineComponent({
 const supportedORM = ["MikroORM", "Drizzle", "Prisma"] as const
 type SupportedORM = (typeof supportedORM)[number]
 
-export const ormTab = ref<SupportedORM>("Drizzle")
+export const ormTab = ref<SupportedORM>("MikroORM")
 
 const OrmTabs = defineComponent({
   name: "OrmTabs",
