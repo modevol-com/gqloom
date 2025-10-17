@@ -66,12 +66,12 @@ GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验�
 <Tabs groupId="favorite-orm-and-validation-library">
 <template #Valibot>
 
-<!--@include: ../snippets/install-valibot.md-->
+<!--@include: @/snippets/install-valibot.md-->
 
 </template>
 <template #Zod>
 
-<!--@include: ../snippets/install-zod.md-->
+<!--@include: @/snippets/install-zod.md-->
 
 </template>
 <template #MikroORM>
@@ -91,12 +91,12 @@ GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验�
 </template>
 <template #Yup>
 
-<!--@include: ../snippets/install-yup.md-->
+<!--@include: @/snippets/install-yup.md-->
 
 </template>
 <template #JSON_Schema>
 
-<!--@include: ../snippets/install-json-schema.md-->
+<!--@include: @/snippets/install-json-schema.md-->
 
 </template>
 <template #graphql.js>
@@ -122,7 +122,7 @@ deno add npm:graphql npm:@gqloom/core
 </template>
 <template #TypeBox>
 
-<!--@include: ../snippets/install-typebox.md-->
+<!--@include: @/snippets/install-typebox.md-->
 
 </template>
 <template #ArkType>
