@@ -16,9 +16,6 @@ function useRedirect() {
     if (targetPath.startsWith("en")) {
       targetPath = targetPath.replace("en", "")
     }
-    if (targetPath.includes("/getting-started")) {
-      targetPath = targetPath.replace("/getting-started", "/guide")
-    }
     const suffixRegex = /\.(md|html)$/
     while (suffixRegex.test(targetPath)) {
       targetPath = targetPath.replace(suffixRegex, "")
