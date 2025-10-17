@@ -16,7 +16,7 @@ deno add npm:graphql npm:@gqloom/core npm:yup npm:@gqloom/yup
 ```
 :::
 
-Additionally, we need to declare GQLoom metadata for Yup in the project:
+另外，我们还需要在项目中为 Yup 声明来自 GQLoom 的元数据：
 
 ```ts [yup.d.ts]
 import 'yup'

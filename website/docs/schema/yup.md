@@ -8,20 +8,7 @@ Yup schema are extremely expressive and allow modeling complex, interdependent v
 
 ## Installation
 
-::: code-group
-```sh [npm]
-npm i @gqloom/core yup @gqloom/yup
-```
-```sh [pnpm]
-pnpm add @gqloom/core yup @gqloom/yup
-```
-```sh [yarn]
-yarn add @gqloom/core yup @gqloom/yup
-```
-```sh [bun]
-bun add @gqloom/core yup @gqloom/yup
-```
-:::
+<!--@include: ../../snippets/install-yup.md-->
 
 Also, we need to declare metadata from GQLoom for Yup in the project:
 

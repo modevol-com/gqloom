@@ -9,24 +9,7 @@
 
 ## Installation
 
-Please refer to MikroORM's [Getting Started guide](https://mikro-orm.io/docs/quick-start) to install MikroORM and the corresponding database drivers.
-
-After installing MikroORM, install `@gqloom/mikro-orm`:
-
-::: code-group
-```sh [npm]
-npm i @gqloom/core @gqloom/mikro-orm
-```
-```sh [pnpm]
-pnpm add @gqloom/core @gqloom/mikro-orm
-```
-```sh [yarn]
-yarn add @gqloom/core @gqloom/mikro-orm
-```
-```sh [bun]
-bun add @gqloom/core @gqloom/mikro-orm
-```
-:::
+<!--@include: ../../snippets/install-mikro.md-->
 
 ## Using Silks
 

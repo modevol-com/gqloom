@@ -9,26 +9,7 @@
 
 ## Installation
 
-::: code-group
-```sh [npm]
-npm i -D prisma
-npm i @gqloom/core @gqloom/prisma
-```
-```sh [pnpm]
-pnpm add -D prisma
-pnpm add @gqloom/core @gqloom/prisma
-```
-```sh [yarn]
-yarn add -D prisma
-yarn add @gqloom/core @gqloom/prisma
-```
-```sh [bun]
-bun add -D prisma
-bun add @gqloom/core @gqloom/prisma
-```
-:::
-
-You can find more information about installation in the [Prisma documentation](https://www.prisma.io/docs/getting-started/quickstart).
+<!--@include: ../../snippets/install-prisma.md-->
 
 ## Configuration
 

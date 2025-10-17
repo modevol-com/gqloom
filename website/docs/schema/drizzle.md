@@ -12,52 +12,7 @@ import { Tabs } from '@/components/tabs'
 
 ## Installation
 
-<Tabs groupId="drizzle-api-version">
-<template #Relational_API_v2>
-
-Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
-
-After installing Drizzle, install `@gqloom/drizzle`:
-
-::: code-group
-```sh [npm]
-npm i @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
-```
-```sh [pnpm]
-pnpm add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
-```
-```sh [yarn]
-yarn add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
-```
-```sh [bun]
-bun add @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
-```
-:::
-
-</template>
-<template #Relational_API_v1>
-
-Please refer to Drizzle's [Getting Started Guide](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started) to install Drizzle and its corresponding database integration.
-
-After installing Drizzle, install `@gqloom/drizzle`:
-
-::: code-group
-```sh [npm]
-npm i @gqloom/core @gqloom/drizzle
-```
-```sh [pnpm]
-pnpm add @gqloom/core @gqloom/drizzle
-```
-```sh [yarn]
-yarn add @gqloom/core @gqloom/drizzle
-```
-```sh [bun]
-bun add @gqloom/core @gqloom/drizzle
-```
-:::
-
-</template>
-</Tabs>
+<!--@include: ../../snippets/install-drizzle.md-->
 
 ## Using Silk
 

@@ -14,38 +14,12 @@ We can use JSON Schema directly in our project, or use [typebox](https://sinclai
 <Tabs groupId="json-schema-builder">
 <template #JSON_Schema>
 
-::: code-group
-```sh [npm]
-npm i @gqloom/core @gqloom/json
-```
-```sh [pnpm]
-pnpm add @gqloom/core @gqloom/json
-```
-```sh [yarn]
-yarn add @gqloom/core @gqloom/json
-```
-```sh [bun]
-bun add @gqloom/core @gqloom/json
-```
-:::
+<!--@include: @/snippets/install-json-schema.md-->
 
 </template>
 <template #TypeBox>
 
-::: code-group
-```sh [npm]
-npm i @gqloom/core typebox @gqloom/json
-```
-```sh [pnpm]
-pnpm add @gqloom/core typebox @gqloom/json
-```
-```sh [yarn]
-yarn add @gqloom/core typebox @gqloom/json
-```
-```sh [bun]
-bun add @gqloom/core typebox @gqloom/json
-```
-:::
+<!--@include: @/snippets/install-typebox.md-->
 
 </template>
 </Tabs>

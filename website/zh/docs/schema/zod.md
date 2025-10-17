@@ -12,7 +12,7 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 ## 安装
 
-<!--@include: ../../snippets/install-zod.md-->
+<!--@include: @/snippets/install-zod.md-->
 
 ## 定义简单标量
 

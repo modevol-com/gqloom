@@ -12,20 +12,7 @@ Zod is designed to be as developer-friendly as possible. The goal is to eliminat
 
 ## Installation
 
-::: code-group
-```sh [npm]
-npm i @gqloom/core zod @gqloom/zod
-```
-```sh [pnpm]
-pnpm add @gqloom/core zod @gqloom/zod
-```
-```sh [yarn]
-yarn add @gqloom/core zod @gqloom/zod
-```
-```sh [bun]
-bun add @gqloom/core zod @gqloom/zod
-```
-:::
+<!--@include: @/snippets/install-zod.md-->
 
 ## Defining simple scalars
 

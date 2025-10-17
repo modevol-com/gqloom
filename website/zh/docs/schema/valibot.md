@@ -6,7 +6,7 @@
 
 ## 安装
 
-<!--@include: ../../snippets/install-valibot.md-->
+<!--@include: @/snippets/install-valibot.md-->
 
 ## 定义简单标量
 

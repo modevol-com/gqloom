@@ -14,12 +14,12 @@ import { Tabs } from '@/components/tabs'
 <Tabs groupId="json-schema-builder">
 <template #JSON_Schema>
 
-<!--@include: ../../snippets/install-json-schema.md-->
+<!--@include: @/snippets/install-json-schema.md-->
 
 </template>
 <template #TypeBox>
 
-<!--@include: ../../snippets/install-typebox.md-->
+<!--@include: @/snippets/install-typebox.md-->
 
 </template>
 </Tabs>
