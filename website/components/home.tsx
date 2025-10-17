@@ -90,7 +90,7 @@ const HomeFeatures = defineComponent({
   },
 })
 
-const supportedORM = ["Drizzle", "MikroORM", "Prisma"] as const
+const supportedORM = ["MikroORM", "Drizzle", "Prisma"] as const
 type SupportedORM = (typeof supportedORM)[number]
 
 export const ormTab = ref<SupportedORM>("Drizzle")
@@ -155,9 +155,9 @@ const HomeOrmLibrary = defineComponent({
 
     const url = computed(() => {
       const ormPage = {
+        MikroORM: "mikro-orm",
         Drizzle: "drizzle",
         Prisma: "prisma",
-        MikroORM: "mikro-orm",
       }[ormTab.value]
       const hash = lang.value === "zh" ? "#解析器工厂" : "#resolver-factory"
       return `./docs/schema/${ormPage}${hash}`
@@ -351,12 +351,12 @@ export const Home = defineComponent({
             schemaGraphQl: () => slots.schemaGraphQl?.(),
           }}
         </HomeSchemaLibrary>
-        <HomeFeatures class="mt-24 lg:mt-32" />
         <HomeOrmLibrary class="mt-24 lg:mt-32">
           {{
             orm: () => slots.orm?.(),
           }}
         </HomeOrmLibrary>
+        <HomeFeatures class="mt-24 lg:mt-32" />
         <GraphQLIntro class="mt-24 lg:mt-32" />
         <div class="mt-24" />
       </main>

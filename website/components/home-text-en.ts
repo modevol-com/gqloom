@@ -108,11 +108,11 @@ export const gqlHighlights: IHighlight[] = [
 ]
 
 export const ormIntro = {
-  title: "CRUD interfaces are ready for activation",
+  title: "Build Complete CRUD Interfaces Instantly",
   descriptions: [
-    "Like a skilled weaver, embed precisely defined database tables seamlessly into the GraphQL Schema.",
-    "With just a few lines of code, easily build a CRUD system and enjoy ORM's convenience.",
-    "Both resolvers and single operations can be customized with inputs and middleware to meet diverse needs.",
-    "Using a flexible approach, freely combine resolvers and add operations to the graph for endless potential.",
+    "Deep integration with multiple ORMs, using existing database table definitions as threads without needing to redefine GraphQL types;",
+    "Build fully functional GraphQL interfaces in minutes: relational queries, create, delete, and update operations;",
+    "Easily extend interfaces: freely modify input or output types for each interface, add custom middleware and logic;",
+    "Seamless integration with various validation libraries, using your most familiar validation library to validate input data and extend interfaces;",
   ],
 }
