@@ -170,7 +170,7 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 </Tabs>
 
 此外，我们还需要选择一个[适配器](./advanced/adapters)来运行我们的 GraphQL 服务器。  
-这里我们选择 `graphql-yoga` 适配器。
+这里我们选择 [graphql-yoga](https://the-guild.dev/graphql/yoga-server) 适配器。
 
 <!--@include: ../snippets/install-yoga.md-->
 
@@ -274,3 +274,9 @@ export const userResolver = resolver.of(User, {
 
 </template>
 </Tabs>
+
+## 下一步
+
+- 查看 GQLoom 的核心概念：[丝线](./silk)、[解析器](./resolver)、[编织](./weave)；
+- 了解常用功能：[上下文](./context)、[DataLoader](./dataloader)、[中间件](./middleware)
+- 为前端项目添加 GraphQL 客户端：[gql.tada](https://gql-tada.0no.co/)、[Urql](https://commerce.nearform.com/open-source/urql/)、[Apollo Client](https://www.apollographql.com/docs/react)、[TanStack Query](https://tanstack.com/query/latest/docs/framework/react/graphql)、[Graffle](https://graffle.js.org/)
