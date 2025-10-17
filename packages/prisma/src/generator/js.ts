@@ -18,7 +18,7 @@ export function genJSFile(
   }
 
   if (config.esm) {
-    lines.push(`import mm from "./model-meta.json"`)
+    lines.push(`import mm from "./model-meta.json" with { type: "json" }`)
   } else {
     lines.push(`const mm = require("./model-meta.json")`)
   }

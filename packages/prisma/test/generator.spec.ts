@@ -77,7 +77,7 @@ describe("generator", () => {
       const result = genJSFile(mockDMMF, config)
       expect(result).toMatchInlineSnapshot(`
         "import { PrismaWeaver } from "@gqloom/prisma"
-        import mm from "./model-meta.json"
+        import mm from "./model-meta.json" with { type: "json" }
 
         const User = PrismaWeaver.unravel(mm.models.User, mm)
 
