@@ -1,6 +1,3 @@
----
-icon: RadioTower
----
 <script setup>
 import { Tabs } from "@/components/tabs.tsx"
 </script>

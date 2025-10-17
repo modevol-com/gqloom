@@ -1,6 +1,3 @@
----
-icon: HardDriveDownload
----
 # 数据加载器（Dataloader）
 
 由于 GraphQL 的灵活性，当我们加载某个对象的关联对象时，我们通常需要执行多个查询。

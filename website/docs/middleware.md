@@ -1,6 +1,3 @@
----
-icon: Fence
----
 # Middleware
 
 Middleware is a function that intervenes in the processing flow of a parsed function. It provides a way to insert logic into the request and response flow to execute code before a response is sent or before a request is processed.

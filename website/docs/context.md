@@ -1,7 +1,3 @@
----
-icon: Shuffle
----
-
 # Context
 
 In the Node.js world, Context allows us to share data and state within the same request. In GraphQL, contexts allow data to be shared between multiple [resolver functions](./resolver) and [middleware](./middleware) for the same request.

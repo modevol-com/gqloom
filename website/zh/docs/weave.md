@@ -1,6 +1,3 @@
----
-icon: Waves
----
 # 编织（Weave）
 
 在 GQLoom 中，`weave` 函数用于将多个解析器（Resolver）或丝线（Silk）编织到一张 GraphQL Schema 中。
