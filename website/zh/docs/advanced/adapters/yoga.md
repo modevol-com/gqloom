@@ -6,20 +6,7 @@
 
 ## 安装
 
-::: code-group
-```sh [npm]
-npm i graphql graphql-yoga @gqloom/core
-```
-```sh [pnpm]
-pnpm add graphql graphql-yoga @gqloom/core
-```
-```sh [yarn]
-yarn add graphql graphql-yoga @gqloom/core
-```
-```sh [bun]
-bun add graphql graphql-yoga @gqloom/core
-```
-:::
+<!--@include: ../../snippets/install-yoga.md-->
 
 ## 使用
 

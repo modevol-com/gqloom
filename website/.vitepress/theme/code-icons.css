@@ -161,3 +161,10 @@ html.dark [data-title="pnpm"] {
     --icon: url('https://api.iconify.design/vscode-icons/file-type-bun.svg');
   }
 }
+
+[data-title="deno"] {
+  &:before {
+    content: "";
+    --icon: url('https://api.iconify.design/vscode-icons/file-type-deno.svg');
+  }
+}

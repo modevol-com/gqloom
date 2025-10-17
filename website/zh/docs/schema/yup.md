@@ -8,31 +8,7 @@ Yup 模式具有极强的表现力，可对复杂、相互依赖的验证或值�
 
 ## 安装
 
-::: code-group
-```sh [npm]
-npm i @gqloom/core yup @gqloom/yup
-```
-```sh [pnpm]
-pnpm add @gqloom/core yup @gqloom/yup
-```
-```sh [yarn]
-yarn add @gqloom/core yup @gqloom/yup
-```
-```sh [bun]
-bun add @gqloom/core yup @gqloom/yup
-```
-:::
-
-另外，我们还需要在项目中为 Yup 声明来自 GQLoom 的元数据：
-
-```ts [yup.d.ts]
-import 'yup'
-import { type GQLoomMetadata } from "@gqloom/yup"
-
-declare module "yup" {
-  export interface CustomSchemaMetadata extends GQLoomMetadata {}
-}
-```
+<!--@include: ../../snippets/install-yup.md-->
 
 ## 定义简单标量
 

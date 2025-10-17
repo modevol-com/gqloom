@@ -178,6 +178,20 @@ type PostCursor {
 }
 
 input PostFilter {
+  """
+  Joins query clauses with a logical AND returns all documents that match the conditions of both clauses.
+  """
+  AND: [PostFilter!]
+
+  """
+  Inverts the effect of a query expression and returns documents that do not match the query expression.
+  """
+  NOT: PostFilter
+
+  """
+  Joins query clauses with a logical OR returns all documents that match the conditions of either clause.
+  """
+  OR: [PostFilter!]
   createdAt: StringComparisonOperators
   id: IDComparisonOperators
   published: BooleanComparisonOperators
@@ -194,6 +208,7 @@ input PostOrderBy {
 }
 
 input PostPartialInput {
+  author: ID
   createdAt: String
   id: ID
   published: Boolean
@@ -202,11 +217,12 @@ input PostPartialInput {
 }
 
 input PostRequiredInput {
-  createdAt: String!
+  author: ID!
+  createdAt: String
   id: ID
-  published: Boolean!
+  published: Boolean
   title: String!
-  updatedAt: String!
+  updatedAt: String
 }
 
 type Query {
@@ -360,6 +376,20 @@ type UserCursor {
 }
 
 input UserFilter {
+  """
+  Joins query clauses with a logical AND returns all documents that match the conditions of both clauses.
+  """
+  AND: [UserFilter!]
+
+  """
+  Inverts the effect of a query expression and returns documents that do not match the query expression.
+  """
+  NOT: UserFilter
+
+  """
+  Joins query clauses with a logical OR returns all documents that match the conditions of either clause.
+  """
+  OR: [UserFilter!]
   createdAt: StringComparisonOperators
   email: StringComparisonOperators
   id: IDComparisonOperators
@@ -380,13 +410,15 @@ input UserPartialInput {
   email: String
   id: ID
   name: String
+  posts: [ID]
   role: String
 }
 
 input UserRequiredInput {
-  createdAt: String!
+  createdAt: String
   email: String!
   id: ID
   name: String!
+  posts: [ID]
   role: String
 }

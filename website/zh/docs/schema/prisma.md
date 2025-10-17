@@ -9,24 +9,7 @@
 
 ## 安装
 
-::: code-group
-```sh [npm]
-npm i -D prisma
-npm i @gqloom/core @gqloom/prisma
-```
-```sh [pnpm]
-pnpm add -D prisma
-pnpm add @gqloom/core @gqloom/prisma
-```
-```sh [yarn]
-yarn add -D prisma
-yarn add @gqloom/core @gqloom/prisma
-```
-```sh [bun]
-bun add -D prisma
-bun add @gqloom/core @gqloom/prisma
-```
-:::
+<!--@include: ../../snippets/install-prisma.md-->
 
 在 [Prisma 文档](https://www.prisma.io/docs/getting-started/quickstart)中，你可以找到更多关于安装的信息。
 

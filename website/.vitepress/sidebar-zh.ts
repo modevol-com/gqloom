@@ -6,8 +6,8 @@ export default [
     link: "/zh/docs/",
   },
   {
-    text: "入门指南",
-    link: "/zh/docs/guide",
+    text: "快速上手",
+    link: "/zh/docs/getting-started",
   },
   {
     text: "丝线（Silk）",
@@ -54,16 +54,16 @@ export default [
         link: "/zh/docs/schema/yup",
       },
       {
+        text: "MikroORM",
+        link: "/zh/docs/schema/mikro-orm",
+      },
+      {
         text: "Drizzle",
         link: "/zh/docs/schema/drizzle",
       },
       {
         text: "Prisma",
         link: "/zh/docs/schema/prisma",
-      },
-      {
-        text: "MikroORM",
-        link: "/zh/docs/schema/mikro-orm",
       },
     ],
   },

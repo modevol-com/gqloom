@@ -12,20 +12,7 @@ Zod 的设计尽可能方便开发人员使用。我们的目标是消除重复�
 
 ## 安装
 
-::: code-group
-```sh [npm]
-npm i @gqloom/core zod @gqloom/zod
-```
-```sh [pnpm]
-pnpm add @gqloom/core zod @gqloom/zod
-```
-```sh [yarn]
-yarn add @gqloom/core zod @gqloom/zod
-```
-```sh [bun]
-bun add @gqloom/core zod @gqloom/zod
-```
-:::
+<!--@include: ../../snippets/install-zod.md-->
 
 ## 定义简单标量
 

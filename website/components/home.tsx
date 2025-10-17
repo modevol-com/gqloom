@@ -90,7 +90,7 @@ const HomeFeatures = defineComponent({
   },
 })
 
-const supportedORM = ["Drizzle", "MikroORM", "Prisma"] as const
+const supportedORM = ["MikroORM", "Drizzle", "Prisma"] as const
 type SupportedORM = (typeof supportedORM)[number]
 
 export const ormTab = ref<SupportedORM>("Drizzle")
@@ -155,9 +155,9 @@ const HomeOrmLibrary = defineComponent({
 
     const url = computed(() => {
       const ormPage = {
+        MikroORM: "mikro-orm",
         Drizzle: "drizzle",
         Prisma: "prisma",
-        MikroORM: "mikro-orm",
       }[ormTab.value]
       const hash = lang.value === "zh" ? "#解析器工厂" : "#resolver-factory"
       return `./docs/schema/${ormPage}${hash}`
@@ -270,12 +270,12 @@ const Hero = defineComponent({
       if (lang.value === "zh")
         return {
           star: "在 GitHub 点亮繁星",
-          start: "入门指南",
+          start: "快速上手",
           description: "愉快且高效地建构 GraphQL 服务",
         }
       return {
         star: "Star on GitHub",
-        start: "Guide",
+        start: "Getting Started",
         description: "Build GraphQL server enjoyably and efficiently",
       }
     })
@@ -311,7 +311,7 @@ const Hero = defineComponent({
               {texts.value.star}
             </a>
             <a
-              href="./docs/guide.html"
+              href="./docs/getting-started.html"
               class="no-underline hover:scale-105 ease-out text-nowrap transition duration-300 !text-white px-6 py-3 flex items-center font-medium bg-gradient-to-r to-pink-600 from-orange-400 rounded-full hover:to-pink-500 hover:from-amber-300"
             >
               <span>{texts.value.start}</span>
@@ -351,12 +351,12 @@ export const Home = defineComponent({
             schemaGraphQl: () => slots.schemaGraphQl?.(),
           }}
         </HomeSchemaLibrary>
-        <HomeFeatures class="mt-24 lg:mt-32" />
         <HomeOrmLibrary class="mt-24 lg:mt-32">
           {{
             orm: () => slots.orm?.(),
           }}
         </HomeOrmLibrary>
+        <HomeFeatures class="mt-24 lg:mt-32" />
         <GraphQLIntro class="mt-24 lg:mt-32" />
         <div class="mt-24" />
       </main>
