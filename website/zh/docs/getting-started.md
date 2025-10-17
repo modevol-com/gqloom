@@ -179,52 +179,12 @@ deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 <Tabs groupId="favorite-orm-and-validation-library">
 <template #Valibot>
 
-```ts twoslash
-import { resolver, query, weave } from "@gqloom/core"
-import { ValibotWeaver } from "@gqloom/valibot"
-import { createYoga } from "graphql-yoga"
-import { createServer } from "node:http"
-import * as v from "valibot"
-
-const helloResolver = resolver({
-  hello: query(v.string())
-    .input({ name: v.nullish(v.string(), "World") })
-    .resolve(({ name }) => `Hello, ${name}!`),
-})
-
-const schema = weave(ValibotWeaver, helloResolver)
-
-const yoga = createYoga({ schema })
-const server = createServer(yoga)
-server.listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql")
-})
-```
+<<< @/snippets/code/hello-valibot.ts{ts twoslash}
 
 </template>
 <template #Zod>
 
-```ts twoslash
-import { resolver, query, weave } from "@gqloom/core"
-import { ZodWeaver } from "@gqloom/zod"
-import { createYoga } from "graphql-yoga"
-import { createServer } from "node:http"
-import * as z from "zod"
-
-const helloResolver = resolver({
-  hello: query(z.string())
-    .input({ name: z.string().nullish().transform((value) => value ?? "World") })
-    .resolve(({ name }) => `Hello, ${name}!`),
-})
-
-const schema = weave(ZodWeaver, helloResolver)
-
-const yoga = createYoga({ schema })
-const server = createServer(yoga)
-server.listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql")
-})
-```
+<<< @/snippets/code/hello-zod.ts{ts twoslash}
 
 </template>
 <template #MikroORM>
@@ -285,27 +245,7 @@ export const userResolver = resolver.of(User, {
 </template>
 <template #Yup>
 
-```ts twoslash
-import { resolver, query, weave } from "@gqloom/core"
-import { YupWeaver } from "@gqloom/yup"
-import { createYoga } from "graphql-yoga"
-import { createServer } from "node:http"
-import { string } from "yup"
-
-const helloResolver = resolver({
-  hello: query(string().required())
-    .input({ name: string().default("World") })
-    .resolve(({ name }) => `Hello, ${name}!`),
-})
-
-const schema = weave(YupWeaver, helloResolver)
-
-const yoga = createYoga({ schema })
-const server = createServer(yoga)
-server.listen(4000, () => {
-  console.info("Server is running on http://localhost:4000/graphql")
-})
-```
+<<< @/snippets/code/hello-yup.ts{ts twoslash}
 
 </template>
 <template #JSON_Schema>
