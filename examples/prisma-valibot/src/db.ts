@@ -58,8 +58,8 @@ for (const statement of CREATE_TABLES) {
   await db.$executeRawUnsafe(statement)
 }
 
-await db.user.createMany({
-  data: userData,
-})
+for (const user of userData) {
+  await db.user.create({ data: user })
+}
 
 export { db }
