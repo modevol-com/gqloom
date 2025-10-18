@@ -122,10 +122,15 @@ describe("generator", () => {
       const result = genTsDeclaration(mockDMMF, config)
       expect(result).toMatchInlineSnapshot(`
         "import type { PrismaModelSilk, PrismaEnumSilk } from "@gqloom/prisma";
-        import type { User as IUser, Role as IRole } from "@prisma/client";
+        import type { User as IUser, Role as IRole, Prisma } from "@prisma/client";
 
         export const User: PrismaModelSilk<IUser, "user">;
         export const Role: PrismaEnumSilk<IRole>;
+
+        declare module "@gqloom/prisma" {
+          interface PrismaInputTypes {
+          }
+        }
 
         export { IUser, IRole };
         "
