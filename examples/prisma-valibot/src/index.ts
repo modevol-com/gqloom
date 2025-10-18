@@ -30,7 +30,21 @@ fs.writeFileSync(
   printSchema(lexicographicSortSchema(schema))
 )
 
-const yoga = createYoga({ graphqlEndpoint: "/", schema })
+const yoga = createYoga({
+  graphqlEndpoint: "/",
+  graphiql: {
+    defaultQuery: /* GraphQL */ `
+    query {
+      users {
+        id
+        name
+        email
+      }
+    }
+  `,
+  },
+  schema,
+})
 const server = createServer(yoga)
 server.listen(4000, () => {
   console.info("Server is running on http://localhost:4000")
