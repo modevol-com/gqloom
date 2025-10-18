@@ -1,3 +1,7 @@
+<script setup>
+import { Tabs } from "@/components/tabs.tsx"
+</script>
+
 # 丝线（Silk）
 
 丝线（Silk）是 GraphQL 纺织机的基本原料，它同时反应 GraphQL 类型和 TypeScript 类型。
@@ -62,9 +66,9 @@ type Cat {
 你可能注意到了，使用 `graphql.js` 来创建丝线需要同时声明 `ICat` 接口和 `GraphQLObjectType`，也就是说，我们为 `Cat` 创建了两份定义。
 重复的定义让代码损失了简洁性，也增加了维护成本。
 
-## 使用模式库创建丝线
+## 使用 Schema 库创建丝线
 
-好在，我们有像 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/) 这样的模式库，它们创建的 Schema 将携带 TypeScript 类型，并在运行时仍然携带类型。
+好在，我们有像 [Valibot](https://valibot.dev/)、[Zod](https://zod.dev/) 这样的 Schema 库，它们创建的 Schema 将携带 TypeScript 类型，并在运行时仍然携带类型。
 `GQLoom` 可以直接使用这些 Schema 作为丝线，而不需要重复定义。
 
 `GQLoom` 目前已经集成来自以下库的 Schema：
@@ -77,7 +81,10 @@ type Cat {
 - [Drizzle](./schema/drizzle.md)
 - [Prisma](./schema/prisma.md)
 
-### 使用 Valibot 创建丝线
+另外，还有一些库可借由 JSON Schema 作为丝线，如 [TypeBox](https://sinclairzx81.github.io/typebox/)、[ArkType](https://arktype.io/)、[Effect Schema](https://effect.website/docs/schema/introduction/) 等。
+
+<Tabs groupId="schema-library">
+<template #Valibot>
 
 ```ts twoslash
 import * as v from "valibot"
@@ -93,9 +100,20 @@ const Cat = v.object({
 })
 ```
 
-在上面的代码中，我们使用 [Valibot](https://valibot.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Valibot 集成](./schema/valibot.md)章节中了解如何使用 [Valibot](https://valibot.dev/) 创建更复杂的类型。
+我们可以直接将 Valibot Schema 作为丝线使用，但不要忘记在[编织](../weave)时添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
 
-### 使用 Zod 创建丝线
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+
+export const schema = weave(ValibotWeaver, ...resolvers)
+```
+
+</template>
+<template #Zod>
 
 ```ts twoslash
 import * as z from "zod"
@@ -111,8 +129,184 @@ const Cat = z.object({
 })
 ```
 
-在上面的代码中，我们使用 [Zod](https://zod.dev/) 创建了一些简单的 Schema 作为丝线，你可以在[Zod 集成](./schema/zod.md)章节中了解如何使用 [Zod](https://zod.dev/) 创建更复杂的类型。
+我们可以直接将 Zod Schema 作为丝线使用，但不要忘记在[编织](../weave)时添加来自 `@gqloom/zod` 的 `ZodWeaver`。
 
-::: info
-`GQLoom` 核心库遵循了 [标准 Schema 规范](https://github.com/standard-schema/standard-schema)，得益于 `Valibot`、`Zod` 同样遵循此规范，我们不需要使用额外的包装函数就可以将来自 Valibot、Zod 的 Schema 作为丝线使用。
-:::
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+
+export const schema = weave(ZodWeaver, ...resolvers)
+```
+
+</template>
+<template #JSON_Schema>
+
+我们需要借助 `@gqloom/json` 中的 `jsonSilk` 函数将 JSON Schema 作为丝线使用：
+
+```ts twoslash
+import { jsonSilk } from "@gqloom/json"
+
+const StringSilk = jsonSilk({ type: "string" })
+
+const BooleanSilk = jsonSilk({ type: "boolean" })
+
+const Cat = jsonSilk({
+  title: "Cat",
+  type: "object",
+})
+```
+
+</template>
+<template #Yup>
+
+```ts twoslash
+import * as yup from "yup"
+
+const StringSilk = yup.string()
+const BooleanSilk = yup.boolean()
+const Cat = yup.object({
+  name: yup.string(),
+  age: yup.number(),
+}).label("Cat")
+```
+
+我们可以直接将 Yup Schema 作为丝线使用，但不要忘记在[编织](../weave)时添加来自 `@gqloom/yup` 的 `YupWeaver`。
+
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { weave } from "@gqloom/core"
+import { YupWeaver } from "@gqloom/yup"
+
+export const schema = weave(YupWeaver, ...resolvers)
+```
+
+</template>
+<template #TypeBox>
+
+为了让 TypeBox Schema 作为丝线使用，我们需要借助 `@gqloom/json` 为 TypeBox Schema 定义一个包装函数：
+
+```ts twoslash
+import { type GraphQLSilk } from "@gqloom/core"
+import { JSONWeaver } from "@gqloom/json"
+import { type Static, type Type } from "typebox"
+
+function typeSilk<T extends Type.TSchema>(
+  type: T
+): T & GraphQLSilk<Type.Static<T>, Type.Static<T>> {
+  return JSONWeaver.unravel(type) as T &
+    GraphQLSilk<Type.Static<T>, Type.Static<T>>
+}
+```
+
+随后我们可以使用 `typeSilk` 函数将 TypeBox Schema 作为丝线使用：
+
+```ts twoslash
+import { type GraphQLSilk } from "@gqloom/core"
+import { JSONWeaver } from "@gqloom/json"
+import { type TSchema, type Static } from "typebox"
+
+function typeSilk<T extends Type.TSchema>(
+  type: T
+): T & GraphQLSilk<Type.Static<T>, Type.Static<T>> {
+  return JSONWeaver.unravel(type) as T &
+    GraphQLSilk<Type.Static<T>, Type.Static<T>>
+}
+// ---cut---
+import { Type } from "typebox"
+
+const StringSilk = typeSilk(Type.String())
+
+const BooleanSilk = typeSilk(Type.Boolean())
+
+const Cat = typeSilk(Type.Object({ 
+  __typename: Type.Optional(Type.Literal("Cat")),
+  name: Type.String(), 
+  age: Type.Integer(),
+}))
+```
+
+</template>
+<template #ArkType>
+
+```ts twoslash
+import { type } from "arktype"
+
+const StringSilk = type("string")
+
+const BooleanSilk = type("boolean")
+
+const Cat = type({
+  "__typename?": "'Cat' | null",
+  name: "string",
+  age: "number",
+})
+```
+
+我们需要借助 `@gqloom/json` 自定义一个 `arkTypeWeaver` 来将 ArkType 的 Schema 作为丝线使用：
+
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { type SchemaWeaver, weave } from "@gqloom/core"
+import { type JSONSchema, JSONWeaver } from "@gqloom/json"
+import { type Type } from "arktype"
+
+const arkTypeWeaver: SchemaWeaver = {
+  vendor: "arktype",
+  getGraphQLType: (type: Type) => {
+    return JSONWeaver.getGraphQLType(type.toJsonSchema() as JSONSchema, {
+      source: type,
+    })
+  },
+}
+
+export const schema = weave(arkTypeWeaver, ...resolvers)
+```
+
+</template>
+<template #Effect_Schema>
+
+```ts twoslash
+import { Schema } from "effect"
+
+const StringSilk = Schema.standardSchemaV1(Schema.String)
+
+const BooleanSilk = Schema.standardSchemaV1(Schema.Boolean)
+
+const Cat = Schema.standardSchemaV1(Schema.Struct({
+  __typename: Schema.NullishOr(Schema.Literal("Cat")),
+  name: Schema.String,
+  age: Schema.Number,
+}))
+```
+
+我们需要借助 `@gqloom/json` 自定义一个 `arkTypeWeaver` 来将 ArkType 的 Schema 作为丝线使用：
+
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { type SchemaWeaver, weave } from "@gqloom/core"
+import { type JSONSchema, JSONWeaver } from "@gqloom/json"
+import { type Schema } from "effect"
+import { make } from "effect/JSONSchema"
+
+const effectSchemaWeaver: SchemaWeaver = {
+  vendor: "effect",
+  getGraphQLType: (type: Schema.Schema<any, any, any>) => {
+    return JSONWeaver.getGraphQLType(make(type), {
+      source: type,
+    })
+  },
+}
+
+export const schema = weave(effectSchemaWeaver, ...resolvers)
+```
+</template>
+</Tabs>

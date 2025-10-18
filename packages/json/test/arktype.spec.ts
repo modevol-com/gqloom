@@ -179,7 +179,7 @@ describe("arktype", () => {
       animals: query(silk.list(Animal)).resolve(() => animals),
     })
 
-    const schema = weave(arktypeWeaver, animalResolver)
+    const schema = weave(arkTypeWeaver, animalResolver)
 
     expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type Query {
@@ -242,7 +242,7 @@ describe("arktype", () => {
           .resolve((data) => data.name),
       })
 
-      const schema = weave(arktypeWeaver, r1)
+      const schema = weave(arkTypeWeaver, r1)
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Query {
@@ -286,7 +286,7 @@ describe("arktype", () => {
           })),
       })
 
-      const schema = weave(arktypeWeaver, r1)
+      const schema = weave(arkTypeWeaver, r1)
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Person {
@@ -334,7 +334,7 @@ describe("arktype", () => {
           .resolve(({ dogs }) => dogs.map((dog) => ({ name: dog.name }))),
       })
 
-      const schema = weave(arktypeWeaver, r1)
+      const schema = weave(arkTypeWeaver, r1)
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Dog {
@@ -392,7 +392,7 @@ describe("arktype", () => {
           ),
       })
 
-      const schema = weave(arktypeWeaver, r1)
+      const schema = weave(arkTypeWeaver, r1)
 
       expect(printSchema(schema)).toMatchInlineSnapshot(`
         "type Dog {
@@ -415,7 +415,7 @@ describe("arktype", () => {
   })
 })
 
-const arktypeWeaver: SchemaWeaver = {
+const arkTypeWeaver: SchemaWeaver = {
   vendor: "arktype",
   getGraphQLType: (type: Type) =>
     JSONWeaver.getGraphQLType(type.toJsonSchema() as JSONSchema, {
@@ -425,7 +425,7 @@ const arktypeWeaver: SchemaWeaver = {
 
 function getGraphQLType(type: GraphQLSilk) {
   const context = initWeaverContext()
-  context.vendorWeavers.set(arktypeWeaver.vendor, arktypeWeaver)
+  context.vendorWeavers.set(arkTypeWeaver.vendor, arkTypeWeaver)
   return provideWeaverContext(() => silk.getType(type), context)
 }
 
@@ -436,6 +436,6 @@ function printArktypeSchema(type: Type) {
 }
 
 function printResolver(...resolvers: Loom.Resolver[]): string {
-  const schema = weave(arktypeWeaver, ...resolvers)
+  const schema = weave(arkTypeWeaver, ...resolvers)
   return printSchema(schema)
 }

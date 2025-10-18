@@ -58,8 +58,8 @@ export const Tabs = defineComponent({
       const containerWidth = container.clientWidth
       const triggerOffsetLeft = triggerElement.offsetLeft
 
-      // Calculate the scroll position to place the element's left edge at 1/5 of container width
-      const targetScrollLeft = triggerOffsetLeft - containerWidth / 5
+      // Calculate the scroll position to place the element's left edge at 1/3 of container width
+      const targetScrollLeft = triggerOffsetLeft - containerWidth / 3
 
       container.scrollTo({
         left: targetScrollLeft,

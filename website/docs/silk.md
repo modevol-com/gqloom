@@ -1,3 +1,7 @@
+<script setup>
+import { Tabs } from "@/components/tabs.tsx"
+</script>
+
 # Silk
 
 The silk is the basic material of the GraphQL Loom, and it reflects both GraphQL types and TypeScript types.
@@ -62,12 +66,12 @@ type Cat {
 You may have noticed that using `graphql.js` to create silk requires the declaration of both the `ICat` interface and the `GraphQLObjectType`, which means that we have created two definitions for `Cat`.
 Duplicate definitions cost the code simplicity and increased maintenance costs.
 
-## Creating silk with schema libraries
+## Creating silk using Schema libraries
 
-The good thing is that we have schema libraries like [Valibot](https://valibot.dev/), [Zod](https://zod.dev/) that create Schemas that will carry TypeScript types and remain typed at runtime.
-`GQLoom` can use these Schemas directly as silks without duplicating definitions.
+Fortunately, we have Schema libraries like [Valibot](https://valibot.dev/) and [Zod](https://zod.dev/) that create Schemas that carry TypeScript types and still carry types at runtime.
+`GQLoom` can directly use these Schemas as silk without duplicate definitions.
 
-`GQLoom` has currently integrated Schemas from the following libraries:
+`GQLoom` currently integrates Schemas from the following libraries:
 
 - [Valibot](./schema/valibot.md)
 - [Zod](./schema/zod.md)
@@ -77,7 +81,10 @@ The good thing is that we have schema libraries like [Valibot](https://valibot.d
 - [Drizzle](./schema/drizzle.md)
 - [Prisma](./schema/prisma.md)
 
-### Use Valibot to create silk
+Additionally, there are some libraries that can be used as silk through JSON Schema, such as [TypeBox](https://sinclairzx81.github.io/typebox/), [ArkType](https://arktype.io/), [Effect Schema](https://effect.website/docs/schema/introduction/), etc.
+
+<Tabs groupId="schema-library">
+<template #Valibot>
 
 ```ts twoslash
 import * as v from "valibot"
@@ -93,9 +100,20 @@ const Cat = v.object({
 })
 ```
 
-In the code above, we use [Valibot](https://valibot.dev/) to create some simple schemas as silk. You can learn more about how to create more complex types with [Valibot](https://valibot.dev/) in the [Valibot Integration](./schema/valibot.md) chapter.
+We can directly use Valibot Schema as silk, but don't forget to add `ValibotWeaver` from `@gqloom/valibot` when [weaving](../weave).
 
-### Use Zod to create silk
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+
+export const schema = weave(ValibotWeaver, ...resolvers)
+```
+
+</template>
+<template #Zod>
 
 ```ts twoslash
 import * as z from "zod"
@@ -111,8 +129,184 @@ const Cat = z.object({
 })
 ```
 
-In the code above, we have created some simple Schema as silk using [Zod](https://zod.dev/), you can learn how to create more complex types using [Zod integration](./schema/zod.md) section to learn how to create more complex types using [Zod](https://zod.dev/).
+We can directly use Zod Schema as silk, but don't forget to add `ZodWeaver` from `@gqloom/zod` when [weaving](../weave).
 
-::: info
-The core library of `GQLoom` follows the [Standard Schema specification](https://github.com/standard-schema/standard-schema). Thanks to `Valibot` and `Zod` also following this specification, we don't need to use additional wrapper functions to use the Schema from Valibot and Zod as Silk.
-:::
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+
+export const schema = weave(ZodWeaver, ...resolvers)
+```
+
+</template>
+<template #JSON_Schema>
+
+We need to use the `jsonSilk` function from `@gqloom/json` to use JSON Schema as silk:
+
+```ts twoslash
+import { jsonSilk } from "@gqloom/json"
+
+const StringSilk = jsonSilk({ type: "string" })
+
+const BooleanSilk = jsonSilk({ type: "boolean" })
+
+const Cat = jsonSilk({
+  title: "Cat",
+  type: "object",
+})
+```
+
+</template>
+<template #Yup>
+
+```ts twoslash
+import * as yup from "yup"
+
+const StringSilk = yup.string()
+const BooleanSilk = yup.boolean()
+const Cat = yup.object({
+  name: yup.string(),
+  age: yup.number(),
+}).label("Cat")
+```
+
+We can directly use Yup Schema as silk, but don't forget to add `YupWeaver` from `@gqloom/yup` when [weaving](../weave).
+
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { weave } from "@gqloom/core"
+import { YupWeaver } from "@gqloom/yup"
+
+export const schema = weave(YupWeaver, ...resolvers)
+```
+
+</template>
+<template #TypeBox>
+
+To use TypeBox Schema as silk, we need to define a wrapper function for TypeBox Schema using `@gqloom/json`:
+
+```ts twoslash
+import { type GraphQLSilk } from "@gqloom/core"
+import { JSONWeaver } from "@gqloom/json"
+import { type Static, type Type } from "typebox"
+
+function typeSilk<T extends Type.TSchema>(
+  type: T
+): T & GraphQLSilk<Type.Static<T>, Type.Static<T>> {
+  return JSONWeaver.unravel(type) as T &
+    GraphQLSilk<Type.Static<T>, Type.Static<T>>
+}
+```
+
+Then we can use the `typeSilk` function to use TypeBox Schema as silk:
+
+```ts twoslash
+import { type GraphQLSilk } from "@gqloom/core"
+import { JSONWeaver } from "@gqloom/json"
+import { type TSchema, type Static } from "typebox"
+
+function typeSilk<T extends Type.TSchema>(
+  type: T
+): T & GraphQLSilk<Type.Static<T>, Type.Static<T>> {
+  return JSONWeaver.unravel(type) as T &
+    GraphQLSilk<Type.Static<T>, Type.Static<T>>
+}
+// ---cut---
+import { Type } from "typebox"
+
+const StringSilk = typeSilk(Type.String())
+
+const BooleanSilk = typeSilk(Type.Boolean())
+
+const Cat = typeSilk(Type.Object({ 
+  __typename: Type.Optional(Type.Literal("Cat")),
+  name: Type.String(), 
+  age: Type.Integer(),
+}))
+```
+
+</template>
+<template #ArkType>
+
+```ts twoslash
+import { type } from "arktype"
+
+const StringSilk = type("string")
+
+const BooleanSilk = type("boolean")
+
+const Cat = type({
+  "__typename?": "'Cat' | null",
+  name: "string",
+  age: "number",
+})
+```
+
+We need to use `@gqloom/json` to create a custom `arkTypeWeaver` to use ArkType's Schema as silk:
+
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { type SchemaWeaver, weave } from "@gqloom/core"
+import { type JSONSchema, JSONWeaver } from "@gqloom/json"
+import { type Type } from "arktype"
+
+const arkTypeWeaver: SchemaWeaver = {
+  vendor: "arktype",
+  getGraphQLType: (type: Type) => {
+    return JSONWeaver.getGraphQLType(type.toJsonSchema() as JSONSchema, {
+      source: type,
+    })
+  },
+}
+
+export const schema = weave(arkTypeWeaver, ...resolvers)
+```
+
+</template>
+<template #Effect_Schema>
+
+```ts twoslash
+import { Schema } from "effect"
+
+const StringSilk = Schema.standardSchemaV1(Schema.String)
+
+const BooleanSilk = Schema.standardSchemaV1(Schema.Boolean)
+
+const Cat = Schema.standardSchemaV1(Schema.Struct({
+  __typename: Schema.NullishOr(Schema.Literal("Cat")),
+  name: Schema.String,
+  age: Schema.Number,
+}))
+```
+
+We need to use `@gqloom/json` to create a custom `effectSchemaWeaver` to use Effect Schema as silk:
+
+```ts twoslash
+import { type Loom } from "@gqloom/core"
+const resolvers: Loom.Resolver[] = []
+// ---cut---
+import { type SchemaWeaver, weave } from "@gqloom/core"
+import { type JSONSchema, JSONWeaver } from "@gqloom/json"
+import { type Schema } from "effect"
+import { make } from "effect/JSONSchema"
+
+const effectSchemaWeaver: SchemaWeaver = {
+  vendor: "effect",
+  getGraphQLType: (type: Schema.Schema<any, any, any>) => {
+    return JSONWeaver.getGraphQLType(make(type), {
+      source: type,
+    })
+  },
+}
+
+export const schema = weave(effectSchemaWeaver, ...resolvers)
+```
+</template>
+</Tabs>

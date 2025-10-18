@@ -10,7 +10,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 
-const arktypeWeaver: SchemaWeaver = {
+const arkTypeWeaver: SchemaWeaver = {
   vendor: "arktype",
   getGraphQLType: (type: Type) => {
     return JSONWeaver.getGraphQLType(type.toJsonSchema() as JSONSchema, {
@@ -19,7 +19,7 @@ const arktypeWeaver: SchemaWeaver = {
   },
 }
 
-const schema = weave(arktypeWeaver, helloResolver)
+const schema = weave(arkTypeWeaver, helloResolver)
 
 const yoga = createYoga({ schema })
 const server = createServer(yoga)
