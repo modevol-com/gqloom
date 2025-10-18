@@ -100,7 +100,7 @@ export function genTsDeclaration(
     declarationKind: ModuleDeclarationKind.Module,
     statements: (writer) => {
       writer.write("interface PrismaInputTypes").block(() => {
-        dmmf.schema.inputObjectTypes.prisma?.forEach((p) => {
+        dmmf.schema.inputObjectTypes?.prisma?.forEach((p) => {
           writer.writeLine(`${p.name}: Prisma.${p.name}`)
         })
       })
