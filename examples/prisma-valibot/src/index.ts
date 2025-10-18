@@ -35,7 +35,7 @@ const yoga = createYoga({
   graphiql: {
     defaultQuery: /* GraphQL */ `
     query {
-      users {
+      findManyUser {
         id
         name
         email

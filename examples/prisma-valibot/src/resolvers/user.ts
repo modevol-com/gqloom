@@ -1,4 +1,4 @@
-import { resolver } from "@gqloom/core"
+import { query, resolver } from "@gqloom/core"
 import { PrismaResolverFactory } from "@gqloom/prisma"
 import { db } from "../db"
 import { User } from "../generated/gqloom"
@@ -7,4 +7,9 @@ const userResolverFactory = new PrismaResolverFactory(User, db)
 
 export const userQueriesResolver = userResolverFactory.queriesResolver()
 
-export const userResolver = resolver.of(User, {})
+export const userResolver = resolver.of(User, {
+  users: query(User.list()).resolve(async () => {
+    const [users] = await db.$transaction([db.user.findMany()])
+    return users
+  }),
+})

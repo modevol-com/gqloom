@@ -1,9 +1,14 @@
-import { PrismaLibSQL } from "@prisma/adapter-libsql"
+import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
 import CREATE_TABLES from "../prisma/CREATE_TABLES"
-import type { Prisma } from "./generated/prisma/client"
-import { PrismaClient } from "./generated/prisma/client"
+import { type Prisma, PrismaClient } from "./generated/prisma/client"
 
-export const userData: Prisma.UserCreateInput[] = [
+const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+const db = new PrismaClient({
+  adapter,
+  log: [{ emit: "stdout", level: "query" }],
+})
+
+const userData: Prisma.UserCreateInput[] = [
   {
     name: "Alice",
     email: "alice@prisma.io",
@@ -50,16 +55,16 @@ export const userData: Prisma.UserCreateInput[] = [
     },
   },
 ]
+async function initializeDatabase() {
+  await db.$connect()
+  for (const statement of CREATE_TABLES) {
+    await db.$executeRawUnsafe(statement)
+  }
 
-const adapter = new PrismaLibSQL({ url: ":memory:" })
-const db = new PrismaClient({ adapter })
-
-for (const statement of CREATE_TABLES) {
-  await db.$executeRawUnsafe(statement)
+  for (const data of userData) {
+    await db.user.create({ data })
+  }
 }
 
-for (const user of userData) {
-  await db.user.create({ data: user })
-}
-
+await initializeDatabase()
 export { db }
