@@ -100,7 +100,7 @@ const Cat = v.object({
 })
 ```
 
-We can directly use Valibot Schema as silk, but don't forget to add `ValibotWeaver` from `@gqloom/valibot` when [weaving](../weave).
+We can directly use Valibot Schema as silk, but don't forget to add `ValibotWeaver` from `@gqloom/valibot` when [weaving](./weave.md).
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"
@@ -129,7 +129,7 @@ const Cat = z.object({
 })
 ```
 
-We can directly use Zod Schema as silk, but don't forget to add `ZodWeaver` from `@gqloom/zod` when [weaving](../weave).
+We can directly use Zod Schema as silk, but don't forget to add `ZodWeaver` from `@gqloom/zod` when [weaving](./weave.md).
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"
@@ -173,7 +173,7 @@ const Cat = yup.object({
 }).label("Cat")
 ```
 
-We can directly use Yup Schema as silk, but don't forget to add `YupWeaver` from `@gqloom/yup` when [weaving](../weave).
+We can directly use Yup Schema as silk, but don't forget to add `YupWeaver` from `@gqloom/yup` when [weaving](./weave.md).
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"

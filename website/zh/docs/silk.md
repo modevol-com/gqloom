@@ -100,7 +100,7 @@ const Cat = v.object({
 })
 ```
 
-我们可以直接将 Valibot Schema 作为丝线使用，但不要忘记在[编织](../weave)时添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
+我们可以直接将 Valibot Schema 作为丝线使用，但不要忘记在[编织](./weave.md)时添加来自 `@gqloom/valibot` 的 `ValibotWeaver`。
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"
@@ -129,7 +129,7 @@ const Cat = z.object({
 })
 ```
 
-我们可以直接将 Zod Schema 作为丝线使用，但不要忘记在[编织](../weave)时添加来自 `@gqloom/zod` 的 `ZodWeaver`。
+我们可以直接将 Zod Schema 作为丝线使用，但不要忘记在[编织](./weave.md)时添加来自 `@gqloom/zod` 的 `ZodWeaver`。
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"
@@ -173,7 +173,7 @@ const Cat = yup.object({
 }).label("Cat")
 ```
 
-我们可以直接将 Yup Schema 作为丝线使用，但不要忘记在[编织](../weave)时添加来自 `@gqloom/yup` 的 `YupWeaver`。
+我们可以直接将 Yup Schema 作为丝线使用，但不要忘记在[编织](./weave.md)时添加来自 `@gqloom/yup` 的 `YupWeaver`。
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"
