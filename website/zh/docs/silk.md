@@ -71,10 +71,11 @@ type Cat {
 
 - [Valibot](./schema/valibot.md)
 - [Zod](./schema/zod.md)
+- [JSON Schema](./schema/json.md)
 - [Yup](./schema/yup.md)
 - [Mikro ORM](./schema/mikro-orm.md)
-- [Prisma](./schema/prisma.md)
 - [Drizzle](./schema/drizzle.md)
+- [Prisma](./schema/prisma.md)
 
 ### 使用 Valibot 创建丝线
 

@@ -71,10 +71,11 @@ The good thing is that we have schema libraries like [Valibot](https://valibot.d
 
 - [Valibot](./schema/valibot.md)
 - [Zod](./schema/zod.md)
+- [JSON Schema](./schema/json.md)
 - [Yup](./schema/yup.md)
 - [Mikro ORM](./schema/mikro-orm.md)
-- [Prisma](./schema/prisma.md)
 - [Drizzle](./schema/drizzle.md)
+- [Prisma](./schema/prisma.md)
 
 ### Use Valibot to create silk
 
