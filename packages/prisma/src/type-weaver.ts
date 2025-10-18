@@ -39,7 +39,7 @@ export class PrismaTypeWeaver<
   }
 
   silks: SilkMap<PrismaTypes[InferTModelSilkName<TModelSilk>]> = new Proxy(
-    {},
+    {} as any,
     {
       get: (_, name: string) => {
         const cache = this.#silkCache

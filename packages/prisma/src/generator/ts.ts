@@ -74,9 +74,7 @@ export function genTsDeclaration(
       declarations: [
         {
           name: `${model.name}`,
-          type: `PrismaModelSilk<I${model.name}, "${lowerCase(
-            model.name
-          )}"${relationsGenerics}>`,
+          type: `PrismaModelSilk<I${model.name}, "${lowerCase(model.name)}"${relationsGenerics}>`,
         },
       ],
     })
