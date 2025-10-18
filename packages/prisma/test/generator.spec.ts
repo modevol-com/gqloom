@@ -127,11 +127,6 @@ describe("generator", () => {
         export const User: PrismaModelSilk<IUser, "user">;
         export const Role: PrismaEnumSilk<IRole>;
 
-        declare module "@gqloom/prisma" {
-          interface PrismaTypes {
-          }
-        }
-
         export { IUser, IRole };
         "
       `)
