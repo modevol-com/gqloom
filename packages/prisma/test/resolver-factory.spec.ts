@@ -192,21 +192,39 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
     })
 
-    it("should handle many-to-many relations with empty relationFromFields/relationToFields", { retry: 6 }, async () => {
-      const PostWithCategoriesBobbin = new PrismaResolverFactory(g.Post, db)
-      const CategoryBobbin = new PrismaResolverFactory(g.Category, db)
+    it("should handle many-to-many relations with empty relationFromFields/relationToFields", async () => {
+      const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+      const db = new PrismaClient({ adapter })
+      for (const statement of CREATE_TABLES) {
+        await db.$executeRawUnsafe(statement)
+      }
+
+      const user = await db.user.create({
+        data: {
+          name: "John Doe",
+          email: "foo@bar.com",
+        },
+      })
+
+      const posts = ["Hello World", "Hello GQLoom", "Post with category"].map(
+        (title) => ({ title, content: "", authorId: user.id })
+      )
+      await db.post.createMany({
+        data: [
+          { ...posts[0], publisherId: null },
+          { ...posts[1], publisherId: null },
+          { ...posts[2], publisherId: user.id },
+        ],
+      })
+
+      const PostWithPublisherBobbin = new PrismaResolverFactory(g.Post, db)
 
       const r3 = resolver.of(g.Post, {
         posts: query(g.Post.list(), () => db.post.findMany()),
-        categories: PostWithCategoriesBobbin.relationField("categories"),
+        publisher: PostWithPublisherBobbin.relationField("publisher"),
       })
 
-      const r4 = resolver.of(g.Category, {
-        categories: query(g.Category.list(), () => db.category.findMany()),
-        posts: CategoryBobbin.relationField("posts"),
-      })
-
-      const testSchema = weave(r3, r4)
+      const testSchema = weave(r3)
       const testYoga = createYoga({ schema: testSchema })
 
       const response = await testYoga.fetch("http://localhost/graphql", {
@@ -219,7 +237,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
             query {
               posts {
                 title
-                categories {
+                publisher {
                   id
                 }
               }
@@ -230,14 +248,11 @@ describe("PrismaModelPrismaResolverFactory", () => {
 
       if (response.status !== 200) throw new Error("unexpected")
       const json = await response.json()
-      expect(json.data.posts).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            title: expect.any(String),
-            categories: [],
-          }),
-        ])
-      )
+      expect(json.data.posts).toEqual([
+        { title: posts[0].title, publisher: null },
+        { title: posts[1].title, publisher: null },
+        { title: posts[2].title, publisher: { id: String(user.id) } },
+      ])
     })
 
     it("should be able to create a relationField", async () => {

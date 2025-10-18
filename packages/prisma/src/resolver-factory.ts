@@ -91,10 +91,10 @@ export class PrismaResolverFactory<
 
     let relationFromFields = field.relationFromFields
     let relationToFields = field.relationToFields
+    const targetField = this.modelData.models[field.type].fields.find(
+      (f) => f.relationName === field.relationName
+    )
     if (relationFromFields?.length === 0) {
-      const targetField = this.modelData.models[field.type].fields.find(
-        (f) => f.relationName === field.relationName
-      )
       if (targetField == null)
         throw new Error(`Field ${String(key)} is not a relation`)
       relationFromFields = targetField.relationToFields
@@ -131,17 +131,20 @@ export class PrismaResolverFactory<
             relationFromFields.length,
             relationToFields.length
           )
-          if (length === 0) {
-            return inputs.map(() => (field.isList ? [] : null))
-          }
-          const where = (() => {
-            if (length === 1) {
-              const field = relationToFields[0]
-              const values = inputs.map(
-                ([parent]) => parent[relationFromFields[0]]
-              )
-              return { [field]: { in: values } }
+          let where
+          if (length === 1) {
+            const fieldName = relationToFields[0]
+            const values = new Set(
+              inputs.map(([parent]) => parent[relationFromFields[0]])
+            )
+            if (targetField?.isRequired) {
+              values.delete(null)
             }
+            if (values.size === 0) {
+              return inputs.map(() => (field.isList ? [] : null))
+            }
+            where = { [fieldName]: { in: [...values] } }
+          } else {
             const OR: any[] = []
             for (const [parent] of inputs) {
               const item = {} as any
@@ -150,8 +153,9 @@ export class PrismaResolverFactory<
               }
               OR.push(item)
             }
-            return { OR }
-          })()
+            where = { OR }
+          }
+
           const select = getSelectedFields(
             targetModel,
             inputs.map((input) => input[1])
