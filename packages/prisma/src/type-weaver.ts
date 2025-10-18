@@ -18,9 +18,9 @@ import {
 import { PrismaWeaver } from "."
 import type {
   AnyPrismaModelSilk,
-  PrismaTypes,
-  PrismaModelMeta,
   InferTModelSilkName,
+  PrismaModelMeta,
+  PrismaTypes,
 } from "./types"
 import { gqlType as gt } from "./utils"
 
@@ -32,17 +32,16 @@ export class PrismaTypeWeaver<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
 > {
   protected modelMeta: Required<PrismaModelMeta>
-  #silkCache = new Map<string, GraphQLSilk>()
 
   public constructor(modelMeta: PrismaModelMeta) {
     this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
   }
 
-  silks: SilkMap<PrismaTypes[InferTModelSilkName<TModelSilk>]> = new Proxy(
-    {} as any,
-    {
+  protected silkCache = new Map<string, GraphQLSilk>()
+  public silks: SilkMap<PrismaTypes[InferTModelSilkName<TModelSilk>]> =
+    new Proxy({} as any, {
       get: (_, name: string) => {
-        const cache = this.#silkCache
+        const cache = this.silkCache
         if (cache.has(name)) {
           return cache.get(name)!
         }
@@ -51,8 +50,7 @@ export class PrismaTypeWeaver<
         cache.set(name, result)
         return result
       },
-    }
-  )
+    })
 
   public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
     const input = this.modelMeta.inputTypes.get(name)
