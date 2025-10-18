@@ -30,7 +30,7 @@ const statements = sql
   })
   .filter((stmt) => stmt)
 const tsContent = `export default [
-${statements.map(stmt => `  ${JSON.stringify(stmt)}`).join(',\n')}
+${statements.map((stmt) => `  ${JSON.stringify(stmt)}`).join(",\n")}
 ] as const
 `
 fs.writeFileSync(outputTsPath, tsContent, "utf-8")
