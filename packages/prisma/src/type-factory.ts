@@ -25,16 +25,16 @@ import type {
 } from "./types"
 import { gqlType as gt } from "./utils"
 
-export class PrismaTypeWeaver<
+export class PrismaTypeFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
 > {
   protected modelMeta: Required<PrismaModelMeta>
 
   public constructor(silkOrModelMeta: TModelSilk | PrismaModelMeta) {
     if (isSilk(silkOrModelMeta)) {
-      this.modelMeta = PrismaTypeWeaver.indexModelMeta(silkOrModelMeta.meta)
+      this.modelMeta = PrismaTypeFactory.indexModelMeta(silkOrModelMeta.meta)
     } else {
-      this.modelMeta = PrismaTypeWeaver.indexModelMeta(silkOrModelMeta)
+      this.modelMeta = PrismaTypeFactory.indexModelMeta(silkOrModelMeta)
     }
   }
 
@@ -52,7 +52,7 @@ export class PrismaTypeWeaver<
     const input = this.modelMeta.inputTypes.get(name)
     if (!input) throw new Error(`Input type ${name} not found`)
 
-    if (input.fields.length === 0) return PrismaTypeWeaver.emptyInputScalar()
+    if (input.fields.length === 0) return PrismaTypeFactory.emptyInputScalar()
     const existing = weaverContext.getNamedType(name) as
       | GraphQLObjectType
       | undefined
@@ -66,7 +66,7 @@ export class PrismaTypeWeaver<
           ...Object.fromEntries(
             input.fields.map((field) => {
               const isNonNull = field.isRequired && !field.isNullable
-              const fieldInput = PrismaTypeWeaver.getMostRankInputType(
+              const fieldInput = PrismaTypeFactory.getMostRankInputType(
                 field.inputTypes
               )
 
@@ -163,7 +163,7 @@ export class PrismaTypeWeaver<
     const rankList = inputTypes
       .map((item) => ({
         item,
-        rank: PrismaTypeWeaver.getInputTypeRank(item),
+        rank: PrismaTypeFactory.getInputTypeRank(item),
       }))
       .sort((a, b) => b.rank - a.rank)
 
@@ -194,8 +194,8 @@ export class PrismaTypeWeaver<
   protected static indexModelMeta(
     modelMeta: PrismaModelMeta
   ): Required<PrismaModelMeta> {
-    modelMeta.inputTypes ??= PrismaTypeWeaver.indexInputTypes(modelMeta.schema)
-    modelMeta.enumTypes ??= PrismaTypeWeaver.indexEnumTypes(modelMeta.schema)
+    modelMeta.inputTypes ??= PrismaTypeFactory.indexInputTypes(modelMeta.schema)
+    modelMeta.enumTypes ??= PrismaTypeFactory.indexEnumTypes(modelMeta.schema)
     return modelMeta as Required<PrismaModelMeta>
   }
 
@@ -220,9 +220,9 @@ export class PrismaTypeWeaver<
   }
 }
 
-export class PrismaActionArgsWeaver<
+export class PrismaActionArgsFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
-> extends PrismaTypeWeaver<TModelSilk> {
+> extends PrismaTypeFactory<TModelSilk> {
   public constructor(protected readonly silk: TModelSilk) {
     super(silk.meta)
   }
@@ -488,3 +488,13 @@ export class PrismaActionArgsWeaver<
     return weaverContext.memoNamedType(input)
   }
 }
+
+/**
+ * @deprecated Use PrismaTypeFactory instead
+ */
+export const PrismaTypeWeaver = PrismaTypeFactory
+
+/**
+ * @deprecated Use PrismaActionArgsFactory instead
+ */
+export const PrismaActionArgsWeaver = PrismaActionArgsFactory

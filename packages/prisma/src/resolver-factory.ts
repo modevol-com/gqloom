@@ -20,7 +20,7 @@ import {
 } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import { PrismaWeaver } from "."
-import { PrismaActionArgsWeaver } from "./type-weaver"
+import { PrismaActionArgsFactory } from "./type-factory"
 import type {
   IBatchPayload,
   InferDelegateCountArgs,
@@ -47,7 +47,7 @@ export class PrismaResolverFactory<
   TClient extends PrismaClient,
 > {
   protected modelData: PrismaModelMeta
-  protected typeWeaver: PrismaActionArgsWeaver<TModelSilk>
+  protected typeFactory: PrismaActionArgsFactory<TModelSilk>
 
   public constructor(
     protected readonly silk: TModelSilk,
@@ -56,7 +56,7 @@ export class PrismaResolverFactory<
       | ((payload: ResolverPayload | undefined) => MayPromise<TClient>)
   ) {
     this.modelData = silk.meta
-    this.typeWeaver = new PrismaActionArgsWeaver(silk)
+    this.typeFactory = new PrismaActionArgsFactory(silk)
   }
 
   protected async getDelegate(
@@ -307,7 +307,7 @@ export class PrismaResolverFactory<
       PrismaResolverCountQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCountQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.countArgs()) as GraphQLSilk<
+    input ??= silk(() => this.typeFactory.countArgs()) as GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
@@ -341,7 +341,7 @@ export class PrismaResolverFactory<
       PrismaResolverFindFirstQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverFindFirstQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.findFirstArgs())
+    input ??= silk(() => this.typeFactory.findFirstArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -374,7 +374,7 @@ export class PrismaResolverFactory<
       PrismaResolverFindManyQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverFindManyQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.findManyArgs())
+    input ??= silk(() => this.typeFactory.findManyArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -407,7 +407,7 @@ export class PrismaResolverFactory<
       PrismaResolverFindUniqueQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverFindUniqueQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.findUniqueArgs())
+    input ??= silk(() => this.typeFactory.findUniqueArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -438,7 +438,7 @@ export class PrismaResolverFactory<
       PrismaResolverCreateMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCreateMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.createArgs()))
+    input ??= silk(() => gt.nonNull(this.typeFactory.createArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -471,7 +471,7 @@ export class PrismaResolverFactory<
       PrismaResolverCreateManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCreateManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.createManyArgs()))
+    input ??= silk(() => gt.nonNull(this.typeFactory.createManyArgs()))
 
     const output = PrismaResolverFactory.batchPayloadSilk()
 
@@ -499,7 +499,7 @@ export class PrismaResolverFactory<
       PrismaResolverDeleteMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverDeleteMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.deleteArgs()))
+    input ??= silk(() => gt.nonNull(this.typeFactory.deleteArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -539,7 +539,7 @@ export class PrismaResolverFactory<
       PrismaResolverDeleteManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverDeleteManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.deleteManyArgs()))
+    input ??= silk(() => gt.nonNull(this.typeFactory.deleteManyArgs()))
     const output = PrismaResolverFactory.batchPayloadSilk()
     return new MutationFactoryWithResolve(output, {
       ...options,
@@ -566,7 +566,7 @@ export class PrismaResolverFactory<
       PrismaResolverUpdateMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpdateMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.updateArgs()))
+    input ??= silk(() => gt.nonNull(this.typeFactory.updateArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return new MutationFactoryWithResolve(output, {
       ...options,
@@ -597,7 +597,7 @@ export class PrismaResolverFactory<
       PrismaResolverUpdateManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpdateManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.updateManyArgs()))
+    input ??= silk(() => gt.nonNull(this.typeFactory.updateManyArgs()))
     const output = PrismaResolverFactory.batchPayloadSilk()
 
     return new MutationFactoryWithResolve(output, {
@@ -624,7 +624,7 @@ export class PrismaResolverFactory<
       PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.upsertArgs()))
+    input ??= silk(() => gt.nonNull(this.typeFactory.upsertArgs()))
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return new MutationFactoryWithResolve(output, {
       ...options,
@@ -652,7 +652,7 @@ export class PrismaResolverFactory<
   }
 
   public static batchPayloadSilk(): GraphQLSilk<IBatchPayload, IBatchPayload> {
-    return silk(() => PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
+    return silk(() => PrismaActionArgsFactory.batchPayload()) as GraphQLSilk<
       IBatchPayload,
       IBatchPayload
     >

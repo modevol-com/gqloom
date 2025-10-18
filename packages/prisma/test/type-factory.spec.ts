@@ -1,11 +1,11 @@
 import { isSilk } from "@gqloom/core"
 import { printType } from "graphql"
 import { describe, expect, it } from "vitest"
-import { PrismaActionArgsWeaver, PrismaTypeWeaver } from "../src"
+import { PrismaActionArgsFactory, PrismaTypeFactory } from "../src"
 import * as g from "./generated"
 
-describe("PrismaModelTypeWeaver", () => {
-  const typeWeaver = new PrismaTypeWeaver(g.User)
+describe("PrismaTypeFactory", () => {
+  const typeWeaver = new PrismaTypeFactory(g.User)
   it("should be able to create a type weaver", () => {
     expect(typeWeaver).toBeDefined()
   })
@@ -137,9 +137,9 @@ describe("PrismaModelTypeWeaver", () => {
   })
 })
 
-describe("PrismaActionArgsWeaver", () => {
+describe("PrismaActionArgsFactory", () => {
   it("should be able to create countArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
     expect(printType(UserTypeBuilder.countArgs())).toMatchInlineSnapshot(`
       "type UserCountArgs {
         where: UserWhereInput
@@ -152,7 +152,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create findFirstArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
     expect(printType(UserTypeBuilder.findFirstArgs())).toMatchInlineSnapshot(`
       "type UserFindFirstArgs {
         where: UserWhereInput
@@ -166,7 +166,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create findManyArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
     expect(printType(UserTypeBuilder.findManyArgs())).toMatchInlineSnapshot(`
       "type UserFindManyArgs {
         where: UserWhereInput
@@ -180,7 +180,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create findUniqueArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
     expect(printType(UserTypeBuilder.findUniqueArgs())).toMatchInlineSnapshot(`
       "type UserFindUniqueArgs {
         where: UserWhereUniqueInput
@@ -189,7 +189,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create createArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
     expect(printType(UserTypeBuilder.createArgs())).toMatchInlineSnapshot(`
       "type UserCreateArgs {
         data: UserCreateInput!
@@ -198,7 +198,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create createManyArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
     expect(printType(UserTypeBuilder.createManyArgs())).toMatchInlineSnapshot(`
       "type UserCreateManyArgs {
         data: [UserCreateManyInput!]!
@@ -207,7 +207,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create deleteArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
 
     expect(printType(UserTypeBuilder.deleteArgs())).toMatchInlineSnapshot(`
       "type UserDeleteArgs {
@@ -217,7 +217,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create deleteManyArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
 
     expect(printType(UserTypeBuilder.deleteManyArgs())).toMatchInlineSnapshot(`
       "type UserDeleteManyArgs {
@@ -227,7 +227,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create updateArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
 
     expect(printType(UserTypeBuilder.updateArgs())).toMatchInlineSnapshot(`
       "type UserUpdateArgs {
@@ -238,7 +238,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create updateManyArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
 
     expect(printType(UserTypeBuilder.updateManyArgs())).toMatchInlineSnapshot(`
       "type UserUpdateManyArgs {
@@ -249,7 +249,7 @@ describe("PrismaActionArgsWeaver", () => {
   })
 
   it("should be able to create upsertArgs", () => {
-    const UserTypeBuilder = new PrismaActionArgsWeaver(g.User)
+    const UserTypeBuilder = new PrismaActionArgsFactory(g.User)
 
     expect(printType(UserTypeBuilder.upsertArgs())).toMatchInlineSnapshot(`
       "type UserUpsertArgs {
