@@ -24,10 +24,6 @@ import type {
 } from "./types"
 import { gqlType as gt } from "./utils"
 
-type SilkMap<T> = {
-  [key in keyof T]: GraphQLSilk<T[key]>
-}
-
 export class PrismaTypeWeaver<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
 > {
@@ -37,20 +33,13 @@ export class PrismaTypeWeaver<
     this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
   }
 
-  protected silkCache = new Map<string, GraphQLSilk>()
-  public silks: SilkMap<PrismaTypes[InferTModelSilkName<TModelSilk>]> =
-    new Proxy({} as any, {
-      get: (_, name: string) => {
-        const cache = this.silkCache
-        if (cache.has(name)) {
-          return cache.get(name)!
-        }
-
-        const result = silk(() => this.inputType(name)) as GraphQLSilk
-        cache.set(name, result)
-        return result
-      },
-    })
+  public getSilk<TName extends string>(
+    name: TName
+  ): GraphQLSilk<PrismaTypes[InferTModelSilkName<TModelSilk>][TName]> {
+    return silk(() => this.inputType(name)) as GraphQLSilk<
+      PrismaTypes[InferTModelSilkName<TModelSilk>][TName]
+    >
+  }
 
   public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
     const input = this.modelMeta.inputTypes.get(name)

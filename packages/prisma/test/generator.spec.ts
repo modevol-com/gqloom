@@ -131,5 +131,66 @@ describe("generator", () => {
         "
       `)
     })
+
+    it("should generate PrismaTypes interface when inputTypes exist", () => {
+      const mockDMMFWithInputTypes: DMMF.Document = {
+        ...mockDMMF,
+        schema: {
+          inputObjectTypes: {
+            prisma: [
+              {
+                name: "UserWhereInput",
+                constraints: { maxNumFields: null, minNumFields: null },
+                fields: [],
+                meta: { grouping: "User" },
+              },
+              {
+                name: "UserCreateInput",
+                constraints: { maxNumFields: null, minNumFields: null },
+                fields: [],
+                meta: { grouping: "User" },
+              },
+              {
+                name: "IntFilter",
+                constraints: { maxNumFields: null, minNumFields: null },
+                fields: [],
+              },
+            ],
+          },
+          outputObjectTypes: { prisma: [], model: [] },
+          enumTypes: { prisma: [], model: [] },
+          fieldRefTypes: { prisma: [] },
+        },
+      }
+
+      const config = {
+        outputFile: "output.ts",
+        prismaLocation: "@prisma/client",
+      }
+      const result = genTsDeclaration(mockDMMFWithInputTypes, config)
+
+      expect(result).toMatchInlineSnapshot(`
+        "import type { PrismaModelSilk, PrismaEnumSilk } from "@gqloom/prisma";
+        import type { User as IUser, Role as IRole, Prisma } from "@prisma/client";
+
+        export const User: PrismaModelSilk<IUser, "user">;
+        export const Role: PrismaEnumSilk<IRole>;
+
+        declare module "@gqloom/prisma" {
+            interface PrismaTypes {
+                User: {
+                    UserWhereInput: Prisma.UserWhereInput
+                    UserCreateInput: Prisma.UserCreateInput
+                }
+                others: {
+                    IntFilter: Prisma.IntFilter
+                }
+            }
+        }
+
+        export { IUser, IRole };
+        "
+      `)
+    })
   })
 })
