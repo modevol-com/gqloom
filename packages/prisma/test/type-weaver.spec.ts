@@ -1,12 +1,56 @@
+import { isSilk } from "@gqloom/core"
 import { printType } from "graphql"
 import { describe, expect, it } from "vitest"
 import { PrismaActionArgsWeaver, PrismaTypeWeaver } from "../src"
 import * as g from "./generated"
 
 describe("PrismaModelTypeWeaver", () => {
-  const typeWeaver = new PrismaTypeWeaver(g.User.meta)
+  const typeWeaver = new PrismaTypeWeaver(g.User)
   it("should be able to create a type weaver", () => {
     expect(typeWeaver).toBeDefined()
+  })
+
+  describe("getSilk", () => {
+    it("should return a valid GraphQL silk", () => {
+      const whereInputSilk = typeWeaver.getSilk("UserWhereInput")
+      expect(isSilk(whereInputSilk)).toBe(true)
+    })
+
+    it("should create silk that delegates to inputType method", () => {
+      const whereInputSilk = typeWeaver.getSilk("UserWhereInput")
+      expect(isSilk(whereInputSilk)).toBe(true)
+
+      const whereInputType = typeWeaver.inputType("UserWhereInput")
+      expect(printType(whereInputType)).toMatchInlineSnapshot(`
+        "type UserWhereInput {
+          AND: [UserWhereInput!]
+          OR: [UserWhereInput!]
+          NOT: [UserWhereInput!]
+          id: IntFilter
+          email: StringFilter
+          name: StringNullableFilter
+          posts: PostListRelationFilter
+          publishedPosts: PostListRelationFilter
+          profile: ProfileNullableScalarRelationFilter
+        }"
+      `)
+    })
+
+    it("should work with different input types", () => {
+      const createInputSilk = typeWeaver.getSilk("UserCreateInput")
+      expect(isSilk(createInputSilk)).toBe(true)
+
+      const createInputType = typeWeaver.inputType("UserCreateInput")
+      expect(printType(createInputType)).toMatchInlineSnapshot(`
+        "type UserCreateInput {
+          email: String!
+          name: String
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
+          profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+    })
   })
 
   describe("inputType", () => {

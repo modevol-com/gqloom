@@ -47,7 +47,7 @@ export class PrismaResolverFactory<
   TClient extends PrismaClient,
 > {
   protected modelData: PrismaModelMeta
-  protected typeWeaver: PrismaActionArgsWeaver
+  protected typeWeaver: PrismaActionArgsWeaver<TModelSilk>
 
   public constructor(
     protected readonly silk: TModelSilk,

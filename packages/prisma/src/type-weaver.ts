@@ -1,4 +1,10 @@
-import { provideWeaverContext, weaverContext } from "@gqloom/core"
+import {
+  type GraphQLSilk,
+  isSilk,
+  provideWeaverContext,
+  silk,
+  weaverContext,
+} from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import {
   GraphQLEnumType,
@@ -11,14 +17,35 @@ import {
   GraphQLScalarType,
 } from "graphql"
 import { PrismaWeaver } from "."
-import type { PrismaModelMeta, PrismaModelSilk } from "./types"
+import type {
+  AnyPrismaModelSilk,
+  InferTModelSilkName,
+  PrismaModelMeta,
+  PrismaTypes,
+} from "./types"
 import { gqlType as gt } from "./utils"
 
-export class PrismaTypeWeaver {
+export class PrismaTypeWeaver<
+  TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
+> {
   protected modelMeta: Required<PrismaModelMeta>
 
-  public constructor(modelMeta: PrismaModelMeta) {
-    this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
+  public constructor(silkOrModelMeta: TModelSilk | PrismaModelMeta) {
+    if (isSilk(silkOrModelMeta)) {
+      this.modelMeta = PrismaTypeWeaver.indexModelMeta(silkOrModelMeta.meta)
+    } else {
+      this.modelMeta = PrismaTypeWeaver.indexModelMeta(silkOrModelMeta)
+    }
+  }
+
+  public getSilk<
+    TName extends keyof PrismaTypes[InferTModelSilkName<TModelSilk>],
+  >(
+    name: TName
+  ): GraphQLSilk<PrismaTypes[InferTModelSilkName<TModelSilk>][TName]> {
+    return silk(() => this.inputType(String(name))) as GraphQLSilk<
+      PrismaTypes[InferTModelSilkName<TModelSilk>][TName]
+    >
   }
 
   public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
@@ -193,8 +220,10 @@ export class PrismaTypeWeaver {
   }
 }
 
-export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
-  public constructor(protected readonly silk: PrismaModelSilk<any>) {
+export class PrismaActionArgsWeaver<
+  TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
+> extends PrismaTypeWeaver<TModelSilk> {
+  public constructor(protected readonly silk: TModelSilk) {
     super(silk.meta)
   }
 
