@@ -1,6 +1,3 @@
----
-icon: BookMarked
----
 # 介绍
 
 ## GraphQL 是什么

@@ -1,7 +1,3 @@
----
-icon: Shuffle
----
-
 # 上下文（Context）
 
 在 Node.js 世界中，上下文（Context）允许我们在同一个请求中共享数据和状态。在 GraphQL 中，上下文允许在同一个请求的多个[解析函数](./resolver)和[中间件](./middleware)之间共享数据。

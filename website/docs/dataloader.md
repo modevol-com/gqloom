@@ -1,6 +1,3 @@
----
-icon: HardDriveDownload
----
 # Data Loaders
 
 Due to the flexibility of GraphQL, when loading related objects of a certain object, we often need to execute multiple queries.

@@ -1,6 +1,3 @@
----
-icon: Volleyball
----
 # 丝线（Silk）
 
 丝线（Silk）是 GraphQL 纺织机的基本原料，它同时反应 GraphQL 类型和 TypeScript 类型。

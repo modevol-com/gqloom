@@ -1,7 +1,7 @@
 <script setup>
 import { FeatureCard } from '@/components/feature-card'
 </script>
-# 适配器
+# Adapters
 
 There are a number of GraphQL HTTP adapters in the Node.js ecosystem.
 

@@ -1,6 +1,3 @@
----
-icon: Waves
----
 # Weave
 
 In GQLoom, the `weave` function is used to weave multiple Resolvers or Silks into a single GraphQL Schema.

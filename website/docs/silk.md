@@ -1,6 +1,3 @@
----
-icon: Volleyball
----
 # Silk
 
 The silk is the basic material of the GraphQL Loom, and it reflects both GraphQL types and TypeScript types.
