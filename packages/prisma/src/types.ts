@@ -152,3 +152,7 @@ export type SelectiveModel<TModel, TName extends string> =
   | (Partial<TModel> & {
       [K in `__selective_${TName}_brand__`]: never
     })
+
+export interface PrismaInputTypes {
+  [key: string]: unknown
+}

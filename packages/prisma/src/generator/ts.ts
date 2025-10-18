@@ -1,6 +1,10 @@
 import type { DMMF } from "@prisma/generator-helper"
 import * as path from "path"
-import { Project, VariableDeclarationKind } from "ts-morph"
+import {
+  ModuleDeclarationKind,
+  Project,
+  VariableDeclarationKind,
+} from "ts-morph"
 import type { GQLoomGeneratorConfig } from "."
 
 export function genTsDeclaration(
@@ -45,6 +49,7 @@ export function genTsDeclaration(
         name: m.name,
         alias: `I${m.name}`,
       })),
+      { name: "Prisma" },
     ],
     isTypeOnly: true,
   })
@@ -60,8 +65,8 @@ export function genTsDeclaration(
               const optional = r.isRequired ? "" : "?"
               return `${r.name}${optional}: I${r.type}${list}`
             })
-            .join(";") +
-          "}"
+            .join("; ") +
+          " }"
         : ""
     sourceFile.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
@@ -69,7 +74,9 @@ export function genTsDeclaration(
       declarations: [
         {
           name: `${model.name}`,
-          type: `PrismaModelSilk<I${model.name}, "${lowerCase(model.name)}"${relationsGenerics}>`,
+          type: `PrismaModelSilk<I${model.name}, "${lowerCase(
+            model.name
+          )}"${relationsGenerics}>`,
         },
       ],
     })
@@ -86,6 +93,19 @@ export function genTsDeclaration(
       ],
     })
   }
+
+  sourceFile.addModule({
+    name: '"@gqloom/prisma"',
+    hasDeclareKeyword: true,
+    declarationKind: ModuleDeclarationKind.Module,
+    statements: (writer) => {
+      writer.write("interface PrismaInputTypes").block(() => {
+        dmmf.schema.inputObjectTypes.prisma?.forEach((p) => {
+          writer.writeLine(`${p.name}: Prisma.${p.name}`)
+        })
+      })
+    },
+  })
 
   sourceFile.addExportDeclaration({
     namedExports: [

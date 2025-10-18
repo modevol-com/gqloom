@@ -11,5 +11,6 @@
       "@gqloom/core/context": ["./packages/core/src/context/index.ts"],
       "@gqloom/*": ["./packages/*/src/index.ts"]
     }
-  }
+  },
+  "exclude": ["packages/prisma/dist"]
 }

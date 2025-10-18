@@ -1,4 +1,9 @@
-import { provideWeaverContext, weaverContext } from "@gqloom/core"
+import {
+  type GraphQLSilk,
+  provideWeaverContext,
+  silk,
+  weaverContext,
+} from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import {
   GraphQLEnumType,
@@ -11,7 +16,11 @@ import {
   GraphQLScalarType,
 } from "graphql"
 import { PrismaWeaver } from "."
-import type { PrismaModelMeta, PrismaModelSilk } from "./types"
+import type {
+  PrismaInputTypes,
+  PrismaModelMeta,
+  PrismaModelSilk,
+} from "./types"
 import { gqlType as gt } from "./utils"
 
 export class PrismaTypeWeaver {
@@ -19,6 +28,12 @@ export class PrismaTypeWeaver {
 
   public constructor(modelMeta: PrismaModelMeta) {
     this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
+  }
+
+  public inputTypeSilk<Name extends string>(name: Name) {
+    return silk(() => this.inputType(name)) as GraphQLSilk<
+      PrismaInputTypes[Capitalize<Name>]
+    >
   }
 
   public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
