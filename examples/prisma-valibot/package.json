@@ -5,7 +5,8 @@
   "scripts": {
     "init-tables": "node scripts/init_tables.cjs",
     "generate": "prisma generate",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "postinstall": "npm run generate"
   },
   "devDependencies": {
     "@types/node": "^24.8.1",
