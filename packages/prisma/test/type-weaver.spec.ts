@@ -4,7 +4,7 @@ import { PrismaActionArgsWeaver, PrismaTypeWeaver } from "../src"
 import * as g from "./generated"
 
 describe("PrismaModelTypeWeaver", () => {
-  const typeWeaver = new PrismaTypeWeaver(g.User.meta)
+  const typeWeaver = new PrismaTypeWeaver(g.User.name, g.User.meta)
   it("should be able to create a type weaver", () => {
     expect(typeWeaver).toBeDefined()
   })

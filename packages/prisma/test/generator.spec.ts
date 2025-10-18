@@ -128,7 +128,7 @@ describe("generator", () => {
         export const Role: PrismaEnumSilk<IRole>;
 
         declare module "@gqloom/prisma" {
-          interface PrismaInputTypes {
+          interface PrismaTypes {
           }
         }
 

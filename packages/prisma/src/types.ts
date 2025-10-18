@@ -17,6 +17,12 @@ export interface PrismaModelSilk<
   relations?: TRelation
 }
 
+export type AnyPrismaModelSilk = PrismaModelSilk<
+  any,
+  string,
+  Record<string, any>
+>
+
 export type InferPrismaModelSilkRelations<T extends PrismaModelSilk<any, any>> =
   NonNullable<T["relations"]>
 
@@ -57,6 +63,13 @@ export interface PrismaDelegate {
   findUniqueOrThrow: (args: { where: any }) => any
   count: (args: any) => any
 }
+
+export type InferTModelSilkName<TModelSilk extends AnyPrismaModelSilk> =
+  TModelSilk extends { name: infer N }
+    ? N extends string
+      ? Capitalize<N>
+      : never
+    : never
 
 export type InferPrismaDelegate<
   TClient extends PrismaClient,
@@ -153,6 +166,8 @@ export type SelectiveModel<TModel, TName extends string> =
       [K in `__selective_${TName}_brand__`]: never
     })
 
-export interface PrismaInputTypes {
-  [key: string]: unknown
+export interface PrismaTypes {
+  [key: string]: {
+    [key: string]: unknown
+  }
 }

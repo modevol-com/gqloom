@@ -17,24 +17,42 @@ import {
 } from "graphql"
 import { PrismaWeaver } from "."
 import type {
-  PrismaInputTypes,
+  AnyPrismaModelSilk,
+  PrismaTypes,
   PrismaModelMeta,
-  PrismaModelSilk,
+  InferTModelSilkName,
 } from "./types"
 import { gqlType as gt } from "./utils"
 
-export class PrismaTypeWeaver {
+type SilkMap<T> = {
+  [key in keyof T]: GraphQLSilk<T[key]>
+}
+
+export class PrismaTypeWeaver<
+  TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
+> {
   protected modelMeta: Required<PrismaModelMeta>
+  #silkCache = new Map<string, GraphQLSilk>()
 
   public constructor(modelMeta: PrismaModelMeta) {
     this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
   }
 
-  public inputTypeSilk<Name extends string>(name: Name) {
-    return silk(() => this.inputType(name)) as GraphQLSilk<
-      PrismaInputTypes[Capitalize<Name>]
-    >
-  }
+  silks: SilkMap<PrismaTypes[InferTModelSilkName<TModelSilk>]> = new Proxy(
+    {},
+    {
+      get: (_, name: string) => {
+        const cache = this.#silkCache
+        if (cache.has(name)) {
+          return cache.get(name)!
+        }
+
+        const result = silk(() => this.inputType(name)) as GraphQLSilk
+        cache.set(name, result)
+        return result
+      },
+    }
+  )
 
   public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
     const input = this.modelMeta.inputTypes.get(name)
@@ -208,8 +226,10 @@ export class PrismaTypeWeaver {
   }
 }
 
-export class PrismaActionArgsWeaver extends PrismaTypeWeaver {
-  public constructor(protected readonly silk: PrismaModelSilk<any>) {
+export class PrismaActionArgsWeaver<
+  TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
+> extends PrismaTypeWeaver<TModelSilk> {
+  public constructor(protected readonly silk: TModelSilk) {
     super(silk.meta)
   }
 
