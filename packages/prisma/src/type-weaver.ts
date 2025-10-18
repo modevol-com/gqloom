@@ -1,5 +1,6 @@
 import {
   type GraphQLSilk,
+  isSilk,
   provideWeaverContext,
   silk,
   weaverContext,
@@ -29,14 +30,20 @@ export class PrismaTypeWeaver<
 > {
   protected modelMeta: Required<PrismaModelMeta>
 
-  public constructor(modelMeta: PrismaModelMeta) {
-    this.modelMeta = PrismaTypeWeaver.indexModelMeta(modelMeta)
+  public constructor(silkOrModelMeta: TModelSilk | PrismaModelMeta) {
+    if (isSilk(silkOrModelMeta)) {
+      this.modelMeta = PrismaTypeWeaver.indexModelMeta(silkOrModelMeta.meta)
+    } else {
+      this.modelMeta = PrismaTypeWeaver.indexModelMeta(silkOrModelMeta)
+    }
   }
 
-  public getSilk<TName extends string>(
+  public getSilk<
+    TName extends keyof PrismaTypes[InferTModelSilkName<TModelSilk>],
+  >(
     name: TName
   ): GraphQLSilk<PrismaTypes[InferTModelSilkName<TModelSilk>][TName]> {
-    return silk(() => this.inputType(name)) as GraphQLSilk<
+    return silk(() => this.inputType(String(name))) as GraphQLSilk<
       PrismaTypes[InferTModelSilkName<TModelSilk>][TName]
     >
   }
