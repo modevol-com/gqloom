@@ -472,7 +472,7 @@ export const postsResolver = resolver({
 const useUser = async () => ({ id: 1 })
 // ---cut---
 import { mutation, resolver } from "@gqloom/core"
-import { z } from "zod"
+import * as z from "zod"
 
 const Post = z.object({
   __typename: z.literal("Post").nullish(),
