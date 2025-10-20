@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "yup": "^1.7.0"
+    "yup": "^1.7.1"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
