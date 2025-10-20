@@ -27,7 +27,7 @@ const BooleanScalar = z.boolean() // GraphQLBoolean
 
 const FloatScalar = z.number() // GraphQLFloat
 
-const IntScalar = z.number().int() // GraphQLInt
+const IntScalar = z.int() // GraphQLInt
 ```
 
 ## 编织 | Weave
@@ -55,7 +55,7 @@ import * as z from "zod"
 export const Cat = z.object({
   __typename: z.literal("Cat").nullish(),
   name: z.string(),
-  age: z.number().int(),
+  age: z.int(),
   loveFish: z.boolean().nullish(),
 })
 ```
@@ -76,7 +76,7 @@ import * as z from "zod"
 export const Cat = z.object({
   __typename: z.literal("Cat").nullish(),
   name: z.string(),
-  age: z.number().int(),
+  age: z.int(),
   loveFish: z.boolean().nullish(),
 })
 ```
@@ -89,7 +89,7 @@ import * as z from "zod"
 export const Cat = z.object({
   __typename: z.literal("Cat"),
   name: z.string(),
-  age: z.number().int(),
+  age: z.int(),
   loveFish: z.boolean().nullish(),
 })
 ```
@@ -104,7 +104,7 @@ import { collectNames } from "@gqloom/core"
 
 export const Cat = z.object({
   name: z.string(),
-  age: z.number().int(),
+  age: z.int(),
   loveFish: z.boolean().nullish(),
 })
 
@@ -120,7 +120,7 @@ import { collectNames } from "@gqloom/core"
 export const { Cat } = collectNames({
   Cat: z.object({
     name: z.string(),
-    age: z.number().int(),
+    age: z.int(),
     loveFish: z.boolean().nullish(),
   }),
 })
@@ -140,7 +140,7 @@ import * as z from "zod/v4"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.number().int(),
+    age: z.int(),
     loveFish: z.boolean().nullish(),
   })
   .register(asObjectType, { name: "Cat" })
@@ -156,7 +156,7 @@ import * as z from "zod/v3"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.number().int(),
+    age: z.int(),
     loveFish: z.boolean().nullish(),
   })
   .superRefine(asObjectType({ name: "Cat" }))
@@ -181,7 +181,7 @@ import * as z from "zod/v4"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.number().int(),
+    age: z.int(),
     loveFish: z.boolean().nullish(),
   })
   .register(asObjectType, {
@@ -200,7 +200,7 @@ import * as z from "zod/v3"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.number().int(),
+    age: z.int(),
     loveFish: z.boolean().nullish(),
   })
   .superRefine(
@@ -653,7 +653,7 @@ export const schema = weave(zodWeaverConfig, helloResolver)
 | `z.literal(false)`       | `GraphQLBoolean`    |
 | `z.literal(0)`           | `GraphQLFloat`      |
 | `z.number()`             | `GraphQLFloat`      |
-| `z.number().int()`       | `GraphQLInt`        |
+| `z.int()`                | `GraphQLInt`        |
 | `z.boolean()`            | `GraphQLBoolean`    |
 | `z.object()`             | `GraphQLObjectType` |
 | `z.enum()`               | `GraphQLEnumType`   |
