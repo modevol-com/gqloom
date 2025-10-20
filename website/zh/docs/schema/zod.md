@@ -156,7 +156,7 @@ import * as z from "zod/v3"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.int(),
+    age: z.number().int(),
     loveFish: z.boolean().nullish(),
   })
   .superRefine(asObjectType({ name: "Cat" }))
@@ -200,7 +200,7 @@ import * as z from "zod/v3"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.int(),
+    age: z.number().int(),
     loveFish: z.boolean().nullish(),
   })
   .superRefine(
