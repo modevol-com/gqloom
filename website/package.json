@@ -44,7 +44,7 @@
     "typebox": "^1.0.4",
     "valibot": "^1.1.0",
     "vitepress": "2.0.0-alpha.12",
-    "vitepress-plugin-llms": "^1.7.3",
+    "vitepress-plugin-llms": "^1.8.1",
     "yup": "^1.7.1",
     "zod": "4.1.5"
   },
