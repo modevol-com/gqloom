@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import {
+  type GraphQLArgumentConfig,
   GraphQLList,
   GraphQLNonNull,
   type GraphQLNullableType,
@@ -9,7 +10,7 @@ import {
 } from "graphql"
 import { weaverContext } from "../schema/weaver-context"
 import type { MayPromise } from "../utils"
-import { GET_GRAPHQL_TYPE } from "../utils/symbols"
+import { GET_GRAPHQL_ARGUMENT_CONFIG, GET_GRAPHQL_TYPE } from "../utils/symbols"
 import type { GraphQLSilk } from "./types"
 
 /**
@@ -163,8 +164,11 @@ export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
  * @returns GraphQL Output Type
  */
 export function getGraphQLType(silk: GraphQLSilk): GraphQLOutputType {
-  if (GET_GRAPHQL_TYPE in silk && silk[GET_GRAPHQL_TYPE] != null)
-    return silk[GET_GRAPHQL_TYPE]()
+  if (GET_GRAPHQL_TYPE in silk && silk[GET_GRAPHQL_TYPE] != null) {
+    return typeof silk[GET_GRAPHQL_TYPE] === "function"
+      ? silk[GET_GRAPHQL_TYPE]()
+      : silk[GET_GRAPHQL_TYPE]
+  }
 
   const vendorWeavers = weaverContext.vendorWeavers
   if (vendorWeavers == null) throw new Error("Schema Weaver is not initialized")
@@ -175,6 +179,34 @@ export function getGraphQLType(silk: GraphQLSilk): GraphQLOutputType {
       `Schema Weaver for ${silk["~standard"].vendor} is not found`
     )
   return weaver.getGraphQLType(silk)
+}
+
+/**
+ * Get GraphQL Argument Config from Silk.
+ * @param silk GraphQL Silk
+ * @returns GraphQL Argument Config
+ */
+export function getGraphQLArgumentConfig(
+  silk: GraphQLSilk
+): Omit<GraphQLArgumentConfig, "type"> | undefined {
+  if (
+    GET_GRAPHQL_ARGUMENT_CONFIG in silk &&
+    silk[GET_GRAPHQL_ARGUMENT_CONFIG] != null
+  ) {
+    return typeof silk[GET_GRAPHQL_ARGUMENT_CONFIG] === "function"
+      ? silk[GET_GRAPHQL_ARGUMENT_CONFIG]()
+      : silk[GET_GRAPHQL_ARGUMENT_CONFIG]
+  }
+
+  const vendorWeavers = weaverContext.vendorWeavers
+  if (vendorWeavers == null) throw new Error("Schema Weaver is not initialized")
+  const weaver = vendorWeavers.get(silk["~standard"].vendor)
+  if (weaver == null)
+    throw new Error(
+      `Schema Weaver for ${silk["~standard"].vendor} is not found`
+    )
+  if (weaver.getGraphQLArgumentConfig == null) return undefined
+  return weaver.getGraphQLArgumentConfig(silk)
 }
 
 /**

@@ -19,6 +19,7 @@ import {
 } from "graphql"
 import { type GraphQLSilk, getGraphQLType, isSilk } from "../resolver"
 import { AUTO_ALIASING, mapValue, pascalCase, tryIn } from "../utils"
+import { GET_GRAPHQL_ARGUMENT_CONFIG } from "../utils/symbols"
 import type { CoreSchemaWeaverConfig } from "./types"
 import { provideWeaverContext, weaverContext } from "./weaver-context"
 
@@ -47,8 +48,11 @@ export function inputToArgs(
     tryIn(() => {
       const fieldName = `${pascalCase(options.fieldName)}${pascalCase(name)}`
 
+      const getConfig = field[GET_GRAPHQL_ARGUMENT_CONFIG]
+      const config = typeof getConfig === "function" ? getConfig() : getConfig
+
       args[name] = {
-        ...field,
+        ...config,
         type: ensureInputType(field, { fieldName }),
       }
     }, name)
