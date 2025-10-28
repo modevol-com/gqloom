@@ -1,4 +1,12 @@
-import { collectNames, silk, weave } from "@gqloom/core"
+import {
+  collectNames,
+  field,
+  mutation,
+  query,
+  resolver,
+  silk,
+  weave,
+} from "@gqloom/core"
 import {
   GraphQLInt,
   GraphQLObjectType,
@@ -8,14 +16,7 @@ import {
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import * as z from "zod/v4"
-import {
-  asUnionType,
-  field,
-  mutation,
-  query,
-  resolver,
-  ZodWeaver,
-} from "../src/index"
+import { asUnionType, ZodWeaver } from "../src/index"
 
 describe("zod resolver", () => {
   const Giraffe = z.object({
@@ -206,6 +207,47 @@ describe("zod resolver", () => {
         dog: { __typename: "Dog", name: "Sadie", age: 2, loveBone: true },
       },
     })
+  })
+
+  it("should generate args description", () => {
+    const r1 = resolver({
+      hello: query(z.string())
+        .description("Say hello to someone (or to the World by default).")
+        .input(
+          z.object({
+            name: z
+              .string()
+              .describe("The name of the person to greet")
+              .nullish()
+              .transform((value) => value ?? "World"),
+          })
+        )
+        .resolve(({ name }) => `Hello, ${name}!`),
+    })
+    expect(printSchema(weave(r1, ZodWeaver))).toMatchInlineSnapshot(`
+      "type Query {
+        """Say hello to someone (or to the World by default)."""
+        hello(name: String): String!
+      }"
+    `)
+    const r2 = resolver({
+      hello: query(z.string())
+        .description("Say hello to someone (or to the World by default).")
+        .input({
+          name: z
+            .string()
+            .describe("The name of the person to greet")
+            .nullish()
+            .transform((value) => value ?? "World"),
+        })
+        .resolve(({ name }) => `Hello, ${name}!`),
+    })
+    expect(printSchema(weave(r2, ZodWeaver))).toMatchInlineSnapshot(`
+      "type Query {
+        """Say hello to someone (or to the World by default)."""
+        hello(name: String): String!
+      }"
+    `)
   })
 
   describe("it should handle GraphQLSilk", () => {

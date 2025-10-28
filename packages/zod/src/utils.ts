@@ -153,6 +153,9 @@ export function isZodPipe(schema: unknown): schema is $ZodPipe {
 }
 
 export function getDescription(schema: $ZodType): string | undefined {
+  while (isZodPipe(schema)) {
+    schema = schema._zod.def.in
+  }
   if ("description" in schema && typeof schema.description === "string") {
     return schema.description
   }
