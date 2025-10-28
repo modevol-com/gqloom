@@ -9,6 +9,7 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
+  type GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
@@ -52,6 +53,15 @@ export class YupWeaver {
 
   public static getGraphQLType(schema: Schema): GraphQLOutputType {
     return YupWeaver.toNullableGraphQLType(schema)
+  }
+
+  public static getGraphQLArgumentConfig(
+    schema: Schema
+  ): Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined {
+    const fieldDesc = schema.describe()
+    const { type: _, ...rest } = fieldDesc.meta?.asField ?? {}
+    const description = fieldDesc?.meta?.description
+    return { description, ...rest }
   }
 
   /**
