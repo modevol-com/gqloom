@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",
-    "build": "pnpm -w run build && node --max_old_space_size=20480 ./node_modules/vitepress/bin/vitepress.js build",
+    "build": "node --max_old_space_size=19456 ./node_modules/vitepress/bin/vitepress.js build",
     "preview": "vitepress preview",
     "check:type": "concurrently 'pnpm run check:type:*'",
     "check:type:root": "tsgo --noEmit",
