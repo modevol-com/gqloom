@@ -5,7 +5,7 @@ export interface SchemaWeaver {
   getGraphQLType: (schema: any) => GraphQLOutputType
   getGraphQLArgumentConfig?: (
     schema: any
-  ) => Omit<GraphQLArgumentConfig, "type"> | undefined
+  ) => Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined
 }
 
 export function isSchemaVendorWeaver(some: any): some is SchemaWeaver {

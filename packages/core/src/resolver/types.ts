@@ -38,7 +38,7 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
    * GraphQL argument config for schema
    */
   [GET_GRAPHQL_ARGUMENT_CONFIG]?: MayGetter<
-    Omit<GraphQLArgumentConfig, "type"> | undefined
+    Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined
   >
 }
 

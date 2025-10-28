@@ -292,15 +292,11 @@ export class ZodWeaver {
 
   public static getGraphQLArgumentConfig(
     schema: $ZodType | ZodTypeAny
-  ): Omit<GraphQLArgumentConfig, "type"> | undefined {
+  ): Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined {
     if ("_zod" in schema) {
-      return getFieldConfig(schema) as
-        | Omit<GraphQLArgumentConfig, "type">
-        | undefined
+      return getFieldConfig(schema)
     } else {
-      return getConfig(schema) as
-        | Omit<GraphQLArgumentConfig, "type">
-        | undefined
+      return getConfig(schema)
     }
   }
 

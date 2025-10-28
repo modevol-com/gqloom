@@ -188,7 +188,7 @@ export function getGraphQLType(silk: GraphQLSilk): GraphQLOutputType {
  */
 export function getGraphQLArgumentConfig(
   silk: GraphQLSilk
-): Omit<GraphQLArgumentConfig, "type"> | undefined {
+): Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined {
   if (
     GET_GRAPHQL_ARGUMENT_CONFIG in silk &&
     silk[GET_GRAPHQL_ARGUMENT_CONFIG] != null
