@@ -8,6 +8,7 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
+  type GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
@@ -314,6 +315,15 @@ export class ValibotWeaver {
     schema: GenericSchemaOrAsync
   ): GraphQLOutputType {
     return ValibotWeaver.toNullableGraphQLType(schema)
+  }
+
+  public static getGraphQLArgumentConfig(
+    schema: GenericSchemaOrAsync
+  ): Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined {
+    const fieldConfig = ValibotMetadataCollector.getFieldConfig(schema)
+    if (fieldConfig == null) return undefined
+    const { type: _, ...rest } = fieldConfig
+    return rest
   }
 
   public static getGraphQLTypeBySelf(
