@@ -29,47 +29,15 @@ const middleware: Middleware = async (next) => {
 
 Next, we'll introduce some common types of middleware.
 
-### Error catching
+### JSON Schema Input Validation
 
-When using [Valibot](./schema/valibot.md) or [Zod](./schema/zod.md) libraries for input validation, we can catch validation errors in the middleware and return customized error messages.
-
-::: code-group
-```ts twoslash [valibot]
-import { type Middleware } from "@gqloom/core"
-import { ValiError } from "valibot"
-import { GraphQLError } from "graphql"
-
-export const valibotExceptionFilter: Middleware = async (next) => {
-  try {
-    return await next()
-  } catch (error) {
-    if (error instanceof ValiError) {
-      const { issues, message } = error
-      throw new GraphQLError(message, { extensions: { issues } })
-    }
-    throw error
-  }
-}
-```
-```ts twoslash [zod]
-import { type Middleware } from "@gqloom/core"
-import { ZodError } from "zod"
-import { GraphQLError } from "graphql"
-
-export const zodExceptionFilter: Middleware = async (next) => {
-  try {
-    return await next()
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw new GraphQLError(error.format()._errors.join(", "), {
-        extensions: { issues: error.issues },
-      })
-    }
-    throw error
-  }
-}
-```
+::: tip
+For input validation libraries that follow the [Standard Schema](https://standardschema.dev/), GQLoom will internally call their provided validation functions to validate the input, eliminating the need for additional input validation middleware.
 :::
+
+When using JSON Schema, we can use [Ajv](https://ajv.js.org/) for runtime validation of the input:
+
+<<< @/snippets/code/middleware-ajv.ts{ts twoslash}
 
 ### Validate output
 

@@ -31,6 +31,7 @@
     "@mikro-orm/libsql": "^6.5.1",
     "@shikijs/vitepress-twoslash": "^3.13.0",
     "@vitejs/plugin-vue-jsx": "^5.1.0",
+    "ajv": "^8.17.1",
     "arktype": "^2.1.22",
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.5",

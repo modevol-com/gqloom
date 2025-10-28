@@ -29,47 +29,15 @@ const middleware: Middleware = async (next) => {
 
 接下来，我们将介绍一些常见的中间件形式。
 
-### 错误捕获
+### JSON Schema 输入验证
 
-在使用 [Valibot](./schema/valibot.md) 或 [Zod](./schema/zod.md) 等库进行输入验证时，我们可以在中间件中捕获验证错误，并返回自定义的错误信息。
-
-::: code-group
-```ts twoslash [valibot]
-import { type Middleware } from "@gqloom/core"
-import { ValiError } from "valibot"
-import { GraphQLError } from "graphql"
-
-export const valibotExceptionFilter: Middleware = async (next) => {
-  try {
-    return await next()
-  } catch (error) {
-    if (error instanceof ValiError) {
-      const { issues, message } = error
-      throw new GraphQLError(message, { extensions: { issues } })
-    }
-    throw error
-  }
-}
-```
-```ts twoslash [zod]
-import { type Middleware } from "@gqloom/core"
-import { ZodError } from "zod"
-import { GraphQLError } from "graphql"
-
-export const zodExceptionFilter: Middleware = async (next) => {
-  try {
-    return await next()
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw new GraphQLError(error.format()._errors.join(", "), {
-        extensions: { issues: error.issues },
-      })
-    }
-    throw error
-  }
-}
-```
+::: tip 小提示
+对于遵循 [Standard Schema](https://standardschema.dev/) 的输入验证库，GQLoom 将在内部调用其提供的验证函数来对输入进行验证，不需要额外的输入验证中间件。
 :::
+
+当使用 JSON Schema 时，我们可以使用 [Ajv](https://ajv.js.org/) 来对输入做运行时验证：
+
+<<< @/snippets/code/middleware-ajv.ts{ts twoslash}
 
 ### 验证输出
 
