@@ -19,11 +19,13 @@ export const projectConfig = defineProject({
       alias("yup"),
       alias("zod"),
     ],
+    include: ["test/**/*.{spec,spec-d}.ts", "src/**/*.{spec,spec-d}.ts"],
   },
 })
 
 export default defineConfig({
   test: {
+    projects: ["packages/*", projectConfig],
     coverage: {
       exclude: [
         ".vercel/",
