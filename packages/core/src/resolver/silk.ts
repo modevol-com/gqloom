@@ -200,7 +200,7 @@ export function getGraphQLArgumentConfig(
 
   const vendorWeavers = weaverContext.vendorWeavers
   if (vendorWeavers == null) return undefined
-  const weaver = vendorWeavers.get(silk["~standard"].vendor)
+  const weaver = vendorWeavers.get(silk["~standard"]?.vendor)
   if (weaver == null) return undefined
   if (weaver.getGraphQLArgumentConfig == null) return undefined
   return weaver.getGraphQLArgumentConfig(silk)
