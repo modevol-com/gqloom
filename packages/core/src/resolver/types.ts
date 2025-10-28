@@ -37,7 +37,9 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
   /**
    * GraphQL argument config for schema
    */
-  [GET_GRAPHQL_ARGUMENT_CONFIG]?: MayGetter<Omit<GraphQLArgumentConfig, "type">>
+  [GET_GRAPHQL_ARGUMENT_CONFIG]?: MayGetter<
+    Omit<GraphQLArgumentConfig, "type"> | undefined
+  >
 }
 
 export interface ResolverOptions<

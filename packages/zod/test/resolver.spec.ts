@@ -227,25 +227,32 @@ describe("zod resolver", () => {
     expect(printSchema(weave(r1, ZodWeaver))).toMatchInlineSnapshot(`
       "type Query {
         """Say hello to someone (or to the World by default)."""
-        hello(name: String): String!
+        hello(
+          """The name of the person to greet"""
+          name: String
+        ): String!
       }"
     `)
     const r2 = resolver({
       hello: query(z.string())
         .description("Say hello to someone (or to the World by default).")
         .input({
-          name: z
+          names: z
             .string()
             .describe("The name of the person to greet")
             .nullish()
-            .transform((value) => value ?? "World"),
+            .transform((value) => value ?? "World")
+            .array(),
         })
-        .resolve(({ name }) => `Hello, ${name}!`),
+        .resolve(({ names }) => `Hello, ${names.join(", ")}!`),
     })
     expect(printSchema(weave(r2, ZodWeaver))).toMatchInlineSnapshot(`
       "type Query {
         """Say hello to someone (or to the World by default)."""
-        hello(name: String): String!
+        hello(
+          """The name of the person to greet"""
+          names: [String]!
+        ): String!
       }"
     `)
   })

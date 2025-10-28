@@ -153,13 +153,22 @@ export function isZodPipe(schema: unknown): schema is $ZodPipe {
 }
 
 export function getDescription(schema: $ZodType): string | undefined {
-  while (isZodPipe(schema)) {
-    schema = schema._zod.def.in
+  while (true) {
+    if ("description" in schema && typeof schema.description === "string") {
+      return schema.description
+    }
+    if (isZodPipe(schema)) {
+      schema = schema._zod.def.in
+    } else if (isZodOptional(schema)) {
+      schema = schema._zod.def.innerType
+    } else if (isZodNullable(schema)) {
+      schema = schema._zod.def.innerType
+    } else if (isZodArray(schema)) {
+      schema = schema._zod.def.element
+    } else {
+      break
+    }
   }
-  if ("description" in schema && typeof schema.description === "string") {
-    return schema.description
-  }
-  return undefined
 }
 
 export function isZodDiscriminatedUnion(

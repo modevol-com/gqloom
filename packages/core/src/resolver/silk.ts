@@ -199,12 +199,9 @@ export function getGraphQLArgumentConfig(
   }
 
   const vendorWeavers = weaverContext.vendorWeavers
-  if (vendorWeavers == null) throw new Error("Schema Weaver is not initialized")
+  if (vendorWeavers == null) return undefined
   const weaver = vendorWeavers.get(silk["~standard"].vendor)
-  if (weaver == null)
-    throw new Error(
-      `Schema Weaver for ${silk["~standard"].vendor} is not found`
-    )
+  if (weaver == null) return undefined
   if (weaver.getGraphQLArgumentConfig == null) return undefined
   return weaver.getGraphQLArgumentConfig(silk)
 }
