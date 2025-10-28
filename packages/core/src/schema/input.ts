@@ -17,7 +17,12 @@ import {
   isObjectType,
   isUnionType,
 } from "graphql"
-import { type GraphQLSilk, getGraphQLType, isSilk } from "../resolver"
+import {
+  type GraphQLSilk,
+  getGraphQLArgumentConfig,
+  getGraphQLType,
+  isSilk,
+} from "../resolver"
 import { AUTO_ALIASING, mapValue, pascalCase, tryIn } from "../utils"
 import type { CoreSchemaWeaverConfig } from "./types"
 import { provideWeaverContext, weaverContext } from "./weaver-context"
@@ -47,8 +52,10 @@ export function inputToArgs(
     tryIn(() => {
       const fieldName = `${pascalCase(options.fieldName)}${pascalCase(name)}`
 
+      const config = getGraphQLArgumentConfig(field)
+
       args[name] = {
-        ...field,
+        ...config,
         type: ensureInputType(field, { fieldName }),
       }
     }, name)

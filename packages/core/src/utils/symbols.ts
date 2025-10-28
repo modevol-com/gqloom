@@ -4,6 +4,13 @@
 export const GET_GRAPHQL_TYPE = Symbol.for("gqloom.get_graphql_type")
 
 /**
+ * The symbol to get GraphQL argument config for schema
+ */
+export const GET_GRAPHQL_ARGUMENT_CONFIG = Symbol.for(
+  "gqloom.get_graphql_argument_config"
+)
+
+/**
  * The symbol to get and store weaver config
  */
 export const WEAVER_CONFIG = Symbol.for("gqloom.weaver_config")

@@ -1,10 +1,10 @@
 import {
   field,
   type GraphQLSilk,
+  getGraphQLType,
   type Loom,
   query,
   resolver,
-  SYMBOLS,
   silk,
   weave,
 } from "@gqloom/core"
@@ -31,8 +31,6 @@ function typeSilk<T extends TSchema>(
 ): T & GraphQLSilk<Static<T>, Static<T>> {
   return JSONWeaver.unravel(type) as T & GraphQLSilk<Static<T>, Static<T>>
 }
-
-const getGraphQLType = (silk: GraphQLSilk) => silk[SYMBOLS.GET_GRAPHQL_TYPE]!()
 
 function printTypeboxSchema(silk: GraphQLSilk): string {
   let gqlType = getGraphQLType(silk)

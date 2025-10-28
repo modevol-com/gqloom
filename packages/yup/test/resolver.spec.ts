@@ -208,6 +208,28 @@ describe("yup resolver", () => {
     })
   })
 
+  it("should generate args description", () => {
+    const r1 = resolver({
+      hello: query(string())
+        .description("Say hello to someone (or to the World by default).")
+        .input({
+          name: string().meta({
+            description: "The name of the person to greet",
+          }),
+        })
+        .resolve(({ name }) => `Hello, ${name}!`),
+    })
+    expect(printSchema(weave(r1, YupWeaver))).toMatchInlineSnapshot(`
+      "type Query {
+        """Say hello to someone (or to the World by default)."""
+        hello(
+          """The name of the person to greet"""
+          name: String
+        ): String
+      }"
+    `)
+  })
+
   describe("it should handle GraphQLSilk", () => {
     interface IHorse {
       name: string

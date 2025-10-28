@@ -7,6 +7,7 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
+  type GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
@@ -55,7 +56,7 @@ import {
   isZodUnion,
   resolveTypeByDiscriminatedUnion,
 } from "./utils"
-import { ZodWeaver as ZodWeaverV3 } from "./v3"
+import { getConfig, ZodWeaver as ZodWeaverV3 } from "./v3"
 
 export class ZodWeaver {
   public static vendor = "zod"
@@ -286,6 +287,16 @@ export class ZodWeaver {
       return ZodWeaver.toNullableGraphQLType(schema)
     } else {
       return ZodWeaverV3.getGraphQLType(schema)
+    }
+  }
+
+  public static getGraphQLArgumentConfig(
+    schema: $ZodType | ZodTypeAny
+  ): Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined {
+    if ("_zod" in schema) {
+      return getFieldConfig(schema)
+    } else {
+      return getConfig(schema)
     }
   }
 

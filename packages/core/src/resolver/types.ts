@@ -1,12 +1,17 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type {
+  GraphQLArgumentConfig,
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
   GraphQLResolveInfo,
 } from "graphql"
-import type { MayPromise, Middleware, RequireKeys } from "../utils"
-import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
+import type { MayGetter, MayPromise, Middleware, RequireKeys } from "../utils"
+import type {
+  FIELD_HIDDEN,
+  GET_GRAPHQL_ARGUMENT_CONFIG,
+  GET_GRAPHQL_TYPE,
+} from "../utils/symbols"
 import type { InferInputO } from "./input"
 import type {
   FieldChainFactory,
@@ -27,7 +32,14 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
   /**
    * GraphQL type for schema
    */
-  [GET_GRAPHQL_TYPE]?: () => GraphQLOutputType
+  [GET_GRAPHQL_TYPE]?: MayGetter<GraphQLOutputType>
+
+  /**
+   * GraphQL argument config for schema
+   */
+  [GET_GRAPHQL_ARGUMENT_CONFIG]?: MayGetter<
+    Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined
+  >
 }
 
 export interface ResolverOptions<
