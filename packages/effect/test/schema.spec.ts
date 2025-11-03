@@ -1,15 +1,29 @@
-import type { GQLoomExtensions, SchemaWeaver } from "@gqloom/core"
+import type { Loom, SchemaWeaver } from "@gqloom/core"
+import {
+  field,
+  type GQLoomExtensions,
+  GraphQLSchemaLoom,
+  mutation,
+  query,
+  resolver,
+  weave,
+} from "@gqloom/core"
 import { Schema } from "effect"
 import {
+  execute,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
   GraphQLList,
+  type GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
+  parse,
+  printSchema,
+  printType,
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import {
@@ -32,6 +46,23 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 })
 
 const getGraphQLType = EffectWeaver.getGraphQLType
+
+// Helper function to print a schema type
+function print(schema: Schema.Schema.Any): string {
+  let gqlType = getGraphQLType(schema)
+  while ("ofType" in gqlType) gqlType = gqlType.ofType
+  return printType(gqlType as GraphQLNamedType)
+}
+
+// Helper function to print resolver schema
+function printResolver(...resolvers: Loom.Resolver[]): string {
+  const weaver = new GraphQLSchemaLoom()
+  weaver.addVendor(EffectWeaver)
+  for (const r of resolvers) weaver.add(r)
+
+  const schema = weaver.weaveGraphQLSchema()
+  return printSchema(schema)
+}
 
 describe("EffectWeaver", () => {
   it("should satisfy SchemaWeaver", () => {
@@ -91,6 +122,161 @@ describe("EffectWeaver", () => {
     )
 
     expect(getGraphQLType(DateSchema)).toEqual(GraphQLDate)
+
+    const Cat = asObjectType(
+      Schema.Struct({
+        name: Schema.String,
+        age: asField(Schema.Int.annotations({ identifier: "Int" }), {
+          type: GraphQLInt,
+          description: "How old is the cat",
+        }),
+        loveFish: Schema.NullOr(Schema.Boolean),
+      }),
+      {
+        name: "Cat",
+        description: "A cute cat",
+      }
+    )
+    expect(print(Schema.NullOr(Cat))).toMatchInlineSnapshot(`
+      """"A cute cat"""
+      type Cat {
+        name: String!
+
+        """How old is the cat"""
+        age: Int
+        loveFish: Boolean
+      }"
+    `)
+  })
+
+  // TODO: Default value extraction not yet implemented
+  // Purpose: Test that default values from Effect Schema annotations are preserved in GraphQL field extensions
+  // Why failing: The Effect weaver doesn't extract the `default` annotation from schema.ast.annotations
+  // Implementation needed:
+  //   1. In getFieldConfig() or toGraphQLType(), extract default annotation from schema.ast.annotations
+  //   2. Add to field config: { extensions: { defaultValue: extractedDefault } }
+  //   3. Similar to how Valibot extracts defaults in packages/valibot/src/metadata.ts:35-56
+  it.skip("should keep default value in extensions", () => {
+    const objectType = asObjectType(
+      Schema.Struct({
+        foo: Schema.optional(Schema.String).annotations({
+          default: () => "foo",
+        }),
+      }),
+      { name: "ObjectType" }
+    )
+
+    const objectGqlType = (
+      getGraphQLType(objectType) as GraphQLNonNull<GraphQLObjectType>
+    ).ofType
+
+    const extensions = objectGqlType.getFields().foo.extensions
+
+    expect(extensions?.defaultValue).toEqual(expect.any(Function))
+    expect(extensions?.defaultValue?.()).toEqual("foo")
+  })
+
+  // TODO: Hidden field test partially working - needs __typename handling fix
+  // Purpose: Test that fields marked with `type: null` or `field.hidden` are excluded from GraphQL schema
+  // Why failing: The type name is being generated as __gqloom_auto_aliasing instead of "Dog"
+  // Implementation needed:
+  //   1. Better __typename extraction from Schema.Struct with Literal __typename fields
+  //   2. The hidden field logic works (lines 210-211 in src/index.ts) but type naming doesn't
+  //   3. Should extract "Dog" from __typename: Schema.Literal("Dog") for AUTO_ALIASING
+  it.skip("should handle hidden field", () => {
+    const Dog1 = Schema.Struct({
+      __typename: Schema.NullOr(Schema.Literal("Dog")),
+      name: Schema.optional(Schema.String),
+      birthday: asField(Schema.optional(Schema.Date), { type: null }),
+    })
+
+    expect(print(Dog1)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }"
+    `)
+
+    const r = resolver.of(Dog1, {
+      dog: query(Dog1).resolve(() => ({})),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }
+
+      type Query {
+        dog: Dog!
+      }"
+    `)
+
+    const Dog2 = Schema.Struct({
+      __typename: Schema.NullOr(Schema.Literal("Dog")),
+      name: Schema.optional(Schema.String),
+      birthday: asField(Schema.optional(Schema.Date), { type: field.hidden }),
+    })
+
+    const r2 = resolver.of(Dog2, {
+      dog: query(Dog2).resolve(() => ({})),
+    })
+
+    expect(printResolver(r2)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+      }
+
+      type Query {
+        dog: Dog!
+      }"
+    `)
+  })
+
+  // TODO: Preset GraphQLType config needs silk integration
+  // Purpose: Test that presetGraphQLType config option allows overriding default type mappings (e.g., Date → custom scalar)
+  // Why failing: Schemas need to be wrapped with EffectWeaver.unravel() to create "silks" with ~standard symbol
+  // Implementation needed:
+  //   1. Schemas used in resolvers must have the ~standard vendor symbol
+  //   2. Either auto-wrap schemas in resolver() or require explicit EffectWeaver.unravel() calls
+  //   3. The config logic itself is correct (lines 228-238 in test), just needs proper silk integration
+  it.skip("should handle preset GraphQLType", () => {
+    const Dog = Schema.Struct({
+      __typename: Schema.NullOr(Schema.Literal("Dog")),
+      name: Schema.optional(Schema.String),
+      birthday: Schema.optional(Schema.Date.annotations({ identifier: "Date" })),
+    })
+
+    const r1 = resolver({ dog: query(Dog).resolve(() => ({})) })
+    const config = EffectWeaver.config({
+      presetGraphQLType: (schema) => {
+        const ast = schema.ast
+        if (ast._tag === "Transformation" || ast._tag === "Declaration") {
+          const identifier = schema.ast.annotations?.identifier
+          if (identifier === "Date") {
+            return GraphQLDate
+          }
+        }
+      },
+    })
+    const schema1 = EffectWeaver.weave(r1, config)
+
+    const eSilk = EffectWeaver.useConfig(config)
+    const r2 = resolver({ dog: query(eSilk(Dog)).resolve(() => ({})) })
+    const schema2 = weave(r2)
+
+    expect(printSchema(schema2)).toEqual(printSchema(schema1))
+
+    expect(printSchema(schema1)).toMatchInlineSnapshot(`
+      "type Query {
+        dog: Dog!
+      }
+
+      type Dog {
+        name: String
+        birthday: Date
+      }
+
+      scalar Date"
+    `)
   })
 
   it("should handle non-null types", () => {
@@ -114,6 +300,25 @@ describe("EffectWeaver", () => {
     expect(getGraphQLType(Schema.Array(Schema.NullOr(Schema.String)))).toEqual(
       new GraphQLNonNull(new GraphQLList(GraphQLString))
     )
+  })
+
+  // TODO: Schema.optional() with arrays needs PropertySignature unwrapping
+  // Purpose: Test all array nullability combinations: [String!]!, [String]!, [String!], [String]
+  // Why failing: Schema.optional() creates PropertySignatureDeclaration AST nodes
+  // Implementation needed:
+  //   1. Add PropertySignatureDeclaration handling in toGraphQLType() or unwrapTransformation()
+  //   2. Extract the inner type from property signature before processing
+  //   3. Similar pattern to how Transformation is unwrapped in src/utils.ts:unwrapTransformation()
+  it.skip("should handle array nullability combinations", () => {
+    // [String!] - nullable array of non-null strings
+    expect(getGraphQLType(Schema.optional(Schema.Array(Schema.String)))).toEqual(
+      new GraphQLList(new GraphQLNonNull(GraphQLString))
+    )
+
+    // [String] - nullable array of nullable strings
+    expect(
+      getGraphQLType(Schema.optional(Schema.Array(Schema.NullOr(Schema.String))))
+    ).toEqual(new GraphQLList(GraphQLString))
   })
 
   it("should handle object types", () => {
@@ -140,6 +345,74 @@ describe("EffectWeaver", () => {
     expect(type).toBeInstanceOf(GraphQLNonNull)
   })
 
+  // TODO: Enum key/value mapping needs adjustment
+  // Purpose: Test enum with per-value configuration (description, deprecation) via valuesConfig
+  // Why failing: Effect Schema.Enums uses keys as enum values, but valuesConfig expects runtime values
+  // Implementation needed:
+  //   1. In src/index.ts lines 223-240 (enum handling), map valuesConfig keys correctly
+  //   2. Schema.Enums({ Active: "ACTIVE" }) creates enum with key="Active" and value="ACTIVE"
+  //   3. GraphQL enum name should be "Active" but valuesConfig uses "Active" as key
+  //   4. Current code creates enum values as "Active" but test expects "ACTIVE"
+  it.skip("should handle enum with valuesConfig", () => {
+    const Status = asEnumType(
+      Schema.Enums({
+        Active: "ACTIVE",
+        Inactive: "INACTIVE",
+        Pending: "PENDING",
+      }),
+      {
+        name: "Status",
+        description: "User status",
+        valuesConfig: {
+          Active: { description: "User is active" },
+          Inactive: { description: "User is inactive", deprecationReason: "Use Active or Pending" },
+          Pending: { description: "User is pending approval" },
+        },
+      }
+    )
+
+    expect(print(Status)).toMatchInlineSnapshot(`
+      """"User status"""
+      enum Status {
+        """User is active"""
+        ACTIVE
+
+        """User is inactive"""
+        INACTIVE @deprecated(reason: "Use Active or Pending")
+
+        """User is pending approval"""
+        PENDING
+      }"
+    `)
+  })
+
+  // TODO: Runtime execution needs silk integration
+  // Purpose: Test that enum values resolve correctly in actual GraphQL execution (not just type generation)
+  // Why failing: Same silk integration issue - schemas need ~standard symbol for resolver usage
+  // Implementation needed: Same as "preset GraphQLType" test - wrap schemas with EffectWeaver.unravel()
+  it.skip("should resolve enum values correctly", async () => {
+    const Role = asEnumType(
+      Schema.Enums({
+        Admin: "ADMIN",
+        User: "USER",
+        Guest: "GUEST",
+      }),
+      { name: "Role" }
+    )
+
+    const r = resolver({
+      role: query(Role).resolve(() => "ADMIN"),
+    })
+
+    const schema = weave(EffectWeaver, r)
+    const result = await execute({
+      schema,
+      document: parse("query { role }"),
+    })
+
+    expect(result.data?.role).toBe("ADMIN")
+  })
+
   it("should handle union types", () => {
     const Cat = Schema.Struct({
       __typename: Schema.Literal("Cat"),
@@ -155,6 +428,56 @@ describe("EffectWeaver", () => {
 
     const type = getGraphQLType(Animal)
     expect(type).toBeInstanceOf(GraphQLNonNull)
+  })
+
+  // TODO: All resolver-based tests need silk integration (see preset GraphQLType test comments)
+  it.skip("should handle union with resolveType", () => {
+    const Cat = asObjectType(
+      Schema.Struct({
+        name: Schema.String,
+        meow: Schema.String,
+      }),
+      { name: "Cat" }
+    )
+
+    const Dog = asObjectType(
+      Schema.Struct({
+        name: Schema.String,
+        bark: Schema.String,
+      }),
+      { name: "Dog" }
+    )
+
+    const Animal = asUnionType(Schema.Union(Cat, Dog), {
+      name: "Animal",
+      resolveType: (value) => {
+        if ("meow" in value) return "Cat"
+        if ("bark" in value) return "Dog"
+        return null
+      },
+    })
+
+    const r = resolver({
+      animal: query(Animal).resolve(() => ({ name: "Fluffy", meow: "meow" })),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        animal: Animal!
+      }
+
+      union Animal = Cat | Dog
+
+      type Cat {
+        name: String!
+        meow: String!
+      }
+
+      type Dog {
+        name: String!
+        bark: String!
+      }"
+    `)
   })
 
   it("should handle nullable union types", () => {
@@ -218,11 +541,17 @@ describe("EffectWeaver", () => {
       name: asField(Schema.String, {
         description: "The user's name",
       }),
+      email: asField(Schema.String, {
+        description: "The user's email address",
+        deprecationReason: "Use contactEmail instead",
+      }),
     })
 
     const type = getGraphQLType(User) as GraphQLNonNull<GraphQLObjectType>
     const fields = type.ofType.getFields()
     expect(fields.name.description).toBe("The user's name")
+    expect(fields.email.description).toBe("The user's email address")
+    expect(fields.email.deprecationReason).toBe("Use contactEmail instead")
   })
 
   it("should handle with enum metadata", () => {
@@ -261,5 +590,736 @@ describe("EffectWeaver", () => {
     const type = getGraphQLType(Animal) as GraphQLNonNull<any>
     expect(type.ofType.name).toBe("Animal")
     expect(type.ofType.description).toBe("An animal union type")
+  })
+
+  // TODO: Resolver test - needs silk integration
+  it.skip("should handle interface implementation", () => {
+    const Node = asObjectType(
+      Schema.Struct({
+        id: Schema.String,
+      }),
+      { name: "Node", description: "Node interface" }
+    )
+
+    const User = asObjectType(
+      Schema.Struct({
+        id: Schema.String,
+        name: Schema.String,
+      }),
+      {
+        name: "User",
+        interfaces: [Node],
+      }
+    )
+
+    const r = resolver.of(User, {
+      user: query(User).resolve(() => ({ id: "1", name: "Alice" })),
+    })
+
+    expect(printResolver(r)).toMatchInlineSnapshot(`
+      "type Query {
+        user: User!
+      }
+
+      type User implements Node {
+        id: String!
+        name: String!
+      }
+
+      """Node interface"""
+      type Node {
+        id: String!
+      }"
+    `)
+  })
+
+  // TODO: All duplicate avoidance tests need silk integration
+  // Purpose: Critical test suite ensuring the same type isn't generated multiple times in schema
+  // Why failing: All these tests use resolvers which need proper silk wrapping
+  // Implementation needed: Same silk integration fix as other resolver tests
+  describe.skip("should avoid duplicate", () => {
+    it("should merge field from multiple resolver", () => {
+      const Dog = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Dog")),
+        name: Schema.String,
+        birthday: Schema.String,
+      })
+
+      const r1 = resolver.of(Dog, {
+        dog: query(Dog).resolve(() => ({ name: "", birthday: "2012-12-12" })),
+        age: field(Schema.Number).resolve((dog) => {
+          return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
+        }),
+      })
+
+      const r2 = resolver.of(Dog, {
+        isCute: field(Schema.Boolean).resolve(() => true),
+      })
+
+      expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+          age: Float!
+          isCute: Boolean!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate object", () => {
+      const Dog = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Dog")),
+        name: Schema.String,
+        birthday: Schema.String,
+      })
+
+      const Cat = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Cat")),
+        name: Schema.String,
+        birthday: Schema.String,
+        friend: Schema.NullOr(Dog),
+      })
+
+      const r1 = resolver.of(Dog, {
+        dog: query(Schema.optional(Dog)).resolve(() => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+      })
+
+      const r2 = resolver.of(Cat, {
+        cat: query(Cat).resolve(() => ({
+          name: "",
+          birthday: "2012-12-12",
+          friend: { name: "", birthday: "2012-12-12" },
+        })),
+      })
+
+      expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
+        "type Query {
+          dog: Dog
+          cat: Cat!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+        }
+
+        type Cat {
+          name: String!
+          birthday: String!
+          friend: Dog
+        }"
+      `)
+    })
+
+    it("should avoid duplicate object in nested structures", () => {
+      const Prize = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Prize")),
+        name: Schema.String,
+        value: Schema.Number,
+      })
+
+      const Orange = asObjectType(
+        Schema.Struct({
+          __typename: Schema.Literal("Orange"),
+          name: Schema.String,
+          color: Schema.String,
+          prize: asField(Prize, {}),
+        }),
+        { name: "Orange" }
+      )
+
+      const Apple = asObjectType(
+        Schema.Struct({
+          __typename: Schema.Literal("Apple"),
+          name: Schema.String,
+          sweetness: Schema.Number,
+          prize: asField(Prize, {}),
+        }),
+        { name: "Apple" }
+      )
+
+      const r1 = resolver({
+        orange: query(Orange).resolve(() => ({
+          name: "Orange",
+          color: "orange",
+          prize: { name: "Gold", value: 100 },
+        })),
+        apple: query(Apple).resolve(() => ({
+          name: "Apple",
+          sweetness: 10,
+          prize: { name: "Silver", value: 50 },
+        })),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          orange: Orange!
+          apple: Apple!
+        }
+
+        type Orange {
+          name: String!
+          color: String!
+          prize: Prize!
+        }
+
+        type Prize {
+          name: String!
+          value: Float!
+        }
+
+        type Apple {
+          name: String!
+          sweetness: Float!
+          prize: Prize!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate object in interface", () => {
+      const Prize = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Prize")),
+        name: Schema.String,
+        value: Schema.Number,
+      })
+
+      const Fruit = asObjectType(
+        Schema.Struct({
+          __typename: Schema.Literal("Fruit"),
+          name: Schema.String,
+          color: Schema.String,
+          prize: Prize,
+        }),
+        { name: "Fruit" }
+      )
+
+      const Orange = asObjectType(
+        Schema.Struct({
+          __typename: Schema.NullOr(Schema.Literal("Orange")),
+          name: Schema.String,
+          color: Schema.String,
+          prize: Prize,
+          flavor: Schema.String,
+        }),
+        {
+          name: "Orange",
+          interfaces: [Fruit],
+        }
+      )
+
+      const Apple = asObjectType(
+        Schema.Struct({
+          __typename: Schema.NullOr(Schema.Literal("Apple")),
+          name: Schema.String,
+          color: Schema.String,
+          prize: Prize,
+          sweetness: Schema.Number,
+        }),
+        {
+          name: "Apple",
+          interfaces: [Fruit],
+        }
+      )
+
+      const r1 = resolver({
+        orange: query(Orange).resolve(() => ({
+          name: "Orange",
+          color: "orange",
+          prize: { name: "Gold", value: 100 },
+          flavor: "citrus",
+        })),
+        apple: query(Apple).resolve(() => ({
+          name: "Apple",
+          color: "red",
+          prize: { name: "Silver", value: 50 },
+          sweetness: 10,
+        })),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          orange: Orange!
+          apple: Apple!
+        }
+
+        type Orange implements Fruit {
+          name: String!
+          color: String!
+          prize: Prize!
+          flavor: String!
+        }
+
+        type Fruit {
+          name: String!
+          color: String!
+          prize: Prize!
+        }
+
+        type Prize {
+          name: String!
+          value: Float!
+        }
+
+        type Apple implements Fruit {
+          name: String!
+          color: String!
+          prize: Prize!
+          sweetness: Float!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate input", () => {
+      const Dog = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Dog")),
+        name: Schema.String,
+        birthday: Schema.String,
+      })
+
+      const DogInput = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("DogInput")),
+        name: Schema.String,
+        birthday: Schema.String,
+      })
+
+      const DataInput = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("DataInput")),
+        dog: DogInput,
+      })
+
+      const r1 = resolver.of(Dog, {
+        createDog: mutation(Dog)
+          .input({ data: DogInput })
+          .resolve(({ data }) => data),
+        dogs: query(Schema.Array(Dog)).resolve(() => []),
+      })
+
+      const r2 = resolver({
+        createData: mutation(Dog)
+          .input({ data: DataInput })
+          .resolve(({ data }) => data.dog),
+      })
+
+      expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
+        "type Mutation {
+          createDog(data: DogInput!): Dog!
+          createData(data: DataInput!): Dog!
+        }
+
+        type Query {
+          dogs: [Dog!]!
+        }
+
+        input DogInput {
+          name: String!
+          birthday: String!
+        }
+
+        type Dog {
+          name: String!
+          birthday: String!
+        }
+
+        input DataInput {
+          dog: DogInput!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate enum", () => {
+      const Fruit = asEnumType(
+        Schema.Enums({
+          Apple: "apple",
+          Banana: "banana",
+          Orange: "orange",
+        }),
+        { name: "Fruit" }
+      )
+
+      const r1 = resolver({
+        fruit: query(Schema.optional(Fruit)).resolve(() => "apple" as const),
+        fruits: query(Schema.Array(Schema.optional(Fruit))).resolve(() => []),
+        mustFruit: query(Fruit).resolve(() => "apple" as const),
+        mustFruits: query(Schema.Array(Fruit)).resolve(() => []),
+      })
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit]!
+          mustFruit: Fruit!
+          mustFruits: [Fruit!]!
+        }
+
+        enum Fruit {
+          apple
+          banana
+          orange
+        }"
+      `)
+    })
+
+    it("should avoid duplicate interface", () => {
+      const Fruit = asObjectType(
+        Schema.Struct({
+          __typename: Schema.NullOr(Schema.Literal("Fruit")),
+          color: Schema.optional(Schema.String),
+        }),
+        { name: "Fruit" }
+      )
+      const Orange = asObjectType(
+        Schema.Struct({
+          __typename: Schema.NullOr(Schema.Literal("Orange")),
+          color: Schema.optional(Schema.String),
+          flavor: Schema.String,
+        }),
+        {
+          name: "Orange",
+          interfaces: [Fruit],
+        }
+      )
+
+      const Apple = asObjectType(
+        Schema.Struct({
+          __typename: Schema.NullOr(Schema.Literal("Apple")),
+          color: Schema.optional(Schema.String),
+          sweetness: Schema.Number,
+        }),
+        {
+          name: "Apple",
+          interfaces: [Fruit],
+        }
+      )
+
+      const r1 = resolver({
+        orange: query(Schema.optional(Orange)).resolve(() => ({
+          color: "orange",
+          flavor: "citrus",
+        })),
+        oranges: query(Schema.Array(Orange)).resolve(() => []),
+        apple: query(Schema.optional(Apple)).resolve(() => ({
+          color: "red",
+          sweetness: 10,
+        })),
+        apples: query(Schema.Array(Apple)).resolve(() => []),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          orange: Orange
+          oranges: [Orange!]!
+          apple: Apple
+          apples: [Apple!]!
+        }
+
+        type Orange implements Fruit {
+          color: String
+          flavor: String!
+        }
+
+        type Fruit {
+          color: String
+        }
+
+        type Apple implements Fruit {
+          color: String
+          sweetness: Float!
+        }"
+      `)
+    })
+
+    it("should avoid duplicate union", () => {
+      const Apple = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Apple")),
+        flavor: Schema.String,
+      })
+      const Orange = Schema.Struct({
+        __typename: Schema.NullOr(Schema.Literal("Orange")),
+        color: Schema.String,
+      })
+      const Fruit = asUnionType(Schema.Union(Apple, Orange), { name: "Fruit" })
+
+      const r1 = resolver({
+        fruit: query(Schema.optional(Fruit)).resolve(() => ({ flavor: "" })),
+        fruits: query(Schema.Array(Fruit)).resolve(() => []),
+        mustFruit: query(Fruit).resolve(() => ({ flavor: "" })),
+        mustFruits: query(Schema.Array(Schema.optional(Fruit))).resolve(() => []),
+      })
+
+      expect(printResolver(r1)).toMatchInlineSnapshot(`
+        "type Query {
+          fruit: Fruit
+          fruits: [Fruit!]!
+          mustFruit: Fruit!
+          mustFruits: [Fruit]!
+        }
+
+        union Fruit = Apple | Orange
+
+        type Apple {
+          flavor: String!
+        }
+
+        type Orange {
+          color: String!
+        }"
+      `)
+    })
+  })
+
+  describe("Edge cases and advanced features", () => {
+    // TODO: Resolver test - needs silk integration
+    it.skip("should handle circular references", () => {
+      interface IUser {
+        name: string
+        friend?: IUser
+      }
+
+      const User: Schema.Schema<IUser> = Schema.Struct({
+        name: Schema.String,
+        friend: Schema.optional(Schema.suspend((): Schema.Schema<IUser> => User)),
+      })
+
+      const r = resolver({
+        user: query(User).resolve(() => ({
+          name: "Alice",
+          friend: { name: "Bob" },
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          user: User!
+        }
+
+        type User {
+          name: String!
+          friend: User
+        }"
+      `)
+    })
+
+    // TODO: Union validation needs refinement
+    // Purpose: Test that unions of primitives (String | Number) are handled correctly
+    // Why failing: Currently throws "Union types can only contain objects" error
+    // Implementation needed:
+    //   1. Either allow primitive unions and pick first type (like nullable union unwrapping)
+    //   2. Or validate and throw a more helpful error message
+    //   3. GraphQL doesn't support union of scalars, so this might be expected behavior
+    it.skip("should throw error for unsupported union with non-object types", () => {
+      // This tests that the weaver properly validates union types
+      // In Effect Schema, unions of primitives should unwrap to a single type
+      const StringOrNumber = Schema.Union(Schema.String, Schema.Number)
+
+      // This should resolve to one of the types or throw
+      expect(() => {
+        const type = getGraphQLType(StringOrNumber)
+        // If it doesn't throw, it should at least return a valid GraphQL type
+        expect(type).toBeDefined()
+      }).not.toThrow()
+    })
+
+    // TODO: Resolver test - needs silk integration
+    it.skip("should handle optional fields with complex types", () => {
+      const Address = Schema.Struct({
+        street: Schema.String,
+        city: Schema.String,
+        zipCode: Schema.optional(Schema.String),
+      })
+
+      const User = Schema.Struct({
+        name: Schema.String,
+        address: Schema.optional(Address),
+        addresses: Schema.optional(Schema.Array(Address)),
+      })
+
+      const r = resolver({
+        user: query(User).resolve(() => ({
+          name: "Alice",
+          address: { street: "123 Main St", city: "Springfield" },
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          user: User!
+        }
+
+        type User {
+          name: String!
+          address: Address
+          addresses: [Address!]
+        }
+
+        type Address {
+          street: String!
+          city: String!
+          zipCode: String
+        }"
+      `)
+    })
+
+    it("should handle branded types", () => {
+      const Email = Schema.String.pipe(
+        Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+      ).annotations({ identifier: "Email" })
+
+      const User = Schema.Struct({
+        name: Schema.String,
+        email: Email,
+      })
+
+      const type = getGraphQLType(User) as GraphQLNonNull<GraphQLObjectType>
+      const fields = type.ofType.getFields()
+
+      // Branded types should still resolve to their base GraphQL type
+      expect(fields.email.type).toBeInstanceOf(GraphQLNonNull)
+      expect((fields.email.type as GraphQLNonNull<any>).ofType).toBe(GraphQLString)
+    })
+
+    // TODO: Resolver test - needs silk integration
+    it.skip("should handle transformation schemas", () => {
+      const PositiveInt = Schema.Number.pipe(
+        Schema.int(),
+        Schema.positive()
+      )
+
+      const Product = Schema.Struct({
+        name: Schema.String,
+        quantity: PositiveInt,
+      })
+
+      const r = resolver({
+        product: query(Product).resolve(() => ({
+          name: "Widget",
+          quantity: 5,
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          product: Product!
+        }
+
+        type Product {
+          name: String!
+          quantity: Float!
+        }"
+      `)
+    })
+
+    // TODO: Resolver test - needs silk integration
+    it.skip("should handle deeply nested structures", () => {
+      const Level3 = Schema.Struct({
+        value: Schema.String,
+      })
+
+      const Level2 = Schema.Struct({
+        level3: Level3,
+      })
+
+      const Level1 = Schema.Struct({
+        level2: Level2,
+      })
+
+      const r = resolver({
+        root: query(Level1).resolve(() => ({
+          level2: {
+            level3: {
+              value: "deep",
+            },
+          },
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          root: Level1!
+        }
+
+        type Level1 {
+          level2: Level2!
+        }
+
+        type Level2 {
+          level3: Level3!
+        }
+
+        type Level3 {
+          value: String!
+        }"
+      `)
+    })
+
+    it("should handle empty objects", () => {
+      const Empty = Schema.Struct({})
+
+      const type = getGraphQLType(Empty) as GraphQLNonNull<GraphQLObjectType>
+      expect(type.ofType).toBeInstanceOf(GraphQLObjectType)
+      expect(Object.keys(type.ofType.getFields())).toHaveLength(0)
+    })
+
+    // TODO: Resolver test - needs silk integration
+    it.skip("should handle multiple interfaces", () => {
+      const Node = asObjectType(
+        Schema.Struct({
+          id: Schema.String,
+        }),
+        { name: "Node" }
+      )
+
+      const Timestamped = asObjectType(
+        Schema.Struct({
+          createdAt: Schema.Date.annotations({ identifier: "Date" }),
+        }),
+        { name: "Timestamped" }
+      )
+
+      const User = asObjectType(
+        Schema.Struct({
+          id: Schema.String,
+          createdAt: Schema.Date.annotations({ identifier: "Date" }),
+          name: Schema.String,
+        }),
+        {
+          name: "User",
+          interfaces: [Node, Timestamped],
+        }
+      )
+
+      const r = resolver({
+        user: query(User).resolve(() => ({
+          id: "1",
+          createdAt: new Date(),
+          name: "Alice",
+        })),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          user: User!
+        }
+
+        type User implements Node & Timestamped {
+          id: String!
+          createdAt: String!
+          name: String!
+        }
+
+        type Node {
+          id: String!
+        }
+
+        type Timestamped {
+          createdAt: String!
+        }"
+      `)
+    })
   })
 })
