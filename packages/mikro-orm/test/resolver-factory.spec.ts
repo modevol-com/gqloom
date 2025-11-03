@@ -33,7 +33,7 @@ const PostEntity = defineEntity({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
     content: p.string().lazy(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 
