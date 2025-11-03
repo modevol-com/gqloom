@@ -31,7 +31,7 @@ describe("Mikro Resolver", () => {
         id: p.integer().primary().autoincrement(),
         title: p.string(),
         content: p.string().lazy(),
-        author: () => p.manyToOne(User),
+        author: () => p.manyToOne(User).ref(),
       }),
     })
 
