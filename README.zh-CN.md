@@ -52,6 +52,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | [GQLoom Core](./packages/core/README.md)             | GraphQL 织布机核心功能                                                                                                           |
 | [GQLoom Drizzle](./packages/drizzle/README.md)       | GQLoom 与 Drizzle 的集成，能够将用 Drizzle定义的数据库表格编织为 GraphQL Schema，支持使用解析器工厂从 Drizzle 快速创建 CRUD 接口 |
+| [GQLoom Effect](./packages/effect/README.md)         | GQLoom 与 Effect Schema 的集成，能够将 Effect Schema 编织为 GraphQL Schema                                                       |
 | [GQLoom Federation](./packages/federation/README.md) | 提供 GQLoom 对 Apollo Federation 的支持                                                                                          |
 | [GQLoom JSON](./packages/json/README.md)             | GQLoom 与 JSON Schema 的集成，能够将 JSON Schema 编织为 GraphQL Schema                                                           |
 | [GQLoom Mikro ORM](./packages/mikro-orm/README.md)   | GQLoom 与 Mikro ORM 的集成，能够将 Mikro Entity 编织为 GraphQL Schema，支持使用解析器工厂从 Mikro ORM 快速创建 CRUD 接口         |

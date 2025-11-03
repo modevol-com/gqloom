@@ -1,0 +1,57 @@
+{
+  "name": "@gqloom/effect",
+  "version": "0.13.0",
+  "description": "Create GraphQL schema and resolvers easily using Effect Schema!",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "check:type": "tsgo --noEmit"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "gqloom",
+    "graphql",
+    "schema",
+    "typescript",
+    "effect",
+    "effect-schema",
+    "validation",
+    "validate"
+  ],
+  "author": "xcfox",
+  "license": "MIT",
+  "peerDependencies": {
+    "@gqloom/core": ">= 0.12.0",
+    "effect": ">= 3.0.0",
+    "graphql": ">= 16.8.0"
+  },
+  "devDependencies": {
+    "@gqloom/core": "workspace:*",
+    "effect": "^3.17.13"
+  },
+  "homepage": "https://gqloom.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/modevol-com/gqloom.git",
+    "directory": "packages/effect"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
