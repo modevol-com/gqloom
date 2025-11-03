@@ -55,6 +55,7 @@ export class EffectWeaver {
 
   /**
    * Get GraphQL Silk from Effect Schema
+   * Converts Effect Schema to Standard Schema v1 for interoperability
    * @param schema Effect Schema
    * @returns GraphQL Silk Like Effect Schema
    */
@@ -63,7 +64,13 @@ export class EffectWeaver {
   ): TSchema {
     const config =
       weaverContext.value?.getConfig<EffectWeaverConfig>("gqloom.effect")
+
+    // Convert to Standard Schema V1 to get ~standard property
+    const standardSchema = Schema.standardSchemaV1(schema)
+
     return Object.assign(schema, {
+      // Copy ~standard property from standardSchemaV1
+      "~standard": standardSchema["~standard"],
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema.Schema.Any) {
             return weaverContext.useConfig(config, () =>
