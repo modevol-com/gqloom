@@ -295,14 +295,7 @@ describe("EffectWeaver", () => {
     )
   })
 
-  // TODO: Schema.optional() with arrays needs PropertySignature unwrapping
-  // Purpose: Test all array nullability combinations: [String!]!, [String]!, [String!], [String]
-  // Why failing: Schema.optional() creates PropertySignatureDeclaration AST nodes
-  // Implementation needed:
-  //   1. Add PropertySignatureDeclaration handling in toGraphQLType() or unwrapTransformation()
-  //   2. Extract the inner type from property signature before processing
-  //   3. Similar pattern to how Transformation is unwrapped in src/utils.ts:unwrapTransformation()
-  it.skip("should handle array nullability combinations", () => {
+  it("should handle array nullability combinations", () => {
     // [String!] - nullable array of non-null strings
     expect(getGraphQLType(Schema.optional(Schema.Array(Schema.String)))).toEqual(
       new GraphQLList(new GraphQLNonNull(GraphQLString))

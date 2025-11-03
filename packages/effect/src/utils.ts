@@ -201,6 +201,15 @@ export function isTupleOrArraySchema(
  * Check if a schema is nullable or optional
  */
 export function isNullable(ast: SchemaAST.AST): boolean {
+  // Handle PropertySignatureDeclaration (created by Schema.optional())
+  if (ast._tag === "PropertySignatureDeclaration") {
+    const prop = ast as SchemaAST.PropertySignatureDeclaration
+    // Schema.optional() always makes the field nullable
+    if (prop.isOptional) return true
+    // Also check the inner type
+    return isNullable(prop.type)
+  }
+
   if (ast._tag === "Union") {
     return ast.types.some(
       (t) =>
@@ -222,6 +231,10 @@ export function unwrapTransformation(ast: SchemaAST.AST): SchemaAST.AST {
   }
   if (ast._tag === "Refinement") {
     return unwrapTransformation(ast.from)
+  }
+  // Handle PropertySignatureDeclaration (created by Schema.optional())
+  if (ast._tag === "PropertySignatureDeclaration") {
+    return unwrapTransformation((ast as SchemaAST.PropertySignatureDeclaration).type)
   }
   return ast
 }
