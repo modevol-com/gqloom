@@ -15,11 +15,26 @@ import type {
 /**
  * Get field configuration from an Effect Schema
  * Extracts both AS_FIELD metadata and default values from annotations
+ * Also checks PropertySignature annotations if provided
  */
-export function getFieldConfig(schema: Schema.Schema.Any): FieldConfig {
-  const fieldConfig = SchemaAST.getAnnotation<FieldConfig>(AS_FIELD)(
+export function getFieldConfig(
+  schema: Schema.Schema.Any,
+  propertySignature?: SchemaAST.PropertySignature
+): FieldConfig {
+  // First check PropertySignature annotations (takes precedence)
+  const propFieldConfig = propertySignature
+    ? SchemaAST.getAnnotation<FieldConfig>(AS_FIELD)(propertySignature).pipe(
+        Option.getOrElse(() => ({}) as FieldConfig)
+      )
+    : {}
+
+  // Then check schema annotations
+  const schemaFieldConfig = SchemaAST.getAnnotation<FieldConfig>(AS_FIELD)(
     schema.ast
   ).pipe(Option.getOrElse(() => ({}) as FieldConfig))
+
+  // Merge configs, PropertySignature takes precedence
+  const fieldConfig = { ...schemaFieldConfig, ...propFieldConfig }
 
   // Extract default value from schema annotations if present
   const defaultValue = schema.ast.annotations?.default
@@ -237,4 +252,37 @@ export function unwrapTransformation(ast: SchemaAST.AST): SchemaAST.AST {
     return unwrapTransformation((ast as SchemaAST.PropertySignatureDeclaration).type)
   }
   return ast
+}
+
+/**
+ * Extract type name from __typename field if present
+ * Looks for __typename: Schema.Literal("TypeName") pattern
+ * Also handles __typename: Schema.NullOr(Schema.Literal("TypeName"))
+ */
+export function extractTypeName(ast: SchemaAST.TypeLiteral): string | undefined {
+  const typenameProp = ast.propertySignatures.find(
+    (prop) => prop.name.toString() === "__typename"
+  )
+
+  if (!typenameProp) return undefined
+
+  // Unwrap the property type to get to the literal
+  const unwrapped = unwrapTransformation(typenameProp.type)
+
+  // Check if it's a literal
+  if (isLiteralSchema(unwrapped) && typeof unwrapped.literal === "string") {
+    return unwrapped.literal
+  }
+
+  // Check if it's a union (from Schema.NullOr or Schema.optional)
+  if (isUnionSchema(unwrapped)) {
+    // Find the first string literal that's not null/undefined
+    for (const type of unwrapped.types) {
+      if (isLiteralSchema(type) && typeof type.literal === "string") {
+        return type.literal
+      }
+    }
+  }
+
+  return undefined
 }

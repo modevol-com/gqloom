@@ -169,14 +169,7 @@ describe("EffectWeaver", () => {
     expect(extensions?.defaultValue?.()).toEqual("foo")
   })
 
-  // TODO: Hidden field test partially working - needs __typename handling fix
-  // Purpose: Test that fields marked with `type: null` or `field.hidden` are excluded from GraphQL schema
-  // Why failing: The type name is being generated as __gqloom_auto_aliasing instead of "Dog"
-  // Implementation needed:
-  //   1. Better __typename extraction from Schema.Struct with Literal __typename fields
-  //   2. The hidden field logic works (lines 210-211 in src/index.ts) but type naming doesn't
-  //   3. Should extract "Dog" from __typename: Schema.Literal("Dog") for AUTO_ALIASING
-  it.skip("should handle hidden field", () => {
+  it("should handle hidden field", () => {
     const Dog1 = Schema.Struct({
       __typename: Schema.NullOr(Schema.Literal("Dog")),
       name: Schema.optional(Schema.String),
@@ -189,8 +182,8 @@ describe("EffectWeaver", () => {
       }"
     `)
 
-    const r = resolver.of(Dog1, {
-      dog: query(Dog1).resolve(() => ({})),
+    const r = resolver.of(EffectWeaver.unravel(Dog1), {
+      dog: query(EffectWeaver.unravel(Dog1)).resolve(() => ({})),
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
@@ -209,8 +202,8 @@ describe("EffectWeaver", () => {
       birthday: asField(Schema.optional(Schema.Date), { type: field.hidden }),
     })
 
-    const r2 = resolver.of(Dog2, {
-      dog: query(Dog2).resolve(() => ({})),
+    const r2 = resolver.of(EffectWeaver.unravel(Dog2), {
+      dog: query(EffectWeaver.unravel(Dog2)).resolve(() => ({})),
     })
 
     expect(printResolver(r2)).toMatchInlineSnapshot(`

@@ -32,6 +32,7 @@ import type {
   FieldConfig,
 } from "./types"
 import {
+  extractTypeName,
   getEnumConfig,
   getFieldConfig,
   getObjectConfig,
@@ -191,11 +192,13 @@ export class EffectWeaver {
 
     // Handle struct (object) types
     if (isStructSchema(ast)) {
-      const {
-        name = AUTO_ALIASING,
-        interfaces,
-        ...objectConfig
-      } = getObjectConfig(schema)
+      const objectConfigFromMetadata = getObjectConfig(schema)
+
+      // Try to extract type name from __typename field if not explicitly set
+      const extractedName = extractTypeName(ast)
+      const name = objectConfigFromMetadata.name ?? extractedName ?? AUTO_ALIASING
+
+      const { interfaces, ...objectConfig } = objectConfigFromMetadata
 
       return new GraphQLObjectType({
         name,
@@ -217,7 +220,7 @@ export class EffectWeaver {
           (fieldData, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
             const { schema: field, propertySignature } = fieldData
-            const { type, ...fieldConfig } = getFieldConfig(field)
+            const { type, ...fieldConfig } = getFieldConfig(field, propertySignature)
             if (type === null || type === SYMBOLS.FIELD_HIDDEN)
               return mapValue.SKIP
 
