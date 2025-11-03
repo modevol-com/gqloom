@@ -324,15 +324,7 @@ describe("EffectWeaver", () => {
     expect(type).toBeInstanceOf(GraphQLNonNull)
   })
 
-  // TODO: Enum key/value mapping needs adjustment
-  // Purpose: Test enum with per-value configuration (description, deprecation) via valuesConfig
-  // Why failing: Effect Schema.Enums uses keys as enum values, but valuesConfig expects runtime values
-  // Implementation needed:
-  //   1. In src/index.ts lines 223-240 (enum handling), map valuesConfig keys correctly
-  //   2. Schema.Enums({ Active: "ACTIVE" }) creates enum with key="Active" and value="ACTIVE"
-  //   3. GraphQL enum name should be "Active" but valuesConfig uses "Active" as key
-  //   4. Current code creates enum values as "Active" but test expects "ACTIVE"
-  it.skip("should handle enum with valuesConfig", () => {
+  it("should handle enum with valuesConfig", () => {
     const Status = asEnumType(
       Schema.Enums({
         Active: "ACTIVE",

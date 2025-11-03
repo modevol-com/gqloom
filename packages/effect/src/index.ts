@@ -256,7 +256,9 @@ export class EffectWeaver {
       const values: GraphQLEnumValueConfigMap = {}
 
       ast.enums.forEach(([key, value]) => {
-        values[key] = { value, ...valuesConfig?.[key] }
+        // Use the value as the GraphQL enum name (e.g., "ACTIVE")
+        // valuesConfig is keyed by the key (e.g., "Active")
+        values[value] = { value, ...valuesConfig?.[key] }
       })
 
       return new GraphQLEnumType({
