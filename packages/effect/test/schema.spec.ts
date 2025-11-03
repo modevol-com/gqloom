@@ -149,14 +149,7 @@ describe("EffectWeaver", () => {
     `)
   })
 
-  // TODO: Default value extraction not yet implemented
-  // Purpose: Test that default values from Effect Schema annotations are preserved in GraphQL field extensions
-  // Why failing: The Effect weaver doesn't extract the `default` annotation from schema.ast.annotations
-  // Implementation needed:
-  //   1. In getFieldConfig() or toGraphQLType(), extract default annotation from schema.ast.annotations
-  //   2. Add to field config: { extensions: { defaultValue: extractedDefault } }
-  //   3. Similar to how Valibot extracts defaults in packages/valibot/src/metadata.ts:35-56
-  it.skip("should keep default value in extensions", () => {
+  it("should keep default value in extensions", () => {
     const objectType = asObjectType(
       Schema.Struct({
         foo: Schema.optional(Schema.String).annotations({

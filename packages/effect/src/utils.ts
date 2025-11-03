@@ -14,11 +14,27 @@ import type {
 
 /**
  * Get field configuration from an Effect Schema
+ * Extracts both AS_FIELD metadata and default values from annotations
  */
 export function getFieldConfig(schema: Schema.Schema.Any): FieldConfig {
-  return SchemaAST.getAnnotation<FieldConfig>(AS_FIELD)(schema.ast).pipe(
-    Option.getOrElse(() => ({}) as FieldConfig)
-  )
+  const fieldConfig = SchemaAST.getAnnotation<FieldConfig>(AS_FIELD)(
+    schema.ast
+  ).pipe(Option.getOrElse(() => ({}) as FieldConfig))
+
+  // Extract default value from schema annotations if present
+  const defaultValue = schema.ast.annotations?.default
+
+  if (defaultValue !== undefined) {
+    return {
+      ...fieldConfig,
+      extensions: {
+        ...fieldConfig.extensions,
+        defaultValue,
+      },
+    }
+  }
+
+  return fieldConfig
 }
 
 /**

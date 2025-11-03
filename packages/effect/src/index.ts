@@ -6,7 +6,7 @@ import {
   weave,
   weaverContext,
 } from "@gqloom/core"
-import { Schema, SchemaAST } from "effect"
+import { Option, Schema, SchemaAST } from "effect"
 import {
   type GraphQLArgumentConfig,
   GraphQLBoolean,
@@ -199,19 +199,35 @@ export class EffectWeaver {
           ast.propertySignatures.reduce(
             (acc, prop) => {
               if (prop.name.toString().startsWith("__")) return acc
-              acc[prop.name.toString()] = Schema.make(prop.type)
+              acc[prop.name.toString()] = {
+                schema: Schema.make(prop.type),
+                propertySignature: prop,
+              }
               return acc
             },
-            {} as Record<string, Schema.Schema.Any>
+            {} as Record<string, { schema: Schema.Schema.Any; propertySignature: SchemaAST.PropertySignature }>
           ),
-          (field, key) => {
+          (fieldData, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
+            const { schema: field, propertySignature } = fieldData
             const { type, ...fieldConfig } = getFieldConfig(field)
             if (type === null || type === SYMBOLS.FIELD_HIDDEN)
               return mapValue.SKIP
+
+            // Extract default value from property signature annotations
+            const defaultValue = SchemaAST.getDefaultAnnotation(propertySignature).pipe(
+              Option.getOrUndefined
+            )
+
             return {
               type: type ?? EffectWeaver.toNullableGraphQLType(field),
               ...fieldConfig,
+              ...(defaultValue !== undefined && {
+                extensions: {
+                  ...fieldConfig.extensions,
+                  defaultValue,
+                },
+              }),
             }
           }
         ),
