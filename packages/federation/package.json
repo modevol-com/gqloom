@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@apollo/server": "^4.12.2",
-    "@apollo/subgraph": "^2.11.0",
+    "@apollo/subgraph": "^2.12.0",
     "@gqloom/core": "workspace:*",
     "@mercuriusjs/federation": "^5.0.0",
     "fastify": "^5.6.1",

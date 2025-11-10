@@ -111,8 +111,8 @@ importers:
         specifier: ^4.12.2
         version: 4.12.2(encoding@0.1.13)(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@apollo/subgraph':
-        specifier: ^2.11.0
-        version: 2.11.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        specifier: ^2.12.0
+        version: 2.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/core':
         specifier: workspace:*
         version: link:../core
@@ -292,8 +292,8 @@ importers:
         specifier: ^4.12.2
         version: 4.12.2(encoding@0.1.13)(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@apollo/subgraph':
-        specifier: ^2.11.0
-        version: 2.11.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        specifier: ^2.12.0
+        version: 2.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       '@gqloom/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -396,8 +396,8 @@ packages:
     peerDependencies:
       graphql: 14.x || 15.x || 16.x
 
-  '@apollo/federation-internals@2.11.0':
-    resolution: {integrity: sha512-5kmXR2AnSN1ywP2QNkLGF8KA0p9HuvGKxbfv2nApy6TnSd3eSpCFKjceWXgwB6s6CFFRQBqL6tviFCTMXUWCRw==}
+  '@apollo/federation-internals@2.12.0':
+    resolution: {integrity: sha512-NCqKxZqTT9oFqRfq/yLcb8U5rzt+v00i5d5cFFadjdO61YwAUCD0W5JFDQzZsYzX7huuK/7N7JWqI897vAOeeQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
       graphql: ^16.5.0
@@ -419,8 +419,8 @@ packages:
     peerDependencies:
       graphql: ^16.6.0
 
-  '@apollo/subgraph@2.11.0':
-    resolution: {integrity: sha512-6Y1UP71vHgLC2tSl2DPh4klz3CllKI6PWmmYb/783aC9HOwugBnuDHeyRlkhDtSRazzFEtiTUIfaSSdIBNkSJg==}
+  '@apollo/subgraph@2.12.0':
+    resolution: {integrity: sha512-5bRPmdUwDoxz8MbD8QeMx06ReDAvQycytqOnV4QjXMb9innoIRfqvv8mpVyQ8Bsy3cd53L6myMikXLEhbm0bSw==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
       graphql: ^16.5.0
@@ -3503,8 +3503,8 @@ packages:
     resolution: {integrity: sha512-Ju0Bz/cEia55xDwUWEa8+olFpCiQoypjnQySseKtmjNrnps3P+xfpUmGr90T7yjlVJmOtybRvPXhKMbHr+fWnw==}
     engines: {node: '>= 0.10'}
 
-  ip-address@10.0.1:
-    resolution: {integrity: sha512-NWv9YLW4PoW2B7xtzaS3NCot75m6nK7Icdv0o3lfMceJVRfSoQwqD4wEH5rLwoKJwUiZ/rfpiVBhnaF0FK4HoA==}
+  ip-address@10.1.0:
+    resolution: {integrity: sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q==}
     engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
@@ -5525,7 +5525,7 @@ snapshots:
     dependencies:
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
-  '@apollo/federation-internals@2.11.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
+  '@apollo/federation-internals@2.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
       '@types/uuid': 9.0.8
       chalk: 4.1.2
@@ -5587,10 +5587,10 @@ snapshots:
       - encoding
       - supports-color
 
-  '@apollo/subgraph@2.11.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
+  '@apollo/subgraph@2.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))':
     dependencies:
       '@apollo/cache-control-types': 1.0.3(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
-      '@apollo/federation-internals': 2.11.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      '@apollo/federation-internals': 2.12.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
       graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
 
   '@apollo/usage-reporting-protobuf@4.1.1':
@@ -8633,7 +8633,7 @@ snapshots:
 
   interpret@2.2.0: {}
 
-  ip-address@10.0.1:
+  ip-address@10.1.0:
     optional: true
 
   ipaddr.js@1.9.1: {}
@@ -10207,7 +10207,7 @@ snapshots:
 
   socks@2.8.7:
     dependencies:
-      ip-address: 10.0.1
+      ip-address: 10.1.0
       smart-buffer: 4.2.0
     optional: true
 
