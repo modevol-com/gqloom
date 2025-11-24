@@ -11,7 +11,7 @@
     "fix": "biome check --write .",
     "check": "biome check --write . && pnpm run check:type",
     "check:type": "pnpm -r check:type",
-    "build": "pnpm -F './packages/core' run build && pnpm -F './packages/{drizzle,federation,mikro-orm,prisma,valibot,yup,zod,json}' run build",
+    "build": "pnpm -F './packages/core' run build && pnpm -F './packages/{drizzle,effect,federation,mikro-orm,prisma,valibot,yup,zod,json}' run build",
     "prepare": "husky",
     "compose-up": "docker compose up -d",
     "push": "pnpm -F @gqloom/drizzle -F @gqloom/prisma -F example-prisma push",
