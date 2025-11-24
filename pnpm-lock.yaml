@@ -85,7 +85,7 @@ importers:
         version: 0.31.5
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
+        version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@7.0.0(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -207,8 +207,8 @@ importers:
         specifier: ^6.17.1
         version: 6.17.1
       '@prisma/client':
-        specifier: ^6.17.1
-        version: 6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
+        specifier: ^7.0.0
+        version: 7.0.0(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
       '@types/better-sqlite3':
         specifier: ^7.6.13
         version: 7.6.13
@@ -347,7 +347,7 @@ importers:
         version: 0.31.5
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
+        version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@7.0.0(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
       effect:
         specifier: ^3.19.6
         version: 3.19.6
@@ -1572,12 +1572,15 @@ packages:
   '@prisma/adapter-better-sqlite3@6.17.1':
     resolution: {integrity: sha512-6OLFYgwqaPLBzwIcquXX6O/kcnmlvo6YXn+Kq8bjyOuSvhFdFj/A5qGlUM62YcjdwZHKUA06wJaptjHuys4p/g==}
 
-  '@prisma/client@6.17.1':
-    resolution: {integrity: sha512-zL58jbLzYamjnNnmNA51IOZdbk5ci03KviXCuB0Tydc9btH2kDWsi1pQm2VecviRTM7jGia0OPPkgpGnT3nKvw==}
-    engines: {node: '>=18.18'}
+  '@prisma/client-runtime-utils@7.0.0':
+    resolution: {integrity: sha512-PAiFgMBPrLSaakBwUpML5NevipuKSL3rtNr8pZ8CZ3OBXo0BFcdeGcBIKw/CxJP6H4GNa4+l5bzJPrk8Iq6tDw==}
+
+  '@prisma/client@7.0.0':
+    resolution: {integrity: sha512-FM1NtJezl0zH3CybLxcbJwShJt7xFGSRg+1tGhy3sCB8goUDnxnBR+RC/P35EAW8gjkzx7kgz7bvb0MerY2VSw==}
+    engines: {node: ^20.19 || ^22.12 || ^24.0}
     peerDependencies:
       prisma: '*'
-      typescript: '>=5.1.0'
+      typescript: '>=5.4.0'
     peerDependenciesMeta:
       prisma:
         optional: true
@@ -6804,7 +6807,11 @@ snapshots:
       '@prisma/driver-adapter-utils': 6.17.1
       better-sqlite3: 11.10.0
 
-  '@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)':
+  '@prisma/client-runtime-utils@7.0.0': {}
+
+  '@prisma/client@7.0.0(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)':
+    dependencies:
+      '@prisma/client-runtime-utils': 7.0.0
     optionalDependencies:
       prisma: 6.17.1(magicast@0.3.5)(typescript@5.9.3)
       typescript: 5.9.3
@@ -8150,10 +8157,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7):
+  drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@7.0.0(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7):
     optionalDependencies:
       '@libsql/client': 0.15.15
-      '@prisma/client': 6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
+      '@prisma/client': 7.0.0(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
       '@types/better-sqlite3': 7.6.13
       '@types/pg': 8.11.10
       better-sqlite3: 12.4.1
