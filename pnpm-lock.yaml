@@ -176,11 +176,11 @@ importers:
         specifier: workspace:*
         version: link:../valibot
       '@mikro-orm/core':
-        specifier: ^6.5.9
-        version: 6.5.9
+        specifier: ^6.6.0
+        version: 6.6.0
       '@mikro-orm/libsql':
         specifier: ^6.5.1
-        version: 6.5.1(@mikro-orm/core@6.5.9)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
+        version: 6.5.1(@mikro-orm/core@6.6.0)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
       valibot:
         specifier: 1.0.0-beta.12
         version: 1.0.0-beta.12(typescript@5.9.3)
@@ -322,11 +322,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/zod
       '@mikro-orm/core':
-        specifier: ^6.5.9
-        version: 6.5.9
+        specifier: ^6.6.0
+        version: 6.6.0
       '@mikro-orm/libsql':
         specifier: ^6.5.1
-        version: 6.5.1(@mikro-orm/core@6.5.9)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
+        version: 6.5.1(@mikro-orm/core@6.6.0)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
       '@shikijs/vitepress-twoslash':
         specifier: ^3.13.0
         version: 3.13.0(typescript@5.9.3)
@@ -1499,8 +1499,8 @@ packages:
   '@mercuriusjs/federation@5.0.0':
     resolution: {integrity: sha512-5E2S3mgxq+yK4XZm0UMms3lcG3QG/83xh8mmo/XyjwQiT8DulX8ibBXvlQtmOO4g4U9N+AUEqrqPfnoC5I+TSA==}
 
-  '@mikro-orm/core@6.5.9':
-    resolution: {integrity: sha512-BDfMW35pKVfSBBK0TiIpjh+IX62UwD0V22x4O6psMfiwbFoAJN/gEpEg1FuLx41dYf/ExHe9Cin6U6hwRdELaQ==}
+  '@mikro-orm/core@6.6.0':
+    resolution: {integrity: sha512-o0uFaaBnE5Y88hbm5Qeol8Z5kllXJbJkdW3PdWVuwVSKTdv7hNu3tmcCixKmw5004VVfa8a9zpjXvySk1EbzVg==}
     engines: {node: '>= 18.12.0'}
 
   '@mikro-orm/knex@6.5.1':
@@ -3302,6 +3302,10 @@ packages:
     resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
     engines: {node: '>= 6'}
 
+  form-data@4.0.5:
+    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
+    engines: {node: '>= 6'}
+
   format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
     engines: {node: '>=0.4.x'}
@@ -4137,8 +4141,8 @@ packages:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
-  mikro-orm@6.5.9:
-    resolution: {integrity: sha512-qbEZsQG8HbGfBHeeSpmWGD+bcaZmYEE8TU3Mi9iXRoJ1yPBd6GXbUjBejMVUAkqzBL+LMZjE9sRyIG+Fg+kTvw==}
+  mikro-orm@6.6.0:
+    resolution: {integrity: sha512-Or689gW269Lj/vnuwLawE+gIlkd1KsIgEnTiulRJhnhUNJ9Lyi375l/3MkCiOJUWPcRGBABS8GmxY4gLPMF3Lg==}
     engines: {node: '>= 18.12.0'}
 
   millify@6.1.0:
@@ -6705,19 +6709,19 @@ snapshots:
       - monocart-coverage-reports
       - utf-8-validate
 
-  '@mikro-orm/core@6.5.9':
+  '@mikro-orm/core@6.6.0':
     dependencies:
       dataloader: 2.2.3
       dotenv: 17.2.3
       esprima: 4.0.1
       fs-extra: 11.3.2
       globby: 11.1.0
-      mikro-orm: 6.5.9
+      mikro-orm: 6.6.0
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.5.1(@mikro-orm/core@6.5.9)(better-sqlite3@12.4.1)(libsql@0.5.20)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)':
+  '@mikro-orm/knex@6.5.1(@mikro-orm/core@6.6.0)(better-sqlite3@12.4.1)(libsql@0.5.20)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)':
     dependencies:
-      '@mikro-orm/core': 6.5.9
+      '@mikro-orm/core': 6.6.0
       fs-extra: 11.3.1
       knex: 3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
       sqlstring: 2.3.3
@@ -6733,10 +6737,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/libsql@6.5.1(@mikro-orm/core@6.5.9)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)':
+  '@mikro-orm/libsql@6.5.1(@mikro-orm/core@6.6.0)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)':
     dependencies:
-      '@mikro-orm/core': 6.5.9
-      '@mikro-orm/knex': 6.5.1(@mikro-orm/core@6.5.9)(better-sqlite3@12.4.1)(libsql@0.5.20)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
+      '@mikro-orm/core': 6.6.0
+      '@mikro-orm/knex': 6.5.1(@mikro-orm/core@6.6.0)(better-sqlite3@12.4.1)(libsql@0.5.20)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
       fs-extra: 11.3.1
       libsql: 0.5.20
       sqlstring-sqlite: 0.1.1
@@ -8582,6 +8586,15 @@ snapshots:
       hasown: 2.0.2
       mime-types: 2.1.35
 
+  form-data@4.0.5:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      es-set-tostringtag: 2.1.0
+      hasown: 2.0.2
+      mime-types: 2.1.35
+    optional: true
+
   format@0.2.2: {}
 
   formdata-polyfill@4.0.10:
@@ -9045,7 +9058,7 @@ snapshots:
       cssstyle: 4.6.0
       data-urls: 5.0.0
       decimal.js: 10.6.0
-      form-data: 4.0.4
+      form-data: 4.0.5
       html-encoding-sniffer: 4.0.0
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
@@ -9664,7 +9677,7 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
-  mikro-orm@6.5.9: {}
+  mikro-orm@6.6.0: {}
 
   millify@6.1.0:
     dependencies:
