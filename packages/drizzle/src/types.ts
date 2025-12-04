@@ -77,17 +77,16 @@ export interface DrizzleSilkConfig<TTable extends Table>
   }>
 }
 
-export type HideFields<TConfig extends DrizzleSilkConfig<any>> = UnwrapGetter<
-  TConfig["fields"]
-> extends Record<string | number | symbol, any>
-  ? {
-      [K in keyof UnwrapGetter<TConfig["fields"]>]: UnwrapGetter<
-        TConfig["fields"]
-      >[K] extends typeof SYMBOLS.FIELD_HIDDEN
-        ? K
-        : never
-    }[keyof UnwrapGetter<TConfig["fields"]>]
-  : never
+export type HideFields<TConfig extends DrizzleSilkConfig<any>> =
+  UnwrapGetter<TConfig["fields"]> extends Record<string | number | symbol, any>
+    ? {
+        [K in keyof UnwrapGetter<TConfig["fields"]>]: UnwrapGetter<
+          TConfig["fields"]
+        >[K] extends typeof SYMBOLS.FIELD_HIDDEN
+          ? K
+          : never
+      }[keyof UnwrapGetter<TConfig["fields"]>]
+    : never
 
 export type ValueOrGetter<T> = T | (() => T)
 
