@@ -16,11 +16,11 @@ runs:
         registry-url: "https://registry.npmjs.org"
         cache: pnpm
 
-    - name: Install dependencies
-      shell: bash
-      run: pnpm install
-
     # Ensure npm 11.5.1 or later is installed
     - name: Update NPM
       shell: bash
       run: npm install -g npm@latest
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install
