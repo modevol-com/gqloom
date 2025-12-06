@@ -32,10 +32,10 @@ declare module "effect/Schema" {
   export namespace Annotations {
     // biome-ignore lint/correctness/noUnusedVariables: Type parameter required for module augmentation
     export interface GenericSchema<A> {
-      [AS_OBJECT_TYPE]?: ObjectConfig
-      [AS_FIELD]?: FieldConfig
-      [AS_ENUM_TYPE]?: EnumConfig
-      [AS_UNION_TYPE]?: UnionConfig
+      [AS_OBJECT_TYPE]?: Partial<ObjectConfig>
+      [AS_FIELD]?: Partial<FieldConfig>
+      [AS_ENUM_TYPE]?: Partial<EnumConfig>
+      [AS_UNION_TYPE]?: Partial<UnionConfig>
     }
   }
 }

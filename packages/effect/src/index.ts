@@ -48,7 +48,7 @@ import {
   isStructSchema,
   isTupleOrArraySchema,
   isUnionSchema,
-  unwrapTransformation,
+  unwrapAST,
 } from "./utils"
 
 export class EffectWeaver {
@@ -66,12 +66,7 @@ export class EffectWeaver {
     const config =
       weaverContext.value?.getConfig<EffectWeaverConfig>("gqloom.effect")
 
-    // Convert to Standard Schema V1 to get ~standard property
-    const standardSchema = Schema.standardSchemaV1(schema)
-
     return Object.assign(schema, {
-      // Copy ~standard property from standardSchemaV1
-      "~standard": standardSchema["~standard"],
       [SYMBOLS.GET_GRAPHQL_TYPE]: config
         ? function (this: Schema.Schema.Any) {
             return weaverContext.useConfig(config, () =>
@@ -128,7 +123,7 @@ export class EffectWeaver {
     const presetType = preset?.presetGraphQLType?.(schema)
     if (presetType) return presetType
 
-    const ast = unwrapTransformation(schema.ast)
+    const ast = unwrapAST(schema.ast)
 
     // Handle tuple/array types
     if (isTupleOrArraySchema(ast)) {
@@ -196,7 +191,8 @@ export class EffectWeaver {
 
       // Try to extract type name from __typename field if not explicitly set
       const extractedName = extractTypeName(ast)
-      const name = objectConfigFromMetadata.name ?? extractedName ?? AUTO_ALIASING
+      const name =
+        objectConfigFromMetadata.name ?? extractedName ?? AUTO_ALIASING
 
       const { interfaces, ...objectConfig } = objectConfigFromMetadata
 
@@ -215,19 +211,28 @@ export class EffectWeaver {
               }
               return acc
             },
-            {} as Record<string, { schema: Schema.Schema.Any; propertySignature: SchemaAST.PropertySignature }>
+            {} as Record<
+              string,
+              {
+                schema: Schema.Schema.Any
+                propertySignature: SchemaAST.PropertySignature
+              }
+            >
           ),
           (fieldData, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
             const { schema: field, propertySignature } = fieldData
-            const { type, ...fieldConfig } = getFieldConfig(field, propertySignature)
+            const { type, ...fieldConfig } = getFieldConfig(
+              field,
+              propertySignature
+            )
             if (type === null || type === SYMBOLS.FIELD_HIDDEN)
               return mapValue.SKIP
 
             // Extract default value from property signature annotations
-            const defaultValue = SchemaAST.getDefaultAnnotation(propertySignature).pipe(
-              Option.getOrUndefined
-            )
+            const defaultValue = SchemaAST.getDefaultAnnotation(
+              propertySignature
+            ).pipe(Option.getOrUndefined)
 
             return {
               type: type ?? EffectWeaver.toNullableGraphQLType(field),
@@ -330,24 +335,6 @@ export class EffectWeaver {
       ...config,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.effect",
     }
-  }
-
-  /**
-   * Use an Effect weaver config
-   * @param config Effect weaver config options
-   * @returns a new Effect to silk function
-   */
-  public static useConfig = function (
-    config: EffectWeaverConfigOptions
-  ): typeof EffectWeaver.unravel {
-    return (schema) =>
-      weaverContext.useConfig(
-        {
-          ...config,
-          [SYMBOLS.WEAVER_CONFIG]: "gqloom.effect",
-        } as EffectWeaverConfig,
-        () => EffectWeaver.unravel(schema)
-      )
   }
 
   public static getGraphQLType(schema: Schema.Schema.Any): GraphQLOutputType {

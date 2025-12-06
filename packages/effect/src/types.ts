@@ -17,14 +17,11 @@ export interface ObjectConfig
     >,
     Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields" | "name">> {
   interfaces?: (Schema.Schema.Any | GraphQLInterfaceType)[]
-  [k: string]: unknown
 }
 
 export interface FieldConfig
   extends Partial<Omit<GraphQLFieldConfig<any, any>, "type">> {
   type?: GraphQLOutputType | undefined | null | typeof SYMBOLS.FIELD_HIDDEN
-
-  [k: string]: unknown
 }
 
 export interface EnumConfig<TKey = string>
@@ -32,14 +29,11 @@ export interface EnumConfig<TKey = string>
   valuesConfig?: TKey extends string
     ? Partial<Record<TKey, GraphQLEnumValueConfig>>
     : Partial<Record<string, GraphQLEnumValueConfig>>
-  [k: string]: unknown
 }
 
 export interface UnionConfig
   extends Omit<GraphQLUnionTypeConfig<any, any>, "types">,
-    Partial<Pick<GraphQLUnionTypeConfig<any, any>, "types">> {
-  [k: string]: unknown
-}
+    Partial<Pick<GraphQLUnionTypeConfig<any, any>, "types">> {}
 
 export interface EffectWeaverConfigOptions {
   presetGraphQLType?: (

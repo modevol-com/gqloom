@@ -1,14 +1,14 @@
-import type { Loom, SchemaWeaver } from "@gqloom/core"
+import type { Loom, SchemaWeaver, StandardSchemaV1 } from "@gqloom/core"
 import {
   field,
   type GQLoomExtensions,
-  GraphQLSchemaLoom,
   mutation,
   query,
   resolver,
   weave,
 } from "@gqloom/core"
 import { Schema } from "effect"
+import type { SchemaClass } from "effect/Schema"
 import {
   execute,
   GraphQLBoolean,
@@ -27,6 +27,7 @@ import {
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import {
+  AS_FIELD,
   asEnumType,
   asField,
   asObjectType,
@@ -47,6 +48,21 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
 
 const getGraphQLType = EffectWeaver.getGraphQLType
 
+const standardMap = new Map<
+  Schema.Schema.Any,
+  StandardSchemaV1<any, any> & SchemaClass<any, any, never>
+>()
+
+const standard = <A, I>(
+  schema: Schema.Schema<A, I, never>
+): StandardSchemaV1<I, A> & SchemaClass<A, I, never> => {
+  const existing = standardMap.get(schema)
+  if (existing) return existing
+  const newSchema = Schema.standardSchemaV1(schema)
+  standardMap.set(schema, newSchema)
+  return newSchema
+}
+
 // Helper function to print a schema type
 function print(schema: Schema.Schema.Any): string {
   let gqlType = getGraphQLType(schema)
@@ -56,11 +72,7 @@ function print(schema: Schema.Schema.Any): string {
 
 // Helper function to print resolver schema
 function printResolver(...resolvers: Loom.Resolver[]): string {
-  const weaver = new GraphQLSchemaLoom()
-  weaver.addVendor(EffectWeaver)
-  for (const r of resolvers) weaver.add(r)
-
-  const schema = weaver.weaveGraphQLSchema()
+  const schema = weave(EffectWeaver, ...resolvers)
   return printSchema(schema)
 }
 
@@ -149,31 +161,13 @@ describe("EffectWeaver", () => {
     `)
   })
 
-  it("should keep default value in extensions", () => {
-    const objectType = asObjectType(
-      Schema.Struct({
-        foo: Schema.optional(Schema.String).annotations({
-          default: () => "foo",
-        }),
-      }),
-      { name: "ObjectType" }
-    )
-
-    const objectGqlType = (
-      getGraphQLType(objectType) as GraphQLNonNull<GraphQLObjectType>
-    ).ofType
-
-    const extensions = objectGqlType.getFields().foo.extensions
-
-    expect(extensions?.defaultValue).toEqual(expect.any(Function))
-    expect(extensions?.defaultValue?.()).toEqual("foo")
-  })
-
   it("should handle hidden field", () => {
     const Dog1 = Schema.Struct({
-      __typename: Schema.NullOr(Schema.Literal("Dog")),
+      __typename: Schema.optional(Schema.Literal("Dog")),
       name: Schema.optional(Schema.String),
-      birthday: asField(Schema.optional(Schema.Date), { type: null }),
+      birthday: Schema.optional(Schema.Date).annotations({
+        [AS_FIELD]: { type: null },
+      }),
     })
 
     expect(print(Dog1)).toMatchInlineSnapshot(`
@@ -182,8 +176,8 @@ describe("EffectWeaver", () => {
       }"
     `)
 
-    const r = resolver.of(EffectWeaver.unravel(Dog1), {
-      dog: query(EffectWeaver.unravel(Dog1)).resolve(() => ({})),
+    const r = resolver.of(standard(Dog1), {
+      dog: query(standard(Dog1)).resolve(() => ({})),
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
@@ -196,14 +190,18 @@ describe("EffectWeaver", () => {
       }"
     `)
 
-    const Dog2 = Schema.Struct({
-      __typename: Schema.NullOr(Schema.Literal("Dog")),
-      name: Schema.optional(Schema.String),
-      birthday: asField(Schema.optional(Schema.Date), { type: field.hidden }),
-    })
+    const Dog2 = standard(
+      Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Dog")),
+        name: Schema.optional(Schema.String),
+        birthday: Schema.optional(Schema.Date).annotations({
+          [AS_FIELD]: { type: field.hidden },
+        }),
+      })
+    )
 
-    const r2 = resolver.of(EffectWeaver.unravel(Dog2), {
-      dog: query(EffectWeaver.unravel(Dog2)).resolve(() => ({})),
+    const r2 = resolver.of(standard(Dog2), {
+      dog: query(standard(Dog2)).resolve(() => ({})),
     })
 
     expect(printResolver(r2)).toMatchInlineSnapshot(`
@@ -226,12 +224,14 @@ describe("EffectWeaver", () => {
   //   3. The config logic itself is correct (lines 228-238 in test), just needs proper silk integration
   it.skip("should handle preset GraphQLType", () => {
     const Dog = Schema.Struct({
-      __typename: Schema.NullOr(Schema.Literal("Dog")),
+      __typename: Schema.optional(Schema.Literal("Dog")),
       name: Schema.optional(Schema.String),
-      birthday: Schema.optional(Schema.Date.annotations({ identifier: "Date" })),
+      birthday: Schema.optional(
+        Schema.Date.annotations({ identifier: "Date" })
+      ),
     })
 
-    const r1 = resolver({ dog: query(Dog).resolve(() => ({})) })
+    const r1 = resolver({ dog: query(standard(Dog)).resolve(() => ({})) })
     const config = EffectWeaver.config({
       presetGraphQLType: (schema) => {
         const ast = schema.ast
@@ -245,9 +245,8 @@ describe("EffectWeaver", () => {
     })
     const schema1 = EffectWeaver.weave(r1, config)
 
-    const eSilk = EffectWeaver.useConfig(config)
-    const r2 = resolver({ dog: query(eSilk(Dog)).resolve(() => ({})) })
-    const schema2 = weave(r2)
+    const r2 = resolver({ dog: query(standard(Dog)).resolve(() => ({})) })
+    const schema2 = weave(EffectWeaver, config, r2)
 
     expect(printSchema(schema2)).toEqual(printSchema(schema1))
 
@@ -290,13 +289,23 @@ describe("EffectWeaver", () => {
 
   it("should handle array nullability combinations", () => {
     // [String!] - nullable array of non-null strings
-    expect(getGraphQLType(Schema.optional(Schema.Array(Schema.String)))).toEqual(
+    expect(getGraphQLType(Schema.NullOr(Schema.Array(Schema.String)))).toEqual(
       new GraphQLList(new GraphQLNonNull(GraphQLString))
     )
+    expect(
+      getGraphQLType(Schema.NullishOr(Schema.Array(Schema.String)))
+    ).toEqual(new GraphQLList(new GraphQLNonNull(GraphQLString)))
 
     // [String] - nullable array of nullable strings
     expect(
-      getGraphQLType(Schema.optional(Schema.Array(Schema.NullOr(Schema.String))))
+      getGraphQLType(
+        Schema.NullishOr(Schema.Array(Schema.NullOr(Schema.String)))
+      )
+    ).toEqual(new GraphQLList(GraphQLString))
+    expect(
+      getGraphQLType(
+        Schema.NullOr(Schema.Array(Schema.NullishOr(Schema.String)))
+      )
     ).toEqual(new GraphQLList(GraphQLString))
   })
 
@@ -336,7 +345,10 @@ describe("EffectWeaver", () => {
         description: "User status",
         valuesConfig: {
           Active: { description: "User is active" },
-          Inactive: { description: "User is inactive", deprecationReason: "Use Active or Pending" },
+          Inactive: {
+            description: "User is inactive",
+            deprecationReason: "Use Active or Pending",
+          },
           Pending: { description: "User is pending approval" },
         },
       }
@@ -372,7 +384,7 @@ describe("EffectWeaver", () => {
     )
 
     const r = resolver({
-      role: query(Role).resolve(() => "ADMIN"),
+      role: query(standard(Role)).resolve(() => "ADMIN"),
     })
 
     const schema = weave(EffectWeaver, r)
@@ -419,9 +431,19 @@ describe("EffectWeaver", () => {
       { name: "Dog" }
     )
 
-    const Animal = asUnionType(Schema.Union(Cat, Dog), {
+    // const Animal = asUnionType(Schema.Union(Cat, Dog), {
+    //   name: "Animal",
+    //   resolveType: (value) => {
+    //     if ("meow" in value) return "Cat"
+    //     if ("bark" in value) return "Dog"
+    //     return null
+    //   },
+    // })
+    const Animal = Schema.Union(Cat, Dog).annotations({
       name: "Animal",
-      resolveType: (value) => {
+      resolveType: (
+        value: Schema.Schema.Type<typeof Cat> | Schema.Schema.Type<typeof Dog>
+      ) => {
         if ("meow" in value) return "Cat"
         if ("bark" in value) return "Dog"
         return null
@@ -429,7 +451,10 @@ describe("EffectWeaver", () => {
     })
 
     const r = resolver({
-      animal: query(Animal).resolve(() => ({ name: "Fluffy", meow: "meow" })),
+      animal: query(standard(Animal)).resolve(() => ({
+        name: "Fluffy",
+        meow: "meow",
+      })),
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
@@ -583,8 +608,8 @@ describe("EffectWeaver", () => {
       }
     )
 
-    const r = resolver.of(User, {
-      user: query(User).resolve(() => ({ id: "1", name: "Alice" })),
+    const r = resolver.of(standard(User), {
+      user: query(standard(User)).resolve(() => ({ id: "1", name: "Alice" })),
     })
 
     expect(printResolver(r)).toMatchInlineSnapshot(`
@@ -611,20 +636,23 @@ describe("EffectWeaver", () => {
   describe.skip("should avoid duplicate", () => {
     it("should merge field from multiple resolver", () => {
       const Dog = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Dog")),
+        __typename: Schema.optional(Schema.Literal("Dog")),
         name: Schema.String,
         birthday: Schema.String,
       })
 
-      const r1 = resolver.of(Dog, {
-        dog: query(Dog).resolve(() => ({ name: "", birthday: "2012-12-12" })),
-        age: field(Schema.Number).resolve((dog) => {
+      const r1 = resolver.of(standard(Dog), {
+        dog: query(standard(Dog)).resolve(() => ({
+          name: "",
+          birthday: "2012-12-12",
+        })),
+        age: field(standard(Schema.Number)).resolve((dog) => {
           return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
         }),
       })
 
-      const r2 = resolver.of(Dog, {
-        isCute: field(Schema.Boolean).resolve(() => true),
+      const r2 = resolver.of(standard(Dog), {
+        isCute: field(standard(Schema.Boolean)).resolve(() => true),
       })
 
       expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
@@ -643,27 +671,27 @@ describe("EffectWeaver", () => {
 
     it("should avoid duplicate object", () => {
       const Dog = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Dog")),
+        __typename: Schema.optional(Schema.Literal("Dog")),
         name: Schema.String,
         birthday: Schema.String,
       })
 
       const Cat = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Cat")),
+        __typename: Schema.optional(Schema.Literal("Cat")),
         name: Schema.String,
         birthday: Schema.String,
         friend: Schema.NullOr(Dog),
       })
 
-      const r1 = resolver.of(Dog, {
-        dog: query(Schema.optional(Dog)).resolve(() => ({
+      const r1 = resolver.of(standard(Dog), {
+        dog: query(standard(Dog)).resolve(() => ({
           name: "",
           birthday: "2012-12-12",
         })),
       })
 
-      const r2 = resolver.of(Cat, {
-        cat: query(Cat).resolve(() => ({
+      const r2 = resolver.of(standard(Cat), {
+        cat: query(standard(Cat)).resolve(() => ({
           name: "",
           birthday: "2012-12-12",
           friend: { name: "", birthday: "2012-12-12" },
@@ -691,24 +719,24 @@ describe("EffectWeaver", () => {
 
     it("should avoid duplicate object in nested structures", () => {
       const Prize = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Prize")),
+        __typename: Schema.optional(Schema.Literal("Prize")),
         name: Schema.String,
         value: Schema.Number,
       })
 
       const Orange = asObjectType(
         Schema.Struct({
-          __typename: Schema.Literal("Orange"),
+          __typename: Schema.optional(Schema.Literal("Orange")),
           name: Schema.String,
           color: Schema.String,
-          prize: asField(Prize, {}),
+          prize: Prize,
         }),
         { name: "Orange" }
       )
 
       const Apple = asObjectType(
         Schema.Struct({
-          __typename: Schema.Literal("Apple"),
+          __typename: Schema.optional(Schema.Literal("Apple")),
           name: Schema.String,
           sweetness: Schema.Number,
           prize: asField(Prize, {}),
@@ -717,12 +745,12 @@ describe("EffectWeaver", () => {
       )
 
       const r1 = resolver({
-        orange: query(Orange).resolve(() => ({
+        orange: query(standard(Orange)).resolve(() => ({
           name: "Orange",
           color: "orange",
           prize: { name: "Gold", value: 100 },
         })),
-        apple: query(Apple).resolve(() => ({
+        apple: query(standard(Apple)).resolve(() => ({
           name: "Apple",
           sweetness: 10,
           prize: { name: "Silver", value: 50 },
@@ -756,14 +784,14 @@ describe("EffectWeaver", () => {
 
     it("should avoid duplicate object in interface", () => {
       const Prize = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Prize")),
+        __typename: Schema.optional(Schema.Literal("Prize")),
         name: Schema.String,
         value: Schema.Number,
       })
 
       const Fruit = asObjectType(
         Schema.Struct({
-          __typename: Schema.Literal("Fruit"),
+          __typename: Schema.optional(Schema.Literal("Fruit")),
           name: Schema.String,
           color: Schema.String,
           prize: Prize,
@@ -773,7 +801,7 @@ describe("EffectWeaver", () => {
 
       const Orange = asObjectType(
         Schema.Struct({
-          __typename: Schema.NullOr(Schema.Literal("Orange")),
+          __typename: Schema.optional(Schema.Literal("Orange")),
           name: Schema.String,
           color: Schema.String,
           prize: Prize,
@@ -787,7 +815,7 @@ describe("EffectWeaver", () => {
 
       const Apple = asObjectType(
         Schema.Struct({
-          __typename: Schema.NullOr(Schema.Literal("Apple")),
+          __typename: Schema.optional(Schema.Literal("Apple")),
           name: Schema.String,
           color: Schema.String,
           prize: Prize,
@@ -800,13 +828,13 @@ describe("EffectWeaver", () => {
       )
 
       const r1 = resolver({
-        orange: query(Orange).resolve(() => ({
+        orange: query(standard(Orange)).resolve(() => ({
           name: "Orange",
           color: "orange",
           prize: { name: "Gold", value: 100 },
           flavor: "citrus",
         })),
-        apple: query(Apple).resolve(() => ({
+        apple: query(standard(Apple)).resolve(() => ({
           name: "Apple",
           color: "red",
           prize: { name: "Silver", value: 50 },
@@ -849,33 +877,33 @@ describe("EffectWeaver", () => {
 
     it("should avoid duplicate input", () => {
       const Dog = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Dog")),
+        __typename: Schema.optional(Schema.Literal("Dog")),
         name: Schema.String,
         birthday: Schema.String,
       })
 
       const DogInput = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("DogInput")),
+        __typename: Schema.optional(Schema.Literal("DogInput")),
         name: Schema.String,
         birthday: Schema.String,
       })
 
       const DataInput = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("DataInput")),
+        __typename: Schema.optional(Schema.Literal("DataInput")),
         dog: DogInput,
       })
 
-      const r1 = resolver.of(Dog, {
-        createDog: mutation(Dog)
-          .input({ data: DogInput })
-          .resolve(({ data }) => data),
-        dogs: query(Schema.Array(Dog)).resolve(() => []),
+      const r1 = resolver.of(standard(Dog), {
+        createDog: mutation(standard(Dog))
+          .input({ data: standard(DogInput) })
+          .resolve(({ data }) => ({ ...data, __typename: "Dog" })),
+        dogs: query(standard(Schema.Array(Dog))).resolve(() => []),
       })
 
       const r2 = resolver({
-        createData: mutation(Dog)
-          .input({ data: DataInput })
-          .resolve(({ data }) => data.dog),
+        createData: mutation(standard(Dog))
+          .input({ data: standard(DataInput) })
+          .resolve(({ data }) => ({ ...data.dog, __typename: "Dog" })),
       })
 
       expect(printResolver(r1, r2)).toMatchInlineSnapshot(`
@@ -915,10 +943,14 @@ describe("EffectWeaver", () => {
       )
 
       const r1 = resolver({
-        fruit: query(Schema.optional(Fruit)).resolve(() => "apple" as const),
-        fruits: query(Schema.Array(Schema.optional(Fruit))).resolve(() => []),
-        mustFruit: query(Fruit).resolve(() => "apple" as const),
-        mustFruits: query(Schema.Array(Fruit)).resolve(() => []),
+        fruit: query(standard(Schema.NullOr(Fruit))).resolve(
+          () => "apple" as const
+        ),
+        fruits: query(standard(Schema.Array(Schema.NullishOr(Fruit)))).resolve(
+          () => []
+        ),
+        mustFruit: query(standard(Fruit)).resolve(() => "apple" as const),
+        mustFruits: query(standard(Schema.Array(Fruit))).resolve(() => []),
       })
       expect(printResolver(r1)).toMatchInlineSnapshot(`
         "type Query {
@@ -939,14 +971,14 @@ describe("EffectWeaver", () => {
     it("should avoid duplicate interface", () => {
       const Fruit = asObjectType(
         Schema.Struct({
-          __typename: Schema.NullOr(Schema.Literal("Fruit")),
+          __typename: Schema.optional(Schema.Literal("Fruit")),
           color: Schema.optional(Schema.String),
         }),
         { name: "Fruit" }
       )
       const Orange = asObjectType(
         Schema.Struct({
-          __typename: Schema.NullOr(Schema.Literal("Orange")),
+          __typename: Schema.optional(Schema.Literal("Orange")),
           color: Schema.optional(Schema.String),
           flavor: Schema.String,
         }),
@@ -958,7 +990,7 @@ describe("EffectWeaver", () => {
 
       const Apple = asObjectType(
         Schema.Struct({
-          __typename: Schema.NullOr(Schema.Literal("Apple")),
+          __typename: Schema.optional(Schema.Literal("Apple")),
           color: Schema.optional(Schema.String),
           sweetness: Schema.Number,
         }),
@@ -969,16 +1001,20 @@ describe("EffectWeaver", () => {
       )
 
       const r1 = resolver({
-        orange: query(Schema.optional(Orange)).resolve(() => ({
+        orange: query(standard(Schema.NullishOr(Orange))).resolve(() => ({
           color: "orange",
           flavor: "citrus",
         })),
-        oranges: query(Schema.Array(Orange)).resolve(() => []),
-        apple: query(Schema.optional(Apple)).resolve(() => ({
+        oranges: query(
+          standard(Schema.Array(Schema.NullishOr(Orange)))
+        ).resolve(() => []),
+        apple: query(standard(Schema.NullOr(Apple))).resolve(() => ({
           color: "red",
           sweetness: 10,
         })),
-        apples: query(Schema.Array(Apple)).resolve(() => []),
+        apples: query(standard(Schema.Array(Schema.NullOr(Apple)))).resolve(
+          () => []
+        ),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -1007,20 +1043,26 @@ describe("EffectWeaver", () => {
 
     it("should avoid duplicate union", () => {
       const Apple = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Apple")),
+        __typename: Schema.optional(Schema.Literal("Apple")),
         flavor: Schema.String,
       })
       const Orange = Schema.Struct({
-        __typename: Schema.NullOr(Schema.Literal("Orange")),
+        __typename: Schema.optional(Schema.Literal("Orange")),
         color: Schema.String,
       })
       const Fruit = asUnionType(Schema.Union(Apple, Orange), { name: "Fruit" })
 
       const r1 = resolver({
-        fruit: query(Schema.optional(Fruit)).resolve(() => ({ flavor: "" })),
-        fruits: query(Schema.Array(Fruit)).resolve(() => []),
-        mustFruit: query(Fruit).resolve(() => ({ flavor: "" })),
-        mustFruits: query(Schema.Array(Schema.optional(Fruit))).resolve(() => []),
+        fruit: query(standard(Schema.NullOr(Fruit))).resolve(() => ({
+          flavor: "",
+        })),
+        fruits: query(standard(Schema.Array(Schema.NullOr(Fruit)))).resolve(
+          () => []
+        ),
+        mustFruit: query(standard(Fruit)).resolve(() => ({ flavor: "" })),
+        mustFruits: query(standard(Schema.Array(Schema.NullOr(Fruit)))).resolve(
+          () => []
+        ),
       })
 
       expect(printResolver(r1)).toMatchInlineSnapshot(`
@@ -1054,11 +1096,13 @@ describe("EffectWeaver", () => {
 
       const User: Schema.Schema<IUser> = Schema.Struct({
         name: Schema.String,
-        friend: Schema.optional(Schema.suspend((): Schema.Schema<IUser> => User)),
+        friend: Schema.optional(
+          Schema.suspend((): Schema.Schema<IUser> => User)
+        ),
       })
 
       const r = resolver({
-        user: query(User).resolve(() => ({
+        user: query(standard(User)).resolve(() => ({
           name: "Alice",
           friend: { name: "Bob" },
         })),
@@ -1111,7 +1155,7 @@ describe("EffectWeaver", () => {
       })
 
       const r = resolver({
-        user: query(User).resolve(() => ({
+        user: query(standard(User)).resolve(() => ({
           name: "Alice",
           address: { street: "123 Main St", city: "Springfield" },
         })),
@@ -1151,15 +1195,14 @@ describe("EffectWeaver", () => {
 
       // Branded types should still resolve to their base GraphQL type
       expect(fields.email.type).toBeInstanceOf(GraphQLNonNull)
-      expect((fields.email.type as GraphQLNonNull<any>).ofType).toBe(GraphQLString)
+      expect((fields.email.type as GraphQLNonNull<any>).ofType).toBe(
+        GraphQLString
+      )
     })
 
     // TODO: Resolver test - needs silk integration
     it.skip("should handle transformation schemas", () => {
-      const PositiveInt = Schema.Number.pipe(
-        Schema.int(),
-        Schema.positive()
-      )
+      const PositiveInt = Schema.Number.pipe(Schema.int(), Schema.positive())
 
       const Product = Schema.Struct({
         name: Schema.String,
@@ -1167,7 +1210,7 @@ describe("EffectWeaver", () => {
       })
 
       const r = resolver({
-        product: query(Product).resolve(() => ({
+        product: query(standard(Product)).resolve(() => ({
           name: "Widget",
           quantity: 5,
         })),
@@ -1200,7 +1243,7 @@ describe("EffectWeaver", () => {
       })
 
       const r = resolver({
-        root: query(Level1).resolve(() => ({
+        root: query(standard(Level1)).resolve(() => ({
           level2: {
             level3: {
               value: "deep",
@@ -1265,7 +1308,7 @@ describe("EffectWeaver", () => {
       )
 
       const r = resolver({
-        user: query(User).resolve(() => ({
+        user: query(standard(User)).resolve(() => ({
           id: "1",
           createdAt: new Date(),
           name: "Alice",

@@ -36,19 +36,6 @@ export function getFieldConfig(
   // Merge configs, PropertySignature takes precedence
   const fieldConfig = { ...schemaFieldConfig, ...propFieldConfig }
 
-  // Extract default value from schema annotations if present
-  const defaultValue = schema.ast.annotations?.default
-
-  if (defaultValue !== undefined) {
-    return {
-      ...fieldConfig,
-      extensions: {
-        ...fieldConfig.extensions,
-        defaultValue,
-      },
-    }
-  }
-
   return fieldConfig
 }
 
@@ -209,22 +196,13 @@ export function isUnionSchema(ast: SchemaAST.AST): ast is SchemaAST.Union {
 export function isTupleOrArraySchema(
   ast: SchemaAST.AST
 ): ast is SchemaAST.TupleType {
-  return ast._tag === "TupleType"
+  return unwrapAST(ast)._tag === "TupleType"
 }
 
 /**
  * Check if a schema is nullable or optional
  */
 export function isNullable(ast: SchemaAST.AST): boolean {
-  // Handle PropertySignatureDeclaration (created by Schema.optional())
-  if (ast._tag === "PropertySignatureDeclaration") {
-    const prop = ast as SchemaAST.PropertySignatureDeclaration
-    // Schema.optional() always makes the field nullable
-    if (prop.isOptional) return true
-    // Also check the inner type
-    return isNullable(prop.type)
-  }
-
   if (ast._tag === "Union") {
     return ast.types.some(
       (t) =>
@@ -238,18 +216,14 @@ export function isNullable(ast: SchemaAST.AST): boolean {
 }
 
 /**
- * Unwrap transformation schemas to get the underlying type
+ * Unwrap AST to get the underlying type
  */
-export function unwrapTransformation(ast: SchemaAST.AST): SchemaAST.AST {
+export function unwrapAST(ast: SchemaAST.AST): SchemaAST.AST {
   if (ast._tag === "Transformation") {
-    return unwrapTransformation(ast.to)
+    return unwrapAST(ast.to)
   }
   if (ast._tag === "Refinement") {
-    return unwrapTransformation(ast.from)
-  }
-  // Handle PropertySignatureDeclaration (created by Schema.optional())
-  if (ast._tag === "PropertySignatureDeclaration") {
-    return unwrapTransformation((ast as SchemaAST.PropertySignatureDeclaration).type)
+    return unwrapAST(ast.from)
   }
   return ast
 }
@@ -259,7 +233,9 @@ export function unwrapTransformation(ast: SchemaAST.AST): SchemaAST.AST {
  * Looks for __typename: Schema.Literal("TypeName") pattern
  * Also handles __typename: Schema.NullOr(Schema.Literal("TypeName"))
  */
-export function extractTypeName(ast: SchemaAST.TypeLiteral): string | undefined {
+export function extractTypeName(
+  ast: SchemaAST.TypeLiteral
+): string | undefined {
   const typenameProp = ast.propertySignatures.find(
     (prop) => prop.name.toString() === "__typename"
   )
@@ -267,7 +243,7 @@ export function extractTypeName(ast: SchemaAST.TypeLiteral): string | undefined 
   if (!typenameProp) return undefined
 
   // Unwrap the property type to get to the literal
-  const unwrapped = unwrapTransformation(typenameProp.type)
+  const unwrapped = unwrapAST(typenameProp.type)
 
   // Check if it's a literal
   if (isLiteralSchema(unwrapped) && typeof unwrapped.literal === "string") {
