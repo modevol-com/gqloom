@@ -28,8 +28,6 @@ jobs:
       - name: Setup pnpm
         uses: ./.github/actions/pnpm
       - name: Build
-        run: pnpm run build # Ensu
-      - name: NPM Version
-        run: npm --version
+        run: pnpm run build
       - name: Publish
         run: pnpm run ci:publish

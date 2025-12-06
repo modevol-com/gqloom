@@ -19,3 +19,8 @@ runs:
     - name: Install dependencies
       shell: bash
       run: pnpm install
+
+    # Ensure npm 11.5.1 or later is installed
+    - name: Update NPM
+      shell: bash
+      run: npm install -g npm@latest
