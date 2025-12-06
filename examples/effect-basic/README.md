@@ -20,17 +20,17 @@ This example shows:
 import { Schema } from "effect"
 
 export const User = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
+    id: Schema.String,
+    name: Schema.String,
   email: Schema.String.annotations({
     asField: { description: "User's email address" },
-  }),
-  age: Schema.optional(Schema.Number),
-  role: Schema.Enums({
-    Admin: "ADMIN",
-    User: "USER",
-    Guest: "GUEST",
-  }),
+    }),
+    age: Schema.optional(Schema.Number),
+    role: Schema.Enums({
+      Admin: "ADMIN",
+      User: "USER",
+      Guest: "GUEST",
+    }),
 }).annotations({
   asObjectType: { description: "A user in the system" },
 })

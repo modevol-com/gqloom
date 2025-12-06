@@ -1047,16 +1047,16 @@ describe("EffectWeaver", () => {
 
   describe("Edge cases and advanced features", () => {
     // TODO: Resolver test - needs silk integration
-    it.skip("should handle circular references", () => {
+    it("should handle circular references", () => {
       interface IUser {
-        name: string
-        friend?: IUser
+        readonly name: string
+        readonly friend?: IUser | null | undefined
       }
 
       const User: Schema.Schema<IUser> = Schema.Struct({
         name: Schema.String,
         friend: Schema.optional(
-          Schema.suspend((): Schema.Schema<IUser> => User)
+          Schema.NullOr(Schema.suspend((): Schema.Schema<IUser> => User))
         ),
       })
 
