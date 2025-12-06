@@ -21,9 +21,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      # Ensure npm 11.5.1 or later is installed
+      - name: Update npm
+        run: npm install -g npm@latest
       - name: Setup pnpm
         uses: ./.github/actions/pnpm
       - name: Build
-        run: pnpm run build
+        run: pnpm run build # Ensu
       - name: Publish
         run: pnpm run ci:publish
