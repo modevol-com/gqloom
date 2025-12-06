@@ -196,13 +196,6 @@ describe("EffectWeaver", () => {
     `)
   })
 
-  // TODO: Preset GraphQLType config needs silk integration
-  // Purpose: Test that presetGraphQLType config option allows overriding default type mappings (e.g., Date → custom scalar)
-  // Why failing: Schemas need to be wrapped with EffectWeaver.unravel() to create "silks" with ~standard symbol
-  // Implementation needed:
-  //   1. Schemas used in resolvers must have the ~standard vendor symbol
-  //   2. Either auto-wrap schemas in resolver() or require explicit EffectWeaver.unravel() calls
-  //   3. The config logic itself is correct (lines 228-238 in test), just needs proper silk integration
   it("should handle preset GraphQLType", () => {
     const Dog = Schema.Struct({
       __typename: Schema.optional(Schema.Literal("Dog")),
@@ -350,10 +343,6 @@ describe("EffectWeaver", () => {
     `)
   })
 
-  // TODO: Runtime execution needs silk integration
-  // Purpose: Test that enum values resolve correctly in actual GraphQL execution (not just type generation)
-  // Why failing: Same silk integration issue - schemas need ~standard symbol for resolver usage
-  // Implementation needed: Same as "preset GraphQLType" test - wrap schemas with EffectWeaver.unravel()
   it("should resolve enum values correctly", async () => {
     const Role = Schema.Enums({
       Admin: "ADMIN",
@@ -391,7 +380,6 @@ describe("EffectWeaver", () => {
     expect(type).toBeInstanceOf(GraphQLNonNull)
   })
 
-  // TODO: All resolver-based tests need silk integration (see preset GraphQLType test comments)
   it("should handle union with resolveType", () => {
     const Cat = Schema.Struct({
       name: Schema.String,
@@ -566,7 +554,6 @@ describe("EffectWeaver", () => {
     expect(type.ofType.description).toBe("An animal union type")
   })
 
-  // TODO: Resolver test - needs silk integration
   it("should handle interface implementation", () => {
     const Node = Schema.Struct({
       id: Schema.String,
@@ -605,10 +592,6 @@ describe("EffectWeaver", () => {
     `)
   })
 
-  // TODO: All duplicate avoidance tests need silk integration
-  // Purpose: Critical test suite ensuring the same type isn't generated multiple times in schema
-  // Why failing: All these tests use resolvers which need proper silk wrapping
-  // Implementation needed: Same silk integration fix as other resolver tests
   describe("should avoid duplicate", () => {
     it("should merge field from multiple resolver", () => {
       const Dog = Schema.Struct({
@@ -1046,7 +1029,6 @@ describe("EffectWeaver", () => {
   })
 
   describe("Edge cases and advanced features", () => {
-    // TODO: Resolver test - needs silk integration
     it("should handle circular references", () => {
       interface IUser {
         readonly name: string
@@ -1088,7 +1070,6 @@ describe("EffectWeaver", () => {
       )
     })
 
-    // TODO: Resolver test - needs silk integration
     it("should handle optional fields with complex types", () => {
       const Address = Schema.Struct({
         street: Schema.String,
@@ -1154,7 +1135,6 @@ describe("EffectWeaver", () => {
       )
     })
 
-    // TODO: Resolver test - needs silk integration
     it("should handle transformation schemas", () => {
       const PositiveInt = Schema.Number.pipe(Schema.int(), Schema.positive())
 
@@ -1182,7 +1162,6 @@ describe("EffectWeaver", () => {
       `)
     })
 
-    // TODO: Resolver test - needs silk integration
     it("should handle deeply nested structures", () => {
       const Level3 = Schema.Struct({
         value: Schema.String,
@@ -1233,7 +1212,6 @@ describe("EffectWeaver", () => {
       expect(Object.keys(type.ofType.getFields())).toHaveLength(0)
     })
 
-    // TODO: Resolver test - needs silk integration
     it("should handle multiple interfaces", () => {
       const Node = Schema.Struct({
         id: Schema.String,
