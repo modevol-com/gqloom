@@ -20,8 +20,8 @@ jobs:
     needs:
       - test
     permissions:
+      id-token: write # Required for OIDC trusted publishing
       contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
