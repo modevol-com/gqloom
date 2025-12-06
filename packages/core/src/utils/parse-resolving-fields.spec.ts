@@ -106,6 +106,59 @@ describe("parseResolvingFields", () => {
 
   const schema = weave(asyncContextProvider, testResolver)
 
+  it("should filter out introspection fields by default", async () => {
+    await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user {
+            __typename
+            name
+            profile {
+              __typename
+              email
+            }
+          }
+        }
+      `),
+    })
+
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
+    expect(fields).toEqual(new Set(["name", "profile", "profile.email"]))
+  })
+
+  it("should include introspection fields when includeIntrospection is true", async () => {
+    await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user {
+            __typename
+            name
+            profile {
+              __typename
+              email
+            }
+          }
+        }
+      `),
+    })
+
+    const fields = parseResolvingFields(info, {
+      maxDepth: Infinity,
+      includeIntrospection: true,
+    })
+    expect(fields).toEqual(
+      new Set([
+        "__typename",
+        "name",
+        "profile",
+        "profile.__typename",
+        "profile.email",
+      ])
+    )
+  })
+
   it("should parse simple fields", async () => {
     await execute({
       schema,
@@ -119,7 +172,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "name"]))
   })
 
@@ -138,7 +191,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(
       new Set(["profile", "profile.email", "profile.phone"])
     )
@@ -161,7 +214,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(
       new Set([
         "profile",
@@ -190,7 +243,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -212,7 +265,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -234,7 +287,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id"]))
   })
 
@@ -256,7 +309,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id"]))
   })
 
@@ -278,7 +331,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -300,7 +353,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id"]))
   })
 
@@ -323,7 +376,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -343,7 +396,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "name", "profile", "profile.email"]))
   })
 
@@ -360,7 +413,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "role"]))
   })
 
@@ -386,7 +439,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(
       new Set(["id", "name", "profile", "profile.email", "role"])
     )
@@ -411,7 +464,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(
       new Set(["id", "profile", "profile.email", "profile.phone"])
     )
@@ -435,7 +488,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "name", "profile", "profile.email"]))
   })
 
@@ -463,7 +516,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(
       new Set([
         "profile",
@@ -495,7 +548,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "name"]))
   })
 
@@ -514,7 +567,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -533,7 +586,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -552,7 +605,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -571,7 +624,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -593,7 +646,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id"]))
   })
 
@@ -615,7 +668,7 @@ describe("parseResolvingFields", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id"]))
   })
 
@@ -635,7 +688,7 @@ describe("parseResolvingFields", () => {
       // Intentionally not providing variableValues
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id"]))
   })
 
@@ -655,7 +708,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 
@@ -676,7 +729,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email", "name"]))
   })
 
@@ -696,7 +749,7 @@ describe("parseResolvingFields", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "profile", "profile.email"]))
   })
 })
@@ -779,7 +832,7 @@ describe("parseResolvingFields for nested field", () => {
       `),
     })
 
-    const fields = parseResolvingFields(userInfo, Infinity)
+    const fields = parseResolvingFields(userInfo, { maxDepth: Infinity })
     expect(fields).toEqual(new Set(["id", "name"]))
   })
 
@@ -799,12 +852,14 @@ describe("parseResolvingFields for nested field", () => {
       `),
     })
 
-    const userFields = parseResolvingFields(userInfo, Infinity)
+    const userFields = parseResolvingFields(userInfo, { maxDepth: Infinity })
     expect(userFields).toEqual(
       new Set(["id", "profile", "profile.email", "profile.phone"])
     )
 
-    const profileFields = parseResolvingFields(profileInfo, Infinity)
+    const profileFields = parseResolvingFields(profileInfo, {
+      maxDepth: Infinity,
+    })
     expect(profileFields).toEqual(new Set(["email", "phone"]))
   })
 
@@ -825,7 +880,7 @@ describe("parseResolvingFields for nested field", () => {
       `),
     })
 
-    const userFields = parseResolvingFields(userInfo, Infinity)
+    const userFields = parseResolvingFields(userInfo, { maxDepth: Infinity })
     expect(userFields).toEqual(
       new Set([
         "profile",
@@ -835,12 +890,16 @@ describe("parseResolvingFields for nested field", () => {
       ])
     )
 
-    const profileFields = parseResolvingFields(profileInfo, Infinity)
+    const profileFields = parseResolvingFields(profileInfo, {
+      maxDepth: Infinity,
+    })
     expect(profileFields).toEqual(
       new Set(["address", "address.street", "address.city"])
     )
 
-    const addressFields = parseResolvingFields(addressInfo, Infinity)
+    const addressFields = parseResolvingFields(addressInfo, {
+      maxDepth: Infinity,
+    })
     expect(addressFields).toEqual(new Set(["street", "city"]))
   })
 
@@ -863,7 +922,7 @@ describe("parseResolvingFields for nested field", () => {
       `),
     })
 
-    const userFields = parseResolvingFields(userInfo, Infinity)
+    const userFields = parseResolvingFields(userInfo, { maxDepth: Infinity })
     expect(userFields).toEqual(
       new Set([
         "id",
@@ -875,10 +934,14 @@ describe("parseResolvingFields for nested field", () => {
       ])
     )
 
-    const profileFields = parseResolvingFields(profileInfo, Infinity)
+    const profileFields = parseResolvingFields(profileInfo, {
+      maxDepth: Infinity,
+    })
     expect(profileFields).toEqual(new Set(["email", "address", "address.city"]))
 
-    const addressFields = parseResolvingFields(addressInfo, Infinity)
+    const addressFields = parseResolvingFields(addressInfo, {
+      maxDepth: Infinity,
+    })
     expect(addressFields).toEqual(new Set(["city"]))
   })
 
@@ -905,12 +968,16 @@ describe("parseResolvingFields for nested field", () => {
       },
     })
 
-    const profileFields = parseResolvingFields(profileInfo, Infinity)
+    const profileFields = parseResolvingFields(profileInfo, {
+      maxDepth: Infinity,
+    })
     expect(profileFields).toEqual(
       new Set(["email", "phone", "address", "address.city"])
     )
 
-    const addressFields = parseResolvingFields(addressInfo, Infinity)
+    const addressFields = parseResolvingFields(addressInfo, {
+      maxDepth: Infinity,
+    })
     expect(addressFields).toEqual(new Set(["city"]))
   })
 
@@ -933,7 +1000,9 @@ describe("parseResolvingFields for nested field", () => {
       `),
     })
 
-    const profileFields = parseResolvingFields(profileInfo, Infinity)
+    const profileFields = parseResolvingFields(profileInfo, {
+      maxDepth: Infinity,
+    })
     expect(profileFields).toEqual(new Set(["email", "phone"]))
   })
 })
@@ -1034,7 +1103,7 @@ describe("parseResolvingFields with maxDepth", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, 2)
+    const fields = parseResolvingFields(info, { maxDepth: 2 })
     expect(fields).toEqual(
       new Set([
         "id",
@@ -1068,7 +1137,7 @@ describe("parseResolvingFields with maxDepth", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, Infinity)
+    const fields = parseResolvingFields(info, { maxDepth: Infinity })
     expect(fields).toEqual(
       new Set([
         "id",
@@ -1106,7 +1175,7 @@ describe("parseResolvingFields with maxDepth", () => {
       `),
     })
 
-    const fields = parseResolvingFields(info, 2)
+    const fields = parseResolvingFields(info, { maxDepth: 2 })
     expect(fields).toEqual(
       new Set([
         "id",
@@ -1140,7 +1209,7 @@ describe("parseResolvingFields with maxDepth", () => {
       },
     })
 
-    const fields = parseResolvingFields(info, 2)
+    const fields = parseResolvingFields(info, { maxDepth: 2 })
     expect(fields).toEqual(
       new Set(["id", "profile", "profile.email", "profile.address"])
     )
@@ -1215,6 +1284,66 @@ describe("getDeepResolvingFields", () => {
     profileFieldResolver
   )
 
+  it("should exclude introspection fields by default", async () => {
+    await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user {
+            __typename
+            id
+            profile {
+              __typename
+              email
+            }
+          }
+        }
+      `),
+    })
+
+    const fieldsMap = getDeepResolvingFields({ info: userInfo })
+    const rootFields = fieldsMap.get("")
+    const profileFields = fieldsMap.get("profile")
+
+    expect(rootFields?.requestedFields).toEqual(new Set(["id", "profile"]))
+    expect(profileFields?.requestedFields).toEqual(new Set(["email"]))
+  })
+
+  it("should include introspection fields when includeIntrospection is true", async () => {
+    await execute({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          user {
+            __typename
+            id
+            profile {
+              __typename
+              email
+            }
+          }
+        }
+      `),
+    })
+
+    const fieldsMap = getDeepResolvingFields(
+      { info: userInfo },
+      {
+        includeIntrospection: true,
+        maxDepth: Infinity,
+      }
+    )
+    const rootFields = fieldsMap.get("")
+    const profileFields = fieldsMap.get("profile")
+
+    expect(rootFields?.requestedFields).toEqual(
+      new Set(["__typename", "id", "profile"])
+    )
+    expect(profileFields?.requestedFields).toEqual(
+      new Set(["__typename", "email"])
+    )
+  })
+
   it("should handle field selection at multiple levels", async () => {
     await execute({
       schema,
@@ -1273,7 +1402,10 @@ describe("getDeepResolvingFields", () => {
       `),
     })
 
-    const fieldsMap = getDeepResolvingFields({ info: userInfo }, 2)
+    const fieldsMap = getDeepResolvingFields(
+      { info: userInfo },
+      { maxDepth: 2 }
+    )
     expect(fieldsMap.size).toBe(2)
 
     const rootResolvingFields = fieldsMap.get("")

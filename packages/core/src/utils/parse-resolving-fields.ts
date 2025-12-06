@@ -34,21 +34,39 @@ export interface ResolvingFields {
   selectedFields: ReadonlySet<string>
 }
 
+export interface ResolvingFieldsOptions {
+  /**
+   * Whether to include GraphQL introspection/meta fields (names starting with "__").
+   * Default: false (filtered out).
+   */
+  includeIntrospection?: boolean
+  /**
+   * Maximum depth of nested fields to parse.
+   * Default: Infinity for deep helpers; default is handled per caller.
+   */
+  maxDepth?: number
+}
+
 /**
  * Analyzes and processes field resolution in a GraphQL query deeply.
  *
  * @param payload - The resolver payload containing the current field resolution context
- * @param [maxDepth=Infinity] - Maximum depth of nested fields to parse
+ * @param options - Additional parsing options (e.g., includeIntrospection, maxDepth; default maxDepth = Infinity)
  * @returns A map of field paths to their resolving fields
  */
 export function getDeepResolvingFields(
   payload: Pick<ResolverPayload, "info">,
-  maxDepth: number = Infinity
+  options?: ResolvingFieldsOptions
 ): Map<string, ResolvingFields> {
+  const resolvedDepth = options?.maxDepth ?? Infinity
+  const mergedOptions: ResolvingFieldsOptions = {
+    ...options,
+    maxDepth: resolvedDepth,
+  }
   const result = new Map<string, ResolvingFields>()
   const requestedFieldsByPath = ResolvingFieldsParser.parseDeep(
     payload.info,
-    maxDepth
+    mergedOptions
   )
 
   const rootType = unwrapType(payload.info.returnType)
@@ -114,12 +132,17 @@ export function getDeepResolvingFields(
  * Analyzes and processes field resolution in a GraphQL query.
  *
  * @param payload - The resolver payload containing the current field resolution context
+ * @param options - Additional parsing options (e.g., includeIntrospection; fixed maxDepth = 1)
  * @returns An object containing sets of different field types
  */
 export function getResolvingFields(
-  payload: Pick<ResolverPayload, "info">
+  payload: Pick<ResolverPayload, "info">,
+  options?: Omit<ResolvingFieldsOptions, "maxDepth">
 ): ResolvingFields {
-  const requestedFields = parseResolvingFields(payload.info)
+  const requestedFields = parseResolvingFields(payload.info, {
+    ...options,
+    maxDepth: 1,
+  })
   const derivedFields = new Set<string>()
   const derivedDependencies = new Set<string>()
   const resolvingObject = unwrapType(payload.info.returnType)
@@ -152,14 +175,19 @@ export function getResolvingFields(
  * Supports @include, @skip directives, fragments, and variables.
  *
  * @param info - The GraphQL resolve info object containing the query information
- * @param maxDepth - Maximum depth of nested fields to parse (default: 1)
+ * @param options - Additional parsing options (e.g., includeIntrospection, maxDepth; default maxDepth = 1)
  * @returns A Set of field paths
  */
 export function parseResolvingFields(
   info: GraphQLResolveInfo,
-  maxDepth: number = 1
+  options?: ResolvingFieldsOptions
 ): Set<string> {
-  return ResolvingFieldsParser.parse(info, maxDepth)
+  const resolvedDepth = options?.maxDepth ?? 1
+  const mergedOptions: ResolvingFieldsOptions = {
+    ...options,
+    maxDepth: resolvedDepth,
+  }
+  return ResolvingFieldsParser.parse(info, mergedOptions)
 }
 
 /**
@@ -172,23 +200,34 @@ class ResolvingFieldsParser {
   private visitedFragments = new Set<string>()
   /** The GraphQL resolve info object */
   private info: GraphQLResolveInfo
-  /** Maximum depth of nested fields to parse */
-  private maxDepth: number
+  /** Options controlling parsing behavior */
+  private options: Required<
+    Pick<ResolvingFieldsOptions, "maxDepth" | "includeIntrospection">
+  >
 
-  public static parse(info: GraphQLResolveInfo, maxDepth: number): Set<string> {
-    return new ResolvingFieldsParser(info, maxDepth).parse()
+  public static parse(
+    info: GraphQLResolveInfo,
+    options?: ResolvingFieldsOptions
+  ): Set<string> {
+    return new ResolvingFieldsParser(info, options).parse()
   }
 
   public static parseDeep(
     info: GraphQLResolveInfo,
-    maxDepth: number
+    options?: ResolvingFieldsOptions
   ): Map<string, Set<string>> {
-    return new ResolvingFieldsParser(info, maxDepth).parseDeep()
+    return new ResolvingFieldsParser(info, options).parseDeep()
   }
 
-  protected constructor(info: GraphQLResolveInfo, maxDepth: number) {
+  protected constructor(
+    info: GraphQLResolveInfo,
+    options?: ResolvingFieldsOptions
+  ) {
     this.info = info
-    this.maxDepth = maxDepth
+    this.options = {
+      maxDepth: options?.maxDepth ?? Infinity,
+      includeIntrospection: options?.includeIntrospection ?? false,
+    }
     // Start collecting fields from the root nodes
     for (const fieldNode of this.info.fieldNodes) {
       this.collectFields(fieldNode.selectionSet, "", 0)
@@ -239,7 +278,10 @@ class ResolvingFieldsParser {
     parentPath: string = "",
     currentDepth: number = 0
   ): void {
-    if (!selectionSet?.selections.length || currentDepth >= this.maxDepth)
+    if (
+      !selectionSet?.selections.length ||
+      currentDepth >= this.options.maxDepth
+    )
       return
 
     if (!this.fields.has(parentPath)) {
@@ -255,6 +297,12 @@ class ResolvingFieldsParser {
         case Kind.FIELD: {
           // Handle regular fields
           const fieldName = selection.name.value
+          if (
+            !this.options.includeIntrospection &&
+            fieldName.startsWith("__")
+          ) {
+            break
+          }
           currentFields.add(fieldName)
 
           // Process nested fields if they exist
