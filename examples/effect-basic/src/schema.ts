@@ -1,42 +1,35 @@
-import { asField, asObjectType } from "@gqloom/effect"
 import { Schema } from "effect"
 
 // User schema
-export const User = asObjectType(
-  Schema.Struct({
-    id: Schema.String,
-    name: Schema.String,
-    email: asField(Schema.String, {
-      description: "User's email address",
-    }),
-    age: Schema.optional(Schema.Number),
-    role: Schema.Enums({
-      Admin: "ADMIN",
-      User: "USER",
-      Guest: "GUEST",
-    }),
+export const User = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  email: Schema.String.annotations({
+    asField: { description: "User's email address" },
   }),
-  {
-    description: "A user in the system",
-  }
-)
+  age: Schema.optional(Schema.Number),
+  role: Schema.Enums({
+    Admin: "ADMIN",
+    User: "USER",
+    Guest: "GUEST",
+  }),
+}).annotations({
+  asObjectType: { description: "A user in the system" },
+})
 
 // Post schema
-export const Post = asObjectType(
-  Schema.Struct({
-    id: Schema.String,
-    title: Schema.String,
-    content: asField(Schema.String, {
-      description: "Post content",
-    }),
-    published: Schema.Boolean,
-    authorId: Schema.String,
-    createdAt: Schema.Date.annotations({ identifier: "Date" }),
+export const Post = Schema.Struct({
+  id: Schema.String,
+  title: Schema.String,
+  content: Schema.String.annotations({
+    asField: { description: "Post content" },
   }),
-  {
-    description: "A blog post",
-  }
-)
+  published: Schema.Boolean,
+  authorId: Schema.String,
+  createdAt: Schema.Date.annotations({ identifier: "Date" }),
+}).annotations({
+  asObjectType: { description: "A blog post" },
+})
 
 // Input schemas
 export const CreateUserInput = Schema.Struct({

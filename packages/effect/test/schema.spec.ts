@@ -26,14 +26,7 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
-import {
-  AS_FIELD,
-  asEnumType,
-  asField,
-  asObjectType,
-  asUnionType,
-  EffectWeaver,
-} from "../src"
+import { asField, EffectWeaver } from "../src"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -128,27 +121,29 @@ describe("EffectWeaver", () => {
   })
 
   it("should handle custom type", () => {
-    const DateSchema = asField(
-      Schema.Date.annotations({ identifier: "Date" }),
-      { type: GraphQLDate }
-    )
+    const DateSchema = Schema.Date.annotations({
+      identifier: "Date",
+      asField: { type: GraphQLDate },
+    })
 
     expect(getGraphQLType(DateSchema)).toEqual(GraphQLDate)
 
-    const Cat = asObjectType(
-      Schema.Struct({
-        name: Schema.String,
-        age: asField(Schema.Int.annotations({ identifier: "Int" }), {
+    const Cat = Schema.Struct({
+      name: Schema.String,
+      age: Schema.Int.annotations({
+        identifier: "Int",
+        asField: {
           type: GraphQLInt,
           description: "How old is the cat",
-        }),
-        loveFish: Schema.NullOr(Schema.Boolean),
+        },
       }),
-      {
+      loveFish: Schema.NullOr(Schema.Boolean),
+    }).annotations({
+      asObjectType: {
         name: "Cat",
         description: "A cute cat",
-      }
-    )
+      },
+    })
     expect(print(Schema.NullOr(Cat))).toMatchInlineSnapshot(`
       """"A cute cat"""
       type Cat {
@@ -166,7 +161,7 @@ describe("EffectWeaver", () => {
       __typename: Schema.optional(Schema.Literal("Dog")),
       name: Schema.optional(Schema.String),
       birthday: Schema.optional(Schema.Date).annotations({
-        [AS_FIELD]: { type: null },
+        [asField]: { type: null },
       }),
     })
 
@@ -195,7 +190,7 @@ describe("EffectWeaver", () => {
         __typename: Schema.optional(Schema.Literal("Dog")),
         name: Schema.optional(Schema.String),
         birthday: Schema.optional(Schema.Date).annotations({
-          [AS_FIELD]: { type: field.hidden },
+          [asField]: { type: field.hidden },
         }),
       })
     )
@@ -334,13 +329,12 @@ describe("EffectWeaver", () => {
   })
 
   it("should handle enum with valuesConfig", () => {
-    const Status = asEnumType(
-      Schema.Enums({
-        Active: "ACTIVE",
-        Inactive: "INACTIVE",
-        Pending: "PENDING",
-      }),
-      {
+    const Status = Schema.Enums({
+      Active: "ACTIVE",
+      Inactive: "INACTIVE",
+      Pending: "PENDING",
+    }).annotations({
+      asEnumType: {
         name: "Status",
         description: "User status",
         valuesConfig: {
@@ -351,8 +345,8 @@ describe("EffectWeaver", () => {
           },
           Pending: { description: "User is pending approval" },
         },
-      }
-    )
+      },
+    })
 
     expect(print(Status)).toMatchInlineSnapshot(`
       """"User status"""
@@ -374,14 +368,11 @@ describe("EffectWeaver", () => {
   // Why failing: Same silk integration issue - schemas need ~standard symbol for resolver usage
   // Implementation needed: Same as "preset GraphQLType" test - wrap schemas with EffectWeaver.unravel()
   it.skip("should resolve enum values correctly", async () => {
-    const Role = asEnumType(
-      Schema.Enums({
-        Admin: "ADMIN",
-        User: "USER",
-        Guest: "GUEST",
-      }),
-      { name: "Role" }
-    )
+    const Role = Schema.Enums({
+      Admin: "ADMIN",
+      User: "USER",
+      Guest: "GUEST",
+    }).annotations({ asEnumType: { name: "Role" } })
 
     const r = resolver({
       role: query(standard(Role)).resolve(() => "ADMIN"),
@@ -415,21 +406,15 @@ describe("EffectWeaver", () => {
 
   // TODO: All resolver-based tests need silk integration (see preset GraphQLType test comments)
   it.skip("should handle union with resolveType", () => {
-    const Cat = asObjectType(
-      Schema.Struct({
-        name: Schema.String,
-        meow: Schema.String,
-      }),
-      { name: "Cat" }
-    )
+    const Cat = Schema.Struct({
+      name: Schema.String,
+      meow: Schema.String,
+    }).annotations({ asObjectType: { name: "Cat" } })
 
-    const Dog = asObjectType(
-      Schema.Struct({
-        name: Schema.String,
-        bark: Schema.String,
-      }),
-      { name: "Dog" }
-    )
+    const Dog = Schema.Struct({
+      name: Schema.String,
+      bark: Schema.String,
+    }).annotations({ asObjectType: { name: "Dog" } })
 
     // const Animal = asUnionType(Schema.Union(Cat, Dog), {
     //   name: "Animal",
@@ -440,13 +425,15 @@ describe("EffectWeaver", () => {
     //   },
     // })
     const Animal = Schema.Union(Cat, Dog).annotations({
-      name: "Animal",
-      resolveType: (
-        value: Schema.Schema.Type<typeof Cat> | Schema.Schema.Type<typeof Dog>
-      ) => {
-        if ("meow" in value) return "Cat"
-        if ("bark" in value) return "Dog"
-        return null
+      asUnionType: {
+        name: "Animal",
+        resolveType: (
+          value: Schema.Schema.Type<typeof Cat> | Schema.Schema.Type<typeof Dog>
+        ) => {
+          if ("meow" in value) return "Cat"
+          if ("bark" in value) return "Dog"
+          return undefined
+        },
       },
     })
 
@@ -515,16 +502,15 @@ describe("EffectWeaver", () => {
   })
 
   it("should handle with object metadata", () => {
-    const User = asObjectType(
-      Schema.Struct({
-        id: Schema.String,
-        name: Schema.String,
-      }),
-      {
+    const User = Schema.Struct({
+      id: Schema.String,
+      name: Schema.String,
+    }).annotations({
+      asObjectType: {
         name: "CustomUser",
         description: "A custom user type",
-      }
-    )
+      },
+    })
 
     const type = getGraphQLType(User) as GraphQLNonNull<GraphQLObjectType>
     expect(type.ofType.name).toBe("CustomUser")
@@ -534,12 +520,16 @@ describe("EffectWeaver", () => {
   it("should handle with field metadata", () => {
     const User = Schema.Struct({
       id: Schema.String,
-      name: asField(Schema.String, {
-        description: "The user's name",
+      name: Schema.String.annotations({
+        asField: {
+          description: "The user's name",
+        },
       }),
-      email: asField(Schema.String, {
-        description: "The user's email address",
-        deprecationReason: "Use contactEmail instead",
+      email: Schema.String.annotations({
+        asField: {
+          description: "The user's email address",
+          deprecationReason: "Use contactEmail instead",
+        },
       }),
     })
 
@@ -551,16 +541,15 @@ describe("EffectWeaver", () => {
   })
 
   it("should handle with enum metadata", () => {
-    const Role = asEnumType(
-      Schema.Enums({
-        Admin: "ADMIN",
-        User: "USER",
-      }),
-      {
+    const Role = Schema.Enums({
+      Admin: "ADMIN",
+      User: "USER",
+    }).annotations({
+      asEnumType: {
         name: "UserRole",
         description: "User role in the system",
-      }
-    )
+      },
+    })
 
     const type = getGraphQLType(Role) as GraphQLNonNull<any>
     expect(type.ofType.name).toBe("UserRole")
@@ -578,9 +567,11 @@ describe("EffectWeaver", () => {
       bark: Schema.String,
     })
 
-    const Animal = asUnionType(Schema.Union(Cat, Dog), {
-      name: "Animal",
-      description: "An animal union type",
+    const Animal = Schema.Union(Cat, Dog).annotations({
+      asUnionType: {
+        name: "Animal",
+        description: "An animal union type",
+      },
     })
 
     const type = getGraphQLType(Animal) as GraphQLNonNull<any>
@@ -590,23 +581,21 @@ describe("EffectWeaver", () => {
 
   // TODO: Resolver test - needs silk integration
   it.skip("should handle interface implementation", () => {
-    const Node = asObjectType(
-      Schema.Struct({
-        id: Schema.String,
-      }),
-      { name: "Node", description: "Node interface" }
-    )
+    const Node = Schema.Struct({
+      id: Schema.String,
+    }).annotations({
+      asObjectType: { name: "Node", description: "Node interface" },
+    })
 
-    const User = asObjectType(
-      Schema.Struct({
-        id: Schema.String,
-        name: Schema.String,
-      }),
-      {
+    const User = Schema.Struct({
+      id: Schema.String,
+      name: Schema.String,
+    }).annotations({
+      asObjectType: {
         name: "User",
         interfaces: [Node],
-      }
-    )
+      },
+    })
 
     const r = resolver.of(standard(User), {
       user: query(standard(User)).resolve(() => ({ id: "1", name: "Alice" })),
@@ -724,25 +713,19 @@ describe("EffectWeaver", () => {
         value: Schema.Number,
       })
 
-      const Orange = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Orange")),
-          name: Schema.String,
-          color: Schema.String,
-          prize: Prize,
-        }),
-        { name: "Orange" }
-      )
+      const Orange = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Orange")),
+        name: Schema.String,
+        color: Schema.String,
+        prize: Prize,
+      }).annotations({ asObjectType: { name: "Orange" } })
 
-      const Apple = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Apple")),
-          name: Schema.String,
-          sweetness: Schema.Number,
-          prize: asField(Prize, {}),
-        }),
-        { name: "Apple" }
-      )
+      const Apple = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Apple")),
+        name: Schema.String,
+        sweetness: Schema.Number,
+        prize: Prize,
+      }).annotations({ asObjectType: { name: "Apple" } })
 
       const r1 = resolver({
         orange: query(standard(Orange)).resolve(() => ({
@@ -789,43 +772,38 @@ describe("EffectWeaver", () => {
         value: Schema.Number,
       })
 
-      const Fruit = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Fruit")),
-          name: Schema.String,
-          color: Schema.String,
-          prize: Prize,
-        }),
-        { name: "Fruit" }
-      )
+      const Fruit = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Fruit")),
+        name: Schema.String,
+        color: Schema.String,
+        prize: Prize,
+      }).annotations({ asObjectType: { name: "Fruit" } })
 
-      const Orange = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Orange")),
-          name: Schema.String,
-          color: Schema.String,
-          prize: Prize,
-          flavor: Schema.String,
-        }),
-        {
+      const Orange = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Orange")),
+        name: Schema.String,
+        color: Schema.String,
+        prize: Prize,
+        flavor: Schema.String,
+      }).annotations({
+        asObjectType: {
           name: "Orange",
           interfaces: [Fruit],
-        }
-      )
+        },
+      })
 
-      const Apple = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Apple")),
-          name: Schema.String,
-          color: Schema.String,
-          prize: Prize,
-          sweetness: Schema.Number,
-        }),
-        {
+      const Apple = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Apple")),
+        name: Schema.String,
+        color: Schema.String,
+        prize: Prize,
+        sweetness: Schema.Number,
+      }).annotations({
+        asObjectType: {
           name: "Apple",
           interfaces: [Fruit],
-        }
-      )
+        },
+      })
 
       const r1 = resolver({
         orange: query(standard(Orange)).resolve(() => ({
@@ -933,14 +911,11 @@ describe("EffectWeaver", () => {
     })
 
     it("should avoid duplicate enum", () => {
-      const Fruit = asEnumType(
-        Schema.Enums({
-          Apple: "apple",
-          Banana: "banana",
-          Orange: "orange",
-        }),
-        { name: "Fruit" }
-      )
+      const Fruit = Schema.Enums({
+        Apple: "apple",
+        Banana: "banana",
+        Orange: "orange",
+      }).annotations({ asEnumType: { name: "Fruit" } })
 
       const r1 = resolver({
         fruit: query(standard(Schema.NullOr(Fruit))).resolve(
@@ -969,36 +944,31 @@ describe("EffectWeaver", () => {
     })
 
     it("should avoid duplicate interface", () => {
-      const Fruit = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Fruit")),
-          color: Schema.optional(Schema.String),
-        }),
-        { name: "Fruit" }
-      )
-      const Orange = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Orange")),
-          color: Schema.optional(Schema.String),
-          flavor: Schema.String,
-        }),
-        {
+      const Fruit = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Fruit")),
+        color: Schema.optional(Schema.String),
+      }).annotations({ asObjectType: { name: "Fruit" } })
+      const Orange = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Orange")),
+        color: Schema.optional(Schema.String),
+        flavor: Schema.String,
+      }).annotations({
+        asObjectType: {
           name: "Orange",
           interfaces: [Fruit],
-        }
-      )
+        },
+      })
 
-      const Apple = asObjectType(
-        Schema.Struct({
-          __typename: Schema.optional(Schema.Literal("Apple")),
-          color: Schema.optional(Schema.String),
-          sweetness: Schema.Number,
-        }),
-        {
+      const Apple = Schema.Struct({
+        __typename: Schema.optional(Schema.Literal("Apple")),
+        color: Schema.optional(Schema.String),
+        sweetness: Schema.Number,
+      }).annotations({
+        asObjectType: {
           name: "Apple",
           interfaces: [Fruit],
-        }
-      )
+        },
+      })
 
       const r1 = resolver({
         orange: query(standard(Schema.NullishOr(Orange))).resolve(() => ({
@@ -1050,7 +1020,9 @@ describe("EffectWeaver", () => {
         __typename: Schema.optional(Schema.Literal("Orange")),
         color: Schema.String,
       })
-      const Fruit = asUnionType(Schema.Union(Apple, Orange), { name: "Fruit" })
+      const Fruit = Schema.Union(Apple, Orange).annotations({
+        asUnionType: { name: "Fruit" },
+      })
 
       const r1 = resolver({
         fruit: query(standard(Schema.NullOr(Fruit))).resolve(() => ({
@@ -1281,31 +1253,24 @@ describe("EffectWeaver", () => {
 
     // TODO: Resolver test - needs silk integration
     it.skip("should handle multiple interfaces", () => {
-      const Node = asObjectType(
-        Schema.Struct({
-          id: Schema.String,
-        }),
-        { name: "Node" }
-      )
+      const Node = Schema.Struct({
+        id: Schema.String,
+      }).annotations({ asObjectType: { name: "Node" } })
 
-      const Timestamped = asObjectType(
-        Schema.Struct({
-          createdAt: Schema.Date.annotations({ identifier: "Date" }),
-        }),
-        { name: "Timestamped" }
-      )
+      const Timestamped = Schema.Struct({
+        createdAt: Schema.Date.annotations({ identifier: "Date" }),
+      }).annotations({ asObjectType: { name: "Timestamped" } })
 
-      const User = asObjectType(
-        Schema.Struct({
-          id: Schema.String,
-          createdAt: Schema.Date.annotations({ identifier: "Date" }),
-          name: Schema.String,
-        }),
-        {
+      const User = Schema.Struct({
+        id: Schema.String,
+        createdAt: Schema.Date.annotations({ identifier: "Date" }),
+        name: Schema.String,
+      }).annotations({
+        asObjectType: {
           name: "User",
           interfaces: [Node, Timestamped],
-        }
-      )
+        },
+      })
 
       const r = resolver({
         user: query(standard(User)).resolve(() => ({

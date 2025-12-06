@@ -1,16 +1,20 @@
 import { Option, type Schema, SchemaAST } from "effect"
-import {
-  AS_ENUM_TYPE,
-  AS_FIELD,
-  AS_OBJECT_TYPE,
-  AS_UNION_TYPE,
-} from "./metadata"
+import { asEnumType, asField, asObjectType, asUnionType } from "./metadata"
 import type {
   EnumConfig,
   FieldConfig,
   ObjectConfig,
   UnionConfig,
 } from "./types"
+
+const getAnnotationWithFallback = <T>(
+  ast: SchemaAST.AST | SchemaAST.PropertySignature,
+  symbolKey: symbol,
+  stringKey: string
+) =>
+  SchemaAST.getAnnotation<T>(symbolKey)(ast).pipe(
+    Option.orElse(() => SchemaAST.getAnnotation<T>(stringKey as any)(ast))
+  )
 
 /**
  * Get field configuration from an Effect Schema
@@ -23,14 +27,18 @@ export function getFieldConfig(
 ): FieldConfig {
   // First check PropertySignature annotations (takes precedence)
   const propFieldConfig = propertySignature
-    ? SchemaAST.getAnnotation<FieldConfig>(AS_FIELD)(propertySignature).pipe(
-        Option.getOrElse(() => ({}) as FieldConfig)
-      )
+    ? getAnnotationWithFallback<FieldConfig>(
+        propertySignature,
+        asField,
+        "asField"
+      ).pipe(Option.getOrElse(() => ({}) as FieldConfig))
     : {}
 
   // Then check schema annotations
-  const schemaFieldConfig = SchemaAST.getAnnotation<FieldConfig>(AS_FIELD)(
-    schema.ast
+  const schemaFieldConfig = getAnnotationWithFallback<FieldConfig>(
+    schema.ast,
+    asField,
+    "asField"
   ).pipe(Option.getOrElse(() => ({}) as FieldConfig))
 
   // Merge configs, PropertySignature takes precedence
@@ -43,27 +51,33 @@ export function getFieldConfig(
  * Get object type configuration from an Effect Schema
  */
 export function getObjectConfig(schema: Schema.Schema.Any): ObjectConfig {
-  return SchemaAST.getAnnotation<ObjectConfig>(AS_OBJECT_TYPE)(schema.ast).pipe(
-    Option.getOrElse(() => ({}) as ObjectConfig)
-  )
+  return getAnnotationWithFallback<ObjectConfig>(
+    schema.ast,
+    asObjectType,
+    "asObjectType"
+  ).pipe(Option.getOrElse(() => ({}) as ObjectConfig))
 }
 
 /**
  * Get enum type configuration from an Effect Schema
  */
 export function getEnumConfig(schema: Schema.Schema.Any): EnumConfig {
-  return SchemaAST.getAnnotation<EnumConfig>(AS_ENUM_TYPE)(schema.ast).pipe(
-    Option.getOrElse(() => ({}) as EnumConfig)
-  )
+  return getAnnotationWithFallback<EnumConfig>(
+    schema.ast,
+    asEnumType,
+    "asEnumType"
+  ).pipe(Option.getOrElse(() => ({}) as EnumConfig))
 }
 
 /**
  * Get union type configuration from an Effect Schema
  */
 export function getUnionConfig(schema: Schema.Schema.Any): UnionConfig {
-  return SchemaAST.getAnnotation<UnionConfig>(AS_UNION_TYPE)(schema.ast).pipe(
-    Option.getOrElse(() => ({}) as UnionConfig)
-  )
+  return getAnnotationWithFallback<UnionConfig>(
+    schema.ast,
+    asUnionType,
+    "asUnionType"
+  ).pipe(Option.getOrElse(() => ({}) as UnionConfig))
 }
 
 /**

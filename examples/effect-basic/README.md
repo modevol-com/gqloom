@@ -9,7 +9,7 @@ This example shows:
 - 🎯 **Effect Schema Integration**: Using `@gqloom/effect` to define GraphQL types with Effect Schema
 - 📝 **Type Safety**: Full TypeScript type inference from Effect Schema definitions
 - 🔧 **Resolvers**: Queries, mutations, and field resolvers
-- 🎨 **Metadata**: Using `asObjectType` and `asField` to configure GraphQL types
+- 🎨 **Metadata**: Using `annotations({ asObjectType/asField })` to configure GraphQL types
 - 📊 **Complex Types**: Structs, Enums, Arrays, Optional fields, and Dates
 
 ## Features Demonstrated
@@ -18,26 +18,22 @@ This example shows:
 
 ```typescript
 import { Schema } from "effect"
-import { asObjectType, asField } from "@gqloom/effect"
 
-export const User = asObjectType(
-  Schema.Struct({
-    id: Schema.String,
-    name: Schema.String,
-    email: asField(Schema.String, {
-      description: "User's email address",
-    }),
-    age: Schema.optional(Schema.Number),
-    role: Schema.Enums({
-      Admin: "ADMIN",
-      User: "USER",
-      Guest: "GUEST",
-    }),
+export const User = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  email: Schema.String.annotations({
+    asField: { description: "User's email address" },
   }),
-  {
-    description: "A user in the system",
-  }
-)
+  age: Schema.optional(Schema.Number),
+  role: Schema.Enums({
+    Admin: "ADMIN",
+    User: "USER",
+    Guest: "GUEST",
+  }),
+}).annotations({
+  asObjectType: { description: "A user in the system" },
+})
 ```
 
 ### Resolvers
