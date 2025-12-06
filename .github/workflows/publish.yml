@@ -29,7 +29,5 @@ jobs:
         uses: ./.github/actions/pnpm
       - name: Build
         run: pnpm run build
-      - name: NPM Version
-        run: npm --version
       - name: Publish
         run: pnpm run ci:publish
