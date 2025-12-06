@@ -55,29 +55,6 @@ export class EffectWeaver {
   public static vendor = "effect"
 
   /**
-   * Get GraphQL Silk from Effect Schema
-   * Converts Effect Schema to Standard Schema v1 for interoperability
-   * @param schema Effect Schema
-   * @returns GraphQL Silk Like Effect Schema
-   */
-  public static unravel<TSchema extends Schema.Schema.Any>(
-    schema: TSchema
-  ): TSchema {
-    const config =
-      weaverContext.value?.getConfig<EffectWeaverConfig>("gqloom.effect")
-
-    return Object.assign(schema, {
-      [SYMBOLS.GET_GRAPHQL_TYPE]: config
-        ? function (this: Schema.Schema.Any) {
-            return weaverContext.useConfig(config, () =>
-              EffectWeaver.getGraphQLTypeBySelf.call(this)
-            )
-          }
-        : EffectWeaver.getGraphQLTypeBySelf,
-    })
-  }
-
-  /**
    * Weave a GraphQL Schema from resolvers with Effect schema
    * @param inputs Resolvers, Global Middlewares, WeaverConfigs Or SchemaWeaver
    * @returns GraphQL Schema
@@ -107,10 +84,10 @@ export class EffectWeaver {
   protected static toMemoriedGraphQLType(
     schema: Schema.Schema.Any
   ): GraphQLOutputType {
-    const existing = weaverContext.getGraphQLType(schema)
+    const existing = weaverContext.getGraphQLType(schema.ast)
     if (existing) return existing
     const gqlType = EffectWeaver.toGraphQLType(schema)
-    return weaverContext.memoGraphQLType(schema, gqlType)
+    return weaverContext.memoGraphQLType(schema.ast, gqlType)
   }
 
   protected static toGraphQLType(schema: Schema.Schema.Any): GraphQLOutputType {
@@ -124,6 +101,10 @@ export class EffectWeaver {
     if (presetType) return presetType
 
     const ast = unwrapAST(schema.ast)
+
+    if (ast._tag === "Suspend") {
+      return EffectWeaver.toMemoriedGraphQLType(Schema.make(ast.f()))
+    }
 
     // Handle tuple/array types
     if (isTupleOrArraySchema(ast)) {
@@ -196,58 +177,84 @@ export class EffectWeaver {
 
       const { interfaces, ...objectConfig } = objectConfigFromMetadata
 
-      return new GraphQLObjectType({
+      const existed = weaverContext.getGraphQLType<GraphQLObjectType>(ast)
+      if (existed) return existed
+
+      const gqlObj = new GraphQLObjectType({
         name,
         interfaces: interfaces?.map((i) =>
           isInterfaceType(i) ? i : EffectWeaver.ensureInterfaceType(i)
         ),
-        fields: mapValue(
-          ast.propertySignatures.reduce(
-            (acc, prop) => {
-              if (prop.name.toString().startsWith("__")) return acc
-              acc[prop.name.toString()] = {
-                schema: Schema.make(prop.type),
-                propertySignature: prop,
+        fields: () =>
+          mapValue(
+            ast.propertySignatures.reduce(
+              (acc, prop) => {
+                if (prop.name.toString().startsWith("__")) return acc
+                acc[prop.name.toString()] = {
+                  schema: Schema.make(prop.type),
+                  propertySignature: prop,
+                }
+                return acc
+              },
+              {} as Record<
+                string,
+                {
+                  schema: Schema.Schema.Any
+                  propertySignature: SchemaAST.PropertySignature
+                }
+              >
+            ),
+            (fieldData, key) => {
+              if (key.startsWith("__")) return mapValue.SKIP
+              const { schema: field, propertySignature } = fieldData
+              const unwrappedFieldAst = unwrapAST(field.ast)
+              if (unwrappedFieldAst._tag === "Suspend") {
+                return {
+                  type: EffectWeaver.toNullableGraphQLType(
+                    Schema.make(unwrappedFieldAst.f())
+                  ),
+                }
               }
-              return acc
-            },
-            {} as Record<
-              string,
-              {
-                schema: Schema.Schema.Any
-                propertySignature: SchemaAST.PropertySignature
+              if (unwrappedFieldAst._tag === "Union") {
+                const suspendType = unwrappedFieldAst.types.find(
+                  (t) => t._tag === "Suspend"
+                ) as SchemaAST.Suspend | undefined
+                if (suspendType) {
+                  return {
+                    type: EffectWeaver.toNullableGraphQLType(
+                      Schema.make(suspendType.f())
+                    ),
+                  }
+                }
               }
-            >
-          ),
-          (fieldData, key) => {
-            if (key.startsWith("__")) return mapValue.SKIP
-            const { schema: field, propertySignature } = fieldData
-            const { type, ...fieldConfig } = getFieldConfig(
-              field,
-              propertySignature
-            )
-            if (type === null || type === SYMBOLS.FIELD_HIDDEN)
-              return mapValue.SKIP
+              const { type, ...fieldConfig } = getFieldConfig(
+                field,
+                propertySignature
+              )
+              if (type === null || type === SYMBOLS.FIELD_HIDDEN)
+                return mapValue.SKIP
 
-            // Extract default value from property signature annotations
-            const defaultValue = SchemaAST.getDefaultAnnotation(
-              propertySignature
-            ).pipe(Option.getOrUndefined)
+              // Extract default value from property signature annotations
+              const defaultValue = SchemaAST.getDefaultAnnotation(
+                propertySignature
+              ).pipe(Option.getOrUndefined)
 
-            return {
-              type: type ?? EffectWeaver.toNullableGraphQLType(field),
-              ...fieldConfig,
-              ...(defaultValue !== undefined && {
-                extensions: {
-                  ...fieldConfig.extensions,
-                  defaultValue,
-                },
-              }),
+              return {
+                type: type ?? EffectWeaver.toNullableGraphQLType(field),
+                ...fieldConfig,
+                ...(defaultValue !== undefined && {
+                  extensions: {
+                    ...fieldConfig.extensions,
+                    defaultValue,
+                  },
+                }),
+              }
             }
-          }
-        ),
+          ),
         ...objectConfig,
       })
+
+      return weaverContext.memoGraphQLType(ast, gqlObj)
     }
 
     // Handle enum types
@@ -266,11 +273,16 @@ export class EffectWeaver {
         values[value] = { value, ...valuesConfig?.[key] }
       })
 
-      return new GraphQLEnumType({
+      const existed = weaverContext.getGraphQLType<GraphQLEnumType>(ast)
+      if (existed) return existed
+
+      const gqlEnum = new GraphQLEnumType({
         name,
         values,
         ...enumConfig,
       })
+
+      return weaverContext.memoGraphQLType(ast, gqlEnum)
     }
 
     // Handle union types
@@ -288,7 +300,9 @@ export class EffectWeaver {
 
       // If there's only one non-null type left, unwrap it
       if (nonNullTypes.length === 1) {
-        return EffectWeaver.toMemoriedGraphQLType(Schema.make(nonNullTypes[0]))
+        const innerSchema = Schema.make(nonNullTypes[0])
+        const innerType = EffectWeaver.toMemoriedGraphQLType(innerSchema)
+        return weaverContext.memoGraphQLType(schema, innerType)
       }
 
       // Otherwise, create a GraphQL union type
@@ -302,11 +316,16 @@ export class EffectWeaver {
         )
       })
 
-      return new GraphQLUnionType({
+      const existed = weaverContext.getGraphQLType<GraphQLUnionType>(ast)
+      if (existed) return existed
+
+      const gqlUnion = new GraphQLUnionType({
         types,
         name,
         ...unionConfig,
       })
+
+      return weaverContext.memoGraphQLType(ast, gqlUnion)
     }
 
     throw new Error(
@@ -333,6 +352,7 @@ export class EffectWeaver {
   ): EffectWeaverConfig {
     return {
       ...config,
+      vendorWeaver: EffectWeaver,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.effect",
     }
   }

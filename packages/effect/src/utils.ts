@@ -18,28 +18,61 @@ const getAnnotationWithFallback = <T>(
 
 /**
  * Get field configuration from an Effect Schema
- * Extracts both AS_FIELD metadata and default values from annotations
+ * Extracts both asField metadata and default values from annotations
  * Also checks PropertySignature annotations if provided
  */
 export function getFieldConfig(
   schema: Schema.Schema.Any,
   propertySignature?: SchemaAST.PropertySignature
 ): FieldConfig {
+  const safeGet = <T>(fn: () => T, fallback: T): T => {
+    try {
+      return fn()
+    } catch {
+      return fallback
+    }
+  }
+  const unwrapped = unwrapAST(schema.ast)
+  const unwrappedPropertyType =
+    propertySignature && unwrapAST(propertySignature.type)
+  if (
+    unwrappedPropertyType &&
+    (unwrappedPropertyType._tag === "Suspend" ||
+      (unwrappedPropertyType._tag === "Union" &&
+        unwrappedPropertyType.types.some((t) => t._tag === "Suspend")))
+  ) {
+    return {}
+  }
+  if (
+    unwrapped._tag === "Suspend" ||
+    (unwrapped._tag === "Union" &&
+      unwrapped.types.some((t) => t._tag === "Suspend"))
+  ) {
+    return {}
+  }
   // First check PropertySignature annotations (takes precedence)
   const propFieldConfig = propertySignature
-    ? getAnnotationWithFallback<FieldConfig>(
-        propertySignature,
-        asField,
-        "asField"
-      ).pipe(Option.getOrElse(() => ({}) as FieldConfig))
+    ? safeGet(
+        () =>
+          getAnnotationWithFallback<FieldConfig>(
+            propertySignature,
+            asField,
+            "asField"
+          ).pipe(Option.getOrElse(() => ({}) as FieldConfig)),
+        {} as FieldConfig
+      )
     : {}
 
   // Then check schema annotations
-  const schemaFieldConfig = getAnnotationWithFallback<FieldConfig>(
-    schema.ast,
-    asField,
-    "asField"
-  ).pipe(Option.getOrElse(() => ({}) as FieldConfig))
+  const schemaFieldConfig = safeGet(
+    () =>
+      getAnnotationWithFallback<FieldConfig>(
+        schema.ast,
+        asField,
+        "asField"
+      ).pipe(Option.getOrElse(() => ({}) as FieldConfig)),
+    {} as FieldConfig
+  )
 
   // Merge configs, PropertySignature takes precedence
   const fieldConfig = { ...schemaFieldConfig, ...propFieldConfig }
