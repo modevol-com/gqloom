@@ -243,31 +243,33 @@ type GraphQLVariants<TSource extends GraphQLNullableType> =
 
 type InferScalarInternalByVariants<
   T extends GraphQLVariants<GraphQLScalarType>,
-> = T extends GraphQLNonNull<infer U>
-  ? U extends GraphQLVariants<GraphQLScalarType>
-    ? NonNullable<InferScalarInternalByVariants<U>>
-    : never
-  : T extends GraphQLList<infer U>
+> =
+  T extends GraphQLNonNull<infer U>
     ? U extends GraphQLVariants<GraphQLScalarType>
-      ? InferScalarInternalByVariants<U>[]
+      ? NonNullable<InferScalarInternalByVariants<U>>
       : never
-    : T extends GraphQLScalarType<infer TInternal, any>
-      ? TInternal | null | undefined
-      : never
+    : T extends GraphQLList<infer U>
+      ? U extends GraphQLVariants<GraphQLScalarType>
+        ? InferScalarInternalByVariants<U>[]
+        : never
+      : T extends GraphQLScalarType<infer TInternal, any>
+        ? TInternal | null | undefined
+        : never
 
 type InferScalarExternalByVariants<
   T extends GraphQLVariants<GraphQLScalarType>,
-> = T extends GraphQLNonNull<infer U>
-  ? U extends GraphQLVariants<GraphQLScalarType>
-    ? NonNullable<InferScalarExternalByVariants<U>>
-    : never
-  : T extends GraphQLList<infer U>
+> =
+  T extends GraphQLNonNull<infer U>
     ? U extends GraphQLVariants<GraphQLScalarType>
-      ? InferScalarExternalByVariants<U>[]
+      ? NonNullable<InferScalarExternalByVariants<U>>
       : never
-    : T extends GraphQLScalarType<any, infer TExternal>
-      ? TExternal | null | undefined
-      : never
+    : T extends GraphQLList<infer U>
+      ? U extends GraphQLVariants<GraphQLScalarType>
+        ? InferScalarExternalByVariants<U>[]
+        : never
+      : T extends GraphQLScalarType<any, infer TExternal>
+        ? TExternal | null | undefined
+        : never
 
 type InferObjectSourceByVariants<T extends GraphQLVariants<GraphQLObjectType>> =
   T extends GraphQLNonNull<infer U>

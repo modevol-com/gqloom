@@ -1,12 +1,13 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
     "includes": [
       "**",
       "!**/dist/**/*",
-      "!**/.vercel/",
+      "!**/.vercel/**/*",
+      "!**/coverage/**/*",
       "!**/website-fuma/",
       "!**/website/.vitepress/cache",
       "!**/docs/doc_build/",

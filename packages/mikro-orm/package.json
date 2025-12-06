@@ -19,20 +19,6 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
-    },
-    "./context": {
-      "source": {
-        "types": "./src/context.ts",
-        "default": "./src/context.ts"
-      },
-      "import": {
-        "types": "./dist/context.d.ts",
-        "default": "./dist/context.js"
-      },
-      "require": {
-        "types": "./dist/context.d.cts",
-        "default": "./dist/context.cjs"
-      }
     }
   },
   "scripts": {
@@ -59,7 +45,7 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/valibot": "workspace:*",
-    "@mikro-orm/core": "^6.5.9",
+    "@mikro-orm/core": "^6.6.0",
     "@mikro-orm/libsql": "^6.5.1",
     "valibot": "1.0.0-beta.12"
   },

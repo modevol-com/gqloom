@@ -17,7 +17,7 @@
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
     "@apollo/server": "^4.12.2",
-    "@apollo/subgraph": "^2.11.0",
+    "@apollo/subgraph": "^2.12.0",
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "workspace:*",
     "@gqloom/federation": "workspace:*",
@@ -27,7 +27,7 @@
     "@gqloom/valibot": "workspace:*",
     "@gqloom/yup": "workspace:*",
     "@gqloom/zod": "workspace:*",
-    "@mikro-orm/core": "^6.5.9",
+    "@mikro-orm/core": "^6.6.0",
     "@mikro-orm/libsql": "^6.5.1",
     "@shikijs/vitepress-twoslash": "^3.13.0",
     "@vitejs/plugin-vue-jsx": "^5.1.0",
@@ -36,12 +36,12 @@
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.5",
     "drizzle-orm": "^0.44.7",
-    "effect": "^3.17.13",
+    "effect": "^3.19.6",
     "fastify": "^5.6.1",
     "graphql": "^16.8.1",
     "graphql-scalars": "^1.25.0",
-    "graphql-yoga": "^5.6.0",
-    "mercurius": "^16.2.0",
+    "graphql-yoga": "^5.16.2",
+    "mercurius": "^16.5.0",
     "typebox": "^1.0.4",
     "valibot": "^1.1.0",
     "vitepress": "2.0.0-alpha.12",
@@ -55,7 +55,7 @@
     "colord": "^2.9.3",
     "postcss": "^8.5.6",
     "reka-ui": "^2.4.1",
-    "tailwindcss": "^4.1.12",
+    "tailwindcss": "^4.1.17",
     "vue": "^3.5.22"
   }
 }

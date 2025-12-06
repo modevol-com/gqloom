@@ -136,22 +136,20 @@ type RelationEntity<TEntity extends object, TKey> = TKey extends keyof TEntity
   ? UnwrapRef<TEntity[TKey]>
   : never
 
-type UnwrapRef<T> = T extends ScalarReference<any>
-  ? UnwrapScalarReference<T>
-  : T extends Reference<any>
-    ? UnwrapReference<T>
-    : T extends Collection<any>
-      ? UnwrapCollection<T>
-      : T
+type UnwrapRef<T> =
+  T extends ScalarReference<any>
+    ? UnwrapScalarReference<T>
+    : T extends Reference<any>
+      ? UnwrapReference<T>
+      : T extends Collection<any>
+        ? UnwrapCollection<T>
+        : T
 
 type UnwrapScalarReference<T extends ScalarReference<any>> =
   T extends ScalarReference<infer Value> ? Value : T
 
-type UnwrapReference<T extends Reference<any>> = T extends Reference<
-  infer Value
->
-  ? Value
-  : T
+type UnwrapReference<T extends Reference<any>> =
+  T extends Reference<infer Value> ? Value : T
 
 type UnwrapCollection<T> = T extends Collection<infer Value> ? Value : T
 

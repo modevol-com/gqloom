@@ -148,17 +148,18 @@ export interface IBatchPayload {
 
 export type SelectedModelFields<
   TSilk extends PrismaModelSilk<unknown, string, Record<string, unknown>>,
-> = TSilk extends PrismaModelSilk<
-  infer TModel,
-  infer TName,
-  Record<string, unknown>
->
-  ? {
-      [K in `__selective_${TName}_brand__`]: true
-    } & {
-      [K in keyof TModel]?: false | undefined
-    }
-  : never
+> =
+  TSilk extends PrismaModelSilk<
+    infer TModel,
+    infer TName,
+    Record<string, unknown>
+  >
+    ? {
+        [K in `__selective_${TName}_brand__`]: true
+      } & {
+        [K in keyof TModel]?: false | undefined
+      }
+    : never
 
 export type SelectiveModel<TModel, TName extends string> =
   | TModel
