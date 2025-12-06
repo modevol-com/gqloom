@@ -116,7 +116,7 @@ importers:
         version: link:../core
       effect:
         specifier: ^3.17.13
-        version: 3.17.13
+        version: 3.19.6
 
   packages/federation:
     devDependencies:
