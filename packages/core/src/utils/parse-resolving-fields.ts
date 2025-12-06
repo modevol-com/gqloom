@@ -139,12 +139,10 @@ export function getResolvingFields(
   payload: Pick<ResolverPayload, "info">,
   options?: Omit<ResolvingFieldsOptions, "maxDepth">
 ): ResolvingFields {
-  const resolvedDepth = 1
-  const mergedOptions: ResolvingFieldsOptions = {
+  const requestedFields = parseResolvingFields(payload.info, {
     ...options,
-    maxDepth: resolvedDepth,
-  }
-  const requestedFields = parseResolvingFields(payload.info, mergedOptions)
+    maxDepth: 1,
+  })
   const derivedFields = new Set<string>()
   const derivedDependencies = new Set<string>()
   const resolvingObject = unwrapType(payload.info.returnType)
