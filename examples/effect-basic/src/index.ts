@@ -1,4 +1,5 @@
 import { createServer } from "node:http"
+import { fileURLToPath } from "node:url"
 import { weave } from "@gqloom/core"
 import { EffectWeaver } from "@gqloom/effect"
 import * as fs from "fs"
@@ -6,6 +7,9 @@ import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
 import * as path from "path"
 import { resolvers } from "./resolvers"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const schema = weave(EffectWeaver, ...resolvers)
 

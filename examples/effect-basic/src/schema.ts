@@ -14,7 +14,8 @@ export const User = Schema.Struct({
     Guest: "GUEST",
   }),
 }).annotations({
-  asObjectType: { description: "A user in the system" },
+  title: "User",
+  description: "A user in the system",
 })
 
 // Post schema
@@ -28,7 +29,8 @@ export const Post = Schema.Struct({
   authorId: Schema.String,
   createdAt: Schema.Date.annotations({ identifier: "Date" }),
 }).annotations({
-  asObjectType: { description: "A blog post" },
+  title: "Post",
+  description: "A blog post",
 })
 
 // Input schemas
@@ -41,7 +43,7 @@ export const CreateUserInput = Schema.Struct({
       Admin: "ADMIN",
       User: "USER",
       Guest: "GUEST",
-    })
+    } as const)
   ),
 })
 

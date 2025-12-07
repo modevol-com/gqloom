@@ -1,21 +1,23 @@
-import { field, mutation, query, resolver } from "@gqloom/core"
+import { field, mutation, query, resolver, silk } from "@gqloom/core"
 import { Schema } from "effect"
 import * as db from "./data"
 import { CreatePostInput, CreateUserInput, Post, User } from "./schema"
 
+const standard = Schema.standardSchemaV1
+
 // User resolvers
-export const userResolver = resolver.of(User, {
+export const userResolver = resolver.of(standard(User), {
   // Query to get all users
-  users: query(Schema.Array(User)).resolve(() => db.users),
+  users: query(silk.list(standard(User))).resolve(() => db.users),
 
   // Query to get a user by ID
-  user: query(Schema.NullOr(User))
-    .input({ id: Schema.String })
+  user: query(silk.nullable(standard(User)))
+    .input({ id: standard(Schema.String) })
     .resolve(({ id }) => db.users.find((u) => u.id === id) ?? null),
 
   // Mutation to create a new user
-  createUser: mutation(User)
-    .input({ input: CreateUserInput })
+  createUser: mutation(standard(User))
+    .input({ input: standard(CreateUserInput) })
     .resolve(({ input }) => {
       return db.createUser({
         name: input.name,
@@ -24,31 +26,26 @@ export const userResolver = resolver.of(User, {
         role: input.role ?? "USER",
       })
     }),
-
-  // Field resolver to get posts by user
-  posts: field(Schema.Array(Post)).resolve((user) =>
-    db.posts.filter((p) => p.authorId === user.id)
-  ),
 })
 
 // Post resolvers
-export const postResolver = resolver.of(Post, {
+export const postResolver = resolver.of(standard(Post), {
   // Query to get all posts
-  posts: query(Schema.Array(Post)).resolve(() => db.posts),
+  posts: query(standard(Schema.Array(Post))).resolve(() => db.posts),
 
   // Query to get published posts
-  publishedPosts: query(Schema.Array(Post)).resolve(() =>
+  publishedPosts: query(standard(Schema.Array(Post))).resolve(() =>
     db.posts.filter((p) => p.published)
   ),
 
   // Query to get a post by ID
-  post: query(Schema.NullOr(Post))
-    .input({ id: Schema.String })
+  post: query(standard(Schema.NullOr(standard(Post))))
+    .input({ id: standard(Schema.String) })
     .resolve(({ id }) => db.posts.find((p) => p.id === id) ?? null),
 
   // Mutation to create a new post
-  createPost: mutation(Post)
-    .input({ input: CreatePostInput })
+  createPost: mutation(standard(Post))
+    .input({ input: standard(CreatePostInput) })
     .resolve(({ input }) => {
       return db.createPost({
         title: input.title,
@@ -58,8 +55,8 @@ export const postResolver = resolver.of(Post, {
     }),
 
   // Mutation to publish a post
-  publishPost: mutation(Schema.NullOr(Post))
-    .input({ id: Schema.String })
+  publishPost: mutation(standard(Schema.NullOr(Post)))
+    .input({ id: standard(Schema.String) })
     .resolve(({ id }) => {
       const post = db.posts.find((p) => p.id === id)
       if (post) {
@@ -69,15 +66,15 @@ export const postResolver = resolver.of(Post, {
     }),
 
   // Field resolver to get the author of a post
-  author: field(Schema.NullOr(User)).resolve(
+  author: field(standard(Schema.NullOr(User))).resolve(
     (post) => db.users.find((u) => u.id === post.authorId) ?? null
   ),
 })
 
 // Simple hello resolver
 export const helloResolver = resolver({
-  hello: query(Schema.String)
-    .input({ name: Schema.NullOr(Schema.String) })
+  hello: query(standard(Schema.String))
+    .input({ name: standard(Schema.NullOr(Schema.String)) })
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 

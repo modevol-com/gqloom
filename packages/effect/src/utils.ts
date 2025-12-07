@@ -7,6 +7,15 @@ import type {
   UnionConfig,
 } from "./types"
 
+const AUTO_DESCRIPTIONS = new Set([
+  "a string",
+  "a number",
+  "an integer",
+  "a boolean",
+  "a valid Date",
+  "a positive number",
+])
+
 const getAnnotationWithFallback = <T>(
   ast: SchemaAST.AST | SchemaAST.PropertySignature,
   symbolKey: symbol,
@@ -77,40 +86,104 @@ export function getFieldConfig(
   // Merge configs, PropertySignature takes precedence
   const fieldConfig = { ...schemaFieldConfig, ...propFieldConfig }
 
-  return fieldConfig
+  const description =
+    SchemaAST.getDescriptionAnnotation(propertySignature ?? schema.ast).pipe(
+      Option.getOrNull
+    ) ?? SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrNull)
+  const sanitizedDescription =
+    description !== null && !AUTO_DESCRIPTIONS.has(description)
+      ? description
+      : null
+  const deprecationReason =
+    SchemaAST.getAnnotation<string>("deprecationReason" as any)(
+      propertySignature ?? schema.ast
+    ).pipe(Option.getOrNull) ??
+    SchemaAST.getAnnotation<string>("deprecationReason" as any)(
+      schema.ast
+    ).pipe(Option.getOrNull)
+
+  return {
+    ...fieldConfig,
+    ...(fieldConfig.description === undefined && sanitizedDescription !== null
+      ? { description: sanitizedDescription }
+      : {}),
+    ...(fieldConfig.deprecationReason === undefined &&
+    deprecationReason !== null
+      ? { deprecationReason }
+      : {}),
+  }
 }
 
 /**
  * Get object type configuration from an Effect Schema
  */
 export function getObjectConfig(schema: Schema.Schema.Any): ObjectConfig {
-  return getAnnotationWithFallback<ObjectConfig>(
+  const config = getAnnotationWithFallback<ObjectConfig>(
     schema.ast,
     asObjectType,
     "asObjectType"
   ).pipe(Option.getOrElse(() => ({}) as ObjectConfig))
+
+  const title = SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrNull)
+  const description = SchemaAST.getDescriptionAnnotation(schema.ast).pipe(
+    Option.getOrNull
+  )
+
+  return {
+    ...config,
+    ...(config.name === undefined && title !== null ? { name: title } : {}),
+    ...(config.description === undefined && description !== null
+      ? { description }
+      : {}),
+  }
 }
 
 /**
  * Get enum type configuration from an Effect Schema
  */
 export function getEnumConfig(schema: Schema.Schema.Any): EnumConfig {
-  return getAnnotationWithFallback<EnumConfig>(
+  const config = getAnnotationWithFallback<EnumConfig>(
     schema.ast,
     asEnumType,
     "asEnumType"
   ).pipe(Option.getOrElse(() => ({}) as EnumConfig))
+
+  const title = SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrNull)
+  const description = SchemaAST.getDescriptionAnnotation(schema.ast).pipe(
+    Option.getOrNull
+  )
+
+  return {
+    ...config,
+    ...(config.name === undefined && title !== null ? { name: title } : {}),
+    ...(config.description === undefined && description !== null
+      ? { description }
+      : {}),
+  }
 }
 
 /**
  * Get union type configuration from an Effect Schema
  */
 export function getUnionConfig(schema: Schema.Schema.Any): UnionConfig {
-  return getAnnotationWithFallback<UnionConfig>(
+  const config = getAnnotationWithFallback<UnionConfig>(
     schema.ast,
     asUnionType,
     "asUnionType"
   ).pipe(Option.getOrElse(() => ({}) as UnionConfig))
+
+  const title = SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrNull)
+  const description = SchemaAST.getDescriptionAnnotation(schema.ast).pipe(
+    Option.getOrNull
+  )
+
+  return {
+    ...config,
+    ...(config.name === undefined && title !== null ? { name: title } : {}),
+    ...(config.description === undefined && description !== null
+      ? { description }
+      : {}),
+  }
 }
 
 /**

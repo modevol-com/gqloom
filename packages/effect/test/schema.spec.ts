@@ -38,13 +38,11 @@ const GraphQLDate = new GraphQLScalarType<Date, string>({
   name: "Date",
 })
 
-const getGraphQLType = EffectWeaver.getGraphQLType
-
 const standard = Schema.standardSchemaV1
 
 // Helper function to print a schema type
 function print(schema: Schema.Schema.Any): string {
-  let gqlType = getGraphQLType(schema)
+  let gqlType = EffectWeaver.getGraphQLType(schema)
   while ("ofType" in gqlType) gqlType = gqlType.ofType
   return printType(gqlType as GraphQLNamedType)
 }
@@ -61,49 +59,53 @@ describe("EffectWeaver", () => {
   })
 
   it("should handle scalar types", () => {
-    expect(getGraphQLType(Schema.NullOr(Schema.String))).toEqual(GraphQLString)
+    expect(EffectWeaver.getGraphQLType(Schema.NullOr(Schema.String))).toEqual(
+      GraphQLString
+    )
 
-    expect(getGraphQLType(Schema.NullOr(Schema.Number))).toEqual(GraphQLFloat)
+    expect(EffectWeaver.getGraphQLType(Schema.NullOr(Schema.Number))).toEqual(
+      GraphQLFloat
+    )
 
     expect(
-      getGraphQLType(
+      EffectWeaver.getGraphQLType(
         Schema.NullOr(Schema.Int.annotations({ identifier: "Int" }))
       )
     ).toEqual(GraphQLInt)
 
-    expect(getGraphQLType(Schema.NullOr(Schema.Boolean))).toEqual(
+    expect(EffectWeaver.getGraphQLType(Schema.NullOr(Schema.Boolean))).toEqual(
       GraphQLBoolean
     )
 
     expect(
-      getGraphQLType(
+      EffectWeaver.getGraphQLType(
         Schema.NullOr(Schema.Date.annotations({ identifier: "Date" }))
       )
     ).toEqual(GraphQLString)
 
     expect(
-      getGraphQLType(
+      EffectWeaver.getGraphQLType(
         Schema.NullOr(Schema.String.annotations({ identifier: "UUID" }))
       )
     ).toEqual(GraphQLID)
 
     expect(
-      getGraphQLType(
+      EffectWeaver.getGraphQLType(
         Schema.NullOr(Schema.String.annotations({ identifier: "ULID" }))
       )
     ).toEqual(GraphQLID)
   })
 
   it("should handle literal types", () => {
-    expect(getGraphQLType(Schema.NullOr(Schema.Literal("")))).toEqual(
-      GraphQLString
-    )
-    expect(getGraphQLType(Schema.NullOr(Schema.Literal(0)))).toEqual(
-      GraphQLFloat
-    )
-    expect(getGraphQLType(Schema.NullOr(Schema.Literal(false)))).toEqual(
-      GraphQLBoolean
-    )
+    expect(
+      EffectWeaver.getGraphQLType(Schema.NullOr(Schema.Literal("")))
+    ).toEqual(GraphQLString)
+    expect(
+      EffectWeaver.getGraphQLType(Schema.NullOr(Schema.Literal(0)))
+    ).toEqual(GraphQLFloat)
+    expect(
+      EffectWeaver.getGraphQLType(Schema.NullOr(Schema.Literal(false)))
+    ).toEqual(GraphQLBoolean)
   })
 
   it("should handle custom type", () => {
@@ -112,7 +114,7 @@ describe("EffectWeaver", () => {
       asField: { type: GraphQLDate },
     })
 
-    expect(getGraphQLType(DateSchema)).toEqual(GraphQLDate)
+    expect(EffectWeaver.getGraphQLType(DateSchema)).toEqual(GraphQLDate)
 
     const Cat = Schema.Struct({
       name: Schema.String,
@@ -240,45 +242,49 @@ describe("EffectWeaver", () => {
   })
 
   it("should handle non-null types", () => {
-    expect(getGraphQLType(Schema.String)).toEqual(
+    expect(EffectWeaver.getGraphQLType(Schema.String)).toEqual(
       new GraphQLNonNull(GraphQLString)
     )
-    expect(getGraphQLType(Schema.NullOr(Schema.String))).toEqual(GraphQLString)
+    expect(EffectWeaver.getGraphQLType(Schema.NullOr(Schema.String))).toEqual(
+      GraphQLString
+    )
     expect(
-      getGraphQLType(Schema.Union(Schema.String, Schema.Undefined))
+      EffectWeaver.getGraphQLType(Schema.Union(Schema.String, Schema.Undefined))
     ).toEqual(GraphQLString)
     expect(
-      getGraphQLType(Schema.Union(Schema.String, Schema.Undefined, Schema.Void))
+      EffectWeaver.getGraphQLType(
+        Schema.Union(Schema.String, Schema.Undefined, Schema.Void)
+      )
     ).toEqual(GraphQLString)
   })
 
   it("should handle array types", () => {
-    expect(getGraphQLType(Schema.Array(Schema.String))).toEqual(
+    expect(EffectWeaver.getGraphQLType(Schema.Array(Schema.String))).toEqual(
       new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLString)))
     )
 
-    expect(getGraphQLType(Schema.Array(Schema.NullOr(Schema.String)))).toEqual(
-      new GraphQLNonNull(new GraphQLList(GraphQLString))
-    )
+    expect(
+      EffectWeaver.getGraphQLType(Schema.Array(Schema.NullOr(Schema.String)))
+    ).toEqual(new GraphQLNonNull(new GraphQLList(GraphQLString)))
   })
 
   it("should handle array nullability combinations", () => {
     // [String!] - nullable array of non-null strings
-    expect(getGraphQLType(Schema.NullOr(Schema.Array(Schema.String)))).toEqual(
-      new GraphQLList(new GraphQLNonNull(GraphQLString))
-    )
     expect(
-      getGraphQLType(Schema.NullishOr(Schema.Array(Schema.String)))
+      EffectWeaver.getGraphQLType(Schema.NullOr(Schema.Array(Schema.String)))
+    ).toEqual(new GraphQLList(new GraphQLNonNull(GraphQLString)))
+    expect(
+      EffectWeaver.getGraphQLType(Schema.NullishOr(Schema.Array(Schema.String)))
     ).toEqual(new GraphQLList(new GraphQLNonNull(GraphQLString)))
 
     // [String] - nullable array of nullable strings
     expect(
-      getGraphQLType(
+      EffectWeaver.getGraphQLType(
         Schema.NullishOr(Schema.Array(Schema.NullOr(Schema.String)))
       )
     ).toEqual(new GraphQLList(GraphQLString))
     expect(
-      getGraphQLType(
+      EffectWeaver.getGraphQLType(
         Schema.NullOr(Schema.Array(Schema.NullishOr(Schema.String)))
       )
     ).toEqual(new GraphQLList(GraphQLString))
@@ -290,7 +296,7 @@ describe("EffectWeaver", () => {
       age: Schema.Number,
     })
 
-    const type = getGraphQLType(User)
+    const type = EffectWeaver.getGraphQLType(User)
     expect(type).toBeInstanceOf(GraphQLNonNull)
     expect((type as GraphQLNonNull<any>).ofType).toBeInstanceOf(
       GraphQLObjectType
@@ -304,7 +310,7 @@ describe("EffectWeaver", () => {
       Guest: "GUEST",
     })
 
-    const type = getGraphQLType(Role)
+    const type = EffectWeaver.getGraphQLType(Role)
     expect(type).toBeInstanceOf(GraphQLNonNull)
   })
 
@@ -376,7 +382,7 @@ describe("EffectWeaver", () => {
 
     const Animal = Schema.Union(Cat, Dog)
 
-    const type = getGraphQLType(Animal)
+    const type = EffectWeaver.getGraphQLType(Animal)
     expect(type).toBeInstanceOf(GraphQLNonNull)
   })
 
@@ -451,7 +457,7 @@ describe("EffectWeaver", () => {
 
     const Animal = Schema.NullOr(Schema.Union(Cat, Dog))
 
-    const type = getGraphQLType(Animal)
+    const type = EffectWeaver.getGraphQLType(Animal)
     expect(type).not.toBeInstanceOf(GraphQLNonNull)
   })
 
@@ -466,7 +472,9 @@ describe("EffectWeaver", () => {
       address: Address,
     })
 
-    const type = getGraphQLType(User) as GraphQLNonNull<GraphQLObjectType>
+    const type = EffectWeaver.getGraphQLType(
+      User
+    ) as GraphQLNonNull<GraphQLObjectType>
     expect(type.ofType).toBeInstanceOf(GraphQLObjectType)
 
     const fields = type.ofType.getFields()
@@ -487,9 +495,25 @@ describe("EffectWeaver", () => {
       },
     })
 
-    const type = getGraphQLType(User) as GraphQLNonNull<GraphQLObjectType>
+    const type = EffectWeaver.getGraphQLType(
+      User
+    ) as GraphQLNonNull<GraphQLObjectType>
     expect(type.ofType.name).toBe("CustomUser")
     expect(type.ofType.description).toBe("A custom user type")
+
+    const User2 = Schema.Struct({
+      id: Schema.String,
+      name: Schema.String,
+    }).annotations({
+      title: "CustomUser",
+      description: "A custom user type",
+    })
+
+    const type2 = EffectWeaver.getGraphQLType(
+      User2
+    ) as GraphQLNonNull<GraphQLObjectType>
+    expect(type2.ofType.name).toBe("CustomUser")
+    expect(type2.ofType.description).toBe("A custom user type")
   })
 
   it("should handle with field metadata", () => {
@@ -508,11 +532,32 @@ describe("EffectWeaver", () => {
       }),
     })
 
-    const type = getGraphQLType(User) as GraphQLNonNull<GraphQLObjectType>
+    const type = EffectWeaver.getGraphQLType(
+      User
+    ) as GraphQLNonNull<GraphQLObjectType>
     const fields = type.ofType.getFields()
     expect(fields.name.description).toBe("The user's name")
     expect(fields.email.description).toBe("The user's email address")
     expect(fields.email.deprecationReason).toBe("Use contactEmail instead")
+
+    const User2 = Schema.Struct({
+      id: Schema.String,
+      name: Schema.String.annotations({
+        description: "The user's name",
+      }),
+      email: Schema.String.annotations({
+        description: "The user's email address",
+        deprecationReason: "Use contactEmail instead",
+      }),
+    })
+
+    const type2 = EffectWeaver.getGraphQLType(
+      User2
+    ) as GraphQLNonNull<GraphQLObjectType>
+    const fields2 = type2.ofType.getFields()
+    expect(fields2.name.description).toBe("The user's name")
+    expect(fields2.email.description).toBe("The user's email address")
+    expect(fields2.email.deprecationReason).toBe("Use contactEmail instead")
   })
 
   it("should handle with enum metadata", () => {
@@ -526,9 +571,21 @@ describe("EffectWeaver", () => {
       },
     })
 
-    const type = getGraphQLType(Role) as GraphQLNonNull<any>
+    const type = EffectWeaver.getGraphQLType(Role) as GraphQLNonNull<any>
     expect(type.ofType.name).toBe("UserRole")
     expect(type.ofType.description).toBe("User role in the system")
+
+    const Role2 = Schema.Enums({
+      Admin: "ADMIN",
+      User: "USER",
+    }).annotations({
+      title: "UserRole",
+      description: "User role in the system",
+    })
+
+    const type2 = EffectWeaver.getGraphQLType(Role2) as GraphQLNonNull<any>
+    expect(type2.ofType.name).toBe("UserRole")
+    expect(type2.ofType.description).toBe("User role in the system")
   })
 
   it("should handle with union metadata", () => {
@@ -549,9 +606,18 @@ describe("EffectWeaver", () => {
       },
     })
 
-    const type = getGraphQLType(Animal) as GraphQLNonNull<any>
+    const type = EffectWeaver.getGraphQLType(Animal) as GraphQLNonNull<any>
     expect(type.ofType.name).toBe("Animal")
     expect(type.ofType.description).toBe("An animal union type")
+
+    const Animal2 = Schema.Union(Cat, Dog).annotations({
+      title: "Animal",
+      description: "An animal union type",
+    })
+
+    const type2 = EffectWeaver.getGraphQLType(Animal2) as GraphQLNonNull<any>
+    expect(type2.ofType.name).toBe("Animal")
+    expect(type2.ofType.description).toBe("An animal union type")
   })
 
   it("should handle interface implementation", () => {
@@ -1065,7 +1131,7 @@ describe("EffectWeaver", () => {
       // This tests that the weaver properly validates union types
       const StringOrNumber = Schema.Union(Schema.String, Schema.Number)
 
-      expect(() => getGraphQLType(StringOrNumber)).toThrow(
+      expect(() => EffectWeaver.getGraphQLType(StringOrNumber)).toThrow(
         /Union types .* can only contain objects/i
       )
     })
@@ -1125,7 +1191,9 @@ describe("EffectWeaver", () => {
         email: Email,
       })
 
-      const type = getGraphQLType(User) as GraphQLNonNull<GraphQLObjectType>
+      const type = EffectWeaver.getGraphQLType(
+        User
+      ) as GraphQLNonNull<GraphQLObjectType>
       const fields = type.ofType.getFields()
 
       // Branded types should still resolve to their base GraphQL type
@@ -1207,7 +1275,9 @@ describe("EffectWeaver", () => {
     it("should handle empty objects", () => {
       const Empty = Schema.Struct({})
 
-      const type = getGraphQLType(Empty) as GraphQLNonNull<GraphQLObjectType>
+      const type = EffectWeaver.getGraphQLType(
+        Empty
+      ) as GraphQLNonNull<GraphQLObjectType>
       expect(type.ofType).toBeInstanceOf(GraphQLObjectType)
       expect(Object.keys(type.ofType.getFields())).toHaveLength(0)
     })
