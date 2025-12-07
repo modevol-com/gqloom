@@ -1,11 +1,14 @@
 import { Option, type Schema, SchemaAST } from "effect"
-import { asEnumType, asField, asObjectType, asUnionType } from "./metadata"
-import type {
-  EnumConfig,
-  FieldConfig,
-  ObjectConfig,
-  UnionConfig,
-} from "./types"
+import {
+  asEnumType,
+  asField,
+  asObjectType,
+  asUnionType,
+  type EnumConfig,
+  type FieldConfig,
+  type ObjectConfig,
+  type UnionConfig,
+} from "./metadata"
 
 const AUTO_DESCRIPTIONS = new Set([
   "a string",

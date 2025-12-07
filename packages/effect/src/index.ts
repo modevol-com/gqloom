@@ -6,7 +6,7 @@ import {
   weave,
   weaverContext,
 } from "@gqloom/core"
-import { Option, Schema, SchemaAST } from "effect"
+import { Schema, SchemaAST } from "effect"
 import {
   type GraphQLArgumentConfig,
   GraphQLBoolean,
@@ -30,7 +30,7 @@ import type {
   EffectWeaverConfig,
   EffectWeaverConfigOptions,
   FieldConfig,
-} from "./types"
+} from "./metadata"
 import {
   extractTypeName,
   getEnumConfig,
@@ -234,20 +234,9 @@ export class EffectWeaver {
               if (type === null || type === SYMBOLS.FIELD_HIDDEN)
                 return mapValue.SKIP
 
-              // Extract default value from property signature annotations
-              const defaultValue = SchemaAST.getDefaultAnnotation(
-                propertySignature
-              ).pipe(Option.getOrUndefined)
-
               return {
                 type: type ?? EffectWeaver.toNullableGraphQLType(field),
                 ...fieldConfig,
-                ...(defaultValue !== undefined && {
-                  extensions: {
-                    ...fieldConfig.extensions,
-                    defaultValue,
-                  },
-                }),
               }
             }
           ),
@@ -375,4 +364,3 @@ export class EffectWeaver {
 }
 
 export * from "./metadata"
-export * from "./types"
