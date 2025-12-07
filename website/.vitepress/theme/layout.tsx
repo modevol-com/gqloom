@@ -21,7 +21,7 @@ function useRedirect() {
       targetPath = targetPath.replace(suffixRegex, "")
     }
     if (targetPath !== page.value.relativePath) {
-      router.go(targetPath, { replace: true })
+      router.go(targetPath)
     }
   })
 }

@@ -14,12 +14,16 @@ export default defineConfig({
     codeTransformers: [
       transformerTwoslash({
         typesCache: createFileSystemTypesCache(),
-      }),
+      }) as any,
     ],
-    languages: ["ts", "js", "bash", "graphql", "gql", "prisma", "json"],
+    languages: ["ts", "js", "bash", "graphql", "gql", "prisma", "json"] as any,
   },
   vite: {
-    plugins: [tailwindcss(), vueJsx(), llmstxt({ ignoreFiles: ["zh/**/*"] })],
+    plugins: [
+      tailwindcss(),
+      vueJsx(),
+      llmstxt({ ignoreFiles: ["zh/**/*"] }),
+    ] as any,
     resolve: {
       alias: [
         {
@@ -66,7 +70,6 @@ export default defineConfig({
         outlineTitle: "目录",
         notFound: {
           title: "页面不存在",
-          link: "/zh",
           linkText: "返回主页",
           linkLabel: "返回主页",
           quote: "但如果你不改变方向，继续寻找，你可能会到达你正在寻找的地方。",
