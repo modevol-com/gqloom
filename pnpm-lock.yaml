@@ -625,6 +625,9 @@ importers:
       '@gqloom/drizzle':
         specifier: workspace:*
         version: link:../packages/drizzle
+      '@gqloom/effect':
+        specifier: workspace:*
+        version: link:../packages/effect
       '@gqloom/federation':
         specifier: workspace:*
         version: link:../packages/federation

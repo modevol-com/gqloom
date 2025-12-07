@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",
-    "build": "node --max_old_space_size=19456 ./node_modules/vitepress/bin/vitepress.js build",
+    "build": "node --max_old_space_size=24576 ./node_modules/vitepress/bin/vitepress.js build",
     "preview": "vitepress preview",
     "check:type": "concurrently 'pnpm run check:type:*'",
     "check:type:root": "tsgo --noEmit",
@@ -20,6 +20,7 @@
     "@apollo/subgraph": "^2.12.0",
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "workspace:*",
+    "@gqloom/effect": "workspace:*",
     "@gqloom/federation": "workspace:*",
     "@gqloom/json": "workspace:*",
     "@gqloom/mikro-orm": "workspace:*",
