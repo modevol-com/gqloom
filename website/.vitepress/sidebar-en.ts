@@ -54,6 +54,10 @@ export default [
         link: "/docs/schema/yup",
       },
       {
+        text: "Effect",
+        link: "/docs/schema/effect",
+      },
+      {
         text: "MikroORM",
         link: "/docs/schema/mikro-orm",
       },

@@ -94,6 +94,11 @@ GQLoom 支持诸多的运行时类型，选择你最喜欢的 ORM 和输入验�
 <!--@include: @/snippets/install-yup.md-->
 
 </template>
+<template #Effect_Schema>
+
+<!--@include: ../snippets/install-effect.md-->
+
+</template>
 <template #JSON_Schema>
 
 <!--@include: @/snippets/install-json-schema.md-->
@@ -142,27 +147,6 @@ bun add graphql @gqloom/core arktype @gqloom/json
 ```
 ```sh [deno]
 deno add npm:graphql npm:@gqloom/core npm:arktype npm:@gqloom/json
-```
-:::
-
-</template>
-<template #Effect_Schema>
-
-::: code-group
-```sh [npm]
-npm i graphql @gqloom/core effect @gqloom/json
-```
-```sh [pnpm]
-pnpm add graphql @gqloom/core effect @gqloom/json
-```
-```sh [yarn]
-yarn add graphql @gqloom/core effect @gqloom/json
-```
-```sh [bun]
-bun add graphql @gqloom/core effect @gqloom/json
-```
-```sh [deno]
-deno add npm:graphql npm:@gqloom/core npm:effect-schema npm:@gqloom/json
 ```
 :::
 
@@ -248,6 +232,11 @@ export const userResolver = resolver.of(User, {
 <<< @/snippets/code/hello-yup.ts{ts twoslash}
 
 </template>
+<template #Effect_Schema>
+
+<<< @/snippets/code/hello-effect.ts{ts twoslash}
+
+</template>
 <template #JSON_Schema>
 
 <<< @/snippets/code/hello-json.ts{ts twoslash}
@@ -266,11 +255,6 @@ export const userResolver = resolver.of(User, {
 <template #ArkType>
 
 <<< @/snippets/code/hello-arktype.ts{ts twoslash}
-
-</template>
-<template #Effect_Schema>
-
-<<< @/snippets/code/hello-effect.ts{ts twoslash}
 
 </template>
 </Tabs>

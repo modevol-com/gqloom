@@ -95,6 +95,13 @@ html.dark [data-title$=".json"]:before {
   }
 }
 
+[data-title="effect" i] {
+  &:before {
+    content: "";
+    --icon: url('https://effect.website/icon.png');
+  }
+}
+
 html.dark [data-title="json-schema" i] {
   &:before {
     content: "";
