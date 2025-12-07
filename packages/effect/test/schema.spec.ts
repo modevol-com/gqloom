@@ -14,6 +14,7 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLInterfaceType,
   GraphQLList,
   type GraphQLNamedType,
   GraphQLNonNull,
@@ -290,6 +291,56 @@ describe("EffectWeaver", () => {
     ).toEqual(new GraphQLList(GraphQLString))
   })
 
+  it("should handle tuple with rest elements", () => {
+    const tupleAst = new SchemaAST.TupleType(
+      [],
+      [new SchemaAST.Type(SchemaAST.stringKeyword)],
+      false,
+      {}
+    )
+    const TupleSchema = Schema.make(tupleAst)
+    const gqlType = EffectWeaver.getGraphQLType(TupleSchema) as GraphQLNonNull<
+      GraphQLList<any>
+    >
+
+    expect(gqlType).toBeInstanceOf(GraphQLNonNull)
+    const list = gqlType.ofType
+    expect(list).toBeInstanceOf(GraphQLList)
+    expect((list as GraphQLList<any>).ofType).toBeInstanceOf(GraphQLNonNull)
+  })
+
+  it("should resolve suspend field on struct", () => {
+    const Lazy = Schema.Struct({
+      value: Schema.suspend(() => Schema.String),
+    })
+
+    const gql = EffectWeaver.getGraphQLType(Lazy) as GraphQLNonNull<any>
+    const fields = (gql.ofType as GraphQLObjectType).getFields()
+    expect(fields.value.type).toBeInstanceOf(GraphQLNonNull)
+    expect((fields.value.type as GraphQLNonNull<any>).ofType).toBe(
+      GraphQLString
+    )
+  })
+
+  it("should resolve union containing suspend field", () => {
+    const Friend = Schema.Struct({ name: Schema.String })
+    const Wrapper = Schema.Struct({
+      friend: Schema.Union(
+        Schema.suspend(() => Friend),
+        Schema.Null
+      ),
+    })
+
+    const gql = EffectWeaver.getGraphQLType(
+      Wrapper
+    ) as GraphQLNonNull<GraphQLObjectType>
+    const fields = gql.ofType.getFields()
+    expect(fields.friend.type).toBeInstanceOf(GraphQLNonNull)
+    expect((fields.friend.type as GraphQLNonNull<any>).ofType).toBeInstanceOf(
+      GraphQLObjectType
+    )
+  })
+
   it("should handle object types", () => {
     const User = Schema.Struct({
       name: Schema.String,
@@ -312,6 +363,14 @@ describe("EffectWeaver", () => {
 
     const type = EffectWeaver.getGraphQLType(Role)
     expect(type).toBeInstanceOf(GraphQLNonNull)
+  })
+
+  it("should convert schema to interface via ensureInterfaceType", () => {
+    const Node = Schema.Struct({
+      id: Schema.String,
+    })
+    const iface = EffectWeaver.ensureInterfaceType(Node)
+    expect(iface).toBeInstanceOf(GraphQLInterfaceType)
   })
 
   it("should handle enum with valuesConfig", () => {
@@ -1330,5 +1389,18 @@ describe("EffectWeaver", () => {
         }"
       `)
     })
+  })
+
+  it("should throw error for unsupported ast type", () => {
+    const bigIntSchema = Schema.make(new SchemaAST.BigIntKeyword())
+    expect(() => EffectWeaver.getGraphQLType(bigIntSchema)).toThrow(
+      /BigIntKeyword/
+    )
+  })
+
+  it("should respect getGraphQLTypeBySelf helper", () => {
+    const type = (EffectWeaver as any).getGraphQLTypeBySelf.call(Schema.String)
+    expect(type).toBeInstanceOf(GraphQLNonNull)
+    expect((type as GraphQLNonNull<any>).ofType).toBe(GraphQLString)
   })
 })
