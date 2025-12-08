@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@apollo/server": "^4.12.2",
+    "@apollo/server": "^5.2.0",
     "@gqloom/core": "^0.2.0",
     "@hono/graphql-server": "^0.5.1",
     "@hono/node-server": "^1.19.1",
