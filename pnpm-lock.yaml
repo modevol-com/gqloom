@@ -221,8 +221,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/effect
       effect:
-        specifier: ^3.17.0
-        version: 3.19.6
+        specifier: ^3.19.9
+        version: 3.19.9
       graphql:
         specifier: ^16.8.1
         version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
@@ -427,8 +427,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       effect:
-        specifier: ^3.17.13
-        version: 3.19.6
+        specifier: ^3.19.9
+        version: 3.19.9
 
   packages/federation:
     devDependencies:
@@ -482,8 +482,8 @@ importers:
         specifier: ^2.1.22
         version: 2.1.22
       effect:
-        specifier: ^3.19.6
-        version: 3.19.6
+        specifier: ^3.19.9
+        version: 3.19.9
       typebox:
         specifier: ^1.0.4
         version: 1.0.4
@@ -677,8 +677,8 @@ importers:
         specifier: ^0.44.7
         version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
       effect:
-        specifier: ^3.19.6
-        version: 3.19.6
+        specifier: ^3.19.9
+        version: 3.19.9
       fastify:
         specifier: ^5.6.1
         version: 5.6.1
@@ -3689,8 +3689,8 @@ packages:
   effect@3.16.12:
     resolution: {integrity: sha512-N39iBk0K71F9nb442TLbTkjl24FLUzuvx2i1I2RsEAQsdAdUTuUoW0vlfUXgkMTUOnYqKnWcFfqw4hK4Pw27hg==}
 
-  effect@3.19.6:
-    resolution: {integrity: sha512-Eh1E/CI+xCAcMSDC5DtyE29yWJINC0zwBbwHappQPorjKyS69rCA8qzpsHpfhKnPDYgxdg8zkknii8mZ+6YMQA==}
+  effect@3.19.9:
+    resolution: {integrity: sha512-taMXnfG/p+j7AmMOHHQaCHvjqwu9QBO3cxuZqL2dMG/yWcEMw0ZHruHe9B49OxtfKH/vKKDDKRhZ+1GJ2p5R5w==}
 
   electron-to-chromium@1.5.208:
     resolution: {integrity: sha512-ozZyibehoe7tOhNaf16lKmljVf+3npZcJIEbJRVftVsmAg5TeA1mGS9dVCZzOwr2xT7xK15V0p7+GZqSPgkuPg==}
@@ -9125,7 +9125,7 @@ snapshots:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.2
 
-  effect@3.19.6:
+  effect@3.19.9:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.2
