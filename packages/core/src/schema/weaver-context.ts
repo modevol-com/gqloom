@@ -99,6 +99,7 @@ export class WeaverContext {
   protected aliasCounters: Partial<
     Record<keyof typeof WeaverContext.namedTypes, number>
   > = {}
+  protected aliasMap = new WeakMap<GraphQLNamedType, Set<string>>()
 
   public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
     if (namedType.name === AUTO_ALIASING) {
@@ -107,28 +108,10 @@ export class WeaverContext {
 
     if (!WeaverContext.autoAliasTypes.has(namedType)) return namedType.name
 
-    if (WeaverContext.higherPriorityThan(alias, namedType.name) < 0) {
-      if (alias) return (namedType.name = alias)
-    }
+    const aliases = this.ensureAliasStore(namedType)
+    if (alias) aliases.add(alias)
 
-    if (namedType.name === AUTO_ALIASING) {
-      if (isObjectType(namedType) || isInputObjectType(namedType)) {
-        this.aliasCounters["Object"] ??= 0
-        return (namedType.name = `Object${++this.aliasCounters["Object"]}`)
-      } else if (isUnionType(namedType)) {
-        this.aliasCounters["Union"] ??= 0
-        return (namedType.name = `Union${++this.aliasCounters["Union"]}`)
-      } else if (isEnumType(namedType)) {
-        this.aliasCounters["Enum"] ??= 0
-        return (namedType.name = `Enum${++this.aliasCounters["Enum"]}`)
-      } else if (isInterfaceType(namedType)) {
-        this.aliasCounters["Interface"] ??= 0
-        return (namedType.name = `Interface${++this.aliasCounters["Interface"]}`)
-      } else if (isScalarType(namedType)) {
-        this.aliasCounters["Scalar"] ??= 0
-        return (namedType.name = `Scalar${++this.aliasCounters["Scalar"]}`)
-      }
-    }
+    return this.pickAlias(namedType, aliases)
   }
 
   /**
@@ -150,6 +133,75 @@ export class WeaverContext {
     const compareLocale = a.localeCompare(b)
     if (compareLocale !== 0) return compareLocale
     return 0
+  }
+
+  protected ensureAliasStore(namedType: GraphQLNamedType) {
+    const existing = this.aliasMap.get(namedType)
+    if (existing) return existing
+
+    const aliases = new Set<string>()
+    this.aliasMap.set(namedType, aliases)
+
+    Object.defineProperty(namedType, "name", {
+      get: () => this.pickAlias(namedType, aliases),
+      set: (value: string) => {
+        aliases.add(value)
+      },
+      enumerable: true,
+      configurable: true,
+    })
+
+    return aliases
+  }
+
+  protected pickAlias(
+    namedType: GraphQLNamedType,
+    aliases: Set<string>
+  ): string {
+    const best = this.reduceAliases(aliases)
+    if (best && best !== AUTO_ALIASING) return best
+
+    const fallback = this.createFallbackAlias(namedType)
+    aliases.add(fallback)
+    return this.reduceAliases(aliases) ?? fallback
+  }
+
+  protected reduceAliases(aliases: Iterable<string>) {
+    let best: string | undefined
+    for (const alias of aliases) {
+      if (
+        best === undefined ||
+        WeaverContext.higherPriorityThan(alias, best) < 0
+      ) {
+        best = alias
+      }
+    }
+    return best
+  }
+
+  protected createFallbackAlias(namedType: GraphQLNamedType): string {
+    if (isObjectType(namedType) || isInputObjectType(namedType)) {
+      this.aliasCounters["Object"] ??= 0
+      return `Object${++this.aliasCounters["Object"]}`
+    }
+    if (isUnionType(namedType)) {
+      this.aliasCounters["Union"] ??= 0
+      return `Union${++this.aliasCounters["Union"]}`
+    }
+    if (isEnumType(namedType)) {
+      this.aliasCounters["Enum"] ??= 0
+      return `Enum${++this.aliasCounters["Enum"]}`
+    }
+    if (isInterfaceType(namedType)) {
+      this.aliasCounters["Interface"] ??= 0
+      return `Interface${++this.aliasCounters["Interface"]}`
+    }
+    if (isScalarType(namedType)) {
+      this.aliasCounters["Scalar"] ??= 0
+      return `Scalar${++this.aliasCounters["Scalar"]}`
+    }
+    // Fallback: return the current name if type doesn't match any known type
+    return (namedType as GraphQLNamedType).name
   }
 
   public static provide<T>(func: () => T, value: WeaverContext | undefined): T {
@@ -269,8 +321,11 @@ export class GlobalWeaverContext
     return gqlType
   }
 
-  public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
-    return WeaverContext.ref?.setAlias(namedType, alias)
+  public setAlias(
+    namedType: GraphQLNamedType,
+    alias: string | undefined
+  ): string {
+    return WeaverContext.ref?.setAlias(namedType, alias) ?? namedType.name
   }
 }
 

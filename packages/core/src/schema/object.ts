@@ -400,7 +400,10 @@ export function getCacheType(
   if (gqlType instanceof LoomObjectType) return gqlType
   if (isObjectType(gqlType)) {
     const gqlObject = context.loomObjectMap?.get(gqlType)
-    if (gqlObject != null) return gqlObject
+    if (gqlObject != null) {
+      context.setAlias(gqlObject, getAlias())
+      return gqlObject
+    }
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
@@ -412,7 +415,10 @@ export function getCacheType(
     return new GraphQLNonNull(getCacheType(gqlType.ofType, options))
   } else if (isUnionType(gqlType)) {
     const existing = context.loomUnionMap?.get(gqlType)
-    if (existing != null) return existing
+    if (existing != null) {
+      context.setAlias(existing, getAlias())
+      return existing
+    }
     const config = gqlType.toConfig()
     const unionType = new GraphQLUnionType({
       ...config,

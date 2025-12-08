@@ -1,7 +1,9 @@
 import {
   GraphQLBoolean,
   GraphQLEnumType,
+  GraphQLInt,
   GraphQLInterfaceType,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
@@ -92,6 +94,77 @@ describe("alias", () => {
 
       type Subscription {
         watchBar: Bar
+      }"
+    `)
+  })
+
+  it("should auto assign alias for objects in operations with silk", () => {
+    const User = silk(
+      new GraphQLObjectType({
+        name: AUTO_ALIASING,
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          name: { type: new GraphQLNonNull(GraphQLString) },
+          email: { type: new GraphQLNonNull(GraphQLString) },
+          age: { type: new GraphQLNonNull(GraphQLInt) },
+          role: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      })
+    )
+    const CreateUserInput = silk(
+      new GraphQLObjectType({
+        name: AUTO_ALIASING,
+        fields: {
+          name: { type: new GraphQLNonNull(GraphQLString) },
+          email: { type: new GraphQLNonNull(GraphQLString) },
+          age: { type: new GraphQLNonNull(GraphQLInt) },
+          role: { type: new GraphQLNonNull(GraphQLString) },
+        },
+      })
+    )
+    const userResolver = resolver.of(User, {
+      users: query(silk.list(User)).resolve(() => []),
+
+      user: query(silk.nullable(User))
+        .input({ id: silk(GraphQLString) })
+        .resolve(({ id }) => null),
+
+      createUser: mutation(User)
+        .input({ input: CreateUserInput })
+        .resolve(({ input }) => {
+          return {
+            id: "1",
+            name: input.name,
+            email: input.email,
+            age: input.age,
+            role: input.role ?? "USER",
+          }
+        }),
+    })
+    const schema = weave(userResolver)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        id: String!
+        name: String!
+        email: String!
+        age: Int!
+        role: String!
+      }
+
+      type Query {
+        users: [User]!
+        user(id: String): User
+      }
+
+      type Mutation {
+        createUser(input: CreateUserInputInput): User
+      }
+
+      input CreateUserInputInput {
+        name: String!
+        email: String!
+        age: Int!
+        role: String!
       }"
     `)
   })
