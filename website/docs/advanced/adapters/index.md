@@ -11,27 +11,27 @@ Here are some popular adapters:
 
 <div class="vp-raw grid grid-cols-1 gap-4 sm:grid-cols-2 mt-12">
   <FeatureCard 
-    to="./adapters/yoga" 
+    to="./yoga" 
     title="Yoga" 
     description="Rewrite of a fully-featured GraphQL Server with focus on easy setup, performance & great developer experience."
   />
   <FeatureCard
-    to="./adapters/apollo"
+    to="./apollo"
     title="Apollo Server"
     description="pec-compliant and production ready JavaScript GraphQL server that lets you develop in a schema-first way. Built for Express, Connect, Hapi, Koa, and more."
   />
   <FeatureCard
-    to="./adapters/mercurius"
+    to="./mercurius"
     title="Mercurius"
     description="Implement GraphQL servers and gateways with Fastify."
   />  
   <FeatureCard
-    to="./adapters/hono"
+    to="./hono"
     title="Hono"
     description="Hono is a small, simple, and extremely fast web framework built based on web standards and capable of running in various JavaScript runtime environments."
   />
   <FeatureCard
-    to="./adapters/elysia"
+    to="./elysia"
     title="Elysia"
     description="Elysia is an ergonomic web framework for building backend servers with Bun"
   />
