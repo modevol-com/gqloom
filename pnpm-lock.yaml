@@ -212,7 +212,7 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
-  examples/effect-basic:
+  examples/effect:
     dependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -225,10 +225,10 @@ importers:
         version: 3.19.9
       graphql:
         specifier: ^16.8.1
-        version: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+        version: 5.16.2(graphql@16.12.0)
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
@@ -7624,8 +7624,8 @@ snapshots:
   '@mercuriusjs/federation@5.0.0':
     dependencies:
       '@fastify/error': 4.2.0
-      graphql: 16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)
-      mercurius: 16.5.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
+      graphql: 16.12.0
+      mercurius: 16.5.0(graphql@16.12.0)
     transitivePeerDependencies:
       - bufferutil
       - monocart-coverage-reports
@@ -9672,6 +9672,16 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
+  graphql-jit@0.8.7(graphql@16.12.0):
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.12.0)
+      fast-json-stringify: 5.16.1
+      generate-function: 2.3.1
+      graphql: 16.12.0
+      lodash.memoize: 4.1.2
+      lodash.merge: 4.6.2
+      lodash.mergewith: 4.6.2
+
   graphql-jit@0.8.7(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)):
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8))
@@ -10425,6 +10435,29 @@ snapshots:
       '@mercuriusjs/federation': 5.0.0
     transitivePeerDependencies:
       - bufferutil
+      - utf-8-validate
+
+  mercurius@16.5.0(graphql@16.12.0):
+    dependencies:
+      '@fastify/error': 4.2.0
+      '@fastify/static': 8.3.0
+      '@fastify/websocket': 11.2.0
+      borp: 0.20.2
+      fastify-plugin: 5.1.0
+      graphql: 16.12.0
+      graphql-jit: 0.8.7(graphql@16.12.0)
+      mqemitter: 7.1.0
+      p-map: 4.0.0
+      quick-lru: 7.3.0
+      readable-stream: 4.7.0
+      safe-stable-stringify: 2.5.0
+      secure-json-parse: 4.1.0
+      single-user-cache: 2.1.0
+      tiny-lru: 11.4.5
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - monocart-coverage-reports
       - utf-8-validate
 
   mercurius@16.5.0(graphql@16.8.1(patch_hash=c3a9767e3d80300c2403f5e7447d2c057178847cbc9a76669fd8e03cb87fc4a8)):
