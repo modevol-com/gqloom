@@ -153,57 +153,71 @@
 
 @reference "@/css/tailwind.css";
 
+/* When sidebar is present, add background and horizontal padding to DocSearch button in title area on desktop (min-width: 960px) */
 .VPNav>.VPNavBar.has-sidebar>.wrapper>.container>.title .DocSearch-Button {
-  @apply min-[960px]:bg-[var(--vp-c-bg)] px-2;
+  @apply min-[960px]:bg-(--vp-c-bg) px-2;
 }
 
+/* Left title area when sidebar is absent: adaptive width and spacing, wrapped in a frosted glass capsule; inner DocSearch also uses frosted glass background and shadow */
 .VPNav>.VPNavBar:not(.has-sidebar)>.wrapper>.container>.title>.VPNavBarTitle {
   @apply w-fit gap-1;
 
+  /* Logo/title link capsule on the left: semi-transparent background + rounded corners + blur */
   >a {
-    @apply bg-[var(--vp-c-bg)]/40 px-3 rounded-lg backdrop-blur-sm;
+    @apply bg-(--vp-c-bg)/40 px-3 rounded-lg backdrop-blur-sm;
   }
 
+  /* DocSearch button: semi-transparent background + blur + shadow, keeping consistent with title capsule style */
   .DocSearch-Button {
-    @apply bg-[var(--docsearch-searchbox-background)]/60 backdrop-blur-sm shadow-sm;
+    @apply bg-(--docsearch-searchbox-background)/60 backdrop-blur-sm shadow-sm;
   }
 }
 
+/* DocSearch placeholder text left/right padding, compressed for a more compact capsule appearance */
 .DocSearch-Button-Placeholder {
   @apply px-1;
 }
 
+/* Search area in top bar: remove left padding, disable flex-grow, avoid expanding right capsule */
 .VPNavBarSearch {
   @apply pl-0 flex-none;
 }
 
+/* When sidebar is present: title area right-aligned on desktop, no extra padding on left/right, convenient for aligning with sidebar width */
 .VPNav>.VPNavBar.has-sidebar>.wrapper>.container>.title {
   @apply px-0 flex flex-row min-[960px]:justify-end;
 }
 
+/* Page body with sidebar: remove extra top padding, bring content closer to custom top bar */
 .Layout>.VPContent.has-sidebar {
   @apply pt-0;
 }
 
+/* Overall style of right control area (search, menu, language, theme, social, etc.) */
 .VPNav {
   >.VPNavBar>.wrapper>.container>.content {
     @apply flex flex-row items-center justify-end;
 
+    /* Capsule wrapping all controls on the right: 40px height, adaptive width, semi-transparent frosted glass + shadow + rounded corners, right padding reserved */
     >.content-body {
-      @apply h-10 w-fit bg-[var(--vp-c-bg)]/40 backdrop-blur-sm pr-4 shadow-sm rounded-lg;
+      @apply h-10 bg-(--vp-c-bg)/40 backdrop-blur-sm shadow-sm rounded-lg;
+      @apply pr-4 mr-0;
 
+      /* All controls and their pop-out buttons inside the capsule have a uniform height of 40px, maintaining alignment */
       >*,
       >*>.button {
-        @apply h-10
+        @apply h-10;
       }
     }
   }
 
+  /* When sidebar exists, add dynamic padding on the right side of desktop, align with layout max width, avoid sticking to edge */
   >.VPNavBar.has-sidebar>.wrapper>.container>.content {
     padding-right: max(calc((100vw - var(--vp-layout-max-width)) * 0.5 - 48px), 8px);
   }
 }
 
+/* Local navigation (secondary navigation for mobile/narrow screens): buttons and dropdowns maintain 40px high frosted glass capsule with subtle border */
 .VPLocalNav>.container {
   .VPLocalNavOutlineDropdown>button {
     @apply h-10 py-1 px-2;
@@ -211,7 +225,7 @@
 
   >button.menu,
   .VPLocalNavOutlineDropdown {
-    @apply m-2 bg-[var(--vp-c-bg)]/40 backdrop-blur-sm h-10 rounded-lg border border-slate-700/10 dark:border-slate-800/80;
+    @apply m-2 bg-(--vp-c-bg)/40 backdrop-blur-sm h-10 rounded-lg border border-slate-700/10 dark:border-slate-800/80;
   }
 }
 

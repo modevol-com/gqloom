@@ -5,25 +5,20 @@ import tailwindcss from "@tailwindcss/vite"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig } from "vitepress"
 import llmstxt from "vitepress-plugin-llms"
-import sidebarEn from "./sidebar-en"
-import sidebarZh from "./sidebar-zh"
+import sidebarEn from "./sidebar-en.js"
+import sidebarZh from "./sidebar-zh.js"
 
-// https://vitepress.dev/reference/site-config
 export default defineConfig({
   markdown: {
     codeTransformers: [
       transformerTwoslash({
         typesCache: createFileSystemTypesCache(),
-      }) as any,
+      }),
     ],
-    languages: ["ts", "js", "bash", "graphql", "gql", "prisma", "json"] as any,
+    languages: ["ts", "js", "bash", "graphql", "gql", "prisma", "json"],
   },
   vite: {
-    plugins: [
-      tailwindcss(),
-      vueJsx(),
-      llmstxt({ ignoreFiles: ["zh/**/*"] }),
-    ] as any,
+    plugins: [tailwindcss(), vueJsx(), llmstxt({ ignoreFiles: ["zh/**/*"] })],
     resolve: {
       alias: [
         {
@@ -78,7 +73,6 @@ export default defineConfig({
     },
   },
   themeConfig: {
-    // https://vitepress.dev/reference/default-theme-config,
     logo: "/gqloom.svg",
     nav: [
       { text: "Home", link: "/" },

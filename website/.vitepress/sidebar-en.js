@@ -1,5 +1,3 @@
-import type { DefaultTheme } from "vitepress"
-
 export default [
   {
     text: "Introduction",
@@ -120,4 +118,4 @@ export default [
       },
     ],
   },
-] satisfies DefaultTheme.Config["sidebar"]
+]
