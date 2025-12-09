@@ -1,7 +1,12 @@
 import { weave } from "@gqloom/core"
 import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
-import { lexicographicSortSchema, printSchema, printType } from "graphql"
-import { createYoga } from "graphql-yoga"
+import {
+  execute as graphqlExecute,
+  lexicographicSortSchema,
+  parse,
+  printSchema,
+  printType,
+} from "graphql"
 import {
   afterAll,
   afterEach,
@@ -208,22 +213,16 @@ describe("Resolver", () => {
     const schema = weaveSchema(db, (e) => {
       logs.push(e.query.replaceAll("`", ""))
     })
-    const yoga = createYoga({ schema })
-    const execute = async (query: string, variables?: Record<string, any>) => {
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          variables,
-        }),
+    const execute = async (query: string, variables?: any): Promise<any> => {
+      const contextValue: Record<string, unknown> = {}
+      const { data, errors } = await graphqlExecute({
+        schema,
+        document: parse(query),
+        variableValues: variables,
+        contextValue,
       })
 
-      const { data, errors } = await response.json()
-
-      if (response.status !== 200) {
+      if (errors && errors.length > 0) {
         throw new Error(JSON.stringify(errors))
       }
       await new Promise((resolve) => setTimeout(resolve, 6))
@@ -560,22 +559,16 @@ describe("Resolver", () => {
     const schema = weaveSchema(db, (e) => {
       logs.push(e.query.replaceAll("`", ""))
     })
-    const yoga = createYoga({ schema })
-    const execute = async (query: string, variables?: Record<string, any>) => {
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          variables,
-        }),
+    const execute = async (query: string, variables?: any): Promise<any> => {
+      const contextValue: any = {}
+      const { data, errors } = await graphqlExecute({
+        schema,
+        document: parse(query),
+        variableValues: variables,
+        contextValue,
       })
 
-      const { data, errors } = await response.json()
-
-      if (response.status !== 200 || errors != null) {
+      if (errors && errors.length > 0) {
         throw new Error(JSON.stringify(errors))
       }
       await new Promise((resolve) => setTimeout(resolve, 6))

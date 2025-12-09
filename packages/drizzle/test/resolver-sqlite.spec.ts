@@ -3,10 +3,11 @@ import { eq } from "drizzle-orm"
 import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql"
 import {
   type GraphQLSchema,
+  execute as graphqlExecute,
   lexicographicSortSchema,
+  parse,
   printSchema,
 } from "graphql"
-import { createYoga, type YogaServerInstance } from "graphql-yoga"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { drizzleResolverFactory } from "../src"
 import * as schema from "./schema/sqlite"
@@ -18,23 +19,17 @@ describe("resolver by sqlite", () => {
   let db: LibSQLDatabase<typeof schema>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
-  let yoga: YogaServerInstance<{}, {}>
 
   const execute = async (query: string, variables?: Record<string, any>) => {
-    const response = await yoga.fetch("http://localhost/graphql", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
+    const contextValue: Record<string, unknown> = {}
+    const { data, errors } = await graphqlExecute({
+      schema: gqlSchema,
+      document: parse(query),
+      variableValues: variables,
+      contextValue,
     })
 
-    const { data, errors } = await response.json()
-
-    if (response.status !== 200 || errors != null) {
+    if (errors && errors.length > 0) {
       console.info(errors)
       throw new Error(JSON.stringify(errors))
     }
@@ -50,7 +45,6 @@ describe("resolver by sqlite", () => {
     const userFactory = drizzleResolverFactory(db, "user")
     const postFactory = drizzleResolverFactory(db, "post")
     gqlSchema = weave(userFactory.resolver(), postFactory.resolver())
-    yoga = createYoga({ schema: gqlSchema })
 
     await db
       .insert(user)

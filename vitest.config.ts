@@ -7,15 +7,16 @@ const alias = (name: string) => {
   return { find, replacement }
 }
 
-const graphqlCjs = path.join(__dirname, "node_modules", "graphql", "index.js")
+const graphqlPath = path.join(__dirname, "node_modules", "graphql", "index.js")
 
 export const projectConfig = defineProject({
   resolve: { dedupe: ["graphql"] },
   test: {
     deps: { optimizer: { ssr: { include: ["graphql"] } } },
     alias: [
-      { find: "graphql", replacement: graphqlCjs },
-      { find: "graphql/index.js", replacement: graphqlCjs },
+      { find: "graphql", replacement: graphqlPath },
+      { find: "graphql/index.js", replacement: graphqlPath },
+      { find: "graphql/index.mjs", replacement: graphqlPath },
       alias("core"),
       alias("federation"),
       alias("json"),

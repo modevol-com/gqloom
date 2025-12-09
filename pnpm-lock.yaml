@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  graphql: ^16.12.0
   pg: ^8.13.2
 
 importers:
@@ -16,7 +17,7 @@ importers:
         version: 2.3.8
       '@graphql-tools/utils':
         specifier: ^10.10.1
-        version: 10.10.1(graphql@16.8.1)
+        version: 10.10.1(graphql@16.12.0)
       '@types/node':
         specifier: ^24.3.0
         version: 24.3.0
@@ -27,8 +28,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(jiti@2.6.1)(jsdom@25.0.1)(lightningcss@1.30.2)(terser@5.32.0)(tsx@4.20.3)(yaml@2.8.1))
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       husky:
         specifier: ^9.0.11
         version: 9.0.11
@@ -52,10 +53,10 @@ importers:
     dependencies:
       '@apollo/server':
         specifier: ^5.2.0
-        version: 5.2.0(graphql@16.8.1)
+        version: 5.2.0(graphql@16.12.0)
       '@gqloom/core':
         specifier: ^0.2.0
-        version: 0.2.2(graphql@16.8.1)
+        version: 0.2.2(graphql@16.12.0)
       '@hono/graphql-server':
         specifier: ^0.5.1
         version: 0.5.1(hono@4.10.7)
@@ -66,29 +67,29 @@ importers:
         specifier: ^5.4.0
         version: 5.6.1
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       hono:
         specifier: ^4.9.8
         version: 4.10.7
       mercurius:
         specifier: ^16.2.0
-        version: 16.5.0(graphql@16.8.1)
+        version: 16.5.0(graphql@16.12.0)
 
   examples/cattery-valibot:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.14.1(graphql@16.8.1)
+        version: 0.14.1(graphql@16.12.0)
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.14.1(graphql@16.8.1))(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.8.1)
+        version: 0.11.0(@gqloom/core@0.14.1(graphql@16.12.0))(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/valibot':
         specifier: latest
-        version: 0.13.0(@gqloom/core@0.14.1(graphql@16.8.1))(graphql@16.8.1)(valibot@1.1.0(typescript@5.9.3))
+        version: 0.13.0(@gqloom/core@0.14.1(graphql@16.12.0))(graphql@16.12.0)(valibot@1.1.0(typescript@5.9.3))
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -99,11 +100,11 @@ importers:
         specifier: ^0.44.6
         version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -125,13 +126,13 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.14.1(graphql@16.8.1)
+        version: 0.14.1(graphql@16.12.0)
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.14.1(graphql@16.8.1))(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.8.1)
+        version: 0.11.0(@gqloom/core@0.14.1(graphql@16.12.0))(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/zod':
         specifier: latest
-        version: 0.13.0(@gqloom/core@0.14.1(graphql@16.8.1))(graphql@16.8.1)(zod@4.1.5)
+        version: 0.13.0(@gqloom/core@0.14.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.1.5)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -142,11 +143,11 @@ importers:
         specifier: ^0.44.6
         version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       zod:
         specifier: 4.1.5
         version: 4.1.5
@@ -179,11 +180,11 @@ importers:
         specifier: ^0.3.1
         version: 0.3.1(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7))
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       pg:
         specifier: ^8.13.2
         version: 8.13.2
@@ -219,7 +220,7 @@ importers:
         specifier: ^3.19.9
         version: 3.19.9
       graphql:
-        specifier: ^16.8.1
+        specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
@@ -239,19 +240,19 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: ^0.13.0
-        version: 0.13.0(graphql@16.8.1)
+        version: 0.13.0(graphql@16.12.0)
       '@gqloom/json':
         specifier: ^0.12.0
-        version: 0.12.0(@gqloom/core@0.13.0(graphql@16.8.1))(graphql@16.8.1)
+        version: 0.12.0(@gqloom/core@0.13.0(graphql@16.12.0))(graphql@16.12.0)
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
 
   examples/middlewares:
     dependencies:
@@ -265,11 +266,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/zod
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -323,11 +324,11 @@ importers:
         specifier: 6.16.2
         version: 6.16.2(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -348,11 +349,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/zod
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-yoga:
         specifier: ^5.6.0
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -363,14 +364,18 @@ importers:
   packages/core:
     dependencies:
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@standard-schema/spec':
         specifier: 1.0.0
         version: 1.0.0
 
   packages/drizzle:
+    dependencies:
+      graphql:
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -393,12 +398,6 @@ importers:
       drizzle-orm:
         specifier: ^0.44.7
         version: 0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
-      graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
-      graphql-yoga:
-        specifier: ^5.16.2
-        version: 5.16.2(graphql@16.8.1)
       mysql2:
         specifier: ^3.15.3
         version: 3.15.3
@@ -415,8 +414,8 @@ importers:
   packages/effect:
     dependencies:
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -426,13 +425,17 @@ importers:
         version: 3.19.9
 
   packages/federation:
+    dependencies:
+      graphql:
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@apollo/server':
         specifier: ^5.2.0
-        version: 5.2.0(graphql@16.8.1)
+        version: 5.2.0(graphql@16.12.0)
       '@apollo/subgraph':
         specifier: ^2.12.0
-        version: 2.12.0(graphql@16.8.1)
+        version: 2.12.0(graphql@16.12.0)
       '@gqloom/core':
         specifier: workspace:*
         version: link:../core
@@ -442,27 +445,24 @@ importers:
       fastify:
         specifier: ^5.6.1
         version: 5.6.1
-      graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
       graphql-tag:
         specifier: ^2.12.6
-        version: 2.12.6(graphql@16.8.1)
+        version: 2.12.6(graphql@16.12.0)
       graphql-yoga:
         specifier: ^5.16.2
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       mercurius:
         specifier: ^16.5.0
-        version: 16.5.0(graphql@16.8.1)
+        version: 16.5.0(graphql@16.12.0)
       mercurius-integration-testing:
         specifier: ^9.0.0
-        version: 9.0.0(@mercuriusjs/federation@5.0.0)(fastify@5.6.1)(graphql@16.8.1)(mercurius@16.5.0(graphql@16.8.1))
+        version: 9.0.0(@mercuriusjs/federation@5.0.0)(fastify@5.6.1)(graphql@16.12.0)(mercurius@16.5.0(graphql@16.12.0))
 
   packages/json:
     dependencies:
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       json-schema-to-ts:
         specifier: ^3.1.1
         version: 3.1.1
@@ -486,8 +486,8 @@ importers:
   packages/mikro-orm:
     dependencies:
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -511,8 +511,8 @@ importers:
         specifier: ^6.17.1
         version: 6.17.1
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       ts-morph:
         specifier: ^27.0.2
         version: 27.0.2
@@ -535,9 +535,6 @@ importers:
       better-sqlite3:
         specifier: ^12.4.1
         version: 12.4.1
-      graphql-yoga:
-        specifier: ^5.16.2
-        version: 5.16.2(graphql@16.8.1)
       prisma:
         specifier: ^6.17.1
         version: 6.17.1(magicast@0.3.5)(typescript@5.9.3)
@@ -548,8 +545,8 @@ importers:
   packages/valibot:
     dependencies:
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -561,8 +558,8 @@ importers:
   packages/yup:
     dependencies:
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -574,8 +571,8 @@ importers:
   packages/zod:
     dependencies:
       graphql:
-        specifier: '>= 16.8.0'
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
     devDependencies:
       '@gqloom/core':
         specifier: workspace:*
@@ -610,10 +607,10 @@ importers:
     devDependencies:
       '@apollo/server':
         specifier: ^5.2.0
-        version: 5.2.0(graphql@16.8.1)
+        version: 5.2.0(graphql@16.12.0)
       '@apollo/subgraph':
         specifier: ^2.12.0
-        version: 2.12.0(graphql@16.8.1)
+        version: 2.12.0(graphql@16.12.0)
       '@gqloom/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -678,17 +675,17 @@ importers:
         specifier: ^5.6.1
         version: 5.6.1
       graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
+        specifier: ^16.12.0
+        version: 16.12.0
       graphql-scalars:
         specifier: ^1.25.0
-        version: 1.25.0(graphql@16.8.1)
+        version: 1.25.0(graphql@16.12.0)
       graphql-yoga:
         specifier: ^5.16.2
-        version: 5.16.2(graphql@16.8.1)
+        version: 5.16.2(graphql@16.12.0)
       mercurius:
         specifier: ^16.5.0
-        version: 16.5.0(graphql@16.8.1)
+        version: 16.5.0(graphql@16.12.0)
       typebox:
         specifier: ^1.0.4
         version: 1.0.4
@@ -805,13 +802,13 @@ packages:
   '@apollo/cache-control-types@1.0.3':
     resolution: {integrity: sha512-F17/vCp7QVwom9eG7ToauIKdAxpSoadsJnqIfyryLFSkLSOEqu+eC5Z3N8OXcUVStuOMcNHlyraRsA6rRICu4g==}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/federation-internals@2.12.0':
     resolution: {integrity: sha512-NCqKxZqTT9oFqRfq/yLcb8U5rzt+v00i5d5cFFadjdO61YwAUCD0W5JFDQzZsYzX7huuK/7N7JWqI897vAOeeQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
-      graphql: ^16.5.0
+      graphql: ^16.12.0
 
   '@apollo/protobufjs@1.2.7':
     resolution: {integrity: sha512-Lahx5zntHPZia35myYDBRuF58tlwPskwHc5CWBZC/4bMKB6siTBWwtMrkqXcsNwQiFSzSx5hKdRPUmemrEp3Gg==}
@@ -820,19 +817,19 @@ packages:
   '@apollo/server-gateway-interface@2.0.0':
     resolution: {integrity: sha512-3HEMD6fSantG2My3jWkb9dvfkF9vJ4BDLRjMgsnD790VINtuPaEp+h3Hg9HOHiWkML6QsOhnaRqZ+gvhp3y8Nw==}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/server@5.2.0':
     resolution: {integrity: sha512-OEAl5bwVitkvVkmZlgWksSnQ10FUr6q2qJMdkexs83lsvOGmd/y81X5LoETmKZux8UiQsy/A/xzP00b8hTHH/w==}
     engines: {node: '>=20'}
     peerDependencies:
-      graphql: ^16.11.0
+      graphql: ^16.12.0
 
   '@apollo/subgraph@2.12.0':
     resolution: {integrity: sha512-5bRPmdUwDoxz8MbD8QeMx06ReDAvQycytqOnV4QjXMb9innoIRfqvv8mpVyQ8Bsy3cd53L6myMikXLEhbm0bSw==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
-      graphql: ^16.5.0
+      graphql: ^16.12.0
 
   '@apollo/usage-reporting-protobuf@4.1.1':
     resolution: {integrity: sha512-u40dIUePHaSKVshcedO7Wp+mPiZsaU6xjv9J+VyxpoU/zL6Jle+9zWeG98tr/+SZ0nZ4OXhrbb8SNr0rAPpIDA==}
@@ -845,7 +842,7 @@ packages:
     resolution: {integrity: sha512-EsPIBqsSt2BwDsv8Wu76LK5R1KtsVkNoO4b0M5aK0hx+dGg9xJXuqlr7Fo34Dl+y83jmzn+UvEW+t1/GP2melA==}
     engines: {node: '>=14'}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/utils.fetcher@3.1.0':
     resolution: {integrity: sha512-Z3QAyrsQkvrdTuHAFwWDNd+0l50guwoQUoaDQssLOjkmnmVuvXlJykqlEJolio+4rFwBnWdoY1ByFdKaQEcm7A==}
@@ -867,31 +864,31 @@ packages:
     resolution: {integrity: sha512-9M4LUXV/fQBh8vZWlLvb/HyyhjJ77/I5ZKu+NBWV/BmYGyRmoEP9EVAy7LCVoY3t8BDcyCAGfxJaLFCSuQkPUg==}
     engines: {node: '>=14'}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/utils.removealiases@2.0.1':
     resolution: {integrity: sha512-0joRc2HBO4u594Op1nev+mUF6yRnxoUH64xw8x3bX7n8QBDYdeYgY4tF0vJReTy+zdn2xv6fMsquATSgC722FA==}
     engines: {node: '>=14'}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/utils.sortast@2.0.1':
     resolution: {integrity: sha512-eciIavsWpJ09za1pn37wpsCGrQNXUhM0TktnZmHwO+Zy9O4fu/WdB4+5BvVhFiZYOXvfjzJUcc+hsIV8RUOtMw==}
     engines: {node: '>=14'}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/utils.stripsensitiveliterals@2.0.1':
     resolution: {integrity: sha512-QJs7HtzXS/JIPMKWimFnUMK7VjkGQTzqD9bKD1h3iuPAqLsxd0mUNVbkYOPTsDhUKgcvUOfOqOJWYohAKMvcSA==}
     engines: {node: '>=14'}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/utils.usagereporting@2.1.0':
     resolution: {integrity: sha512-LPSlBrn+S17oBy5eWkrRSGb98sWmnEzo3DPTZgp8IQc8sJe0prDgDuppGq4NeQlpoqEHz0hQeYHAOA0Z3aQsxQ==}
     engines: {node: '>=14'}
     peerDependencies:
-      graphql: 14.x || 15.x || 16.x
+      graphql: ^16.12.0
 
   '@apollo/utils.withrequired@3.0.0':
     resolution: {integrity: sha512-aaxeavfJ+RHboh7c2ofO5HHtQobGX4AgUujXP4CXpREHp9fQ9jPi6K9T1jrAKe7HIipoP0OJ1gd6JamSkFIpvA==}
@@ -1830,91 +1827,91 @@ packages:
   '@gqloom/core@0.13.0':
     resolution: {integrity: sha512-Q9HKioKnKZEci7YSytWtmKoWa1bzdx7cY8p8cDQ9DnPyH0HYqTD/V11hMQ/TxCIwyWjzBEgTIa2fZHc64oQglw==}
     peerDependencies:
-      graphql: '>= 16.8.0'
+      graphql: ^16.12.0
 
   '@gqloom/core@0.14.1':
     resolution: {integrity: sha512-Glin1mf/P5BTJX90indArEPAWWrBwzkUqcjZOSIECXAVHUxrCen2yUnLBYy3NRK5TncCCBux5QmR8qgL3Flwaw==}
     peerDependencies:
-      graphql: '>= 16.8.0'
+      graphql: ^16.12.0
 
   '@gqloom/core@0.2.2':
     resolution: {integrity: sha512-IDPztyENXqmDr/+5mNGpZHvOE6VhhrI6w1Xxl3LhryKNeHGl7cbSUBuSMxltN3PHbNK+SfbrU3hnUyvi05ddTQ==}
     peerDependencies:
-      graphql: '>= 16.8.0'
+      graphql: ^16.12.0
 
   '@gqloom/drizzle@0.11.0':
     resolution: {integrity: sha512-XwTHjhS6O7aEeSX4R3ExfaxaqvSg+JS15erQhNiDgQtu39rTuQ8VhpwzLaJ7nR5Co1FZQRoBrB0U6VL8Rp3Sow==}
     peerDependencies:
       '@gqloom/core': '>= 0.10.0'
       drizzle-orm: '>= 0.38.0'
-      graphql: '>= 16.8.0'
+      graphql: ^16.12.0
 
   '@gqloom/json@0.12.0':
     resolution: {integrity: sha512-LLf7fDwCPCsEi6ZEtJF7iE8gPed3joE8jFxmLolZaYTpAxekqZz4KwNhN5I9heB+Cpb6Vpn5vLmgN6fA5h9pnw==}
     peerDependencies:
       '@gqloom/core': '>= 0.12.0'
-      graphql: '>= 16.8.0'
+      graphql: ^16.12.0
 
   '@gqloom/valibot@0.13.0':
     resolution: {integrity: sha512-9A6W25A3EH5mLlzpDe7yNPggiJKt+4ikh6YUudLkQlSvsXx8I1wuAict4jD4uL9lqNud2rSuiwuJpumqeKokYA==}
     peerDependencies:
       '@gqloom/core': '>= 0.12.0'
-      graphql: '>= 16.8.0'
+      graphql: ^16.12.0
       valibot: '>= 1.0.0'
 
   '@gqloom/zod@0.13.0':
     resolution: {integrity: sha512-mkuljaW87QC08+hIt9+Q3sWKfJFWADKzALvyfYctIcggXrL+uyroB1/d5IaJfBZUw6nISGVKiDP6uK9YsLe6Yg==}
     peerDependencies:
       '@gqloom/core': '>= 0.12.0'
-      graphql: '>= 16.8.0'
+      graphql: ^16.12.0
       zod: '>= 3.25.35'
 
   '@graphql-tools/executor@1.4.11':
     resolution: {integrity: sha512-e6WwB5Cf9UAwRc32jRy98q87MlYWiq4q81A0FNeWPoccWHNaxj8G2Wqi/6YjxfU3T1Qne2W98Q6u0nhNc5uZuQ==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-tools/merge@9.1.3':
     resolution: {integrity: sha512-O53kiNwGU/moJxX8m4BKpf9xHxVhmThhrctZ1gqHkdC3fYmafzWdzyNGkBsZcoh9x0wKM1ORPPuaE6Bwp3OFBA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-tools/merge@9.1.6':
     resolution: {integrity: sha512-bTnP+4oom4nDjmkS3Ykbe+ljAp/RIiWP3R35COMmuucS24iQxGLa9Hn8VMkLIoaoPxgz6xk+dbC43jtkNsFoBw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-tools/schema@10.0.27':
     resolution: {integrity: sha512-Lb5mJG8eF3TPnW0TXS9qoqR40S5rrnS3DFaY9dGf+8y3petTF2nc1khcOaLlOsvyvfSWSMUgkB/U6LRofRjb6w==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-tools/schema@10.0.30':
     resolution: {integrity: sha512-yPXU17uM/LR90t92yYQqn9mAJNOVZJc0nQtYeZyZeQZeQjwIGlTubvvoDL0fFVk+wZzs4YQOgds2NwSA4npodA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-tools/utils@10.10.1':
     resolution: {integrity: sha512-9iOZ7x6tuIpp/dviNmTCSH1cDDNLIcrj6T3WKH9lU4nRWx5Pr0e7Faj7T/HmP2Njrjik63dJWuDVRxfQSTOc4g==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-tools/utils@10.11.0':
     resolution: {integrity: sha512-iBFR9GXIs0gCD+yc3hoNswViL1O5josI33dUqiNStFI/MHLCEPduasceAcazRH77YONKNiviHBV8f7OgcT4o2Q==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-typed-document-node/core@3.2.0':
     resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
     peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: ^16.12.0
 
   '@graphql-yoga/logger@2.0.1':
     resolution: {integrity: sha512-Nv0BoDGLMg9QBKy9cIswQ3/6aKaKjlTh87x3GiBg2Z4RrjyrM48DvOOK0pJh1C1At+b0mUIM67cwZcFTDLN4sA==}
@@ -4087,32 +4084,28 @@ packages:
   graphql-jit@0.8.7:
     resolution: {integrity: sha512-KGzCrsxQPfEiXOUIJCexWKiWF6ycjO89kAO6SdO8OWRGwYXbG0hsLuTnbFfMq0gj7d7/ib/Gh7jtst7FHZEEjw==}
     peerDependencies:
-      graphql: '>=15'
+      graphql: ^16.12.0
 
   graphql-scalars@1.25.0:
     resolution: {integrity: sha512-b0xyXZeRFkne4Eq7NAnL400gStGqG/Sx9VqX0A05nHyEbv57UJnWKsjNnrpVqv5e/8N1MUxkt0wwcRXbiyKcFg==}
     engines: {node: '>=10'}
     peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+      graphql: ^16.12.0
 
   graphql-tag@2.12.6:
     resolution: {integrity: sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==}
     engines: {node: '>=10'}
     peerDependencies:
-      graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+      graphql: ^16.12.0
 
   graphql-yoga@5.16.2:
     resolution: {integrity: sha512-heaD8ejapeEZ8+8CxB6DbYzkvMfC4gHEXr1Gc2CQCXEb5PVaDcEnQfiThBNic1KLPpuZixqQdJJ0pjcEVc9H7g==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      graphql: ^15.2.0 || ^16.0.0
+      graphql: ^16.12.0
 
   graphql@16.12.0:
     resolution: {integrity: sha512-DKKrynuQRne0PNpEbzuEdHlYOMksHSUI8Zc9Unei5gTsMNA2/vMpoMz/yKba50pejK56qj98qM0SjYxAKi13gQ==}
-    engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
-
-  graphql@16.8.1:
-    resolution: {integrity: sha512-59LZHPdGZVh695Ud9lRzPBVTtlX9ZCV150Er2W43ro37wVof0ctenSaskPPjN7lVTIN8mSZt8PHUNKZuNQUuxw==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
   gray-matter@4.0.3:
@@ -4691,7 +4684,7 @@ packages:
       '@mercuriusjs/federation': ^1 || ^2
       '@mercuriusjs/gateway': ^1.2.0
       fastify: ^4.0.0 || ^5.0.0
-      graphql: '*'
+      graphql: ^16.12.0
       mercurius: ^12 || ^13 || ^14 || ^15
     peerDependenciesMeta:
       '@mercuriusjs/federation':
@@ -4703,7 +4696,7 @@ packages:
     resolution: {integrity: sha512-l5SOEXYATLhlH1M3tEIF1lJdwcgxXdNCf7HsCHoZ9IFO4Sgs//lo/ymeRuXOnapQ6zo1yruecY7OsRVaSCC2LA==}
     engines: {node: ^20.9.0 || >=22.0.0}
     peerDependencies:
-      graphql: ^16.0.0
+      graphql: ^16.12.0
 
   merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
@@ -6456,15 +6449,15 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.30
 
-  '@apollo/cache-control-types@1.0.3(graphql@16.8.1)':
+  '@apollo/cache-control-types@1.0.3(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@apollo/federation-internals@2.12.0(graphql@16.8.1)':
+  '@apollo/federation-internals@2.12.0(graphql@16.12.0)':
     dependencies:
       '@types/uuid': 9.0.8
       chalk: 4.1.2
-      graphql: 16.8.1
+      graphql: 16.12.0
       js-levenshtein: 1.1.6
       uuid: 9.0.1
 
@@ -6483,32 +6476,32 @@ snapshots:
       '@types/long': 4.0.2
       long: 4.0.0
 
-  '@apollo/server-gateway-interface@2.0.0(graphql@16.8.1)':
+  '@apollo/server-gateway-interface@2.0.0(graphql@16.12.0)':
     dependencies:
       '@apollo/usage-reporting-protobuf': 4.1.1
       '@apollo/utils.fetcher': 3.1.0
       '@apollo/utils.keyvaluecache': 4.0.0
       '@apollo/utils.logger': 3.0.0
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@apollo/server@5.2.0(graphql@16.8.1)':
+  '@apollo/server@5.2.0(graphql@16.12.0)':
     dependencies:
-      '@apollo/cache-control-types': 1.0.3(graphql@16.8.1)
-      '@apollo/server-gateway-interface': 2.0.0(graphql@16.8.1)
+      '@apollo/cache-control-types': 1.0.3(graphql@16.12.0)
+      '@apollo/server-gateway-interface': 2.0.0(graphql@16.12.0)
       '@apollo/usage-reporting-protobuf': 4.1.1
       '@apollo/utils.createhash': 3.0.1
       '@apollo/utils.fetcher': 3.1.0
       '@apollo/utils.isnodelike': 3.0.0
       '@apollo/utils.keyvaluecache': 4.0.0
       '@apollo/utils.logger': 3.0.0
-      '@apollo/utils.usagereporting': 2.1.0(graphql@16.8.1)
+      '@apollo/utils.usagereporting': 2.1.0(graphql@16.12.0)
       '@apollo/utils.withrequired': 3.0.0
-      '@graphql-tools/schema': 10.0.30(graphql@16.8.1)
+      '@graphql-tools/schema': 10.0.30(graphql@16.12.0)
       async-retry: 1.3.3
       body-parser: 2.2.1
       cors: 2.8.5
       finalhandler: 2.1.1
-      graphql: 16.8.1
+      graphql: 16.12.0
       loglevel: 1.9.2
       lru-cache: 11.2.4
       negotiator: 1.0.0
@@ -6517,11 +6510,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@apollo/subgraph@2.12.0(graphql@16.8.1)':
+  '@apollo/subgraph@2.12.0(graphql@16.12.0)':
     dependencies:
-      '@apollo/cache-control-types': 1.0.3(graphql@16.8.1)
-      '@apollo/federation-internals': 2.12.0(graphql@16.8.1)
-      graphql: 16.8.1
+      '@apollo/cache-control-types': 1.0.3(graphql@16.12.0)
+      '@apollo/federation-internals': 2.12.0(graphql@16.12.0)
+      graphql: 16.12.0
 
   '@apollo/usage-reporting-protobuf@4.1.1':
     dependencies:
@@ -6532,9 +6525,9 @@ snapshots:
       '@apollo/utils.isnodelike': 3.0.0
       sha.js: 2.4.12
 
-  '@apollo/utils.dropunuseddefinitions@2.0.1(graphql@16.8.1)':
+  '@apollo/utils.dropunuseddefinitions@2.0.1(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
   '@apollo/utils.fetcher@3.1.0': {}
 
@@ -6547,32 +6540,32 @@ snapshots:
 
   '@apollo/utils.logger@3.0.0': {}
 
-  '@apollo/utils.printwithreducedwhitespace@2.0.1(graphql@16.8.1)':
+  '@apollo/utils.printwithreducedwhitespace@2.0.1(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@apollo/utils.removealiases@2.0.1(graphql@16.8.1)':
+  '@apollo/utils.removealiases@2.0.1(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@apollo/utils.sortast@2.0.1(graphql@16.8.1)':
+  '@apollo/utils.sortast@2.0.1(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
       lodash.sortby: 4.7.0
 
-  '@apollo/utils.stripsensitiveliterals@2.0.1(graphql@16.8.1)':
+  '@apollo/utils.stripsensitiveliterals@2.0.1(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@apollo/utils.usagereporting@2.1.0(graphql@16.8.1)':
+  '@apollo/utils.usagereporting@2.1.0(graphql@16.12.0)':
     dependencies:
       '@apollo/usage-reporting-protobuf': 4.1.1
-      '@apollo/utils.dropunuseddefinitions': 2.0.1(graphql@16.8.1)
-      '@apollo/utils.printwithreducedwhitespace': 2.0.1(graphql@16.8.1)
-      '@apollo/utils.removealiases': 2.0.1(graphql@16.8.1)
-      '@apollo/utils.sortast': 2.0.1(graphql@16.8.1)
-      '@apollo/utils.stripsensitiveliterals': 2.0.1(graphql@16.8.1)
-      graphql: 16.8.1
+      '@apollo/utils.dropunuseddefinitions': 2.0.1(graphql@16.12.0)
+      '@apollo/utils.printwithreducedwhitespace': 2.0.1(graphql@16.12.0)
+      '@apollo/utils.removealiases': 2.0.1(graphql@16.12.0)
+      '@apollo/utils.sortast': 2.0.1(graphql@16.12.0)
+      '@apollo/utils.stripsensitiveliterals': 2.0.1(graphql@16.12.0)
+      graphql: 16.12.0
 
   '@apollo/utils.withrequired@3.0.0': {}
 
@@ -7299,40 +7292,40 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
-  '@gqloom/core@0.13.0(graphql@16.8.1)':
+  '@gqloom/core@0.13.0(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@gqloom/core@0.14.1(graphql@16.8.1)':
+  '@gqloom/core@0.14.1(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@gqloom/core@0.2.2(graphql@16.8.1)':
+  '@gqloom/core@0.2.2(graphql@16.12.0)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@gqloom/drizzle@0.11.0(@gqloom/core@0.14.1(graphql@16.8.1))(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.8.1)':
+  '@gqloom/drizzle@0.11.0(@gqloom/core@0.14.1(graphql@16.12.0))(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)':
     dependencies:
-      '@gqloom/core': 0.14.1(graphql@16.8.1)
+      '@gqloom/core': 0.14.1(graphql@16.12.0)
       drizzle-orm: 0.44.7(@libsql/client@0.15.15)(@prisma/client@6.17.1(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.4.1)(knex@3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.15.3)(pg@8.13.2)(prisma@6.17.1(magicast@0.3.5)(typescript@5.9.3))(sqlite3@5.1.7)
-      graphql: 16.8.1
+      graphql: 16.12.0
 
-  '@gqloom/json@0.12.0(@gqloom/core@0.13.0(graphql@16.8.1))(graphql@16.8.1)':
+  '@gqloom/json@0.12.0(@gqloom/core@0.13.0(graphql@16.12.0))(graphql@16.12.0)':
     dependencies:
-      '@gqloom/core': 0.13.0(graphql@16.8.1)
-      graphql: 16.8.1
+      '@gqloom/core': 0.13.0(graphql@16.12.0)
+      graphql: 16.12.0
       json-schema-to-ts: 3.1.1
 
-  '@gqloom/valibot@0.13.0(@gqloom/core@0.14.1(graphql@16.8.1))(graphql@16.8.1)(valibot@1.1.0(typescript@5.9.3))':
+  '@gqloom/valibot@0.13.0(@gqloom/core@0.14.1(graphql@16.12.0))(graphql@16.12.0)(valibot@1.1.0(typescript@5.9.3))':
     dependencies:
-      '@gqloom/core': 0.14.1(graphql@16.8.1)
-      graphql: 16.8.1
+      '@gqloom/core': 0.14.1(graphql@16.12.0)
+      graphql: 16.12.0
       valibot: 1.1.0(typescript@5.9.3)
 
-  '@gqloom/zod@0.13.0(@gqloom/core@0.14.1(graphql@16.8.1))(graphql@16.8.1)(zod@4.1.5)':
+  '@gqloom/zod@0.13.0(@gqloom/core@0.14.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.1.5)':
     dependencies:
-      '@gqloom/core': 0.14.1(graphql@16.8.1)
-      graphql: 16.8.1
+      '@gqloom/core': 0.14.1(graphql@16.12.0)
+      graphql: 16.12.0
       zod: 4.1.5
 
   '@graphql-tools/executor@1.4.11(graphql@16.12.0)':
@@ -7345,32 +7338,16 @@ snapshots:
       graphql: 16.12.0
       tslib: 2.8.1
 
-  '@graphql-tools/executor@1.4.11(graphql@16.8.1)':
-    dependencies:
-      '@graphql-tools/utils': 10.10.1(graphql@16.8.1)
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1)
-      '@repeaterjs/repeater': 3.0.6
-      '@whatwg-node/disposablestack': 0.0.6
-      '@whatwg-node/promise-helpers': 1.3.2
-      graphql: 16.8.1
-      tslib: 2.8.1
-
   '@graphql-tools/merge@9.1.3(graphql@16.12.0)':
     dependencies:
       '@graphql-tools/utils': 10.11.0(graphql@16.12.0)
       graphql: 16.12.0
       tslib: 2.8.1
 
-  '@graphql-tools/merge@9.1.3(graphql@16.8.1)':
+  '@graphql-tools/merge@9.1.6(graphql@16.12.0)':
     dependencies:
-      '@graphql-tools/utils': 10.11.0(graphql@16.8.1)
-      graphql: 16.8.1
-      tslib: 2.8.1
-
-  '@graphql-tools/merge@9.1.6(graphql@16.8.1)':
-    dependencies:
-      '@graphql-tools/utils': 10.11.0(graphql@16.8.1)
-      graphql: 16.8.1
+      '@graphql-tools/utils': 10.11.0(graphql@16.12.0)
+      graphql: 16.12.0
       tslib: 2.8.1
 
   '@graphql-tools/schema@10.0.27(graphql@16.12.0)':
@@ -7380,18 +7357,11 @@ snapshots:
       graphql: 16.12.0
       tslib: 2.8.1
 
-  '@graphql-tools/schema@10.0.27(graphql@16.8.1)':
+  '@graphql-tools/schema@10.0.30(graphql@16.12.0)':
     dependencies:
-      '@graphql-tools/merge': 9.1.3(graphql@16.8.1)
-      '@graphql-tools/utils': 10.10.1(graphql@16.8.1)
-      graphql: 16.8.1
-      tslib: 2.8.1
-
-  '@graphql-tools/schema@10.0.30(graphql@16.8.1)':
-    dependencies:
-      '@graphql-tools/merge': 9.1.6(graphql@16.8.1)
-      '@graphql-tools/utils': 10.11.0(graphql@16.8.1)
-      graphql: 16.8.1
+      '@graphql-tools/merge': 9.1.6(graphql@16.12.0)
+      '@graphql-tools/utils': 10.11.0(graphql@16.12.0)
+      graphql: 16.12.0
       tslib: 2.8.1
 
   '@graphql-tools/utils@10.10.1(graphql@16.12.0)':
@@ -7402,14 +7372,6 @@ snapshots:
       graphql: 16.12.0
       tslib: 2.8.1
 
-  '@graphql-tools/utils@10.10.1(graphql@16.8.1)':
-    dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1)
-      '@whatwg-node/promise-helpers': 1.3.2
-      cross-inspect: 1.0.1
-      graphql: 16.8.1
-      tslib: 2.8.1
-
   '@graphql-tools/utils@10.11.0(graphql@16.12.0)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.12.0)
@@ -7418,21 +7380,9 @@ snapshots:
       graphql: 16.12.0
       tslib: 2.8.1
 
-  '@graphql-tools/utils@10.11.0(graphql@16.8.1)':
-    dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1)
-      '@whatwg-node/promise-helpers': 1.3.2
-      cross-inspect: 1.0.1
-      graphql: 16.8.1
-      tslib: 2.8.1
-
   '@graphql-typed-document-node/core@3.2.0(graphql@16.12.0)':
     dependencies:
       graphql: 16.12.0
-
-  '@graphql-typed-document-node/core@3.2.0(graphql@16.8.1)':
-    dependencies:
-      graphql: 16.8.1
 
   '@graphql-yoga/logger@2.0.1':
     dependencies:
@@ -7452,7 +7402,7 @@ snapshots:
 
   '@hono/graphql-server@0.5.1(hono@4.10.7)':
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
       hono: 4.10.7
 
   '@hono/node-server@1.19.6(hono@4.10.7)':
@@ -9677,24 +9627,14 @@ snapshots:
       lodash.merge: 4.6.2
       lodash.mergewith: 4.6.2
 
-  graphql-jit@0.8.7(graphql@16.8.1):
+  graphql-scalars@1.25.0(graphql@16.12.0):
     dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1)
-      fast-json-stringify: 5.16.1
-      generate-function: 2.3.1
-      graphql: 16.8.1
-      lodash.memoize: 4.1.2
-      lodash.merge: 4.6.2
-      lodash.mergewith: 4.6.2
-
-  graphql-scalars@1.25.0(graphql@16.8.1):
-    dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
       tslib: 2.8.1
 
-  graphql-tag@2.12.6(graphql@16.8.1):
+  graphql-tag@2.12.6(graphql@16.12.0):
     dependencies:
-      graphql: 16.8.1
+      graphql: 16.12.0
       tslib: 2.6.2
 
   graphql-yoga@5.16.2(graphql@16.12.0):
@@ -9713,25 +9653,7 @@ snapshots:
       lru-cache: 10.4.3
       tslib: 2.8.1
 
-  graphql-yoga@5.16.2(graphql@16.8.1):
-    dependencies:
-      '@envelop/core': 5.4.0
-      '@envelop/instrumentation': 1.0.0
-      '@graphql-tools/executor': 1.4.11(graphql@16.8.1)
-      '@graphql-tools/schema': 10.0.27(graphql@16.8.1)
-      '@graphql-tools/utils': 10.10.1(graphql@16.8.1)
-      '@graphql-yoga/logger': 2.0.1
-      '@graphql-yoga/subscription': 5.0.5
-      '@whatwg-node/fetch': 0.10.12
-      '@whatwg-node/promise-helpers': 1.3.2
-      '@whatwg-node/server': 0.10.15
-      graphql: 16.8.1
-      lru-cache: 10.4.3
-      tslib: 2.8.1
-
   graphql@16.12.0: {}
-
-  graphql@16.8.1: {}
 
   gray-matter@4.0.3:
     dependencies:
@@ -10418,13 +10340,13 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mercurius-integration-testing@9.0.0(@mercuriusjs/federation@5.0.0)(fastify@5.6.1)(graphql@16.8.1)(mercurius@16.5.0(graphql@16.8.1)):
+  mercurius-integration-testing@9.0.0(@mercuriusjs/federation@5.0.0)(fastify@5.6.1)(graphql@16.12.0)(mercurius@16.5.0(graphql@16.12.0)):
     dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.8.1)
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.12.0)
       cookie: 0.5.0
       fastify: 5.6.1
-      graphql: 16.8.1
-      mercurius: 16.5.0(graphql@16.8.1)
+      graphql: 16.12.0
+      mercurius: 16.5.0(graphql@16.12.0)
       ws: 8.18.0
     optionalDependencies:
       '@mercuriusjs/federation': 5.0.0
@@ -10441,29 +10363,6 @@ snapshots:
       fastify-plugin: 5.1.0
       graphql: 16.12.0
       graphql-jit: 0.8.7(graphql@16.12.0)
-      mqemitter: 7.1.0
-      p-map: 4.0.0
-      quick-lru: 7.3.0
-      readable-stream: 4.7.0
-      safe-stable-stringify: 2.5.0
-      secure-json-parse: 4.1.0
-      single-user-cache: 2.1.0
-      tiny-lru: 11.4.5
-      ws: 8.18.3
-    transitivePeerDependencies:
-      - bufferutil
-      - monocart-coverage-reports
-      - utf-8-validate
-
-  mercurius@16.5.0(graphql@16.8.1):
-    dependencies:
-      '@fastify/error': 4.2.0
-      '@fastify/static': 8.3.0
-      '@fastify/websocket': 11.2.0
-      borp: 0.20.2
-      fastify-plugin: 5.1.0
-      graphql: 16.8.1
-      graphql-jit: 0.8.7(graphql@16.8.1)
       mqemitter: 7.1.0
       p-map: 4.0.0
       quick-lru: 7.3.0

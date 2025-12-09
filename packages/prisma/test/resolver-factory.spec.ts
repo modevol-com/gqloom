@@ -6,8 +6,12 @@ import {
 } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
-import { printSchema, printType } from "graphql"
-import { createYoga } from "graphql-yoga"
+import {
+  execute as graphqlExecute,
+  parse,
+  printSchema,
+  printType,
+} from "graphql"
 import {
   afterAll,
   beforeAll,
@@ -132,7 +136,20 @@ describe("PrismaModelPrismaResolverFactory", () => {
       author: PostBobbin.relationField("author"),
     })
     const schema = weave(r1, r2)
-    const yoga = createYoga({ schema })
+    const execute = async (query: string, variables?: any): Promise<any> => {
+      const contextValue: Record<string, unknown> = {}
+      const { data, errors } = await graphqlExecute({
+        schema,
+        document: parse(query),
+        variableValues: variables,
+        contextValue,
+      })
+
+      if (errors && errors.length > 0) {
+        throw new Error(JSON.stringify(errors))
+      }
+      return data
+    }
     beforeEach(async () => {
       await db.user.deleteMany()
       await db.post.deleteMany()
@@ -148,13 +165,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
     })
 
     it("should be able to resolve a relationField", { retry: 6 }, async () => {
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
+      const json = await execute(/* GraphQL */ `
               query {
                 users {
                   name
@@ -169,26 +180,20 @@ describe("PrismaModelPrismaResolverFactory", () => {
                   }
                 }
               }
-            `,
-        }),
-      })
+            `)
 
-      if (response.status !== 200) throw new Error("unexpected")
-      const json = await response.json()
       // if (!json?.data) return
       expect(json).toMatchObject({
-        data: {
-          users: [
-            {
-              name: "John",
-              posts: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
-            },
-          ],
-          posts: [
-            { title: "Hello World", author: { name: "John" } },
-            { title: "Hello GQLoom", author: { name: "John" } },
-          ],
-        },
+        users: [
+          {
+            name: "John",
+            posts: [{ title: "Hello World" }, { title: "Hello GQLoom" }],
+          },
+        ],
+        posts: [
+          { title: "Hello World", author: { name: "John" } },
+          { title: "Hello GQLoom", author: { name: "John" } },
+        ],
       })
     })
 
@@ -225,15 +230,22 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const testSchema = weave(r3)
-      const testYoga = createYoga({ schema: testSchema })
+      const execute = async (query: string, variables?: any): Promise<any> => {
+        const contextValue: Record<string, unknown> = {}
+        const { data, errors } = await graphqlExecute({
+          schema: testSchema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue,
+        })
 
-      const response = await testYoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
+        if (errors && errors.length > 0) {
+          throw new Error(JSON.stringify(errors))
+        }
+        return data
+      }
+
+      const json = await execute(/* GraphQL */ `
             query {
               posts {
                 title
@@ -242,13 +254,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
                 }
               }
             }
-          `,
-        }),
-      })
+          `)
 
-      if (response.status !== 200) throw new Error("unexpected")
-      const json = await response.json()
-      expect(json.data.posts).toEqual([
+      expect(json.posts).toEqual([
         { title: posts[0].title, publisher: null },
         { title: posts[1].title, publisher: null },
         { title: posts[2].title, publisher: { id: String(user.id) } },
@@ -983,15 +991,22 @@ describe("PrismaModelPrismaResolverFactory", () => {
     it("should resolve queries correctly", async () => {
       const resolver = UserBobbin.queriesResolver()
       const schema = weave(resolver)
-      const yoga = createYoga({ schema })
+      const execute = async (query: string, variables?: any): Promise<any> => {
+        const contextValue: Record<string, unknown> = {}
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue,
+        })
 
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
+        if (errors && errors.length > 0) {
+          throw new Error(JSON.stringify(errors))
+        }
+        return data
+      }
+
+      const json = await execute(/* GraphQL */ `
             query {
               countUser
               findFirstUser {
@@ -1006,13 +1021,9 @@ describe("PrismaModelPrismaResolverFactory", () => {
                 }
               }
             }
-          `,
-        }),
-      })
+          `)
 
-      if (response.status !== 200) throw new Error("unexpected")
-      const json = await response.json()
-      expect(new Set(Object.keys(json.data))).toEqual(
+      expect(new Set(Object.keys(json))).toEqual(
         new Set(["countUser", "findFirstUser", "findManyUser"])
       )
     })
@@ -1031,21 +1042,26 @@ describe("PrismaModelPrismaResolverFactory", () => {
         ],
       })
       const schema = weave(resolver)
-      const yoga = createYoga({ schema })
+      const execute = async (query: string, variables?: any): Promise<any> => {
+        const contextValue: Record<string, unknown> = {}
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue,
+        })
 
-      await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
+        if (errors && errors.length > 0) {
+          throw new Error(JSON.stringify(errors))
+        }
+        return data
+      }
+
+      await execute(/* GraphQL */ `
             query {
               countUser
             }
-          `,
-        }),
-      })
+          `)
 
       expect(count).toBe(1)
     })

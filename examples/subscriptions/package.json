@@ -14,7 +14,7 @@
     "@gqloom/core": "workspace:*",
     "@gqloom/valibot": "workspace:*",
     "@gqloom/zod": "workspace:*",
-    "graphql": "^16.8.1",
+    "graphql": "^16.12.0",
     "graphql-yoga": "^5.6.0",
     "valibot": "1.1.0",
     "zod": "4.1.5"

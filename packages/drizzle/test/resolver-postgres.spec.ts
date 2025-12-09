@@ -3,10 +3,11 @@ import { eq } from "drizzle-orm"
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres"
 import {
   type GraphQLSchema,
+  execute as graphqlExecute,
   lexicographicSortSchema,
+  parse,
   printSchema,
 } from "graphql"
-import { createYoga, type YogaServerInstance } from "graphql-yoga"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
 import { drizzleResolverFactory } from "../src"
@@ -23,23 +24,17 @@ describe.runIf(config.postgresUrl)("resolver by postgres", () => {
   let db: NodePgDatabase<typeof schema>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
-  let yoga: YogaServerInstance<{}, {}>
 
   const execute = async (query: string, variables?: Record<string, any>) => {
-    const response = await yoga.fetch("http://localhost/graphql", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
+    const contextValue: Record<string, unknown> = {}
+    const { data, errors } = await graphqlExecute({
+      schema: gqlSchema,
+      document: parse(query),
+      variableValues: variables,
+      contextValue,
     })
 
-    const { data, errors } = await response.json()
-
-    if (response.status !== 200 || errors != null) {
+    if (errors && errors.length > 0) {
       console.info(errors)
       throw new Error(JSON.stringify(errors))
     }
@@ -58,7 +53,6 @@ describe.runIf(config.postgresUrl)("resolver by postgres", () => {
         userFactory.resolver({ name: "user" }),
         postFactory.resolver({ name: "post" })
       )
-      yoga = createYoga({ schema: gqlSchema })
 
       await db
         .insert(user)
