@@ -6,9 +6,10 @@ const standard = Schema.standardSchemaV1
 
 const Giraffe = standard(
   Schema.Struct({
-    __typename: Schema.optional(Schema.Literal("Giraffe")),
     name: Schema.String.annotations({ description: "The giraffe's name" }),
     birthday: Schema.Date,
+  }).annotations({
+    title: "Giraffe",
   })
 )
 

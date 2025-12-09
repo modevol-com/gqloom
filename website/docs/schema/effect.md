@@ -63,6 +63,20 @@ export const Cat = Schema.Struct({
 
 ### Defining names for objects
 
+#### Using `title`
+
+```ts twoslash
+import { Schema } from "effect"
+
+export const Cat = Schema.Struct({
+  name: Schema.String,
+  age: Schema.Int,
+  loveFish: Schema.NullOr(Schema.Boolean),
+}).annotations({
+  title: "Cat",
+})
+```
+
 #### Using `__typename` literal
 
 ```ts twoslash
@@ -101,21 +115,6 @@ export const { Cat } = collectNames({
     age: Schema.Int,
     loveFish: Schema.NullOr(Schema.Boolean),
   }),
-})
-```
-
-#### Using `asObjectType`
-
-```ts twoslash
-import { Schema } from "effect"
-import { asObjectType } from "@gqloom/effect"
-
-export const Cat = Schema.Struct({
-  name: Schema.String,
-  age: Schema.Int,
-  loveFish: Schema.NullOr(Schema.Boolean),
-}).annotations({
-  [asObjectType]: { name: "Cat" },
 })
 ```
 
@@ -160,7 +159,8 @@ const Node = Schema.Struct({
   __typename: Schema.optional(Schema.Literal("Node")),
   id: Schema.String,
 }).annotations({
-  [asObjectType]: { name: "Node", description: "Node interface" },
+  title: "Node",
+  description: "Node interface",
 })
 
 const User = Schema.Struct({
@@ -168,7 +168,8 @@ const User = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
 }).annotations({
-  [asObjectType]: { name: "User", interfaces: [Node] },
+  title: "User",
+  [asObjectType]: { interfaces: [Node] },
 })
 ```
 
@@ -208,7 +209,8 @@ const Dog = Schema.Struct({
 })
 
 const Animal = Schema.Union(Cat, Dog).annotations({
-  [asUnionType]: { name: "Animal", description: "An animal union type" },
+  title: "Animal",
+  description: "An animal union type",
 })
 ```
 
@@ -226,8 +228,8 @@ export const Role = Schema.Enums({
   Admin: "ADMIN",
   User: "USER",
 }).annotations({
+  title: "Role",
   [asEnumType]: {
-    name: "Role",
     valuesConfig: {
       Admin: { description: "Administrator" },
       User: { description: "Regular user" },
