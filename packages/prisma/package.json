@@ -68,7 +68,7 @@
     "@gqloom/core": "workspace:*",
     "@gqloom/zod": "workspace:*",
     "@prisma/adapter-better-sqlite3": "^6.17.1",
-    "@prisma/client": "^6.17.1",
+    "@prisma/client": "^7.1.0",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.4.1",
     "prisma": "^6.17.1",
