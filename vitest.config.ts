@@ -32,7 +32,7 @@ export const projectConfig = defineProject({
 
 export default defineConfig({
   test: {
-    projects: ["packages/*", projectConfig],
+    projects: ["packages/*", "examples/query-complexity", projectConfig],
     coverage: {
       exclude: [
         ".vercel/",
