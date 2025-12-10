@@ -12,7 +12,7 @@ import * as v from "valibot"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const File = silk(
+const FileScalar = silk(
   new GraphQLNonNull(
     new GraphQLScalarType<File, File>({
       name: "File",
@@ -29,12 +29,14 @@ const helloResolver = resolver({
   upload: mutation(v.string())
     .input({
       fileName: v.nullish(v.string()),
-      file: File,
+      file: FileScalar,
     })
     .resolve(async ({ fileName, file }) => {
       const name = fileName ?? file.name
+      const uploadsDir = path.join(__dirname, "uploads")
+      await fsPromises.mkdir(uploadsDir, { recursive: true })
       await fsPromises.writeFile(
-        path.join(__dirname, "uploads", name),
+        path.join(uploadsDir, name),
         Buffer.from(await file.arrayBuffer())
       )
       return `file uploaded: ${name}`
@@ -46,7 +48,7 @@ const schema = weave(ValibotWeaver, helloResolver)
 // Write schema to file in development
 if (process.env.NODE_ENV !== "production") {
   fs.writeFileSync(
-    path.resolve(__dirname, "../yoga-schema.graphql"),
+    path.resolve(__dirname, "../schema-yoga.graphql"),
     printSchema(schema)
   )
 }

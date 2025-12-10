@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/graphql-upload.ts",
-    "dev:yoga": "tsx watch src/graphql-yoga.ts"
+    "dev:yoga": "tsx watch src/graphql-yoga.ts",
+    "upload": "tsx scripts/upload.ts",
+    "upload:yoga": "tsx scripts/upload-yoga.ts"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +15,9 @@
   "description": "File upload example using graphql-upload and graphql-yoga with GQLoom",
   "devDependencies": {
     "@types/node": "^24.3.0",
+    "fastify": "^5.6.2",
+    "mercurius": "^16.6.0",
+    "mercurius-upload": "^8.0.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
   },

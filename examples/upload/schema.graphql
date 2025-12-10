@@ -1,3 +1,7 @@
+type Query {
+  hello(name: String): String!
+}
+
 type Mutation {
   upload(fileName: String, file: Upload!): String!
 }

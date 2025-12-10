@@ -1,4 +1,4 @@
 *.db
 .env
 *.uploaded
-/uploads
+**/uploads
