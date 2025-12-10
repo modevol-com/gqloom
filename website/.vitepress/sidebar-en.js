@@ -116,6 +116,10 @@ export default [
         text: "Federation",
         link: "/docs/advanced/federation",
       },
+      {
+        text: "Upload",
+        link: "/docs/advanced/upload",
+      },
     ],
   },
 ]

@@ -2,15 +2,11 @@ import * as fs from "node:fs"
 import * as fsPromises from "node:fs/promises"
 import { createServer } from "node:http"
 import * as path from "node:path"
-import { fileURLToPath } from "node:url"
 import { mutation, query, resolver, silk, weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { GraphQLNonNull, GraphQLScalarType, printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
 import * as v from "valibot"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 const FileScalar = silk(
   new GraphQLNonNull(
@@ -33,7 +29,7 @@ const helloResolver = resolver({
     })
     .resolve(async ({ fileName, file }) => {
       const name = fileName ?? file.name
-      const uploadsDir = path.join(__dirname, "uploads")
+      const uploadsDir = path.join(import.meta.dirname, "uploads")
       await fsPromises.mkdir(uploadsDir, { recursive: true })
       await fsPromises.writeFile(
         path.join(uploadsDir, name),
@@ -48,7 +44,7 @@ const schema = weave(ValibotWeaver, helloResolver)
 // Write schema to file in development
 if (process.env.NODE_ENV !== "production") {
   fs.writeFileSync(
-    path.resolve(__dirname, "../schema-yoga.graphql"),
+    path.resolve(import.meta.dirname, "../schema-yoga.graphql"),
     printSchema(schema)
   )
 }

@@ -116,6 +116,10 @@ export default [
         text: "联邦图（Federation）",
         link: "/zh/docs/advanced/federation",
       },
+      {
+        text: "文件上传（Upload）",
+        link: "/zh/docs/advanced/upload",
+      },
     ],
   },
 ]
