@@ -22,6 +22,7 @@ import { createServer } from "node:http"
 import { createWriteStream } from "node:fs"
 import { pipeline } from "node:stream/promises"
 import * as path from "node:path"
+import * as fsPromises from "node:fs/promises"
 import { createYoga } from "graphql-yoga"
 import * as v from "valibot"
 
@@ -85,8 +86,8 @@ const uploadResolver = resolver({
     .resolve(async ({ fileName, file }) => {
       const name = fileName ?? file.name
       const uploadsDir = path.join(import.meta.dirname, "uploads")
-      await fsPromises.mkdir(uploadsDir, { recursive: true })
-      await fsPromises.writeFile(
+      await fs.mkdir(uploadsDir, { recursive: true })
+      await fs.writeFile(
         path.join(uploadsDir, name),
         Buffer.from(await file.arrayBuffer())
       )
