@@ -63,7 +63,7 @@ export const Cat = Schema.Struct({
 
 ### Defining names for objects
 
-#### Using `title`
+The recommended practice is to use the `title` metadata in the built-in `annotations()` of Effect Schema to define a name for the object, for example:
 
 ```ts twoslash
 import { Schema } from "effect"
@@ -77,7 +77,7 @@ export const Cat = Schema.Struct({
 })
 ```
 
-#### Using `__typename` literal
+We can also use the `__typename` literal to set a specific value, which is very useful when using GraphQL `interface` and `union`, for example:
 
 ```ts twoslash
 import { Schema } from "effect"
@@ -90,7 +90,9 @@ export const Cat = Schema.Struct({
 })
 ```
 
-#### Using `collectNames`
+::: details Using `collectNames`
+
+We can use the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
 ```ts twoslash
 import { collectNames } from "@gqloom/core"
@@ -105,6 +107,8 @@ export const Cat = Schema.Struct({
 collectNames({ Cat })
 ```
 
+We can also use the `collectNames` function to define names for objects and deconstruct the returned objects into `Cat` and export them.
+
 ```ts twoslash
 import { collectNames } from "@gqloom/core"
 import { Schema } from "effect"
@@ -117,6 +121,7 @@ export const { Cat } = collectNames({
   }),
 })
 ```
+:::
 
 ### Adding more metadata
 
@@ -128,7 +133,13 @@ import { GraphQLInt } from "graphql"
 export const Cat = Schema.Struct({
   name: Schema.String,
   age: Schema.Int.annotations({
-    [asField]: { type: GraphQLInt, description: "How old is the cat" },
+    [asField]: { // [!code highlight]
+      type: GraphQLInt, // [!code highlight]
+      description: "How old is the cat", // [!code highlight]
+      extensions: { // [!code highlight]
+        complexity: 2, // [!code highlight]
+      }, // [!code highlight]
+    }, // [!code highlight]
   }),
   loveFish: Schema.NullOr(Schema.Boolean),
 }).annotations({

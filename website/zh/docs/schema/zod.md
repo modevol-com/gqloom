@@ -62,13 +62,11 @@ export const Cat = z.object({
 
 ## 名称和更多元数据
 
-<!--@include: ./parts/naming.info.md-->
-
 ### 为对象定义名称
 
-在 `GQLoom` 中，我们有多种方法来为对象定义名称。
+<!--@include: ./parts/naming.info.md-->
 
-#### 使用 `__typename` 字面量
+最推荐的实践是使用 `__typename` 字面量来为对象定义名称，比如：
 
 ```ts twoslash
 import * as z from "zod"
@@ -81,7 +79,7 @@ export const Cat = z.object({
 })
 ```
 
-在上面的代码中，我们使用 `__typename` 字面量来为对象定义名称。我们还将 `__typename` 字面量设置为 `nullish`，这意味着 `__typename` 字段是可选的，如果存在，则必须为 "Cat"。
+也可使用 `__typename` 必填字面量来设置具体的值，这在使用 GraphQL `interface` 和 `union` 时非常有用，比如：
 
 ```ts twoslash
 import * as z from "zod"
@@ -94,9 +92,7 @@ export const Cat = z.object({
 })
 ```
 
-在上面的代码中，我们仍旧使用 `__typename` 字面量来为对象定义名称，但这次我们将 `__typename` 字面量设置为 "Cat"，这意味着 `__typename` 字段是必须的，且必须为 "Cat"，当使用 GraphQL `interface` 和 `union` 时，必填的 `__typename` 将非常有用。
-
-#### 使用 `collectNames`
+::: details 使用 `collectNames`
 
 ```ts twoslash
 import * as z from "zod"
@@ -111,7 +107,7 @@ export const Cat = z.object({
 collectNames({ Cat })
 ```
 
-在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
+我们也可以使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
 
 ```ts twoslash
 import * as z from "zod"
@@ -126,9 +122,11 @@ export const { Cat } = collectNames({
 })
 ```
 
-在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
+:::
 
-#### 使用 `asObjectType`
+::: details 使用 `asObjectType`
+
+我们可以使用 `asObjectType` 函数创建一个元数据并将其传入 `Zod` 管道中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
 
 <Tabs groupId="zod-version">
 <template #zod-v4>
@@ -165,7 +163,7 @@ export const Cat = z
 </template>
 </Tabs>
 
-在上面的代码中，我们使用 `asObjectType` 函数创建一个元数据并将其传入 `superRefine()` 中来为对象定义名称。`asObjectType` 函数接受完整的 GraphQL 对象类型定义，并返回一个元数据。
+:::
 
 ### 添加更多元数据
 
@@ -238,10 +236,13 @@ import * as z from "zod/v4"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.number().register(asField, {
-      type: GraphQLInt,
-      description: "How old is the cat",
-    }),
+    age: z.number().register(asField, { // [!code highlight]
+      type: GraphQLInt, // [!code highlight]
+      description: "How old is the cat", // [!code highlight]
+      extensions: { // [!code highlight]
+        complexity: 2, // [!code highlight]
+      }, // [!code highlight]
+    }), // [!code highlight]
     loveFish: z.boolean().nullish(),
   })
   .register(asObjectType, {
@@ -264,7 +265,13 @@ export const Cat = z
     age: z
       .number()
       .superRefine(
-        asField({ type: GraphQLInt, description: "How old is the cat" })
+        asField({ // [!code highlight]
+          type: GraphQLInt, // [!code highlight]
+          description: "How old is the cat", // [!code highlight]
+          extensions: { // [!code highlight]
+            complexity: 2, // [!code highlight]
+          }, // [!code highlight]
+        }) // [!code highlight]
       ),
     loveFish: z.boolean().nullish(),
   })

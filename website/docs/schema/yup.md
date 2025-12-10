@@ -74,6 +74,8 @@ export const Cat = object({
 
 #### Using `label()`
 
+The recommended practice is to use the built-in `label` method in `yup` to define a name for the object, for example:
+
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
 
@@ -83,9 +85,10 @@ export const Cat = object({
   loveFish: boolean(),
 }).label("Cat")
 ```
-In the above code, we have defined the name for the object using `label` so that the object will have the name `Cat` in the generated GraphQL Schema.
 
-#### Using `collectNames`
+::: details Using `collectNames`
+
+We can use the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -100,7 +103,7 @@ export const Cat = object({
 collectNames({ Cat })
 ```
 
-In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
+We can also use the `collectNames` function to define names for objects and deconstruct the returned objects into `Cat` and export them.
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -114,9 +117,12 @@ export const { Cat } = collectNames({
   }),
 })
 ```
-In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
+:::
 
-#### Using `asObjectType` metadata
+::: details Using `asObjectType` metadata
+
+We can use the `meta` function in Yup Schema to define a name for the object.   
+Here, we define the `asObjectType` metadata and set it to `{ name: "Cat" }` so that in the generated GraphQL Schema, the object will have the name `Cat`.
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -127,10 +133,9 @@ export const Cat = object({
   loveFish: boolean(),
 }).meta({ asObjectType: { name: "Cat" } })
 ```
-In the above code, we have used `meta` function in Yup Schema to define the name for the object.
-Here, we have defined the name `asObjectType` metadata and set it to `{ name: “Cat” }` so that in the generated GraphQL Schema, the object will have the name `Cat`.
+:::
 
-### Add more metadata
+### Adding more metadata
 
 We can use the `meta` function in Yup Schema to add more metadata, such as `description`, `deprecationReason`, `extensions` and so on.
 ```ts twoslash
@@ -170,7 +175,13 @@ import { GraphQLInt } from "graphql"
 export const Cat = object({
   name: string().required(),
   age: number().meta({
-    asField: { type: () => GraphQLInt, description: "How old is the cat" },
+    asField: { // [!code highlight]
+      type: () => GraphQLInt, // [!code highlight]
+      description: "How old is the cat", // [!code highlight]
+      extensions: { // [!code highlight]
+        complexity: 2, // [!code highlight]
+      }, // [!code highlight]
+    }, // [!code highlight]
   }),
   loveFish: boolean(),
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })

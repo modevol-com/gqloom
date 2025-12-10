@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "vitepress dev",
+    "dev": "node --max_old_space_size=8192 ./node_modules/vitepress/bin/vitepress.js dev",
     "build": "vitepress build",
     "preview": "vitepress preview",
     "check:type": "concurrently 'pnpm run check:type:*'",

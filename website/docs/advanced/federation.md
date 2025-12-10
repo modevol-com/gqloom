@@ -116,7 +116,7 @@ export const userResolver = resolver
   .directives({ key: { fields: "id", resolvable: true } })
 ```
 
-### Add Directives to the Schema
+### Adding Directives to the Schema
 
 ```ts
 const schema = FederatedSchemaLoom.weave(

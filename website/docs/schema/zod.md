@@ -60,15 +60,13 @@ export const Cat = z.object({
 })
 ```
 
-## Names and more data
+## Names and more metadata
 
 ### Defining names for objects
 
 <!--@include: ./parts/naming.info.md-->
 
-In `GQLoom` we have multiple ways to define names for objects.
-
-#### Using `__typename` literal
+The recommended practice is to use the `__typename` literal to define a name for the object, for example:
 
 ```ts twoslash
 import * as z from "zod"
@@ -81,7 +79,7 @@ export const Cat = z.object({
 })
 ```
 
-In the code above, we used the `__typename` literal to define the name for the object. We also set the `__typename` literal to `nullish`, which means that the `__typename` field is optional, and if it exists, it must be “Cat”.
+We can also use the required `__typename` literal to set a specific value, which is very useful when using GraphQL `interface` and `union`, for example:
 
 ```ts twoslash
 import * as z from "zod"
@@ -94,9 +92,7 @@ export const Cat = z.object({
 })
 ```
 
-In the code above we are still using the `__typename` literal to define the name for the object, but this time we are setting the `__typename` literal to “Cat”, which means that the `__typename` field is mandatory and must be “Cat”, which will be very useful when using the GraphQL `interface` and `union` The required `__typename` will be very useful when using GraphQL `interface` and `union`.
-
-#### Using `collectNames`
+::: details Using `collectNames`
 
 ```ts twoslash
 import * as z from "zod"
@@ -111,7 +107,7 @@ export const Cat = z.object({
 collectNames({ Cat })
 ```
 
-In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
+We can also use the `collectNames` function to define names for objects and deconstruct the returned objects into `Cat` and export them.
 
 ```ts twoslash
 import * as z from "zod"
@@ -126,9 +122,11 @@ export const { Cat } = collectNames({
 })
 ```
 
-In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
+:::
 
-#### Using `asObjectType`
+::: details Using `asObjectType`
+
+We can use the `asObjectType` function to create metadata and pass it into the `Zod` pipeline to define a name for the object. The `asObjectType` function takes the complete GraphQL object type definition and returns metadata.
 
 <Tabs groupId="zod-version">
 <template #zod-v4>
@@ -165,11 +163,11 @@ export const Cat = z
 </template>
 </Tabs>
 
-In the code above, we used the `asObjectType` function to create a metadata and pass it into `superRefine()` to define a name for the object. The `asObjectType` function takes the complete GraphQL object type definition and returns a metadata.
+:::
 
-### Add more metadata
+### Adding more metadata
 
-With the `asObjectType` register, we can add more data to the object, such as `description`, `deprecationReason`, `extensions` and so on.
+With the `asObjectType` register, we can add more metadata to the object, such as `description`, `deprecationReason`, `extensions` and so on.
 
 <Tabs groupId="zod-version">
 <template #zod-v4>
@@ -238,10 +236,13 @@ import * as z from "zod/v4"
 export const Cat = z
   .object({
     name: z.string(),
-    age: z.number().register(asField, {
-      type: GraphQLInt,
-      description: "How old is the cat",
-    }),
+    age: z.number().register(asField, { // [!code highlight]
+      type: GraphQLInt, // [!code highlight]
+      description: "How old is the cat", // [!code highlight]
+      extensions: { // [!code highlight]
+        complexity: 2, // [!code highlight]
+      }, // [!code highlight]
+    }), // [!code highlight]
     loveFish: z.boolean().nullish(),
   })
   .register(asObjectType, {
@@ -264,7 +265,13 @@ export const Cat = z
     age: z
       .number()
       .superRefine(
-        asField({ type: GraphQLInt, description: "How old is the cat" })
+        asField({ // [!code highlight]
+          type: GraphQLInt, // [!code highlight]
+          description: "How old is the cat", // [!code highlight]
+          extensions: { // [!code highlight]
+            complexity: 2, // [!code highlight]
+          }, // [!code highlight]
+        })
       ),
     loveFish: z.boolean().nullish(),
   })

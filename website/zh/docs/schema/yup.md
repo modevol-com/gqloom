@@ -10,6 +10,17 @@ Yup 模式具有极强的表现力，可对复杂、相互依赖的验证或值�
 
 <!--@include: ../../snippets/install-yup.md-->
 
+另外，我们还需要在项目中为 Yup 声明来自 GQLoom 的元数据：
+
+```ts [yup.d.ts]
+import 'yup'
+import { type GQLoomMetadata } from "@gqloom/yup"
+
+declare module "yup" {
+  export interface CustomSchemaMetadata extends GQLoomMetadata {}
+}
+```
+
 ## 定义简单标量
 
 在 GQLoom 中，可以直接将 Yup Schema 作为[丝线](../silk)使用：
@@ -63,6 +74,8 @@ export const Cat = object({
 
 #### 使用 `label()`
 
+最推荐的实践是使用 `yup` 内置的 `label` 方法来为对象定义名称，比如：
+
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
 
@@ -72,9 +85,10 @@ export const Cat = object({
   loveFish: boolean(),
 }).label("Cat")
 ```
-在上面的代码中，我们使用 `label` 为对象定义了名称，这样在生成的 GraphQL Schema 中，该对象将具有名称 `Cat`。
 
-#### 使用 `collectNames`
+::: details 使用 `collectNames`
+
+我们可以使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -89,7 +103,7 @@ export const Cat = object({
 collectNames({ Cat })
 ```
 
-在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
+我们也可以使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -103,9 +117,12 @@ export const { Cat } = collectNames({
   }),
 })
 ```
-在上面的代码中，我们使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
+:::
 
-#### 使用 `asObjectType` 元数据
+::: details 使用 `asObjectType` 元数据
+
+我们可以在 Yup Schema 中使用 `meta` 函数来为对象定义名称。
+在这里，我们定义了名称为 `asObjectType` 元数据，并将其设置为 `{ name: "Cat" }`，这样在生成的 GraphQL Schema 中，该对象将具有名称 `Cat`。
 
 ```ts twoslash
 import { string, boolean, object, number } from "yup"
@@ -116,8 +133,7 @@ export const Cat = object({
   loveFish: boolean(),
 }).meta({ asObjectType: { name: "Cat" } })
 ```
-在上面的代码中，我们在 Yup Schema 中使用 `meta` 函数来为对象定义名称。
-在这里，我们定义了名称为 `asObjectType` 元数据，并将其设置为 `{ name: "Cat" }`，这样在生成的 GraphQL Schema 中，该对象将具有名称 `Cat`。
+:::
 
 ### 添加更多元数据
 
@@ -159,7 +175,13 @@ import { GraphQLInt } from "graphql"
 export const Cat = object({
   name: string().required(),
   age: number().meta({
-    asField: { type: () => GraphQLInt, description: "How old is the cat" },
+    asField: { // [!code highlight]
+      type: () => GraphQLInt, // [!code highlight]
+      description: "How old is the cat", // [!code highlight]
+      extensions: { // [!code highlight]
+        complexity: 2, // [!code highlight]
+      }, // [!code highlight]
+    }, // [!code highlight]
   }),
   loveFish: boolean(),
 }).meta({ asObjectType: { name: "Cat", description: "A cute cat" } })

@@ -63,7 +63,7 @@ export const Cat = Schema.Struct({
 
 ### 为对象定义名称
 
-#### 使用 `title`
+最推荐的实践是使用 Effect Schema 内置的 `annotations()` 中的 `title` 元数据来为对象定义名称，比如：
 
 ```ts twoslash
 import { Schema } from "effect"
@@ -77,7 +77,7 @@ export const Cat = Schema.Struct({
 })
 ```
 
-#### 使用 `__typename` 字面量
+也可使用 `__typename` 字面量来设置具体的值，这在使用 GraphQL `interface` 和 `union` 时非常有用，比如：
 
 ```ts twoslash
 import { Schema } from "effect"
@@ -90,7 +90,9 @@ export const Cat = Schema.Struct({
 })
 ```
 
-#### 使用 `collectNames`
+::: details 使用 `collectNames`
+
+我们可以使用 `collectNames` 函数来为对象定义名称。`collectNames` 函数接受一个对象，该对象的键是对象的名称，值是对象本身。
 
 ```ts twoslash
 import { collectNames } from "@gqloom/core"
@@ -105,6 +107,8 @@ export const Cat = Schema.Struct({
 collectNames({ Cat })
 ```
 
+我们也可以使用 `collectNames` 函数来为对象定义名称，并将返回的对象解构为 `Cat` 并导出。
+
 ```ts twoslash
 import { collectNames } from "@gqloom/core"
 import { Schema } from "effect"
@@ -117,6 +121,7 @@ export const { Cat } = collectNames({
   }),
 })
 ```
+:::
 
 ### 添加更多元数据
 
@@ -128,7 +133,13 @@ import { GraphQLInt } from "graphql"
 export const Cat = Schema.Struct({
   name: Schema.String,
   age: Schema.Int.annotations({
-    [asField]: { type: GraphQLInt, description: "How old is the cat" },
+    [asField]: { // [!code highlight]
+      type: GraphQLInt, // [!code highlight]
+      description: "How old is the cat", // [!code highlight]
+      extensions: { // [!code highlight]
+        complexity: 2, // [!code highlight]
+      }, // [!code highlight]
+    }, // [!code highlight]
   }),
   loveFish: Schema.NullOr(Schema.Boolean),
 }).annotations({

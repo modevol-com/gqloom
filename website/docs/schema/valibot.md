@@ -42,7 +42,7 @@ export const schema = weave(ValibotWeaver, helloResolver)
 
 ## Defining objects
 
-We can use Valibot to define objects and use them as [silk] (... /silk) to use:
+We can use Valibot to define objects and use them as [silk](../silk):
 
 ```ts twoslash
 import * as v from "valibot"
@@ -61,9 +61,7 @@ export const Cat = v.object({
 
 <!--@include: ./parts/naming.info.md-->
 
-In `GQLoom` we have multiple ways to define names for objects.
-
-#### Using `__typename` literal
+The recommended practice is to use the `__typename` literal to define a name for the object, for example:
 
 ```ts twoslash
 import * as v from "valibot"
@@ -76,7 +74,7 @@ export const Cat = v.object({
 })
 ```
 
-In the code above, we used the `__typename` literal to define the name for the object. We also set the `__typename` literal to `nullish`, which means that the `__typename` field is optional, and if it exists, it must be “Cat”.
+We can also use the required `__typename` literal to set a specific value, which is very useful when using GraphQL `interface` and `union`, for example:
 
 ```ts twoslash
 import * as v from "valibot"
@@ -89,9 +87,9 @@ export const Cat = v.object({
 })
 ```
 
-In the code above, we are still using the `__typename` literal to define the name for the object, but this time we are setting the `__typename` literal to “Cat”, which means that the `__typename` field is required and must be “Cat”. The required `__typename` will be very useful when using GraphQL `interface` and `union`.
+::: details Using `collectNames`
 
-#### Using `collectNames`
+We can use the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
 
 ```ts twoslash
 import * as v from "valibot"
@@ -106,7 +104,7 @@ export const Cat = v.object({
 collectNames({ Cat }) // Collect names for Cat, which will be presented in the GraphQL Schema after weaving.
 ```
 
-In the above code, we are using the `collectNames` function to define names for objects. The `collectNames` function accepts an object whose key is the name of the object and whose value is the object itself.
+We can also use the `collectNames` function to define names for objects and deconstruct the returned objects into `Cat` and export them.
 
 ```ts twoslash
 import * as v from "valibot"
@@ -120,10 +118,11 @@ export const { Cat } = collectNames({
   }),
 })
 ```
+:::
 
-In the code above, we use the `collectNames` function to define the names for the objects and deconstruct the returned objects into `Cat` and export them.
+::: details Using `asObjectType`
 
-#### Using `asObjectType`
+We can use the `asObjectType` function to create metadata and pass it into the `Valibot` pipeline to define a name for the object. The `asObjectType` function takes the complete GraphQL object type definition and returns metadata.
 
 ```ts twoslash
 import * as v from "valibot"
@@ -138,12 +137,11 @@ export const Cat = v.pipe(
   asObjectType({ name: "Cat" })
 )
 ```
+:::
 
-In the code above, we used the `asObjectType` function to create a metadata and pass it into the `Valibot` pipeline to define a name for the object. The `asObjectType` function takes the complete GraphQL object type definition and returns a metadata.
+### Adding more metadata
 
-### Add more data
-
-With the `asObjectType` function, we can add more data to the object, such as `description`, `deprecationReason`, `extensions` and so on.
+With the `asObjectType` function, we can add more metadata to the object, such as `description`, `deprecationReason`, `extensions` and so on.
 
 ```ts twoslash
 import * as v from "valibot"
@@ -155,10 +153,10 @@ export const Cat = v.pipe(
     age: v.pipe(v.number(), v.integer()),
     loveFish: v.nullish(v.boolean()),
   }),
-  asObjectType({
-    name: "Cat",
-    description: "A cute cat",
-  })
+  asObjectType({ // [!code highlight]
+    name: "Cat", // [!code highlight]
+    description: "A cute cat", // [!code highlight]
+  }) // [!code highlight]
 )
 ```
 
@@ -185,7 +183,13 @@ export const Cat = v.pipe(
     name: v.string(),
     age: v.pipe(
       v.number(),
-      asField({ type: GraphQLInt, description: "How old is the cat" })
+      asField({ // [!code highlight]
+        type: GraphQLInt, // [!code highlight]
+        description: "How old is the cat", // [!code highlight]
+        extensions: { // [!code highlight]
+          complexity: 2, // [!code highlight]
+        }, // [!code highlight]
+      }) // [!code highlight]
     ),
     loveFish: v.nullish(v.boolean()),
   }),
