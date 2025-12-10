@@ -61,7 +61,7 @@ deno init # Initialize the project
 
 ## Installation
 
-GQLoom supports multiple runtime types; choose your favorite ORM and validation library!
+GQLoom supports multiple runtime types, choose your favorite ORM and validation library!
 
 <Tabs groupId="favorite-orm-and-validation-library">
 <template #Valibot>
