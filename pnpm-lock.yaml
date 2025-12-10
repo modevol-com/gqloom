@@ -362,6 +362,37 @@ importers:
         specifier: 4.1.5
         version: 4.1.5
 
+  examples/upload:
+    dependencies:
+      '@gqloom/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@gqloom/valibot':
+        specifier: workspace:*
+        version: link:../../packages/valibot
+      graphql:
+        specifier: ^16.12.0
+        version: 16.12.0
+      graphql-upload-minimal:
+        specifier: ^1.0.0
+        version: 1.6.4(graphql@16.12.0)
+      graphql-yoga:
+        specifier: ^5.6.0
+        version: 5.16.2(graphql@16.12.0)
+      valibot:
+        specifier: 1.1.0
+        version: 1.1.0(typescript@5.9.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^24.3.0
+        version: 24.8.1
+      tsx:
+        specifier: ^4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
   packages/core:
     dependencies:
       graphql:
@@ -3082,6 +3113,10 @@ packages:
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
+  busboy@1.6.0:
+    resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
+    engines: {node: '>=10.16.0'}
+
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
@@ -3937,6 +3972,12 @@ packages:
   graphql-tag@2.12.6:
     resolution: {integrity: sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==}
     engines: {node: '>=10'}
+    peerDependencies:
+      graphql: ^16.12.0
+
+  graphql-upload-minimal@1.6.4:
+    resolution: {integrity: sha512-8uSNQp+rGFmh+yuq60wMVfD6b0kHMiMtvYbdcSl2e/ZmlG2cgel+J/UPTgvsWVAUZvtfYCRE8A4r+mVHydCQyQ==}
+    engines: {node: '>=12'}
     peerDependencies:
       graphql: ^16.12.0
 
@@ -5523,6 +5564,10 @@ packages:
 
   stream-shift@1.0.3:
     resolution: {integrity: sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==}
+
+  streamsearch@1.1.0:
+    resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
+    engines: {node: '>=10.0.0'}
 
   string-argv@0.3.2:
     resolution: {integrity: sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==}
@@ -8384,6 +8429,10 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
+  busboy@1.6.0:
+    dependencies:
+      streamsearch: 1.1.0
+
   bytes@3.1.2: {}
 
   c12@3.1.0(magicast@0.3.5):
@@ -9275,6 +9324,11 @@ snapshots:
     dependencies:
       graphql: 16.12.0
       tslib: 2.6.2
+
+  graphql-upload-minimal@1.6.4(graphql@16.12.0):
+    dependencies:
+      busboy: 1.6.0
+      graphql: 16.12.0
 
   graphql-yoga@5.16.2(graphql@16.12.0):
     dependencies:
@@ -11142,6 +11196,8 @@ snapshots:
   std-env@3.9.0: {}
 
   stream-shift@1.0.3: {}
+
+  streamsearch@1.1.0: {}
 
   string-argv@0.3.2: {}
 

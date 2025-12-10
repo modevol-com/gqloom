@@ -1,0 +1,8 @@
+type Mutation {
+  upload(fileName: String, file: Upload!): String!
+}
+
+"""
+The `Upload` scalar type represents a file upload.
+"""
+scalar Upload
