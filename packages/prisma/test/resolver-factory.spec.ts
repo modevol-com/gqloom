@@ -5,7 +5,7 @@ import {
   weave,
 } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
-import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
 import {
   execute as graphqlExecute,
   parse,
@@ -50,7 +50,7 @@ class TestablePrismaModelResolverFactory<
 }
 
 describe("PrismaModelPrismaResolverFactory", () => {
-  const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+  const adapter = new PrismaBetterSqlite3({ url: ":memory:" })
   const db = new PrismaClient({ adapter })
 
   beforeAll(async () => {
@@ -198,7 +198,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
     })
 
     it("should handle many-to-many relations with empty relationFromFields/relationToFields", async () => {
-      const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+      const adapter = new PrismaBetterSqlite3({ url: ":memory:" })
       const db = new PrismaClient({ adapter })
       for (const statement of CREATE_TABLES) {
         await db.$executeRawUnsafe(statement)

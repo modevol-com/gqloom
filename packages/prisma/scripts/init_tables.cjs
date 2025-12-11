@@ -11,7 +11,7 @@ const migrationsDir = path.join(prismaDir, "migrations")
 const devDbPath = path.join(prismaDir, "dev.db")
 
 const sql = execSync(
-  `pnpm exec prisma migrate diff --from-empty --to-schema-datamodel ${schemaPath} --script`,
+  `pnpm exec prisma migrate diff --from-empty --to-schema ${schemaPath} --script`,
   {
     cwd: projectRoot,
     encoding: "utf-8",

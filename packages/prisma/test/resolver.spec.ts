@@ -1,5 +1,5 @@
 import { weave } from "@gqloom/core"
-import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
 import {
   execute as graphqlExecute,
   lexicographicSortSchema,
@@ -22,7 +22,7 @@ import { type Prisma, PrismaClient } from "./client/client"
 import * as p from "./generated"
 
 describe("Resolver", () => {
-  const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+  const adapter = new PrismaBetterSqlite3({ url: ":memory:" })
   const db = new PrismaClient({
     adapter,
     log: [{ emit: "event", level: "query" }],
