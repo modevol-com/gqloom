@@ -289,14 +289,11 @@ importers:
       '@gqloom/mikro-orm':
         specifier: workspace:*
         version: link:../../packages/mikro-orm
-      '@gqloom/valibot':
-        specifier: workspace:*
-        version: link:../../packages/valibot
       '@mikro-orm/core':
         specifier: ^6.6.2
         version: 6.6.2
       '@mikro-orm/libsql':
-        specifier: ^6.6.2
+        specifier: ^6.5.1
         version: 6.6.2(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)
       graphql-yoga:
         specifier: ^5.6.0
@@ -3710,10 +3707,6 @@ packages:
     resolution: {integrity: sha512-P8OtKZRv/5J5hhz0cUAdu/cLuPIKXpQl1R9pZtvmHWQvrAUVd0UNIPT4IB4W3rNOqVO0rlqHmCIbSwxh/c9yUQ==}
     engines: {node: '>=18'}
     hasBin: true
-
-  escalade@3.1.2:
-    resolution: {integrity: sha512-ErCHMCae19vR8vQGe50xIsVomy19rg6gFu3+r3jkEO46suLMWBksvVyoGgQV+jOfl84ZSOSlmv6Gxa89PmTGmA==}
-    engines: {node: '>=6'}
 
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
@@ -9028,8 +9021,6 @@ snapshots:
       '@esbuild/win32-ia32': 0.25.5
       '@esbuild/win32-x64': 0.25.5
 
-  escalade@3.1.2: {}
-
   escalade@3.2.0: {}
 
   escape-html@1.0.3: {}
@@ -9760,7 +9751,7 @@ snapshots:
       colorette: 2.0.19
       commander: 10.0.1
       debug: 4.3.4
-      escalade: 3.1.2
+      escalade: 3.2.0
       esm: 3.2.25
       get-package-type: 0.1.0
       getopts: 2.3.0
