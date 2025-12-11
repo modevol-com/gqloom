@@ -234,6 +234,23 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
+### 混合字段
+
+在定义数据库表时，我们有时会使用 `json`, `enum` 这样的列，同时希望在 TypeScript 和 GraphQL 中都能正确地推导出类型，我们可以借助像 `valibot` 或 `zod` 这样的库来定义这些字段：
+
+<Tabs groupId="schema-library">
+<template #Valibot>
+
+<<< @/snippets/code/drizzle-valibot.ts{ts twoslash}
+
+</template>
+<template #Zod>
+
+<<< @/snippets/code/drizzle-zod.ts{ts twoslash}
+
+</template>
+</Tabs>
+
 ## 解析器工厂
 
 `gqloom/drizzle` 提供了解析器工厂 `DrizzleResolverFactory`，用于从 Drizzle 轻松地生成 CRUD 解析器，同时支持自定参数和添加中间件。

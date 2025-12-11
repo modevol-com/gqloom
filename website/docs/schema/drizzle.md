@@ -234,6 +234,23 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
+### Mixing Fields
+
+Sometimes we use `json`, `enum` columns in database tables, and we want to correctly infer the types in both TypeScript and GraphQL. We can use libraries like `valibot` or `zod` to define these fields:
+
+<Tabs groupId="schema-library">
+<template #Valibot>
+
+<<< @/snippets/code/drizzle-valibot.ts{ts twoslash}
+
+</template>
+<template #Zod>
+
+<<< @/snippets/code/drizzle-zod.ts{ts twoslash}
+
+</template>
+</Tabs>
+
 ## Resolver Factory
 
 `gqloom/drizzle` provides a resolver factory `DrizzleResolverFactory` to easily create CRUD resolvers from Drizzle, and it also supports custom parameters and adding middleware.
