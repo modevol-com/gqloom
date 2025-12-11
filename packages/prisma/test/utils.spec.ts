@@ -1,6 +1,6 @@
 import { field, query, resolver, silk, weave } from "@gqloom/core"
 import { asyncContextProvider } from "@gqloom/core/context"
-import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
 import { execute, GraphQLString, parse } from "graphql"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 import CREATE_TABLES from "../prisma/CREATE_TABLES.json"
@@ -10,7 +10,7 @@ import { PrismaClient } from "./client/client"
 import * as silks from "./generated"
 
 describe("getSelectedFields", () => {
-  const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+  const adapter = new PrismaBetterSqlite3({ url: ":memory:" })
   const db = new PrismaClient({ adapter })
   let selectedFields: Record<string, boolean | undefined>
   beforeAll(async () => {
@@ -58,7 +58,7 @@ describe("getSelectedFields", () => {
 })
 
 describe("useSelectedFields", () => {
-  const adapter = new PrismaBetterSQLite3({ url: ":memory:" })
+  const adapter = new PrismaBetterSqlite3({ url: ":memory:" })
   const db = new PrismaClient({ adapter })
   let selectedFields: Record<string, boolean | undefined>
   const r = resolver.of(silks.User, {
