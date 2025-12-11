@@ -1,3 +1,7 @@
+<script setup>
+import { Tabs } from "@/components/tabs.tsx"
+</script>
+
 # MikroORM
 
 [MikroORM](https://mikro-orm.io/) 是一个适用于 Node.js 的 TypeScript ORM，支持 PostgreSQL、MySQL、MariaDB、SQLite 和 MongoDB 等多种数据库。它基于 Data Mapper、Unit of Work 和 Identity Map 模式，旨在提供一个功能强大且易于使用的数据库工具集。
@@ -353,6 +357,23 @@ export const userResolver = resolver.of(User, {
 ```
 
 在上面的代码中，我们隐藏了 `password` 字段，这意味着它将不会出现在生成的 GraphQL Schema 中。
+
+### 混合字段
+
+在定义数据库实体时，我们有时会使用 `json`, `enum` 这样的字段，同时希望在 TypeScript 和 GraphQL 中都能正确地推导出类型，我们可以借助像 `valibot` 或 `zod` 这样的库来定义这些字段：
+
+<Tabs groupId="schema-library">
+<template #Valibot>
+
+<<< @/snippets/code/mikro-valibot.ts{ts twoslash}
+
+</template>
+<template #Zod>
+
+<<< @/snippets/code/mikro-zod.ts{ts twoslash}
+
+</template>
+</Tabs>
 
 ## 解析器工厂
 

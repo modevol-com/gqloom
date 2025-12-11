@@ -1,3 +1,7 @@
+<script setup>
+import { Tabs } from "@/components/tabs.tsx"
+</script>
+
 # MikroORM
 
 [MikroORM](https://mikro-orm.io/) is a TypeScript ORM for Node.js that supports multiple databases such as PostgreSQL, MySQL, MariaDB, SQLite, and MongoDB. It is based on the Data Mapper, Unit of Work, and Identity Map patterns, aiming to provide a powerful and easy-to-use database toolset.
@@ -353,6 +357,23 @@ export const userResolver = resolver.of(User, {
 ```
 
 In the code above, we hide the `password` field, which means it will not appear in the generated GraphQL Schema.
+
+### Mixing Fields
+
+Sometimes we use `json`, `enum` fields in database entities, and we want to correctly infer the types in both TypeScript and GraphQL. We can use libraries like `valibot` or `zod` to define these fields:
+
+<Tabs groupId="schema-library">
+<template #Valibot>
+
+<<< @/snippets/code/mikro-valibot.ts{ts twoslash}
+
+</template>
+<template #Zod>
+
+<<< @/snippets/code/mikro-zod.ts{ts twoslash}
+
+</template>
+</Tabs>
 
 ## Resolver Factory
 

@@ -289,12 +289,15 @@ importers:
       '@gqloom/mikro-orm':
         specifier: workspace:*
         version: link:../../packages/mikro-orm
+      '@gqloom/valibot':
+        specifier: workspace:*
+        version: link:../../packages/valibot
       '@mikro-orm/core':
         specifier: ^6.6.2
         version: 6.6.2
       '@mikro-orm/libsql':
-        specifier: ^6.5.1
-        version: 6.5.1(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
+        specifier: ^6.6.2
+        version: 6.6.2(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)
       graphql-yoga:
         specifier: ^5.6.0
         version: 5.16.2(graphql@16.12.0)
@@ -1964,8 +1967,30 @@ packages:
       mariadb:
         optional: true
 
+  '@mikro-orm/knex@6.6.2':
+    resolution: {integrity: sha512-Qs1S5q80thBmrbW9sbexZs7Gxle4ASyqNOtJ9CFwR4q9BLvA846Ig5HjXhv3KIPC8KcmRquSMDYSutgLOzK2nQ==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+      better-sqlite3: '*'
+      libsql: '*'
+      mariadb: '*'
+    peerDependenciesMeta:
+      better-sqlite3:
+        optional: true
+      libsql:
+        optional: true
+      mariadb:
+        optional: true
+
   '@mikro-orm/libsql@6.5.1':
     resolution: {integrity: sha512-V8Ld+MBmIItFf/vAUuiayrigKJ3GDOH2kkNlneTf5N2TTmxTXgWxbAbFejAnE+/PR1STnP796NDHCCbQ0rCJNA==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+
+  '@mikro-orm/libsql@6.6.2':
+    resolution: {integrity: sha512-wtGlslrKUPQluCQ/v14FnU4HkFRQFH97drKkriNk474rIlE1WNILbYUVSeSa/3RWUPlPTzUCGhSWzlbi1NcWRA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -7343,12 +7368,48 @@ snapshots:
       - supports-color
       - tedious
 
+  '@mikro-orm/knex@6.6.2(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)(libsql@0.5.22)':
+    dependencies:
+      '@mikro-orm/core': 6.6.2
+      fs-extra: 11.3.2
+      knex: 3.1.0(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
+      sqlstring: 2.3.3
+    optionalDependencies:
+      better-sqlite3: 12.4.1
+      libsql: 0.5.22
+    transitivePeerDependencies:
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
   '@mikro-orm/libsql@6.5.1(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)':
     dependencies:
       '@mikro-orm/core': 6.6.2
       '@mikro-orm/knex': 6.5.1(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)(libsql@0.5.20)(mysql2@3.15.3)(pg@8.13.2)(sqlite3@5.1.7)
       fs-extra: 11.3.1
       libsql: 0.5.20
+      sqlstring-sqlite: 0.1.1
+    transitivePeerDependencies:
+      - better-sqlite3
+      - mariadb
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
+  '@mikro-orm/libsql@6.6.2(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)':
+    dependencies:
+      '@mikro-orm/core': 6.6.2
+      '@mikro-orm/knex': 6.6.2(@mikro-orm/core@6.6.2)(better-sqlite3@12.4.1)(libsql@0.5.22)
+      fs-extra: 11.3.2
+      libsql: 0.5.22
       sqlstring-sqlite: 0.1.1
     transitivePeerDependencies:
       - better-sqlite3
