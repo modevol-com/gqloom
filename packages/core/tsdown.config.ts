@@ -6,6 +6,14 @@ export default defineConfig({
     context: "./src/context/index.ts",
   },
   format: ["esm", "cjs"],
+  outExtensions: ({ format }) => {
+    switch (format) {
+      case "es":
+        return { js: ".js", dts: ".d.ts" }
+      case "cjs":
+        return { js: ".cjs", dts: ".d.cts" }
+    }
+  },
   minify: false,
   dts: {
     resolve: ["@standard-schema/spec"],
