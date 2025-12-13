@@ -75,7 +75,7 @@ const helloResolver = resolver({
 })
 ```
 
-In the code above, we use `z.string()` to define the return type of the `hello` operation, and the `zodSilk` function lets us use the Schema definition of `zod` as a `silk`.
+In the code above, we use `z.string()` to define the return type of the `hello` operation. We can directly use the `zod` Schema definition as a `silk`.
 </template>
 </Tabs>
 
@@ -99,7 +99,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-In the code above, we passed in the `input` property in the second argument of the `query` function to define the input parameter: the `input` property is an object whose key is the name of the input parameter, and whose value is the type definition of the input parameter.
+In the code above, we use the chained `input` method to define the input parameter: the `input` method accepts an object as a parameter, where the object's keys are the names of the input parameters, and the values are the type definitions of the input parameters.
 
 Here, we use `v.nullish(v.string(), “World”)` to define the `name` parameter, which is an optional string with a default value of `“World”`.
 In the `resolve` function, we can get the value of the input parameter by the first parameter, and TypeScript will derive its type for us, in this case, we directly deconstruct to get the value of the `name` parameter.
@@ -122,7 +122,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name}`),
 })
 ```
-In the code above, we passed in the `input` property in the second argument of the `query` function to define the input parameter: the `input` property is an object whose key is the name of the input parameter, and whose value is the type definition of the input parameter.
+In the code above, we use the chained `input` method to define the input parameter: the `input` method accepts an object as a parameter, where the object's keys are the names of the input parameters, and the values are the type definitions of the input parameters.
 
 Here, we use `z.string().nullish()` to define the `name` parameter, which is an optional string with a default value of `“World”`.
 In the `resolve` function, we can get the value of the input parameter by the first parameter, and TypeScript will derive its type for us, in this case, we directly deconstruct to get the value of the `name` parameter.
@@ -396,13 +396,22 @@ const bookMap: Map<number, IBook> = new Map(
   ].map((book) => [book.id, book])
 )
 // ---cut---
-import { resolver, query, field } from '@gqloom/core'
+import { resolver, query, field, mutation } from '@gqloom/core'
 import * as v from "valibot"
 
 const bookResolver = resolver.of(Book, {
   books: query(v.array(Book)).resolve(() => Array.from(bookMap.values())),
 
   author: field(v.nullish(User)).resolve((book) => userMap.get(book.authorID)), // [!code hl]
+
+  addBook: mutation(Book) // [!code hl]
+    .input({ title: v.string(), authorID: v.number() }) // [!code hl]
+    .resolve(({ title, authorID }) => { // [!code hl]
+      const id = bookMap.size > 0 ? Math.max(...Array.from(bookMap.keys())) + 1 : 1 // [!code hl]
+      const book: IBook = { id, title, authorID } // [!code hl]
+      bookMap.set(id, book) // [!code hl]
+      return book // [!code hl]
+    }), // [!code hl]
 })
 ```
 
@@ -441,13 +450,22 @@ const bookMap: Map<number, IBook> = new Map(
   ].map((book) => [book.id, book])
 )
 // ---cut---
-import { resolver, query, field } from '@gqloom/zod'
+import { resolver, query, field, mutation } from '@gqloom/zod'
 import * as z from "zod"
 
 const bookResolver = resolver.of(Book, {
   books: query(z.array(Book)).resolve(() => Array.from(bookMap.values())),
 
   author: field(User.nullish()).resolve((book) => userMap.get(book.authorID)), // [!code hl]
+
+  addBook: mutation(Book) // [!code hl]
+    .input({ title: z.string(), authorID: z.number() }) // [!code hl]
+    .resolve(({ title, authorID }) => { // [!code hl]
+      const id = bookMap.size > 0 ? Math.max(...Array.from(bookMap.keys())) + 1 : 1 // [!code hl]
+      const book: IBook = { id, title, authorID } // [!code hl]
+      bookMap.set(id, book) // [!code hl]
+      return book // [!code hl]
+    }), // [!code hl]
 })
 ```
 
@@ -500,7 +518,7 @@ const bookMap: Map<number, IBook> = new Map(
   ].map((book) => [book.id, book])
 )
 // ---cut---
-import { resolver, query, field } from '@gqloom/core'
+import { resolver, query, field, mutation } from '@gqloom/core'
 import * as v from "valibot"
 
 const bookResolver = resolver.of(Book, {
@@ -512,6 +530,15 @@ const bookResolver = resolver.of(Book, {
     .input({ name: v.string() }) // [!code hl]
     .resolve((book, { name }) => { // [!code hl]
       return `The book ${book.title} is in ${name}'s collection.` // [!code hl]
+    }), // [!code hl]
+
+  addBook: mutation(Book) // [!code hl]
+    .input({ title: v.string(), authorID: v.number() }) // [!code hl]
+    .resolve(({ title, authorID }) => { // [!code hl]
+      const id = bookMap.size > 0 ? Math.max(...Array.from(bookMap.keys())) + 1 : 1 // [!code hl]
+      const book: IBook = { id, title, authorID } // [!code hl]
+      bookMap.set(id, book) // [!code hl]
+      return book // [!code hl]
     }), // [!code hl]
 })
 ```
@@ -551,7 +578,7 @@ const bookMap: Map<number, IBook> = new Map(
   ].map((book) => [book.id, book])
 )
 // ---cut---
-import { resolver, query, field } from '@gqloom/zod'
+import { resolver, query, field, mutation } from '@gqloom/zod'
 import * as z from "zod"
 
 const bookResolver = resolver.of(Book, {
@@ -563,6 +590,15 @@ const bookResolver = resolver.of(Book, {
     .input({ name: z.string() }) // [!code hl]
     .resolve((book, { name }) => { // [!code hl]
       return `The book ${book.title} is in ${name}'s collection.` // [!code hl]
+    }), // [!code hl]
+
+  addBook: mutation(Book) // [!code hl]
+    .input({ title: z.string(), authorID: z.number() }) // [!code hl]
+    .resolve(({ title, authorID }) => { // [!code hl]
+      const id = bookMap.size > 0 ? Math.max(...Array.from(bookMap.keys())) + 1 : 1 // [!code hl]
+      const book: IBook = { id, title, authorID } // [!code hl]
+      bookMap.set(id, book) // [!code hl]
+      return book // [!code hl]
     }), // [!code hl]
 })
 ```
@@ -618,6 +654,10 @@ type User {
 
 type Query {
   books: [Book!]!
+}
+
+type Mutation {
+  addBook(title: String!, authorID: ID!): Book!
 }
 ```
 
