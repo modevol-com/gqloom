@@ -77,11 +77,12 @@ Fortunately, we have Schema libraries like [Valibot](https://valibot.dev/) and [
 - [Zod](./schema/zod.md)
 - [JSON Schema](./schema/json.md)
 - [Yup](./schema/yup.md)
+- [Effect Schema](./schema/effect.md)
 - [Mikro ORM](./schema/mikro-orm.md)
 - [Drizzle](./schema/drizzle.md)
 - [Prisma](./schema/prisma.md)
 
-Additionally, there are some libraries that can be used as silk through JSON Schema, such as [TypeBox](https://sinclairzx81.github.io/typebox/), [ArkType](https://arktype.io/), [Effect Schema](https://effect.website/docs/schema/introduction/), etc.
+Additionally, there are some libraries that can be used as silk through JSON Schema, such as [TypeBox](https://sinclairzx81.github.io/typebox/), [ArkType](https://arktype.io/) etc.
 
 <Tabs groupId="schema-library">
 <template #Valibot>
@@ -280,33 +281,21 @@ const StringSilk = Schema.standardSchemaV1(Schema.String)
 const BooleanSilk = Schema.standardSchemaV1(Schema.Boolean)
 
 const Cat = Schema.standardSchemaV1(Schema.Struct({
-  __typename: Schema.NullishOr(Schema.Literal("Cat")),
   name: Schema.String,
-  age: Schema.Number,
-}))
+  age: Schema.Int,
+}).annotations({ title: "Cat" }))
 ```
 
-We need to use `@gqloom/json` to create a custom `effectSchemaWeaver` to use Effect Schema as silk:
+We can directly use Effect Schema as silk, but don't forget to add `EffectWeaver` from `@gqloom/effect` when [weaving](./weave.md):
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"
 const resolvers: Loom.Resolver[] = []
 // ---cut---
-import { type SchemaWeaver, weave } from "@gqloom/core"
-import { type JSONSchema, JSONWeaver } from "@gqloom/json"
-import { type Schema } from "effect"
-import { make } from "effect/JSONSchema"
+import { weave } from "@gqloom/core"
+import { EffectWeaver } from "@gqloom/effect"
 
-const effectSchemaWeaver: SchemaWeaver = {
-  vendor: "effect",
-  getGraphQLType: (type: Schema.Schema<any, any, any>) => {
-    return JSONWeaver.getGraphQLType(make(type), {
-      source: type,
-    })
-  },
-}
-
-export const schema = weave(effectSchemaWeaver, ...resolvers)
+export const schema = weave(EffectWeaver, ...resolvers)
 ```
 </template>
 </Tabs>

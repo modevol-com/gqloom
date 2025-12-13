@@ -77,11 +77,12 @@ type Cat {
 - [Zod](./schema/zod.md)
 - [JSON Schema](./schema/json.md)
 - [Yup](./schema/yup.md)
+- [Effect Schema](./schema/effect.md)
 - [Mikro ORM](./schema/mikro-orm.md)
 - [Drizzle](./schema/drizzle.md)
 - [Prisma](./schema/prisma.md)
 
-另外，还有一些库可借由 JSON Schema 作为丝线，如 [TypeBox](https://sinclairzx81.github.io/typebox/)、[ArkType](https://arktype.io/)、[Effect Schema](https://effect.website/docs/schema/introduction/) 等。
+另外，还有一些库可借由 JSON Schema 作为丝线，如 [TypeBox](https://sinclairzx81.github.io/typebox/)、[ArkType](https://arktype.io/) 等。
 
 <Tabs groupId="schema-library">
 <template #Valibot>
@@ -280,33 +281,21 @@ const StringSilk = Schema.standardSchemaV1(Schema.String)
 const BooleanSilk = Schema.standardSchemaV1(Schema.Boolean)
 
 const Cat = Schema.standardSchemaV1(Schema.Struct({
-  __typename: Schema.NullishOr(Schema.Literal("Cat")),
   name: Schema.String,
-  age: Schema.Number,
-}))
+  age: Schema.Int,
+}).annotations({ title: "Cat" }))
 ```
 
-我们需要借助 `@gqloom/json` 自定义一个 `arkTypeWeaver` 来将 ArkType 的 Schema 作为丝线使用：
+我们可以直接将 Effect Schema 作为丝线使用，但不要忘记在[编织](./weave.md)时添加来自 `@gqloom/effect` 的 `EffectWeaver`。
 
 ```ts twoslash
 import { type Loom } from "@gqloom/core"
 const resolvers: Loom.Resolver[] = []
 // ---cut---
-import { type SchemaWeaver, weave } from "@gqloom/core"
-import { type JSONSchema, JSONWeaver } from "@gqloom/json"
-import { type Schema } from "effect"
-import { make } from "effect/JSONSchema"
+import { weave } from "@gqloom/core"
+import { EffectWeaver } from "@gqloom/effect"
 
-const effectSchemaWeaver: SchemaWeaver = {
-  vendor: "effect",
-  getGraphQLType: (type: Schema.Schema<any, any, any>) => {
-    return JSONWeaver.getGraphQLType(make(type), {
-      source: type,
-    })
-  },
-}
-
-export const schema = weave(effectSchemaWeaver, ...resolvers)
+export const schema = weave(EffectWeaver, ...resolvers)
 ```
 </template>
 </Tabs>
