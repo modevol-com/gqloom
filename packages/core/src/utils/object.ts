@@ -44,6 +44,7 @@ export function toObjMap<T>(
   return map
 }
 
+/** @deprecated use `x != null` instead */
 export function notNullish<T>(x: T | undefined | null): x is T {
   return x != null
 }

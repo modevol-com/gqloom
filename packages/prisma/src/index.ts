@@ -1,10 +1,4 @@
-import {
-  type GraphQLSilk,
-  notNullish,
-  SYMBOLS,
-  silk,
-  weaverContext,
-} from "@gqloom/core"
+import { type GraphQLSilk, SYMBOLS, silk, weaverContext } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import {
   GraphQLBoolean,
@@ -96,7 +90,7 @@ export class PrismaWeaver {
                       ])
                     : null
                 })
-                .filter(notNullish)
+                .filter((x) => x != null)
             ),
         })
       )
