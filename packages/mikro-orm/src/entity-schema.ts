@@ -3,7 +3,6 @@ import {
   type GraphQLSilk,
   getGraphQLType,
   mapValue,
-  notNullish,
   provideWeaverContext,
   type StandardSchemaV1,
   type WeaverContext,
@@ -88,7 +87,7 @@ export class EntitySchemaWeaver {
           },
           ...(Array.isArray(options?.hooks?.onInit)
             ? options.hooks.onInit
-            : [options?.hooks?.onInit].filter(notNullish)),
+            : [options?.hooks?.onInit].filter((x) => x != null)),
         ],
       },
     })

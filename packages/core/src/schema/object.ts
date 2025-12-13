@@ -1,8 +1,5 @@
 import {
-  assertName,
-  type GraphQLArgument,
   type GraphQLFieldConfig,
-  type GraphQLFieldConfigArgumentMap,
   type GraphQLFieldMap,
   GraphQLList,
   GraphQLNonNull,
@@ -17,8 +14,6 @@ import {
   isObjectType,
   isScalarType,
   isUnionType,
-  resolveObjMapThunk,
-  type ThunkObjMap,
 } from "graphql"
 import {
   createInputParser,
@@ -30,9 +25,8 @@ import {
   applyMiddlewares,
   deepMerge,
   filterMiddlewares,
-  mapValue,
   pascalCase,
-  toObjMap,
+  toFieldMap,
 } from "../utils"
 import { AUTO_ALIASING } from "../utils/constants"
 import { inputToArgs } from "./input"
@@ -130,7 +124,7 @@ export class LoomObjectType extends GraphQLObjectType {
     const fieldsBySuper = super.getFields()
     this.collectedFieldNames()
     const extraFields = provideWeaverContext(
-      () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
+      () => toFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
     )
 
@@ -336,43 +330,6 @@ function extract(field: Loom.BaseField): Partial<GraphQLFieldConfig<any, any>> {
     deprecationReason,
     extensions,
   }
-}
-
-// https://github.com/graphql/graphql-js/blob/main/src/type/definition.ts#L774
-function defineFieldMap(
-  fields: ThunkObjMap<GraphQLFieldConfig<any, any>>
-): GraphQLFieldMap<any, any> {
-  const fieldMap = resolveObjMapThunk(fields)
-
-  return mapValue(fieldMap, (fieldConfig, fieldName) => {
-    const argsConfig = fieldConfig.args ?? {}
-    return {
-      name: assertName(fieldName),
-      description: fieldConfig.description,
-      type: fieldConfig.type,
-      args: defineArguments(argsConfig),
-      resolve: fieldConfig.resolve,
-      subscribe: fieldConfig.subscribe,
-      deprecationReason: fieldConfig.deprecationReason,
-      extensions: toObjMap(fieldConfig.extensions),
-      astNode: fieldConfig.astNode,
-    }
-  })
-}
-
-// https://github.com/graphql/graphql-js/blob/main/src/type/definition.ts#L795
-function defineArguments(
-  args: GraphQLFieldConfigArgumentMap
-): ReadonlyArray<GraphQLArgument> {
-  return Object.entries(args).map(([argName, argConfig]) => ({
-    name: assertName(argName),
-    description: argConfig.description,
-    type: argConfig.type,
-    defaultValue: argConfig.defaultValue,
-    deprecationReason: argConfig.deprecationReason,
-    extensions: toObjMap(argConfig.extensions),
-    astNode: argConfig.astNode,
-  }))
 }
 
 export const OPERATION_OBJECT_NAMES = new Set([
