@@ -62,10 +62,10 @@ importers:
         version: 0.2.2(graphql@16.12.0)
       '@hono/graphql-server':
         specifier: ^0.5.1
-        version: 0.5.1(hono@4.10.7)
+        version: 0.5.1(hono@4.11.1)
       '@hono/node-server':
         specifier: ^1.19.1
-        version: 1.19.6(hono@4.10.7)
+        version: 1.19.6(hono@4.11.1)
       fastify:
         specifier: ^5.6.2
         version: 5.6.2
@@ -76,8 +76,8 @@ importers:
         specifier: ^5.6.0
         version: 5.16.2(graphql@16.12.0)
       hono:
-        specifier: ^4.9.8
-        version: 4.10.7
+        specifier: ^4.11.1
+        version: 4.11.1
       mercurius:
         specifier: ^16.6.0
         version: 16.6.0(graphql@16.12.0)
@@ -4196,8 +4196,8 @@ packages:
     resolution: {integrity: sha512-BIdolzGpDO9MQ4nu3AUuDwHZZ+KViNm+EZ75Ae55eMXMqLVhDFqEMXxtUe9Qh8hjL+pIna/frs2j6Y2yD5Ua/g==}
     engines: {node: '>=16.9.0'}
 
-  hono@4.10.7:
-    resolution: {integrity: sha512-icXIITfw/07Q88nLSkB9aiUrd8rYzSweK681Kjo/TSggaGbOX4RRyxxm71v+3PC8C/j+4rlxGeoTRxQDkaJkUw==}
+  hono@4.11.1:
+    resolution: {integrity: sha512-KsFcH0xxHes0J4zaQgWbYwmz3UPOOskdqZmItstUG93+Wk1ePBLkLGwbP9zlmh1BFUiL8Qp+Xfu9P7feJWpGNg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -7431,18 +7431,18 @@ snapshots:
       '@repeaterjs/repeater': 3.0.6
       tslib: 2.8.1
 
-  '@hono/graphql-server@0.5.1(hono@4.10.7)':
+  '@hono/graphql-server@0.5.1(hono@4.11.1)':
     dependencies:
       graphql: 16.12.0
-      hono: 4.10.7
+      hono: 4.11.1
 
   '@hono/node-server@1.19.6(hono@4.10.6)':
     dependencies:
       hono: 4.10.6
 
-  '@hono/node-server@1.19.6(hono@4.10.7)':
+  '@hono/node-server@1.19.6(hono@4.11.1)':
     dependencies:
-      hono: 4.10.7
+      hono: 4.11.1
 
   '@iconify-json/simple-icons@1.2.61':
     dependencies:
@@ -9804,7 +9804,7 @@ snapshots:
 
   hono@4.10.6: {}
 
-  hono@4.10.7: {}
+  hono@4.11.1: {}
 
   hookable@5.5.3: {}
 
