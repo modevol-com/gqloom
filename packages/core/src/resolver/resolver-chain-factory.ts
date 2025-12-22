@@ -78,7 +78,7 @@ export interface IChainFactory<
  */
 export interface ChainFactoryOptions extends Loom.FieldMeta {
   /** Middleware functions to be applied to the field */
-  middlewares?: Middleware[]
+  middlewares?: Middleware[] | undefined
 }
 
 /**
