@@ -480,4 +480,19 @@ describe("valibot resolver", () => {
       `)
     })
   })
+
+  describe("input type validation", () => {
+    it("should throw error when using raw schema as input", () => {
+      const testResolver = resolver({
+        string: query(v.string())
+          // @ts-expect-error - Type system should reject raw scalar schema as input
+          .input(v.pipe(v.number(), v.integer()))
+          .resolve(() => "Hello, World!"),
+      })
+
+      expect(() => weave(ValibotWeaver, testResolver)).toThrow(
+        /Cannot convert .* to input type/
+      )
+    })
+  })
 })
