@@ -42,7 +42,7 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "ajv": "^8.17.1",
-    "arktype": "^2.1.22",
+    "arktype": "^2.1.29",
     "effect": "^3.19.9",
     "typebox": "^1.0.4"
   },
