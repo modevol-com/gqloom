@@ -33,7 +33,7 @@
     "@shikijs/vitepress-twoslash": "^3.19.0",
     "@vitejs/plugin-vue-jsx": "^5.1.2",
     "ajv": "^8.17.1",
-    "arktype": "^2.1.22",
+    "arktype": "^2.1.29",
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.5",
     "drizzle-orm": "^0.44.7",
