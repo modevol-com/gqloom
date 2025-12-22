@@ -530,4 +530,106 @@ describe("alias", () => {
       "scalar Scalar1"
     `)
   })
+
+  it("should auto assign alias for nested objects", () => {
+    const SubDemoType = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        bar: { type: GraphQLString },
+      },
+    })
+
+    const DemoType = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: {
+        foo: { type: GraphQLInt },
+        sub: { type: SubDemoType },
+      },
+    })
+
+    const Demo = silk(DemoType)
+
+    const testResolver = resolver.of(Demo, {
+      demo: query(Demo).resolve(() => ({
+        foo: 42,
+        sub: {
+          bar: "Hello, World!",
+        },
+      })),
+    })
+
+    const schema = weave(testResolver)
+    const schemaString = printSchema(schema)
+    expect(schemaString).toMatchInlineSnapshot(`
+      "type Demo {
+        foo: Int
+        sub: DemoSub
+      }
+
+      type DemoSub {
+        bar: String
+      }
+
+      type Query {
+        demo: Demo
+      }"
+    `)
+  })
+
+  it("should auto assign alias for circular references", () => {
+    interface IFoo {
+      bar?: IBar
+    }
+    interface IBar {
+      foo?: IFoo
+    }
+    const Foo: GraphQLObjectType<IFoo> = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: () => ({
+        bar: { type: Bar },
+      }),
+    })
+    const Bar: GraphQLObjectType<IBar> = new GraphQLObjectType({
+      name: AUTO_ALIASING,
+      fields: () => ({
+        foo: { type: Foo },
+      }),
+    })
+
+    const r1 = resolver({
+      foo: query(silk(Foo)).resolve(() => ({})),
+    })
+
+    const r2 = resolver({
+      bar: query(silk(Bar)).resolve(() => ({})),
+    })
+
+    expect(printSchema(weave(r1))).toMatchInlineSnapshot(`
+      "type Query {
+        foo: Foo
+      }
+
+      type Foo {
+        bar: FooBar
+      }
+
+      type FooBar {
+        foo: Foo
+      }"
+    `)
+
+    expect(printSchema(weave(r2))).toMatchInlineSnapshot(`
+      "type Query {
+        bar: Bar
+      }
+
+      type Bar {
+        foo: BarFoo
+      }
+
+      type BarFoo {
+        bar: Bar
+      }"
+    `)
+  })
 })

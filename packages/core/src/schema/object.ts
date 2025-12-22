@@ -2,6 +2,7 @@ import {
   type GraphQLFieldConfig,
   type GraphQLFieldMap,
   GraphQLList,
+  type GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
   type GraphQLObjectTypeConfig,
@@ -172,9 +173,7 @@ export class LoomObjectType extends GraphQLObjectType {
     return {
       ...extract(field),
       type: outputType,
-      args: inputToArgs(field["~meta"].input, {
-        fieldName: parentName(this.name) + fieldName,
-      }),
+      args: inputToArgs(field["~meta"].input, { fieldName }),
       resolve,
       ...(subscribe ? { subscribe } : {}),
     }
@@ -349,22 +348,21 @@ export function getCacheType(
 ): GraphQLOutputType {
   const context = options.weaverContext ?? weaverContext
 
-  const getAlias = () => {
-    if (!options.fieldName || !options.parent) return
-    return parentName(options.parent.name) + pascalCase(options.fieldName)
-  }
-
   if (gqlType instanceof LoomObjectType) return gqlType
+  const parent = excludeOperationObject(options.parent)
+  const fieldName = options.fieldName
+    ? pascalCase(options.fieldName)
+    : undefined
   if (isObjectType(gqlType)) {
     const gqlObject = context.loomObjectMap?.get(gqlType)
     if (gqlObject != null) {
-      context.setAlias(gqlObject, getAlias())
+      context.setAlias(gqlObject, fieldName, parent)
       return gqlObject
     }
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
-    context.setAlias(loomObject, getAlias())
+    context.setAlias(loomObject, fieldName, parent)
     return loomObject
   } else if (isListType(gqlType)) {
     return new GraphQLList(getCacheType(gqlType.ofType, options))
@@ -373,7 +371,7 @@ export function getCacheType(
   } else if (isUnionType(gqlType)) {
     const existing = context.loomUnionMap?.get(gqlType)
     if (existing != null) {
-      context.setAlias(existing, getAlias())
+      context.setAlias(existing, fieldName, parent)
       return existing
     }
     const config = gqlType.toConfig()
@@ -390,20 +388,23 @@ export function getCacheType(
       ),
     })
     context.loomUnionMap?.set(gqlType, unionType)
-    context.setAlias(unionType, getAlias())
+    context.setAlias(unionType, fieldName, parent)
     return unionType
   } else if (
     isEnumType(gqlType) ||
     isInterfaceType(gqlType) ||
     isScalarType(gqlType)
   ) {
-    context.setAlias(gqlType, getAlias())
+    context.setAlias(gqlType, fieldName, parent)
     return gqlType
   }
   return gqlType
 }
 
-function parentName(name: string): string {
-  if (OPERATION_OBJECT_NAMES.has(name)) name = ""
-  return name
+function excludeOperationObject(
+  object: GraphQLNamedType | undefined
+): GraphQLNamedType | undefined {
+  if (object == null) return undefined
+  if (OPERATION_OBJECT_NAMES.has(object.name)) return undefined
+  return object
 }
