@@ -13,7 +13,7 @@ import type { $ZodObject, $ZodType } from "zod/v4/core"
 export interface LooseZodObject extends Pick<$ZodObject, "~standard"> {
   _zod: Omit<
     $ZodObject<any, any>["_zod"],
-    "def" | "parent" | "parse" | "run" | "toJSONSchema"
+    "def" | "parent" | "parse" | "run" | "toJSONSchema" | "processJSONSchema"
   >
 }
 
