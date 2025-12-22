@@ -99,9 +99,13 @@ export class WeaverContext {
   protected aliasCounters: Partial<
     Record<keyof typeof WeaverContext.namedTypes, number>
   > = {}
-  protected aliasMap = new WeakMap<GraphQLNamedType, Set<string>>()
+  protected aliasMap = new WeakMap<GraphQLNamedType, AliasList>()
 
-  public setAlias(namedType: GraphQLNamedType, alias: string | undefined) {
+  public setAlias(
+    namedType: GraphQLNamedType,
+    fieldName: string | undefined,
+    parent?: GraphQLNamedType
+  ) {
     if (namedType.name === AUTO_ALIASING) {
       WeaverContext.autoAliasTypes.add(namedType)
     }
@@ -109,7 +113,9 @@ export class WeaverContext {
     if (!WeaverContext.autoAliasTypes.has(namedType)) return namedType.name
 
     const aliases = this.ensureAliasStore(namedType)
-    if (alias) aliases.add(alias)
+    if (fieldName) {
+      parent ? aliases.push([fieldName, parent]) : aliases.push(fieldName)
+    }
 
     return this.pickAlias(namedType, aliases)
   }
@@ -139,13 +145,13 @@ export class WeaverContext {
     const existing = this.aliasMap.get(namedType)
     if (existing) return existing
 
-    const aliases = new Set<string>()
+    const aliases: AliasList = []
     this.aliasMap.set(namedType, aliases)
 
     Object.defineProperty(namedType, "name", {
       get: () => this.pickAlias(namedType, aliases),
       set: (value: string) => {
-        aliases.add(value)
+        aliases.push(value)
       },
       enumerable: true,
       configurable: true,
@@ -154,21 +160,30 @@ export class WeaverContext {
     return aliases
   }
 
-  protected pickAlias(
-    namedType: GraphQLNamedType,
-    aliases: Set<string>
-  ): string {
+  protected pickAlias(namedType: GraphQLNamedType, aliases: AliasList): string {
     const best = this.reduceAliases(aliases)
     if (best && best !== AUTO_ALIASING) return best
 
     const fallback = this.createFallbackAlias(namedType)
-    aliases.add(fallback)
+    aliases.push(fallback)
     return this.reduceAliases(aliases) ?? fallback
   }
 
-  protected reduceAliases(aliases: Iterable<string>) {
+  protected reduceAliases(aliases: AliasList): string | undefined {
+    const stringAliases = aliases.filter((alias) => typeof alias === "string")
+    const tupleAliases = aliases.filter((alias) => Array.isArray(alias))
     let best: string | undefined
-    for (const alias of aliases) {
+    for (const alias of stringAliases) {
+      if (
+        best === undefined ||
+        WeaverContext.higherPriorityThan(alias, best) < 0
+      ) {
+        best = alias
+      }
+    }
+    if (typeof best === "string") return best
+    for (const [fieldName, parent] of tupleAliases) {
+      const alias = parent.name + fieldName
       if (
         best === undefined ||
         WeaverContext.higherPriorityThan(alias, best) < 0
@@ -214,6 +229,11 @@ export class WeaverContext {
     }
   }
 }
+
+export type AliasList = (
+  | string
+  | [fieldName: string, parent: GraphQLNamedType]
+)[]
 
 export const initWeaverContext = (): WeaverContext => new WeaverContext()
 
