@@ -135,7 +135,7 @@ importers:
         version: 0.11.0(@gqloom/core@0.14.2(graphql@16.12.0))(drizzle-orm@0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/zod':
         specifier: latest
-        version: 0.13.0(@gqloom/core@0.14.2(graphql@16.12.0))(graphql@16.12.0)(zod@4.1.5)
+        version: 0.13.0(@gqloom/core@0.14.2(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -152,8 +152,8 @@ importers:
         specifier: ^5.6.0
         version: 5.16.2(graphql@16.12.0)
       zod:
-        specifier: 4.1.5
-        version: 4.1.5
+        specifier: 4.2.1
+        version: 4.2.1
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
@@ -278,8 +278,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
       zod:
-        specifier: 4.1.5
-        version: 4.1.5
+        specifier: 4.2.1
+        version: 4.2.1
 
   examples/mikro-orm:
     dependencies:
@@ -370,8 +370,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
       zod:
-        specifier: 4.1.5
-        version: 4.1.5
+        specifier: 4.2.1
+        version: 4.2.1
 
   examples/subscriptions:
     dependencies:
@@ -394,8 +394,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
       zod:
-        specifier: 4.1.5
-        version: 4.1.5
+        specifier: 4.2.1
+        version: 4.2.1
 
   examples/upload:
     dependencies:
@@ -615,8 +615,8 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0(@types/react@19.2.7)(better-sqlite3@12.4.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)
       zod:
-        specifier: 4.1.5
-        version: 4.1.5
+        specifier: 4.2.1
+        version: 4.2.1
 
   packages/valibot:
     dependencies:
@@ -654,8 +654,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       zod:
-        specifier: 4.1.5
-        version: 4.1.5
+        specifier: 4.2.1
+        version: 4.2.1
 
   website:
     dependencies:
@@ -784,8 +784,8 @@ importers:
         specifier: ^1.7.1
         version: 1.7.1
       zod:
-        specifier: 4.1.5
-        version: 4.1.5
+        specifier: 4.2.1
+        version: 4.2.1
 
 packages:
 
@@ -6381,8 +6381,8 @@ packages:
   zeptomatch@2.0.2:
     resolution: {integrity: sha512-H33jtSKf8Ijtb5BW6wua3G5DhnFjbFML36eFu+VdOoVY4HD9e7ggjqdM6639B+L87rjnR6Y+XeRzBXZdy52B/g==}
 
-  zod@4.1.5:
-    resolution: {integrity: sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg==}
+  zod@4.2.1:
+    resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -7299,11 +7299,11 @@ snapshots:
       graphql: 16.12.0
       valibot: 1.1.0(typescript@5.9.3)
 
-  '@gqloom/zod@0.13.0(@gqloom/core@0.14.2(graphql@16.12.0))(graphql@16.12.0)(zod@4.1.5)':
+  '@gqloom/zod@0.13.0(@gqloom/core@0.14.2(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)':
     dependencies:
       '@gqloom/core': 0.14.2(graphql@16.12.0)
       graphql: 16.12.0
-      zod: 4.1.5
+      zod: 4.2.1
 
   '@graphql-tools/executor@1.4.11(graphql@16.12.0)':
     dependencies:
@@ -12203,6 +12203,6 @@ snapshots:
     dependencies:
       grammex: 3.1.12
 
-  zod@4.1.5: {}
+  zod@4.2.1: {}
 
   zwitch@2.0.4: {}

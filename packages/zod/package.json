@@ -52,7 +52,7 @@
   ],
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "zod": "4.1.5"
+    "zod": "4.2.1"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
