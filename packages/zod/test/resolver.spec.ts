@@ -418,4 +418,19 @@ describe("zod resolver", () => {
       `)
     })
   })
+
+  describe("input type validation", () => {
+    it("should throw error when using raw schema as input", () => {
+      const testResolver = resolver({
+        string: query(z.string())
+          // @ts-expect-error - Type system should reject raw scalar schema as input
+          .input(z.int())
+          .resolve(() => "Hello, World!"),
+      })
+
+      expect(() => weave(ZodWeaver, testResolver)).toThrow(
+        /Cannot convert .* to input type/
+      )
+    })
+  })
 })

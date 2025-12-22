@@ -386,4 +386,19 @@ describe("yup resolver", () => {
       `)
     })
   })
+
+  describe("input type validation", () => {
+    it("should throw error when using raw schema as input", () => {
+      const testResolver = resolver({
+        string: query(string())
+          // @ts-expect-error - Type system should reject raw scalar schema as input
+          .input(number().integer())
+          .resolve(() => "Hello, World!"),
+      })
+
+      expect(() => weave(YupWeaver, testResolver)).toThrow(
+        /Cannot convert .* to input type/
+      )
+    })
+  })
 })
