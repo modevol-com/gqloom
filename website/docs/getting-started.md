@@ -12,13 +12,13 @@ You only need a JavaScript/TypeScript runtime, such as Node.js, Bun, Deno, or Cl
 
 ## Initialize the project
 
-:::: tip Tip
+::: tip Tip
 If you already have a project, you can skip this step and jump straight to [Installation](#installation).
-::::
+:::
 
 First, create a new folder and initialize the project:
 
-:::: code-group
+::: code-group
 ```sh [npm]
 mkdir gqloom-app # Create a new folder
 cd ./gqloom-app # Enter the folder
@@ -57,7 +57,7 @@ mkdir gqloom-app # Create a new folder
 cd ./gqloom-app # Enter the folder
 deno init # Initialize the project
 ```
-::::
+:::
 
 ## Installation
 
@@ -106,7 +106,7 @@ GQLoom supports multiple runtime types, choose your favorite ORM and validation 
 </template>
 <template #graphql.js>
 
-:::: code-group
+::: code-group
 ```sh [npm]
 npm i graphql @gqloom/core
 ```
@@ -122,7 +122,7 @@ bun add graphql @gqloom/core
 ```sh [deno]
 deno add npm:graphql npm:@gqloom/core
 ```
-::::
+:::
 
 </template>
 <template #TypeBox>
@@ -132,7 +132,7 @@ deno add npm:graphql npm:@gqloom/core
 </template>
 <template #ArkType>
 
-:::: code-group
+::: code-group
 ```sh [npm]
 npm i graphql @gqloom/core arktype @gqloom/json
 ```
@@ -148,7 +148,7 @@ bun add graphql @gqloom/core arktype @gqloom/json
 ```sh [deno]
 deno add npm:graphql npm:@gqloom/core npm:arktype npm:@gqloom/json
 ```
-::::
+:::
 
 </template>
 </Tabs>

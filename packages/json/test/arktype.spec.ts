@@ -100,14 +100,20 @@ describe("arktype", () => {
     })
 
     const r1 = resolver.of(Dog, {
-      dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-      cat: query(Cat, () => ({ name: "", birthday: "2012-12-12" })),
+      dog: query(silk.nullable(Dog), () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
+      cat: query(silk.nullable(Cat), () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
       dogs: query(silk.list(Dog), () => [
         { name: "", birthday: "2012-12-12" },
         { name: "", birthday: "2012-12-12" },
       ]),
       mustDog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-      mustDogs: query(silk.list(Dog), () => []),
+      mustDogs: query(Dog.array(), () => []),
       age: field(type("number.integer"), (dog) => {
         return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
       }),
@@ -121,8 +127,8 @@ describe("arktype", () => {
       }
 
       type Query {
-        dog: Dog!
-        cat: Cat!
+        dog: Dog
+        cat: Cat
         dogs: [Dog!]!
         mustDog: Dog!
         mustDogs: [Dog!]!
@@ -226,6 +232,47 @@ describe("arktype", () => {
         { __typename: "Cat", name: "Whiskers", loveFish: false },
       ],
     })
+  })
+
+  it("should handle ArkType with Standard JSON Schema", async () => {
+    const Cat = type({
+      "__typename?": "'Cat'",
+      name: "string",
+    })
+
+    const catResolver = resolver({
+      cat: query(silk.nullable(Cat)).resolve(() => ({ name: "Lue" })),
+      cats: query(Cat.array()).resolve(() => [{ name: "Lue" }]),
+      mustCat: query(Cat).resolve(() => ({ name: "Lue" })),
+    })
+
+    const schema = weave(JSONWeaver, catResolver)
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        cat: Cat
+        cats: [Cat!]!
+        mustCat: Cat!
+      }
+
+      type Cat {
+        name: String!
+      }"
+    `)
+
+    const result = await executeGraphQL({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          cat {
+            name
+          }
+        }
+      `),
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(result.data).toEqual({ cat: { name: "Lue" } })
   })
 
   describe("should handle input types", () => {

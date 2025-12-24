@@ -1,7 +1,7 @@
 import { createServer } from "node:http"
-import { query, resolver, type SchemaWeaver, weave } from "@gqloom/core"
-import { type JSONSchema, JSONWeaver } from "@gqloom/json"
-import { type Type, type } from "arktype"
+import { query, resolver, weave } from "@gqloom/core"
+import { JSONWeaver } from "@gqloom/json"
+import { type } from "arktype"
 import { createYoga } from "graphql-yoga"
 
 const helloResolver = resolver({
@@ -10,16 +10,7 @@ const helloResolver = resolver({
     .resolve(({ name }) => `Hello, ${name ?? "World"}!`),
 })
 
-const arkTypeWeaver: SchemaWeaver = {
-  vendor: "arktype",
-  getGraphQLType: (type: Type) => {
-    return JSONWeaver.getGraphQLType(type.toJsonSchema() as JSONSchema, {
-      source: type,
-    })
-  },
-}
-
-const schema = weave(arkTypeWeaver, helloResolver)
+const schema = weave(JSONWeaver, helloResolver)
 
 const yoga = createYoga({ schema })
 const server = createServer(yoga)

@@ -173,12 +173,16 @@ export function getGraphQLType(silk: GraphQLSilk): GraphQLOutputType {
   const vendorWeavers = weaverContext.vendorWeavers
   if (vendorWeavers == null) throw new Error("Schema Weaver is not initialized")
 
-  const weaver = vendorWeavers.get(silk["~standard"].vendor)
-  if (weaver == null)
-    throw new Error(
-      `Schema Weaver for ${silk["~standard"].vendor} is not found`
-    )
-  return weaver.getGraphQLType(silk)
+  const vendor = silk["~standard"]?.vendor
+  const weaver = vendor ? vendorWeavers.get(vendor) : undefined
+  if (weaver != null) return weaver.getGraphQLType(silk)
+
+  if (silk["~standard"] && "jsonSchema" in silk["~standard"]) {
+    const jsonWeaver = vendorWeavers.get("json")
+    if (jsonWeaver != null) return jsonWeaver.getGraphQLType(silk)
+  }
+
+  throw new Error(`Schema Weaver for ${vendor} is not found`)
 }
 
 /**
@@ -200,10 +204,22 @@ export function getGraphQLArgumentConfig(
 
   const vendorWeavers = weaverContext.vendorWeavers
   if (vendorWeavers == null) return undefined
-  const weaver = vendorWeavers.get(silk["~standard"]?.vendor)
-  if (weaver == null) return undefined
-  if (weaver.getGraphQLArgumentConfig == null) return undefined
-  return weaver.getGraphQLArgumentConfig(silk)
+
+  const vendor = silk["~standard"]?.vendor
+  const weaver = vendor ? vendorWeavers.get(vendor) : undefined
+
+  if (weaver?.getGraphQLArgumentConfig != null) {
+    return weaver.getGraphQLArgumentConfig(silk)
+  }
+
+  if (silk["~standard"] && "jsonSchema" in silk["~standard"]) {
+    const jsonWeaver = vendorWeavers.get("json")
+    if (jsonWeaver?.getGraphQLArgumentConfig != null) {
+      return jsonWeaver.getGraphQLArgumentConfig(silk)
+    }
+  }
+
+  return undefined
 }
 
 /**
