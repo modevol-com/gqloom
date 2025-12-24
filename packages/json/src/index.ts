@@ -3,6 +3,7 @@ import {
   ensureInterfaceType,
   type GraphQLSilk,
   mapValue,
+  type StandardJSONSchemaV1,
   type StandardSchemaV1,
   SYMBOLS,
   weaverContext,
@@ -80,16 +81,36 @@ export class JSONWeaver {
     return schema as JSONSilk<TSchema, TData>
   }
 
-  protected static sourceTypeMap = new Map<JSONSchema, any>()
+  protected static sourceTypeMap = new WeakMap<
+    Exclude<JSONSchema, boolean>,
+    unknown
+  >()
 
   public static getGraphQLType(
-    schema: JSONSchema,
-    { source }: { source?: any } = {}
+    schema: JSONSchema | StandardJSONSchemaV1,
+    { source }: { source?: unknown } = {}
   ): GraphQLOutputType {
-    if (source) {
-      JSONWeaver.sourceTypeMap.set(schema, source)
+    if (
+      (typeof schema === "object" || typeof schema === "function") &&
+      schema !== null &&
+      "~standard" in schema
+    ) {
+      const standard = (schema as any)["~standard"]
+      if ("jsonSchema" in standard) {
+        const rawSchema = standard.jsonSchema.output({ target: "draft-07" })
+        return JSONWeaver.getGraphQLType(rawSchema as JSONSchema, {
+          source: source ?? schema,
+        })
+      }
     }
-    return JSONWeaver.toNullableGraphQLType(schema)
+
+    if (source) {
+      JSONWeaver.sourceTypeMap.set(
+        schema as Exclude<JSONSchema, boolean>,
+        source
+      )
+    }
+    return JSONWeaver.toNullableGraphQLType(schema as JSONSchema)
   }
 
   protected static getGraphQLTypeBySelf(this: JSONSchema): GraphQLOutputType {

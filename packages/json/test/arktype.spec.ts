@@ -234,6 +234,47 @@ describe("arktype", () => {
     })
   })
 
+  it("should handle ArkType with Standard JSON Schema", async () => {
+    const Cat = type({
+      "__typename?": "'Cat'",
+      name: "string",
+    })
+
+    const catResolver = resolver({
+      cat: query(silk.nullable(Cat)).resolve(() => ({ name: "Lue" })),
+      cats: query(Cat.array()).resolve(() => [{ name: "Lue" }]),
+      mustCat: query(Cat).resolve(() => ({ name: "Lue" })),
+    })
+
+    const schema = weave(JSONWeaver, catResolver)
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        cat: Cat
+        cats: [Cat!]!
+        mustCat: Cat!
+      }
+
+      type Cat {
+        name: String!
+      }"
+    `)
+
+    const result = await executeGraphQL({
+      schema,
+      document: parse(/* GraphQL */ `
+        query {
+          cat {
+            name
+          }
+        }
+      `),
+    })
+
+    expect(result.errors).toBeUndefined()
+    expect(result.data).toEqual({ cat: { name: "Lue" } })
+  })
+
   describe("should handle input types", () => {
     it("should convert object schema to input type for mutations", () => {
       const DogInput = type({
