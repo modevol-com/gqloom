@@ -552,9 +552,6 @@ importers:
       arktype:
         specifier: ^2.1.29
         version: 2.1.29
-      effect:
-        specifier: ^3.19.9
-        version: 3.19.9
       typebox:
         specifier: ^1.0.4
         version: 1.0.4

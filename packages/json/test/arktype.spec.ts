@@ -100,14 +100,20 @@ describe("arktype", () => {
     })
 
     const r1 = resolver.of(Dog, {
-      dog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-      cat: query(Cat, () => ({ name: "", birthday: "2012-12-12" })),
+      dog: query(silk.nullable(Dog), () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
+      cat: query(silk.nullable(Cat), () => ({
+        name: "",
+        birthday: "2012-12-12",
+      })),
       dogs: query(silk.list(Dog), () => [
         { name: "", birthday: "2012-12-12" },
         { name: "", birthday: "2012-12-12" },
       ]),
       mustDog: query(Dog, () => ({ name: "", birthday: "2012-12-12" })),
-      mustDogs: query(silk.list(Dog), () => []),
+      mustDogs: query(Dog.array(), () => []),
       age: field(type("number.integer"), (dog) => {
         return new Date().getFullYear() - new Date(dog.birthday).getFullYear()
       }),
@@ -121,8 +127,8 @@ describe("arktype", () => {
       }
 
       type Query {
-        dog: Dog!
-        cat: Cat!
+        dog: Dog
+        cat: Cat
         dogs: [Dog!]!
         mustDog: Dog!
         mustDogs: [Dog!]!
