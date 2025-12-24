@@ -81,10 +81,7 @@ export class JSONWeaver {
     return schema as JSONSilk<TSchema, TData>
   }
 
-  protected static sourceTypeMap = new WeakMap<
-    Exclude<JSONSchema, boolean>,
-    unknown
-  >()
+  protected static sourceTypeMap = new WeakMap<object, unknown>()
 
   public static getGraphQLType(
     schema: JSONSchema | StandardJSONSchemaV1,
@@ -104,11 +101,8 @@ export class JSONWeaver {
       }
     }
 
-    if (source) {
-      JSONWeaver.sourceTypeMap.set(
-        schema as Exclude<JSONSchema, boolean>,
-        source
-      )
+    if (source && typeof schema === "object" && schema !== null) {
+      JSONWeaver.sourceTypeMap.set(schema, source)
     }
     return JSONWeaver.toNullableGraphQLType(schema as JSONSchema)
   }
