@@ -47,6 +47,7 @@ import {
   isZodDiscriminatedUnion,
   isZodEnum,
   isZodInt,
+  isZodLazy,
   isZodLiteral,
   isZodNumber,
   isZodObject,
@@ -160,6 +161,10 @@ export class ZodWeaver {
       return GraphQLBoolean
     }
 
+    if (isZodLazy(schema)) {
+      return ZodWeaver.toMemoriedGraphQLType(schema._zod.def.getter())
+    }
+
     if (isZodDate(schema)) {
       return GraphQLString
     }
@@ -169,9 +174,8 @@ export class ZodWeaver {
 
       return new GraphQLObjectType({
         name,
-        fields: mapValue(
-          (schema as $ZodObject)._zod.def.shape,
-          (field, key) => {
+        fields: () =>
+          mapValue((schema as $ZodObject)._zod.def.shape, (field, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
             const { type, ...fieldConfig } = getFieldConfig(field)
             if (type === null || type === SYMBOLS.FIELD_HIDDEN)
@@ -180,8 +184,7 @@ export class ZodWeaver {
               type: type ?? ZodWeaver.toNullableGraphQLType(field),
               ...fieldConfig,
             }
-          }
-        ),
+          }),
         ...objectConfig,
       })
     }

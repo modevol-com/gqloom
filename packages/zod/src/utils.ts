@@ -12,6 +12,7 @@ import type {
   $ZodDefault,
   $ZodDiscriminatedUnion,
   $ZodEnum,
+  $ZodLazy,
   $ZodLiteral,
   $ZodNullable,
   $ZodNumber,
@@ -152,6 +153,10 @@ export function isZodPipe(schema: unknown): schema is $ZodPipe {
   return isZodType(schema) && schema._zod.def.type === "pipe"
 }
 
+export function isZodLazy(schema: unknown): schema is $ZodLazy {
+  return isZodType(schema) && schema._zod.def.type === "lazy"
+}
+
 export function getDescription(schema: $ZodType): string | undefined {
   while (true) {
     if ("description" in schema && typeof schema.description === "string") {
@@ -165,6 +170,8 @@ export function getDescription(schema: $ZodType): string | undefined {
       schema = schema._zod.def.innerType
     } else if (isZodArray(schema)) {
       schema = schema._zod.def.element
+    } else if (isZodLazy(schema)) {
+      schema = schema._zod.def.getter()
     } else {
       break
     }
