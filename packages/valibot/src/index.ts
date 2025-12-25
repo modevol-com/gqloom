@@ -130,6 +130,11 @@ export class ValibotWeaver {
         return GraphQLBoolean
       case "date":
         return GraphQLString
+      case "lazy":
+        return ValibotWeaver.toGraphQLType(
+          schema.getter(undefined),
+          ...wrappers
+        )
       case "enum":
       case "picklist": {
         const {
@@ -187,24 +192,29 @@ export class ValibotWeaver {
 
         return new GraphQLObjectType({
           name,
-          fields: mapValue(schema.entries, (field, key) => {
-            if (key.startsWith("__")) return mapValue.SKIP
-            const { type, ...fieldConfig } =
-              ValibotMetadataCollector.getFieldConfig(field) ?? {}
+          fields: () =>
+            mapValue(schema.entries as Record<string, any>, (field, key) => {
+              if (key.startsWith("__")) return mapValue.SKIP
+              const { type, ...fieldConfig } =
+                ValibotMetadataCollector.getFieldConfig(
+                  field as GenericSchemaOrAsync
+                ) ?? {}
 
-            if (type === null || type === SYMBOLS.FIELD_HIDDEN)
-              return mapValue.SKIP
+              if (type === null || type === SYMBOLS.FIELD_HIDDEN)
+                return mapValue.SKIP
 
-            return {
-              type:
-                type === undefined
-                  ? ValibotWeaver.toNullableGraphQLType(field)
-                  : typeof type === "function"
-                    ? type()
-                    : type,
-              ...fieldConfig,
-            }
-          }),
+              return {
+                type:
+                  type === undefined
+                    ? ValibotWeaver.toNullableGraphQLType(
+                        field as GenericSchemaOrAsync
+                      )
+                    : typeof type === "function"
+                      ? type()
+                      : type,
+                ...fieldConfig,
+              }
+            }),
           ...objectConfig,
           interfaces: objectConfig.interfaces?.map(
             ValibotWeaver.ensureInterfaceType
@@ -238,7 +248,7 @@ export class ValibotWeaver {
         const options =
           schema.type === "variant" ? flatVariant(schema) : schema.options
 
-        const types = options.map((s) => {
+        const types = (options as GenericSchemaOrAsync[]).map((s) => {
           const gqlType = ValibotWeaver.toGraphQLType(s)
           if (isObjectType(gqlType)) return gqlType
           throw new Error(

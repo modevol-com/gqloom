@@ -13,6 +13,8 @@ import type {
   EnumSchema,
   GenericSchema,
   GenericSchemaAsync,
+  LazySchema,
+  LazySchemaAsync,
   Literal,
   LiteralSchema,
   LooseObjectSchema,
@@ -80,6 +82,8 @@ export type SupportedSchema =
   | DateSchema<any>
   | EnumSchema<Enum, any>
   | LiteralSchema<Literal, any>
+  | LazySchema<any>
+  | LazySchemaAsync<any>
   | LooseObjectSchema<ObjectEntries, any>
   | LooseObjectSchemaAsync<ObjectEntriesAsync, any>
   | NonNullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>

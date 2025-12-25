@@ -163,6 +163,10 @@ export class ValibotMetadataCollector {
     }
     for (const schema of schemas) {
       if (schema == null) continue
+      if (schema.type === "lazy") {
+        pushToPipe((schema as any).getter(undefined))
+        continue
+      }
       pushToPipe(schema)
       if ("wrapped" in schema) {
         pushToPipe(schema.wrapped as PipedSchema)

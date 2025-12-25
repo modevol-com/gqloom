@@ -81,6 +81,27 @@ describe("ValibotWeaver", () => {
     expect(getGraphQLType(schema)).toEqual(GraphQLString)
   })
 
+  it("should handle lazy type", () => {
+    interface Category {
+      name: string
+      subCategories?: Category[]
+    }
+    const Category: v.GenericSchema<Category> = v.lazy(() =>
+      v.object({
+        __typename: v.nullish(v.literal("Category")),
+        name: v.string(),
+        subCategories: v.optional(v.array(Category)),
+      })
+    )
+
+    expect(print(Category)).toMatchInlineSnapshot(`
+      "type Category {
+        name: String!
+        subCategories: [Category!]
+      }"
+    `)
+  })
+
   it("should keep default value in extensions", () => {
     const objectType = v.pipe(
       v.object({
