@@ -87,6 +87,27 @@ describe("ZodWeaver", () => {
     expect(getGraphQLType(z.literal(false).nullable())).toEqual(GraphQLBoolean)
   })
 
+  it("should handle lazy type", () => {
+    interface Category {
+      name: string
+      subCategories?: Category[]
+    }
+    const Category: z.ZodType<Category> = z.lazy(() =>
+      z.object({
+        __typename: z.literal("Category").nullish(),
+        name: z.string(),
+        subCategories: z.array(Category).optional(),
+      })
+    )
+
+    expect(printZodSilk(Category)).toMatchInlineSnapshot(`
+      "type Category {
+        name: String!
+        subCategories: [Category!]
+      }"
+    `)
+  })
+
   it("should handle custom type", () => {
     expect(
       getGraphQLType(
