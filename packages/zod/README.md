@@ -19,7 +19,7 @@ This package provides GQLoom integration with [Zod](https://zod.dev/) to weave Z
 ```ts
 import { resolver, query, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
-import { zod } from "zod"
+import * as z from "zod"
 
 const helloResolver = resolver({
   hello: query(z.string())
