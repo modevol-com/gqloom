@@ -30,7 +30,7 @@
     "@gqloom/zod": "workspace:*",
     "@mikro-orm/core": "^6.6.2",
     "@mikro-orm/libsql": "^6.6.2",
-    "@shikijs/vitepress-twoslash": "^3.19.0",
+    "@shikijs/vitepress-twoslash": "^3.20.0",
     "@vitejs/plugin-vue-jsx": "^5.1.2",
     "ajv": "^8.17.1",
     "arktype": "^2.1.29",
