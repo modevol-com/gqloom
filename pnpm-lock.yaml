@@ -86,13 +86,13 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.14.5(graphql@16.12.0)
+        version: 0.15.0(graphql@16.12.0)
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.14.5(graphql@16.12.0))(drizzle-orm@0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
+        version: 0.11.0(@gqloom/core@0.15.0(graphql@16.12.0))(drizzle-orm@0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/valibot':
         specifier: latest
-        version: 0.13.0(@gqloom/core@0.14.5(graphql@16.12.0))(graphql@16.12.0)(valibot@1.1.0(typescript@5.9.3))
+        version: 0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(valibot@1.1.0(typescript@5.9.3))
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -129,13 +129,13 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.14.5(graphql@16.12.0)
+        version: 0.15.0(graphql@16.12.0)
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.14.5(graphql@16.12.0))(drizzle-orm@0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
+        version: 0.11.0(@gqloom/core@0.15.0(graphql@16.12.0))(drizzle-orm@0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/zod':
         specifier: latest
-        version: 0.14.0(@gqloom/core@0.14.5(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)
+        version: 0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -672,8 +672,8 @@ importers:
         specifier: ^2.4.1
         version: 2.4.1(typescript@5.9.3)(vue@3.5.25(typescript@5.9.3))
       tailwindcss:
-        specifier: ^4.1.17
-        version: 4.1.17
+        specifier: ^4.1.18
+        version: 4.1.18
       vue:
         specifier: ^3.5.25
         version: 3.5.25(typescript@5.9.3)
@@ -1865,8 +1865,8 @@ packages:
     peerDependencies:
       graphql: ^16.12.0
 
-  '@gqloom/core@0.14.5':
-    resolution: {integrity: sha512-9k2hg3adN+c6u39He3GfScEPQKPtJqfM2pbLl8mm36TkZNSENd4Jze7Zn7w9sk+3oWipKTQR7EFHHXa4ly+QPA==}
+  '@gqloom/core@0.15.0':
+    resolution: {integrity: sha512-iYsL296HczSA9tbLctEHqna8ohEwJsjX1lvIxLjdm9nkIaCqdVFSzh0WDHYNEHCiHHmZDsvgo66nvHyoMGUxzA==}
     peerDependencies:
       graphql: ^16.12.0
 
@@ -1888,15 +1888,15 @@ packages:
       '@gqloom/core': '>= 0.12.0'
       graphql: ^16.12.0
 
-  '@gqloom/valibot@0.13.0':
-    resolution: {integrity: sha512-9A6W25A3EH5mLlzpDe7yNPggiJKt+4ikh6YUudLkQlSvsXx8I1wuAict4jD4uL9lqNud2rSuiwuJpumqeKokYA==}
+  '@gqloom/valibot@0.15.0':
+    resolution: {integrity: sha512-Q4mrP5vcw6wMrHU3tpm14THeXwP9XapbzHYUlQQFzkwobu85ddKo/i9nJKl80D1ZHZmC//8yv99atmSuiA+zsA==}
     peerDependencies:
       '@gqloom/core': '>= 0.12.0'
       graphql: ^16.12.0
       valibot: '>= 1.0.0'
 
-  '@gqloom/zod@0.14.0':
-    resolution: {integrity: sha512-WEbd76Lyz1Y4Gwyry1WuVpc3KDQFvuRFKoQ7dAlGAJ74+5oC8DHPgD4J78PIfKKAiuFj5vQtGGPmxWDJy4QxiQ==}
+  '@gqloom/zod@0.15.0':
+    resolution: {integrity: sha512-nHaeKPwMpk8FUbm05WdV6mv62GhytOzRHYXt5/59Cz7Iqp6I3RgDx51Xpnaa9GxJf1xsndYzEOjrqmFumkY7yQ==}
     peerDependencies:
       '@gqloom/core': '>= 0.12.0'
       graphql: ^16.12.0
@@ -5884,8 +5884,8 @@ packages:
   tailwindcss@4.1.16:
     resolution: {integrity: sha512-pONL5awpaQX4LN5eiv7moSiSPd/DLDzKVRJz8Q9PgzmAdd1R4307GQS2ZpfiN7ZmekdQrfhZZiSE5jkLR4WNaA==}
 
-  tailwindcss@4.1.17:
-    resolution: {integrity: sha512-j9Ee2YjuQqYT9bbRTfTZht9W/ytp5H+jJpZKiYdP/bpnXARAuELt9ofP0lPnmHjbga7SNQIxdTAXCmtKVYjN+Q==}
+  tailwindcss@4.1.18:
+    resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
 
   tapable@2.3.0:
     resolution: {integrity: sha512-g9ljZiwki/LfxmQADO3dEY1CbpmXT5Hm2fJ+QaGKwSXUylMybePR7/67YW7jOrrvjEgL1Fmz5kzyAjWVWLlucg==}
@@ -6349,6 +6349,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -7366,7 +7367,7 @@ snapshots:
     dependencies:
       graphql: 16.12.0
 
-  '@gqloom/core@0.14.5(graphql@16.12.0)':
+  '@gqloom/core@0.15.0(graphql@16.12.0)':
     dependencies:
       graphql: 16.12.0
 
@@ -7374,9 +7375,9 @@ snapshots:
     dependencies:
       graphql: 16.12.0
 
-  '@gqloom/drizzle@0.11.0(@gqloom/core@0.14.5(graphql@16.12.0))(drizzle-orm@0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)':
+  '@gqloom/drizzle@0.11.0(@gqloom/core@0.15.0(graphql@16.12.0))(drizzle-orm@0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)':
     dependencies:
-      '@gqloom/core': 0.14.5(graphql@16.12.0)
+      '@gqloom/core': 0.15.0(graphql@16.12.0)
       drizzle-orm: 0.44.7(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.5.0)(knex@3.1.0(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.1.0(@types/react@19.2.7)(better-sqlite3@12.5.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7)
       graphql: 16.12.0
 
@@ -7386,15 +7387,15 @@ snapshots:
       graphql: 16.12.0
       json-schema-to-ts: 3.1.1
 
-  '@gqloom/valibot@0.13.0(@gqloom/core@0.14.5(graphql@16.12.0))(graphql@16.12.0)(valibot@1.1.0(typescript@5.9.3))':
+  '@gqloom/valibot@0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(valibot@1.1.0(typescript@5.9.3))':
     dependencies:
-      '@gqloom/core': 0.14.5(graphql@16.12.0)
+      '@gqloom/core': 0.15.0(graphql@16.12.0)
       graphql: 16.12.0
       valibot: 1.1.0(typescript@5.9.3)
 
-  '@gqloom/zod@0.14.0(@gqloom/core@0.14.5(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)':
+  '@gqloom/zod@0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)':
     dependencies:
-      '@gqloom/core': 0.14.5(graphql@16.12.0)
+      '@gqloom/core': 0.15.0(graphql@16.12.0)
       graphql: 16.12.0
       zod: 4.2.1
 
@@ -11745,7 +11746,7 @@ snapshots:
 
   tailwindcss@4.1.16: {}
 
-  tailwindcss@4.1.17: {}
+  tailwindcss@4.1.18: {}
 
   tapable@2.3.0: {}
 
