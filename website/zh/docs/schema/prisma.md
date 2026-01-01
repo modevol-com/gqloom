@@ -11,8 +11,6 @@
 
 <!--@include: ../../snippets/install-prisma.md-->
 
-在 [Prisma 文档](https://www.prisma.io/docs/getting-started/quickstart)中，你可以找到更多关于安装的信息。
-
 ## 配置
 
 在 `prisma/schema.prisma` 文件中定义你的 Prisma Schema：
@@ -318,10 +316,10 @@ const userResolver = userResolverFactory.resolver()
 
 为了适应更多的 Prisma 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
 
-首先我们使用 `PrismaWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`，当遇到 `DateTime` 类型时，我们将其映射到对应的 GraphQL 标量。
+首先我们使用 `PrismaWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime` 和 `GraphQLJSON`，当遇到 `DateTime` 和 `Json` 类型时，我们将其映射到对应的 GraphQL 标量。
 
 ```ts twoslash
-import { GraphQLDateTime } from 'graphql-scalars'
+import { GraphQLDateTime, GraphQLJSON } from 'graphql-scalars'
 import { PrismaWeaver } from '@gqloom/prisma'
 
 export const prismaWeaverConfig = PrismaWeaver.config({
@@ -329,6 +327,8 @@ export const prismaWeaverConfig = PrismaWeaver.config({
     switch (type) {
       case 'DateTime':
         return GraphQLDateTime
+      case 'Json':
+        return GraphQLJSON
     }
   },
 })

@@ -316,10 +316,10 @@ There are two methods for creating Resolvers:
 
 To adapt to more Prisma types, we can extend GQLoom to add more type mappings.
 
-First, we use `PrismaWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering the `DateTime` type, we map it to the corresponding GraphQL scalar.
+First, we use `PrismaWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSON` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering the `DateTime` and `Json` types, we map them to the corresponding GraphQL scalars.
 
 ```ts twoslash
-import { GraphQLDateTime } from 'graphql-scalars'
+import { GraphQLDateTime, GraphQLJSON } from 'graphql-scalars'
 import { PrismaWeaver } from '@gqloom/prisma'
 
 export const prismaWeaverConfig = PrismaWeaver.config({
@@ -327,6 +327,8 @@ export const prismaWeaverConfig = PrismaWeaver.config({
     switch (type) {
       case 'DateTime':
         return GraphQLDateTime
+      case 'Json':
+        return GraphQLJSON
     }
   },
 })
