@@ -510,8 +510,8 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0(graphql@16.12.0)
       '@apollo/subgraph':
-        specifier: ^2.12.0
-        version: 2.12.0(graphql@16.12.0)
+        specifier: ^2.12.2
+        version: 2.12.2(graphql@16.12.0)
       '@gqloom/core':
         specifier: workspace:*
         version: link:../core
@@ -682,8 +682,8 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0(graphql@16.12.0)
       '@apollo/subgraph':
-        specifier: ^2.12.0
-        version: 2.12.0(graphql@16.12.0)
+        specifier: ^2.12.2
+        version: 2.12.2(graphql@16.12.0)
       '@gqloom/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -807,8 +807,8 @@ packages:
     peerDependencies:
       graphql: ^16.12.0
 
-  '@apollo/federation-internals@2.12.0':
-    resolution: {integrity: sha512-NCqKxZqTT9oFqRfq/yLcb8U5rzt+v00i5d5cFFadjdO61YwAUCD0W5JFDQzZsYzX7huuK/7N7JWqI897vAOeeQ==}
+  '@apollo/federation-internals@2.12.2':
+    resolution: {integrity: sha512-8L3gsYkiwLJhiRVRMzXhJOV6oVMYGdCioYcio66yjaXevfcfsnEUVXfC378ma7+9GBjBjp0YzbDargOg+0FXJA==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
       graphql: ^16.12.0
@@ -828,8 +828,8 @@ packages:
     peerDependencies:
       graphql: ^16.12.0
 
-  '@apollo/subgraph@2.12.0':
-    resolution: {integrity: sha512-5bRPmdUwDoxz8MbD8QeMx06ReDAvQycytqOnV4QjXMb9innoIRfqvv8mpVyQ8Bsy3cd53L6myMikXLEhbm0bSw==}
+  '@apollo/subgraph@2.12.2':
+    resolution: {integrity: sha512-/07xSi1Sn4B3+qm+4K4En5m7eBdE1vfevyd6HcwKqcmNo4OLGYo+88h+CfvizuwMdtORq0DDsPSmVCCR1w8wsQ==}
     engines: {node: '>=14.15.0'}
     peerDependencies:
       graphql: ^16.12.0
@@ -6555,7 +6555,7 @@ snapshots:
     dependencies:
       graphql: 16.12.0
 
-  '@apollo/federation-internals@2.12.0(graphql@16.12.0)':
+  '@apollo/federation-internals@2.12.2(graphql@16.12.0)':
     dependencies:
       '@types/uuid': 9.0.8
       chalk: 4.1.2
@@ -6612,10 +6612,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@apollo/subgraph@2.12.0(graphql@16.12.0)':
+  '@apollo/subgraph@2.12.2(graphql@16.12.0)':
     dependencies:
       '@apollo/cache-control-types': 1.0.3(graphql@16.12.0)
-      '@apollo/federation-internals': 2.12.0(graphql@16.12.0)
+      '@apollo/federation-internals': 2.12.2(graphql@16.12.0)
       graphql: 16.12.0
 
   '@apollo/usage-reporting-protobuf@4.1.1':
