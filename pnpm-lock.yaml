@@ -73,8 +73,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       hono:
         specifier: ^4.11.1
         version: 4.11.1
@@ -106,8 +106,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -149,8 +149,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       zod:
         specifier: 4.2.1
         version: 4.2.1
@@ -186,8 +186,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       pg:
         specifier: ^8.13.2
         version: 8.13.2
@@ -226,8 +226,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
@@ -254,8 +254,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
 
   examples/middlewares:
     dependencies:
@@ -272,8 +272,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -296,8 +296,8 @@ importers:
         specifier: ^6.6.2
         version: 6.6.2(@mikro-orm/core@6.6.2)(better-sqlite3@12.5.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7)
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -333,8 +333,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       pg:
         specifier: ^8.13.2
         version: 8.13.2
@@ -364,8 +364,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(graphql@16.12.0)
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -388,8 +388,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -412,8 +412,8 @@ importers:
         specifier: ^1.0.0
         version: 1.6.4(graphql@16.12.0)
       graphql-yoga:
-        specifier: ^5.6.0
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       valibot:
         specifier: 1.1.0
         version: 1.1.0(typescript@5.9.3)
@@ -525,8 +525,8 @@ importers:
         specifier: ^2.12.6
         version: 2.12.6(graphql@16.12.0)
       graphql-yoga:
-        specifier: ^5.16.2
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       mercurius:
         specifier: ^16.6.0
         version: 16.6.0(graphql@16.12.0)
@@ -757,8 +757,8 @@ importers:
         specifier: ^1.6.4
         version: 1.6.4(graphql@16.12.0)
       graphql-yoga:
-        specifier: ^5.16.2
-        version: 5.16.2(graphql@16.12.0)
+        specifier: ^5.18.0
+        version: 5.18.0(graphql@16.12.0)
       mercurius:
         specifier: ^16.6.0
         version: 16.6.0(graphql@16.12.0)
@@ -1163,8 +1163,14 @@ packages:
   '@emnapi/core@1.7.1':
     resolution: {integrity: sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==}
 
+  '@emnapi/core@1.8.1':
+    resolution: {integrity: sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg==}
+
   '@emnapi/runtime@1.7.1':
     resolution: {integrity: sha512-PVtJr5CmLwYAU9PZDMITZoR5iAOShYREoR45EyyLrbntV50mdePTgUn4AmOw90Ifcj+x2kRjdzr1HP3RrNiHGA==}
+
+  '@emnapi/runtime@1.8.1':
+    resolution: {integrity: sha512-mehfKSMWjjNol8659Z8KxEMrdSJDDot5SXMq00dM8BN4o+CLNXQ0xH2V7EchNHV4RmbZLmmPdEaXZc5H2FXmDg==}
 
   '@emnapi/wasi-threads@1.1.0':
     resolution: {integrity: sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==}
@@ -1898,8 +1904,8 @@ packages:
       graphql: ^16.12.0
       zod: '>= 3.25.35'
 
-  '@graphql-tools/executor@1.4.11':
-    resolution: {integrity: sha512-e6WwB5Cf9UAwRc32jRy98q87MlYWiq4q81A0FNeWPoccWHNaxj8G2Wqi/6YjxfU3T1Qne2W98Q6u0nhNc5uZuQ==}
+  '@graphql-tools/executor@1.5.0':
+    resolution: {integrity: sha512-3HzAxfexmynEWwRB56t/BT+xYKEYLGPvJudR1jfs+XZX8bpfqujEhqVFoxmkpEE8BbFcKuBNoQyGkTi1eFJ+hA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       graphql: ^16.12.0
@@ -2112,6 +2118,9 @@ packages:
 
   '@napi-rs/wasm-runtime@1.1.0':
     resolution: {integrity: sha512-Fq6DJW+Bb5jaWE69/qOE0D1TUN9+6uWhCeZpdnSBk14pjLcCWR7Q8n49PTSPHazM37JqrsdpEthXy2xn6jWWiA==}
+
+  '@napi-rs/wasm-runtime@1.1.1':
+    resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
 
   '@neon-rs/load@0.0.4':
     resolution: {integrity: sha512-kTPhdZyTQxB+2wpiRcFWrDcejc4JI6tkPuS7UZCG4l6Zvc5kU/gGQ/ozvHTh1XR5tS+UlfAfGuPajjzQjCiHCw==}
@@ -3111,20 +3120,20 @@ packages:
     resolution: {integrity: sha512-ApcWxkrs1WmEMS2CaLLFUEem/49erT3sxIVjpzU5f6zmVcnijtDSrhoK2zVobOIikZJdH63jdAXOrvjf6eOUNQ==}
     engines: {node: '>=18.0.0'}
 
-  '@whatwg-node/fetch@0.10.12':
-    resolution: {integrity: sha512-XmsCdDgQxbM8ha7xvIbDQyO/iES2ga0wQcM5sb+mugll1F+IzSshOMPK6n1TuqDDgjTwoU01mMa6oRhHWnpDcw==}
+  '@whatwg-node/fetch@0.10.13':
+    resolution: {integrity: sha512-b4PhJ+zYj4357zwk4TTuF2nEe0vVtOrwdsrNo5hL+u1ojXNhh1FgJ6pg1jzDlwlT4oBdzfSwaBwMCtFCsIWg8Q==}
     engines: {node: '>=18.0.0'}
 
-  '@whatwg-node/node-fetch@0.8.2':
-    resolution: {integrity: sha512-1PihEl0a8hm/AZD/LVRs1lEWCZCo2Q65Xm1goaHeqR314e+/Z7NI7YE10Yser8+2iZFGtv542IYr685o3aaZ/g==}
+  '@whatwg-node/node-fetch@0.8.4':
+    resolution: {integrity: sha512-AlKLc57loGoyYlrzDbejB9EeR+pfdJdGzbYnkEuZaGekFboBwzfVYVMsy88PMriqPI1ORpiGYGgSSWpx7a2sDA==}
     engines: {node: '>=18.0.0'}
 
   '@whatwg-node/promise-helpers@1.3.2':
     resolution: {integrity: sha512-Nst5JdK47VIl9UcGwtv2Rcgyn5lWtZ0/mhRQ4G8NN2isxpq2TO30iqHzmwoJycjWuyUfg3GFXqP/gFHXeV57IA==}
     engines: {node: '>=16.0.0'}
 
-  '@whatwg-node/server@0.10.15':
-    resolution: {integrity: sha512-/BqffJYRIbX1HfNUZkPvtiSloC3QCvxAYC82g0uo3ruiJ44GOiCGH1q/XWF0/l5tWBvFsgX5VBA8l7IhQkCNfA==}
+  '@whatwg-node/server@0.10.17':
+    resolution: {integrity: sha512-QxI+HQfJeI/UscFNCTcSri6nrHP25mtyAMbhEri7W2ctdb3EsorPuJz7IovSgNjvKVs73dg9Fmayewx1O2xOxA==}
     engines: {node: '>=18.0.0'}
 
   abbrev@1.1.1:
@@ -4197,8 +4206,8 @@ packages:
     peerDependencies:
       graphql: ^16.12.0
 
-  graphql-yoga@5.16.2:
-    resolution: {integrity: sha512-heaD8ejapeEZ8+8CxB6DbYzkvMfC4gHEXr1Gc2CQCXEb5PVaDcEnQfiThBNic1KLPpuZixqQdJJ0pjcEVc9H7g==}
+  graphql-yoga@5.18.0:
+    resolution: {integrity: sha512-xFt1DVXS1BZ3AvjnawAGc5OYieSe56WuQuyk3iEpBwJ3QDZJWQGLmU9z/L5NUZ+pUcyprsz/bOwkYIV96fXt/g==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       graphql: ^16.12.0
@@ -6958,7 +6967,18 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
+  '@emnapi/core@1.8.1':
+    dependencies:
+      '@emnapi/wasi-threads': 1.1.0
+      tslib: 2.8.1
+    optional: true
+
   '@emnapi/runtime@1.7.1':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
+  '@emnapi/runtime@1.8.1':
     dependencies:
       tslib: 2.8.1
     optional: true
@@ -7428,7 +7448,7 @@ snapshots:
       graphql: 16.12.0
       zod: 4.2.1
 
-  '@graphql-tools/executor@1.4.11(graphql@16.12.0)':
+  '@graphql-tools/executor@1.5.0(graphql@16.12.0)':
     dependencies:
       '@graphql-tools/utils': 10.11.0(graphql@16.12.0)
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.12.0)
@@ -7687,6 +7707,13 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.7.1
       '@emnapi/runtime': 1.7.1
+      '@tybys/wasm-util': 0.10.1
+    optional: true
+
+  '@napi-rs/wasm-runtime@1.1.1':
+    dependencies:
+      '@emnapi/core': 1.8.1
+      '@emnapi/runtime': 1.8.1
       '@tybys/wasm-util': 0.10.1
     optional: true
 
@@ -7982,7 +8009,7 @@ snapshots:
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.53':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.57':
@@ -8653,12 +8680,12 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@whatwg-node/fetch@0.10.12':
+  '@whatwg-node/fetch@0.10.13':
     dependencies:
-      '@whatwg-node/node-fetch': 0.8.2
+      '@whatwg-node/node-fetch': 0.8.4
       urlpattern-polyfill: 10.1.0
 
-  '@whatwg-node/node-fetch@0.8.2':
+  '@whatwg-node/node-fetch@0.8.4':
     dependencies:
       '@fastify/busboy': 3.2.0
       '@whatwg-node/disposablestack': 0.0.6
@@ -8669,11 +8696,11 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@whatwg-node/server@0.10.15':
+  '@whatwg-node/server@0.10.17':
     dependencies:
       '@envelop/instrumentation': 1.0.0
       '@whatwg-node/disposablestack': 0.0.6
-      '@whatwg-node/fetch': 0.10.12
+      '@whatwg-node/fetch': 0.10.13
       '@whatwg-node/promise-helpers': 1.3.2
       tslib: 2.8.1
 
@@ -9832,18 +9859,18 @@ snapshots:
       busboy: 1.6.0
       graphql: 16.12.0
 
-  graphql-yoga@5.16.2(graphql@16.12.0):
+  graphql-yoga@5.18.0(graphql@16.12.0):
     dependencies:
       '@envelop/core': 5.4.0
       '@envelop/instrumentation': 1.0.0
-      '@graphql-tools/executor': 1.4.11(graphql@16.12.0)
+      '@graphql-tools/executor': 1.5.0(graphql@16.12.0)
       '@graphql-tools/schema': 10.0.30(graphql@16.12.0)
       '@graphql-tools/utils': 10.11.0(graphql@16.12.0)
       '@graphql-yoga/logger': 2.0.1
       '@graphql-yoga/subscription': 5.0.5
-      '@whatwg-node/fetch': 0.10.12
+      '@whatwg-node/fetch': 0.10.13
       '@whatwg-node/promise-helpers': 1.3.2
-      '@whatwg-node/server': 0.10.15
+      '@whatwg-node/server': 0.10.17
       graphql: 16.12.0
       lru-cache: 10.4.3
       tslib: 2.8.1
