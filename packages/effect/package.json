@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/effect",
-  "version": "0.13.0",
+  "version": "0.15.0",
   "description": "Create GraphQL schema and resolvers easily using Effect Schema!",
   "type": "module",
   "main": "./dist/index.js",
