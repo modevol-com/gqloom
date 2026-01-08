@@ -4,12 +4,15 @@ import { createFileSystemTypesCache } from "@shikijs/vitepress-twoslash/cache-fs
 import tailwindcss from "@tailwindcss/vite"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import { defineConfig } from "vitepress"
-import llmstxt from "vitepress-plugin-llms"
+import llmstxt, { copyOrDownloadAsMarkdownButtons } from "vitepress-plugin-llms"
 import sidebarEn from "./sidebar-en.js"
 import sidebarZh from "./sidebar-zh.js"
 
 export default defineConfig({
   markdown: {
+    config(md) {
+      md.use(copyOrDownloadAsMarkdownButtons)
+    },
     codeTransformers: [
       transformerTwoslash({
         typesCache: createFileSystemTypesCache(),
