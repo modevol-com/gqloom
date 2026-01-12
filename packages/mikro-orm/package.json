@@ -47,7 +47,7 @@
     "@gqloom/valibot": "workspace:*",
     "@mikro-orm/core": "^6.6.2",
     "@mikro-orm/libsql": "^6.6.2",
-    "valibot": "1.0.0-beta.12"
+    "valibot": "1.2.0"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

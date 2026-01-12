@@ -46,7 +46,7 @@
     "mercurius": "^16.6.0",
     "oxc-minify": "^0.106.0",
     "typebox": "^1.0.4",
-    "valibot": "^1.1.0",
+    "valibot": "^1.2.0",
     "vitepress": "2.0.0-alpha.15",
     "vitepress-plugin-llms": "^1.10.0",
     "yup": "^1.7.1",
