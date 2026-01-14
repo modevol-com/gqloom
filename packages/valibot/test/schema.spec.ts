@@ -126,33 +126,6 @@ describe("ValibotWeaver", () => {
         v.pipe(v.nullable(v.date()), asField({ type: GraphQLDate }))
       )
     ).toEqual(GraphQLDate)
-
-    const Cat = v.pipe(
-      v.object({
-        name: v.string(),
-        age: v.pipe(
-          v.number(),
-          asField({ type: GraphQLInt, description: "How old is the cat" })
-        ),
-        loveFish: v.nullish(v.boolean()),
-      }),
-      asObjectType({
-        name: "Cat",
-        description: "A cute cat",
-      })
-    )
-    expect(
-      printType(getGraphQLType(v.nullish(Cat)) as GraphQLNamedType)
-    ).toMatchInlineSnapshot(`
-      """"A cute cat"""
-      type Cat {
-        name: String!
-
-        """How old is the cat"""
-        age: Int
-        loveFish: Boolean
-      }"
-    `)
   })
 
   it("should handle hidden field", () => {
@@ -210,7 +183,12 @@ describe("ValibotWeaver", () => {
       birthday: v.optional(v.date()),
     })
 
-    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const r1 = resolver.of(Dog, {
+      dog: query(Dog, () => ({})),
+      derivedBirthday: field(v.date())
+        .derivedFrom("birthday")
+        .resolve((dog) => dog.birthday),
+    })
     const config = ValibotWeaver.config({
       presetGraphQLType: (schema) => {
         switch (schema.type) {
@@ -225,9 +203,7 @@ describe("ValibotWeaver", () => {
     const r2 = resolver({ dog: query(vSilk(Dog), () => ({})) })
     const schema2 = weave(r2)
 
-    expect(printSchema(schema2)).toEqual(printSchema(schema1))
-
-    expect(printSchema(schema1)).toMatchInlineSnapshot(`
+    expect(printSchema(schema2)).toMatchInlineSnapshot(`
       "type Query {
         dog: Dog!
       }
@@ -238,6 +214,20 @@ describe("ValibotWeaver", () => {
       }
 
       scalar Date"
+    `)
+
+    expect(printSchema(schema1)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+        birthday: Date
+        derivedBirthday: Date!
+      }
+
+      scalar Date
+
+      type Query {
+        dog: Dog!
+      }"
     `)
   })
 

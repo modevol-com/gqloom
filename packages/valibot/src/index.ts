@@ -3,6 +3,7 @@ import {
   ensureInterfaceType,
   type GraphQLSilk,
   mapValue,
+  provideWeaverContext,
   SYMBOLS,
   weave,
   weaverContext,
@@ -192,7 +193,7 @@ export class ValibotWeaver {
 
         return new GraphQLObjectType({
           name,
-          fields: () =>
+          fields: provideWeaverContext.inherit(() =>
             mapValue(schema.entries as Record<string, any>, (field, key) => {
               if (key.startsWith("__")) return mapValue.SKIP
               const { type, ...fieldConfig } =
@@ -214,7 +215,8 @@ export class ValibotWeaver {
                       : type,
                 ...fieldConfig,
               }
-            }),
+            })
+          ),
           ...objectConfig,
           interfaces: objectConfig.interfaces?.map(
             ValibotWeaver.ensureInterfaceType
