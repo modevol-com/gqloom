@@ -2,6 +2,7 @@ import {
   AUTO_ALIASING,
   ensureInterfaceType,
   mapValue,
+  provideWeaverContext,
   SYMBOLS,
   weave,
   weaverContext,
@@ -174,7 +175,7 @@ export class ZodWeaver {
 
       return new GraphQLObjectType({
         name,
-        fields: () =>
+        fields: provideWeaverContext.inherit(() =>
           mapValue((schema as $ZodObject)._zod.def.shape, (field, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
             const { type, ...fieldConfig } = getFieldConfig(field)
@@ -184,7 +185,8 @@ export class ZodWeaver {
               type: type ?? ZodWeaver.toNullableGraphQLType(field),
               ...fieldConfig,
             }
-          }),
+          })
+        ),
         ...objectConfig,
       })
     }
