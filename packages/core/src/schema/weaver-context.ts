@@ -170,28 +170,32 @@ export class WeaverContext {
   }
 
   protected reduceAliases(aliases: AliasList): string | undefined {
-    const stringAliases = aliases.filter((alias) => typeof alias === "string")
-    const tupleAliases = aliases.filter((alias) => Array.isArray(alias))
-    let best: string | undefined
-    for (const alias of stringAliases) {
-      if (
-        best === undefined ||
-        WeaverContext.higherPriorityThan(alias, best) < 0
-      ) {
-        best = alias
+    let bestString: string | undefined
+    for (const alias of aliases) {
+      if (typeof alias === "string") {
+        if (
+          bestString === undefined ||
+          WeaverContext.higherPriorityThan(alias, bestString) < 0
+        ) {
+          bestString = alias
+        }
       }
     }
-    if (typeof best === "string") return best
-    for (const [fieldName, parent] of tupleAliases) {
-      const alias = parent.name + fieldName
-      if (
-        best === undefined ||
-        WeaverContext.higherPriorityThan(alias, best) < 0
-      ) {
-        best = alias
+    if (bestString !== undefined) return bestString
+
+    let bestTuple: string | undefined
+    for (const alias of aliases) {
+      if (Array.isArray(alias)) {
+        const current = alias[1].name + alias[0]
+        if (
+          bestTuple === undefined ||
+          WeaverContext.higherPriorityThan(current, bestTuple) < 0
+        ) {
+          bestTuple = current
+        }
       }
     }
-    return best
+    return bestTuple
   }
 
   protected createFallbackAlias(namedType: GraphQLNamedType): string {
