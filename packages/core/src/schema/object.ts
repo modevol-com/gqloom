@@ -91,6 +91,7 @@ export class LoomObjectType extends GraphQLObjectType {
 
   public hideField(name: string) {
     this.hiddenFields.add(name)
+    delete this._fieldsCache
   }
 
   public addField(
@@ -104,6 +105,7 @@ export class LoomObjectType extends GraphQLObjectType {
     }
     this.extraFields.set(name, field)
     if (resolver) this.resolvers.set(name, resolver)
+    delete this._fieldsCache
   }
 
   public mergeExtensions(
@@ -121,7 +123,9 @@ export class LoomObjectType extends GraphQLObjectType {
   }
 
   private extraFieldMap?: GraphQLFieldMap<any, any>
+  private _fieldsCache?: GraphQLFieldMap<any, any>
   public override getFields(): GraphQLFieldMap<any, any> {
+    if (this._fieldsCache) return this._fieldsCache
     const fieldsBySuper = super.getFields()
     this.collectedFieldNames()
     const extraFields = provideWeaverContext(
@@ -143,6 +147,7 @@ export class LoomObjectType extends GraphQLObjectType {
     for (const fieldName of this.hiddenFields) {
       delete answer[fieldName]
     }
+    this._fieldsCache = answer
     return answer
   }
 
