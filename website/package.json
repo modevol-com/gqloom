@@ -45,7 +45,7 @@
     "graphql-yoga": "^5.18.0",
     "mercurius": "^16.6.0",
     "oxc-minify": "^0.108.0",
-    "typebox": "^1.0.4",
+    "typebox": "^1.0.78",
     "valibot": "^1.2.0",
     "vitepress": "2.0.0-alpha.15",
     "vitepress-plugin-llms": "^1.10.0",
