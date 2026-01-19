@@ -553,8 +553,8 @@ importers:
         specifier: ^2.1.29
         version: 2.1.29
       typebox:
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.78
+        version: 1.0.78
 
   packages/mikro-orm:
     dependencies:
@@ -766,8 +766,8 @@ importers:
         specifier: ^0.108.0
         version: 0.108.0
       typebox:
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.78
+        version: 1.0.78
       valibot:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.9.3)
@@ -6171,8 +6171,8 @@ packages:
     resolution: {integrity: sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==}
     engines: {node: '>= 0.6'}
 
-  typebox@1.0.4:
-    resolution: {integrity: sha512-qDRlLZ1xoOr33u5HQdbto05azYFzAuauSkb3lLmA1j9l5s91h/G2KoLJgP7+O+Wpft1zLazfqwbvKyGcCofCXg==}
+  typebox@1.0.78:
+    resolution: {integrity: sha512-xOPmaDSBCMa6vCHFguteJuOcq73HY2aKexdVUi+zE82dCcCp3FMKaM/SfT4fcNNgskLmjauuU8wr0/1fWNN1Og==}
 
   typed-array-buffer@1.0.3:
     resolution: {integrity: sha512-nAYYwfY3qnzX30IkA6AQZjVbtK6duGontcQm1WSG1MD94YLqK0515GNApXkoxKOWMusVssAHWLh9SeaoefYFGw==}
@@ -12106,7 +12106,7 @@ snapshots:
       media-typer: 1.1.0
       mime-types: 3.0.2
 
-  typebox@1.0.4: {}
+  typebox@1.0.78: {}
 
   typed-array-buffer@1.0.3:
     dependencies:
