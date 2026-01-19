@@ -38,7 +38,7 @@
     "graphql-tag": "^2.12.6",
     "graphql-yoga": "^5.18.0",
     "mercurius": "^16.6.0",
-    "mercurius-integration-testing": "^9.0.0"
+    "mercurius-integration-testing": "^9.0.1"
   },
   "keywords": [
     "gqloom",

@@ -86,13 +86,13 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.15.0(graphql@16.12.0)
+        version: 0.15.1(graphql@16.12.0)
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.15.0(graphql@16.12.0))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.6.0)(knex@3.1.0(better-sqlite3@12.6.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
+        version: 0.11.0(@gqloom/core@0.15.1(graphql@16.12.0))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.6.0)(knex@3.1.0(better-sqlite3@12.6.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/valibot':
         specifier: latest
-        version: 0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(valibot@1.2.0(typescript@5.9.3))
+        version: 0.15.1(@gqloom/core@0.15.1(graphql@16.12.0))(graphql@16.12.0)(valibot@1.2.0(typescript@5.9.3))
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -129,13 +129,13 @@ importers:
     dependencies:
       '@gqloom/core':
         specifier: latest
-        version: 0.15.0(graphql@16.12.0)
+        version: 0.15.1(graphql@16.12.0)
       '@gqloom/drizzle':
         specifier: latest
-        version: 0.11.0(@gqloom/core@0.15.0(graphql@16.12.0))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.6.0)(knex@3.1.0(better-sqlite3@12.6.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
+        version: 0.11.0(@gqloom/core@0.15.1(graphql@16.12.0))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.6.0)(knex@3.1.0(better-sqlite3@12.6.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/zod':
         specifier: latest
-        version: 0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)
+        version: 0.15.1(@gqloom/core@0.15.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -531,8 +531,8 @@ importers:
         specifier: ^16.6.0
         version: 16.6.0(graphql@16.12.0)
       mercurius-integration-testing:
-        specifier: ^9.0.0
-        version: 9.0.0(@mercuriusjs/federation@5.0.0)(fastify@5.6.2)(graphql@16.12.0)(mercurius@16.6.0(graphql@16.12.0))
+        specifier: ^9.0.1
+        version: 9.0.1(@mercuriusjs/federation@5.0.0)(fastify@5.6.2)(graphql@16.12.0)(mercurius@16.6.0(graphql@16.12.0))
 
   packages/json:
     dependencies:
@@ -1861,8 +1861,8 @@ packages:
     peerDependencies:
       graphql: ^16.12.0
 
-  '@gqloom/core@0.15.0':
-    resolution: {integrity: sha512-iYsL296HczSA9tbLctEHqna8ohEwJsjX1lvIxLjdm9nkIaCqdVFSzh0WDHYNEHCiHHmZDsvgo66nvHyoMGUxzA==}
+  '@gqloom/core@0.15.1':
+    resolution: {integrity: sha512-wd/gn3MThpv5u0NgLOZOETTuR9Q+gIPnVfUs4CIm3qmkUXCDsJs+gJCupTihmK236n+q8ffuNllB+oyzuhsLUA==}
     peerDependencies:
       graphql: ^16.12.0
 
@@ -1884,15 +1884,15 @@ packages:
       '@gqloom/core': '>= 0.12.0'
       graphql: ^16.12.0
 
-  '@gqloom/valibot@0.15.0':
-    resolution: {integrity: sha512-Q4mrP5vcw6wMrHU3tpm14THeXwP9XapbzHYUlQQFzkwobu85ddKo/i9nJKl80D1ZHZmC//8yv99atmSuiA+zsA==}
+  '@gqloom/valibot@0.15.1':
+    resolution: {integrity: sha512-b3c4rAeSPzhXuW91NBGuFPWkW+jE9DN+XpRe13v6vhsGDiX8K8zDG72hJVkhccBhtj6m0Efqv9I6/wbBOAvtOw==}
     peerDependencies:
       '@gqloom/core': '>= 0.12.0'
       graphql: ^16.12.0
       valibot: '>= 1.0.0'
 
-  '@gqloom/zod@0.15.0':
-    resolution: {integrity: sha512-nHaeKPwMpk8FUbm05WdV6mv62GhytOzRHYXt5/59Cz7Iqp6I3RgDx51Xpnaa9GxJf1xsndYzEOjrqmFumkY7yQ==}
+  '@gqloom/zod@0.15.1':
+    resolution: {integrity: sha512-CnrPBnRDG1iUAM0+9EiNC3Iv2o/pk/AMKYRfm+PZzpx8J7CXeSOD+k9J4+fq3IIS7EW/R7UuQH6ZUsMUk600bA==}
     peerDependencies:
       '@gqloom/core': '>= 0.12.0'
       graphql: ^16.12.0
@@ -3542,12 +3542,12 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  cookie@0.5.0:
-    resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
-    engines: {node: '>= 0.6'}
-
   cookie@1.0.2:
     resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
+    engines: {node: '>=18'}
+
+  cookie@1.1.1:
+    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
     engines: {node: '>=18'}
 
   copy-anything@4.0.5:
@@ -4842,8 +4842,8 @@ packages:
     resolution: {integrity: sha512-aisnrDP4GNe06UcKFnV5bfMNPBUw4jsLGaWwWfnH3v02GnBuXX2MCVn5RbrWo0j3pczUilYblq7fQ7Nw2t5XKw==}
     engines: {node: '>= 0.8'}
 
-  mercurius-integration-testing@9.0.0:
-    resolution: {integrity: sha512-N2GRMPOZ2BjgnTUH3QKcv9INd3AXb7u7GYQQ8EeakBTqZ68PkWppM32RwNTRMKuxJblUBbTEOJ5diAwo0ETP9A==}
+  mercurius-integration-testing@9.0.1:
+    resolution: {integrity: sha512-AAE0slhjNPtNbRD3guczsEzlh38ClzFlvU/VnuMHqjWUDsc7pHkk8psFTxlJ6ihFiNIVBBPDIfWnBzbMJ+7IrA==}
     engines: {node: '>=14'}
     peerDependencies:
       '@mercuriusjs/federation': ^1 || ^2
@@ -5991,6 +5991,7 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   tarn@3.0.2:
     resolution: {integrity: sha512-51LAVKUSZSVfI05vjPESNc5vwqqZpbXCsU+/+wxlOrUjk2SnFTt97v9ZgQrD4YmxYW1Px6w2KjaDitCfkvgxMQ==}
@@ -6464,18 +6465,6 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  ws@8.18.0:
-    resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
 
   ws@8.18.3:
     resolution: {integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==}
@@ -7441,7 +7430,7 @@ snapshots:
     dependencies:
       graphql: 16.12.0
 
-  '@gqloom/core@0.15.0(graphql@16.12.0)':
+  '@gqloom/core@0.15.1(graphql@16.12.0)':
     dependencies:
       graphql: 16.12.0
 
@@ -7449,9 +7438,9 @@ snapshots:
     dependencies:
       graphql: 16.12.0
 
-  '@gqloom/drizzle@0.11.0(@gqloom/core@0.15.0(graphql@16.12.0))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.6.0)(knex@3.1.0(better-sqlite3@12.6.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)':
+  '@gqloom/drizzle@0.11.0(@gqloom/core@0.15.1(graphql@16.12.0))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.6.0)(knex@3.1.0(better-sqlite3@12.6.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)':
     dependencies:
-      '@gqloom/core': 0.15.0(graphql@16.12.0)
+      '@gqloom/core': 0.15.1(graphql@16.12.0)
       drizzle-orm: 0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.11.10)(better-sqlite3@12.6.0)(knex@3.1.0(better-sqlite3@12.6.0)(mysql2@3.16.0)(pg@8.13.2)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.13.2)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.0)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7)
       graphql: 16.12.0
 
@@ -7461,15 +7450,15 @@ snapshots:
       graphql: 16.12.0
       json-schema-to-ts: 3.1.1
 
-  '@gqloom/valibot@0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(valibot@1.2.0(typescript@5.9.3))':
+  '@gqloom/valibot@0.15.1(@gqloom/core@0.15.1(graphql@16.12.0))(graphql@16.12.0)(valibot@1.2.0(typescript@5.9.3))':
     dependencies:
-      '@gqloom/core': 0.15.0(graphql@16.12.0)
+      '@gqloom/core': 0.15.1(graphql@16.12.0)
       graphql: 16.12.0
       valibot: 1.2.0(typescript@5.9.3)
 
-  '@gqloom/zod@0.15.0(@gqloom/core@0.15.0(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)':
+  '@gqloom/zod@0.15.1(@gqloom/core@0.15.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)':
     dependencies:
-      '@gqloom/core': 0.15.0(graphql@16.12.0)
+      '@gqloom/core': 0.15.1(graphql@16.12.0)
       graphql: 16.12.0
       zod: 4.2.1
 
@@ -7647,7 +7636,7 @@ snapshots:
   '@libsql/isomorphic-ws@0.1.5':
     dependencies:
       '@types/ws': 8.18.1
-      ws: 8.18.3
+      ws: 8.19.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -9148,9 +9137,9 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  cookie@0.5.0: {}
-
   cookie@1.0.2: {}
+
+  cookie@1.1.1: {}
 
   copy-anything@4.0.5:
     dependencies:
@@ -10592,14 +10581,14 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mercurius-integration-testing@9.0.0(@mercuriusjs/federation@5.0.0)(fastify@5.6.2)(graphql@16.12.0)(mercurius@16.6.0(graphql@16.12.0)):
+  mercurius-integration-testing@9.0.1(@mercuriusjs/federation@5.0.0)(fastify@5.6.2)(graphql@16.12.0)(mercurius@16.6.0(graphql@16.12.0)):
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.12.0)
-      cookie: 0.5.0
+      cookie: 1.1.1
       fastify: 5.6.2
       graphql: 16.12.0
       mercurius: 16.6.0(graphql@16.12.0)
-      ws: 8.18.0
+      ws: 8.19.0
     optionalDependencies:
       '@mercuriusjs/federation': 5.0.0
     transitivePeerDependencies:
@@ -12474,12 +12463,9 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.18.0: {}
-
   ws@8.18.3: {}
 
-  ws@8.19.0:
-    optional: true
+  ws@8.19.0: {}
 
   xml-name-validator@5.0.0:
     optional: true
