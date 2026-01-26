@@ -14,7 +14,7 @@
     "@gqloom/core": "^0.2.0",
     "@hono/graphql-server": "^0.5.1",
     "@hono/node-server": "^1.19.7",
-    "fastify": "^5.4.0",
+    "fastify": "^5.7.1",
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.18.0",
     "hono": "^4.11.1",

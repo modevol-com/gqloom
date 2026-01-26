@@ -15,7 +15,7 @@
   "description": "File upload example using graphql-upload and graphql-yoga with GQLoom",
   "devDependencies": {
     "@types/node": "^24.3.0",
-    "fastify": "^5.6.2",
+    "fastify": "^5.7.1",
     "mercurius": "^16.6.0",
     "mercurius-upload": "^8.0.0",
     "tsx": "^4.21.0",
