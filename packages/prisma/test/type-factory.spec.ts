@@ -1,26 +1,28 @@
-import { isSilk } from "@gqloom/core"
-import { printType } from "graphql"
+import { isSilk, query, resolver, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import { GraphQLScalarType, printType } from "graphql"
 import { describe, expect, it } from "vitest"
+import * as z from "zod"
 import { PrismaActionArgsFactory, PrismaTypeFactory } from "../src"
 import * as g from "./generated"
 
 describe("PrismaTypeFactory", () => {
-  const typeWeaver = new PrismaTypeFactory(g.User)
+  const typeFactory = new PrismaTypeFactory(g.User)
   it("should be able to create a type weaver", () => {
-    expect(typeWeaver).toBeDefined()
+    expect(typeFactory).toBeDefined()
   })
 
   describe("getSilk", () => {
     it("should return a valid GraphQL silk", () => {
-      const whereInputSilk = typeWeaver.getSilk("UserWhereInput")
+      const whereInputSilk = typeFactory.getSilk("UserWhereInput")
       expect(isSilk(whereInputSilk)).toBe(true)
     })
 
     it("should create silk that delegates to inputType method", () => {
-      const whereInputSilk = typeWeaver.getSilk("UserWhereInput")
+      const whereInputSilk = typeFactory.getSilk("UserWhereInput")
       expect(isSilk(whereInputSilk)).toBe(true)
 
-      const whereInputType = typeWeaver.inputType("User", "WhereInput")
+      const whereInputType = typeFactory.inputType("User", "WhereInput")
       expect(printType(whereInputType)).toMatchInlineSnapshot(`
         "type UserWhereInput {
           AND: [UserWhereInput!]
@@ -37,10 +39,10 @@ describe("PrismaTypeFactory", () => {
     })
 
     it("should work with different input types", () => {
-      const createInputSilk = typeWeaver.getSilk("UserCreateInput")
+      const createInputSilk = typeFactory.getSilk("UserCreateInput")
       expect(isSilk(createInputSilk)).toBe(true)
 
-      const createInputType = typeWeaver.inputType("User", "CreateInput")
+      const createInputType = typeFactory.inputType("User", "CreateInput")
       expect(printType(createInputType)).toMatchInlineSnapshot(`
         "type UserCreateInput {
           email: String!
@@ -55,7 +57,7 @@ describe("PrismaTypeFactory", () => {
 
   describe("inputType", () => {
     it("should be able to create WhereInput", () => {
-      const UserWhereInput = typeWeaver.inputType("User", "WhereInput")
+      const UserWhereInput = typeFactory.inputType("User", "WhereInput")
       expect(printType(UserWhereInput)).toMatchInlineSnapshot(`
         "type UserWhereInput {
           AND: [UserWhereInput!]
@@ -72,7 +74,7 @@ describe("PrismaTypeFactory", () => {
     })
 
     it("should be able to create ScaleFilter", () => {
-      const IntFilter = typeWeaver.inputType("Int", "Filter")
+      const IntFilter = typeFactory.inputType("Int", "Filter")
       expect(printType(IntFilter)).toMatchInlineSnapshot(`
       "type IntFilter {
         equals: Int
@@ -88,7 +90,7 @@ describe("PrismaTypeFactory", () => {
     })
 
     it("should be able to create CreateInput", () => {
-      const UserCreateInput = typeWeaver.inputType("User", "CreateInput")
+      const UserCreateInput = typeFactory.inputType("User", "CreateInput")
       expect(printType(UserCreateInput)).toMatchInlineSnapshot(`
         "type UserCreateInput {
           email: String!
@@ -100,7 +102,7 @@ describe("PrismaTypeFactory", () => {
       `)
     })
     it("should be able to create CreateManyInput", () => {
-      const UserCreateManyInput = typeWeaver.inputType(
+      const UserCreateManyInput = typeFactory.inputType(
         "User",
         "CreateManyInput"
       )
@@ -114,7 +116,7 @@ describe("PrismaTypeFactory", () => {
     })
 
     it("should be able to create UpdateManyMutationInput", () => {
-      const UserUpdateManyMutationInput = typeWeaver.inputType(
+      const UserUpdateManyMutationInput = typeFactory.inputType(
         "User",
         "UpdateManyMutationInput"
       )
@@ -125,11 +127,49 @@ describe("PrismaTypeFactory", () => {
         }"
       `)
     })
+
+    it("should be able to create WhereInput with custom silk", () => {
+      const userResolver = resolver.of(g.User, {
+        create: query(g.User.nullable())
+          .input({
+            data: typeFactory.getSilk("UserCreateInput"),
+          })
+          .resolve(() => null),
+      })
+
+      const Email = new GraphQLScalarType({
+        name: "Email",
+        description: "Email address",
+      })
+
+      const schema = weave(
+        ZodWeaver.config({
+          presetGraphQLType: (schema) => {
+            if (schema instanceof z.ZodEmail) return Email
+          },
+        }),
+        g.User.config({
+          fields: { email: z.email() },
+        }),
+        userResolver
+      )
+
+      const UserCreateInput = schema.getType("UserCreateInput")
+      expect(printType(UserCreateInput!)).toMatchInlineSnapshot(`
+        "input UserCreateInput {
+          email: Email!
+          name: String
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
+          profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+    })
   })
 
   describe("enumType", () => {
     it("should be able to create enum type", () => {
-      const SortOrder = typeWeaver.enumType("SortOrder")
+      const SortOrder = typeFactory.enumType("SortOrder")
 
       expect(printType(SortOrder)).toMatchInlineSnapshot(`
         "enum SortOrder {

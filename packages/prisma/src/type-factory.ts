@@ -16,6 +16,8 @@ import {
   GraphQLObjectType,
   type GraphQLOutputType,
   GraphQLScalarType,
+  isListType,
+  isNonNullType,
 } from "graphql"
 import { PrismaWeaver } from "."
 import type {
@@ -133,8 +135,10 @@ export class PrismaTypeFactory<
 
                 if (type === SYMBOLS.FIELD_HIDDEN) return null
 
-                if (isList) type = new GraphQLList(new GraphQLNonNull(type))
-                if (isNonNull) type = new GraphQLNonNull(type)
+                if (isList && !isListType(type))
+                  type = new GraphQLList(new GraphQLNonNull(type))
+                if (isNonNull && !isNonNullType(type))
+                  type = new GraphQLNonNull(type)
 
                 return [
                   field.name,
