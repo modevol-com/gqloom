@@ -17,6 +17,7 @@ import {
   GraphQLObjectType,
   type GraphQLOutputType,
   GraphQLString,
+  isOutputType,
 } from "graphql"
 import type {
   PrismaEnumSilk,
@@ -134,13 +135,29 @@ export class PrismaWeaver {
     fieldConfig: PrismaModelConfigOptionsField,
     meta: PrismaModelMeta | undefined
   ): GraphQLFieldConfig<any, any> | undefined {
+    const ensureNonNull = (type: GraphQLOutputType) =>
+      field.isRequired ? new GraphQLNonNull(type) : type
+
     if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return undefined
+    const description = field.documentation
+
+    if (isSilk(fieldConfig)) {
+      return {
+        type: silk.getType(fieldConfig),
+        description: field.documentation,
+      }
+    }
+    if (isOutputType(fieldConfig)) {
+      return {
+        type: ensureNonNull(fieldConfig),
+        description: field.documentation,
+      }
+    }
+
     const { type: typeGetter, ...options } = fieldConfig ?? {}
     const fieldTypeFromConfig =
       typeof typeGetter === "function" ? typeGetter() : typeGetter
     if (fieldTypeFromConfig === SYMBOLS.FIELD_HIDDEN) return undefined
-
-    const description = field.documentation
 
     if (isSilk(fieldTypeFromConfig)) {
       return {
@@ -151,7 +168,7 @@ export class PrismaWeaver {
     }
     if (fieldTypeFromConfig != null) {
       return {
-        type: fieldTypeFromConfig,
+        type: ensureNonNull(fieldTypeFromConfig),
         description: field.documentation,
         ...options,
       }
@@ -169,12 +186,7 @@ export class PrismaWeaver {
       }
     })()
     if (!unwrappedType) return
-
-    const type = field.isRequired
-      ? new GraphQLNonNull(unwrappedType)
-      : unwrappedType
-
-    return { type, description, ...options }
+    return { type: ensureNonNull(unwrappedType), description, ...options }
   }
 
   public static config(config: PrismaWeaverConfigOptions): PrismaWeaverConfig {

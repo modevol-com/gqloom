@@ -42,6 +42,8 @@ export type PrismaModelConfigOptionsField =
         | undefined
     })
   | typeof SYMBOLS.FIELD_HIDDEN
+  | GraphQLOutputType
+  | GraphQLSilk
   | undefined
 
 export interface PrismaModelConfig<TModel>
