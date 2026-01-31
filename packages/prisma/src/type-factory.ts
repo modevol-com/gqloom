@@ -102,7 +102,7 @@ export class PrismaTypeFactory<
                           return PrismaWeaver.getGraphQLTypeByField(
                             fieldInput.type,
                             typeGetter,
-                            null // FIXME: should pass field
+                            null
                           )
                         } catch (_err) {
                           throw new Error(
