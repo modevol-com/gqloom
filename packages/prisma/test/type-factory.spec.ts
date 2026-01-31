@@ -20,7 +20,7 @@ describe("PrismaTypeFactory", () => {
       const whereInputSilk = typeWeaver.getSilk("UserWhereInput")
       expect(isSilk(whereInputSilk)).toBe(true)
 
-      const whereInputType = typeWeaver.inputType("UserWhereInput")
+      const whereInputType = typeWeaver.inputType("User", "WhereInput")
       expect(printType(whereInputType)).toMatchInlineSnapshot(`
         "type UserWhereInput {
           AND: [UserWhereInput!]
@@ -40,7 +40,7 @@ describe("PrismaTypeFactory", () => {
       const createInputSilk = typeWeaver.getSilk("UserCreateInput")
       expect(isSilk(createInputSilk)).toBe(true)
 
-      const createInputType = typeWeaver.inputType("UserCreateInput")
+      const createInputType = typeWeaver.inputType("User", "CreateInput")
       expect(printType(createInputType)).toMatchInlineSnapshot(`
         "type UserCreateInput {
           email: String!
@@ -55,7 +55,7 @@ describe("PrismaTypeFactory", () => {
 
   describe("inputType", () => {
     it("should be able to create WhereInput", () => {
-      const UserWhereInput = typeWeaver.inputType("UserWhereInput")
+      const UserWhereInput = typeWeaver.inputType("User", "WhereInput")
       expect(printType(UserWhereInput)).toMatchInlineSnapshot(`
         "type UserWhereInput {
           AND: [UserWhereInput!]
@@ -72,7 +72,7 @@ describe("PrismaTypeFactory", () => {
     })
 
     it("should be able to create ScaleFilter", () => {
-      const IntFilter = typeWeaver.inputType("IntFilter")
+      const IntFilter = typeWeaver.inputType("Int", "Filter")
       expect(printType(IntFilter)).toMatchInlineSnapshot(`
       "type IntFilter {
         equals: Int
@@ -88,7 +88,7 @@ describe("PrismaTypeFactory", () => {
     })
 
     it("should be able to create CreateInput", () => {
-      const UserCreateInput = typeWeaver.inputType("UserCreateInput")
+      const UserCreateInput = typeWeaver.inputType("User", "CreateInput")
       expect(printType(UserCreateInput)).toMatchInlineSnapshot(`
         "type UserCreateInput {
           email: String!
@@ -100,7 +100,10 @@ describe("PrismaTypeFactory", () => {
       `)
     })
     it("should be able to create CreateManyInput", () => {
-      const UserCreateManyInput = typeWeaver.inputType("UserCreateManyInput")
+      const UserCreateManyInput = typeWeaver.inputType(
+        "User",
+        "CreateManyInput"
+      )
       expect(printType(UserCreateManyInput)).toMatchInlineSnapshot(`
         "type UserCreateManyInput {
           id: Int
@@ -112,7 +115,8 @@ describe("PrismaTypeFactory", () => {
 
     it("should be able to create UpdateManyMutationInput", () => {
       const UserUpdateManyMutationInput = typeWeaver.inputType(
-        "UserUpdateManyMutationInput"
+        "User",
+        "UpdateManyMutationInput"
       )
       expect(printType(UserUpdateManyMutationInput)).toMatchInlineSnapshot(`
         "type UserUpdateManyMutationInput {

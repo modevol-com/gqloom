@@ -2,6 +2,7 @@ import {
   type GraphQLSilk,
   isSilk,
   provideWeaverContext,
+  SYMBOLS,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -20,6 +21,7 @@ import { PrismaWeaver } from "."
 import type {
   AnyPrismaModelSilk,
   InferTModelSilkName,
+  PrismaModelConfig,
   PrismaModelMeta,
   PrismaTypes,
 } from "./types"
@@ -29,10 +31,12 @@ export class PrismaTypeFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
 > {
   protected modelMeta: Required<PrismaModelMeta>
+  protected modelName: string | undefined
 
   public constructor(silkOrModelMeta: TModelSilk | PrismaModelMeta) {
     if (isSilk(silkOrModelMeta)) {
       this.modelMeta = PrismaTypeFactory.indexModelMeta(silkOrModelMeta.meta)
+      this.modelName = silkOrModelMeta.name
     } else {
       this.modelMeta = PrismaTypeFactory.indexModelMeta(silkOrModelMeta)
     }
@@ -43,13 +47,26 @@ export class PrismaTypeFactory<
   >(
     name: TName
   ): GraphQLSilk<PrismaTypes[InferTModelSilkName<TModelSilk>][TName]> {
-    return silk(() => this.inputType(String(name))) as GraphQLSilk<
-      PrismaTypes[InferTModelSilkName<TModelSilk>][TName]
-    >
+    if (!this.modelName)
+      throw new Error(
+        "Model name is not set, you should pass the silk object instead of model meta in the constructor"
+      )
+    const modelName = this.modelName
+    return silk(() =>
+      this.inputType(modelName, { inputName: String(name) })
+    ) as GraphQLSilk<PrismaTypes[InferTModelSilkName<TModelSilk>][TName]>
   }
 
-  public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
+  public inputType(
+    modelName: string | null,
+    suffixOrConfig: string | { inputName: string }
+  ): GraphQLObjectType | GraphQLScalarType {
+    const name =
+      typeof suffixOrConfig === "string"
+        ? `${modelName}${suffixOrConfig}`
+        : suffixOrConfig.inputName
     const input = this.modelMeta.inputTypes.get(name)
+
     if (!input) throw new Error(`Input type ${name} not found`)
 
     if (input.fields.length === 0) return PrismaTypeFactory.emptyInputScalar()
@@ -59,57 +76,80 @@ export class PrismaTypeFactory<
 
     if (existing) return existing
 
+    const {
+      fields: fieldsGetter,
+      [SYMBOLS.WEAVER_CONFIG]: _,
+      ...modelConfig
+    } = weaverContext.getConfig<PrismaModelConfig<any>>(
+      `gqloom.prisma.model.${modelName}`
+    ) ?? {}
+
+    const fieldsConfig =
+      typeof fieldsGetter === "function" ? fieldsGetter() : fieldsGetter
+
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
         fields: provideWeaverContext.inherit(() => ({
           ...Object.fromEntries(
-            input.fields.map((field) => {
-              const isNonNull = field.isRequired && !field.isNullable
-              const fieldInput = PrismaTypeFactory.getMostRankInputType(
-                field.inputTypes
-              )
+            input.fields
+              .map((field) => {
+                const isNonNull = field.isRequired && !field.isNullable
+                const fieldInput = PrismaTypeFactory.getMostRankInputType(
+                  field.inputTypes
+                )
+                const [typeGetter, options] =
+                  PrismaWeaver.getFieldConfigOptions(fieldsConfig?.[field.name])
 
-              const isList = fieldInput.isList
-              let type: GraphQLOutputType = (() => {
-                switch (fieldInput.location) {
-                  case "inputObjectTypes":
-                    return this.inputType(fieldInput.type)
-                  case "scalar": {
-                    try {
-                      const t = PrismaWeaver.getGraphQLTypeByField(
-                        fieldInput.type
-                      )
-                      return t
-                    } catch (_err) {
-                      throw new Error(
-                        `Can not find GraphQL type for scalar ${fieldInput.type}`
-                      )
+                const isList = fieldInput.isList
+                let type: GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN =
+                  (() => {
+                    switch (fieldInput.location) {
+                      case "inputObjectTypes":
+                        return this.inputType(modelName, {
+                          inputName: fieldInput.type,
+                        })
+                      case "scalar": {
+                        try {
+                          return PrismaWeaver.getGraphQLTypeByField(
+                            fieldInput.type,
+                            typeGetter,
+                            null // FIXME: should pass field
+                          )
+                        } catch (_err) {
+                          throw new Error(
+                            `Can not find GraphQL type for scalar ${fieldInput.type}`
+                          )
+                        }
+                      }
+                      case "enumTypes":
+                        return this.enumType(fieldInput.type)
+                      default:
+                        throw new Error(
+                          `Unknown input type location: ${fieldInput.location}`
+                        )
                     }
-                  }
-                  case "enumTypes":
-                    return this.enumType(fieldInput.type)
-                  default:
-                    throw new Error(
-                      `Unknown input type location: ${fieldInput.location}`
-                    )
-                }
-              })()
+                  })()
 
-              if (isList) type = new GraphQLList(new GraphQLNonNull(type))
-              if (isNonNull) type = new GraphQLNonNull(type)
+                if (type === SYMBOLS.FIELD_HIDDEN) return null
 
-              return [
-                field.name,
-                {
-                  description: field.comment,
-                  deprecationReason: field.deprecation?.reason,
-                  type,
-                } as GraphQLFieldConfig<any, any, any>,
-              ]
-            })
+                if (isList) type = new GraphQLList(new GraphQLNonNull(type))
+                if (isNonNull) type = new GraphQLNonNull(type)
+
+                return [
+                  field.name,
+                  {
+                    description: field.comment,
+                    deprecationReason: field.deprecation?.reason,
+                    type,
+                    ...options,
+                  } as GraphQLFieldConfig<any, any, any>,
+                ]
+              })
+              .filter((x) => x != null)
           ),
         })),
+        ...modelConfig,
       })
     )
   }
@@ -256,13 +296,11 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(`${model.name}WhereInput`) },
+        where: { type: this.inputType(model.name, "WhereInput") },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
-          ),
+          type: gt.list(this.inputType(model.name, "OrderByWithRelationInput")),
         },
-        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+        cursor: { type: this.inputType(model.name, "WhereUniqueInput") },
         skip: { type: gt.int },
         take: { type: gt.int },
       })),
@@ -281,13 +319,11 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(`${model.name}WhereInput`) },
+        where: { type: this.inputType(model.name, "WhereInput") },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
-          ),
+          type: gt.list(this.inputType(model.name, "OrderByWithRelationInput")),
         },
-        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+        cursor: { type: this.inputType(model.name, "WhereUniqueInput") },
         skip: { type: gt.int },
         take: { type: gt.int },
         distinct: {
@@ -309,13 +345,11 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(`${model.name}WhereInput`) },
+        where: { type: this.inputType(model.name, "WhereInput") },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
-          ),
+          type: gt.list(this.inputType(model.name, "OrderByWithRelationInput")),
         },
-        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+        cursor: { type: this.inputType(model.name, "WhereUniqueInput") },
         skip: { type: gt.int },
         take: { type: gt.int },
         distinct: {
@@ -337,7 +371,7 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(`${model.name}WhereUniqueInput`) },
+        where: { type: this.inputType(model.name, "WhereUniqueInput") },
       })),
     })
 
@@ -355,7 +389,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
+          type: gt.nonNull(this.inputType(model.name, "CreateInput")),
         },
       })),
     })
@@ -374,7 +408,7 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(
-            gt.list(this.inputType(`${model.name}CreateManyInput`))
+            gt.list(this.inputType(model.name, "CreateManyInput"))
           ),
         },
       })),
@@ -393,7 +427,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: gt.nonNull(this.inputType(model.name, "WhereUniqueInput")),
         },
       })),
     })
@@ -411,7 +445,7 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(`${model.name}WhereInput`) },
+        where: { type: this.inputType(model.name, "WhereInput") },
       })),
     })
 
@@ -429,10 +463,10 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+          type: gt.nonNull(this.inputType(model.name, "UpdateInput")),
         },
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: gt.nonNull(this.inputType(model.name, "WhereUniqueInput")),
         },
       })),
     })
@@ -451,10 +485,10 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(
-            this.inputType(`${model.name}UpdateManyMutationInput`)
+            this.inputType(model.name, "UpdateManyMutationInput")
           ),
         },
-        where: { type: this.inputType(`${model.name}WhereInput`) },
+        where: { type: this.inputType(model.name, "WhereInput") },
       })),
     })
 
@@ -472,13 +506,13 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: gt.nonNull(this.inputType(model.name, "WhereUniqueInput")),
         },
         create: {
-          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
+          type: gt.nonNull(this.inputType(model.name, "CreateInput")),
         },
         update: {
-          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+          type: gt.nonNull(this.inputType(model.name, "UpdateInput")),
         },
       })),
     })
