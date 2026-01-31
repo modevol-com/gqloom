@@ -49,24 +49,12 @@ export class PrismaTypeFactory<
   >(
     name: TName
   ): GraphQLSilk<PrismaTypes[InferTModelSilkName<TModelSilk>][TName]> {
-    if (!this.modelName)
-      throw new Error(
-        "Model name is not set, you should pass the silk object instead of model meta in the constructor"
-      )
-    const modelName = this.modelName
-    return silk(() =>
-      this.inputType(modelName, { inputName: String(name) })
-    ) as GraphQLSilk<PrismaTypes[InferTModelSilkName<TModelSilk>][TName]>
+    return silk(() => this.inputType(String(name))) as GraphQLSilk<
+      PrismaTypes[InferTModelSilkName<TModelSilk>][TName]
+    >
   }
 
-  public inputType(
-    modelName: string | null,
-    suffixOrConfig: string | { inputName: string }
-  ): GraphQLObjectType | GraphQLScalarType {
-    const name =
-      typeof suffixOrConfig === "string"
-        ? `${modelName}${suffixOrConfig}`
-        : suffixOrConfig.inputName
+  public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
     const input = this.modelMeta.inputTypes.get(name)
 
     if (!input) throw new Error(`Input type ${name} not found`)
@@ -83,7 +71,7 @@ export class PrismaTypeFactory<
       [SYMBOLS.WEAVER_CONFIG]: _,
       ...modelConfig
     } = weaverContext.getConfig<PrismaModelConfig<any>>(
-      `gqloom.prisma.model.${modelName}`
+      `gqloom.prisma.model.${input.meta?.grouping}`
     ) ?? {}
 
     const fieldsConfig =
@@ -108,9 +96,7 @@ export class PrismaTypeFactory<
                   (() => {
                     switch (fieldInput.location) {
                       case "inputObjectTypes":
-                        return this.inputType(modelName, {
-                          inputName: fieldInput.type,
-                        })
+                        return this.inputType(fieldInput.type)
                       case "scalar": {
                         try {
                           return PrismaWeaver.getGraphQLTypeByField(
@@ -300,11 +286,13 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(model.name, "WhereInput") },
+        where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(this.inputType(model.name, "OrderByWithRelationInput")),
+          type: gt.list(
+            this.inputType(`${model.name}OrderByWithRelationInput`)
+          ),
         },
-        cursor: { type: this.inputType(model.name, "WhereUniqueInput") },
+        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
         skip: { type: gt.int },
         take: { type: gt.int },
       })),
@@ -323,11 +311,13 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(model.name, "WhereInput") },
+        where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(this.inputType(model.name, "OrderByWithRelationInput")),
+          type: gt.list(
+            this.inputType(`${model.name}OrderByWithRelationInput`)
+          ),
         },
-        cursor: { type: this.inputType(model.name, "WhereUniqueInput") },
+        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
         skip: { type: gt.int },
         take: { type: gt.int },
         distinct: {
@@ -349,11 +339,13 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(model.name, "WhereInput") },
+        where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(this.inputType(model.name, "OrderByWithRelationInput")),
+          type: gt.list(
+            this.inputType(`${model.name}OrderByWithRelationInput`)
+          ),
         },
-        cursor: { type: this.inputType(model.name, "WhereUniqueInput") },
+        cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
         skip: { type: gt.int },
         take: { type: gt.int },
         distinct: {
@@ -375,7 +367,7 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(model.name, "WhereUniqueInput") },
+        where: { type: this.inputType(`${model.name}WhereUniqueInput`) },
       })),
     })
 
@@ -393,7 +385,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(model.name, "CreateInput")),
+          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
         },
       })),
     })
@@ -412,7 +404,7 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(
-            gt.list(this.inputType(model.name, "CreateManyInput"))
+            gt.list(this.inputType(`${model.name}CreateManyInput`))
           ),
         },
       })),
@@ -431,7 +423,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(model.name, "WhereUniqueInput")),
+          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
         },
       })),
     })
@@ -449,7 +441,7 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        where: { type: this.inputType(model.name, "WhereInput") },
+        where: { type: this.inputType(`${model.name}WhereInput`) },
       })),
     })
 
@@ -467,10 +459,10 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(model.name, "UpdateInput")),
+          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
         },
         where: {
-          type: gt.nonNull(this.inputType(model.name, "WhereUniqueInput")),
+          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
         },
       })),
     })
@@ -489,10 +481,10 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         data: {
           type: gt.nonNull(
-            this.inputType(model.name, "UpdateManyMutationInput")
+            this.inputType(`${model.name}UpdateManyMutationInput`)
           ),
         },
-        where: { type: this.inputType(model.name, "WhereInput") },
+        where: { type: this.inputType(`${model.name}WhereInput`) },
       })),
     })
 
@@ -510,13 +502,13 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(model.name, "WhereUniqueInput")),
+          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
         },
         create: {
-          type: gt.nonNull(this.inputType(model.name, "CreateInput")),
+          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
         },
         update: {
-          type: gt.nonNull(this.inputType(model.name, "UpdateInput")),
+          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
         },
       })),
     })
