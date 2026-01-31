@@ -263,6 +263,7 @@ export class ZodWeaver {
   ): ZodWeaverConfig {
     return {
       ...config,
+      vendorWeaver: ZodWeaver,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
     }
   }

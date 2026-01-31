@@ -9,6 +9,7 @@ import type {
   GraphQLUnionTypeConfig,
 } from "graphql"
 import type { $ZodObject, $ZodType } from "zod/v4/core"
+import type { ZodWeaver } from "."
 
 export interface LooseZodObject extends Pick<$ZodObject, "~standard"> {
   _zod: Omit<
@@ -54,4 +55,5 @@ export interface ZodWeaverConfigOptions {
 
 export interface ZodWeaverConfig extends WeaverConfig, ZodWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod"
+  vendorWeaver: typeof ZodWeaver
 }
