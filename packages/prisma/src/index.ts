@@ -1,4 +1,10 @@
-import { type GraphQLSilk, SYMBOLS, silk, weaverContext } from "@gqloom/core"
+import {
+  type GraphQLSilk,
+  isSilk,
+  SYMBOLS,
+  silk,
+  weaverContext,
+} from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
 import {
   GraphQLBoolean,
@@ -14,6 +20,9 @@ import {
 } from "graphql"
 import type {
   PrismaEnumSilk,
+  PrismaModelConfig,
+  PrismaModelConfigOptions,
+  PrismaModelConfigOptionsField,
   PrismaModelMeta,
   PrismaModelSilk,
   PrismaWeaverConfig,
@@ -49,6 +58,14 @@ export class PrismaWeaver {
           SelectiveModel<TModal, typeof model.name>[]
         >
       },
+      config(
+        options: PrismaModelConfigOptions<TModal>
+      ): PrismaModelConfig<TModal> {
+        return {
+          ...options,
+          [SYMBOLS.WEAVER_CONFIG]: `gqloom.prisma.model.${model.name}`,
+        }
+      },
     }
   }
 
@@ -74,6 +91,16 @@ export class PrismaWeaver {
     const existing = weaverContext.getNamedType(model.name)
     if (existing != null) return new GraphQLNonNull(existing)
 
+    const {
+      fields: fieldsGetter,
+      [SYMBOLS.WEAVER_CONFIG]: _,
+      ...modelConfig
+    } = weaverContext.getConfig<PrismaModelConfig<any>>(
+      `gqloom.prisma.model.${model.name}`
+    ) ?? {}
+    const fieldsConfig =
+      typeof fieldsGetter === "function" ? fieldsGetter() : fieldsGetter
+
     return new GraphQLNonNull(
       weaverContext.memoNamedType(
         new GraphQLObjectType({
@@ -82,7 +109,11 @@ export class PrismaWeaver {
             Object.fromEntries(
               model.fields
                 .map((field) => {
-                  const fieldConfig = PrismaWeaver.getGraphQLField(field, meta)
+                  const fieldConfig = PrismaWeaver.getGraphQLField(
+                    field,
+                    fieldsConfig?.[field.name],
+                    meta
+                  )
                   return fieldConfig
                     ? ([field.name, fieldConfig] as [
                         string,
@@ -92,6 +123,7 @@ export class PrismaWeaver {
                 })
                 .filter((x) => x != null)
             ),
+          ...modelConfig,
         })
       )
     )
@@ -99,8 +131,32 @@ export class PrismaWeaver {
 
   public static getGraphQLField(
     field: DMMF.Field,
-    meta?: PrismaModelMeta
+    fieldConfig: PrismaModelConfigOptionsField,
+    meta: PrismaModelMeta | undefined
   ): GraphQLFieldConfig<any, any> | undefined {
+    if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return undefined
+    const { type: typeGetter, ...options } = fieldConfig ?? {}
+    const fieldTypeFromConfig =
+      typeof typeGetter === "function" ? typeGetter() : typeGetter
+    if (fieldTypeFromConfig === SYMBOLS.FIELD_HIDDEN) return undefined
+
+    const description = field.documentation
+
+    if (isSilk(fieldTypeFromConfig)) {
+      return {
+        type: silk.getType(fieldTypeFromConfig),
+        description: field.documentation,
+        ...options,
+      }
+    }
+    if (fieldTypeFromConfig != null) {
+      return {
+        type: fieldTypeFromConfig,
+        description: field.documentation,
+        ...options,
+      }
+    }
+
     const unwrappedType = (() => {
       switch (field.kind) {
         case "enum": {
@@ -114,13 +170,11 @@ export class PrismaWeaver {
     })()
     if (!unwrappedType) return
 
-    const description = field.documentation
-
     const type = field.isRequired
       ? new GraphQLNonNull(unwrappedType)
       : unwrappedType
 
-    return { type, description }
+    return { type, description, ...options }
   }
 
   public static config(config: PrismaWeaverConfigOptions): PrismaWeaverConfig {

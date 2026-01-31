@@ -1,6 +1,10 @@
 import type { GraphQLSilk, SYMBOLS, WeaverConfig } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
-import type { GraphQLOutputType } from "graphql"
+import type {
+  GraphQLFieldConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+} from "graphql"
 
 export interface PrismaModelSilk<
   TModel,
@@ -10,11 +14,40 @@ export interface PrismaModelSilk<
   nullable(): GraphQLSilk<SelectiveModel<TModel, TName> | null>
   list(): GraphQLSilk<SelectiveModel<TModel, TName>[]>
 
+  config(options: PrismaModelConfigOptions<TModel>): PrismaModelConfig<TModel>
+
   model: DMMF.Model
   meta: PrismaModelMeta
   name: TName
 
   relations?: TRelation
+}
+
+export interface PrismaModelConfigOptions<TModel>
+  extends Partial<Omit<GraphQLObjectTypeConfig<any, any>, "fields">> {
+  fields?: Getter<{
+    [K in keyof TModel]?: PrismaModelConfigOptionsField
+  }>
+}
+
+export type PrismaModelConfigOptionsField =
+  | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
+      /**
+       * The type of the field, set to `null` to hide the field
+       */
+      type?:
+        | Getter<
+            GraphQLOutputType | GraphQLSilk | typeof SYMBOLS.FIELD_HIDDEN | null
+          >
+        | undefined
+    })
+  | typeof SYMBOLS.FIELD_HIDDEN
+  | undefined
+
+export interface PrismaModelConfig<TModel>
+  extends PrismaModelConfigOptions<TModel>,
+    WeaverConfig {
+  [SYMBOLS.WEAVER_CONFIG]: `gqloom.prisma.model.${string}`
 }
 
 export type AnyPrismaModelSilk = PrismaModelSilk<
@@ -172,3 +205,5 @@ export interface PrismaTypes {
     [key: string]: unknown
   }
 }
+
+export type Getter<T> = T | (() => T)
