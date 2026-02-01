@@ -152,6 +152,70 @@ const postResolver = resolver.of(Post, {
 
 在上面的代码中，我们隐藏了 `authorId` 字段，这意味着它将不会出现在生成的 GraphQL Schema 中。
 
+## 模型配置
+
+通过生成的丝线的 `.config()` 方法，你可以为特定的 Prisma 模型定制输出字段、输入行为以及元数据。
+
+### 输出字段配置
+
+你可以使用 `fields` 选项来定制模型生成的 GraphQL 对象类型（Object Type）。这允许你覆盖字段的类型、添加描述或隐藏特定字段。
+
+```ts
+import { User } from '@gqloom/prisma/generated'
+import { weave, SYMBOLS } from '@gqloom/core'
+import { GraphQLID } from 'graphql'
+
+export const schema = weave(
+  User,
+  User.config({
+    description: "系统用户信息", // 为 GraphQL 类型添加描述
+    fields: {
+      // 覆盖字段描述
+      email: { description: "用户的唯一电子邮箱" },
+      // 覆盖字段类型，支持 GraphQL 类型或丝线
+      id: { type: GraphQLID }, 
+      // 隐藏字段，使其不出现在查询结果中
+      password: SYMBOLS.FIELD_HIDDEN,
+    },
+  })
+)
+```
+
+### 输入字段行为
+
+你可以使用 `input` 选项来控制字段在各种输入类型（如 `CreateInput`、`UpdateInput`、`WhereInput`）中的行为。你可以根据不同的「操作」来决定字段是否可见，或者覆盖其输入类型。
+
+支持的操作类型包括：
+- `create`: 用于创建操作的输入（如 `UserCreateInput`）。
+- `update`: 用于更新操作的输入（如 `UserUpdateInput`）。
+- `filters`: 用于过滤操作的输入（如 `UserWhereInput`）。
+
+```ts
+import { User } from '@gqloom/prisma/generated'
+import { weave } from '@gqloom/core'
+import * as v from 'valibot'
+
+export const schema = weave(
+  User,
+  User.config({
+    input: {
+      // 在创建时隐藏 email 字段
+      email: { create: false },
+      // 在更新时将 name 字段设为必填（通过丝线覆盖）
+      name: { update: v.string() },
+      // 默认隐藏所有字段的过滤功能
+      "*": { filters: false },
+      // 仅显式开启 id 的过滤功能
+      id: { filters: true },
+    },
+  })
+)
+```
+
+:::tip 优先级
+对于输入类型，`input` 选项中定义的行为优先级最高，它会覆盖 `fields` 中的配置以及全局的预设。
+:::
+
 ## 解析器工厂
 
 `@gqloom/prisma` 提供了 `PrismaResolverFactory` 来帮助你创建解析器工厂。  
@@ -323,6 +387,12 @@ import { GraphQLDateTime, GraphQLJSON } from 'graphql-scalars'
 import { PrismaWeaver } from '@gqloom/prisma'
 
 export const prismaWeaverConfig = PrismaWeaver.config({
+  /**
+   * 将 @id 字段发射为 GraphQL ID 类型（仅影响输出类型）。
+   * 默认为 true。如果设为 false，则使用底层标量（如 Int 或 String）。
+   */
+  emitIdAsIDType: false,
+
   presetGraphQLType: (type) => {
     switch (type) {
       case 'DateTime':
