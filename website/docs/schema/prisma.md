@@ -15,7 +15,7 @@
 
 Define your Prisma Schema in the `prisma/schema.prisma` file:
 
-```prisma
+```prisma title="schema.prisma"
 generator client {
   provider = "prisma-client-js"
 }
@@ -47,6 +47,7 @@ model Post {
 ```
 
 ### Generator Parameters
+
 The `generator` accepts the following parameters:
 
 | Parameter      | Description                                                                                                                | Default Value                           |
@@ -57,7 +58,6 @@ The `generator` accepts the following parameters:
 | `commonjsFile` | The file name of the CommonJS file. Use an empty string `""` to skip generation of the CommonJS file.                      | `index.cjs`                             |
 | `moduleFile`   | The file name of the ES module file. Use an empty string `""` to skip generation of the ES module file.                    | `index.js`                              |
 | `typesFiles`   | The file name(s) of the TypeScript declaration file(s). Use `[]` to skip generation of the TypeScript declaration file(s). | `["index.d.ts"]`                        |
-
 ### Generate Silk
 
 ```sh
@@ -66,7 +66,7 @@ npx prisma generate
 
 ## Using Silk
 
-After generating the silk, we can use it in the `resolver`:
+After generating the silk, we can use it in the `resolver`. We use `useSelectedFields` to ensure only the fields required by the GraphQL query are selected:
 
 ```ts
 import { resolver, query, field, weave } from '@gqloom/core'
@@ -152,10 +152,74 @@ const postResolver = resolver.of(Post, {
 
 In the above code, we hide the `authorId` field, which means it will not appear in the generated GraphQL Schema.
 
+## Model Configuration
+
+You can customize output fields, input behavior, and metadata for a specific Prisma model via the `.config()` method on the generated silk.
+
+### Output Field Configuration
+
+You can use the `fields` option to customize the GraphQL Object Type generated from the model. This lets you override field types, add descriptions, or hide specific fields.
+
+```ts
+import { User } from '@gqloom/prisma/generated'
+import { weave, SYMBOLS } from '@gqloom/core'
+import { GraphQLID } from 'graphql'
+
+export const schema = weave(
+  User,
+  User.config({
+    description: "System user information", // Add description to the GraphQL type
+    fields: {
+      // Override field description
+      email: { description: "User's unique email address" },
+      // Override field type; supports GraphQL type or silk
+      id: { type: GraphQLID },
+      // Hide field so it does not appear in query results
+      password: SYMBOLS.FIELD_HIDDEN,
+    },
+  })
+)
+```
+
+### Input Field Behavior
+
+You can use the `input` option to control how fields behave in various input types (e.g. `CreateInput`, `UpdateInput`, `WhereInput`). You can decide per "operation" whether a field is visible or override its input type.
+
+Supported operation types:
+
+- `create`: Input for create operations (e.g. `UserCreateInput`).
+- `update`: Input for update operations (e.g. `UserUpdateInput`).
+- `filters`: Input for filter operations (e.g. `UserWhereInput`).
+
+```ts
+import { User } from '@gqloom/prisma/generated'
+import { weave } from '@gqloom/core'
+import * as v from 'valibot'
+
+export const schema = weave(
+  User,
+  User.config({
+    input: {
+      // Hide email in create
+      email: { create: false },
+      // Override name in update with a required string (via silk)
+      name: { update: v.string() },
+      // By default hide filter for all fields
+      "*": { filters: false },
+      // Only enable filter for id
+      id: { filters: true },
+    },
+  })
+)
+```
+
+:::tip Priority
+For input types, behavior defined in the `input` option has the highest priority; it overrides both `fields` config and global presets.
+:::
 ## Resolver Factory
 
 `@gqloom/prisma` provides the `PrismaResolverFactory` to help you create resolver factories.
-With the resolver factory, you can quickly define common queries, mutations, and fields. The resolver factory also pre-defines the input types for common operation inputs. Using the resolver factory can significantly reduce boilerplate code, which is very useful for rapid development.
+With the resolver factory, you can quickly define common queries, mutations, and fields. The resolver factory also pre-defines input types for common operations. Using it can greatly reduce boilerplate, which is helpful for fast iteration.
 
 ```ts
 import { Post, User } from '@gqloom/prisma/generated'
@@ -168,7 +232,7 @@ const db = new PrismaClient({})
 const userResolverFactory = new PrismaResolverFactory(User, db)
 const postResolverFactory = new PrismaResolverFactory(Post, db)
 ```
-In the above code, we create resolver factories for the `User` and `Post` models. The `PrismaResolverFactory` accepts two parameters. The first is the model used as silk, and the second is an instance of `PrismaClient`.
+In the above code, we create resolver factories for the `User` and `Post` models. `PrismaResolverFactory` accepts two arguments: the first is the model used as silk, the second is a `PrismaClient` instance.
 
 ### Relationship Fields
 
@@ -200,8 +264,8 @@ const postResolver = resolver.of(Post, {
   authorId: field.hidden,
 })
 ```
-In the above code, we use `userResolverFactory.relationField('posts')` and `postResolverFactory.relationField('author')` to define relationship fields.
-The `relationField` method accepts a string parameter representing the name of the relationship field.
+In the above code, we use `userResolverFactory.relationField('posts')` and `postResolverFactory.relationField('author')` to define relationship fields. The `relationField` method accepts a string argument: the name of the relationship field.
+
 
 ### Queries
 
@@ -227,7 +291,7 @@ const userResolver = resolver.of(User, {
 })
 ```
 
-In the above code, we use `userResolverFactory.findUniqueQuery()` to define the `user` query. The resolver factory will automatically create the input type and the resolver function.
+In the above code, we use `userResolverFactory.findUniqueQuery()` to define the `user` query. The resolver factory creates the input type and resolver function automatically.
 
 ### Mutations
 
@@ -252,11 +316,11 @@ const postResolver = resolver.of(Post, {
 })
 ```
 
-In the above code, we use `postResolverFactory.createMutation()` to define the `createPost` mutation. The factory will automatically create the input type and the resolver function.
+In the above code, we use `postResolverFactory.createMutation()` to define the `createPost` mutation. The factory creates the input type and resolver function automatically.
 
 ### Custom Input
 
-The pre-defined queries and mutations of the resolver factory support custom input. You can define the input type through the `input` option:
+The resolver factory’s pre-defined queries and mutations support custom input. You can define the input type via the `input` option:
 
 ```ts
 import * as v from "valibot"
@@ -273,11 +337,11 @@ const userResolver = resolver.of(User, {
 })
 ```
 
-In the above code, we use `valibot` to define the input type. `v.object({ id: v.number() })` defines the type of the input object, and `v.transform(({ id }) => ({ where: { id } }))` converts the input parameters into Prisma query parameters.
+In the above code, we use `valibot` to define the input type. `v.object({ id: v.number() })` defines the input object type, and `v.transform(({ id }) => ({ where: { id } }))` maps the input to Prisma query arguments.
 
 ### Adding Middleware
 
-The pre-defined queries, mutations, and fields of the resolver factory support adding middleware. You can define middleware through the `middlewares` option:
+The resolver factory’s pre-defined queries, mutations, and fields support middleware. You can define it via the `middlewares` option:
 
 ```ts
 const postResolver = resolver.of(Post, {
@@ -293,11 +357,11 @@ const postResolver = resolver.of(Post, {
 })
 ```
 
-In the above code, we use the `middlewares` option to define middleware. `async (next) => { ... }` defines a middleware. `useAuthedUser()` is a custom function used to get the currently logged-in user. If the user is not logged in, an error is thrown; otherwise, `next()` is called to continue execution.
+In the above code, we use the `middlewares` option to define middleware. `async (next) => { ... }` is the middleware. `useAuthedUser()` is a custom function that returns the current user; if not logged in, it throws, otherwise we call `next()` to continue.
 
 ### Complete Resolver
 
-You can directly create a Resolver from the resolver factory:
+You can create a full resolver directly from the resolver factory:
 
 ```ts
 // Readonly Resolver
@@ -307,22 +371,28 @@ const userQueriesResolver = userResolverFactory.queriesResolver()
 const userResolver = userResolverFactory.resolver()
 ```
 
-There are two methods for creating Resolvers:
+There are two methods:
+- `usersResolverFactory.queriesResolver()`: Creates a resolver with only queries and relation fields.
+- `usersResolverFactory.resolver()`: Creates a resolver with all queries, mutations, and relation fields.
 
-- `usersResolverFactory.queriesResolver()`: Creates a Resolver that only includes queries and relational fields.
-- `usersResolverFactory.resolver()`: Creates a Resolver that includes all queries, mutations, and relational fields.
 
 ## Custom Type Mapping
 
 To adapt to more Prisma types, we can extend GQLoom to add more type mappings.
 
-First, we use `PrismaWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSON` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering the `DateTime` and `Json` types, we map them to the corresponding GraphQL scalars.
+First, use `PrismaWeaver.config` to define type mapping. Here we import `GraphQLDateTime` and `GraphQLJSON` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When the types are `DateTime` or `Json`, we map them to the corresponding GraphQL scalars.
 
 ```ts twoslash
 import { GraphQLDateTime, GraphQLJSON } from 'graphql-scalars'
 import { PrismaWeaver } from '@gqloom/prisma'
 
 export const prismaWeaverConfig = PrismaWeaver.config({
+  /**
+   * Emit @id fields as GraphQL ID type (output types only).
+   * Default is true. Set to false to use the underlying scalar (e.g. Int or String).
+   */
+  emitIdAsIDType: false,
+
   presetGraphQLType: (type) => {
     switch (type) {
       case 'DateTime':
@@ -334,7 +404,7 @@ export const prismaWeaverConfig = PrismaWeaver.config({
 })
 ```
 
-Pass the configuration to the `weave` function when weaving the GraphQL Schema:
+Pass this config into the `weave` function when building the GraphQL schema:
 ```ts
 import { weave } from "@gqloom/core"
 
@@ -343,7 +413,7 @@ export const schema = weave(prismaWeaverConfig, userResolver, postResolver)
 
 ## Default Type Mapping
 
-The following table lists the default mapping relationships between Prisma types and GraphQL types in GQLoom:
+The following table lists the default mapping between Prisma types and GraphQL types in GQLoom:
 
 | Prisma Type | GraphQL Type     |
 | ----------- | ---------------- |

@@ -1,7 +1,15 @@
-import { type GraphQLSilk, getGraphQLType } from "@gqloom/core"
+import { type GraphQLSilk, getGraphQLType, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
 import type { DMMF } from "@prisma/generator-helper"
-import { type GraphQLNamedType, GraphQLNonNull, printType } from "graphql"
+import {
+  type GraphQLNamedType,
+  GraphQLNonNull,
+  GraphQLScalarType,
+  printSchema,
+  printType,
+} from "graphql"
 import { describe, expect, it } from "vitest"
+import * as z from "zod"
 import { PrismaWeaver } from "../src"
 
 const UserModel: DMMF.Model = {
@@ -175,6 +183,140 @@ describe("PrismaWeaver", () => {
         role: Role!
       }"
     `)
+  })
+
+  it("should weave model with config", () => {
+    interface IUser {
+      id: number
+      email: string
+      name: string
+      createdAt: Date
+    }
+    const UserSilk = PrismaWeaver.unravel<IUser>(UserModel, {
+      models: { User: UserModel },
+      enums: { Role: RoleEnum },
+      schema: {} as any,
+    })
+
+    const Uid = new GraphQLScalarType<number, string>({ name: "UID" })
+
+    const schema = weave(
+      UserSilk,
+      UserSilk.config({
+        fields: { id: { type: Uid, description: "user's id" } },
+      })
+    )
+
+    const schema2 = weave(
+      UserSilk,
+      UserSilk.config({
+        fields: { id: Uid },
+      })
+    )
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        """user's id"""
+        id: UID!
+
+        """user's email is unique"""
+        email: String!
+        name: String
+        createdAt: String!
+      }
+
+      scalar UID"
+    `)
+
+    expect(printSchema(schema2)).toMatchInlineSnapshot(`
+      "type User {
+        id: UID!
+
+        """user's email is unique"""
+        email: String!
+        name: String
+        createdAt: String!
+      }
+
+      scalar UID"
+    `)
+  })
+
+  it("should emit id as Int when emitIdAsIDType is false", () => {
+    const UserSilk = PrismaWeaver.unravel(UserModel, {
+      models: { User: UserModel },
+      enums: { Role: RoleEnum },
+      schema: {} as any,
+    })
+    const schema = weave(
+      PrismaWeaver.config({ emitIdAsIDType: false }),
+      UserSilk
+    )
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        id: Int!
+
+        """user's email is unique"""
+        email: String!
+        name: String
+        createdAt: String!
+      }"
+    `)
+  })
+
+  it("should weave model with config and zod type", () => {
+    interface IUser {
+      id: number
+      email: string
+      name: string
+      createdAt: Date
+    }
+    const UserSilk = PrismaWeaver.unravel<IUser>(UserModel, {
+      models: { User: UserModel },
+      enums: { Role: RoleEnum },
+      schema: {} as any,
+    })
+
+    const GraphQLDateTime = new GraphQLScalarType<Date, string>({
+      name: "DateTime",
+    })
+
+    const zodConfig = ZodWeaver.config({
+      presetGraphQLType: (schema) => {
+        if (schema instanceof z.ZodDate) return GraphQLDateTime
+      },
+    })
+
+    const schema = weave(
+      UserSilk,
+      UserSilk.config({
+        fields: { createdAt: { type: z.date() } },
+      }),
+      zodConfig
+    )
+
+    const schema2 = weave(
+      UserSilk,
+      UserSilk.config({
+        fields: { createdAt: z.date() },
+      }),
+      zodConfig
+    )
+
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        id: ID!
+
+        """user's email is unique"""
+        email: String!
+        name: String
+        createdAt: DateTime!
+      }
+
+      scalar DateTime"
+    `)
+
+    expect(printSchema(schema2)).toEqual(printSchema(schema))
   })
 })
 

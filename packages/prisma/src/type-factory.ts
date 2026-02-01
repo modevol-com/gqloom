@@ -2,6 +2,7 @@ import {
   type GraphQLSilk,
   isSilk,
   provideWeaverContext,
+  SYMBOLS,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -15,11 +16,16 @@ import {
   GraphQLObjectType,
   type GraphQLOutputType,
   GraphQLScalarType,
+  isListType,
+  isNonNullType,
 } from "graphql"
 import { PrismaWeaver } from "."
 import type {
   AnyPrismaModelSilk,
   InferTModelSilkName,
+  PrismaInputOperation,
+  PrismaModelConfig,
+  PrismaModelFieldBehaviors,
   PrismaModelMeta,
   PrismaTypes,
 } from "./types"
@@ -29,13 +35,42 @@ export class PrismaTypeFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
 > {
   protected modelMeta: Required<PrismaModelMeta>
+  protected modelName: string | undefined
 
   public constructor(silkOrModelMeta: TModelSilk | PrismaModelMeta) {
     if (isSilk(silkOrModelMeta)) {
       this.modelMeta = PrismaTypeFactory.indexModelMeta(silkOrModelMeta.meta)
+      this.modelName = silkOrModelMeta.name
     } else {
       this.modelMeta = PrismaTypeFactory.indexModelMeta(silkOrModelMeta)
     }
+  }
+
+  public static getOperationByName(name: string): PrismaInputOperation {
+    if (
+      name.endsWith("WhereInput") ||
+      name.endsWith("WhereUniqueInput") ||
+      name.endsWith("OrderByWithRelationInput") ||
+      name.endsWith("ScalarWhereInput") ||
+      name.endsWith("Filter")
+    ) {
+      return "filters"
+    }
+
+    if (
+      name.endsWith("CreateInput") ||
+      name.endsWith("CreateManyInput") ||
+      name.includes("CreateWithout")
+    )
+      return "create"
+    if (
+      name.endsWith("UpdateInput") ||
+      name.endsWith("UpdateManyMutationInput") ||
+      name.includes("UpdateWithout") ||
+      name.includes("Upsert")
+    )
+      return "update"
+    return "filters"
   }
 
   public getSilk<
@@ -50,6 +85,7 @@ export class PrismaTypeFactory<
 
   public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
     const input = this.modelMeta.inputTypes.get(name)
+
     if (!input) throw new Error(`Input type ${name} not found`)
 
     if (input.fields.length === 0) return PrismaTypeFactory.emptyInputScalar()
@@ -59,57 +95,108 @@ export class PrismaTypeFactory<
 
     if (existing) return existing
 
+    const {
+      fields: fieldsGetter,
+      input: inputGetter,
+      [SYMBOLS.WEAVER_CONFIG]: _,
+      ...modelConfig
+    } = weaverContext.getConfig<PrismaModelConfig<any>>(
+      `gqloom.prisma.model.${input.meta?.grouping}`
+    ) ?? {}
+
+    const fieldsConfig =
+      typeof fieldsGetter === "function" ? fieldsGetter() : fieldsGetter
+
+    const inputBehaviors =
+      typeof inputGetter === "function" ? inputGetter() : inputGetter
+
+    const operation = PrismaTypeFactory.getOperationByName(name)
+
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
         fields: provideWeaverContext.inherit(() => ({
           ...Object.fromEntries(
-            input.fields.map((field) => {
-              const isNonNull = field.isRequired && !field.isNullable
-              const fieldInput = PrismaTypeFactory.getMostRankInputType(
-                field.inputTypes
-              )
+            input.fields
+              .map((field) => {
+                const opBehavior = PrismaTypeFactory.getOperationBehavior(
+                  inputBehaviors,
+                  field.name,
+                  operation
+                )
 
-              const isList = fieldInput.isList
-              let type: GraphQLOutputType = (() => {
-                switch (fieldInput.location) {
-                  case "inputObjectTypes":
-                    return this.inputType(fieldInput.type)
-                  case "scalar": {
-                    try {
-                      const t = PrismaWeaver.getGraphQLTypeByField(
-                        fieldInput.type
-                      )
-                      return t
-                    } catch (_err) {
-                      throw new Error(
-                        `Can not find GraphQL type for scalar ${fieldInput.type}`
+                if (opBehavior === false) return null
+
+                const isNonNull = field.isRequired && !field.isNullable
+                const fieldInput = PrismaTypeFactory.getMostRankInputType(
+                  field.inputTypes
+                )
+
+                const finalFieldConfig =
+                  opBehavior != null && isSilk(opBehavior)
+                    ? opBehavior
+                    : fieldsConfig?.[field.name]
+
+                const [typeGetter, options, source] =
+                  PrismaWeaver.getFieldConfigOptions(finalFieldConfig)
+
+                const isList = fieldInput.isList
+                let type: GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN =
+                  (() => {
+                    if (source != null) {
+                      return PrismaWeaver.getGraphQLTypeByField(
+                        fieldInput.type,
+                        typeGetter,
+                        null
                       )
                     }
-                  }
-                  case "enumTypes":
-                    return this.enumType(fieldInput.type)
-                  default:
-                    throw new Error(
-                      `Unknown input type location: ${fieldInput.location}`
-                    )
-                }
-              })()
 
-              if (isList) type = new GraphQLList(new GraphQLNonNull(type))
-              if (isNonNull) type = new GraphQLNonNull(type)
+                    switch (fieldInput.location) {
+                      case "inputObjectTypes":
+                        return this.inputType(fieldInput.type)
+                      case "scalar": {
+                        try {
+                          return PrismaWeaver.getGraphQLTypeByField(
+                            fieldInput.type,
+                            typeGetter,
+                            null
+                          )
+                        } catch (_err) {
+                          throw new Error(
+                            `Can not find GraphQL type for scalar ${fieldInput.type}`
+                          )
+                        }
+                      }
+                      case "enumTypes":
+                        return this.enumType(fieldInput.type)
+                      default:
+                        throw new Error(
+                          `Unknown input type location: ${fieldInput.location}`
+                        )
+                    }
+                  })()
 
-              return [
-                field.name,
-                {
-                  description: field.comment,
-                  deprecationReason: field.deprecation?.reason,
-                  type,
-                } as GraphQLFieldConfig<any, any, any>,
-              ]
-            })
+                if (type === SYMBOLS.FIELD_HIDDEN) return null
+
+                if (isList && !isListType(type))
+                  type = new GraphQLList(new GraphQLNonNull(type))
+                if (isNonNull && !isNonNullType(type))
+                  type = new GraphQLNonNull(type)
+
+                return [
+                  field.name,
+                  {
+                    description: field.comment,
+                    deprecationReason: field.deprecation?.reason,
+                    type,
+                    ...options,
+                  } as GraphQLFieldConfig<any, any, any>,
+                ]
+              })
+              .filter((x) => x != null)
           ),
         })),
+        ...modelConfig,
       })
     )
   }
@@ -139,6 +226,24 @@ export class PrismaTypeFactory<
         ),
       })
     )
+  }
+
+  protected static getOperationBehavior(
+    behaviors: PrismaModelFieldBehaviors<any> | undefined,
+    fieldName: string,
+    operation: PrismaInputOperation
+  ): boolean | GraphQLSilk | undefined {
+    const fieldBehavior = behaviors?.[fieldName]
+    const wildcardBehavior = behaviors?.["*"]
+
+    const resolve = (b: any) => {
+      if (b === undefined) return undefined
+      if (typeof b === "boolean") return b
+      if (isSilk(b)) return b
+      return b[operation]
+    }
+
+    return resolve(fieldBehavior) ?? resolve(wildcardBehavior)
   }
 
   protected static emptyInputScalar(): GraphQLScalarType {
