@@ -1,6 +1,6 @@
-import { isSilk, query, resolver, weave } from "@gqloom/core"
+import { isSilk, query, resolver, silk, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
-import { GraphQLScalarType, printType } from "graphql"
+import { GraphQLNonNull, GraphQLScalarType, printType } from "graphql"
 import { describe, expect, it } from "vitest"
 import * as z from "zod"
 import { PrismaActionArgsFactory, PrismaTypeFactory } from "../src"
@@ -330,6 +330,137 @@ describe("PrismaTypeFactory", () => {
           posts: PostCreateNestedManyWithoutAuthorInput
           publishedPosts: PostCreateNestedManyWithoutPublisherInput
           profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+    })
+
+    it("should support field visibility and type override in input behaviors", () => {
+      const userResolver = resolver.of(g.User, {
+        create: query(g.User.nullable())
+          .input({
+            data: typeFactory.getSilk("UserCreateInput"),
+            where: typeFactory.getSilk("UserWhereInput"),
+          })
+          .resolve(() => null),
+      })
+
+      const MyName = new GraphQLScalarType<string, string>({ name: "MyName" })
+      const myNameSilk = silk(new GraphQLNonNull(MyName))
+
+      const schema = weave(
+        g.User.config({
+          input: {
+            email: { create: false }, // Hide email in create
+            name: { create: myNameSilk }, // Override name in create
+            "*": { filters: false }, // Hide all other fields in filters by default
+            id: { filters: true }, // Keep id in filters
+          },
+        }),
+        userResolver
+      )
+
+      const UserCreateInput = schema.getType("UserCreateInput")
+      expect(printType(UserCreateInput!)).toMatchInlineSnapshot(`
+        "input UserCreateInput {
+          name: MyName!
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
+          profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+
+      const UserWhereInput = schema.getType("UserWhereInput")
+      expect(printType(UserWhereInput!)).toMatchInlineSnapshot(`
+        "input UserWhereInput {
+          id: IntFilter
+        }"
+      `)
+    })
+
+    it("should prioritize input behaviors over fields config and zod preset", () => {
+      const MyEmail = new GraphQLScalarType({ name: "MyEmail" })
+
+      const InputEmail = new GraphQLScalarType({ name: "InputEmail" })
+      const inputEmailSilk = silk(InputEmail)
+
+      const schema = weave(
+        ZodWeaver.config({
+          presetGraphQLType: (schema) => {
+            if (schema instanceof z.ZodEmail) return MyEmail
+          },
+        }),
+        g.User.config({
+          fields: {
+            email: z.email(), // Zod preset would use MyEmail
+            name: silk(new GraphQLScalarType({ name: "FieldName" })),
+          },
+          input: {
+            // input behavior should win over fields config
+            name: {
+              create: silk(new GraphQLScalarType({ name: "InputName" })),
+            },
+            // input behavior should win over zod preset
+            email: { create: inputEmailSilk },
+          } as Parameters<typeof g.User.config>[0]["input"],
+        }),
+        resolver.of(g.User, {
+          create: query(g.User.nullable())
+            .input({ data: typeFactory.getSilk("UserCreateInput") })
+            .resolve(() => null),
+        })
+      )
+
+      const UserCreateInput = schema.getType("UserCreateInput")
+      expect(printType(UserCreateInput!)).toMatchInlineSnapshot(`
+        "input UserCreateInput {
+          email: InputEmail!
+          name: InputName
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
+          profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+
+      const User = schema.getType("User")
+      expect(printType(User!)).toMatchInlineSnapshot(`
+        "type User {
+          id: ID!
+          email: MyEmail!
+          name: FieldName
+        }"
+      `)
+    })
+
+    it("should support custom visibility and type override for update operation", () => {
+      const UpdateName = new GraphQLScalarType<string, string>({
+        name: "UpdateName",
+      })
+      const updateNameSilk = silk(UpdateName)
+
+      const schema = weave(
+        g.User.config({
+          input: {
+            email: { update: false }, // Hide email in update
+            name: { update: updateNameSilk }, // Override name in update
+          },
+        }),
+        resolver.of(g.User, {
+          update: query(g.User.nullable())
+            .input({
+              data: typeFactory.getSilk("UserUpdateInput"),
+              where: typeFactory.getSilk("UserWhereUniqueInput"),
+            })
+            .resolve(() => null),
+        })
+      )
+
+      const UserUpdateInput = schema.getType("UserUpdateInput")
+      expect(printType(UserUpdateInput!)).toMatchInlineSnapshot(`
+        "input UserUpdateInput {
+          name: UpdateName
+          posts: PostUpdateManyWithoutAuthorNestedInput
+          publishedPosts: PostUpdateManyWithoutPublisherNestedInput
+          profile: ProfileUpdateOneWithoutUserNestedInput
         }"
       `)
     })

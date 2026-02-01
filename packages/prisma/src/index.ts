@@ -207,7 +207,11 @@ export class PrismaWeaver {
     if (isSilk(fieldTypeFromConfig)) {
       return [silk.getType(fieldTypeFromConfig), options, "silk"]
     }
-    return [fieldTypeFromConfig, options, "outputType"]
+    return [
+      fieldTypeFromConfig,
+      options,
+      fieldTypeFromConfig == null ? null : "outputType",
+    ]
   }
 
   public static getGraphQLTypeByField(

@@ -25,6 +25,7 @@ import type {
   InferTModelSilkName,
   PrismaInputOperation,
   PrismaModelConfig,
+  PrismaModelFieldBehaviors,
   PrismaModelMeta,
   PrismaTypes,
 } from "./types"
@@ -96,6 +97,7 @@ export class PrismaTypeFactory<
 
     const {
       fields: fieldsGetter,
+      input: inputGetter,
       [SYMBOLS.WEAVER_CONFIG]: _,
       ...modelConfig
     } = weaverContext.getConfig<PrismaModelConfig<any>>(
@@ -105,6 +107,11 @@ export class PrismaTypeFactory<
     const fieldsConfig =
       typeof fieldsGetter === "function" ? fieldsGetter() : fieldsGetter
 
+    const inputBehaviors =
+      typeof inputGetter === "function" ? inputGetter() : inputGetter
+
+    const operation = PrismaTypeFactory.getOperationByName(name)
+
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
@@ -112,16 +119,38 @@ export class PrismaTypeFactory<
           ...Object.fromEntries(
             input.fields
               .map((field) => {
+                const opBehavior = PrismaTypeFactory.getOperationBehavior(
+                  inputBehaviors,
+                  field.name,
+                  operation
+                )
+
+                if (opBehavior === false) return null
+
                 const isNonNull = field.isRequired && !field.isNullable
                 const fieldInput = PrismaTypeFactory.getMostRankInputType(
                   field.inputTypes
                 )
-                const [typeGetter, options] =
-                  PrismaWeaver.getFieldConfigOptions(fieldsConfig?.[field.name])
+
+                const finalFieldConfig =
+                  opBehavior != null && isSilk(opBehavior)
+                    ? opBehavior
+                    : fieldsConfig?.[field.name]
+
+                const [typeGetter, options, source] =
+                  PrismaWeaver.getFieldConfigOptions(finalFieldConfig)
 
                 const isList = fieldInput.isList
                 let type: GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN =
                   (() => {
+                    if (source != null) {
+                      return PrismaWeaver.getGraphQLTypeByField(
+                        fieldInput.type,
+                        typeGetter,
+                        null // FIXME: should pass field
+                      )
+                    }
+
                     switch (fieldInput.location) {
                       case "inputObjectTypes":
                         return this.inputType(fieldInput.type)
@@ -197,6 +226,24 @@ export class PrismaTypeFactory<
         ),
       })
     )
+  }
+
+  protected static getOperationBehavior(
+    behaviors: PrismaModelFieldBehaviors<any> | undefined,
+    fieldName: string,
+    operation: PrismaInputOperation
+  ): boolean | GraphQLSilk | undefined {
+    const fieldBehavior = behaviors?.[fieldName]
+    const wildcardBehavior = behaviors?.["*"]
+
+    const resolve = (b: any) => {
+      if (b === undefined) return undefined
+      if (typeof b === "boolean") return b
+      if (isSilk(b)) return b
+      return b[operation]
+    }
+
+    return resolve(fieldBehavior) ?? resolve(wildcardBehavior)
   }
 
   protected static emptyInputScalar(): GraphQLScalarType {

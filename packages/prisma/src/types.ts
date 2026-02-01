@@ -60,7 +60,7 @@ export interface PrismaModelFieldBehavior<TOutput> {
   /**
    * Is this field visible in the update mutation input?
    */
-  update?: boolean | GraphQLSilk<TOutput, any> | undefined
+  update?: boolean | GraphQLSilk<TOutput | null | undefined, any> | undefined
 }
 
 export type PrismaModelFieldBehaviors<TModel> = {
