@@ -165,20 +165,19 @@ import { User } from '@gqloom/prisma/generated'
 import { weave, SYMBOLS } from '@gqloom/core'
 import { GraphQLID } from 'graphql'
 
-export const schema = weave(
-  User,
-  User.config({
-    description: "System user information", // Add description to the GraphQL type
-    fields: {
-      // Override field description
-      email: { description: "User's unique email address" },
-      // Override field type; supports GraphQL type or silk
-      id: { type: GraphQLID },
-      // Hide field so it does not appear in query results
-      password: SYMBOLS.FIELD_HIDDEN,
-    },
-  })
-)
+const userConfig = User.config({
+  description: "System user information", // Add description to the GraphQL type
+  fields: {
+    // Override field description
+    email: { description: "User's unique email address" },
+    // Override field type; supports GraphQL type or silk
+    id: { type: GraphQLID },
+    // Hide field so it does not appear in query results
+    password: SYMBOLS.FIELD_HIDDEN,
+  },
+})
+
+export const schema = weave(userConfig, userResolver, postResolver)
 ```
 
 ### Input Field Behavior
@@ -196,21 +195,20 @@ import { User } from '@gqloom/prisma/generated'
 import { weave } from '@gqloom/core'
 import * as v from 'valibot'
 
-export const schema = weave(
-  User,
-  User.config({
-    input: {
-      // Hide email in create
-      email: { create: false },
-      // Override name in update with a required string (via silk)
-      name: { update: v.string() },
-      // By default hide filter for all fields
-      "*": { filters: false },
-      // Only enable filter for id
-      id: { filters: true },
-    },
-  })
-)
+const userConfig = User.config({
+  input: {
+    // Hide email in create
+    email: { create: false },
+    // Override name in update with a required string (via silk)
+    name: { update: v.string() },
+    // By default hide filter for all fields
+    "*": { filters: false },
+    // Only enable filter for id
+    id: { filters: true },
+  },
+})
+
+export const schema = weave(userConfig, userResolver, postResolver)
 ```
 
 :::tip Priority

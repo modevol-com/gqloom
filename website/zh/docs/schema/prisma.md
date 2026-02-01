@@ -165,20 +165,19 @@ import { User } from '@gqloom/prisma/generated'
 import { weave, SYMBOLS } from '@gqloom/core'
 import { GraphQLID } from 'graphql'
 
-export const schema = weave(
-  User,
-  User.config({
-    description: "系统用户信息", // 为 GraphQL 类型添加描述
-    fields: {
-      // 覆盖字段描述
-      email: { description: "用户的唯一电子邮箱" },
-      // 覆盖字段类型，支持 GraphQL 类型或丝线
-      id: { type: GraphQLID }, 
-      // 隐藏字段，使其不出现在查询结果中
-      password: SYMBOLS.FIELD_HIDDEN,
-    },
-  })
-)
+const userConfig = User.config({
+  description: "系统用户信息", // 为 GraphQL 类型添加描述
+  fields: {
+    // 覆盖字段描述
+    email: { description: "用户的唯一电子邮箱" },
+    // 覆盖字段类型，支持 GraphQL 类型或丝线
+    id: { type: GraphQLID },
+    // 隐藏字段，使其不出现在查询结果中
+    password: SYMBOLS.FIELD_HIDDEN,
+  },
+})
+
+export const schema = weave(userConfig, userResolver, postResolver)
 ```
 
 ### 输入字段行为
@@ -195,21 +194,20 @@ import { User } from '@gqloom/prisma/generated'
 import { weave } from '@gqloom/core'
 import * as v from 'valibot'
 
-export const schema = weave(
-  User,
-  User.config({
-    input: {
-      // 在创建时隐藏 email 字段
-      email: { create: false },
-      // 在更新时将 name 字段设为必填（通过丝线覆盖）
-      name: { update: v.string() },
-      // 默认隐藏所有字段的过滤功能
-      "*": { filters: false },
-      // 仅显式开启 id 的过滤功能
-      id: { filters: true },
-    },
-  })
-)
+const userConfig = User.config({
+  input: {
+    // 在创建时隐藏 email 字段
+    email: { create: false },
+    // 在更新时将 name 字段设为必填（通过丝线覆盖）
+    name: { update: v.string() },
+    // 默认隐藏所有字段的过滤功能
+    "*": { filters: false },
+    // 仅显式开启 id 的过滤功能
+    id: { filters: true },
+  },
+})
+
+export const schema = weave(userConfig, userResolver, postResolver)
 ```
 
 :::tip 优先级
