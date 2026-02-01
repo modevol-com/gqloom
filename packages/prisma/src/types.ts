@@ -28,6 +28,7 @@ export interface PrismaModelConfigOptions<TModel>
   fields?: Getter<{
     [K in keyof TModel]?: PrismaModelConfigOptionsField
   }>
+  input?: Getter<PrismaModelFieldBehaviors<TModel>>
 }
 
 export type PrismaModelConfigOptionsField =
@@ -45,6 +46,35 @@ export type PrismaModelConfigOptionsField =
   | GraphQLOutputType
   | GraphQLSilk
   | undefined
+
+export interface PrismaModelFieldBehavior<TOutput> {
+  /**
+   * Is this field visible in the filters?
+   */
+  filters?: boolean | undefined
+
+  /**
+   * Is this field visible in the create mutation input?
+   */
+  create?: boolean | GraphQLSilk<TOutput, any> | undefined
+  /**
+   * Is this field visible in the update mutation input?
+   */
+  update?: boolean | GraphQLSilk<TOutput, any> | undefined
+}
+
+export type PrismaModelFieldBehaviors<TModel> = {
+  [K in keyof TModel]?:
+    | PrismaModelFieldBehavior<TModel[K]>
+    | GraphQLSilk<TModel[K], any>
+    | boolean
+    | undefined
+} & {
+  /**
+   * Config the default behavior of all fields
+   */
+  "*"?: PrismaModelFieldBehavior<never> | boolean | undefined
+}
 
 export interface PrismaModelConfig<TModel>
   extends PrismaModelConfigOptions<TModel>,
@@ -77,6 +107,8 @@ export interface PrismaWeaverConfig
     PrismaWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.prisma"
 }
+
+export type PrismaInputOperation = "filters" | "create" | "update"
 
 export interface PrismaModelMeta {
   models: Record<string, DMMF.Model>

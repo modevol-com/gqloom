@@ -23,6 +23,7 @@ import { PrismaWeaver } from "."
 import type {
   AnyPrismaModelSilk,
   InferTModelSilkName,
+  PrismaInputOperation,
   PrismaModelConfig,
   PrismaModelMeta,
   PrismaTypes,
@@ -42,6 +43,33 @@ export class PrismaTypeFactory<
     } else {
       this.modelMeta = PrismaTypeFactory.indexModelMeta(silkOrModelMeta)
     }
+  }
+
+  public static getOperationByName(name: string): PrismaInputOperation {
+    if (
+      name.endsWith("WhereInput") ||
+      name.endsWith("WhereUniqueInput") ||
+      name.endsWith("OrderByWithRelationInput") ||
+      name.endsWith("ScalarWhereInput") ||
+      name.endsWith("Filter")
+    ) {
+      return "filters"
+    }
+
+    if (
+      name.endsWith("CreateInput") ||
+      name.endsWith("CreateManyInput") ||
+      name.includes("CreateWithout")
+    )
+      return "create"
+    if (
+      name.endsWith("UpdateInput") ||
+      name.endsWith("UpdateManyMutationInput") ||
+      name.includes("UpdateWithout") ||
+      name.includes("Upsert")
+    )
+      return "update"
+    return "filters"
   }
 
   public getSilk<
@@ -102,7 +130,7 @@ export class PrismaTypeFactory<
                           return PrismaWeaver.getGraphQLTypeByField(
                             fieldInput.type,
                             typeGetter,
-                            null
+                            null // FIXME: should pass field
                           )
                         } catch (_err) {
                           throw new Error(
