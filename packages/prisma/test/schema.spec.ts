@@ -242,6 +242,28 @@ describe("PrismaWeaver", () => {
     `)
   })
 
+  it("should emit id as Int when emitIdAsIDType is false", () => {
+    const UserSilk = PrismaWeaver.unravel(UserModel, {
+      models: { User: UserModel },
+      enums: { Role: RoleEnum },
+      schema: {} as any,
+    })
+    const schema = weave(
+      PrismaWeaver.config({ emitIdAsIDType: false }),
+      UserSilk
+    )
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        id: Int!
+
+        """user's email is unique"""
+        email: String!
+        name: String
+        createdAt: String!
+      }"
+    `)
+  })
+
   it("should weave model with config and zod type", () => {
     interface IUser {
       id: number

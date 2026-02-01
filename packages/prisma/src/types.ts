@@ -96,6 +96,15 @@ export interface PrismaEnumSilk<TEnum> extends GraphQLSilk<TEnum> {
 }
 
 export interface PrismaWeaverConfigOptions {
+  /**
+   * Emit id fields (Prisma @id) as GraphQL `ID` scalar in **output** types only.
+   * When `true` (default), object type id fields use GraphQLID (e.g. for Relay).
+   * When `false`, id fields use underlying scalar (Int / String).
+   * Input types (WhereUniqueInput, CreateInput, etc.) always use Int/String so Prisma receives the correct type.
+   * @default true
+   */
+  emitIdAsIDType?: boolean
+
   presetGraphQLType?: (
     type: string,
     field?: DMMF.Field

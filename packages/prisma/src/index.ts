@@ -239,7 +239,9 @@ export class PrismaWeaver {
 
     const presetType = config?.presetGraphQLType?.(type, field ?? undefined)
     if (presetType) return presetType
-    if (field?.isId) return GraphQLID
+
+    const isId = field?.isId ?? false
+    if (isId && config?.emitIdAsIDType !== false) return GraphQLID
     switch (type) {
       case "BigInt":
       case "Int":
