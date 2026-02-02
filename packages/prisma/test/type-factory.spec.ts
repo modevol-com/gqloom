@@ -574,6 +574,42 @@ describe("PrismaTypeFactory", () => {
         }"
       `)
     })
+
+    it("should support custom visibility and type override for filter operation", () => {
+      const FilterName = new GraphQLScalarType<string, string>({
+        name: "FilterName",
+      })
+
+      const schema = weave(
+        g.User.config({
+          input: {
+            email: { filters: false }, // Hide email in filter
+            name: { filters: FilterName }, // Override name in filter
+          },
+        }),
+        resolver.of(g.User, {
+          users: query(g.User.list())
+            .input({
+              where: typeFactory.getSilk("UserWhereInput"),
+            })
+            .resolve(() => []),
+        })
+      )
+
+      const UserWhereInput = schema.getType("UserWhereInput")
+      expect(printType(UserWhereInput!)).toMatchInlineSnapshot(`
+        "input UserWhereInput {
+          AND: [UserWhereInput!]
+          OR: [UserWhereInput!]
+          NOT: [UserWhereInput!]
+          id: IntFilter
+          name: FilterName
+          posts: PostListRelationFilter
+          publishedPosts: PostListRelationFilter
+          profile: ProfileNullableScalarRelationFilter
+        }"
+      `)
+    })
   })
 
   describe("enumType", () => {
