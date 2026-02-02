@@ -135,7 +135,9 @@ export class PrismaTypeFactory<
                 const finalFieldConfig =
                   opBehavior != null && isSilk(opBehavior)
                     ? opBehavior
-                    : fieldsConfig?.[field.name]
+                    : fieldInput.location === "scalar"
+                      ? fieldsConfig?.[field.name]
+                      : undefined
 
                 const [typeGetter, options, source] =
                   PrismaWeaver.getFieldConfigOptions(finalFieldConfig)
