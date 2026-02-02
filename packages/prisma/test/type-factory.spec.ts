@@ -322,8 +322,47 @@ describe("PrismaTypeFactory", () => {
         userResolver
       )
 
-      const UserCreateInput = schema.getType("UserCreateInput")
-      expect(printType(UserCreateInput!)).toMatchInlineSnapshot(`
+      expect(
+        printType(schema.getType("UserCreateInput")!)
+      ).toMatchInlineSnapshot(`
+        "input UserCreateInput {
+          email: Email!
+          name: String
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
+          profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+
+      const schema2 = weave(
+        g.User.config({
+          input: { email: Email },
+        }),
+        userResolver
+      )
+
+      expect(
+        printType(schema2.getType("UserCreateInput")!)
+      ).toMatchInlineSnapshot(`
+        "input UserCreateInput {
+          email: Email!
+          name: String
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
+          profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+
+      const schema3 = weave(
+        g.User.config({
+          input: { email: { create: Email } },
+        }),
+        userResolver
+      )
+
+      expect(
+        printType(schema3.getType("UserCreateInput")!)
+      ).toMatchInlineSnapshot(`
         "input UserCreateInput {
           email: Email!
           name: String

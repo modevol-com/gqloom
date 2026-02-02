@@ -183,7 +183,7 @@ export class PrismaWeaver {
         >
       | undefined,
     options: Omit<GraphQLFieldConfig<any, any>, "type">,
-    source: "silk" | "outputType" | null,
+    source: "silk" | "gqlType" | null,
   ] {
     if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return [undefined, {}, null]
 
@@ -191,7 +191,7 @@ export class PrismaWeaver {
       return [silk.getType(fieldConfig), {}, "silk"]
     }
     if (isOutputType(fieldConfig)) {
-      return [fieldConfig, {}, "outputType"]
+      return [fieldConfig, {}, "gqlType"]
     }
 
     const { type: typeGetter, ...options } = fieldConfig ?? {}
@@ -210,7 +210,7 @@ export class PrismaWeaver {
     return [
       fieldTypeFromConfig,
       options,
-      fieldTypeFromConfig == null ? null : "outputType",
+      fieldTypeFromConfig == null ? null : "gqlType",
     ]
   }
 
