@@ -1,4 +1,4 @@
-import { isSilk, query, resolver, silk, weave } from "@gqloom/core"
+import { isSilk, mutation, query, resolver, silk, weave } from "@gqloom/core"
 import { ZodWeaver } from "@gqloom/zod"
 import { GraphQLNonNull, GraphQLScalarType, printType } from "graphql"
 import { describe, expect, it } from "vitest"
@@ -427,6 +427,77 @@ describe("PrismaTypeFactory", () => {
           id: ID!
           email: MyEmail!
           name: FieldName
+        }"
+      `)
+    })
+
+    it("should fallback to fields config for scalar input but not for object input", () => {
+      const MAC = new GraphQLScalarType({ name: "MAC" })
+
+      const schema = weave(
+        g.User.config({
+          fields: { email: MAC },
+        }),
+        resolver.of(g.User, {
+          create: mutation(g.User.nullable())
+            .input({
+              data: typeFactory.getSilk("UserCreateInput"),
+            })
+            .resolve(() => null),
+
+          update: mutation(g.User.nullable())
+            .input({
+              data: typeFactory.getSilk("UserUpdateInput"),
+              where: typeFactory.getSilk("UserWhereUniqueInput"),
+            })
+            .resolve(() => null),
+
+          users: query(g.User.list())
+            .input({
+              where: typeFactory.getSilk("UserWhereInput"),
+            })
+            .resolve(() => []),
+        })
+      )
+
+      const UserCreateInput = schema.getType("UserCreateInput")!
+      // CreateInput.email should be MAC because it's a scalar in DMMF
+      expect(printType(UserCreateInput)).toContain("email: MAC!")
+      expect(printType(UserCreateInput)).toMatchInlineSnapshot(`
+        "input UserCreateInput {
+          email: MAC!
+          name: String
+          posts: PostCreateNestedManyWithoutAuthorInput
+          publishedPosts: PostCreateNestedManyWithoutPublisherInput
+          profile: ProfileCreateNestedOneWithoutUserInput
+        }"
+      `)
+
+      const UserWhereInput = schema.getType("UserWhereInput")!
+      // WhereInput.email should still be StringFilter because it's an object in DMMF
+      expect(printType(UserWhereInput)).toContain("email: StringFilter")
+      expect(printType(UserWhereInput)).toMatchInlineSnapshot(`
+        "input UserWhereInput {
+          AND: [UserWhereInput!]
+          OR: [UserWhereInput!]
+          NOT: [UserWhereInput!]
+          id: IntFilter
+          email: StringFilter
+          name: StringNullableFilter
+          posts: PostListRelationFilter
+          publishedPosts: PostListRelationFilter
+          profile: ProfileNullableScalarRelationFilter
+        }"
+      `)
+
+      const UserUpdateInput = schema.getType("UserUpdateInput")!
+      expect(printType(UserUpdateInput)).toMatchInlineSnapshot(`
+        "input UserUpdateInput {
+          email: StringFieldUpdateOperationsInput
+          name: NullableStringFieldUpdateOperationsInput
+          posts: PostUpdateManyWithoutAuthorNestedInput
+          publishedPosts: PostUpdateManyWithoutPublisherNestedInput
+          profile: ProfileUpdateOneWithoutUserNestedInput
         }"
       `)
     })
