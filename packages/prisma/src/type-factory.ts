@@ -18,6 +18,7 @@ import {
   GraphQLScalarType,
   isListType,
   isNonNullType,
+  isOutputType,
 } from "graphql"
 import { PrismaWeaver } from "."
 import type {
@@ -25,6 +26,7 @@ import type {
   InferTModelSilkName,
   PrismaInputOperation,
   PrismaModelConfig,
+  PrismaModelFieldBehavior,
   PrismaModelFieldBehaviors,
   PrismaModelMeta,
   PrismaTypes,
@@ -133,7 +135,8 @@ export class PrismaTypeFactory<
                 )
 
                 const finalFieldConfig =
-                  opBehavior != null && isSilk(opBehavior)
+                  opBehavior != null &&
+                  (isSilk(opBehavior) || isOutputType(opBehavior))
                     ? opBehavior
                     : fieldInput.location === "scalar"
                       ? fieldsConfig?.[field.name]
@@ -234,18 +237,26 @@ export class PrismaTypeFactory<
     behaviors: PrismaModelFieldBehaviors<any> | undefined,
     fieldName: string,
     operation: PrismaInputOperation
-  ): boolean | GraphQLSilk | undefined {
+  ): boolean | GraphQLSilk | GraphQLOutputType | undefined {
     const fieldBehavior = behaviors?.[fieldName]
     const wildcardBehavior = behaviors?.["*"]
 
-    const resolve = (b: any) => {
+    const resolveBehavior = (
+      b:
+        | boolean
+        | GraphQLSilk<any, any>
+        | GraphQLOutputType
+        | PrismaModelFieldBehavior<any>
+        | undefined
+    ) => {
       if (b === undefined) return undefined
       if (typeof b === "boolean") return b
       if (isSilk(b)) return b
+      if (isOutputType(b)) return b
       return b[operation]
     }
 
-    return resolve(fieldBehavior) ?? resolve(wildcardBehavior)
+    return resolveBehavior(fieldBehavior) ?? resolveBehavior(wildcardBehavior)
   }
 
   protected static emptyInputScalar(): GraphQLScalarType {
