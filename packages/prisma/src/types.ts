@@ -51,7 +51,7 @@ export interface PrismaModelFieldBehavior<TOutput> {
   /**
    * Is this field visible in the filters?
    */
-  filters?: boolean | GraphQLSilk<TOutput, any> | GraphQLOutputType | undefined
+  filters?: boolean | GraphQLSilk<any, any> | GraphQLOutputType | undefined
 
   /**
    * Is this field visible in the create mutation input?
@@ -60,11 +60,7 @@ export interface PrismaModelFieldBehavior<TOutput> {
   /**
    * Is this field visible in the update mutation input?
    */
-  update?:
-    | boolean
-    | GraphQLSilk<TOutput | null | undefined, any>
-    | GraphQLOutputType
-    | undefined
+  update?: boolean | GraphQLSilk<any, any> | GraphQLOutputType | undefined
 }
 
 export type PrismaModelFieldBehaviors<TModel> = {
