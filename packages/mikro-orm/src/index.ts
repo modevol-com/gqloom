@@ -45,8 +45,6 @@ import { EntityGraphQLTypes, isSubclass } from "./utils"
 export class MikroWeaver {
   public static vendor = "gqloom.mikro-orm"
 
-  /** Stored on the schema/silk object so getGraphQLTypeBySelf can read config without a separate WeakMap */
-  public static MIKRO_SILK_CONFIG = Symbol.for("gqloom.mikro-orm.silkConfig")
   /**
    * get GraphQL Silk from Mikro Entity Schema
    * @param schema Mikro Entity Schema
