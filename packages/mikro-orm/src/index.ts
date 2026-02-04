@@ -44,13 +44,15 @@ import { EntityGraphQLTypes, isSubclass } from "./utils"
 
 export class MikroWeaver {
   public static vendor = "gqloom.mikro-orm"
+
   /**
    * get GraphQL Silk from Mikro Entity Schema
    * @param schema Mikro Entity Schema
    * @returns GraphQL Silk Like Mikro Entity Schema
    */
   public static unravel<TEntityName extends EntityName<any> & object>(
-    schema: TEntityName
+    schema: TEntityName,
+    config?: MikroSilkConfig<InferEntity<TEntityName>>
   ): EntitySchemaSilk<TEntityName> {
     return Object.assign(schema, {
       "~standard": {
@@ -67,6 +69,7 @@ export class MikroWeaver {
       list() {
         return silk.list(this) as GraphQLSilk<InferEntity<TEntityName>[]>
       },
+      "~silkConfig": config,
     })
   }
 
@@ -75,16 +78,17 @@ export class MikroWeaver {
     MikroSilkConfig<EntitySchema>
   >()
 
-  public static asObjectType(
-    schema: EntityMetadata,
-    config: MikroSilkConfig<EntitySchema>
-  ) {
-    MikroWeaver.ObjectConfigMap.set(schema, config)
-    return schema
-  }
-
-  public static getGraphQLTypeBySelf(this: EntitySchema) {
-    return MikroWeaver.getGraphQLType(this.init().meta)
+  public static getGraphQLTypeBySelf(
+    this: EntityName<unknown> & object
+  ): ReturnType<typeof MikroWeaver.getGraphQLType> {
+    const pendingConfig = (
+      this as EntitySchemaSilk<EntityName<unknown> & object>
+    )["~silkConfig"]
+    const meta = getMetadata(this, pendingConfig?.metadata)
+    if (pendingConfig) {
+      MikroWeaver.ObjectConfigMap.set(meta, pendingConfig)
+    }
+    return MikroWeaver.getGraphQLType(meta)
   }
 
   public static getGraphQLType(
@@ -331,9 +335,7 @@ export function mikroSilk<TEntityName extends EntityName<any> & object>(
   entityName: TEntityName,
   config?: MikroSilkConfig<InferEntity<TEntityName>>
 ): EntitySchemaSilk<TEntityName> {
-  const meta = getMetadata(entityName, config?.metadata)
-  if (config) MikroWeaver.asObjectType(meta, config)
-  return MikroWeaver.unravel(entityName)
+  return MikroWeaver.unravel(entityName, config)
 }
 
 export type EntitySchemaSilk<TEntityName extends EntityName<any>> =
@@ -350,6 +352,7 @@ export type EntitySchemaSilk<TEntityName extends EntityName<any>> =
         Partial<InferEntity<TEntityName>>[],
         Partial<InferEntity<TEntityName>>[]
       >
+      "~silkConfig": MikroSilkConfig<EntitySchema> | undefined
     }
 
 export * from "./entity-schema"

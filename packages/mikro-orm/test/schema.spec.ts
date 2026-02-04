@@ -231,6 +231,41 @@ describe("mikroSilk", () => {
       }"
     `)
   })
+
+  it("should work with circular references", () => {
+    const ChanelEntity = defineEntity({
+      name: "Chanel",
+      properties: (p) => ({
+        id: p.string().primary(),
+        name: p.string(),
+        messages: () => p.oneToMany(MessageEntity).mappedBy("chanel"),
+      }),
+    })
+    const Chanel = mikroSilk(ChanelEntity, {})
+
+    const MessageEntity = defineEntity({
+      name: "Message",
+      properties: (p) => ({
+        id: p.string().primary(),
+        content: p.string(),
+        chanel: () => p.manyToOne(ChanelEntity),
+      }),
+    })
+    const Message = mikroSilk(MessageEntity, {})
+
+    const schema = weave(Chanel, Message)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Chanel {
+        id: ID!
+        name: String!
+      }
+
+      type Message {
+        id: ID!
+        content: String!
+      }"
+    `)
+  })
 })
 
 function unwrap(gqlType: GraphQLOutputType) {
