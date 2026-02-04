@@ -3,5 +3,6 @@ type UserRequiredInput {
   name: String!
   email: String!
   password: String!
+  age: CustomFloat
   isActive: Boolean
 }

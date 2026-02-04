@@ -518,7 +518,7 @@ export class MikroInputFactory<TEntity extends object> {
               "create"
             )
             const type = customSilk
-              ? weaverContext.getGraphQLType(customSilk)
+              ? silk.getType(customSilk)
               : (MikroWeaver.getFieldType(property, this.meta) ??
                 MikroInputFactory.relationPropertyAsId(property))
 
@@ -575,7 +575,7 @@ export class MikroInputFactory<TEntity extends object> {
               "update"
             )
             const type = customSilk
-              ? weaverContext.getGraphQLType(customSilk)
+              ? silk.getType(customSilk)
               : (MikroWeaver.getFieldType(property, this.meta) ??
                 MikroInputFactory.relationPropertyAsId(property))
 
