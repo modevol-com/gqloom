@@ -920,8 +920,7 @@ export class MikroInputFactory<TEntity extends object> {
    */
   protected async validateFields(
     data: any,
-    fieldValidators: Map<string, GraphQLSilk<any, any>>,
-    operation: "create" | "update" = "create"
+    fieldValidators: Map<string, GraphQLSilk<any, any>>
   ): Promise<StandardSchemaV1.Result<any>> {
     const result: Record<string, any> = {}
     const issues: StandardSchemaV1.Issue[] = []
@@ -929,7 +928,7 @@ export class MikroInputFactory<TEntity extends object> {
     // Validate each field that has a custom validator
     for (const [fieldName, validator] of fieldValidators.entries()) {
       // For update operations, skip validation if field is not provided (undefined)
-      if (operation === "update" && !(fieldName in data)) {
+      if (!(fieldName in data)) {
         continue
       }
       const fieldValue = data?.[fieldName]
@@ -976,11 +975,7 @@ export class MikroInputFactory<TEntity extends object> {
         return { value: transform(args.data, args) }
       }
 
-      const dataResult = await this.validateFields(
-        args.data,
-        fieldValidators,
-        operation
-      )
+      const dataResult = await this.validateFields(args.data, fieldValidators)
 
       if (dataResult.issues) {
         return { issues: dataResult.issues }
@@ -1013,8 +1008,7 @@ export class MikroInputFactory<TEntity extends object> {
       for (let i = 0; i < args.data.length; i++) {
         const itemResult = await this.validateFields(
           args.data[i],
-          fieldValidators,
-          operation
+          fieldValidators
         )
 
         if (itemResult.issues) {
