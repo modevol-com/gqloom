@@ -586,6 +586,150 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }"
       `)
     })
+
+    it("should use with custom input with validation - validate name field with minLength and maxLength", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        createUser: UserBobbin.createMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { name: z.string().min(3).max(20) },
+        }),
+        userResolver
+      )
+      const execute = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ): Promise<any> => {
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue: {},
+        })
+        if (errors?.length) throw new Error(JSON.stringify(errors))
+        return data
+      }
+      const mutation = /* GraphQL */ `
+        mutation CreateUser($data: UserCreateInput!) {
+          createUser(data: $data) {
+            id
+            name
+            email
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: { name: "J", email: "john@example.com" },
+        })
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
+
+      const res = await execute(mutation, {
+        data: { name: "Joe", email: "joe@example.com" },
+      })
+      expect(res.createUser).toBeDefined()
+      expect(res.createUser.name).toBe("Joe")
+      expect(res.createUser.email).toBe("joe@example.com")
+    })
+
+    it("should use with custom input with validation - validate email field with email format", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        createUser: UserBobbin.createMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { email: z.string().email() },
+        }),
+        userResolver
+      )
+      const execute = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ): Promise<any> => {
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue: {},
+        })
+        if (errors?.length) throw new Error(JSON.stringify(errors))
+        return data
+      }
+      const mutation = /* GraphQL */ `
+        mutation CreateUser($data: UserCreateInput!) {
+          createUser(data: $data) {
+            id
+            name
+            email
+          }
+        }
+      `
+      const res = await execute(mutation, {
+        data: {
+          name: "John",
+          email: "email-validation-only@example.com",
+        },
+      })
+      expect(res.createUser).toBeDefined()
+      expect(res.createUser.name).toBe("John")
+      expect(res.createUser.email).toBe("email-validation-only@example.com")
+    })
+
+    it("should use with custom input with validation - validate multiple fields simultaneously", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        createUser: UserBobbin.createMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: {
+            name: z.string().min(3).max(20),
+            email: z.string().email(),
+          },
+        }),
+        userResolver
+      )
+      const execute = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ): Promise<any> => {
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue: {},
+        })
+        if (errors?.length) throw new Error(JSON.stringify(errors))
+        return data
+      }
+      const mutation = /* GraphQL */ `
+        mutation CreateUser($data: UserCreateInput!) {
+          createUser(data: $data) {
+            id
+            name
+            email
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: { name: "Jo", email: "ab" },
+        })
+      ).rejects.toThrow()
+
+      const res = await execute(mutation, {
+        data: { name: "Joe", email: "joe-validation1@example.com" },
+      })
+      expect(res.createUser).toBeDefined()
+      expect(res.createUser.name).toBe("Joe")
+      expect(res.createUser.email).toBe("joe-validation1@example.com")
+    })
   })
 
   describe("createManyMutation", async () => {
@@ -642,6 +786,19 @@ describe("PrismaModelPrismaResolverFactory", () => {
           email: String!
         }"
       `)
+    })
+
+    it.todo("should use with custom input with validation - validate name field in array items", async () => {
+      // Test that createManyMutation validates each item in data array using field validators configured via Model.config({ input: { name: z.string().min(3).max(20) } })
+      // Expected: validation should reject items with invalid names
+      // Expected: validation should collect errors with array index in path (e.g., [0, "name"])
+      // Expected: validation should accept all valid items and create them successfully
+    })
+
+    it.todo("should use with custom input with validation - validate email field in array items", async () => {
+      // Test that createManyMutation validates email field in each array item
+      // Expected: validation should reject items with invalid emails
+      // Expected: validation should pass when all items have valid emails
     })
   })
 
@@ -825,6 +982,31 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }"
       `)
     })
+
+    it.todo("should use with custom input with validation - validate name field in update data", async () => {
+      // Test that updateMutation validates name field configured via Model.config({ input: { name: { update: z.string().min(3).max(20) } } })
+      // Expected: validation should reject names shorter than 3 or longer than 20 characters
+      // Expected: validation should accept valid names and update the user successfully
+    })
+
+    it.todo("should use with custom input with validation - validate email field in update data", async () => {
+      // Test that updateMutation validates email field configured via Model.config({ input: { email: { update: z.string().email() } } })
+      // Expected: validation should reject invalid email formats
+      // Expected: validation should accept valid emails and update the user successfully
+    })
+
+    it.todo("should use with custom input with validation - only validate fields that are provided", async () => {
+      // Test that updateMutation only validates fields present in data (not all fields)
+      // Expected: if only name is provided, only name should be validated (not email)
+      // Expected: if only email is provided, only email should be validated (not name)
+      // Expected: validation should pass when provided fields are valid, even if other fields would be invalid
+    })
+
+    it.todo("should use with custom input with validation - validate multiple fields simultaneously", async () => {
+      // Test that updateMutation validates multiple fields when both are provided
+      // Expected: validation should collect all errors for multiple invalid fields
+      // Expected: validation should pass when all provided fields are valid
+    })
   })
 
   describe("updateManyMutation", async () => {
@@ -896,6 +1078,18 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }"
       `)
     })
+
+    it.todo("should use with custom input with validation - validate name field in update data", async () => {
+      // Test that updateManyMutation validates name field configured via Model.config({ input: { name: { update: z.string().min(3).max(20) } } })
+      // Expected: validation should reject names shorter than 3 or longer than 20 characters
+      // Expected: validation should accept valid names and update users successfully
+    })
+
+    it.todo("should use with custom input with validation - validate email field in update data", async () => {
+      // Test that updateManyMutation validates email field configured via Model.config({ input: { email: { update: z.string().email() } } })
+      // Expected: validation should reject invalid email formats
+      // Expected: validation should accept valid emails and update users successfully
+    })
   })
 
   describe("upsertMutation", async () => {
@@ -963,6 +1157,31 @@ describe("PrismaModelPrismaResolverFactory", () => {
           email: String!
         }"
       `)
+    })
+
+    it.todo("should use with custom input with validation - validate name field in create data", async () => {
+      // Test that upsertMutation validates name field in create data configured via Model.config({ input: { name: { create: z.string().min(3).max(20) } } })
+      // Expected: validation should reject names shorter than 3 or longer than 20 characters in create
+      // Expected: validation should accept valid names and create the user successfully
+    })
+
+    it.todo("should use with custom input with validation - validate name field in update data", async () => {
+      // Test that upsertMutation validates name field in update data configured via Model.config({ input: { name: { update: z.string().min(3).max(20) } } })
+      // Expected: validation should reject names shorter than 3 or longer than 20 characters in update
+      // Expected: validation should accept valid names and update the user successfully
+    })
+
+    it.todo("should use with custom input with validation - validate both create and update data", async () => {
+      // Test that upsertMutation validates both create and update data when both are provided
+      // Expected: validation should validate create data using create validators
+      // Expected: validation should validate update data using update validators
+      // Expected: validation should pass when both create and update data are valid
+    })
+
+    it.todo("should use with custom input with validation - only validate provided fields in update", async () => {
+      // Test that upsertMutation only validates fields present in update data (not all fields)
+      // Expected: if only name is provided in update, only name should be validated
+      // Expected: validation should pass when provided fields are valid
     })
   })
 

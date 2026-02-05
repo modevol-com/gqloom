@@ -438,7 +438,10 @@ export class PrismaResolverFactory<
       PrismaResolverCreateMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCreateMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeFactory.createArgs()))
+    input ??= this.typeFactory.createArgsSilk() as GraphQLSilk<
+      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
+      TInputI
+    >
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 

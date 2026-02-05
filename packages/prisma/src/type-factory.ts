@@ -2,6 +2,7 @@ import {
   type GraphQLSilk,
   isSilk,
   provideWeaverContext,
+  type StandardSchemaV1,
   SYMBOLS,
   silk,
   weaverContext,
@@ -352,8 +353,147 @@ export class PrismaTypeFactory<
 export class PrismaActionArgsFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
 > extends PrismaTypeFactory<TModelSilk> {
+  /**
+   * Cached field validators populated when input types are built during weave (weaverContext is set).
+   * Used at resolve time so validation works without relying on weaverContext.
+   */
+  protected validatorsCache?: Map<
+    "create" | "update",
+    Map<string, GraphQLSilk<any, any>>
+  >
+
   public constructor(protected readonly silk: TModelSilk) {
     super(silk.meta)
+  }
+
+  public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
+    const operation = PrismaTypeFactory.getOperationByName(name)
+    if (operation === "create" || operation === "update") {
+      if (!this.validatorsCache) this.validatorsCache = new Map()
+      if (!this.validatorsCache.has(operation)) {
+        this.validatorsCache.set(operation, this.getFieldValidators(operation))
+      }
+    }
+    return super.inputType(name)
+  }
+
+  /**
+   * Build a map of field validators for the given operation from Model.config({ input: { ... } })
+   */
+  protected getFieldValidators(
+    operation: "create" | "update"
+  ): Map<string, GraphQLSilk<any, any>> {
+    const validators = new Map<string, GraphQLSilk<any, any>>()
+    const model = this.silk.model
+    const inputTypeName =
+      operation === "create"
+        ? `${model.name}CreateInput`
+        : `${model.name}UpdateInput`
+    const input = this.modelMeta.inputTypes.get(inputTypeName)
+    if (!input) return validators
+
+    const config = weaverContext.getConfig<PrismaModelConfig<any>>(
+      `gqloom.prisma.model.${model.name}`
+    )
+    const inputGetter = config?.input
+    const inputBehaviors =
+      typeof inputGetter === "function" ? inputGetter() : inputGetter
+
+    for (const field of input.fields) {
+      const opBehavior = PrismaTypeFactory.getOperationBehavior(
+        inputBehaviors,
+        field.name,
+        operation
+      )
+      const hasValidate =
+        opBehavior != null &&
+        typeof opBehavior === "object" &&
+        "~standard" in opBehavior &&
+        typeof (opBehavior as any)["~standard"]?.validate === "function"
+      if (hasValidate) {
+        validators.set(field.name, opBehavior as GraphQLSilk<any, any>)
+      }
+    }
+    return validators
+  }
+
+  /**
+   * Validate fields using the provided validators (parallel validation)
+   */
+  protected async validateFields(
+    data: any,
+    fieldValidators: Map<string, GraphQLSilk<any, any>>
+  ): Promise<StandardSchemaV1.Result<any>> {
+    const result: Record<string, any> = {}
+    const issues: StandardSchemaV1.Issue[] = []
+
+    const validationPromises = Array.from(fieldValidators.entries())
+      .filter(([fieldName]) => fieldName in data)
+      .map(async ([fieldName, validator]) => {
+        const fieldValue = data[fieldName]
+        const validationResult = await (validator as any)["~standard"].validate(
+          fieldValue
+        )
+        return { fieldName, validationResult }
+      })
+
+    const validationResults = await Promise.all(validationPromises)
+
+    for (const { fieldName, validationResult } of validationResults) {
+      if (validationResult.issues) {
+        issues.push(
+          ...validationResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+            ...issue,
+            path: [fieldName, ...(issue.path || [])],
+          }))
+        )
+      } else if ("value" in validationResult) {
+        result[fieldName] = validationResult.value
+      }
+    }
+
+    for (const key in data) {
+      if (!fieldValidators.has(key) && data[key] !== undefined) {
+        result[key] = data[key]
+      }
+    }
+
+    return issues.length > 0 ? { issues } : { value: result }
+  }
+
+  /**
+   * Compile a validator for create/update args. Uses cached validators when available (set during schema build).
+   */
+  protected compileDataValidator(
+    operation: "create" | "update",
+    transform: (validatedData: any, args: { data: any }) => { data: any }
+  ): (args: { data: any }) => Promise<StandardSchemaV1.Result<{ data: any }>> {
+    return async (args: { data: any }) => {
+      const fieldValidators =
+        this.validatorsCache?.get(operation) ??
+        this.getFieldValidators(operation)
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      const dataResult = await this.validateFields(args.data, fieldValidators)
+
+      if (dataResult.issues) {
+        return { issues: dataResult.issues }
+      }
+
+      return { value: transform(dataResult.value, args) }
+    }
+  }
+
+  /**
+   * Create a silk for create mutation args that runs field validators from Model.config({ input })
+   */
+  public createArgsSilk(): GraphQLSilk<{ data: any }, { data: any }> {
+    return silk(
+      () => gt.nonNull(this.createArgs()),
+      this.compileDataValidator("create", (data) => ({ data }))
+    )
   }
 
   protected getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
