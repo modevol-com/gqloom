@@ -1,8 +1,10 @@
 import {
   type GraphQLSilk,
+  isSilk,
   mapValue,
   pascalCase,
   provideWeaverContext,
+  type StandardSchemaV1,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -294,7 +296,10 @@ export class MikroInputFactory<TEntity extends object> {
   public createArgsSilk() {
     return silk<CreateMutationOptions<TEntity>, CreateMutationArgs<TEntity>>(
       () => this.createArgs(),
-      (args) => ({ value: { data: args.data } })
+      this.compileDataValidator<
+        CreateMutationArgs<TEntity>,
+        CreateMutationOptions<TEntity>
+      >("create", (data) => ({ data }))
     )
   }
 
@@ -315,7 +320,10 @@ export class MikroInputFactory<TEntity extends object> {
   public insertArgsSilk() {
     return silk<InsertMutationOptions<TEntity>, InsertMutationArgs<TEntity>>(
       () => this.insertArgs(),
-      (args) => ({ value: { data: args.data } })
+      this.compileDataValidator<
+        InsertMutationArgs<TEntity>,
+        InsertMutationOptions<TEntity>
+      >("create", (data) => ({ data }))
     )
   }
 
@@ -341,7 +349,10 @@ export class MikroInputFactory<TEntity extends object> {
       InsertManyMutationArgs<TEntity>
     >(
       () => this.insertManyArgs(),
-      (args) => ({ value: { data: args.data } })
+      this.compileArrayDataValidator<
+        InsertManyMutationArgs<TEntity>,
+        InsertManyMutationOptions<TEntity>
+      >("create", (data) => ({ data }))
     )
   }
 
@@ -386,12 +397,13 @@ export class MikroInputFactory<TEntity extends object> {
   public updateArgsSilk() {
     return silk<UpdateMutationOptions<TEntity>, UpdateMutationArgs<TEntity>>(
       () => this.updateArgs(),
-      (args) => ({
-        value: {
-          where: MikroInputFactory.transformFilters(args.where),
-          data: args.data,
-        },
-      })
+      this.compileDataValidator<
+        UpdateMutationArgs<TEntity>,
+        UpdateMutationOptions<TEntity>
+      >("update", (data, args) => ({
+        where: MikroInputFactory.transformFilters(args.where),
+        data,
+      }))
     )
   }
 
@@ -421,7 +433,11 @@ export class MikroInputFactory<TEntity extends object> {
 
   public upsertArgsSilk() {
     return silk<UpsertMutationOptions<TEntity>, UpsertMutationArgs<TEntity>>(
-      () => this.upsertArgs()
+      () => this.upsertArgs(),
+      this.compileDataValidator<
+        UpsertMutationArgs<TEntity>,
+        UpsertMutationOptions<TEntity>
+      >("update", (data, args) => ({ ...args, data }))
     )
   }
 
@@ -457,7 +473,13 @@ export class MikroInputFactory<TEntity extends object> {
     return silk<
       UpsertManyMutationOptions<TEntity>,
       UpsertManyMutationArgs<TEntity>
-    >(() => this.upsertManyArgs())
+    >(
+      () => this.upsertManyArgs(),
+      this.compileArrayDataValidator<
+        UpsertManyMutationArgs<TEntity>,
+        UpsertManyMutationOptions<TEntity>
+      >("update", (data, args) => ({ ...args, data }))
+    )
   }
 
   public orderBy(): GraphQLObjectType {
@@ -868,5 +890,151 @@ export class MikroInputFactory<TEntity extends object> {
     }
 
     return undefined
+  }
+
+  /**
+   * Build a map of field validators for the given operation
+   */
+  protected getFieldValidators(
+    operation: "create" | "update"
+  ): Map<string, GraphQLSilk<any, any>> {
+    const validators = new Map<string, GraphQLSilk<any, any>>()
+
+    for (const [propertyName] of Object.entries(this.meta.properties)) {
+      const customSilk = MikroInputFactory.getPropertyConfig(
+        this.options?.input,
+        propertyName as keyof TEntity,
+        operation
+      )
+
+      if (customSilk && isSilk(customSilk)) {
+        validators.set(propertyName, customSilk)
+      }
+    }
+
+    return validators
+  }
+
+  /**
+   * Validate fields using the provided validators
+   */
+  protected async validateFields(
+    data: any,
+    fieldValidators: Map<string, GraphQLSilk<any, any>>,
+    operation: "create" | "update" = "create"
+  ): Promise<StandardSchemaV1.Result<any>> {
+    const result: Record<string, any> = {}
+    const issues: StandardSchemaV1.Issue[] = []
+
+    // Validate each field that has a custom validator
+    for (const [fieldName, validator] of fieldValidators.entries()) {
+      // For update operations, skip validation if field is not provided (undefined)
+      if (operation === "update" && !(fieldName in data)) {
+        continue
+      }
+      const fieldValue = data?.[fieldName]
+
+      const validationResult = await validator["~standard"].validate(fieldValue)
+
+      if (validationResult.issues) {
+        // Add field name to path for each issue
+        issues.push(
+          ...validationResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+            ...issue,
+            path: [fieldName, ...(issue.path || [])],
+          }))
+        )
+      } else if ("value" in validationResult) {
+        result[fieldName] = validationResult.value
+      }
+    }
+
+    // Preserve fields that don't have custom validators
+    for (const key in data) {
+      if (!fieldValidators.has(key) && data[key] !== undefined) {
+        result[key] = data[key]
+      }
+    }
+
+    return issues.length > 0 ? { issues } : { value: result }
+  }
+
+  /**
+   * Compile a validator function with custom transform
+   */
+  protected compileDataValidator<
+    TArgs extends { data: any },
+    TOptions extends { data: any },
+  >(
+    operation: "create" | "update",
+    transform: (validatedData: TArgs["data"], args: TArgs) => TOptions
+  ): (args: TArgs) => Promise<StandardSchemaV1.Result<TOptions>> {
+    const fieldValidators = this.getFieldValidators(operation)
+
+    return async (args: TArgs) => {
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      const dataResult = await this.validateFields(
+        args.data,
+        fieldValidators,
+        operation
+      )
+
+      if (dataResult.issues) {
+        return { issues: dataResult.issues }
+      }
+
+      return { value: transform(dataResult.value, args) }
+    }
+  }
+
+  /**
+   * Compile a validator function for array data with custom transform
+   */
+  protected compileArrayDataValidator<
+    TArgs extends { data: any[] },
+    TOptions extends { data: any[] },
+  >(
+    operation: "create" | "update",
+    transform: (validatedData: TArgs["data"], args: TArgs) => TOptions
+  ): (args: TArgs) => Promise<StandardSchemaV1.Result<TOptions>> {
+    const fieldValidators = this.getFieldValidators(operation)
+
+    return async (args: TArgs) => {
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      const issues: StandardSchemaV1.Issue[] = []
+      const validatedData: any[] = []
+
+      for (let i = 0; i < args.data.length; i++) {
+        const itemResult = await this.validateFields(
+          args.data[i],
+          fieldValidators,
+          operation
+        )
+
+        if (itemResult.issues) {
+          // Add array index to path for each issue
+          issues.push(
+            ...itemResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: [i, ...(issue.path || [])],
+            }))
+          )
+        } else if ("value" in itemResult) {
+          validatedData.push(itemResult.value)
+        }
+      }
+
+      if (issues.length > 0) {
+        return { issues }
+      }
+
+      return { value: transform(validatedData, args) }
+    }
   }
 }
