@@ -2,6 +2,7 @@ import {
   type GraphQLSilk,
   mapValue,
   pascalCase,
+  provideWeaverContext,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -498,7 +499,7 @@ export class MikroInputFactory<TEntity extends object> {
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
-        fields: () =>
+        fields: provideWeaverContext.inherit(() =>
           mapValue(this.meta.properties, (property, propertyName) => {
             // Check visibility
             if (
@@ -542,7 +543,8 @@ export class MikroInputFactory<TEntity extends object> {
               type: finalType,
               description: property.comment,
             } as GraphQLFieldConfig<any, any>
-          }),
+          })
+        ),
       })
     )
   }
@@ -555,7 +557,7 @@ export class MikroInputFactory<TEntity extends object> {
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
-        fields: () =>
+        fields: provideWeaverContext.inherit(() =>
           mapValue(this.meta.properties, (property, propertyName) => {
             // Check visibility
             if (
@@ -594,7 +596,8 @@ export class MikroInputFactory<TEntity extends object> {
               type: finalType,
               description: property.comment,
             } as GraphQLFieldConfig<any, any>
-          }),
+          })
+        ),
       })
     )
   }
