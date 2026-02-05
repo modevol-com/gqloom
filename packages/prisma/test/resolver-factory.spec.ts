@@ -7,6 +7,7 @@ import {
 import { ZodWeaver } from "@gqloom/zod"
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
 import {
+  type GraphQLSchema,
   execute as graphqlExecute,
   parse,
   printSchema,
@@ -32,6 +33,22 @@ import { PrismaClient } from "./client/client"
 import * as g from "./generated"
 
 const { resolver, query } = loom
+
+function createExecute(schema: GraphQLSchema) {
+  return async (
+    query: string,
+    variables?: Record<string, unknown>
+  ): Promise<any> => {
+    const { data, errors } = await graphqlExecute({
+      schema,
+      document: parse(query),
+      variableValues: variables,
+      contextValue: {},
+    })
+    if (errors?.length) throw new Error(JSON.stringify(errors))
+    return data
+  }
+}
 
 class TestablePrismaModelResolverFactory<
   TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
@@ -148,20 +165,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       author: postResolverFactory.relationField("author"),
     })
     const schema = weave(r1, r2)
-    const execute = async (query: string, variables?: any): Promise<any> => {
-      const contextValue: Record<string, unknown> = {}
-      const { data, errors } = await graphqlExecute({
-        schema,
-        document: parse(query),
-        variableValues: variables,
-        contextValue,
-      })
-
-      if (errors && errors.length > 0) {
-        throw new Error(JSON.stringify(errors))
-      }
-      return data
-    }
+    const execute = createExecute(schema)
     beforeEach(async () => {
       await db.user.deleteMany()
       await db.post.deleteMany()
@@ -245,20 +249,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const testSchema = weave(r3)
-      const execute = async (query: string, variables?: any): Promise<any> => {
-        const contextValue: Record<string, unknown> = {}
-        const { data, errors } = await graphqlExecute({
-          schema: testSchema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue,
-        })
-
-        if (errors && errors.length > 0) {
-          throw new Error(JSON.stringify(errors))
-        }
-        return data
-      }
+      const execute = createExecute(testSchema)
 
       const json = await execute(/* GraphQL */ `
             query {
@@ -629,19 +620,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }),
         userResolver
       )
-      const execute = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ): Promise<any> => {
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue: {},
-        })
-        if (errors?.length) throw new Error(JSON.stringify(errors))
-        return data
-      }
+      const execute = createExecute(schema)
       const mutation = /* GraphQL */ `
         mutation CreateUser($data: UserCreateInput!) {
           createUser(data: $data) {
@@ -677,19 +656,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }),
         userResolver
       )
-      const execute = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ): Promise<any> => {
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue: {},
-        })
-        if (errors?.length) throw new Error(JSON.stringify(errors))
-        return data
-      }
+      const execute = createExecute(schema)
       const mutation = /* GraphQL */ `
         mutation CreateUser($data: UserCreateInput!) {
           createUser(data: $data) {
@@ -725,19 +692,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }),
         userResolver
       )
-      const execute = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ): Promise<any> => {
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue: {},
-        })
-        if (errors?.length) throw new Error(JSON.stringify(errors))
-        return data
-      }
+      const execute = createExecute(schema)
       const mutation = /* GraphQL */ `
         mutation CreateUser($data: UserCreateInput!) {
           createUser(data: $data) {
@@ -1046,19 +1001,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }),
         userResolver
       )
-      const execute = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ): Promise<any> => {
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue: {},
-        })
-        if (errors?.length) throw new Error(JSON.stringify(errors))
-        return data
-      }
+      const execute = createExecute(schema)
       const mutation = /* GraphQL */ `
         mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
           updateUser(data: $data, where: $where) {
@@ -1096,19 +1039,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }),
         userResolver
       )
-      const execute = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ): Promise<any> => {
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue: {},
-        })
-        if (errors?.length) throw new Error(JSON.stringify(errors))
-        return data
-      }
+      const execute = createExecute(schema)
       const mutation = /* GraphQL */ `
         mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
           updateUser(data: $data, where: $where) {
@@ -1148,19 +1079,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }),
         userResolver
       )
-      const execute = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ): Promise<any> => {
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue: {},
-        })
-        if (errors?.length) throw new Error(JSON.stringify(errors))
-        return data
-      }
+      const execute = createExecute(schema)
       const mutation = /* GraphQL */ `
         mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
           updateUser(data: $data, where: $where) {
@@ -1208,19 +1127,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         }),
         userResolver
       )
-      const execute = async (
-        query: string,
-        variables?: Record<string, unknown>
-      ): Promise<any> => {
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue: {},
-        })
-        if (errors?.length) throw new Error(JSON.stringify(errors))
-        return data
-      }
+      const execute = createExecute(schema)
       const mutation = /* GraphQL */ `
         mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
           updateUser(data: $data, where: $where) {
@@ -1457,20 +1364,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
     it("should resolve queries correctly", async () => {
       const resolver = userResolverFactory.queriesResolver()
       const schema = weave(resolver)
-      const execute = async (query: string, variables?: any): Promise<any> => {
-        const contextValue: Record<string, unknown> = {}
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue,
-        })
-
-        if (errors && errors.length > 0) {
-          throw new Error(JSON.stringify(errors))
-        }
-        return data
-      }
+      const execute = createExecute(schema)
 
       const json = await execute(/* GraphQL */ `
             query {
@@ -1508,20 +1402,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         ],
       })
       const schema = weave(resolver)
-      const execute = async (query: string, variables?: any): Promise<any> => {
-        const contextValue: Record<string, unknown> = {}
-        const { data, errors } = await graphqlExecute({
-          schema,
-          document: parse(query),
-          variableValues: variables,
-          contextValue,
-        })
-
-        if (errors && errors.length > 0) {
-          throw new Error(JSON.stringify(errors))
-        }
-        return data
-      }
+      const execute = createExecute(schema)
 
       await execute(/* GraphQL */ `
             query {
