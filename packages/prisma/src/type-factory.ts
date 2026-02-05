@@ -186,6 +186,9 @@ export class PrismaTypeFactory<
 
                 if (isList && !isListType(type))
                   type = new GraphQLList(new GraphQLNonNull(type))
+
+                // Respect DMMF optionality: if the field should be nullable per DMMF
+                if (!isNonNull && isNonNullType(type)) type = type.ofType
                 if (isNonNull && !isNonNullType(type))
                   type = new GraphQLNonNull(type)
 
@@ -466,9 +469,9 @@ export class PrismaActionArgsFactory<
    */
   protected compileDataValidator(
     operation: "create" | "update",
-    transform: (validatedData: any, args: { data: any }) => { data: any }
-  ): (args: { data: any }) => Promise<StandardSchemaV1.Result<{ data: any }>> {
-    return async (args: { data: any }) => {
+    transform: (validatedData: any, args: any) => any
+  ): (args: any) => Promise<StandardSchemaV1.Result<any>> {
+    return async (args: any) => {
       const fieldValidators =
         this.validatorsCache?.get(operation) ??
         this.getFieldValidators(operation)

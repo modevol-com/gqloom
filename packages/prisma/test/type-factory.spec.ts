@@ -401,7 +401,7 @@ describe("PrismaTypeFactory", () => {
       const UserCreateInput = schema.getType("UserCreateInput")
       expect(printType(UserCreateInput!)).toMatchInlineSnapshot(`
         "input UserCreateInput {
-          name: MyName!
+          name: MyName
           posts: PostCreateNestedManyWithoutAuthorInput
           publishedPosts: PostCreateNestedManyWithoutPublisherInput
           profile: ProfileCreateNestedOneWithoutUserInput
