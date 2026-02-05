@@ -957,10 +957,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("updateMutation", async () => {
-    let userResolverFactory: TestablePrismaModelResolverFactory<
-      typeof g.User,
-      PrismaClient
-    >
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
     let existingUser: { id: number; name: string | null; email: string }
 
     beforeEach(async () => {
@@ -969,7 +969,6 @@ describe("PrismaModelPrismaResolverFactory", () => {
         data: { name: "John", email: "john@example.com" },
       })
       existingUser = u
-      userResolverFactory = new TestablePrismaModelResolverFactory(g.User, db)
     })
 
     it("should be able to create a deleteMutation", async () => {

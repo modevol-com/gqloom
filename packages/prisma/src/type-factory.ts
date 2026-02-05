@@ -5,6 +5,7 @@ import {
   type StandardSchemaV1,
   SYMBOLS,
   silk,
+  WeaverContext,
   weaverContext,
 } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
@@ -372,8 +373,9 @@ export class PrismaActionArgsFactory<
   public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
     const operation = PrismaTypeFactory.getOperationByName(name)
     if (operation === "create" || operation === "update") {
-      if (!this.validatorsCache) this.validatorsCache = new Map()
-      if (!this.validatorsCache.has(operation)) {
+      // Only update cache during schema build (weaverContext is set). At resolve time ref is null, skip to avoid overwriting with empty validators.
+      if (WeaverContext.ref != null) {
+        if (!this.validatorsCache) this.validatorsCache = new Map()
         this.validatorsCache.set(operation, this.getFieldValidators(operation))
       }
     }
