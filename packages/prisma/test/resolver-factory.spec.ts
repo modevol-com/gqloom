@@ -83,21 +83,30 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   it("should be able to create a bobbin", () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
-    expect(UserBobbin).toBeDefined()
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
+    expect(userResolverFactory).toBeDefined()
   })
 
   it("should be able to create a uniqueWhere condition", () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
-    const userCondition = UserBobbin.uniqueWhere({
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
+    const userCondition = userResolverFactory.uniqueWhere({
       id: 4,
       name: "",
       email: "",
     })
     expect(userCondition).toEqual({ id: 4 })
 
-    const SheepBobbin = new TestablePrismaModelResolverFactory(g.Sheep, db)
-    const sheepCondition = SheepBobbin.uniqueWhere({
+    const sheepResolverFactory = new TestablePrismaModelResolverFactory(
+      g.Sheep,
+      db
+    )
+    const sheepCondition = sheepResolverFactory.uniqueWhere({
       firstCode: "foo",
       lastCode: "bar",
     })
@@ -105,8 +114,8 @@ describe("PrismaModelPrismaResolverFactory", () => {
       firstCode_lastCode: { firstCode: "foo", lastCode: "bar" },
     })
 
-    const DogBobbin = new TestablePrismaModelResolverFactory(g.Dog, db)
-    const dogCondition = DogBobbin.uniqueWhere({
+    const dogResolverFactory = new TestablePrismaModelResolverFactory(g.Dog, db)
+    const dogCondition = dogResolverFactory.uniqueWhere({
       firstName: "foo",
       lastName: "bar",
       height: 10,
@@ -122,18 +131,21 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("relationField", () => {
-    const UserBobbin = new PrismaResolverFactory(g.User, async () => db)
-    const PostBobbin = new PrismaResolverFactory(g.Post, db)
+    const userResolverFactory = new PrismaResolverFactory(
+      g.User,
+      async () => db
+    )
+    const postResolverFactory = new PrismaResolverFactory(g.Post, db)
     const r1 = resolver.of(g.User, {
       users: query(g.User.list(), () => db.user.findMany()),
 
-      posts: UserBobbin.relationField("posts"),
+      posts: userResolverFactory.relationField("posts"),
     })
 
     const r2 = resolver.of(g.Post, {
       posts: query(g.Post.list(), () => db.post.findMany()),
 
-      author: PostBobbin.relationField("author"),
+      author: postResolverFactory.relationField("author"),
     })
     const schema = weave(r1, r2)
     const execute = async (query: string, variables?: any): Promise<any> => {
@@ -222,11 +234,14 @@ describe("PrismaModelPrismaResolverFactory", () => {
         ],
       })
 
-      const PostWithPublisherBobbin = new PrismaResolverFactory(g.Post, db)
+      const postWithPublisherResolverFactory = new PrismaResolverFactory(
+        g.Post,
+        db
+      )
 
       const r3 = resolver.of(g.Post, {
         posts: query(g.Post.list(), () => db.post.findMany()),
-        publisher: PostWithPublisherBobbin.relationField("publisher"),
+        publisher: postWithPublisherResolverFactory.relationField("publisher"),
       })
 
       const testSchema = weave(r3)
@@ -264,7 +279,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
     })
 
     it("should be able to create a relationField", async () => {
-      const postsField = UserBobbin.relationField("posts")
+      const postsField = userResolverFactory.relationField("posts")
       expect(postsField).toBeDefined()
       expect(postsField["~meta"].output).toBeTypeOf("object")
       expect(postsField["~meta"].operation).toEqual("field")
@@ -273,7 +288,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         Partial<g.IPost>[]
       >()
 
-      const userField = PostBobbin.relationField("author")
+      const userField = postResolverFactory.relationField("author")
       expect(userField).toBeDefined()
       expect(userField["~meta"].output).toBeTypeOf("object")
       expect(userField["~meta"].operation).toEqual("field")
@@ -296,9 +311,12 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("countQuery", () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
     it("should be able to create a countQuery", () => {
-      const q = UserBobbin.countQuery({
+      const q = userResolverFactory.countQuery({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = await parseInput.getResult()
@@ -325,7 +343,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        countUser: UserBobbin.countQuery({
+        countUser: userResolverFactory.countQuery({
           input: z.object({
             where: UserWhereInput,
           }),
@@ -352,9 +370,12 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("findFirstQuery", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
     it("should be able to create a findFirstQuery", () => {
-      const q = UserBobbin.findFirstQuery({
+      const q = userResolverFactory.findFirstQuery({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = getStandardValue(await parseInput())
@@ -383,7 +404,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        findFirstUser: UserBobbin.findFirstQuery({
+        findFirstUser: userResolverFactory.findFirstQuery({
           input: z.object({
             where: UserWhereInput.optional(),
           }),
@@ -410,10 +431,13 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("findManyQuery", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a findManyQuery", () => {
-      const q = UserBobbin.findManyQuery({
+      const q = userResolverFactory.findManyQuery({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = getStandardValue(await parseInput())
@@ -441,7 +465,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        findManyUser: UserBobbin.findManyQuery({
+        findManyUser: userResolverFactory.findManyQuery({
           input: z.object({
             where: UserWhereInput.optional(),
           }),
@@ -468,10 +492,13 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("findUniqueQuery", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a findUniqueQuery", () => {
-      const q = UserBobbin.findUniqueQuery({
+      const q = userResolverFactory.findUniqueQuery({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = await parseInput()
@@ -502,7 +529,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        findUniqueUser: UserBobbin.findUniqueQuery({
+        findUniqueUser: userResolverFactory.findUniqueQuery({
           input: z.object({
             where: UserWhereInput,
           }),
@@ -529,10 +556,13 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("createMutation", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a createMutation", () => {
-      const m = UserBobbin.createMutation({
+      const m = userResolverFactory.createMutation({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = await parseInput()
@@ -562,7 +592,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        createUser: UserBobbin.createMutation({
+        createUser: userResolverFactory.createMutation({
           input: z.object({
             data: UserCreateInput,
           }),
@@ -590,7 +620,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
     it("should use with custom input with validation - validate name field with minLength and maxLength", async () => {
       const userResolver = resolver.of(g.User, {
         hello: query(z.string(), () => "world"),
-        createUser: UserBobbin.createMutation(),
+        createUser: userResolverFactory.createMutation(),
       })
       const schema = weave(
         ZodWeaver,
@@ -638,12 +668,12 @@ describe("PrismaModelPrismaResolverFactory", () => {
     it("should use with custom input with validation - validate email field with email format", async () => {
       const userResolver = resolver.of(g.User, {
         hello: query(z.string(), () => "world"),
-        createUser: UserBobbin.createMutation(),
+        createUser: userResolverFactory.createMutation(),
       })
       const schema = weave(
         ZodWeaver,
         g.User.config({
-          input: { email: z.string().email() },
+          input: { email: z.email() },
         }),
         userResolver
       )
@@ -683,14 +713,14 @@ describe("PrismaModelPrismaResolverFactory", () => {
     it("should use with custom input with validation - validate multiple fields simultaneously", async () => {
       const userResolver = resolver.of(g.User, {
         hello: query(z.string(), () => "world"),
-        createUser: UserBobbin.createMutation(),
+        createUser: userResolverFactory.createMutation(),
       })
       const schema = weave(
         ZodWeaver,
         g.User.config({
           input: {
             name: z.string().min(3).max(20),
-            email: z.string().email(),
+            email: z.email(),
           },
         }),
         userResolver
@@ -733,10 +763,13 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("createManyMutation", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a createManyMutation", () => {
-      const m = UserBobbin.createManyMutation({
+      const m = userResolverFactory.createManyMutation({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = getStandardValue(await parseInput())
@@ -760,7 +793,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         email: z.string(),
       })
       const r = resolver.of(g.User, {
-        createManyUser: UserBobbin.createManyMutation({
+        createManyUser: userResolverFactory.createManyMutation({
           input: z.object({
             data: UserCreateManyInput.array(),
           }),
@@ -803,10 +836,13 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("deleteMutation", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a deleteMutation", () => {
-      const m = UserBobbin.deleteMutation({
+      const m = userResolverFactory.deleteMutation({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = await parseInput()
@@ -833,7 +869,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        deleteUser: UserBobbin.deleteMutation({
+        deleteUser: userResolverFactory.deleteMutation({
           input: z.object({
             where: UserDeleteInput,
           }),
@@ -860,10 +896,13 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("deleteManyMutation", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a deleteManyMutation", async () => {
-      const m = UserBobbin.deleteManyMutation({
+      const m = userResolverFactory.deleteManyMutation({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = getStandardValue(await parseInput())
@@ -887,7 +926,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        deleteManyUser: UserBobbin.deleteManyMutation({
+        deleteManyUser: userResolverFactory.deleteManyMutation({
           input: z.object({
             where: UserDeleteManyInput,
           }),
@@ -918,10 +957,23 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("updateMutation", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    let userResolverFactory: TestablePrismaModelResolverFactory<
+      typeof g.User,
+      PrismaClient
+    >
+    let existingUser: { id: number; name: string | null; email: string }
+
+    beforeEach(async () => {
+      await db.user.deleteMany()
+      const u = await db.user.create({
+        data: { name: "John", email: "john@example.com" },
+      })
+      existingUser = u
+      userResolverFactory = new TestablePrismaModelResolverFactory(g.User, db)
+    })
 
     it("should be able to create a deleteMutation", async () => {
-      const m = UserBobbin.updateMutation({
+      const m = userResolverFactory.updateMutation({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = await parseInput()
@@ -953,7 +1005,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        updateUser: UserBobbin.updateMutation({
+        updateUser: userResolverFactory.updateMutation({
           input: z.object({
             data: UserUpdateInput,
             where: UserWhereInput,
@@ -983,37 +1035,227 @@ describe("PrismaModelPrismaResolverFactory", () => {
       `)
     })
 
-    it.todo("should use with custom input with validation - validate name field in update data", async () => {
-      // Test that updateMutation validates name field configured via Model.config({ input: { name: { update: z.string().min(3).max(20) } } })
-      // Expected: validation should reject names shorter than 3 or longer than 20 characters
-      // Expected: validation should accept valid names and update the user successfully
+    it("should use with custom input with validation - validate name field in update data", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        updateUser: userResolverFactory.updateMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { name: { update: z.string().min(3).max(20) } },
+        }),
+        userResolver
+      )
+      const execute = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ): Promise<any> => {
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue: {},
+        })
+        if (errors?.length) throw new Error(JSON.stringify(errors))
+        return data
+      }
+      const mutation = /* GraphQL */ `
+        mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
+          updateUser(data: $data, where: $where) {
+            id
+            name
+            email
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: { name: "J" },
+          where: { id: existingUser.id },
+        })
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
+
+      const res = await execute(mutation, {
+        data: { name: "Joe" },
+        where: { id: existingUser.id },
+      })
+      expect(res.updateUser).toBeDefined()
+      expect(res.updateUser.name).toBe("Joe")
+      expect(res.updateUser.email).toBe(existingUser.email)
     })
 
-    it.todo("should use with custom input with validation - validate email field in update data", async () => {
-      // Test that updateMutation validates email field configured via Model.config({ input: { email: { update: z.string().email() } } })
-      // Expected: validation should reject invalid email formats
-      // Expected: validation should accept valid emails and update the user successfully
+    it("should use with custom input with validation - validate email field in update data", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        updateUser: userResolverFactory.updateMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { email: { update: z.email() } },
+        }),
+        userResolver
+      )
+      const execute = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ): Promise<any> => {
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue: {},
+        })
+        if (errors?.length) throw new Error(JSON.stringify(errors))
+        return data
+      }
+      const mutation = /* GraphQL */ `
+        mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
+          updateUser(data: $data, where: $where) {
+            id
+            name
+            email
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: { email: "not-an-email" },
+          where: { id: existingUser.id },
+        })
+      ).rejects.toThrow()
+
+      const res = await execute(mutation, {
+        data: { email: "valid@example.com" },
+        where: { id: existingUser.id },
+      })
+      expect(res.updateUser).toBeDefined()
+      expect(res.updateUser.email).toBe("valid@example.com")
     })
 
-    it.todo("should use with custom input with validation - only validate fields that are provided", async () => {
-      // Test that updateMutation only validates fields present in data (not all fields)
-      // Expected: if only name is provided, only name should be validated (not email)
-      // Expected: if only email is provided, only email should be validated (not name)
-      // Expected: validation should pass when provided fields are valid, even if other fields would be invalid
+    it("should use with custom input with validation - only validate fields that are provided", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        updateUser: userResolverFactory.updateMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: {
+            name: { update: z.string().min(3).max(20) },
+            email: { update: z.email() },
+          },
+        }),
+        userResolver
+      )
+      const execute = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ): Promise<any> => {
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue: {},
+        })
+        if (errors?.length) throw new Error(JSON.stringify(errors))
+        return data
+      }
+      const mutation = /* GraphQL */ `
+        mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
+          updateUser(data: $data, where: $where) {
+            id
+            name
+            email
+          }
+        }
+      `
+      // Only name provided - should validate name only (short name fails)
+      await expect(
+        execute(mutation, {
+          data: { name: "Jo" },
+          where: { id: existingUser.id },
+        })
+      ).rejects.toThrow()
+
+      // Only name provided and valid - should pass (email not validated)
+      const resName = await execute(mutation, {
+        data: { name: "Joe" },
+        where: { id: existingUser.id },
+      })
+      expect(resName.updateUser.name).toBe("Joe")
+
+      // Only email provided and valid - should pass (name not validated)
+      const resEmail = await execute(mutation, {
+        data: { email: "other@example.com" },
+        where: { id: existingUser.id },
+      })
+      expect(resEmail.updateUser.email).toBe("other@example.com")
     })
 
-    it.todo("should use with custom input with validation - validate multiple fields simultaneously", async () => {
-      // Test that updateMutation validates multiple fields when both are provided
-      // Expected: validation should collect all errors for multiple invalid fields
-      // Expected: validation should pass when all provided fields are valid
+    it("should use with custom input with validation - validate multiple fields simultaneously", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        updateUser: userResolverFactory.updateMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: {
+            name: { update: z.string().min(3).max(20) },
+            email: { update: z.email() },
+          },
+        }),
+        userResolver
+      )
+      const execute = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ): Promise<any> => {
+        const { data, errors } = await graphqlExecute({
+          schema,
+          document: parse(query),
+          variableValues: variables,
+          contextValue: {},
+        })
+        if (errors?.length) throw new Error(JSON.stringify(errors))
+        return data
+      }
+      const mutation = /* GraphQL */ `
+        mutation UpdateUser($data: UserUpdateInput!, $where: UserWhereUniqueInput!) {
+          updateUser(data: $data, where: $where) {
+            id
+            name
+            email
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: { name: "Jo", email: "ab" },
+          where: { id: existingUser.id },
+        })
+      ).rejects.toThrow()
+
+      const res = await execute(mutation, {
+        data: { name: "Joe", email: "joe@example.com" },
+        where: { id: existingUser.id },
+      })
+      expect(res.updateUser).toBeDefined()
+      expect(res.updateUser.name).toBe("Joe")
+      expect(res.updateUser.email).toBe("joe@example.com")
     })
   })
 
   describe("updateManyMutation", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a deleteMutation", async () => {
-      const m = UserBobbin.updateManyMutation({
+      const m = userResolverFactory.updateManyMutation({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = await parseInput()
@@ -1045,7 +1287,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        updateManyUser: UserBobbin.updateManyMutation({
+        updateManyUser: userResolverFactory.updateManyMutation({
           input: z.object({
             data: UserUpdateManyInput,
             where: UserWhereInput,
@@ -1086,17 +1328,20 @@ describe("PrismaModelPrismaResolverFactory", () => {
     })
 
     it.todo("should use with custom input with validation - validate email field in update data", async () => {
-      // Test that updateManyMutation validates email field configured via Model.config({ input: { email: { update: z.string().email() } } })
+      // Test that updateManyMutation validates email field configured via Model.config({ input: { email: { update: z.email() } } })
       // Expected: validation should reject invalid email formats
       // Expected: validation should accept valid emails and update users successfully
     })
   })
 
   describe("upsertMutation", async () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     it("should be able to create a deleteMutation", async () => {
-      const m = UserBobbin.upsertMutation({
+      const m = userResolverFactory.upsertMutation({
         middlewares: [
           async ({ next, parseInput }) => {
             const input = await parseInput()
@@ -1128,7 +1373,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
       })
 
       const r = resolver.of(g.User, {
-        upsertUser: UserBobbin.upsertMutation({
+        upsertUser: userResolverFactory.upsertMutation({
           input: z.object({
             where: UserWhereUniqueInput,
             create: UserUpsertInput,
@@ -1186,7 +1431,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
   })
 
   describe("queriesResolver", () => {
-    const UserBobbin = new TestablePrismaModelResolverFactory(g.User, db)
+    const userResolverFactory = new TestablePrismaModelResolverFactory(
+      g.User,
+      db
+    )
 
     beforeEach(async () => {
       await db.user.deleteMany()
@@ -1203,12 +1451,12 @@ describe("PrismaModelPrismaResolverFactory", () => {
     })
 
     it("should be created without error", () => {
-      const resolver = UserBobbin.queriesResolver()
+      const resolver = userResolverFactory.queriesResolver()
       expect(resolver).toBeDefined()
     })
 
     it("should resolve queries correctly", async () => {
-      const resolver = UserBobbin.queriesResolver()
+      const resolver = userResolverFactory.queriesResolver()
       const schema = weave(resolver)
       const execute = async (query: string, variables?: any): Promise<any> => {
         const contextValue: Record<string, unknown> = {}
@@ -1249,7 +1497,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
 
     it("should be created with middlewares", async () => {
       let count = 0
-      const resolver = UserBobbin.queriesResolver({
+      const resolver = userResolverFactory.queriesResolver({
         middlewares: [
           async ({ parseInput, next }) => {
             const input = await parseInput()

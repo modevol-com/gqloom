@@ -499,6 +499,22 @@ export class PrismaActionArgsFactory<
     )
   }
 
+  /**
+   * Create a silk for update mutation args that runs field validators from Model.config({ input })
+   */
+  public updateArgsSilk(): GraphQLSilk<
+    { data: any; where: any },
+    { data: any; where: any }
+  > {
+    return silk(
+      () => new GraphQLNonNull(this.updateArgs()),
+      this.compileDataValidator("update", (data, args) => ({
+        data,
+        where: args.where,
+      }))
+    )
+  }
+
   protected getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
     if (modelOrName == null) return this.silk.model
     if (typeof modelOrName === "object") return modelOrName
