@@ -143,7 +143,11 @@ export function getStandardValue<T>(
 ): T | null
 export function getStandardValue<T>(
   result?: StandardSchemaV1.Result<T> | null
-): T | null | undefined {
+): T | null | undefined
+
+export function getStandardValue(
+  result?: StandardSchemaV1.Result<any> | null
+): any | null | undefined {
   if (result == null) return result
   const { issues } = result
   if (issues?.length) {
