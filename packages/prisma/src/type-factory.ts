@@ -12,6 +12,7 @@ import {
   GraphQLEnumType,
   type GraphQLEnumValueConfig,
   type GraphQLFieldConfig,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -32,7 +33,6 @@ import type {
   PrismaModelMeta,
   PrismaTypes,
 } from "./types"
-import { gqlType as gt } from "./utils"
 
 export class PrismaTypeFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
@@ -491,7 +491,7 @@ export class PrismaActionArgsFactory<
    */
   public createArgsSilk(): GraphQLSilk<{ data: any }, { data: any }> {
     return silk(
-      () => gt.nonNull(this.createArgs()),
+      () => new GraphQLNonNull(this.createArgs()),
       this.compileDataValidator("create", (data) => ({ data }))
     )
   }
@@ -516,13 +516,15 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
+          type: new GraphQLList(
+            new GraphQLNonNull(
+              this.inputType(`${model.name}OrderByWithRelationInput`)
+            )
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gt.int },
-        take: { type: gt.int },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
       })),
     })
 
@@ -541,15 +543,19 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
+          type: new GraphQLList(
+            new GraphQLNonNull(
+              this.inputType(`${model.name}OrderByWithRelationInput`)
+            )
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gt.int },
-        take: { type: gt.int },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
         distinct: {
-          type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+          type: new GraphQLList(
+            new GraphQLNonNull(this.enumType(`${model.name}ScalarFieldEnum`))
+          ),
         },
       })),
     })
@@ -569,15 +575,19 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
+          type: new GraphQLList(
+            new GraphQLNonNull(
+              this.inputType(`${model.name}OrderByWithRelationInput`)
+            )
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gt.int },
-        take: { type: gt.int },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
         distinct: {
-          type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+          type: new GraphQLList(
+            new GraphQLNonNull(this.enumType(`${model.name}ScalarFieldEnum`))
+          ),
         },
       })),
     })
@@ -613,7 +623,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}CreateInput`)),
         },
       })),
     })
@@ -631,8 +641,10 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(
-            gt.list(this.inputType(`${model.name}CreateManyInput`))
+          type: new GraphQLNonNull(
+            new GraphQLList(
+              new GraphQLNonNull(this.inputType(`${model.name}CreateManyInput`))
+            )
           ),
         },
       })),
@@ -651,7 +663,9 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: new GraphQLNonNull(
+            this.inputType(`${model.name}WhereUniqueInput`)
+          ),
         },
       })),
     })
@@ -687,10 +701,12 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}UpdateInput`)),
         },
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: new GraphQLNonNull(
+            this.inputType(`${model.name}WhereUniqueInput`)
+          ),
         },
       })),
     })
@@ -708,7 +724,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(
+          type: new GraphQLNonNull(
             this.inputType(`${model.name}UpdateManyMutationInput`)
           ),
         },
@@ -730,13 +746,15 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: new GraphQLNonNull(
+            this.inputType(`${model.name}WhereUniqueInput`)
+          ),
         },
         create: {
-          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}CreateInput`)),
         },
         update: {
-          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}UpdateInput`)),
         },
       })),
     })
@@ -750,7 +768,7 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        count: { type: gt.nonNull(gt.int) },
+        count: { type: new GraphQLNonNull(GraphQLInt) },
       })),
     })
 
