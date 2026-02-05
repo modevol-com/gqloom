@@ -917,6 +917,7 @@ export class MikroInputFactory<TEntity extends object> {
 
   /**
    * Validate fields using the provided validators
+   * Optimized: Fields are validated in parallel for better performance
    */
   protected async validateFields(
     data: any,
@@ -925,16 +926,20 @@ export class MikroInputFactory<TEntity extends object> {
     const result: Record<string, any> = {}
     const issues: StandardSchemaV1.Issue[] = []
 
-    // Validate each field that has a custom validator
-    for (const [fieldName, validator] of fieldValidators.entries()) {
-      // For update operations, skip validation if field is not provided (undefined)
-      if (!(fieldName in data)) {
-        continue
-      }
-      const fieldValue = data?.[fieldName]
+    // Validate all fields in parallel for better performance
+    const validationPromises = Array.from(fieldValidators.entries())
+      .filter(([fieldName]) => fieldName in data)
+      .map(async ([fieldName, validator]) => {
+        const fieldValue = data[fieldName]
+        const validationResult =
+          await validator["~standard"].validate(fieldValue)
+        return { fieldName, validationResult }
+      })
 
-      const validationResult = await validator["~standard"].validate(fieldValue)
+    const validationResults = await Promise.all(validationPromises)
 
+    // Collect results and errors
+    for (const { fieldName, validationResult } of validationResults) {
       if (validationResult.issues) {
         // Add field name to path for each issue
         issues.push(
@@ -987,6 +992,7 @@ export class MikroInputFactory<TEntity extends object> {
 
   /**
    * Compile a validator function for array data with custom transform
+   * Optimized: Array elements are validated in parallel for better performance
    */
   protected compileArrayDataValidator<
     TArgs extends { data: any[] },
@@ -1002,25 +1008,30 @@ export class MikroInputFactory<TEntity extends object> {
         return { value: transform(args.data, args) }
       }
 
+      // Validate all array elements in parallel for better performance
+      const itemPromises = args.data.map((item, i) =>
+        this.validateFields(item, fieldValidators).then((itemResult) => ({
+          index: i,
+          result: itemResult,
+        }))
+      )
+
+      const itemResults = await Promise.all(itemPromises)
+
       const issues: StandardSchemaV1.Issue[] = []
       const validatedData: any[] = []
 
-      for (let i = 0; i < args.data.length; i++) {
-        const itemResult = await this.validateFields(
-          args.data[i],
-          fieldValidators
-        )
-
-        if (itemResult.issues) {
+      for (const { index, result } of itemResults) {
+        if (result.issues) {
           // Add array index to path for each issue
           issues.push(
-            ...itemResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+            ...result.issues.map((issue: StandardSchemaV1.Issue) => ({
               ...issue,
-              path: [i, ...(issue.path || [])],
+              path: [index, ...(issue.path || [])],
             }))
           )
-        } else if ("value" in itemResult) {
-          validatedData.push(itemResult.value)
+        } else if ("value" in result) {
+          validatedData.push(result.value)
         }
       }
 
