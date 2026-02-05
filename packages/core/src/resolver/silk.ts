@@ -66,7 +66,7 @@ export function silk<TOutput, TInput = TOutput>(
   })
 ): GraphQLSilk<TOutput, TInput> {
   return {
-    [GET_GRAPHQL_TYPE]: typeof type === "function" ? type : () => type,
+    [GET_GRAPHQL_TYPE]: type,
     "~standard": {
       version: 1,
       vendor: "gqloom.silk",
@@ -75,6 +75,7 @@ export function silk<TOutput, TInput = TOutput>(
   }
 }
 
+silk.is = isSilk
 silk.parse = parseSilk
 silk.getType = getGraphQLType
 silk.nonNull = nonNullSilk
