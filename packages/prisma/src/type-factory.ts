@@ -2,8 +2,10 @@ import {
   type GraphQLSilk,
   isSilk,
   provideWeaverContext,
+  type StandardSchemaV1,
   SYMBOLS,
   silk,
+  WeaverContext,
   weaverContext,
 } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
@@ -11,6 +13,7 @@ import {
   GraphQLEnumType,
   type GraphQLEnumValueConfig,
   type GraphQLFieldConfig,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -31,7 +34,6 @@ import type {
   PrismaModelMeta,
   PrismaTypes,
 } from "./types"
-import { gqlType as gt } from "./utils"
 
 export class PrismaTypeFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
@@ -185,6 +187,9 @@ export class PrismaTypeFactory<
 
                 if (isList && !isListType(type))
                   type = new GraphQLList(new GraphQLNonNull(type))
+
+                // Respect DMMF optionality: if the field should be nullable per DMMF
+                if (!isNonNull && isNonNullType(type)) type = type.ofType
                 if (isNonNull && !isNonNullType(type))
                   type = new GraphQLNonNull(type)
 
@@ -352,8 +357,388 @@ export class PrismaTypeFactory<
 export class PrismaActionArgsFactory<
   TModelSilk extends AnyPrismaModelSilk = AnyPrismaModelSilk,
 > extends PrismaTypeFactory<TModelSilk> {
+  /**
+   * Cached field validators populated when input types are built during weave (weaverContext is set).
+   * Used at resolve time so validation works without relying on weaverContext.
+   */
+  protected validatorsCache?: Map<
+    "create" | "update",
+    Map<string, GraphQLSilk<any, any>>
+  >
+
   public constructor(protected readonly silk: TModelSilk) {
     super(silk.meta)
+  }
+
+  public inputType(name: string): GraphQLObjectType | GraphQLScalarType {
+    const operation = PrismaTypeFactory.getOperationByName(name)
+    if (operation === "create" || operation === "update") {
+      // Only update cache during schema build (weaverContext is set). At resolve time ref is null, skip to avoid overwriting with empty validators.
+      if (WeaverContext.ref != null) {
+        if (!this.validatorsCache) this.validatorsCache = new Map()
+        this.validatorsCache.set(operation, this.getFieldValidators(operation))
+      }
+    }
+    return super.inputType(name)
+  }
+
+  /**
+   * Build a map of field validators for the given operation from Model.config({ input: { ... } })
+   */
+  protected getFieldValidators(
+    operation: "create" | "update"
+  ): Map<string, GraphQLSilk<any, any>> {
+    const validators = new Map<string, GraphQLSilk<any, any>>()
+    const model = this.silk.model
+    const inputTypeName =
+      operation === "create"
+        ? `${model.name}CreateInput`
+        : `${model.name}UpdateInput`
+    const input = this.modelMeta.inputTypes.get(inputTypeName)
+    if (!input) return validators
+
+    const config = weaverContext.getConfig<PrismaModelConfig<any>>(
+      `gqloom.prisma.model.${model.name}`
+    )
+    const inputGetter = config?.input
+    const inputBehaviors =
+      typeof inputGetter === "function" ? inputGetter() : inputGetter
+
+    for (const field of input.fields) {
+      const opBehavior = PrismaTypeFactory.getOperationBehavior(
+        inputBehaviors,
+        field.name,
+        operation
+      )
+      const hasValidate =
+        opBehavior != null &&
+        typeof opBehavior === "object" &&
+        "~standard" in opBehavior &&
+        typeof (opBehavior as any)["~standard"]?.validate === "function"
+      if (hasValidate) {
+        validators.set(field.name, opBehavior as GraphQLSilk<any, any>)
+      }
+    }
+    return validators
+  }
+
+  /**
+   * Validate fields using the provided validators (parallel validation)
+   */
+  protected async validateFields(
+    data: any,
+    fieldValidators: Map<string, GraphQLSilk<any, any>>
+  ): Promise<StandardSchemaV1.Result<any>> {
+    // Early return if no validators
+    if (fieldValidators.size === 0) {
+      return { value: data ?? {} }
+    }
+
+    const result: Record<string, any> = {}
+    const issues: StandardSchemaV1.Issue[] = []
+
+    // Filter validators for fields that exist in data
+    const validatorsToCheck = Array.from(fieldValidators.entries()).filter(
+      ([fieldName]) => fieldName in data
+    )
+
+    // Optimize for single validator case - avoid Promise.all overhead
+    if (validatorsToCheck.length === 1) {
+      const [fieldName, validator] = validatorsToCheck[0]
+      const fieldValue = data[fieldName]
+      const validationResult = await (validator as any)["~standard"].validate(
+        fieldValue
+      )
+
+      if (validationResult.issues) {
+        return {
+          issues: validationResult.issues.map(
+            (issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: [fieldName, ...(issue.path || [])],
+            })
+          ),
+        }
+      }
+
+      // Validation passed
+      if ("value" in validationResult) {
+        result[fieldName] = validationResult.value
+      }
+
+      // Copy non-validated fields
+      for (const key in data) {
+        if (key !== fieldName && data[key] !== undefined) {
+          result[key] = data[key]
+        }
+      }
+
+      return { value: result }
+    }
+
+    // Multiple validators - use parallel validation with Promise.all
+    const validationPromises = validatorsToCheck.map(
+      async ([fieldName, validator]) => {
+        const fieldValue = data[fieldName]
+        const validationResult = await (validator as any)["~standard"].validate(
+          fieldValue
+        )
+        return { fieldName, validationResult }
+      }
+    )
+
+    const validationResults = await Promise.all(validationPromises)
+
+    for (const { fieldName, validationResult } of validationResults) {
+      if (validationResult.issues) {
+        issues.push(
+          ...validationResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+            ...issue,
+            path: [fieldName, ...(issue.path || [])],
+          }))
+        )
+      } else if ("value" in validationResult) {
+        result[fieldName] = validationResult.value
+      }
+    }
+
+    // Copy non-validated fields
+    for (const key in data) {
+      if (!fieldValidators.has(key) && data[key] !== undefined) {
+        result[key] = data[key]
+      }
+    }
+
+    return issues.length > 0 ? { issues } : { value: result }
+  }
+
+  /**
+   * Validate fields for array items using the provided validators (parallel validation)
+   */
+  protected async validateFieldsForArray(
+    dataArray: any[],
+    fieldValidators: Map<string, GraphQLSilk<any, any>>
+  ): Promise<StandardSchemaV1.Result<any[]>> {
+    // Early return if no validators
+    if (fieldValidators.size === 0) {
+      return { value: dataArray ?? [] }
+    }
+
+    const results: any[] = []
+    const issues: StandardSchemaV1.Issue[] = []
+
+    // Parallel validation for all array items
+    const validationPromises = dataArray.map(async (item, index) => {
+      const result = await this.validateFields(item, fieldValidators)
+      return { index, result }
+    })
+
+    const validationResults = await Promise.all(validationPromises)
+
+    for (const { index, result } of validationResults) {
+      if (result.issues) {
+        issues.push(
+          ...result.issues.map((issue: StandardSchemaV1.Issue) => ({
+            ...issue,
+            path: [index, ...(issue.path || [])],
+          }))
+        )
+      } else if ("value" in result) {
+        results[index] = result.value
+      } else {
+        results[index] = dataArray[index]
+      }
+    }
+
+    return issues.length > 0 ? { issues } : { value: results }
+  }
+
+  /**
+   * Compile a validator for create/update args. Uses cached validators when available (set during schema build).
+   */
+  protected compileDataValidator(
+    operation: "create" | "update",
+    transform: (validatedData: any, args: any) => any
+  ): (args: any) => Promise<StandardSchemaV1.Result<any>> {
+    return async (args: any) => {
+      const fieldValidators =
+        this.validatorsCache?.get(operation) ??
+        this.getFieldValidators(operation)
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      const dataResult = await this.validateFields(args.data, fieldValidators)
+
+      if (dataResult.issues) {
+        return { issues: dataResult.issues }
+      }
+
+      return { value: transform(dataResult.value, args) }
+    }
+  }
+
+  /**
+   * Create a silk for create mutation args that runs field validators from Model.config({ input })
+   */
+  public createArgsSilk(): GraphQLSilk<{ data: any }, { data: any }> {
+    return silk(
+      () => new GraphQLNonNull(this.createArgs()),
+      this.compileDataValidator("create", (data) => ({ data }))
+    )
+  }
+
+  /**
+   * Create a silk for update mutation args that runs field validators from Model.config({ input })
+   */
+  public updateArgsSilk(): GraphQLSilk<
+    { data: any; where: any },
+    { data: any; where: any }
+  > {
+    return silk(
+      () => new GraphQLNonNull(this.updateArgs()),
+      this.compileDataValidator("update", (data, args) => ({
+        data,
+        where: args.where,
+      }))
+    )
+  }
+
+  /**
+   * Create a silk for updateMany mutation args that runs field validators from Model.config({ input })
+   */
+  public updateManyArgsSilk(): GraphQLSilk<
+    { data: any; where: any },
+    { data: any; where: any }
+  > {
+    return silk(
+      () => new GraphQLNonNull(this.updateManyArgs()),
+      this.compileDataValidator("update", (data, args) => ({
+        data,
+        where: args.where,
+      }))
+    )
+  }
+
+  /**
+   * Compile a validator for upsert args that validates both create and update data. Uses cached validators when available (set during schema build).
+   */
+  protected compileUpsertValidator(
+    transform: (
+      validatedCreateData: any,
+      validatedUpdateData: any,
+      args: any
+    ) => any
+  ): (args: any) => Promise<StandardSchemaV1.Result<any>> {
+    return async (args: any) => {
+      const createValidators =
+        this.validatorsCache?.get("create") ?? this.getFieldValidators("create")
+      const updateValidators =
+        this.validatorsCache?.get("update") ?? this.getFieldValidators("update")
+
+      const issues: StandardSchemaV1.Issue[] = []
+
+      // Validate create data
+      let createData = args.create
+      if (createValidators.size > 0) {
+        const createResult = await this.validateFields(
+          args.create,
+          createValidators
+        )
+        if (createResult.issues) {
+          issues.push(
+            ...createResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: ["create", ...(issue.path || [])],
+            }))
+          )
+        } else if ("value" in createResult) {
+          createData = createResult.value
+        }
+      }
+
+      // Validate update data
+      let updateData = args.update
+      if (updateValidators.size > 0) {
+        const updateResult = await this.validateFields(
+          args.update,
+          updateValidators
+        )
+        if (updateResult.issues) {
+          issues.push(
+            ...updateResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: ["update", ...(issue.path || [])],
+            }))
+          )
+        } else if ("value" in updateResult) {
+          updateData = updateResult.value
+        }
+      }
+
+      if (issues.length > 0) {
+        return { issues }
+      }
+
+      return {
+        value: transform(createData, updateData, args),
+      }
+    }
+  }
+
+  /**
+   * Create a silk for upsert mutation args that runs field validators from Model.config({ input })
+   */
+  public upsertArgsSilk(): GraphQLSilk<
+    { where: any; create: any; update: any },
+    { where: any; create: any; update: any }
+  > {
+    return silk(
+      () => new GraphQLNonNull(this.upsertArgs()),
+      this.compileUpsertValidator((createData, updateData, args) => ({
+        where: args.where,
+        create: createData,
+        update: updateData,
+      }))
+    )
+  }
+
+  /**
+   * Compile a validator for createMany args that validates array items. Uses cached validators when available (set during schema build).
+   */
+  protected compileDataValidatorForArray(
+    operation: "create",
+    transform: (validatedData: any[], args: any) => any
+  ): (args: any) => Promise<StandardSchemaV1.Result<any>> {
+    return async (args: any) => {
+      const fieldValidators =
+        this.validatorsCache?.get(operation) ??
+        this.getFieldValidators(operation)
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      const dataResult = await this.validateFieldsForArray(
+        args.data,
+        fieldValidators
+      )
+
+      if (dataResult.issues) {
+        return { issues: dataResult.issues }
+      }
+
+      return { value: transform(dataResult.value, args) }
+    }
+  }
+
+  /**
+   * Create a silk for createMany mutation args that runs field validators from Model.config({ input })
+   */
+  public createManyArgsSilk(): GraphQLSilk<{ data: any[] }, { data: any[] }> {
+    return silk(
+      () => new GraphQLNonNull(this.createManyArgs()),
+      this.compileDataValidatorForArray("create", (data) => ({ data }))
+    )
   }
 
   protected getModel(modelOrName?: string | DMMF.Model): DMMF.Model {
@@ -376,13 +761,15 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
+          type: new GraphQLList(
+            new GraphQLNonNull(
+              this.inputType(`${model.name}OrderByWithRelationInput`)
+            )
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gt.int },
-        take: { type: gt.int },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
       })),
     })
 
@@ -401,15 +788,19 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
+          type: new GraphQLList(
+            new GraphQLNonNull(
+              this.inputType(`${model.name}OrderByWithRelationInput`)
+            )
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gt.int },
-        take: { type: gt.int },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
         distinct: {
-          type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+          type: new GraphQLList(
+            new GraphQLNonNull(this.enumType(`${model.name}ScalarFieldEnum`))
+          ),
         },
       })),
     })
@@ -429,15 +820,19 @@ export class PrismaActionArgsFactory<
       fields: provideWeaverContext.inherit(() => ({
         where: { type: this.inputType(`${model.name}WhereInput`) },
         orderBy: {
-          type: gt.list(
-            this.inputType(`${model.name}OrderByWithRelationInput`)
+          type: new GraphQLList(
+            new GraphQLNonNull(
+              this.inputType(`${model.name}OrderByWithRelationInput`)
+            )
           ),
         },
         cursor: { type: this.inputType(`${model.name}WhereUniqueInput`) },
-        skip: { type: gt.int },
-        take: { type: gt.int },
+        skip: { type: GraphQLInt },
+        take: { type: GraphQLInt },
         distinct: {
-          type: gt.list(this.enumType(`${model.name}ScalarFieldEnum`)),
+          type: new GraphQLList(
+            new GraphQLNonNull(this.enumType(`${model.name}ScalarFieldEnum`))
+          ),
         },
       })),
     })
@@ -473,7 +868,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}CreateInput`)),
         },
       })),
     })
@@ -491,8 +886,10 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(
-            gt.list(this.inputType(`${model.name}CreateManyInput`))
+          type: new GraphQLNonNull(
+            new GraphQLList(
+              new GraphQLNonNull(this.inputType(`${model.name}CreateManyInput`))
+            )
           ),
         },
       })),
@@ -511,7 +908,9 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: new GraphQLNonNull(
+            this.inputType(`${model.name}WhereUniqueInput`)
+          ),
         },
       })),
     })
@@ -547,10 +946,12 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}UpdateInput`)),
         },
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: new GraphQLNonNull(
+            this.inputType(`${model.name}WhereUniqueInput`)
+          ),
         },
       })),
     })
@@ -568,7 +969,7 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         data: {
-          type: gt.nonNull(
+          type: new GraphQLNonNull(
             this.inputType(`${model.name}UpdateManyMutationInput`)
           ),
         },
@@ -590,13 +991,15 @@ export class PrismaActionArgsFactory<
       name,
       fields: provideWeaverContext.inherit(() => ({
         where: {
-          type: gt.nonNull(this.inputType(`${model.name}WhereUniqueInput`)),
+          type: new GraphQLNonNull(
+            this.inputType(`${model.name}WhereUniqueInput`)
+          ),
         },
         create: {
-          type: gt.nonNull(this.inputType(`${model.name}CreateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}CreateInput`)),
         },
         update: {
-          type: gt.nonNull(this.inputType(`${model.name}UpdateInput`)),
+          type: new GraphQLNonNull(this.inputType(`${model.name}UpdateInput`)),
         },
       })),
     })
@@ -610,7 +1013,7 @@ export class PrismaActionArgsFactory<
     const input: GraphQLObjectType = new GraphQLObjectType({
       name,
       fields: provideWeaverContext.inherit(() => ({
-        count: { type: gt.nonNull(gt.int) },
+        count: { type: new GraphQLNonNull(GraphQLInt) },
       })),
     })
 

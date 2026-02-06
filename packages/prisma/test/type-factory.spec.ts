@@ -401,7 +401,7 @@ describe("PrismaTypeFactory", () => {
       const UserCreateInput = schema.getType("UserCreateInput")
       expect(printType(UserCreateInput!)).toMatchInlineSnapshot(`
         "input UserCreateInput {
-          name: MyName!
+          name: MyName
           posts: PostCreateNestedManyWithoutAuthorInput
           publishedPosts: PostCreateNestedManyWithoutPublisherInput
           profile: ProfileCreateNestedOneWithoutUserInput
@@ -575,16 +575,12 @@ describe("PrismaTypeFactory", () => {
       `)
     })
 
-    it("should support custom visibility and type override for filter operation", () => {
-      const FilterName = new GraphQLScalarType<string, string>({
-        name: "FilterName",
-      })
-
+    it("should support custom visibility for filter operation", () => {
       const schema = weave(
         g.User.config({
           input: {
             email: { filters: false }, // Hide email in filter
-            name: { filters: FilterName }, // Override name in filter
+            name: { filters: true }, // Keep name in filter (default type)
           },
         }),
         resolver.of(g.User, {
@@ -603,7 +599,7 @@ describe("PrismaTypeFactory", () => {
           OR: [UserWhereInput!]
           NOT: [UserWhereInput!]
           id: IntFilter
-          name: FilterName
+          name: StringNullableFilter
           posts: PostListRelationFilter
           publishedPosts: PostListRelationFilter
           profile: ProfileNullableScalarRelationFilter
