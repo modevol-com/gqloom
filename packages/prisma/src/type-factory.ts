@@ -513,6 +513,47 @@ export class PrismaActionArgsFactory<
   }
 
   /**
+   * Validate fields for array items using the provided validators (parallel validation)
+   */
+  protected async validateFieldsForArray(
+    dataArray: any[],
+    fieldValidators: Map<string, GraphQLSilk<any, any>>
+  ): Promise<StandardSchemaV1.Result<any[]>> {
+    // Early return if no validators
+    if (fieldValidators.size === 0) {
+      return { value: dataArray ?? [] }
+    }
+
+    const results: any[] = []
+    const issues: StandardSchemaV1.Issue[] = []
+
+    // Parallel validation for all array items
+    const validationPromises = dataArray.map(async (item, index) => {
+      const result = await this.validateFields(item, fieldValidators)
+      return { index, result }
+    })
+
+    const validationResults = await Promise.all(validationPromises)
+
+    for (const { index, result } of validationResults) {
+      if (result.issues) {
+        issues.push(
+          ...result.issues.map((issue: StandardSchemaV1.Issue) => ({
+            ...issue,
+            path: [index, ...(issue.path || [])],
+          }))
+        )
+      } else if ("value" in result) {
+        results[index] = result.value
+      } else {
+        results[index] = dataArray[index]
+      }
+    }
+
+    return issues.length > 0 ? { issues } : { value: results }
+  }
+
+  /**
    * Compile a validator for create/update args. Uses cached validators when available (set during schema build).
    */
   protected compileDataValidator(
@@ -560,6 +601,143 @@ export class PrismaActionArgsFactory<
         data,
         where: args.where,
       }))
+    )
+  }
+
+  /**
+   * Create a silk for updateMany mutation args that runs field validators from Model.config({ input })
+   */
+  public updateManyArgsSilk(): GraphQLSilk<
+    { data: any; where: any },
+    { data: any; where: any }
+  > {
+    return silk(
+      () => new GraphQLNonNull(this.updateManyArgs()),
+      this.compileDataValidator("update", (data, args) => ({
+        data,
+        where: args.where,
+      }))
+    )
+  }
+
+  /**
+   * Compile a validator for upsert args that validates both create and update data. Uses cached validators when available (set during schema build).
+   */
+  protected compileUpsertValidator(
+    transform: (
+      validatedCreateData: any,
+      validatedUpdateData: any,
+      args: any
+    ) => any
+  ): (args: any) => Promise<StandardSchemaV1.Result<any>> {
+    return async (args: any) => {
+      const createValidators =
+        this.validatorsCache?.get("create") ?? this.getFieldValidators("create")
+      const updateValidators =
+        this.validatorsCache?.get("update") ?? this.getFieldValidators("update")
+
+      const issues: StandardSchemaV1.Issue[] = []
+
+      // Validate create data
+      let createData = args.create
+      if (createValidators.size > 0) {
+        const createResult = await this.validateFields(
+          args.create,
+          createValidators
+        )
+        if (createResult.issues) {
+          issues.push(
+            ...createResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: ["create", ...(issue.path || [])],
+            }))
+          )
+        } else if ("value" in createResult) {
+          createData = createResult.value
+        }
+      }
+
+      // Validate update data
+      let updateData = args.update
+      if (updateValidators.size > 0) {
+        const updateResult = await this.validateFields(
+          args.update,
+          updateValidators
+        )
+        if (updateResult.issues) {
+          issues.push(
+            ...updateResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: ["update", ...(issue.path || [])],
+            }))
+          )
+        } else if ("value" in updateResult) {
+          updateData = updateResult.value
+        }
+      }
+
+      if (issues.length > 0) {
+        return { issues }
+      }
+
+      return {
+        value: transform(createData, updateData, args),
+      }
+    }
+  }
+
+  /**
+   * Create a silk for upsert mutation args that runs field validators from Model.config({ input })
+   */
+  public upsertArgsSilk(): GraphQLSilk<
+    { where: any; create: any; update: any },
+    { where: any; create: any; update: any }
+  > {
+    return silk(
+      () => new GraphQLNonNull(this.upsertArgs()),
+      this.compileUpsertValidator((createData, updateData, args) => ({
+        where: args.where,
+        create: createData,
+        update: updateData,
+      }))
+    )
+  }
+
+  /**
+   * Compile a validator for createMany args that validates array items. Uses cached validators when available (set during schema build).
+   */
+  protected compileDataValidatorForArray(
+    operation: "create",
+    transform: (validatedData: any[], args: any) => any
+  ): (args: any) => Promise<StandardSchemaV1.Result<any>> {
+    return async (args: any) => {
+      const fieldValidators =
+        this.validatorsCache?.get(operation) ??
+        this.getFieldValidators(operation)
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      const dataResult = await this.validateFieldsForArray(
+        args.data,
+        fieldValidators
+      )
+
+      if (dataResult.issues) {
+        return { issues: dataResult.issues }
+      }
+
+      return { value: transform(dataResult.value, args) }
+    }
+  }
+
+  /**
+   * Create a silk for createMany mutation args that runs field validators from Model.config({ input })
+   */
+  public createManyArgsSilk(): GraphQLSilk<{ data: any[] }, { data: any[] }> {
+    return silk(
+      () => new GraphQLNonNull(this.createManyArgs()),
+      this.compileDataValidatorForArray("create", (data) => ({ data }))
     )
   }
 

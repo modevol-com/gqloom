@@ -706,7 +706,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
         execute(mutation, {
           data: { name: "Jo", email: "ab" },
         })
-      ).rejects.toThrow()
+      ).rejects.toThrow(/Too small|Invalid email/)
 
       const res = await execute(mutation, {
         data: { name: "Joe", email: "joe-validation1@example.com" },
@@ -722,6 +722,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
       g.User,
       db
     )
+
+    beforeEach(async () => {
+      await db.user.deleteMany()
+    })
 
     it("should be able to create a createManyMutation", () => {
       const m = userResolverFactory.createManyMutation({
@@ -776,17 +780,82 @@ describe("PrismaModelPrismaResolverFactory", () => {
       `)
     })
 
-    it.todo("should use with custom input with validation - validate name field in array items", async () => {
-      // Test that createManyMutation validates each item in data array using field validators configured via Model.config({ input: { name: z.string().min(3).max(20) } })
-      // Expected: validation should reject items with invalid names
-      // Expected: validation should collect errors with array index in path (e.g., [0, "name"])
-      // Expected: validation should accept all valid items and create them successfully
+    it("should use with custom input with validation - validate name field in array items", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        createManyUser: userResolverFactory.createManyMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { name: z.string().min(3).max(20) },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation CreateManyUser($data: [UserCreateManyInput!]!) {
+          createManyUser(data: $data) {
+            count
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: [
+            { name: "J", email: "john@example.com" },
+            { name: "Joe", email: "joe@example.com" },
+          ],
+        })
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
+
+      const res = await execute(mutation, {
+        data: [
+          { name: "Joe", email: "joe@example.com" },
+          { name: "Alice", email: "alice@example.com" },
+        ],
+      })
+      expect(res.createManyUser).toBeDefined()
+      expect(res.createManyUser.count).toBe(2)
     })
 
-    it.todo("should use with custom input with validation - validate email field in array items", async () => {
-      // Test that createManyMutation validates email field in each array item
-      // Expected: validation should reject items with invalid emails
-      // Expected: validation should pass when all items have valid emails
+    it("should use with custom input with validation - validate email field in array items", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        createManyUser: userResolverFactory.createManyMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { email: z.email() },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation CreateManyUser($data: [UserCreateManyInput!]!) {
+          createManyUser(data: $data) {
+            count
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: [
+            { name: "John", email: "invalid-email" },
+            { name: "Alice", email: "alice@example.com" },
+          ],
+        })
+      ).rejects.toThrow(/Invalid email/)
+
+      const res = await execute(mutation, {
+        data: [
+          { name: "John", email: "john@example.com" },
+          { name: "Alice", email: "alice@example.com" },
+        ],
+      })
+      expect(res.createManyUser).toBeDefined()
+      expect(res.createManyUser.count).toBe(2)
     })
   })
 
@@ -1054,7 +1123,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
           data: { email: "not-an-email" },
           where: { id: existingUser.id },
         })
-      ).rejects.toThrow()
+      ).rejects.toThrow(/Invalid email/)
 
       const res = await execute(mutation, {
         data: { email: "valid@example.com" },
@@ -1095,7 +1164,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
           data: { name: "Jo" },
           where: { id: existingUser.id },
         })
-      ).rejects.toThrow()
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
 
       // Only name provided and valid - should pass (email not validated)
       const resName = await execute(mutation, {
@@ -1142,7 +1211,7 @@ describe("PrismaModelPrismaResolverFactory", () => {
           data: { name: "Jo", email: "ab" },
           where: { id: existingUser.id },
         })
-      ).rejects.toThrow()
+      ).rejects.toThrow(/Too small|Invalid email/)
 
       const res = await execute(mutation, {
         data: { name: "Joe", email: "joe@example.com" },
@@ -1159,6 +1228,16 @@ describe("PrismaModelPrismaResolverFactory", () => {
       g.User,
       db
     )
+
+    beforeEach(async () => {
+      await db.user.deleteMany()
+      await db.user.createMany({
+        data: [
+          { name: "John", email: "john@example.com" },
+          { name: "Alice", email: "alice@example.com" },
+        ],
+      })
+    })
 
     it("should be able to create a deleteMutation", async () => {
       const m = userResolverFactory.updateManyMutation({
@@ -1227,16 +1306,74 @@ describe("PrismaModelPrismaResolverFactory", () => {
       `)
     })
 
-    it.todo("should use with custom input with validation - validate name field in update data", async () => {
-      // Test that updateManyMutation validates name field configured via Model.config({ input: { name: { update: z.string().min(3).max(20) } } })
-      // Expected: validation should reject names shorter than 3 or longer than 20 characters
-      // Expected: validation should accept valid names and update users successfully
+    it("should use with custom input with validation - validate name field in update data", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        updateManyUser: userResolverFactory.updateManyMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { name: { update: z.string().min(3).max(20) } },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation UpdateManyUser($data: UserUpdateManyMutationInput!, $where: UserWhereInput!) {
+          updateManyUser(data: $data, where: $where) {
+            count
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: { name: "J" },
+          where: { email: { contains: "@example.com" } },
+        })
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
+
+      const res = await execute(mutation, {
+        data: { name: "Joe" },
+        where: { email: { contains: "@example.com" } },
+      })
+      expect(res.updateManyUser).toBeDefined()
+      expect(res.updateManyUser.count).toBe(2)
     })
 
-    it.todo("should use with custom input with validation - validate email field in update data", async () => {
-      // Test that updateManyMutation validates email field configured via Model.config({ input: { email: { update: z.email() } } })
-      // Expected: validation should reject invalid email formats
-      // Expected: validation should accept valid emails and update users successfully
+    it("should use with custom input with validation - validate email field in update data", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        updateManyUser: userResolverFactory.updateManyMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { email: { update: z.email() } },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation UpdateManyUser($data: UserUpdateManyMutationInput!, $where: UserWhereInput!) {
+          updateManyUser(data: $data, where: $where) {
+            count
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          data: { email: "not-an-email" },
+          where: { email: { equals: "john@example.com" } },
+        })
+      ).rejects.toThrow(/Invalid email/)
+
+      const res = await execute(mutation, {
+        data: { email: "updated@example.com" },
+        where: { email: { equals: "john@example.com" } },
+      })
+      expect(res.updateManyUser).toBeDefined()
+      expect(res.updateManyUser.count).toBe(1)
     })
   })
 
@@ -1245,6 +1382,10 @@ describe("PrismaModelPrismaResolverFactory", () => {
       g.User,
       db
     )
+
+    beforeEach(async () => {
+      await db.user.deleteMany()
+    })
 
     it("should be able to create a deleteMutation", async () => {
       const m = userResolverFactory.upsertMutation({
@@ -1310,29 +1451,195 @@ describe("PrismaModelPrismaResolverFactory", () => {
       `)
     })
 
-    it.todo("should use with custom input with validation - validate name field in create data", async () => {
-      // Test that upsertMutation validates name field in create data configured via Model.config({ input: { name: { create: z.string().min(3).max(20) } } })
-      // Expected: validation should reject names shorter than 3 or longer than 20 characters in create
-      // Expected: validation should accept valid names and create the user successfully
+    it("should use with custom input with validation - validate name field in create data", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        upsertUser: userResolverFactory.upsertMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { name: { create: z.string().min(3).max(20) } },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation UpsertUser($where: UserWhereUniqueInput!, $create: UserCreateInput!, $update: UserUpdateInput!) {
+          upsertUser(where: $where, create: $create, update: $update) {
+            id
+            name
+            email
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          where: { email: "new@example.com" },
+          create: { name: "J", email: "new@example.com" },
+          update: {},
+        })
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
+
+      const res = await execute(mutation, {
+        where: { email: "new@example.com" },
+        create: { name: "Joe", email: "new@example.com" },
+        update: {},
+      })
+      expect(res.upsertUser).toBeDefined()
+      expect(res.upsertUser.name).toBe("Joe")
+      expect(res.upsertUser.email).toBe("new@example.com")
     })
 
-    it.todo("should use with custom input with validation - validate name field in update data", async () => {
-      // Test that upsertMutation validates name field in update data configured via Model.config({ input: { name: { update: z.string().min(3).max(20) } } })
-      // Expected: validation should reject names shorter than 3 or longer than 20 characters in update
-      // Expected: validation should accept valid names and update the user successfully
+    it("should use with custom input with validation - validate name field in update data", async () => {
+      await db.user.create({
+        data: { name: "John", email: "john@example.com" },
+      })
+
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        upsertUser: userResolverFactory.upsertMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: { name: { update: z.string().min(3).max(20) } },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation UpsertUser($where: UserWhereUniqueInput!, $create: UserCreateInput!, $update: UserUpdateInput!) {
+          upsertUser(where: $where, create: $create, update: $update) {
+            id
+            name
+            email
+          }
+        }
+      `
+      await expect(
+        execute(mutation, {
+          where: { email: "john@example.com" },
+          create: { name: "New", email: "new@example.com" },
+          update: { name: "J" },
+        })
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
+
+      const res = await execute(mutation, {
+        where: { email: "john@example.com" },
+        create: { name: "New", email: "new@example.com" },
+        update: { name: "Joe" },
+      })
+      expect(res.upsertUser).toBeDefined()
+      expect(res.upsertUser.name).toBe("Joe")
+      expect(res.upsertUser.email).toBe("john@example.com")
     })
 
-    it.todo("should use with custom input with validation - validate both create and update data", async () => {
-      // Test that upsertMutation validates both create and update data when both are provided
-      // Expected: validation should validate create data using create validators
-      // Expected: validation should validate update data using update validators
-      // Expected: validation should pass when both create and update data are valid
+    it("should use with custom input with validation - validate both create and update data", async () => {
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        upsertUser: userResolverFactory.upsertMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: {
+            name: {
+              create: z.string().min(3).max(20),
+              update: z.string().min(3).max(20),
+            },
+            email: {
+              create: z.email(),
+              update: z.email(),
+            },
+          },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation UpsertUser($where: UserWhereUniqueInput!, $create: UserCreateInput!, $update: UserUpdateInput!) {
+          upsertUser(where: $where, create: $create, update: $update) {
+            id
+            name
+            email
+          }
+        }
+      `
+      // Both create and update have invalid data
+      await expect(
+        execute(mutation, {
+          where: { email: "test@example.com" },
+          create: { name: "Jo", email: "invalid-email" },
+          update: { name: "Al", email: "also-invalid" },
+        })
+      ).rejects.toThrow(/Too small|Invalid email/)
+
+      // Valid data
+      const res = await execute(mutation, {
+        where: { email: "test@example.com" },
+        create: { name: "Joe", email: "test@example.com" },
+        update: { name: "Alice", email: "updated@example.com" },
+      })
+      expect(res.upsertUser).toBeDefined()
+      expect(res.upsertUser.name).toBe("Joe")
+      expect(res.upsertUser.email).toBe("test@example.com")
     })
 
-    it.todo("should use with custom input with validation - only validate provided fields in update", async () => {
-      // Test that upsertMutation only validates fields present in update data (not all fields)
-      // Expected: if only name is provided in update, only name should be validated
-      // Expected: validation should pass when provided fields are valid
+    it("should use with custom input with validation - only validate provided fields in update", async () => {
+      await db.user.create({
+        data: { name: "John", email: "john@example.com" },
+      })
+
+      const userResolver = resolver.of(g.User, {
+        hello: query(z.string(), () => "world"),
+        upsertUser: userResolverFactory.upsertMutation(),
+      })
+      const schema = weave(
+        ZodWeaver,
+        g.User.config({
+          input: {
+            name: { update: z.string().min(3).max(20) },
+            email: { update: z.email() },
+          },
+        }),
+        userResolver
+      )
+      const execute = createExecute(schema)
+      const mutation = /* GraphQL */ `
+        mutation UpsertUser($where: UserWhereUniqueInput!, $create: UserCreateInput!, $update: UserUpdateInput!) {
+          upsertUser(where: $where, create: $create, update: $update) {
+            id
+            name
+            email
+          }
+        }
+      `
+      // Only name provided in update - should validate name only (short name fails)
+      await expect(
+        execute(mutation, {
+          where: { email: "john@example.com" },
+          create: { name: "New", email: "new@example.com" },
+          update: { name: "Jo" },
+        })
+      ).rejects.toThrow(/Too small: expected string to have >=3 characters/)
+
+      // Only name provided and valid - should pass (email not validated)
+      const resName = await execute(mutation, {
+        where: { email: "john@example.com" },
+        create: { name: "New", email: "new@example.com" },
+        update: { name: "Joe" },
+      })
+      expect(resName.upsertUser.name).toBe("Joe")
+      expect(resName.upsertUser.email).toBe("john@example.com")
+
+      // Only email provided and valid - should pass (name not validated)
+      const resEmail = await execute(mutation, {
+        where: { email: "john@example.com" },
+        create: { name: "New", email: "new@example.com" },
+        update: { email: "updated@example.com" },
+      })
+      expect(resEmail.upsertUser.email).toBe("updated@example.com")
     })
   })
 

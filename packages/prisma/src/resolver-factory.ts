@@ -475,7 +475,12 @@ export class PrismaResolverFactory<
       PrismaResolverCreateManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCreateManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => new GraphQLNonNull(this.typeFactory.createManyArgs()))
+    input ??= this.typeFactory.createManyArgsSilk() as GraphQLSilk<
+      InferDelegateCreateManyArgs<
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
+      >,
+      TInputI
+    >
 
     const output = PrismaResolverFactory.batchPayloadSilk()
 
@@ -604,7 +609,12 @@ export class PrismaResolverFactory<
       PrismaResolverUpdateManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpdateManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => new GraphQLNonNull(this.typeFactory.updateManyArgs()))
+    input ??= this.typeFactory.updateManyArgsSilk() as GraphQLSilk<
+      InferDelegateUpdateManyArgs<
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
+      >,
+      TInputI
+    >
     const output = PrismaResolverFactory.batchPayloadSilk()
 
     return new MutationFactoryWithResolve(output, {
@@ -631,7 +641,10 @@ export class PrismaResolverFactory<
       PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => new GraphQLNonNull(this.typeFactory.upsertArgs()))
+    input ??= this.typeFactory.upsertArgsSilk() as GraphQLSilk<
+      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
+      TInputI
+    >
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return new MutationFactoryWithResolve(output, {
       ...options,
