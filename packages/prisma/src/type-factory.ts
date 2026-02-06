@@ -429,18 +429,63 @@ export class PrismaActionArgsFactory<
     data: any,
     fieldValidators: Map<string, GraphQLSilk<any, any>>
   ): Promise<StandardSchemaV1.Result<any>> {
+    // Early return if no validators
+    if (fieldValidators.size === 0) {
+      return { value: data ?? {} }
+    }
+
     const result: Record<string, any> = {}
     const issues: StandardSchemaV1.Issue[] = []
 
-    const validationPromises = Array.from(fieldValidators.entries())
-      .filter(([fieldName]) => fieldName in data)
-      .map(async ([fieldName, validator]) => {
+    // Filter validators for fields that exist in data
+    const validatorsToCheck = Array.from(fieldValidators.entries()).filter(
+      ([fieldName]) => fieldName in data
+    )
+
+    // Optimize for single validator case - avoid Promise.all overhead
+    if (validatorsToCheck.length === 1) {
+      const [fieldName, validator] = validatorsToCheck[0]
+      const fieldValue = data[fieldName]
+      const validationResult = await (validator as any)["~standard"].validate(
+        fieldValue
+      )
+
+      if (validationResult.issues) {
+        return {
+          issues: validationResult.issues.map(
+            (issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: [fieldName, ...(issue.path || [])],
+            })
+          ),
+        }
+      }
+
+      // Validation passed
+      if ("value" in validationResult) {
+        result[fieldName] = validationResult.value
+      }
+
+      // Copy non-validated fields
+      for (const key in data) {
+        if (key !== fieldName && data[key] !== undefined) {
+          result[key] = data[key]
+        }
+      }
+
+      return { value: result }
+    }
+
+    // Multiple validators - use parallel validation with Promise.all
+    const validationPromises = validatorsToCheck.map(
+      async ([fieldName, validator]) => {
         const fieldValue = data[fieldName]
         const validationResult = await (validator as any)["~standard"].validate(
           fieldValue
         )
         return { fieldName, validationResult }
-      })
+      }
+    )
 
     const validationResults = await Promise.all(validationPromises)
 
@@ -457,6 +502,7 @@ export class PrismaActionArgsFactory<
       }
     }
 
+    // Copy non-validated fields
     for (const key in data) {
       if (!fieldValidators.has(key) && data[key] !== undefined) {
         result[key] = data[key]
