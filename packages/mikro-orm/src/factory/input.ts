@@ -32,7 +32,7 @@ import {
   isNonNullType,
   isType,
 } from "graphql"
-import { MikroWeaver } from ".."
+import { MikroWeaver, type MikroWeaverConfig } from ".."
 import { getMetadata } from "../helper"
 import type {
   CollectionFieldArgs,
@@ -714,88 +714,108 @@ export class MikroInputFactory<TEntity extends object> {
     type: TScalarType
   ): GraphQLObjectType {
     // https://mikro-orm.io/docs/query-conditions#comparison
-    const name = `${type.name}ComparisonOperators`
+    const dialect = weaverContext
+      .getConfig<MikroWeaverConfig>("gqloom.mikro-orm")
+      ?.dialect?.toLowerCase()
+
+    const dialectPascal: Partial<Record<string, string>> = {
+      postgresql: "PostgreSQL",
+      mysql: "MySQL",
+      sqlite: "SQLite",
+      mongodb: "MongoDB",
+    } as const
+
+    const name =
+      dialect != null
+        ? `${type.name}Comparison${dialectPascal[dialect] ?? dialect}Operators`
+        : `${type.name}ComparisonOperators`
+    const includePostgresOnly = dialect == null || dialect === "postgresql"
+
+    const baseFields: Record<string, GraphQLFieldConfig<any, any>> = {
+      eq: {
+        type,
+        description:
+          "Equals. Matches values that are equal to a specified value.",
+      },
+      gt: {
+        type,
+        description:
+          "Greater. Matches values that are greater than a specified value.",
+      },
+      gte: {
+        type,
+        description:
+          "Greater or Equal. Matches values that are greater than or equal to a specified value.",
+      },
+      in: {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description:
+          "Contains, Matches any of the values specified in an array.",
+      },
+      lt: {
+        type,
+        description:
+          "Lower, Matches values that are less than a specified value.",
+      },
+      lte: {
+        type,
+        description:
+          "Lower or equal, Matches values that are less than or equal to a specified value.",
+      },
+      ne: {
+        type,
+        description:
+          "Not equal. Matches all values that are not equal to a specified value.",
+      },
+      nin: {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description:
+          "Not contains. Matches none of the values specified in an array.",
+      },
+    }
+
+    if (includePostgresOnly) {
+      baseFields.overlap = {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description: "&& (postgres only)",
+      }
+      baseFields.contains = {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description: "@> (postgres only)",
+      }
+      baseFields.contained = {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description: "<@ (postgres only)",
+      }
+    }
+
+    if (type === GraphQLString) {
+      baseFields.like = {
+        type,
+        description: "Like. Uses LIKE operator",
+      }
+      baseFields.re = {
+        type,
+        description: "Regexp. Uses REGEXP operator",
+      }
+      baseFields.fulltext = {
+        type,
+        description: "Full text. A driver specific full text search function.",
+      }
+      if (includePostgresOnly) {
+        baseFields.ilike = {
+          type,
+          description: "ilike (postgres only)",
+        }
+      }
+    }
 
     return (
       weaverContext.getNamedType(name) ??
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
-          fields: {
-            eq: {
-              type,
-              description:
-                "Equals. Matches values that are equal to a specified value.",
-            },
-            gt: {
-              type,
-              description:
-                "Greater. Matches values that are greater than a specified value.",
-            },
-            gte: {
-              type,
-              description:
-                "Greater or Equal. Matches values that are greater than or equal to a specified value.",
-            },
-            in: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description:
-                "Contains, Contains, Matches any of the values specified in an array.",
-            },
-            lt: {
-              type,
-              description:
-                "Lower, Matches values that are less than a specified value.",
-            },
-            lte: {
-              type,
-              description:
-                "Lower or equal, Matches values that are less than or equal to a specified value.",
-            },
-            ne: {
-              type,
-              description:
-                "Not equal. Matches all values that are not equal to a specified value.",
-            },
-            nin: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description:
-                "Not contains. Matches none of the values specified in an array.",
-            },
-            overlap: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description: "&&",
-            },
-            contains: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description: "@>",
-            },
-            contained: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description: "<@",
-            },
-            ...(type === GraphQLString
-              ? {
-                  like: {
-                    type,
-                    description: "Like. Uses LIKE operator",
-                  },
-                  re: {
-                    type,
-                    description: "Regexp. Uses REGEXP operator",
-                  },
-                  fulltext: {
-                    type,
-                    description:
-                      "Full text.	A driver specific full text search function.",
-                  },
-                  ilike: {
-                    type,
-                    description: "ilike",
-                  },
-                }
-              : {}),
-          },
+          fields: baseFields,
         })
       )
     )

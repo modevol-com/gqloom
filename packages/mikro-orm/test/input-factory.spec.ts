@@ -1,4 +1,9 @@
-import { getGraphQLType, silk } from "@gqloom/core"
+import {
+  getGraphQLType,
+  initWeaverContext,
+  provideWeaverContext,
+  silk,
+} from "@gqloom/core"
 import {
   defineEntity,
   type FilterQuery,
@@ -12,7 +17,7 @@ import {
   printType,
 } from "graphql"
 import { describe, expect, it } from "vitest"
-import { mikroSilk } from "../src"
+import { MikroWeaver, mikroSilk } from "../src"
 import {
   type FilterArgs,
   type MikroFactoryPropertyBehaviors,
@@ -487,6 +492,30 @@ describe("MikroInputFactory", () => {
       const floatType = MikroInputFactory.comparisonOperatorsType(GraphQLFloat)
       await expect(printType(floatType)).toMatchFileSnapshot(
         "./snapshots/FloatMikroComparisonOperators.graphql"
+      )
+    })
+
+    it("should create operators type for String with dialect sqlite", async () => {
+      const context = initWeaverContext()
+      context.setConfig(MikroWeaver.config({ dialect: "sqlite" }))
+      const stringType = provideWeaverContext(
+        () => MikroInputFactory.comparisonOperatorsType(GraphQLString),
+        context
+      )
+      await expect(printType(stringType)).toMatchFileSnapshot(
+        "./snapshots/StringComparisonSQLiteOperators.graphql"
+      )
+    })
+
+    it("should create operators type for Float with dialect sqlite", async () => {
+      const context = initWeaverContext()
+      context.setConfig(MikroWeaver.config({ dialect: "sqlite" }))
+      const floatType = provideWeaverContext(
+        () => MikroInputFactory.comparisonOperatorsType(GraphQLFloat),
+        context
+      )
+      await expect(printType(floatType)).toMatchFileSnapshot(
+        "./snapshots/FloatComparisonSQLiteOperators.graphql"
       )
     })
   })

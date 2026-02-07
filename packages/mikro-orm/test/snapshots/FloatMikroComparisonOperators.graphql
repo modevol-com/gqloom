@@ -10,7 +10,7 @@ type FloatComparisonOperators {
   """
   gte: Float
 
-  """Contains, Contains, Matches any of the values specified in an array."""
+  """Contains, Matches any of the values specified in an array."""
   in: [Float!]
 
   """Lower, Matches values that are less than a specified value."""
@@ -27,12 +27,12 @@ type FloatComparisonOperators {
   """Not contains. Matches none of the values specified in an array."""
   nin: [Float!]
 
-  """&&"""
+  """&& (postgres only)"""
   overlap: [Float!]
 
-  """@>"""
+  """@> (postgres only)"""
   contains: [Float!]
 
-  """<@"""
+  """<@ (postgres only)"""
   contained: [Float!]
 }

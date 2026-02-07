@@ -34,6 +34,13 @@ export interface MikroResolverFactoryOptions<TEntity extends object> {
     payload: ResolverPayload | undefined
   ) => MayPromise<EntityManager>
   input?: MikroFactoryPropertyBehaviors<TEntity>
+
+  /**
+   * Mikro ORM's MetadataStorage. Required only when using class-based entities
+   * (decorators like @Entity()). With EntitySchema (e.g. defineEntity), omit this
+   * — metadata is read from the schema via entity.init().meta.
+   * When using class entities, pass e.g. orm.getMetadata().
+   */
   metadata?: MetadataStorage
 }
 

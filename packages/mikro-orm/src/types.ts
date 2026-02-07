@@ -19,6 +19,20 @@ export type InferEntity<TEntityName extends EntityName<any>> =
   TEntityName extends EntityName<infer TEntity> ? TEntity : never
 
 export interface MikroWeaverConfigOptions {
+  /**
+   * Database dialect. Used to determine which Filter comparison operators are exposed (e.g. ilike, overlap are PostgreSQL-only).
+   */
+  dialect?:
+    | "PostgreSQL"
+    | "postgreSQL"
+    | "MySQL"
+    | "mysql"
+    | "SQLite"
+    | "sqlite"
+    | "MongoDB"
+    | "mongodb"
+    | null
+
   presetGraphQLType?: (
     property: EntityProperty
   ) => GraphQLOutputType | undefined
