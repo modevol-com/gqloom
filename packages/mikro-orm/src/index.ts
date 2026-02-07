@@ -35,6 +35,7 @@ import {
   type GraphQLOutputType,
   GraphQLString,
   isInputType,
+  isNonNullType,
   isOutputType,
 } from "graphql"
 import { getMetadata, getWeaverConfigMetadata } from "./helper"
@@ -297,15 +298,12 @@ export class MikroWeaver {
       return gqlType
     }
 
+    // Optionality follows entity definition only; strip or add top-level NonNull to match.
     function nonNull(gqlType: GraphQLOutputType) {
-      if (nullable != null) {
-        return nullable ? gqlType : new GraphQLNonNull(gqlType)
-      }
-      if (!property.nullable) {
-        if (gqlType instanceof GraphQLNonNull) return gqlType
-        return new GraphQLNonNull(gqlType)
-      }
-      return gqlType
+      const baseType = isNonNullType(gqlType) ? gqlType.ofType : gqlType
+      const shouldBeNonNull =
+        nullable != null ? !nullable : property.nullable !== true
+      return shouldBeNonNull ? new GraphQLNonNull(baseType) : baseType
     }
   }
 

@@ -396,6 +396,36 @@ describe("mikroSilk", () => {
     const gqlType = unwrap(getGraphQLType(Entity) as GraphQLOutputType)
     expect(gqlType.getFields().data.type.toString()).toBe("String!")
   })
+
+  it("should follow entity optionality for output (custom NonNull on nullable entity field becomes nullable)", () => {
+    const Entity = mikroSilk(
+      defineEntity({
+        name: "Entity",
+        properties: (p) => ({
+          id: p.string().primary(),
+          score: p.integer().nullable(),
+        }),
+      }),
+      { fields: { score: { type: () => new GraphQLNonNull(GraphQLFloat) } } }
+    )
+    const gqlType = unwrap(getGraphQLType(Entity) as GraphQLOutputType)
+    expect(gqlType.getFields().score.type.toString()).toBe("Float")
+  })
+
+  it("should follow entity optionality for output (custom nullable on required entity field becomes non-null)", () => {
+    const Entity = mikroSilk(
+      defineEntity({
+        name: "Entity",
+        properties: (p) => ({
+          id: p.string().primary(),
+          score: p.integer(),
+        }),
+      }),
+      { fields: { score: { type: GraphQLFloat } } }
+    )
+    const gqlType = unwrap(getGraphQLType(Entity) as GraphQLOutputType)
+    expect(gqlType.getFields().score.type.toString()).toBe("Float!")
+  })
 })
 
 function unwrap(gqlType: GraphQLOutputType) {
