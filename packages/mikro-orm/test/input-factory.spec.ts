@@ -355,6 +355,26 @@ describe("MikroInputFactory", () => {
       const createInputType = inputFactoryFromEntityConfig.requiredInput()
       expect(createInputType.getFields().age.type.toString()).toEqual("Float")
     })
+
+    it("should follow entity optionality in createInput (custom NonNull on nullable entity field becomes optional)", async () => {
+      const inputFactoryWithNonNullAge = new MikroInputFactory(User, {
+        getEntityManager: async () => ({}) as any,
+        input: {
+          age: new GraphQLNonNull(GraphQLFloat),
+        },
+      })
+      const createInputType = inputFactoryWithNonNullAge.requiredInput()
+      expect(printType(createInputType)).toMatchInlineSnapshot(`
+        "type UserRequiredInput {
+          id: ID
+          name: String!
+          email: String!
+          password: String!
+          age: Float
+          isActive: Boolean
+        }"
+      `)
+    })
   })
 
   describe("createArgs", () => {

@@ -561,7 +561,7 @@ export class MikroInputFactory<TEntity extends object> {
             if (type == null || type === SYMBOLS.FIELD_HIDDEN)
               return mapValue.SKIP
 
-            // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
+            // Optionality follows entity definition only
             const isRequired =
               property.nullable !== true &&
               property.default === undefined &&
@@ -570,13 +570,13 @@ export class MikroInputFactory<TEntity extends object> {
               property.kind !== ReferenceKind.MANY_TO_MANY &&
               property.kind !== ReferenceKind.ONE_TO_MANY
 
-            const finalType =
-              isRequired && !isNonNullType(type)
-                ? new GraphQLNonNull(type)
-                : type
+            let finalType: GraphQLInputType | GraphQLOutputType = type
+            if (!isRequired && isNonNullType(type)) finalType = type.ofType
+            else if (isRequired && !isNonNullType(finalType))
+              finalType = new GraphQLNonNull(finalType) as GraphQLInputType
 
             return {
-              type: finalType,
+              type: finalType as GraphQLInputType,
               description: property.comment,
             } as GraphQLFieldConfig<any, any>
           })
@@ -624,7 +624,8 @@ export class MikroInputFactory<TEntity extends object> {
             if (type == null || type === SYMBOLS.FIELD_HIDDEN)
               return mapValue.SKIP
 
-            // For update operations, make all fields optional except primary keys
+            // Partial update: all non-primary fields optional; strip custom NonNull to match.
+            // Optionality of custom type is ignored so entity semantics are not overridden.
             let finalType = type
             if (
               isNonNullType(type) &&
