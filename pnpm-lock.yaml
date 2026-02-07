@@ -294,7 +294,7 @@ importers:
         version: 6.6.2
       '@mikro-orm/libsql':
         specifier: ^6.6.3
-        version: 6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
+        version: 6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)
       graphql-yoga:
         specifier: ^5.18.0
         version: 5.18.0(graphql@16.12.0)
@@ -569,11 +569,11 @@ importers:
         specifier: workspace:*
         version: link:../valibot
       '@mikro-orm/core':
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^6.6.6
+        version: 6.6.6
       '@mikro-orm/libsql':
-        specifier: ^6.6.3
-        version: 6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
+        specifier: ^6.6.6
+        version: 6.6.6(@mikro-orm/core@6.6.6)(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
       valibot:
         specifier: 1.2.0
         version: 1.2.0(typescript@5.9.3)
@@ -715,11 +715,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/zod
       '@mikro-orm/core':
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^6.6.6
+        version: 6.6.6
       '@mikro-orm/libsql':
-        specifier: ^6.6.3
-        version: 6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
+        specifier: ^6.6.6
+        version: 6.6.6(@mikro-orm/core@6.6.6)(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
       '@shikijs/vitepress-twoslash':
         specifier: ^3.20.0
         version: 3.20.0(typescript@5.9.3)
@@ -2103,6 +2103,10 @@ packages:
     resolution: {integrity: sha512-W/UmY8EOlHVBgIlJw6+DxyJX8+KAliLRjp1VpWiStq297eBPFHnKPcu3YEyxwxg4DSHK1SVfEQ/72unrfeAYig==}
     engines: {node: '>= 18.12.0'}
 
+  '@mikro-orm/core@6.6.6':
+    resolution: {integrity: sha512-Ms2fkN8rT7NqgZofRGtRqiW4rpKXGuQAHoNYLJgMvcNk1WG8mLALsCja4zqgnE5ihsF/LmN8cBfJGXV4mNrhwg==}
+    engines: {node: '>= 18.12.0'}
+
   '@mikro-orm/knex@6.6.3':
     resolution: {integrity: sha512-XJ2otkg3ORIxvzv6yHqgVRJeN6kQ+C428DFt1cel7ydbhFt92OwYWUtDd121qYg4/1wEpcBCi7QoN1AHVOMoGA==}
     engines: {node: '>= 18.12.0'}
@@ -2119,8 +2123,30 @@ packages:
       mariadb:
         optional: true
 
+  '@mikro-orm/knex@6.6.6':
+    resolution: {integrity: sha512-lqrWnDY+q4femxEW0kixTkBRbIwHtkS42RkjMwL5MhvQFdAgfAmS81sHSA7R03zW87htw4anxE+6Za6WQP0y+A==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+      better-sqlite3: '*'
+      libsql: '*'
+      mariadb: '*'
+    peerDependenciesMeta:
+      better-sqlite3:
+        optional: true
+      libsql:
+        optional: true
+      mariadb:
+        optional: true
+
   '@mikro-orm/libsql@6.6.3':
     resolution: {integrity: sha512-5nPDofaxOEtajKwaZEu3fD3cogesK06uzuBxNMYCoiuXYlEe7nZUEHABy2cU6xUn7RQupxEEsNqg9RT04/CcVA==}
+    engines: {node: '>= 18.12.0'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+
+  '@mikro-orm/libsql@6.6.6':
+    resolution: {integrity: sha512-FgX2MWzy4SZig9avNJKaZqKafSIZ4C2FC731Tj4I0gxFunjijq75GuiObw0dZZODoImBkM+Q0ytFUFyMsYARcQ==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -5027,6 +5053,10 @@ packages:
     resolution: {integrity: sha512-fCPwQZVIfOeQZecBYmJy+21zSrWTlt/thUNONjTtcBHzQNu3f+zVGY0kn9gs6x6bvT570cNlPLmzHVd3NCM4Kw==}
     engines: {node: '>= 18.12.0'}
 
+  mikro-orm@6.6.6:
+    resolution: {integrity: sha512-4BLSANrxlwVHnFjYblzCE/HWWbmVNLI/xJ7dqTUeogN5IYf4G6MBF8h37GN0YNiDzjn7rmk6mfzpPbYXDfUKcA==}
+    engines: {node: '>= 18.12.0'}
+
   millify@6.1.0:
     resolution: {integrity: sha512-H/E3J6t+DQs/F2YgfDhxUVZz/dF8JXPPKTLHL/yHCcLZLtCXJDUaqvhJXQwqOVBvbyNn4T0WjLpIHd7PAw7fBA==}
     hasBin: true
@@ -7744,7 +7774,17 @@ snapshots:
       mikro-orm: 6.6.2
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(libsql@0.5.22)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)':
+  '@mikro-orm/core@6.6.6':
+    dependencies:
+      dataloader: 2.2.3
+      dotenv: 17.2.3
+      esprima: 4.0.1
+      fs-extra: 11.3.3
+      globby: 11.1.0
+      mikro-orm: 6.6.6
+      reflect-metadata: 0.2.2
+
+  '@mikro-orm/knex@6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(libsql@0.5.22)':
     dependencies:
       '@mikro-orm/core': 6.6.2
       fs-extra: 11.3.3
@@ -7762,10 +7802,46 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/libsql@6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)':
+  '@mikro-orm/knex@6.6.6(@mikro-orm/core@6.6.6)(better-sqlite3@12.6.2)(libsql@0.5.22)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)':
+    dependencies:
+      '@mikro-orm/core': 6.6.6
+      fs-extra: 11.3.3
+      knex: 3.1.0(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
+      sqlstring: 2.3.3
+    optionalDependencies:
+      better-sqlite3: 12.6.2
+      libsql: 0.5.22
+    transitivePeerDependencies:
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
+  '@mikro-orm/libsql@6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)':
     dependencies:
       '@mikro-orm/core': 6.6.2
-      '@mikro-orm/knex': 6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(libsql@0.5.22)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
+      '@mikro-orm/knex': 6.6.3(@mikro-orm/core@6.6.2)(better-sqlite3@12.6.2)(libsql@0.5.22)
+      fs-extra: 11.3.3
+      libsql: 0.5.22
+      sqlstring-sqlite: 0.1.1
+    transitivePeerDependencies:
+      - better-sqlite3
+      - mariadb
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - sqlite3
+      - supports-color
+      - tedious
+
+  '@mikro-orm/libsql@6.6.6(@mikro-orm/core@6.6.6)(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)':
+    dependencies:
+      '@mikro-orm/core': 6.6.6
+      '@mikro-orm/knex': 6.6.6(@mikro-orm/core@6.6.6)(better-sqlite3@12.6.2)(libsql@0.5.22)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7)
       fs-extra: 11.3.3
       libsql: 0.5.22
       sqlstring-sqlite: 0.1.1
@@ -10863,6 +10939,8 @@ snapshots:
       picomatch: 2.3.1
 
   mikro-orm@6.6.2: {}
+
+  mikro-orm@6.6.6: {}
 
   millify@6.1.0:
     dependencies:

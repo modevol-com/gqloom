@@ -1,4 +1,4 @@
-import type { SYMBOLS, WeaverConfig } from "@gqloom/core"
+import type { GraphQLSilk, SYMBOLS, WeaverConfig } from "@gqloom/core"
 import type {
   EntityName,
   EntityProperty,
@@ -40,10 +40,14 @@ export interface MikroSilkConfig<TEntity extends object>
            */
           type?:
             | ValueOrGetter<
-                GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN | null
+                | GraphQLOutputType
+                | typeof SYMBOLS.FIELD_HIDDEN
+                | null
+                | GraphQLSilk<any, any>
               >
             | undefined
         })
+      | ValueOrGetter<GraphQLSilk<any, any> | GraphQLOutputType>
       | typeof SYMBOLS.FIELD_HIDDEN
       | undefined
   }>

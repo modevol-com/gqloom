@@ -5,6 +5,7 @@ import {
   pascalCase,
   provideWeaverContext,
   type StandardSchemaV1,
+  SYMBOLS,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -28,9 +29,8 @@ import {
   type GraphQLOutputType,
   GraphQLScalarType,
   GraphQLString,
-  isInputType,
   isNonNullType,
-  isOutputType,
+  isType,
 } from "graphql"
 import { MikroWeaver } from ".."
 import { getMetadata } from "../helper"
@@ -493,7 +493,7 @@ export class MikroInputFactory<TEntity extends object> {
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
-          fields: () =>
+          fields: provideWeaverContext.inherit(() =>
             mapValue(this.meta.properties, (property, propertyName) => {
               // Check visibility for filters (ordering is typically tied to filtering)
               if (
@@ -512,7 +512,8 @@ export class MikroInputFactory<TEntity extends object> {
                 type: MikroInputFactory.queryOrderType(),
                 description: property.comment,
               } as GraphQLFieldConfig<any, any>
-            }),
+            })
+          ),
         })
       )
     )
@@ -539,10 +540,12 @@ export class MikroInputFactory<TEntity extends object> {
             }
 
             // Get custom type if configured (Silk: type + validation; GraphQL type: type only)
+            // Prefer options.input (resolver factory), then entity silk config (mikroSilk.config.fields)
             const customType = MikroInputFactory.getPropertyConfig(
               this.options?.input,
               propertyName as keyof TEntity,
-              "create"
+              "create",
+              this.meta
             )
             const type =
               customType == null
@@ -552,7 +555,8 @@ export class MikroInputFactory<TEntity extends object> {
                   ? silk.getType(customType)
                   : customType
 
-            if (type == null) return mapValue.SKIP
+            if (type == null || type === SYMBOLS.FIELD_HIDDEN)
+              return mapValue.SKIP
 
             // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
             const isRequired =
@@ -582,7 +586,6 @@ export class MikroInputFactory<TEntity extends object> {
     const name = `${this.metaName}PartialInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
-
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
@@ -600,10 +603,12 @@ export class MikroInputFactory<TEntity extends object> {
             }
 
             // Get custom type if configured (Silk: type + validation; GraphQL type: type only)
+            // Prefer options.input (resolver factory), then entity silk config (mikroSilk.config.fields)
             const customType = MikroInputFactory.getPropertyConfig(
               this.options?.input,
               propertyName as keyof TEntity,
-              "update"
+              "update",
+              this.meta
             )
             const type =
               customType == null
@@ -613,7 +618,8 @@ export class MikroInputFactory<TEntity extends object> {
                   ? silk.getType(customType)
                   : customType
 
-            if (type == null) return mapValue.SKIP
+            if (type == null || type === SYMBOLS.FIELD_HIDDEN)
+              return mapValue.SKIP
 
             // For update operations, make all fields optional except primary keys
             let finalType = type
@@ -650,16 +656,6 @@ export class MikroInputFactory<TEntity extends object> {
     }
   }
 
-  /**
-   * Type guard: true when the value is a GraphQL type (input or output) used as
-   * PropertyBehavior.create/update config (no validation, type only).
-   */
-  protected static isGraphQLTypeConfig(
-    t: unknown
-  ): t is GraphQLOutputType | GraphQLInputType {
-    return t != null && (isInputType(t) || isOutputType(t))
-  }
-
   public static transformFilters<TEntity extends object>(
     args: FilterArgs<TEntity>
   ): FilterQuery<TEntity>
@@ -681,9 +677,9 @@ export class MikroInputFactory<TEntity extends object> {
             : key === "NOT"
               ? "$not"
               : key
-      const value = (args as any)[key]
+      const value: any = args[key]
       if (Array.isArray(value)) {
-        ;(filters as any)[newKey] = value.map((v) => this.transformFilters(v))
+        filters[newKey] = value.map((v) => this.transformFilters(v))
       } else if (typeof value === "object" && value !== null) {
         // Handle NOT operator recursively
         if (key === "NOT") {
@@ -693,23 +689,23 @@ export class MikroInputFactory<TEntity extends object> {
           for (const op in value) {
             subQuery[`$${op}`] = value[op]
           }
-          ;(filters as any)[newKey] = subQuery
+          filters[newKey] = subQuery
         }
       } else {
-        ;(filters as any)[newKey] = value
+        filters[newKey] = value
       }
     }
 
     const { $and, $or, $not, ...where } = filters as any
     const result: FilterQuery<any> = where
     if ($and) {
-      ;(result as any).$and = $and
+      result.$and = $and
     }
     if ($or) {
-      ;(result as any).$or = $or
+      result.$or = $or
     }
     if ($not) {
-      ;(result as any).$not = $not
+      result.$not = $not
     }
     return result
   }
@@ -861,7 +857,7 @@ export class MikroInputFactory<TEntity extends object> {
     }
 
     // Direct GraphQL type (e.g. input: { age: GraphQLFloat })
-    if (MikroInputFactory.isGraphQLTypeConfig(behavior)) return true
+    if (isType(behavior)) return true
 
     // PropertyBehavior object
     if (typeof behavior === "object") {
@@ -873,7 +869,7 @@ export class MikroInputFactory<TEntity extends object> {
         "~standard" in operationConfig
       )
         return true
-      if (MikroInputFactory.isGraphQLTypeConfig(operationConfig)) return true
+      if (isType(operationConfig)) return true
     }
 
     // Check default behavior
@@ -882,7 +878,7 @@ export class MikroInputFactory<TEntity extends object> {
     if (typeof defaultBehavior === "object") {
       const operationConfig = defaultBehavior[operation]
       if (typeof operationConfig === "boolean") return operationConfig
-      if (MikroInputFactory.isGraphQLTypeConfig(operationConfig)) return true
+      if (isType(operationConfig)) return true
     }
 
     return true
@@ -891,37 +887,46 @@ export class MikroInputFactory<TEntity extends object> {
   public static getPropertyConfig<TEntity>(
     behaviors: MikroFactoryPropertyBehaviors<TEntity> | undefined,
     propertyName: keyof TEntity,
-    operation: "create" | "update"
-  ): GraphQLSilk<any, any> | GraphQLOutputType | GraphQLInputType | undefined {
-    if (!behaviors) return undefined
+    operation: "create" | "update",
+    entity?: EntityMetadata
+  ):
+    | GraphQLSilk<any, any>
+    | GraphQLOutputType
+    | GraphQLInputType
+    | typeof SYMBOLS.FIELD_HIDDEN
+    | undefined {
+    if (behaviors) {
+      const behavior = behaviors[propertyName]
 
-    const behavior = behaviors[propertyName]
-
-    // Direct GraphQLSilk
-    if (behavior && typeof behavior === "object" && "~standard" in behavior) {
-      return behavior as GraphQLSilk<any, any>
-    }
-
-    // Direct GraphQL type (e.g. input: { age: GraphQLFloat })
-    if (MikroInputFactory.isGraphQLTypeConfig(behavior)) {
-      return behavior
-    }
-
-    // PropertyBehavior object with operation-specific config (Silk or GraphQL type)
-    if (typeof behavior === "object") {
-      const operationConfig = behavior[operation]
-      if (
-        operationConfig &&
-        typeof operationConfig === "object" &&
-        "~standard" in operationConfig
-      ) {
-        return operationConfig as GraphQLSilk<any, any>
+      // Direct GraphQLSilk
+      if (behavior && typeof behavior === "object" && "~standard" in behavior) {
+        return behavior as GraphQLSilk<any, any>
       }
-      if (MikroInputFactory.isGraphQLTypeConfig(operationConfig)) {
-        return operationConfig
+
+      // Direct GraphQL type (e.g. input: { age: GraphQLFloat })
+      if (isType(behavior)) {
+        return behavior
+      }
+
+      // PropertyBehavior object with operation-specific config (Silk or GraphQL type)
+      if (typeof behavior === "object") {
+        const operationConfig = behavior[operation]
+        if (
+          operationConfig &&
+          typeof operationConfig === "object" &&
+          "~standard" in operationConfig
+        ) {
+          return operationConfig as GraphQLSilk<any, any>
+        }
+        if (isType(operationConfig)) {
+          return operationConfig
+        }
       }
     }
 
+    if (entity != null) {
+      return MikroWeaver.getFieldConfigs(entity)[propertyName as string]
+    }
     return undefined
   }
 
@@ -937,7 +942,8 @@ export class MikroInputFactory<TEntity extends object> {
       const customSilk = MikroInputFactory.getPropertyConfig(
         this.options?.input,
         propertyName as keyof TEntity,
-        operation
+        operation,
+        this.meta
       )
 
       if (customSilk && isSilk(customSilk)) {

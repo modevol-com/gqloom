@@ -1,4 +1,4 @@
-import { silk } from "@gqloom/core"
+import { getGraphQLType, silk } from "@gqloom/core"
 import {
   defineEntity,
   type FilterQuery,
@@ -329,6 +329,27 @@ describe("MikroInputFactory", () => {
       const createInputType = inputFactoryWithGraphQLType.requiredInput()
       expect(createInputType.getFields().age.type.toString()).toEqual("Float")
     })
+
+    it("should use mikroSilk.config.fields (entity field config) for createInput when options.input has no override", async () => {
+      const UserWithAgeFloat = mikroSilk(
+        defineEntity({
+          name: "UserWithAgeFloat",
+          properties: (p) => ({
+            id: p.integer().primary().autoincrement(),
+            name: p.string(),
+            age: p.integer().nullable(),
+          }),
+        }),
+        { fields: { age: GraphQLFloat } }
+      )
+      getGraphQLType(UserWithAgeFloat)
+      const inputFactoryFromEntityConfig = new MikroInputFactory(
+        UserWithAgeFloat,
+        { getEntityManager: async () => ({}) as any }
+      )
+      const createInputType = inputFactoryFromEntityConfig.requiredInput()
+      expect(createInputType.getFields().age.type.toString()).toEqual("Float")
+    })
   })
 
   describe("createArgs", () => {
@@ -416,6 +437,13 @@ describe("MikroInputFactory", () => {
         "./snapshots/UserUpdateInputWithGraphQLAgeType.graphql"
       )
       expect(updateInputType.getFields().age.type.toString()).toEqual("Float")
+    })
+
+    it("should make non-primary required fields optional in partialInput", () => {
+      const updateInputType = inputFactory.partialInput()
+      // name is required (non-null) on entity but partialInput strips NonNull for non-primary keys
+      expect(updateInputType.getFields().name.type.toString()).not.toMatch(/!$/)
+      expect(updateInputType.getFields().name.type.toString()).toBe("String")
     })
   })
 
@@ -634,6 +662,22 @@ describe("MikroInputFactory", () => {
       }
       expect(MikroInputFactory.transformFilters(args)).toEqual(expected)
     })
+
+    it("should preserve keys that start with $", () => {
+      const args = {
+        name: { eq: "x" },
+        $and: [{ age: { gt: 18 } }],
+        $custom: "value",
+      }
+      const expected = {
+        name: { $eq: "x" },
+        $and: [{ age: { $gt: 18 } }],
+        $custom: "value",
+      }
+      expect(
+        MikroInputFactory.transformFilters(args as FilterArgs<IUser>)
+      ).toEqual(expected)
+    })
   })
 
   describe("getPropertyConfig", () => {
@@ -737,6 +781,21 @@ describe("MikroInputFactory", () => {
     it("isPropertyVisible should return true when PropertyBehavior.create/update is GraphQL type", () => {
       const behaviors: MikroFactoryPropertyBehaviors<IUser> = {
         age: {
+          create: GraphQLFloat,
+          update: GraphQLFloat,
+        },
+      }
+      expect(
+        MikroInputFactory.isPropertyVisible("age", behaviors, "create")
+      ).toBe(true)
+      expect(
+        MikroInputFactory.isPropertyVisible("age", behaviors, "update")
+      ).toBe(true)
+    })
+
+    it("isPropertyVisible should return true when defaultBehavior (*) is object with GraphQL type for operation", () => {
+      const behaviors: MikroFactoryPropertyBehaviors<IUser> = {
+        "*": {
           create: GraphQLFloat,
           update: GraphQLFloat,
         },
