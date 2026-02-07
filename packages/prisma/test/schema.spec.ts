@@ -372,6 +372,122 @@ describe("PrismaWeaver", () => {
       scalar CustomName"
     `)
   })
+
+  describe("PrismaModelSilk validate (compileValidator)", () => {
+    it("returns value as-is when no config is set", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      const value = { id: 1, email: "a@b.com", name: "x" }
+      const result = await UserSilk["~standard"].validate(value)
+      expect(result).toEqual({ value })
+    })
+
+    it("returns value as-is when config.fields is empty", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      UserSilk.config({ fields: {} })
+      const value = { id: 1, email: "a@b.com", name: "x" }
+      const result = await UserSilk["~standard"].validate(value)
+      expect(result).toEqual({ value })
+    })
+
+    it("validates fields with Silk from config and returns merged value", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      UserSilk.config({
+        fields: {
+          name: z.string().min(1),
+        },
+      })
+      const result = await UserSilk["~standard"].validate({
+        id: 1,
+        email: "a@b.com",
+        name: "ok",
+      })
+      expect(result).toEqual({
+        value: { id: 1, email: "a@b.com", name: "ok" },
+      })
+    })
+
+    it("returns issues with path prefixed when Silk validation fails", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      UserSilk.config({
+        fields: {
+          name: z.string().min(2),
+          email: z.email(),
+        },
+      })
+      const result = await UserSilk["~standard"].validate({
+        id: 1,
+        name: "x",
+        email: "invalid-email",
+      })
+      expect(result).toHaveProperty("issues")
+      expect(result.issues).toHaveLength(2)
+      const nameIssue = result.issues!.find((issue) =>
+        issue.path?.includes("name")
+      )
+      expect(nameIssue?.message).toMatchInlineSnapshot(
+        `"Too small: expected string to have >=2 characters"`
+      )
+      const emailIssue = result.issues!.find((issue) =>
+        issue.path?.includes("email")
+      )
+      expect(emailIssue?.message).toMatchInlineSnapshot(
+        `"Invalid email address"`
+      )
+    })
+
+    it("validates multiple fields with Silks from config", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      UserSilk.config({
+        fields: {
+          name: z.string().min(1),
+          email: z.email(),
+        },
+      })
+      const result = await (UserSilk as any)["~standard"].validate({
+        id: 1,
+        email: "valid@example.com",
+        name: "alice",
+      })
+      expect(result).toEqual({
+        value: { id: 1, email: "valid@example.com", name: "alice" },
+      })
+    })
+
+    it("skips validation for keys not present in value", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      const nameSilk = ZodWeaver.unravel(z.string().min(1))
+      UserSilk.config({ fields: { name: nameSilk } })
+      const result = await UserSilk["~standard"].validate({
+        id: 1,
+        email: "a@b.com",
+      })
+      expect(result).toEqual({ value: { id: 1, email: "a@b.com" } })
+    })
+  })
 })
 
 function printSilk(silk: GraphQLSilk) {
