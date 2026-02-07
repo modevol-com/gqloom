@@ -72,10 +72,10 @@ export class MikroWeaver {
       } satisfies StandardSchemaV1.Props<InferEntity<TEntityName>, unknown>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLTypeBySelf,
       nullable() {
-        return silk.nullable(this as unknown as GraphQLSilk)
+        return silk.nullable(this)
       },
       list() {
-        return silk.list(this) as GraphQLSilk<InferEntity<TEntityName>[]>
+        return silk.list(this)
       },
       "~silkConfig": config,
     }) as EntitySchemaSilk<TEntityName>

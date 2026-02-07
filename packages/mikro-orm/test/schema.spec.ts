@@ -1,4 +1,11 @@
-import { field, getGraphQLType, query, resolver, weave } from "@gqloom/core"
+import {
+  field,
+  getGraphQLType,
+  query,
+  resolver,
+  silk,
+  weave,
+} from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { ArrayType, DateTimeType, defineEntity } from "@mikro-orm/core"
 import {
@@ -425,6 +432,148 @@ describe("mikroSilk", () => {
     )
     const gqlType = unwrap(getGraphQLType(Entity) as GraphQLOutputType)
     expect(gqlType.getFields().score.type.toString()).toBe("Float!")
+  })
+
+  describe("entitySilk.list() and entitySilk.nullable() validate", () => {
+    describe("list()", () => {
+      it("should reject non-array in validate", async () => {
+        const Entity = mikroSilk(
+          defineEntity({
+            name: "Item",
+            properties: (p) => ({
+              id: p.string().primary(),
+              name: p.string(),
+            }),
+          })
+        )
+
+        const result = await silk.parse(Entity.list(), "not an array" as never)
+
+        expect(result).toHaveProperty("issues")
+        expect(result.issues!).toHaveLength(1)
+        expect(result.issues![0].message).toBe("Value must be an array")
+      })
+
+      it("should accept empty array and return empty array", async () => {
+        const Entity = mikroSilk(
+          defineEntity({
+            name: "Item",
+            properties: (p) => ({
+              id: p.string().primary(),
+              name: p.string(),
+            }),
+          })
+        )
+
+        const result = await silk.parse(Entity.list(), [])
+
+        expect(result).toHaveProperty("value")
+        if (result.issues) throw new Error("Expected no issues")
+        expect(result.value).toEqual([])
+      })
+
+      it("should validate each element and return array", async () => {
+        const Entity = mikroSilk(
+          defineEntity({
+            name: "Item",
+            properties: (p) => ({
+              id: p.string().primary(),
+              name: p.string(),
+            }),
+          })
+        )
+
+        const result = await silk.parse(Entity.list(), [
+          { id: "1", name: "a" },
+          { id: "2", name: "b" },
+        ])
+
+        expect(result).toHaveProperty("value")
+        if (result.issues) throw new Error("Expected no issues")
+        expect(result.value).toEqual([
+          { id: "1", name: "a" },
+          { id: "2", name: "b" },
+        ])
+      })
+
+      it("should collect issues with path when element validation fails", async () => {
+        const Entity = mikroSilk(
+          defineEntity({
+            name: "Item",
+            properties: (p) => ({
+              id: p.string().primary(),
+              name: p.string(),
+            }),
+          }),
+          {
+            fields: {
+              id: v.string(),
+              name: v.pipe(v.string(), v.minLength(2)),
+            },
+          }
+        )
+
+        const result = await silk.parse(Entity.list(), [
+          { id: "1", name: "ab" },
+          { id: "2", name: "x" },
+          { id: "3", name: "cd" },
+        ])
+
+        expect(result).toHaveProperty("issues")
+        const issues = result.issues!
+        expect(issues.length).toBeGreaterThanOrEqual(1)
+        expect(issues[0].message).toMatch(/length|min|Invalid/i)
+        expect(issues[0].path).toEqual([1, "name"])
+      })
+    })
+
+    describe("nullable()", () => {
+      it("should accept null/undefined and return as value", async () => {
+        const Entity = mikroSilk(
+          defineEntity({
+            name: "Item",
+            properties: (p) => ({
+              id: p.string().primary(),
+              name: p.string(),
+            }),
+          })
+        )
+
+        const nullResult = await silk.parse(Entity.nullable(), null as never)
+        const undefinedResult = await silk.parse(
+          Entity.nullable(),
+          undefined as never
+        )
+
+        expect(nullResult).toHaveProperty("value")
+        if (nullResult.issues) throw new Error("Expected no issues")
+        expect(nullResult.value).toBeNull()
+        expect(undefinedResult).toHaveProperty("value")
+        if (undefinedResult.issues) throw new Error("Expected no issues")
+        expect(undefinedResult.value).toBeUndefined()
+      })
+
+      it("should delegate to origin validate for non-null value", async () => {
+        const Entity = mikroSilk(
+          defineEntity({
+            name: "Item",
+            properties: (p) => ({
+              id: p.string().primary(),
+              name: p.string(),
+            }),
+          })
+        )
+
+        const result = await silk.parse(Entity.nullable(), {
+          id: "1",
+          name: "hello",
+        })
+
+        expect(result).toHaveProperty("value")
+        if (result.issues) throw new Error("Expected no issues")
+        expect(result.value).toEqual({ id: "1", name: "hello" })
+      })
+    })
   })
 })
 
