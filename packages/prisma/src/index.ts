@@ -144,9 +144,8 @@ export class PrismaWeaver {
     const applyModelNullability = (
       type: GraphQLOutputType
     ): GraphQLOutputType => {
-      if (field.isRequired)
-        return isNonNullType(type) ? type : new GraphQLNonNull(type)
-      return isNonNullType(type) ? type.ofType : type
+      const ofType = isNonNullType(type) ? type.ofType : type
+      return field.isRequired ? new GraphQLNonNull(ofType) : ofType
     }
     const description = field.documentation
 
