@@ -487,6 +487,94 @@ describe("PrismaWeaver", () => {
       })
       expect(result).toEqual({ value: { id: 1, email: "a@b.com" } })
     })
+
+    it("uses config.fields when it is a getter function", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      const nameSilk = ZodWeaver.unravel(z.string().min(1))
+      UserSilk.config({
+        fields: () => ({ name: nameSilk }),
+      })
+      const result = await UserSilk["~standard"].validate({
+        id: 1,
+        email: "a@b.com",
+        name: "ok",
+      })
+      expect(result).toEqual({
+        value: { id: 1, email: "a@b.com", name: "ok" },
+      })
+    })
+
+    it("extracts validator from field config with type getter", async () => {
+      const UserSilk = PrismaWeaver.unravel(UserModel, {
+        models: { User: UserModel },
+        enums: { Role: RoleEnum },
+        schema: {} as any,
+      })
+      const nameSilk = ZodWeaver.unravel(z.string().min(2))
+      UserSilk.config({
+        fields: {
+          name: { type: () => nameSilk },
+        },
+      })
+      const result = await UserSilk["~standard"].validate({
+        id: 1,
+        email: "a@b.com",
+        name: "x",
+      })
+      expect(result).toHaveProperty("issues")
+      expect(result.issues!.length).toBeGreaterThanOrEqual(1)
+      expect(result.issues!.some((i) => i.path?.includes("name"))).toBe(true)
+    })
+  })
+
+  it("throws for unsupported scalar type when no preset", () => {
+    const ModelWithJson: DMMF.Model = {
+      name: "Item",
+      schema: null,
+      dbName: null,
+      fields: [
+        {
+          name: "id",
+          kind: "scalar",
+          isList: false,
+          isRequired: true,
+          isUnique: false,
+          isId: true,
+          isReadOnly: false,
+          hasDefaultValue: false,
+          type: "Int",
+          isGenerated: false,
+          isUpdatedAt: false,
+        },
+        {
+          name: "data",
+          kind: "scalar",
+          isList: false,
+          isRequired: false,
+          isUnique: false,
+          isId: false,
+          isReadOnly: false,
+          hasDefaultValue: false,
+          type: "Json",
+          isGenerated: false,
+          isUpdatedAt: false,
+        },
+      ],
+      primaryKey: null,
+      uniqueFields: [],
+      uniqueIndexes: [],
+      isGenerated: false,
+    }
+    const ItemSilk = PrismaWeaver.unravel(ModelWithJson, {
+      models: { Item: ModelWithJson },
+      enums: {},
+      schema: {} as any,
+    })
+    expect(() => weave(ItemSilk)).toThrow("Unsupported scalar type: Json")
   })
 })
 
