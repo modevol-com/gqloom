@@ -24,7 +24,7 @@ export interface MikroWeaverConfigOptions {
    */
   dialect?:
     | "PostgreSQL"
-    | "postgreSQL"
+    | "postgresql"
     | "MySQL"
     | "mysql"
     | "SQLite"
