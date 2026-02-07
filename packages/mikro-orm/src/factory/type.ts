@@ -36,10 +36,8 @@ export interface MikroResolverFactoryOptions<TEntity extends object> {
   input?: MikroFactoryPropertyBehaviors<TEntity>
 
   /**
-   * Mikro ORM's MetadataStorage. Required only when using class-based entities
-   * (decorators like @Entity()). With EntitySchema (e.g. defineEntity), omit this
-   * — metadata is read from the schema via entity.init().meta.
-   * When using class entities, pass e.g. orm.getMetadata().
+   * Mikro ORM's MetadataStorage. Required only when using class-based entities (@Entity()).
+   * @deprecated Prefer setting via MikroWeaver.config({ metadata: orm.getMetadata() }).
    */
   metadata?: MetadataStorage
 }

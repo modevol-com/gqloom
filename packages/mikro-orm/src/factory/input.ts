@@ -33,7 +33,7 @@ import {
   isType,
 } from "graphql"
 import { MikroWeaver, type MikroWeaverConfig } from ".."
-import { getMetadata } from "../helper"
+import { getMetadata, getWeaverConfigMetadata } from "../helper"
 import type {
   CollectionFieldArgs,
   CollectionFieldOptions,
@@ -71,7 +71,10 @@ export class MikroInputFactory<TEntity extends object> {
   ) {}
 
   protected get meta(): EntityMetadata {
-    return getMetadata(this.entityName, this.options?.metadata)
+    return getMetadata(
+      this.entityName,
+      this.options?.metadata ?? getWeaverConfigMetadata()
+    )
   }
 
   protected get metaName(): string {

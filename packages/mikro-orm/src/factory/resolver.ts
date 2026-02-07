@@ -39,7 +39,11 @@ import {
   GraphQLString,
 } from "graphql"
 import { MikroWeaver } from ".."
-import { getMetadata, getSelectedFields } from "../helper"
+import {
+  getMetadata,
+  getSelectedFields,
+  getWeaverConfigMetadata,
+} from "../helper"
 import { MikroInputFactory } from "./input"
 import type {
   CollectionField,
@@ -116,7 +120,10 @@ export class MikroResolverFactory<TEntity extends object> {
   }
 
   protected get meta() {
-    return getMetadata(this.entityName, this.options?.metadata)
+    return getMetadata(
+      this.entityName,
+      this.options?.metadata ?? getWeaverConfigMetadata()
+    )
   }
 
   protected get metaName(): string {
@@ -131,8 +138,9 @@ export class MikroResolverFactory<TEntity extends object> {
     if (entityName instanceof EntitySchema) {
       return entityName.init().meta
     }
-    if (!this.options.metadata) throw new Error("Metadata not found")
-    return this.options.metadata.get(entityName)
+    const metadata = this.options?.metadata ?? getWeaverConfigMetadata()
+    if (!metadata) throw new Error("Metadata not found")
+    return metadata.get(entityName)
   }
 
   public collectionField<TKey extends InferCollectionKeys<TEntity>>(

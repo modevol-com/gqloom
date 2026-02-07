@@ -36,6 +36,12 @@ export interface MikroWeaverConfigOptions {
   presetGraphQLType?: (
     property: EntityProperty
   ) => GraphQLOutputType | undefined
+
+  /**
+   * Mikro ORM's MetadataStorage. Required when using class-based entities (@Entity()).
+   * Prefer setting via MikroWeaver.config({ metadata: orm.getMetadata() }).
+   */
+  metadata?: ValueOrGetter<MetadataStorage>
 }
 
 export interface MikroWeaverConfig
@@ -65,6 +71,9 @@ export interface MikroSilkConfig<TEntity extends object>
       | typeof SYMBOLS.FIELD_HIDDEN
       | undefined
   }>
+  /**
+   * @deprecated Prefer setting metadata via MikroWeaver.config({ metadata: orm.getMetadata() }).
+   */
   metadata?: MetadataStorage
 }
 

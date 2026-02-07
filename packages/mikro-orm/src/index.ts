@@ -37,7 +37,7 @@ import {
   isInputType,
   isOutputType,
 } from "graphql"
-import { getMetadata } from "./helper"
+import { getMetadata, getWeaverConfigMetadata } from "./helper"
 import type {
   InferEntity,
   MikroSilkConfig,
@@ -182,7 +182,10 @@ export class MikroWeaver {
     const pendingConfig = (
       this as EntitySchemaSilk<EntityName<unknown> & object>
     )["~silkConfig"]
-    const meta = getMetadata(this, pendingConfig?.metadata)
+    const meta = getMetadata(
+      this,
+      getWeaverConfigMetadata() ?? pendingConfig?.metadata
+    )
     if (pendingConfig) {
       MikroWeaver.ObjectConfigMap.set(meta, pendingConfig)
     }
