@@ -103,6 +103,17 @@ export function nonNullSilk<TSilk extends GraphQLSilk<any, any>>(
         return new GraphQLNonNull(originType)
       }
     },
+    "~standard": {
+      ...origin["~standard"],
+      validate: (value: unknown) => {
+        if (value == null) {
+          return {
+            issues: [{ message: "Value must not be null or undefined" }],
+          }
+        }
+        return origin["~standard"].validate(value)
+      },
+    },
   }
 }
 
@@ -132,6 +143,39 @@ export function listSilk<TSilk extends GraphQLSilk<any, any>>(
       }
       return new GraphQLNonNull(new GraphQLList(originType))
     },
+    "~standard": {
+      ...origin["~standard"],
+      validate: async (value: unknown) => {
+        if (!Array.isArray(value)) {
+          return {
+            issues: [{ message: "Value must be an array" }],
+          }
+        }
+        const results = await Promise.all(
+          value.map((item) => origin["~standard"].validate(item))
+        )
+        const issues: StandardSchemaV1.Issue[] = []
+        const outputValues: StandardSchemaV1.InferOutput<TSilk>[] = []
+        for (let i = 0; i < results.length; i++) {
+          const res = results[i]
+          if (res.issues) {
+            for (const issue of res.issues) {
+              issues.push({
+                ...issue,
+                path: [i, ...(issue.path ?? [])],
+              })
+            }
+          }
+          if ("value" in res) {
+            outputValues.push(res.value as StandardSchemaV1.InferOutput<TSilk>)
+          }
+        }
+        if (issues.length > 0) return { issues }
+        return {
+          value: outputValues as Array<StandardSchemaV1.InferOutput<TSilk>>,
+        }
+      },
+    },
   }
 }
 
@@ -155,6 +199,15 @@ export function nullableSilk<TSilk extends GraphQLSilk<any, any>>(
       } else {
         return originType
       }
+    },
+    "~standard": {
+      ...origin["~standard"],
+      validate: (value: unknown) => {
+        if (value == null) {
+          return { value: value as null | undefined }
+        }
+        return origin["~standard"].validate(value)
+      },
     },
   }
 }
@@ -231,7 +284,7 @@ export function getGraphQLArgumentConfig(
  */
 export function parseSilk<TSilk extends GraphQLSilk>(
   silk: TSilk,
-  input: StandardSchemaV1.InferInput<TSilk>
+  input: unknown
 ): MayPromise<StandardSchemaV1.Result<StandardSchemaV1.InferOutput<TSilk>>> {
   return silk["~standard"].validate(input)
 }
