@@ -17,7 +17,12 @@ import { Tabs } from "@/components/tabs.tsx"
 
 ## Using Silks
 
-By simply wrapping MikroORM Entities with `mikroSilk`, we can easily use them as [Silks](../silk).
+By simply wrapping MikroORM Entities with `mikroSilk`, we can use them as [Silks](../silk). There are two ways to define entities:
+
+<Tabs groupId="entity-definition">
+<template #defineEntity>
+
+With `defineEntity`, wrap the result with `mikroSilk`.
 
 ::: code-group
 
@@ -97,67 +102,6 @@ export const Post = mikroSilk(PostEntity)
 
 :::
 
-The second argument of `mikroSilk(Entity, config?)` is optional and is used to set the GraphQL type description (`description`), override or hide fields (`fields`), etc. See the `MikroSilkConfig` type for details.
-
-### Using decorator-defined entities
-
-Besides `defineEntity`, you can define entities with MikroORM **decorators and classes** (`@Entity()`, `@Property()`, `@PrimaryKey()`, `@ManyToOne()`, `@OneToMany()`, etc.). When using class entities, you must provide `metadata` via **MikroWeaver.config** so that schema weaving and the resolver factory can resolve class names to metadata.
-
-1. At the very top of your app entry, `import "reflect-metadata"` and add the `reflect-metadata` dependency.
-2. After initializing the ORM, call `MikroWeaver.config({ metadata: orm.getMetadata() })` to get the weaver config (getter form `metadata: () => orm.getMetadata()` is also supported).
-3. Pass this config as the first argument to `weave` when weaving the schema. If you call `getGraphQLType(silk)` or `factory.queriesResolver()` / `resolver()` outside of `weave`, run them inside the **same weaver context** (e.g. `initWeaverContext()`, `ctx.setConfig(weaverConfig)`, then wrap those calls with `provideWeaverContext(callback, ctx)`).
-
-```ts
-import "reflect-metadata"
-import {
-  Collection,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryKey,
-  Property,
-} from "@mikro-orm/core"
-import { query, resolver, weave } from "@gqloom/core"
-import { MikroWeaver, mikroSilk } from "@gqloom/mikro-orm"
-
-@Entity()
-class Author {
-  @PrimaryKey() id!: number
-  @Property() name!: string
-  @OneToMany(() => Book, (b) => b.author)
-  books = new Collection<Book>(this)
-}
-
-@Entity()
-class Book {
-  @PrimaryKey() id!: number
-  @Property() title!: string
-  @ManyToOne(() => Author, { ref: true }) author!: Author
-}
-
-// After initializing the ORM
-const weaverConfig = MikroWeaver.config({ metadata: orm.getMetadata() })
-const AuthorSilk = mikroSilk(Author)
-const BookSilk = mikroSilk(Book)
-
-// Pass weaverConfig when weaving the schema
-const schema = weave(weaverConfig, resolver({ author: query(AuthorSilk, ...), book: query(BookSilk, ...) }))
-```
-
-When using the resolver factory, build the resolver inside a **weaver context that has the config set** (so the factory can resolve class entities via `getWeaverConfigMetadata()`), for example:
-
-```ts
-import { initWeaverContext, provideWeaverContext, weave } from "@gqloom/core"
-
-const ctx = initWeaverContext()
-ctx.setConfig(weaverConfig)
-const schema = provideWeaverContext(() => {
-  const authorResolver = authorFactory.queriesResolver("Author")
-  const bookResolver = bookFactory.queriesResolver("Book")
-  return weave(weaverConfig, authorResolver, bookResolver)
-}, ctx)
-```
-
 Before using them in resolvers, we need to initialize MikroORM and provide a request-scoped Entity Manager.
 
 ```ts twoslash title="provider.ts"
@@ -223,6 +167,99 @@ export const flusher: Middleware = async ({ next }) => {
   return result
 }
 ```
+
+</template>
+<template #Decorators & class>
+
+With **decorators and classes**, define entities using `@Entity()`, `@Property()`, `@PrimaryKey()`, `@ManyToOne()`, `@OneToMany()`, etc., then wrap the class with `mikroSilk(EntityClass)` to use it as a silk.
+Class entities are resolved from MikroORM metadata, so you must provide `metadata` via **MikroWeaver.config** when weaving the schema (e.g. `metadata: orm.getMetadata()` or `() => orm.getMetadata()`), and pass that config into `weave`, e.g. `weave(mikroWeaverConfig, userResolver, postResolver)`.
+Also, when using decorators, add `import "reflect-metadata"` at the very top of your app entry and install the `reflect-metadata` dependency.
+
+::: code-group
+
+```ts twoslash [Entity and silk]
+import "reflect-metadata"
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+
+@Entity({ tableName: "authors" })
+export class AuthorEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public name!: string
+  @OneToMany(() => BookEntity, (b) => b.author)
+  public books = new Collection<BookEntity>(this)
+}
+
+@Entity({ tableName: "books" })
+export class BookEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public title!: string
+  @ManyToOne(() => AuthorEntity, { ref: true })
+  public author!: AuthorEntity
+}
+
+export const Author = mikroSilk(AuthorEntity)
+export const Book = mikroSilk(BookEntity)
+```
+
+```ts twoslash [Init and weave]
+// @filename: entities.ts
+import "reflect-metadata"
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+
+@Entity({ tableName: "authors" })
+export class AuthorEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public name!: string
+  @OneToMany(() => BookEntity, (b) => b.author)
+  public books = new Collection<BookEntity>(this)
+}
+
+@Entity({ tableName: "books" })
+export class BookEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public title!: string
+  @ManyToOne(() => AuthorEntity, { ref: true })
+  public author!: AuthorEntity
+}
+
+export const Author = mikroSilk(AuthorEntity)
+export const Book = mikroSilk(BookEntity)
+
+// @filename: index.ts
+// ---cut---
+import "reflect-metadata"
+import { weave } from "@gqloom/core"
+import { MikroWeaver, MikroResolverFactory } from "@gqloom/mikro-orm"
+import { defineConfig, MikroORM } from "@mikro-orm/libsql"
+import { Author, AuthorEntity, Book, BookEntity } from "./entities"
+
+const orm = await MikroORM.init(
+  defineConfig({ entities: [AuthorEntity, BookEntity], dbName: ":memory:" })
+)
+await orm.getSchemaGenerator().createSchema()
+
+const authorResolver = new MikroResolverFactory(Author, () => orm.em.fork()).resolver()
+const bookResolver = new MikroResolverFactory(Book, () => orm.em.fork()).resolver()
+const weaverConfig = MikroWeaver.config({ metadata: orm.getMetadata() })
+export const schema = weave(weaverConfig, authorResolver, bookResolver)
+```
+
+:::
+
+Before using them in resolvers, initialize MikroORM and provide a request-scoped Entity Manager; when weaving the schema, pass `MikroWeaver.config({ metadata: orm.getMetadata() })` into `weave`.
+
+</template>
+</Tabs>
 
 Now we can use them in resolvers:
 
@@ -501,10 +538,7 @@ export const userResolverFactory = new MikroResolverFactory(User, useEm)
 export const postResolverFactory = new MikroResolverFactory(Post, useEm)
 ```
 
-In the code above, we created resolver factories for the `User` and `Post` models. The `MikroResolverFactory` constructor can be used in two ways:
-
-- **Shorthand**: `new MikroResolverFactory(Entity, getEntityManager)`, where `getEntityManager` is `(payload?) => EntityManager | Promise<EntityManager>`.
-- **Full options**: `new MikroResolverFactory(Entity, { getEntityManager, input?, metadata? })`. Use `input` to configure visibility and validation per field for filter/create/update. The `metadata` option is only needed for **decorator (class) entities** and is **deprecated**; prefer setting it once via **MikroWeaver.config({ metadata: orm.getMetadata() })**, pass that config into `weave` when weaving the schema, and wrap resolver construction in `provideWeaverContext` when needed.
+In the code above, we created resolver factories for the `User` and `Post` models. The `MikroResolverFactory` constructor has two usages: pass the entity and a function that returns an `EntityManager`, i.e. `new MikroResolverFactory(Entity, getEntityManager)`; or pass the entity and an options object `{ getEntityManager, input?, metadata? }`. The `input` option configures field visibility and validation in filter / create / update; `metadata` is only needed when using **class entities defined with decorators**, to resolve entity metadata from the class, but this option is deprecated—prefer setting it via **MikroWeaver.config({ metadata: orm.getMetadata() })** and pass that config when weaving the schema.
 
 ### Relation Fields
 
@@ -575,15 +609,15 @@ In the code above, we use `userResolverFactory.collectionField('posts')` and `po
 
 ### Queries
 
-The resolver factory comes with preset common queries (implemented via EntityManager’s `em.count()`, `em.find()`, etc.):
-  - [countQuery](https://mikro-orm.io/api/core/class/EntityManager#count)
-  - [findQuery](https://mikro-orm.io/api/core/class/EntityManager#find)
-  - [findAndCountQuery](https://mikro-orm.io/api/core/class/EntityManager#findAndCount)
-  - [findByCursorQuery](https://mikro-orm.io/api/core/class/EntityManager#findByCursor)
-  - [findOneQuery](https://mikro-orm.io/api/core/class/EntityManager#findOne)
-  - [findOneOrFailQuery](https://mikro-orm.io/api/core/class/EntityManager#findOneOrFail)
+The resolver factory comes with preset common queries (implemented via the corresponding EntityManager methods):
+  - [countQuery](https://mikro-orm.io/api/core/class/EntityRepository#count) — count
+  - [findQuery](https://mikro-orm.io/api/core/class/EntityRepository#find) — list query
+  - [findAndCountQuery](https://mikro-orm.io/api/core/class/EntityRepository#findAndCount) — list + total
+  - [findByCursorQuery](https://mikro-orm.io/api/core/class/EntityRepository#findByCursor) — cursor-based pagination
+  - [findOneQuery](https://mikro-orm.io/api/core/class/EntityRepository#findOne) — single query (nullable)
+  - [findOneOrFailQuery](https://mikro-orm.io/api/core/class/EntityRepository#findOneOrFail) — single query (throws if not found)
 
-The `where` argument of queries is exposed as a **Filter** type with comparison operators such as `eq`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `ne`. You can control whether PostgreSQL-only operators (e.g. `ilike`, `overlap`, `contains`) are included via **MikroWeaver.config**’s **dialect**, so that SQLite/MySQL do not get unsupported API.
+The `where` argument of queries generates the corresponding Filter type, supporting comparison operators such as `eq`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `ne`. The **MikroWeaver.config** `dialect` option controls whether PostgreSQL-only operators (e.g. `ilike`, `overlap`, `contains`) are exposed, so you can avoid generating unsupported APIs when using SQLite, MySQL, etc.
 
 You can use them directly:
 
@@ -647,16 +681,16 @@ In the code above, we use `userResolverFactory.findOneQuery()` to define the `us
 
 ### Mutations
 
-The resolver factory comes with preset common mutations (implemented via EntityManager’s `em.create()`, `em.nativeUpdate()`, etc.):
-  - [createMutation](https://mikro-orm.io/api/core/class/EntityManager#create)
-  - [insertMutation](https://mikro-orm.io/api/core/class/EntityManager#insert)
-  - [insertManyMutation](https://mikro-orm.io/api/core/class/EntityManager#insertMany)
-  - [deleteMutation](https://mikro-orm.io/api/core/class/EntityManager#nativeDelete)
-  - [updateMutation](https://mikro-orm.io/api/core/class/EntityManager#nativeUpdate)
-  - [upsertMutation](https://mikro-orm.io/api/core/class/EntityManager#upsert)
-  - [upsertManyMutation](https://mikro-orm.io/api/core/class/EntityManager#upsertMany)
+The resolver factory comes with preset common mutations (implemented via the corresponding EntityManager methods):
+  - [createMutation](https://mikro-orm.io/api/core/class/EntityRepository#create) — create and persist
+  - [insertMutation](https://mikro-orm.io/api/core/class/EntityRepository#insert) — raw insert
+  - [insertManyMutation](https://mikro-orm.io/api/core/class/EntityRepository#insertMany) — batch insert
+  - [deleteMutation](https://mikro-orm.io/api/core/class/EntityRepository#nativeDelete) — delete by condition
+  - [updateMutation](https://mikro-orm.io/api/core/class/EntityRepository#nativeUpdate) — update by condition
+  - [upsertMutation](https://mikro-orm.io/api/core/class/EntityRepository#upsert) — upsert
+  - [upsertManyMutation](https://mikro-orm.io/api/core/class/EntityRepository#upsertMany) — batch upsert
 
-**Note:** `createMutation`, `insertMutation`, `insertManyMutation`, etc. already call `em.flush()` after the mutation, so you usually do not need to wrap them in a flusher middleware.
+**Note:** The factory’s createMutation, insertMutation, insertManyMutation, etc. already call `em.flush()` after the operation, so you usually do not need to wrap them with a flusher middleware; only hand-written mutations need a flusher.
 
 You can use them directly:
 
@@ -719,7 +753,7 @@ In the code above, we use `postResolverFactory.createMutation()` to define the `
 
 ### Custom Input Fields
 
-The default preset inputs of the resolver factory are configurable. By passing the `input` option during the construction of `MikroResolverFactory`, you can configure the input validation and display behavior for each field:
+The resolver factory’s default preset inputs are configurable. By passing the `input` option when constructing `MikroResolverFactory`, you can configure input validation and display behavior for each field:
 
 ```ts twoslash
 import { createMemoization } from "@gqloom/core/context"
@@ -742,6 +776,7 @@ export interface IUser extends InferEntity<typeof User> {}
 const useEm = createMemoization(() => ({}) as EntityManager)
 
 // ---cut---
+import { field } from "@gqloom/core"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
 import * as v from "valibot"
 
@@ -750,9 +785,9 @@ const userFactory = new MikroResolverFactory(User, {
   input: {
     email: v.pipe(v.string(), v.email()), // Validate email format [!code hl]
     password: {
-      filters: false, // Hide this field in query filters [!code hl]
-      create: v.pipe(v.string(), v.minLength(6)), // Validate minimum length of 6 on creation [!code hl]
-      update: v.pipe(v.string(), v.minLength(6)), // Validate minimum length of 6 on update [!code hl]
+      filters: field.hidden, // Hide this field in query filters [!code hl]
+      create: v.pipe(v.string(), v.minLength(6)), // Validate min length 6 on create [!code hl]
+      update: v.pipe(v.string(), v.minLength(6)), // Validate min length 6 on update [!code hl]
     },
   },
 })
@@ -760,7 +795,7 @@ const userFactory = new MikroResolverFactory(User, {
 
 ### Custom Input Object
 
-The preset queries and mutations in the resolver factory support custom inputs. You can define the input type through the `input` option:
+The resolver factory’s preset queries and mutations support custom input objects. You can define the input type via the `input` option:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -810,11 +845,11 @@ export const userResolver = resolver.of(User, {
 })
 ```
 
-In the code above, we use `valibot` to define the input type. `v.object({ id: v.number() })` defines the type of the input object, and `v.transform(({ id }) => ({ where: { id } }))` transforms the input argument into MikroORM's query parameters.
+In the code above, we use `valibot` to define the input type: `v.object({ id: v.number() })` defines the input object type, and `v.transform(({ id }) => ({ where: { id } }))` transforms the input into MikroORM query parameters.
 
 ### Adding Middleware
 
-The preset queries, mutations, and fields in the resolver factory support adding middleware. You can add middleware using the `use` method:
+The resolver factory’s preset queries, mutations, and fields support adding middleware. You can add middleware via the `use` method:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -868,11 +903,11 @@ const postResolver = resolver.of(Post, {
 })
 ```
 
-In the code above, we use the `use` method to add a middleware. `useAuthedUser()` is a custom function to get the currently logged-in user. If the user is not logged in, it throws an error; otherwise, it calls `next()` to proceed.
+In the code above, we use the `use` method to add middleware. `useAuthedUser()` is a custom function that returns the current logged-in user; if the user is not logged in it throws an error, otherwise it calls `next()` to continue.
 
-### Complete Resolver 
+### Complete Resolver
 
-You can create a complete Resolver directly from the resolver factory:
+You can create a complete resolver directly from the resolver factory:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -920,35 +955,27 @@ import { useEm } from "./provider"
 
 export const userResolverFactory = new MikroResolverFactory(User, useEm)
 
-// Readonly Resolver (queries + relation fields only)
+// Readonly Resolver
 const userQueriesResolver = userResolverFactory.queriesResolver()
 
-// Full Resolver (queries + mutations + relation fields)
+// Full Resolver
 const userResolver = userResolverFactory.resolver()
 ```
 
-There are two methods for creating a Resolver:
+There are two methods for creating a resolver (the example variable name is `userResolverFactory`):
 
-- **`userResolverFactory.queriesResolver(name?)`**: Creates a Resolver with only queries and relation fields. The optional `name` argument is used to generate field names (if omitted, the entity’s name/className is used).
-- **`userResolverFactory.resolver(name?)`**: Creates a full Resolver with all queries, mutations, and relation fields.
+- **`userResolverFactory.queriesResolver(name?)`**: Creates a resolver that only includes queries and relation fields. The optional `name` argument is used to generate field names; e.g. passing `"User"` yields `countUser`, `findUser`, `findUserByCursor`, `findOneUser`, `findOneUserOrFail`, plus relation fields on the entity (e.g. `posts`).
+- **`userResolverFactory.resolver(name?)`**: Adds mutation fields on top of queries and relation fields, such as `createUser`, `insertUser`, `insertManyUser`, `deleteUser`, `updateUser`, `upsertUser`, `upsertManyUser`. The `name` argument similarly controls the generated field name prefix.
 
-Generated field naming (for `name = "User"`): queries include `countUser`, `findUser`, `findUserByCursor`, `findOneUser`, `findOneUserOrFail`; mutations include `createUser`, `insertUser`, `insertManyUser`, `deleteUser`, `updateUser`, `upsertUser`, `upsertManyUser`; relation properties on the entity (e.g. `posts`, `author`) are exposed as-is. The factory uses MikroORM **EntityManager** methods (e.g. `em.count()`, `em.find()`) to implement these operations.
+## Weaver config and custom type mapping
 
-## Weaver config (MikroWeaver.config)
+You can configure weaving behavior in one place via **MikroWeaver.config**; it is recommended to set it once in your app and pass it into `weave` when weaving the schema. Supported options include:
 
-`MikroWeaver.config(options)` is used to configure behavior when weaving the schema. Create it once in your app and pass it as the first argument to `weave`.
+- **`presetGraphQLType(property)`**: Override the default GraphQL output type for a given property; used to extend or replace the default type mapping.
+- **`dialect`**: Database dialect (e.g. `"PostgreSQL"`, `"MySQL"`, `"SQLite"`, `"MongoDB"`). Controls whether Filter exposes PostgreSQL-only operators (e.g. `ilike`, `overlap`, `contains`); if unset, behavior is compatible with PostgreSQL; setting to SQLite/MySQL etc. avoids generating unsupported APIs.
+- **`metadata`**: MikroORM’s `MetadataStorage`, or a function that returns it (e.g. `() => orm.getMetadata()`). **Required when using class entities defined with decorators**, so that weaving and the resolver factory can resolve entity metadata from the class; can be omitted when using `defineEntity` (EntitySchema).
 
-### Config options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| **presetGraphQLType** | `(property) => GraphQLOutputType \| undefined` | Override the default GraphQL output type for a property (see “Custom type mapping” below). |
-| **dialect** | `"PostgreSQL"` \| `"MySQL"` \| `"SQLite"` \| `"MongoDB"` etc. \| `null` | Database dialect. Controls whether Filter exposes PostgreSQL-only operators (e.g. `ilike`, `overlap`, `contains`). Set to SQLite/MySQL etc. to avoid unsupported comparison operators. If unset, defaults to PostgreSQL-friendly behavior. |
-| **metadata** | `MetadataStorage \| (() => MetadataStorage)` | MikroORM metadata storage. **Required when using decorator (class) entities**; recommend `metadata: orm.getMetadata()` or `metadata: () => orm.getMetadata()`. Can be omitted when using `defineEntity` (EntitySchema). |
-
-### Custom type mapping
-
-To support more MikroORM types, set `presetGraphQLType` in `MikroWeaver.config`. For example, use [graphql-scalars](https://the-guild.dev/graphql/scalars) `GraphQLDateTime` to map `datetime` to the corresponding GraphQL scalar (a more robust approach is `Object.is(property.type, DateTimeType)`; import `DateTimeType` from `@mikro-orm/core`):
+In the example below we use `presetGraphQLType` to map `datetime` to [graphql-scalars](https://the-guild.dev/graphql/scalars)’s `GraphQLDateTime`; when using class entities, you can also pass `metadata: orm.getMetadata()`.
 
 ```ts twoslash
 import { MikroWeaver } from "@gqloom/mikro-orm"
@@ -960,10 +987,12 @@ export const mikroWeaverConfig = MikroWeaver.config({
       return GraphQLDateTime
     }
   },
+  // When using class entities, uncomment:
+  // metadata: orm.getMetadata(),
 })
 ```
 
-Pass the config when weaving the GraphQL schema:
+Pass this config when weaving the GraphQL schema:
 
 ```ts
 export const schema = weave(mikroWeaverConfig, userResolver, postResolver)

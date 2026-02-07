@@ -16,6 +16,12 @@ export default defineConfig({
     codeTransformers: [
       transformerTwoslash({
         typesCache: createFileSystemTypesCache(),
+        twoslashOptions: {
+          compilerOptions: {
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        },
       }),
     ],
     languages: ["ts", "js", "bash", "graphql", "gql", "prisma", "json"],

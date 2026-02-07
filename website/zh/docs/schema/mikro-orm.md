@@ -17,7 +17,12 @@ import { Tabs } from "@/components/tabs.tsx"
 
 ## 使用丝线
 
-只需要使用 `mikroSilk` 包裹 MikroORM Entity，我们就可以轻松地将它们作为[丝线](../silk)使用。
+只需要使用 `mikroSilk` 包裹 MikroORM Entity，即可将它们作为[丝线](../silk)使用。定义实体的方式有两种：
+
+<Tabs groupId="entity-definition">
+<template #defineEntity>
+
+使用 `defineEntity` 定义实体时，用 `mikroSilk` 包裹即可。
 
 ::: code-group
 
@@ -97,68 +102,7 @@ export const Post = mikroSilk(PostEntity)
 
 :::
 
-`mikroSilk(Entity, config?)` 的第二个参数可选，用于设置 GraphQL 类型描述（`description`）、覆盖或隐藏字段（`fields`）等，详见类型 `MikroSilkConfig`。
-
-### 使用装饰器定义实体
-
-除了 `defineEntity`，你也可以用 MikroORM 的**装饰器 + 类**定义实体（`@Entity()`、`@Property()`、`@PrimaryKey()`、`@ManyToOne()`、`@OneToMany()` 等）。使用 class 实体时，必须通过 **MikroWeaver.config** 提供 `metadata`，这样织 Schema 和解析器工厂才能解析类名到元数据。
-
-1. 在应用入口最顶部 `import "reflect-metadata"`，并安装依赖 `reflect-metadata`。
-2. 初始化 ORM 后，用 `MikroWeaver.config({ metadata: orm.getMetadata() })` 得到 weaver 配置（也支持 `metadata: () => orm.getMetadata()` 的 getter 形式）。
-3. 织 Schema 时把该配置作为 `weave` 的第一个参数传入；若在 `weave` 之外调用 `getGraphQLType(silk)` 或 `factory.queriesResolver()` / `resolver()`，需在**同一 weaver context** 下执行（例如先 `initWeaverContext()`、`ctx.setConfig(weaverConfig)`，再用 `provideWeaverContext(callback, ctx)` 包住这些调用）。
-
-```ts
-import "reflect-metadata"
-import {
-  Collection,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryKey,
-  Property,
-} from "@mikro-orm/core"
-import { query, resolver, weave } from "@gqloom/core"
-import { MikroWeaver, mikroSilk } from "@gqloom/mikro-orm"
-
-@Entity()
-class Author {
-  @PrimaryKey() id!: number
-  @Property() name!: string
-  @OneToMany(() => Book, (b) => b.author)
-  books = new Collection<Book>(this)
-}
-
-@Entity()
-class Book {
-  @PrimaryKey() id!: number
-  @Property() title!: string
-  @ManyToOne(() => Author, { ref: true }) author!: Author
-}
-
-// 初始化 ORM 后
-const weaverConfig = MikroWeaver.config({ metadata: orm.getMetadata() })
-const AuthorSilk = mikroSilk(Author)
-const BookSilk = mikroSilk(Book)
-
-// 织 Schema 时传入 weaverConfig
-const schema = weave(weaverConfig, resolver({ author: query(AuthorSilk, ...), book: query(BookSilk, ...) }))
-```
-
-使用解析器工厂时，在**已设置 weaver config 的 context** 下构建 resolver（这样工厂才能通过 `getWeaverConfigMetadata()` 解析 class 实体），例如：
-
-```ts
-import { initWeaverContext, provideWeaverContext, weave } from "@gqloom/core"
-
-const ctx = initWeaverContext()
-ctx.setConfig(weaverConfig)
-const schema = provideWeaverContext(() => {
-  const authorResolver = authorFactory.queriesResolver("Author")
-  const bookResolver = bookFactory.queriesResolver("Book")
-  return weave(weaverConfig, authorResolver, bookResolver)
-}, ctx)
-```
-
-在解析器中使用它们之前，我们需要初始化 MikroORM 并提供一个请求作用域的 Entity Manager。
+在解析器中使用它们之前，需要初始化 MikroORM 并提供一个请求作用域的 Entity Manager。
 
 ```ts twoslash title="provider.ts"
 // @filename: entities.ts
@@ -223,6 +167,99 @@ export const flusher: Middleware = async ({ next }) => {
   return result
 }
 ```
+
+</template>
+<template #装饰器与类>
+
+使用**装饰器与类**定义实体时，用 `@Entity()`、`@Property()`、`@PrimaryKey()`、`@ManyToOne()`、`@OneToMany()` 等装饰器定义类，再以 `mikroSilk(EntityClass)` 包裹即可作为丝线使用。  
+类实体需要从 MikroORM 的元数据中解析，因此必须在织 Schema 时通过 **MikroWeaver.config** 提供 `metadata`（如 `metadata: orm.getMetadata()` 或 `() => orm.getMetadata()`），并把该配置传入 `weave`，例如：`weave(mikroWeaverConfig, userResolver, postResolver)`。  
+此外，使用装饰器时请在应用入口最顶部 `import "reflect-metadata"`，并安装依赖 `reflect-metadata`。
+
+::: code-group
+
+```ts twoslash [实体与丝线]
+import "reflect-metadata"
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+
+@Entity({ tableName: "authors" })
+export class AuthorEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public name!: string
+  @OneToMany(() => BookEntity, (b) => b.author)
+  public books = new Collection<BookEntity>(this)
+}
+
+@Entity({ tableName: "books" })
+export class BookEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public title!: string
+  @ManyToOne(() => AuthorEntity, { ref: true })
+  public author!: AuthorEntity
+}
+
+export const Author = mikroSilk(AuthorEntity)
+export const Book = mikroSilk(BookEntity)
+```
+
+```ts twoslash [初始化与织入]
+// @filename: entities.ts
+import "reflect-metadata"
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+
+@Entity({ tableName: "authors" })
+export class AuthorEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public name!: string
+  @OneToMany(() => BookEntity, (b) => b.author)
+  public books = new Collection<BookEntity>(this)
+}
+
+@Entity({ tableName: "books" })
+export class BookEntity {
+  @PrimaryKey({ type: "number", autoincrement: true })
+  public id!: number
+  @Property({ type: "string" })
+  public title!: string
+  @ManyToOne(() => AuthorEntity, { ref: true })
+  public author!: AuthorEntity
+}
+
+export const Author = mikroSilk(AuthorEntity)
+export const Book = mikroSilk(BookEntity)
+
+// @filename: index.ts
+// ---cut---
+import "reflect-metadata"
+import { weave } from "@gqloom/core"
+import { MikroWeaver, MikroResolverFactory } from "@gqloom/mikro-orm"
+import { defineConfig, MikroORM } from "@mikro-orm/libsql"
+import { Author, AuthorEntity, Book, BookEntity } from "./entities"
+
+const orm = await MikroORM.init(
+  defineConfig({ entities: [AuthorEntity, BookEntity], dbName: ":memory:" })
+)
+await orm.getSchemaGenerator().createSchema()
+
+const authorResolver = new MikroResolverFactory(Author, () => orm.em.fork()).resolver()
+const bookResolver = new MikroResolverFactory(Book, () => orm.em.fork()).resolver()
+const weaverConfig = MikroWeaver.config({ metadata: orm.getMetadata() })
+export const schema = weave(weaverConfig, authorResolver, bookResolver)
+```
+
+:::
+
+在解析器中使用它们之前，需要初始化 MikroORM 并提供一个请求作用域的 Entity Manager；织入 Schema 时请将 `MikroWeaver.config({ metadata: orm.getMetadata() })` 传入 `weave`。
+
+</template>
+</Tabs>
 
 现在我们可以在解析器中使用它们了：
 
@@ -501,10 +538,7 @@ export const userResolverFactory = new MikroResolverFactory(User, useEm)
 export const postResolverFactory = new MikroResolverFactory(Post, useEm)
 ```
 
-在上面的代码中，我们为 `User` 和 `Post` 模型创建了解析器工厂。`MikroResolverFactory` 的构造函数有两种写法：
-
-- **简写**：`new MikroResolverFactory(Entity, getEntityManager)`，其中 `getEntityManager` 是 `(payload?) => EntityManager | Promise<EntityManager>`。
-- **完整选项**：`new MikroResolverFactory(Entity, { getEntityManager, input?, metadata? })`。其中 `input` 用于配置各字段在 filter/create/update 中的可见性与校验；`metadata` 仅在**装饰器（class）实体**时需要，且**已弃用**，推荐通过 **MikroWeaver.config({ metadata: orm.getMetadata() })** 统一设置，织 Schema 时把该 config 传给 `weave`，并在需要时用 `provideWeaverContext` 包住构建 resolver 的代码。
+在上面的代码中，我们为 `User` 和 `Post` 模型创建了解析器工厂。`MikroResolverFactory` 的构造函数有两种用法：一是传入实体和返回 `EntityManager` 的函数，即 `new MikroResolverFactory(Entity, getEntityManager)`；二是传入实体和选项对象 `{ getEntityManager, input?, metadata? }`。其中 `input` 用于配置各字段在 filter / create / update 中的可见性与校验；`metadata` 仅在**使用装饰器定义的类实体**时需要，用于从类解析出实体元数据，但该选项已弃用，推荐统一通过 **MikroWeaver.config({ metadata: orm.getMetadata() })** 设置，并在织 Schema 时传入该配置。
 
 ### 关系字段
 
@@ -575,15 +609,15 @@ export const postResolver = resolver.of(Post, {
 
 ### 查询
 
-解析器工厂预置了常用查询（内部通过 EntityManager 的 `em.count()`、`em.find()` 等方法实现）：
-  - [countQuery](https://mikro-orm.io/api/core/class/EntityManager#count)
-  - [findQuery](https://mikro-orm.io/api/core/class/EntityManager#find)
-  - [findAndCountQuery](https://mikro-orm.io/api/core/class/EntityManager#findAndCount)
-  - [findByCursorQuery](https://mikro-orm.io/api/core/class/EntityManager#findByCursor)
-  - [findOneQuery](https://mikro-orm.io/api/core/class/EntityManager#findOne)
-  - [findOneOrFailQuery](https://mikro-orm.io/api/core/class/EntityManager#findOneOrFail)
+解析器工厂预置了常用的查询（内部通过 EntityManager 的对应方法实现）：
+  - [countQuery](https://mikro-orm.io/api/core/class/EntityRepository#count) — 计数
+  - [findQuery](https://mikro-orm.io/api/core/class/EntityRepository#find) — 列表查询
+  - [findAndCountQuery](https://mikro-orm.io/api/core/class/EntityRepository#findAndCount) — 列表 + 总数
+  - [findByCursorQuery](https://mikro-orm.io/api/core/class/EntityRepository#findByCursor) — 游标分页
+  - [findOneQuery](https://mikro-orm.io/api/core/class/EntityRepository#findOne) — 单条查询（可空）
+  - [findOneOrFailQuery](https://mikro-orm.io/api/core/class/EntityRepository#findOneOrFail) — 单条查询（不存在则抛错）
 
-查询的 `where` 参数会生成 **Filter** 类型，支持 `eq`、`gt`、`gte`、`lt`、`lte`、`in`、`nin`、`ne` 等比较操作符；通过 **MikroWeaver.config** 的 **dialect** 可控制是否暴露 PostgreSQL 专有操作符（如 `ilike`、`overlap`、`contains`），避免在 SQLite/MySQL 下生成不支持的 API。
+查询的 `where` 参数会生成对应的 Filter 类型，支持 `eq`、`gt`、`gte`、`lt`、`lte`、`in`、`nin`、`ne` 等比较操作符。通过 **MikroWeaver.config** 的 `dialect` 选项可以控制是否暴露 PostgreSQL 专有操作符（如 `ilike`、`overlap`、`contains`），从而在 SQLite、MySQL 等数据库下避免生成不支持的 API。
 
 你可以直接使用它们：
 
@@ -647,16 +681,16 @@ export const userResolver = resolver.of(User, {
 
 ### 变更
 
-解析器工厂预置了常用变更（内部通过 EntityManager 的 `em.create()`、`em.nativeUpdate()` 等方法实现）：
-  - [createMutation](https://mikro-orm.io/api/core/class/EntityManager#create)
-  - [insertMutation](https://mikro-orm.io/api/core/class/EntityManager#insert)
-  - [insertManyMutation](https://mikro-orm.io/api/core/class/EntityManager#insertMany)
-  - [deleteMutation](https://mikro-orm.io/api/core/class/EntityManager#nativeDelete)
-  - [updateMutation](https://mikro-orm.io/api/core/class/EntityManager#nativeUpdate)
-  - [upsertMutation](https://mikro-orm.io/api/core/class/EntityManager#upsert)
-  - [upsertManyMutation](https://mikro-orm.io/api/core/class/EntityManager#upsertMany)
+解析器工厂预置了常用的变更（内部通过 EntityManager 的对应方法实现）：
+  - [createMutation](https://mikro-orm.io/api/core/class/EntityRepository#create) — 创建并持久化
+  - [insertMutation](https://mikro-orm.io/api/core/class/EntityRepository#insert) — 原生插入
+  - [insertManyMutation](https://mikro-orm.io/api/core/class/EntityRepository#insertMany) — 批量插入
+  - [deleteMutation](https://mikro-orm.io/api/core/class/EntityRepository#nativeDelete) — 按条件删除
+  - [updateMutation](https://mikro-orm.io/api/core/class/EntityRepository#nativeUpdate) — 按条件更新
+  - [upsertMutation](https://mikro-orm.io/api/core/class/EntityRepository#upsert) — 存在则更新否则插入
+  - [upsertManyMutation](https://mikro-orm.io/api/core/class/EntityRepository#upsertMany) — 批量 upsert
 
-**说明**：`createMutation`、`insertMutation`、`insertManyMutation` 等已内置在变更完成后调用 `em.flush()`，一般无需再包一层 flusher 中间件。
+**说明**：工厂提供的 createMutation、insertMutation、insertManyMutation 等变更已内置在操作完成后调用 `em.flush()`，因此一般无需再单独包一层 flusher 中间件；手写 mutation 时才需要自行添加 flusher。
 
 你可以直接使用它们：
 
@@ -742,6 +776,7 @@ export interface IUser extends InferEntity<typeof User> {}
 const useEm = createMemoization(() => ({}) as EntityManager)
 
 // ---cut---
+import { field } from "@gqloom/core"
 import { MikroResolverFactory } from "@gqloom/mikro-orm"
 import * as v from "valibot"
 
@@ -750,7 +785,7 @@ const userFactory = new MikroResolverFactory(User, {
   input: {
     email: v.pipe(v.string(), v.email()), // 验证邮箱格式 [!code hl]
     password: {
-      filters: false, // 在查询过滤器中隐藏该字段 [!code hl]
+      filters: field.hidden, // 在查询过滤器中隐藏该字段 [!code hl]
       create: v.pipe(v.string(), v.minLength(6)), // 在创建时验证最小长度为6 [!code hl]
       update: v.pipe(v.string(), v.minLength(6)), // 在更新时验证最小长度为6 [!code hl]
     },
@@ -920,35 +955,27 @@ import { useEm } from "./provider"
 
 export const userResolverFactory = new MikroResolverFactory(User, useEm)
 
-// Readonly Resolver（仅查询 + 关系字段）
+// Readonly Resolver
 const userQueriesResolver = userResolverFactory.queriesResolver()
 
-// Full Resolver（查询 + 变更 + 关系字段）
+// Full Resolver
 const userResolver = userResolverFactory.resolver()
 ```
 
-有两个用于创建 Resolver 的方法：
+有两个用于创建 Resolver 的方法（示例中变量名为 `userResolverFactory`）：
 
-- **`userResolverFactory.queriesResolver(name?)`**：创建只包含查询和关系字段的 Resolver。可选参数 `name` 用于生成字段名（如不传则使用实体的 name/className）。
-- **`userResolverFactory.resolver(name?)`**：创建包含所有查询、变更和关系字段的完整 Resolver。
+- **`userResolverFactory.queriesResolver(name?)`**：创建一个只包含查询与关系字段的 Resolver。可选参数 `name` 用于生成字段名，例如传入 `"User"` 时会得到 `countUser`、`findUser`、`findUserByCursor`、`findOneUser`、`findOneUserOrFail` 以及实体上的关系字段（如 `posts`）。
+- **`userResolverFactory.resolver(name?)`**：在查询与关系字段的基础上，再增加变更字段，如 `createUser`、`insertUser`、`insertManyUser`、`deleteUser`、`updateUser`、`upsertUser`、`upsertManyUser`。同样可通过 `name` 控制生成的字段名前缀。
 
-生成的字段命名规则（以 `name = "User"` 为例）：查询有 `countUser`、`findUser`、`findUserByCursor`、`findOneUser`、`findOneUserOrFail`；变更有 `createUser`、`insertUser`、`insertManyUser`、`deleteUser`、`updateUser`、`upsertUser`、`upsertManyUser`；实体上的关系属性（如 `posts`、`author`）会原样暴露。工厂内部使用 MikroORM 的 **EntityManager** 方法（如 `em.count()`、`em.find()` 等）实现这些操作。
+## Weaver 配置与自定义类型映射
 
-## Weaver 配置（MikroWeaver.config）
+通过 **MikroWeaver.config** 可以统一配置织入行为，推荐在应用里只设置一次，并在编织 Schema 时传入 `weave`。支持的选项包括：
 
-`MikroWeaver.config(options)` 用于在织 Schema 时统一配置行为，建议在应用里创建一次，并在 `weave` 时作为第一个参数传入。
+- **`presetGraphQLType(property)`**：为指定属性覆盖默认的 GraphQL 输出类型，用于扩展或替换默认类型映射。
+- **`dialect`**：数据库方言（如 `"PostgreSQL"`、`"MySQL"`、`"SQLite"`、`"MongoDB"`）。用于控制 Filter 中是否暴露 PostgreSQL 专有操作符（如 `ilike`、`overlap`、`contains`）；不设置时按兼容 PostgreSQL 处理，设置成 SQLite/MySQL 等可避免生成不支持的 API。
+- **`metadata`**：MikroORM 的 `MetadataStorage`，或返回它的函数（如 `() => orm.getMetadata()`）。**使用装饰器定义的类实体时必设**，这样织入与解析器工厂才能从类解析出实体元数据；使用 `defineEntity`（EntitySchema）时可省略。
 
-### 配置项
-
-| 选项                  | 类型                                                                  | 说明                                                                                                                                                                                  |
-| --------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **presetGraphQLType** | `(property) => GraphQLOutputType \| undefined`                        | 为指定属性覆盖默认的 GraphQL 输出类型（见下方「自定义类型映射」）。                                                                                                                   |
-| **dialect**           | `"PostgreSQL"` \| `"MySQL"` \| `"SQLite"` \| `"MongoDB"` 等 \| `null` | 数据库方言。用于控制 Filter 中是否暴露 PostgreSQL 专有操作符（如 `ilike`、`overlap`、`contains`）；设为 SQLite/MySQL 等时可避免生成不支持的比较操作符。不设时按兼容 PostgreSQL 处理。 |
-| **metadata**          | `MetadataStorage \| (() => MetadataStorage)`                          | MikroORM 的元数据存储。**使用装饰器（class）实体时必设**，推荐 `metadata: orm.getMetadata()` 或 `metadata: () => orm.getMetadata()`。使用 `defineEntity`（EntitySchema）时可省略。    |
-
-### 自定义类型映射
-
-为了适应更多的 MikroORM 类型，可以在 `MikroWeaver.config` 中设置 `presetGraphQLType`。例如使用 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`，将 `datetime` 类型映射到对应 GraphQL 标量（更稳妥的写法是用 `Object.is(property.type, DateTimeType)`，需从 `@mikro-orm/core` 导入 `DateTimeType`）：
+下面示例中，我们使用 `presetGraphQLType` 将 `datetime` 类型映射到 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime`；若使用类实体，可同时传入 `metadata: orm.getMetadata()`。
 
 ```ts twoslash
 import { MikroWeaver } from "@gqloom/mikro-orm"
@@ -960,10 +987,12 @@ export const mikroWeaverConfig = MikroWeaver.config({
       return GraphQLDateTime
     }
   },
+  // 使用类实体时取消注释：
+  // metadata: orm.getMetadata(),
 })
 ```
 
-编织 GraphQL Schema 时传入配置：
+在编织 GraphQL Schema 时传入该配置：
 
 ```ts
 export const schema = weave(mikroWeaverConfig, userResolver, postResolver)
