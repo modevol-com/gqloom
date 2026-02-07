@@ -1,6 +1,7 @@
 import {
   type GraphQLSilk,
   initWeaverContext,
+  isSilk,
   mapValue,
   provideWeaverContext,
   type StandardSchemaV1,
@@ -26,14 +27,17 @@ import {
   type GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLID,
+  type GraphQLInputType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   type GraphQLOutputType,
   GraphQLString,
+  isInputType,
+  isOutputType,
 } from "graphql"
-import { getMetadata } from "./helper"
+import { getMetadata, getWeaverConfigMetadata } from "./helper"
 import type {
   InferEntity,
   MikroSilkConfig,
@@ -58,9 +62,12 @@ export class MikroWeaver {
       "~standard": {
         version: 1,
         vendor: MikroWeaver.vendor,
-        validate: (value: unknown) => ({
-          value: value as InferEntity<TEntityName>,
-        }),
+        validate: MikroWeaver.compileValidator(
+          config
+        ) as StandardSchemaV1.Props<
+          InferEntity<TEntityName>,
+          unknown
+        >["validate"],
       } satisfies StandardSchemaV1.Props<InferEntity<TEntityName>, unknown>,
       [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getGraphQLTypeBySelf,
       nullable() {
@@ -70,12 +77,103 @@ export class MikroWeaver {
         return silk.list(this) as GraphQLSilk<InferEntity<TEntityName>[]>
       },
       "~silkConfig": config,
-    })
+    }) as EntitySchemaSilk<TEntityName>
+  }
+
+  /**
+   * Compile a validate function from config.fields: each field with a Silk
+   * (~standard.validate) is validated; issues get path prefixed with the field key.
+   */
+  public static compileValidator<TEntity extends object>(
+    config: MikroSilkConfig<TEntity> | undefined
+  ): StandardSchemaV1.Props<TEntity, unknown>["validate"] {
+    const rawFields =
+      config == null
+        ? undefined
+        : typeof config.fields === "function"
+          ? config.fields()
+          : config.fields
+
+    if (rawFields == null || typeof rawFields !== "object") {
+      return (value: unknown) => ({ value: value as TEntity })
+    }
+
+    const validators = new Map<
+      string,
+      StandardSchemaV1.Props<unknown, unknown>["validate"]
+    >()
+    for (const key of Object.keys(rawFields)) {
+      const fn = MikroWeaver.getFieldValidateFn(
+        (rawFields as Record<string, unknown>)[key]
+      )
+      if (fn) validators.set(key, fn)
+    }
+
+    if (validators.size === 0) {
+      return (value: unknown) => ({ value: value as TEntity })
+    }
+
+    return async (value: unknown) => {
+      if (value == null || typeof value !== "object") {
+        return { value: value as TEntity }
+      }
+      const valueObj = value as Record<string, unknown>
+      const result: Record<string, unknown> = { ...valueObj }
+      const issues: StandardSchemaV1.Issue[] = []
+
+      for (const [key, validateFn] of validators) {
+        if (!(key in valueObj)) continue
+        const fieldResult = await validateFn(valueObj[key])
+        if (fieldResult.issues) {
+          for (const issue of fieldResult.issues) {
+            issues.push({
+              ...issue,
+              path: [key, ...(issue.path ?? [])],
+            })
+          }
+        } else if ("value" in fieldResult) {
+          result[key] = fieldResult.value
+        }
+      }
+
+      if (issues.length > 0) return { issues }
+      return { value: result as TEntity }
+    }
+  }
+
+  /**
+   * Extract the validate function from a field schema (Silk) if it has ~standard.validate.
+   */
+  protected static getFieldValidateFn(
+    fieldSchema: unknown
+  ): StandardSchemaV1.Props<unknown, unknown>["validate"] | null {
+    if (
+      fieldSchema == null ||
+      typeof fieldSchema !== "object" ||
+      !("~standard" in fieldSchema)
+    ) {
+      return null
+    }
+    const validate = (fieldSchema as StandardSchemaV1)["~standard"]?.validate
+    return typeof validate === "function" ? validate : null
   }
 
   public static ObjectConfigMap = new WeakMap<
     EntityMetadata,
     MikroSilkConfig<EntitySchema>
+  >()
+
+  private static fieldConfigsCache = new WeakMap<
+    EntityMetadata,
+    Partial<
+      Record<
+        string,
+        | GraphQLSilk<any, any>
+        | GraphQLOutputType
+        | GraphQLInputType
+        | typeof SYMBOLS.FIELD_HIDDEN
+      >
+    >
   >()
 
   public static getGraphQLTypeBySelf(
@@ -84,7 +182,10 @@ export class MikroWeaver {
     const pendingConfig = (
       this as EntitySchemaSilk<EntityName<unknown> & object>
     )["~silkConfig"]
-    const meta = getMetadata(this, pendingConfig?.metadata)
+    const meta = getMetadata(
+      this,
+      getWeaverConfigMetadata() ?? pendingConfig?.metadata
+    )
     if (pendingConfig) {
       MikroWeaver.ObjectConfigMap.set(meta, pendingConfig)
     }
@@ -112,7 +213,6 @@ export class MikroWeaver {
     if (existing != null) return new GraphQLNonNull(existing)
 
     const properties = meta.properties
-
     const originType = EntityGraphQLTypes.get(meta)
     const originFields = originType?.getFields()
 
@@ -209,27 +309,84 @@ export class MikroWeaver {
     }
   }
 
-  public static getFieldType(
-    property: EntityProperty,
+  /**
+   * Get raw field config map from entity's mikroSilk config (config.fields).
+   * Each value is Silk, GraphQL type, or FIELD_HIDDEN. Cached per entity.
+   */
+  public static getFieldConfigs(
     entity: EntityMetadata
-  ): GraphQLOutputType | undefined {
+  ): Partial<
+    Record<
+      string,
+      | GraphQLSilk<any, any>
+      | GraphQLOutputType
+      | GraphQLInputType
+      | typeof SYMBOLS.FIELD_HIDDEN
+    >
+  > {
+    const cached = MikroWeaver.fieldConfigsCache.get(entity)
+    if (cached !== undefined) return cached
+
     const entityConfig = MikroWeaver.ObjectConfigMap.get(entity)
     const fieldsConfig =
       typeof entityConfig?.fields === "function"
         ? entityConfig.fields()
         : entityConfig?.fields
-    const fieldConfig = (fieldsConfig as any)?.[property.name]
-    if (fieldConfig !== undefined) {
-      if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return
-      let type: GraphQLOutputType | undefined | null | false
-      if (typeof fieldConfig.type === "function") {
-        type = fieldConfig.type()
-      } else {
-        type = fieldConfig.type
+    const raw = (fieldsConfig as Record<string, unknown>) ?? {}
+    const result: Partial<
+      Record<
+        string,
+        | GraphQLSilk<any, any>
+        | GraphQLOutputType
+        | GraphQLInputType
+        | typeof SYMBOLS.FIELD_HIDDEN
+      >
+    > = {}
+    for (const key of Object.keys(raw)) {
+      const fieldConfig = raw[key]
+      if (fieldConfig === undefined) continue
+      if (fieldConfig === SYMBOLS.FIELD_HIDDEN) {
+        result[key] = SYMBOLS.FIELD_HIDDEN
+        continue
       }
-      if (type !== undefined) {
-        return type ? type : undefined
+      if (isSilk(fieldConfig)) {
+        result[key] = fieldConfig as GraphQLSilk<any, any>
+        continue
       }
+      if (isInputType(fieldConfig) || isOutputType(fieldConfig)) {
+        result[key] = fieldConfig
+        continue
+      }
+      const rawType =
+        typeof (fieldConfig as { type?: unknown }).type === "function"
+          ? ((fieldConfig as { type: () => unknown }).type as () => unknown)()
+          : (fieldConfig as { type?: unknown }).type
+      if (rawType === undefined) continue
+      if (rawType === null || rawType === SYMBOLS.FIELD_HIDDEN) {
+        result[key] = SYMBOLS.FIELD_HIDDEN
+        continue
+      }
+      if (isSilk(rawType)) {
+        result[key] = rawType as GraphQLSilk<any, any>
+        continue
+      }
+      if (isInputType(rawType) || isOutputType(rawType)) {
+        result[key] = rawType
+      }
+    }
+    MikroWeaver.fieldConfigsCache.set(entity, result)
+    return result
+  }
+
+  public static getFieldType(
+    property: EntityProperty,
+    entity: EntityMetadata
+  ): GraphQLOutputType | undefined {
+    const raw = MikroWeaver.getFieldConfigs(entity)[property.name]
+    if (raw === SYMBOLS.FIELD_HIDDEN) return undefined
+    if (raw !== undefined) {
+      if (isSilk(raw)) return silk.getType(raw)
+      if (isOutputType(raw)) return raw
     }
 
     const config =

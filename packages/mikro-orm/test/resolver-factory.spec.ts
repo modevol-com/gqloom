@@ -1048,6 +1048,28 @@ describe.concurrent("MikroResolverFactory", async () => {
         "./snapshots/createMutation.graphql"
       )
     })
+
+    it("should use with custom input with validation", async () => {
+      const userFactory = new MikroResolverFactory(User, {
+        getEntityManager: () => orm.em,
+        input: {
+          name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+        },
+      })
+
+      const create = userFactory.createMutation()
+      const executor = resolver({ create }).toExecutor()
+      await expect(
+        executor.create({
+          data: { name: "J", email: "john@example.com" },
+        })
+      ).rejects.toThrow("Invalid length: Expected >=3 but received 1")
+      const answer = await executor.create({
+        data: { name: "Joe", email: "joe@example.com" },
+      })
+      expect(answer.name).toBe("Joe")
+      expect(answer.email).toBe("joe@example.com")
+    })
   })
 
   describe.concurrent("insertMutation", () => {
@@ -1140,6 +1162,23 @@ describe.concurrent("MikroResolverFactory", async () => {
       await expect(printSchema(schema)).toMatchFileSnapshot(
         "./snapshots/insertMutation.graphql"
       )
+    })
+
+    it("should use with custom input with validation", async () => {
+      const userFactoryWithValidation = new MikroResolverFactory(User, {
+        getEntityManager: () => orm.em,
+        input: {
+          name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+        },
+      })
+
+      const insert = userFactoryWithValidation.insertMutation()
+      const executor = resolver({ insert }).toExecutor()
+      await expect(
+        executor.insert({
+          data: { name: "Jo", email: "jo@example.com" },
+        })
+      ).rejects.toThrow("Invalid length: Expected >=3 but received 2")
     })
   })
 
@@ -1254,6 +1293,26 @@ describe.concurrent("MikroResolverFactory", async () => {
       await expect(printSchema(schema)).toMatchFileSnapshot(
         "./snapshots/insertManyMutation.graphql"
       )
+    })
+
+    it("should use with custom input with validation", async () => {
+      const userFactoryWithValidation = new MikroResolverFactory(User, {
+        getEntityManager: () => orm.em,
+        input: {
+          name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+        },
+      })
+
+      const insertMany = userFactoryWithValidation.insertManyMutation()
+      const executor = resolver({ insertMany }).toExecutor()
+      await expect(
+        executor.insertMany({
+          data: [
+            { name: "Valid Name", email: "a@example.com" },
+            { name: "X", email: "b@example.com" },
+          ],
+        })
+      ).rejects.toThrow("Invalid length")
     })
   })
 
@@ -1450,6 +1509,50 @@ describe.concurrent("MikroResolverFactory", async () => {
         "./snapshots/updateMutation.graphql"
       )
     })
+
+    it("should use with custom input with validation", async () => {
+      const userFactoryWithValidation = new MikroResolverFactory(User, {
+        getEntityManager: () => orm.em,
+        input: {
+          name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+          email: v.pipe(v.string(), v.email()),
+        },
+      })
+
+      await orm.em.insert(User, {
+        name: "u8",
+        email: "user8@example.com",
+        age: 30,
+      })
+
+      const updateMutation = userFactoryWithValidation.updateMutation()
+      const executor = resolver({ update: updateMutation }).toExecutor()
+
+      // Test: invalid name length should be rejected
+      await expect(
+        executor.update({
+          where: { name: { eq: "u8" } },
+          data: { name: "Ab" },
+        })
+      ).rejects.toThrow("Invalid length")
+
+      // Test: invalid email format should be rejected
+      await expect(
+        executor.update({
+          where: { name: { eq: "u8" } },
+          data: { email: "invalid-email" },
+        })
+      ).rejects.toThrow("Invalid email")
+
+      // Test: valid update should succeed
+      const answer = await executor.update({
+        where: { name: { eq: "u8" } },
+        data: { email: "u8@example.com" },
+      })
+      expect(answer).toBe(1)
+      const user = await orm.em.findOne(User, { name: "u8" })
+      expect(user?.email).toBe("u8@example.com")
+    })
   })
 
   describe.concurrent("upsertMutation", () => {
@@ -1569,6 +1672,27 @@ describe.concurrent("MikroResolverFactory", async () => {
         "./snapshots/upsertMutation.graphql"
       )
     })
+
+    it("should use with custom input with validation", async () => {
+      const userFactoryWithValidation = new MikroResolverFactory(User, {
+        getEntityManager: () => orm.em,
+        input: {
+          name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+        },
+      })
+
+      const upsertMutation = userFactoryWithValidation.upsertMutation()
+      const executor = resolver({ upsert: upsertMutation }).toExecutor()
+      await expect(
+        executor.upsert({
+          data: {
+            name: "Jo",
+            email: "jo@example.com",
+            age: 20,
+          },
+        })
+      ).rejects.toThrow("Invalid length")
+    })
   })
 
   describe.concurrent("upsertManyMutation", () => {
@@ -1685,6 +1809,26 @@ describe.concurrent("MikroResolverFactory", async () => {
       await expect(printSchema(schema)).toMatchFileSnapshot(
         "./snapshots/upsertManyMutation.graphql"
       )
+    })
+
+    it("should use with custom input with validation", async () => {
+      const userFactoryWithValidation = new MikroResolverFactory(User, {
+        getEntityManager: () => orm.em,
+        input: {
+          name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+        },
+      })
+
+      const upsertManyMutation = userFactoryWithValidation.upsertManyMutation()
+      const executor = resolver({ upsertMany: upsertManyMutation }).toExecutor()
+      await expect(
+        executor.upsertMany({
+          data: [
+            { name: "Valid One", email: "v1@example.com", age: 21 },
+            { name: "X", email: "v2@example.com", age: 22 },
+          ],
+        })
+      ).rejects.toThrow("Invalid length")
     })
   })
 })

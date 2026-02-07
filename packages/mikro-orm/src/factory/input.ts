@@ -1,7 +1,11 @@
 import {
   type GraphQLSilk,
+  isSilk,
   mapValue,
   pascalCase,
+  provideWeaverContext,
+  type StandardSchemaV1,
+  SYMBOLS,
   silk,
   weaverContext,
 } from "@gqloom/core"
@@ -17,16 +21,19 @@ import {
   GraphQLEnumType,
   type GraphQLFieldConfig,
   GraphQLID,
+  type GraphQLInputType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
+  type GraphQLOutputType,
   GraphQLScalarType,
   GraphQLString,
   isNonNullType,
+  isType,
 } from "graphql"
-import { MikroWeaver } from ".."
-import { getMetadata } from "../helper"
+import { MikroWeaver, type MikroWeaverConfig } from ".."
+import { getMetadata, getWeaverConfigMetadata } from "../helper"
 import type {
   CollectionFieldArgs,
   CollectionFieldOptions,
@@ -64,7 +71,10 @@ export class MikroInputFactory<TEntity extends object> {
   ) {}
 
   protected get meta(): EntityMetadata {
-    return getMetadata(this.entityName, this.options?.metadata)
+    return getMetadata(
+      this.entityName,
+      this.options?.metadata ?? getWeaverConfigMetadata()
+    )
   }
 
   protected get metaName(): string {
@@ -293,7 +303,10 @@ export class MikroInputFactory<TEntity extends object> {
   public createArgsSilk() {
     return silk<CreateMutationOptions<TEntity>, CreateMutationArgs<TEntity>>(
       () => this.createArgs(),
-      (args) => ({ value: { data: args.data } })
+      this.compileDataValidator<
+        CreateMutationArgs<TEntity>,
+        CreateMutationOptions<TEntity>
+      >("create", (data) => ({ data }))
     )
   }
 
@@ -314,7 +327,10 @@ export class MikroInputFactory<TEntity extends object> {
   public insertArgsSilk() {
     return silk<InsertMutationOptions<TEntity>, InsertMutationArgs<TEntity>>(
       () => this.insertArgs(),
-      (args) => ({ value: { data: args.data } })
+      this.compileDataValidator<
+        InsertMutationArgs<TEntity>,
+        InsertMutationOptions<TEntity>
+      >("create", (data) => ({ data }))
     )
   }
 
@@ -340,7 +356,10 @@ export class MikroInputFactory<TEntity extends object> {
       InsertManyMutationArgs<TEntity>
     >(
       () => this.insertManyArgs(),
-      (args) => ({ value: { data: args.data } })
+      this.compileArrayDataValidator<
+        InsertManyMutationArgs<TEntity>,
+        InsertManyMutationOptions<TEntity>
+      >("create", (data) => ({ data }))
     )
   }
 
@@ -385,12 +404,13 @@ export class MikroInputFactory<TEntity extends object> {
   public updateArgsSilk() {
     return silk<UpdateMutationOptions<TEntity>, UpdateMutationArgs<TEntity>>(
       () => this.updateArgs(),
-      (args) => ({
-        value: {
-          where: MikroInputFactory.transformFilters(args.where),
-          data: args.data,
-        },
-      })
+      this.compileDataValidator<
+        UpdateMutationArgs<TEntity>,
+        UpdateMutationOptions<TEntity>
+      >("update", (data, args) => ({
+        where: MikroInputFactory.transformFilters(args.where),
+        data,
+      }))
     )
   }
 
@@ -420,7 +440,11 @@ export class MikroInputFactory<TEntity extends object> {
 
   public upsertArgsSilk() {
     return silk<UpsertMutationOptions<TEntity>, UpsertMutationArgs<TEntity>>(
-      () => this.upsertArgs()
+      () => this.upsertArgs(),
+      this.compileDataValidator<
+        UpsertMutationArgs<TEntity>,
+        UpsertMutationOptions<TEntity>
+      >("update", (data, args) => ({ ...args, data }))
     )
   }
 
@@ -456,7 +480,13 @@ export class MikroInputFactory<TEntity extends object> {
     return silk<
       UpsertManyMutationOptions<TEntity>,
       UpsertManyMutationArgs<TEntity>
-    >(() => this.upsertManyArgs())
+    >(
+      () => this.upsertManyArgs(),
+      this.compileArrayDataValidator<
+        UpsertManyMutationArgs<TEntity>,
+        UpsertManyMutationOptions<TEntity>
+      >("update", (data, args) => ({ ...args, data }))
+    )
   }
 
   public orderBy(): GraphQLObjectType {
@@ -466,7 +496,7 @@ export class MikroInputFactory<TEntity extends object> {
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
-          fields: () =>
+          fields: provideWeaverContext.inherit(() =>
             mapValue(this.meta.properties, (property, propertyName) => {
               // Check visibility for filters (ordering is typically tied to filtering)
               if (
@@ -485,7 +515,8 @@ export class MikroInputFactory<TEntity extends object> {
                 type: MikroInputFactory.queryOrderType(),
                 description: property.comment,
               } as GraphQLFieldConfig<any, any>
-            }),
+            })
+          ),
         })
       )
     )
@@ -498,7 +529,7 @@ export class MikroInputFactory<TEntity extends object> {
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
-        fields: () =>
+        fields: provideWeaverContext.inherit(() =>
           mapValue(this.meta.properties, (property, propertyName) => {
             // Check visibility
             if (
@@ -511,18 +542,24 @@ export class MikroInputFactory<TEntity extends object> {
               return mapValue.SKIP
             }
 
-            // Get custom type if configured
-            const customSilk = MikroInputFactory.getPropertyConfig(
+            // Get custom type if configured (Silk: type + validation; GraphQL type: type only)
+            // Prefer options.input (resolver factory), then entity silk config (mikroSilk.config.fields)
+            const customType = MikroInputFactory.getPropertyConfig(
               this.options?.input,
               propertyName as keyof TEntity,
-              "create"
+              "create",
+              this.meta
             )
-            const type = customSilk
-              ? silk.getType(customSilk)
-              : (MikroWeaver.getFieldType(property, this.meta) ??
-                MikroInputFactory.relationPropertyAsId(property))
+            const type =
+              customType == null
+                ? (MikroWeaver.getFieldType(property, this.meta) ??
+                  MikroInputFactory.relationPropertyAsId(property))
+                : isSilk(customType)
+                  ? silk.getType(customType)
+                  : customType
 
-            if (type == null) return mapValue.SKIP
+            if (type == null || type === SYMBOLS.FIELD_HIDDEN)
+              return mapValue.SKIP
 
             // Handle required fields - in MikroORM, nullable defaults to false for non-optional fields
             const isRequired =
@@ -542,7 +579,8 @@ export class MikroInputFactory<TEntity extends object> {
               type: finalType,
               description: property.comment,
             } as GraphQLFieldConfig<any, any>
-          }),
+          })
+        ),
       })
     )
   }
@@ -551,11 +589,10 @@ export class MikroInputFactory<TEntity extends object> {
     const name = `${this.metaName}PartialInput`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
-
     return weaverContext.memoNamedType(
       new GraphQLObjectType({
         name,
-        fields: () =>
+        fields: provideWeaverContext.inherit(() =>
           mapValue(this.meta.properties, (property, propertyName) => {
             // Check visibility
             if (
@@ -568,18 +605,24 @@ export class MikroInputFactory<TEntity extends object> {
               return mapValue.SKIP
             }
 
-            // Get custom type if configured
-            const customSilk = MikroInputFactory.getPropertyConfig(
+            // Get custom type if configured (Silk: type + validation; GraphQL type: type only)
+            // Prefer options.input (resolver factory), then entity silk config (mikroSilk.config.fields)
+            const customType = MikroInputFactory.getPropertyConfig(
               this.options?.input,
               propertyName as keyof TEntity,
-              "update"
+              "update",
+              this.meta
             )
-            const type = customSilk
-              ? silk.getType(customSilk)
-              : (MikroWeaver.getFieldType(property, this.meta) ??
-                MikroInputFactory.relationPropertyAsId(property))
+            const type =
+              customType == null
+                ? (MikroWeaver.getFieldType(property, this.meta) ??
+                  MikroInputFactory.relationPropertyAsId(property))
+                : isSilk(customType)
+                  ? silk.getType(customType)
+                  : customType
 
-            if (type == null) return mapValue.SKIP
+            if (type == null || type === SYMBOLS.FIELD_HIDDEN)
+              return mapValue.SKIP
 
             // For update operations, make all fields optional except primary keys
             let finalType = type
@@ -594,7 +637,8 @@ export class MikroInputFactory<TEntity extends object> {
               type: finalType,
               description: property.comment,
             } as GraphQLFieldConfig<any, any>
-          }),
+          })
+        ),
       })
     )
   }
@@ -636,9 +680,9 @@ export class MikroInputFactory<TEntity extends object> {
             : key === "NOT"
               ? "$not"
               : key
-      const value = (args as any)[key]
+      const value: any = args[key]
       if (Array.isArray(value)) {
-        ;(filters as any)[newKey] = value.map((v) => this.transformFilters(v))
+        filters[newKey] = value.map((v) => this.transformFilters(v))
       } else if (typeof value === "object" && value !== null) {
         // Handle NOT operator recursively
         if (key === "NOT") {
@@ -648,23 +692,23 @@ export class MikroInputFactory<TEntity extends object> {
           for (const op in value) {
             subQuery[`$${op}`] = value[op]
           }
-          ;(filters as any)[newKey] = subQuery
+          filters[newKey] = subQuery
         }
       } else {
-        ;(filters as any)[newKey] = value
+        filters[newKey] = value
       }
     }
 
     const { $and, $or, $not, ...where } = filters as any
     const result: FilterQuery<any> = where
     if ($and) {
-      ;(result as any).$and = $and
+      result.$and = $and
     }
     if ($or) {
-      ;(result as any).$or = $or
+      result.$or = $or
     }
     if ($not) {
-      ;(result as any).$not = $not
+      result.$not = $not
     }
     return result
   }
@@ -673,88 +717,108 @@ export class MikroInputFactory<TEntity extends object> {
     type: TScalarType
   ): GraphQLObjectType {
     // https://mikro-orm.io/docs/query-conditions#comparison
-    const name = `${type.name}ComparisonOperators`
+    const dialect = weaverContext
+      .getConfig<MikroWeaverConfig>("gqloom.mikro-orm")
+      ?.dialect?.toLowerCase()
+
+    const dialectPascal: Partial<Record<string, string>> = {
+      postgresql: "PostgreSQL",
+      mysql: "MySQL",
+      sqlite: "SQLite",
+      mongodb: "MongoDB",
+    } as const
+
+    const name =
+      dialect != null
+        ? `${type.name}Comparison${dialectPascal[dialect] ?? dialect}Operators`
+        : `${type.name}ComparisonOperators`
+    const includePostgresOnly = dialect == null || dialect === "postgresql"
+
+    const baseFields: Record<string, GraphQLFieldConfig<any, any>> = {
+      eq: {
+        type,
+        description:
+          "Equals. Matches values that are equal to a specified value.",
+      },
+      gt: {
+        type,
+        description:
+          "Greater. Matches values that are greater than a specified value.",
+      },
+      gte: {
+        type,
+        description:
+          "Greater or Equal. Matches values that are greater than or equal to a specified value.",
+      },
+      in: {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description:
+          "Contains, Matches any of the values specified in an array.",
+      },
+      lt: {
+        type,
+        description:
+          "Lower, Matches values that are less than a specified value.",
+      },
+      lte: {
+        type,
+        description:
+          "Lower or equal, Matches values that are less than or equal to a specified value.",
+      },
+      ne: {
+        type,
+        description:
+          "Not equal. Matches all values that are not equal to a specified value.",
+      },
+      nin: {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description:
+          "Not contains. Matches none of the values specified in an array.",
+      },
+    }
+
+    if (includePostgresOnly) {
+      baseFields.overlap = {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description: "&& (postgres only)",
+      }
+      baseFields.contains = {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description: "@> (postgres only)",
+      }
+      baseFields.contained = {
+        type: new GraphQLList(new GraphQLNonNull(type)),
+        description: "<@ (postgres only)",
+      }
+    }
+
+    if (type === GraphQLString) {
+      baseFields.like = {
+        type,
+        description: "Like. Uses LIKE operator",
+      }
+      baseFields.re = {
+        type,
+        description: "Regexp. Uses REGEXP operator",
+      }
+      baseFields.fulltext = {
+        type,
+        description: "Full text. A driver specific full text search function.",
+      }
+      if (includePostgresOnly) {
+        baseFields.ilike = {
+          type,
+          description: "ilike (postgres only)",
+        }
+      }
+    }
 
     return (
       weaverContext.getNamedType(name) ??
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
-          fields: {
-            eq: {
-              type,
-              description:
-                "Equals. Matches values that are equal to a specified value.",
-            },
-            gt: {
-              type,
-              description:
-                "Greater. Matches values that are greater than a specified value.",
-            },
-            gte: {
-              type,
-              description:
-                "Greater or Equal. Matches values that are greater than or equal to a specified value.",
-            },
-            in: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description:
-                "Contains, Contains, Matches any of the values specified in an array.",
-            },
-            lt: {
-              type,
-              description:
-                "Lower, Matches values that are less than a specified value.",
-            },
-            lte: {
-              type,
-              description:
-                "Lower or equal, Matches values that are less than or equal to a specified value.",
-            },
-            ne: {
-              type,
-              description:
-                "Not equal. Matches all values that are not equal to a specified value.",
-            },
-            nin: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description:
-                "Not contains. Matches none of the values specified in an array.",
-            },
-            overlap: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description: "&&",
-            },
-            contains: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description: "@>",
-            },
-            contained: {
-              type: new GraphQLList(new GraphQLNonNull(type)),
-              description: "<@",
-            },
-            ...(type === GraphQLString
-              ? {
-                  like: {
-                    type,
-                    description: "Like. Uses LIKE operator",
-                  },
-                  re: {
-                    type,
-                    description: "Regexp. Uses REGEXP operator",
-                  },
-                  fulltext: {
-                    type,
-                    description:
-                      "Full text.	A driver specific full text search function.",
-                  },
-                  ilike: {
-                    type,
-                    description: "ilike",
-                  },
-                }
-              : {}),
-          },
+          fields: baseFields,
         })
       )
     )
@@ -815,6 +879,9 @@ export class MikroInputFactory<TEntity extends object> {
       return true
     }
 
+    // Direct GraphQL type (e.g. input: { age: GraphQLFloat })
+    if (isType(behavior)) return true
+
     // PropertyBehavior object
     if (typeof behavior === "object") {
       const operationConfig = behavior[operation]
@@ -825,6 +892,7 @@ export class MikroInputFactory<TEntity extends object> {
         "~standard" in operationConfig
       )
         return true
+      if (isType(operationConfig)) return true
     }
 
     // Check default behavior
@@ -833,6 +901,7 @@ export class MikroInputFactory<TEntity extends object> {
     if (typeof defaultBehavior === "object") {
       const operationConfig = defaultBehavior[operation]
       if (typeof operationConfig === "boolean") return operationConfig
+      if (isType(operationConfig)) return true
     }
 
     return true
@@ -841,29 +910,198 @@ export class MikroInputFactory<TEntity extends object> {
   public static getPropertyConfig<TEntity>(
     behaviors: MikroFactoryPropertyBehaviors<TEntity> | undefined,
     propertyName: keyof TEntity,
-    operation: "create" | "update"
-  ): GraphQLSilk<any, any> | undefined {
-    if (!behaviors) return undefined
+    operation: "create" | "update",
+    entity?: EntityMetadata
+  ):
+    | GraphQLSilk<any, any>
+    | GraphQLOutputType
+    | GraphQLInputType
+    | typeof SYMBOLS.FIELD_HIDDEN
+    | undefined {
+    if (behaviors) {
+      const behavior = behaviors[propertyName]
 
-    const behavior = behaviors[propertyName]
+      // Direct GraphQLSilk
+      if (behavior && typeof behavior === "object" && "~standard" in behavior) {
+        return behavior as GraphQLSilk<any, any>
+      }
 
-    // Direct GraphQLSilk
-    if (behavior && typeof behavior === "object" && "~standard" in behavior) {
-      return behavior as GraphQLSilk<any, any>
-    }
+      // Direct GraphQL type (e.g. input: { age: GraphQLFloat })
+      if (isType(behavior)) {
+        return behavior
+      }
 
-    // PropertyBehavior object with operation-specific silk
-    if (typeof behavior === "object") {
-      const operationConfig = behavior[operation]
-      if (
-        operationConfig &&
-        typeof operationConfig === "object" &&
-        "~standard" in operationConfig
-      ) {
-        return operationConfig as GraphQLSilk<any, any>
+      // PropertyBehavior object with operation-specific config (Silk or GraphQL type)
+      if (typeof behavior === "object") {
+        const operationConfig = behavior[operation]
+        if (
+          operationConfig &&
+          typeof operationConfig === "object" &&
+          "~standard" in operationConfig
+        ) {
+          return operationConfig as GraphQLSilk<any, any>
+        }
+        if (isType(operationConfig)) {
+          return operationConfig
+        }
       }
     }
 
+    if (entity != null) {
+      return MikroWeaver.getFieldConfigs(entity)[propertyName as string]
+    }
     return undefined
+  }
+
+  /**
+   * Build a map of field validators for the given operation
+   */
+  protected getFieldValidators(
+    operation: "create" | "update"
+  ): Map<string, GraphQLSilk<any, any>> {
+    const validators = new Map<string, GraphQLSilk<any, any>>()
+
+    for (const [propertyName] of Object.entries(this.meta.properties)) {
+      const customSilk = MikroInputFactory.getPropertyConfig(
+        this.options?.input,
+        propertyName as keyof TEntity,
+        operation,
+        this.meta
+      )
+
+      if (customSilk && isSilk(customSilk)) {
+        validators.set(propertyName, customSilk)
+      }
+    }
+
+    return validators
+  }
+
+  /**
+   * Validate fields using the provided validators
+   * Optimized: Fields are validated in parallel for better performance
+   */
+  protected async validateFields(
+    data: any,
+    fieldValidators: Map<string, GraphQLSilk<any, any>>
+  ): Promise<StandardSchemaV1.Result<any>> {
+    const result: Record<string, any> = {}
+    const issues: StandardSchemaV1.Issue[] = []
+
+    // Validate all fields in parallel for better performance
+    const validationPromises = Array.from(fieldValidators.entries())
+      .filter(([fieldName]) => fieldName in data)
+      .map(async ([fieldName, validator]) => {
+        const fieldValue = data[fieldName]
+        const validationResult =
+          await validator["~standard"].validate(fieldValue)
+        return { fieldName, validationResult }
+      })
+
+    const validationResults = await Promise.all(validationPromises)
+
+    // Collect results and errors
+    for (const { fieldName, validationResult } of validationResults) {
+      if (validationResult.issues) {
+        // Add field name to path for each issue
+        issues.push(
+          ...validationResult.issues.map((issue: StandardSchemaV1.Issue) => ({
+            ...issue,
+            path: [fieldName, ...(issue.path || [])],
+          }))
+        )
+      } else if ("value" in validationResult) {
+        result[fieldName] = validationResult.value
+      }
+    }
+
+    // Preserve fields that don't have custom validators
+    for (const key in data) {
+      if (!fieldValidators.has(key) && data[key] !== undefined) {
+        result[key] = data[key]
+      }
+    }
+
+    return issues.length > 0 ? { issues } : { value: result }
+  }
+
+  /**
+   * Compile a validator function with custom transform
+   */
+  protected compileDataValidator<
+    TArgs extends { data: any },
+    TOptions extends { data: any },
+  >(
+    operation: "create" | "update",
+    transform: (validatedData: TArgs["data"], args: TArgs) => TOptions
+  ): (args: TArgs) => Promise<StandardSchemaV1.Result<TOptions>> {
+    const fieldValidators = this.getFieldValidators(operation)
+
+    return async (args: TArgs) => {
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      const dataResult = await this.validateFields(args.data, fieldValidators)
+
+      if (dataResult.issues) {
+        return { issues: dataResult.issues }
+      }
+
+      return { value: transform(dataResult.value, args) }
+    }
+  }
+
+  /**
+   * Compile a validator function for array data with custom transform
+   * Optimized: Array elements are validated in parallel for better performance
+   */
+  protected compileArrayDataValidator<
+    TArgs extends { data: any[] },
+    TOptions extends { data: any[] },
+  >(
+    operation: "create" | "update",
+    transform: (validatedData: TArgs["data"], args: TArgs) => TOptions
+  ): (args: TArgs) => Promise<StandardSchemaV1.Result<TOptions>> {
+    const fieldValidators = this.getFieldValidators(operation)
+
+    return async (args: TArgs) => {
+      if (fieldValidators.size === 0) {
+        return { value: transform(args.data, args) }
+      }
+
+      // Validate all array elements in parallel for better performance
+      const itemPromises = args.data.map((item, i) =>
+        this.validateFields(item, fieldValidators).then((itemResult) => ({
+          index: i,
+          result: itemResult,
+        }))
+      )
+
+      const itemResults = await Promise.all(itemPromises)
+
+      const issues: StandardSchemaV1.Issue[] = []
+      const validatedData: any[] = []
+
+      for (const { index, result } of itemResults) {
+        if (result.issues) {
+          // Add array index to path for each issue
+          issues.push(
+            ...result.issues.map((issue: StandardSchemaV1.Issue) => ({
+              ...issue,
+              path: [index, ...(issue.path || [])],
+            }))
+          )
+        } else if ("value" in result) {
+          validatedData.push(result.value)
+        }
+      }
+
+      if (issues.length > 0) {
+        return { issues }
+      }
+
+      return { value: transform(validatedData, args) }
+    }
   }
 }

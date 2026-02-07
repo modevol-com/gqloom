@@ -38,7 +38,7 @@ input IDComparisonOperators {
   """
   gte: ID
 
-  """Contains, Contains, Matches any of the values specified in an array."""
+  """Contains, Matches any of the values specified in an array."""
   in: [ID!]
 
   """Lower, Matches values that are less than a specified value."""
@@ -55,13 +55,13 @@ input IDComparisonOperators {
   """Not contains. Matches none of the values specified in an array."""
   nin: [ID!]
 
-  """&&"""
+  """&& (postgres only)"""
   overlap: [ID!]
 
-  """@>"""
+  """@> (postgres only)"""
   contains: [ID!]
 
-  """<@"""
+  """<@ (postgres only)"""
   contained: [ID!]
 }
 
@@ -77,7 +77,7 @@ input StringComparisonOperators {
   """
   gte: String
 
-  """Contains, Contains, Matches any of the values specified in an array."""
+  """Contains, Matches any of the values specified in an array."""
   in: [String!]
 
   """Lower, Matches values that are less than a specified value."""
@@ -94,13 +94,13 @@ input StringComparisonOperators {
   """Not contains. Matches none of the values specified in an array."""
   nin: [String!]
 
-  """&&"""
+  """&& (postgres only)"""
   overlap: [String!]
 
-  """@>"""
+  """@> (postgres only)"""
   contains: [String!]
 
-  """<@"""
+  """<@ (postgres only)"""
   contained: [String!]
 
   """Like. Uses LIKE operator"""
@@ -109,10 +109,10 @@ input StringComparisonOperators {
   """Regexp. Uses REGEXP operator"""
   re: String
 
-  """Full text.	A driver specific full text search function."""
+  """Full text. A driver specific full text search function."""
   fulltext: String
 
-  """ilike"""
+  """ilike (postgres only)"""
   ilike: String
 }
 

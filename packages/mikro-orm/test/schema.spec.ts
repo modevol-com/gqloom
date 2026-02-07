@@ -1,6 +1,8 @@
 import { field, getGraphQLType, query, resolver, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
 import { ArrayType, DateTimeType, defineEntity } from "@mikro-orm/core"
 import {
+  GraphQLFloat,
   GraphQLNonNull,
   type GraphQLObjectType,
   type GraphQLOutputType,
@@ -8,6 +10,7 @@ import {
   printSchema,
   printType,
 } from "graphql"
+import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import { MikroWeaver, mikroSilk } from "../src"
 
@@ -265,6 +268,133 @@ describe("mikroSilk", () => {
         content: String!
       }"
     `)
+  })
+
+  it("should handle config.fields", async () => {
+    const User = mikroSilk(
+      defineEntity({
+        name: "User",
+        properties: (p) => ({
+          id: p.string().primary(),
+          name: p.string(),
+          email: p.string(),
+          password: p.string(),
+        }),
+      }),
+      {
+        fields: {
+          id: v.string(),
+          name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+          email: v.pipe(v.string(), v.email()),
+          password: field.hidden,
+        },
+      }
+    )
+
+    expect(
+      (
+        await User["~standard"].validate({
+          name: "J",
+        })
+      ).issues
+    ).toMatchObject([
+      {
+        message: "Invalid length: Expected >=3 but received 1",
+        path: ["name"],
+      },
+    ])
+
+    const emailResult = await User["~standard"].validate({
+      email: "invalid-email",
+    })
+    expect(emailResult.issues).toBeDefined()
+    expect(emailResult.issues).toHaveLength(1)
+    expect(emailResult.issues![0].path).toEqual(["email"])
+    expect(emailResult.issues![0].message).toMatchInlineSnapshot(
+      `"Invalid email: Received "invalid-email""`
+    )
+
+    // Weave with ValibotWeaver so field Silks (Valibot schemas) can be resolved to GraphQL types
+    const schema = weave(
+      ValibotWeaver,
+      resolver({
+        user: query(User, () => ({
+          id: "",
+          name: "",
+          email: "",
+        })),
+      })
+    )
+    const userType = schema.getType("User") as GraphQLObjectType
+    expect(printType(userType)).toMatchInlineSnapshot(`
+      "type User {
+        id: String!
+        name: String!
+        email: String!
+      }"
+    `)
+  })
+
+  it("should handle config.fields as function (getter)", async () => {
+    const User = mikroSilk(
+      defineEntity({
+        name: "User",
+        properties: (p) => ({
+          id: p.string().primary(),
+          name: p.string(),
+        }),
+      }),
+      {
+        fields: () => ({
+          id: v.string(),
+          name: v.pipe(v.string(), v.minLength(1)),
+        }),
+      }
+    )
+    const result = await User["~standard"].validate({ id: "1", name: "a" })
+    if (!("value" in result)) throw new Error("validate failed")
+    expect(result.value).toEqual({ id: "1", name: "a" })
+    const schema = weave(
+      ValibotWeaver,
+      resolver({
+        user: query(User, () => ({ id: "", name: "" })),
+      })
+    )
+    const userType = schema.getType("User") as GraphQLObjectType
+    expect(userType.getFields().name.type.toString()).toBe("String!")
+  })
+
+  it("should handle config.fields with { type: GraphQLType }", () => {
+    const Entity = mikroSilk(
+      defineEntity({
+        name: "Entity",
+        properties: (p) => ({
+          id: p.string().primary(),
+          score: p.integer(),
+        }),
+      }),
+      {
+        fields: {
+          score: { type: GraphQLFloat },
+        },
+      }
+    )
+    const gqlType = unwrap(getGraphQLType(Entity) as GraphQLOutputType)
+    expect(gqlType.getFields().score.type.toString()).toBe("Float!")
+  })
+
+  it("should fallback unknown property type to GraphQLString (getFieldType default)", () => {
+    const Entity = mikroSilk(
+      defineEntity({
+        name: "Entity",
+        properties: (p) => ({
+          id: p.string().primary(),
+          data: p.type("json"),
+        }),
+      })
+    )
+    const gqlType = unwrap(getGraphQLType(Entity) as GraphQLOutputType)
+    expect(gqlType.getFields().data.type.toString()).toBe("String!")
   })
 })
 

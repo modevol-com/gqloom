@@ -1,4 +1,4 @@
-type StringComparisonOperators {
+type StringComparisonSQLiteOperators {
   """Equals. Matches values that are equal to a specified value."""
   eq: String
 
@@ -27,15 +27,6 @@ type StringComparisonOperators {
   """Not contains. Matches none of the values specified in an array."""
   nin: [String!]
 
-  """&& (postgres only)"""
-  overlap: [String!]
-
-  """@> (postgres only)"""
-  contains: [String!]
-
-  """<@ (postgres only)"""
-  contained: [String!]
-
   """Like. Uses LIKE operator"""
   like: String
 
@@ -44,7 +35,4 @@ type StringComparisonOperators {
 
   """Full text. A driver specific full text search function."""
   fulltext: String
-
-  """ilike (postgres only)"""
-  ilike: String
 }

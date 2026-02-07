@@ -1,10 +1,15 @@
-import { getResolvingFields, type ResolverPayload } from "@gqloom/core"
+import {
+  getResolvingFields,
+  type ResolverPayload,
+  weaverContext,
+} from "@gqloom/core"
 import {
   type EntityMetadata,
   type EntityName,
   EntitySchema,
   type MetadataStorage,
 } from "@mikro-orm/core"
+import type { MikroWeaverConfig } from "./types"
 
 /**
  * Get the selected columns from the resolver payload
@@ -24,6 +29,17 @@ export function getSelectedFields(
       selectedFields.add(field)
   }
   return Array.from(selectedFields) as []
+}
+
+/**
+ * Resolve MetadataStorage from weaver config (MikroWeaver.config).
+ * Supports ValueOrGetter so config can be () => orm.getMetadata().
+ */
+export function getWeaverConfigMetadata(): MetadataStorage | undefined {
+  const config = weaverContext.getConfig<MikroWeaverConfig>("gqloom.mikro-orm")
+  const raw = config?.metadata
+  if (raw == null) return undefined
+  return typeof raw === "function" ? raw() : raw
 }
 
 export function getMetadata<TEntity>(
