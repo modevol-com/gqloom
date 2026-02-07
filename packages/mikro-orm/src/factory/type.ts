@@ -27,6 +27,7 @@ import type {
   UpdateOptions,
   UpsertOptions,
 } from "@mikro-orm/core"
+import type { GraphQLInputType, GraphQLOutputType } from "graphql"
 
 export interface MikroResolverFactoryOptions<TEntity extends object> {
   getEntityManager: (
@@ -44,18 +45,30 @@ export interface PropertyBehavior<TOutput> {
 
   /**
    * Is this property visible in the create mutation input?
+   * When set to a GraphQL type, that type is used for the field (no validation).
    */
-  create?: boolean | GraphQLSilk<TOutput, any>
+  create?:
+    | boolean
+    | GraphQLSilk<TOutput, any>
+    | GraphQLOutputType
+    | GraphQLInputType
   /**
    * Is this property visible in the update mutation input?
+   * When set to a GraphQL type, that type is used for the field (no validation).
    */
-  update?: boolean | GraphQLSilk<TOutput, any>
+  update?:
+    | boolean
+    | GraphQLSilk<TOutput, any>
+    | GraphQLOutputType
+    | GraphQLInputType
 }
 
 export type MikroFactoryPropertyBehaviors<TEntity> = {
   [K in keyof TEntity]?:
     | PropertyBehavior<TEntity[K]>
     | GraphQLSilk<TEntity[K], any>
+    | GraphQLOutputType
+    | GraphQLInputType
     | boolean
     | undefined
 } & {
