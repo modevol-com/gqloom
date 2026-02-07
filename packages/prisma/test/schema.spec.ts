@@ -5,6 +5,7 @@ import {
   type GraphQLNamedType,
   GraphQLNonNull,
   GraphQLScalarType,
+  GraphQLString,
   printSchema,
   printType,
 } from "graphql"
@@ -317,6 +318,59 @@ describe("PrismaWeaver", () => {
     `)
 
     expect(printSchema(schema2)).toEqual(printSchema(schema))
+  })
+
+  it("aligns output nullability with Model: required field with nullable Silk becomes NonNull", () => {
+    const UserSilk = PrismaWeaver.unravel(UserModel, {
+      models: { User: UserModel },
+      enums: { Role: RoleEnum },
+      schema: {} as any,
+    })
+    const schema = weave(
+      UserSilk,
+      UserSilk.config({
+        fields: { email: GraphQLString },
+      })
+    )
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        id: ID!
+
+        """user's email is unique"""
+        email: String!
+        name: String
+        createdAt: String!
+      }"
+    `)
+  })
+
+  it("aligns output nullability with Model: optional field with NonNull custom type becomes nullable", () => {
+    const UserSilk = PrismaWeaver.unravel(UserModel, {
+      models: { User: UserModel },
+      enums: { Role: RoleEnum },
+      schema: {} as any,
+    })
+    const CustomName = new GraphQLNonNull(
+      new GraphQLScalarType({ name: "CustomName" })
+    )
+    const schema = weave(
+      UserSilk,
+      UserSilk.config({
+        fields: { name: { type: CustomName } },
+      })
+    )
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        id: ID!
+
+        """user's email is unique"""
+        email: String!
+        name: CustomName
+        createdAt: String!
+      }
+
+      scalar CustomName"
+    `)
   })
 })
 

@@ -137,14 +137,16 @@ export class PrismaWeaver {
     fieldConfig: PrismaModelConfigOptionsField,
     meta: PrismaModelMeta | undefined
   ): GraphQLFieldConfig<any, any> | undefined {
-    const [typeGetter, options, source] =
+    const [typeGetter, options] =
       PrismaWeaver.getFieldConfigOptions(fieldConfig)
 
-    const ensureNonNull = (type: GraphQLOutputType) => {
-      if (source === "silk") return type
-      if (!field.isRequired) return type
-      if (isNonNullType(type)) return type
-      return new GraphQLNonNull(type)
+    /** Align output nullability with Model: required → NonNull, optional → nullable */
+    const applyModelNullability = (
+      type: GraphQLOutputType
+    ): GraphQLOutputType => {
+      if (field.isRequired)
+        return isNonNullType(type) ? type : new GraphQLNonNull(type)
+      return isNonNullType(type) ? type.ofType : type
     }
     const description = field.documentation
 
@@ -164,7 +166,11 @@ export class PrismaWeaver {
       }
     })()
     if (!unwrappedType) return
-    return { type: ensureNonNull(unwrappedType), description, ...options }
+    return {
+      type: applyModelNullability(unwrappedType),
+      description,
+      ...options,
+    }
   }
 
   public static config(config: PrismaWeaverConfigOptions): PrismaWeaverConfig {
