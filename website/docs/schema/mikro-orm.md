@@ -4,7 +4,7 @@ import { Tabs } from "@/components/tabs.tsx"
 
 # MikroORM
 
-[MikroORM](https://mikro-orm.io/) is a TypeScript ORM for Node.js that supports multiple databases such as PostgreSQL, MySQL, MariaDB, SQLite, and MongoDB. It is based on the Data Mapper, Unit of Work, and Identity Map patterns, aiming to provide a powerful and easy-to-use database toolset.
+[MikroORM](https://mikro-orm.io/) is a TypeScript ORM for Node.js that supports PostgreSQL, MySQL, MariaDB, SQLite, MongoDB, and more. It is based on the Data Mapper, Unit of Work, and Identity Map patterns, aiming to provide a powerful and easy-to-use database toolset.
 
 `@gqloom/mikro-orm` provides integration between GQLoom and MikroORM:
 
@@ -17,16 +17,16 @@ import { Tabs } from "@/components/tabs.tsx"
 
 ## Using Silks
 
-By simply wrapping MikroORM Entities with `mikroSilk`, we can use them as [Silks](../silk). There are two ways to define entities:
+Wrap MikroORM Entities with `mikroSilk` to use them as [Silks](../silk). There are two ways to define entities:
 
 <Tabs groupId="entity-definition">
 <template #defineEntity>
 
-When using `defineEntity` to define entities, wrap them with `mikroSilk`.
+When using `defineEntity` to define entities, wrap them with `mikroSilk`. Before using them in resolvers you need to initialize MikroORM; example below:
 
 ::: code-group
 
-```ts twoslash [Using Silk]
+```ts twoslash [entities.ts]
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { type InferEntity, defineEntity } from "@mikro-orm/core"
 
@@ -54,44 +54,7 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
-  }),
-})
-export interface IPost extends InferEntity<typeof PostEntity> {}
-// ---cut---
-export const User = mikroSilk(UserEntity)
-export const Post = mikroSilk(PostEntity)
-```
-
-```ts twoslash [Full File]
-import { mikroSilk } from "@gqloom/mikro-orm"
-import { type InferEntity, defineEntity } from "@mikro-orm/core"
-
-const UserEntity = defineEntity({
-  name: "User",
-  properties: (p) => ({
-    id: p.integer().primary().autoincrement(),
-    createdAt: p.datetime().onCreate(() => new Date()),
-    email: p.string(),
-    name: p.string(),
-    role: p.string().$type<"admin" | "user">().default("user"),
-    posts: () => p.oneToMany(PostEntity).mappedBy("author"),
-  }),
-})
-export interface IUser extends InferEntity<typeof UserEntity> {}
-
-const PostEntity = defineEntity({
-  name: "Post",
-  properties: (p) => ({
-    id: p.integer().primary().autoincrement(),
-    createdAt: p.datetime().onCreate(() => new Date()),
-    updatedAt: p
-      .datetime()
-      .onCreate(() => new Date())
-      .onUpdate(() => new Date()),
-    published: p.boolean().default(false),
-    title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -100,14 +63,11 @@ export const User = mikroSilk(UserEntity)
 export const Post = mikroSilk(PostEntity)
 ```
 
-:::
-
-Before using them in resolvers, we need to initialize MikroORM and provide a request-scoped Entity Manager.
-
-```ts twoslash title="provider.ts"
+```ts twoslash [provider.ts]
 // @filename: entities.ts
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { type InferEntity, defineEntity } from "@mikro-orm/core"
+
 const UserEntity = defineEntity({
   name: "User",
   properties: (p) => ({
@@ -120,6 +80,7 @@ const UserEntity = defineEntity({
   }),
 })
 export interface IUser extends InferEntity<typeof UserEntity> {}
+
 const PostEntity = defineEntity({
   name: "Post",
   properties: (p) => ({
@@ -131,73 +92,127 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
+
 export const User = mikroSilk(UserEntity)
 export const Post = mikroSilk(PostEntity)
-// @filename: index.ts
+
+// @filename: provider.ts
 // ---cut---
-import type { Middleware } from "@gqloom/core"
-import { createMemoization, useResolvingFields } from "@gqloom/core/context"
+import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
-export let orm: MikroORM
-
-export const ormPromise = MikroORM.init({
+export const orm = MikroORM.initSync({
   entities: [User, Post],
   dbName: ":memory:",
-  debug: true,
-}).then(async (o) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
+})
+
+export const useEm = createMemoization(() => orm.em.fork())
+```
+
+```ts twoslash [index.ts]
+// @filename: entities.ts
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { type InferEntity, defineEntity } from "@mikro-orm/core"
+
+const UserEntity = defineEntity({
+  name: "User",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    createdAt: p.datetime().onCreate(() => new Date()),
+    email: p.string(),
+    name: p.string(),
+    role: p.string().$type<"admin" | "user">().default("user"),
+    posts: () => p.oneToMany(PostEntity).mappedBy("author"),
+  }),
+})
+export interface IUser extends InferEntity<typeof UserEntity> {}
+
+const PostEntity = defineEntity({
+  name: "Post",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    createdAt: p.datetime().onCreate(() => new Date()),
+    updatedAt: p
+      .datetime()
+      .onCreate(() => new Date())
+      .onUpdate(() => new Date()),
+    published: p.boolean().default(false),
+    title: p.string(),
+    author: () => p.manyToOne(UserEntity).ref(),
+  }),
+})
+export interface IPost extends InferEntity<typeof PostEntity> {}
+
+export const User = mikroSilk(UserEntity)
+export const Post = mikroSilk(PostEntity)
+
+// @filename: provider.ts
+import { createMemoization } from "@gqloom/core/context"
+import { MikroORM } from "@mikro-orm/libsql"
+import { Post, User } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
+  dbName: ":memory:",
 })
 
 export const useEm = createMemoization(() => orm.em.fork())
 
-export const useSelectedFields = () => {
-  return Array.from(useResolvingFields()?.selectedFields ?? ["*"]) as []
-}
+// @filename: index.ts
+// ---cut---
+import { weave } from "@gqloom/core"
+import { MikroResolverFactory } from "@gqloom/mikro-orm"
+import { Post, User } from "./entities"
+import { useEm } from "./provider"
 
-export const flusher: Middleware = async ({ next }) => {
-  const result = await next()
-  await useEm().flush()
-  return result
-}
+const userResolver = new MikroResolverFactory(User, useEm).resolver()
+const postResolver = new MikroResolverFactory(Post, useEm).resolver()
+
+export const schema = weave(userResolver, postResolver)
 ```
+
+:::
 
 </template>
 <template #Decorators and classes>
 
-When using **decorators and classes** to define entities, use decorators such as `@Entity()`, `@Property()`, `@PrimaryKey()`, `@ManyToOne()`, `@OneToMany()` to define the class, then wrap it with `mikroSilk(EntityClass)` to use as a silk.
-Class entities need to be resolved from MikroORM metadata, so you must provide `metadata` via **MikroWeaver.config** when weaving the schema (e.g. `metadata: orm.getMetadata()` or `() => orm.getMetadata()`), and pass that config into `weave`, e.g. `weave(mikroWeaverConfig, userResolver, postResolver)`.
-Also, when using decorators, `import "reflect-metadata"` at the very top of your app entry and install the `reflect-metadata` dependency.
+When using decorators to define entities, wrap the entity class with `mikroSilk`. Because class entities are resolved from MikroORM metadata, you must provide `metadata` via `MikroWeaver.config` when calling `weave`.
+
+> [!IMPORTANT]
+> When using decorators, ensure you import `reflect-metadata` at the top of your app entry and install that dependency.
 
 ::: code-group
 
-```ts twoslash [Entity and Silk]
+```ts twoslash [entities.ts]
 import "reflect-metadata"
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
 
-@Entity({ tableName: "authors" })
+@Entity()
 export class AuthorEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+
+  @Property()
   public name!: string
+
   @OneToMany(() => BookEntity, (b) => b.author)
   public books = new Collection<BookEntity>(this)
 }
 
-@Entity({ tableName: "books" })
+@Entity()
 export class BookEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+
+  @Property()
   public title!: string
+
   @ManyToOne(() => AuthorEntity, { ref: true })
   public author!: AuthorEntity
 }
@@ -206,27 +221,27 @@ export const Author = mikroSilk(AuthorEntity)
 export const Book = mikroSilk(BookEntity)
 ```
 
-```ts twoslash [Init and Weave]
+```ts twoslash [provider.ts]
 // @filename: entities.ts
 import "reflect-metadata"
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
 
-@Entity({ tableName: "authors" })
+@Entity()
 export class AuthorEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+  @Property()
   public name!: string
   @OneToMany(() => BookEntity, (b) => b.author)
   public books = new Collection<BookEntity>(this)
 }
 
-@Entity({ tableName: "books" })
+@Entity()
 export class BookEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+  @Property()
   public title!: string
   @ManyToOne(() => AuthorEntity, { ref: true })
   public author!: AuthorEntity
@@ -235,28 +250,79 @@ export class BookEntity {
 export const Author = mikroSilk(AuthorEntity)
 export const Book = mikroSilk(BookEntity)
 
+// @filename: provider.ts
+// ---cut---
+import { createMemoization } from "@gqloom/core/context"
+import { MikroORM } from "@mikro-orm/libsql"
+import { Author, Book } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [Author, Book],
+  dbName: ":memory:",
+})
+
+export const useEm = createMemoization(() => orm.em.fork())
+```
+
+```ts twoslash [index.ts]
+// @filename: entities.ts
+import "reflect-metadata"
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+
+@Entity()
+export class AuthorEntity {
+  @PrimaryKey({ autoincrement: true })
+  public id!: number
+  @Property()
+  public name!: string
+  @OneToMany(() => BookEntity, (b) => b.author)
+  public books = new Collection<BookEntity>(this)
+}
+
+@Entity()
+export class BookEntity {
+  @PrimaryKey({ autoincrement: true })
+  public id!: number
+  @Property()
+  public title!: string
+  @ManyToOne(() => AuthorEntity, { ref: true })
+  public author!: AuthorEntity
+}
+
+export const Author = mikroSilk(AuthorEntity)
+export const Book = mikroSilk(BookEntity)
+
+// @filename: provider.ts
+import { createMemoization } from "@gqloom/core/context"
+import { MikroORM } from "@mikro-orm/libsql"
+import { Author, Book } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [Author, Book],
+  dbName: ":memory:",
+})
+
+export const useEm = createMemoization(() => orm.em.fork())
+
 // @filename: index.ts
 // ---cut---
-import "reflect-metadata"
 import { weave } from "@gqloom/core"
 import { MikroWeaver, MikroResolverFactory } from "@gqloom/mikro-orm"
-import { defineConfig, MikroORM } from "@mikro-orm/libsql"
-import { Author, AuthorEntity, Book, BookEntity } from "./entities"
+import { Author, Book } from "./entities"
+import { orm, useEm } from "./provider"
 
-const orm = await MikroORM.init(
-  defineConfig({ entities: [AuthorEntity, BookEntity], dbName: ":memory:" })
+const authorResolver = new MikroResolverFactory(Author, useEm).resolver()
+const bookResolver = new MikroResolverFactory(Book, useEm).resolver()
+
+export const schema = weave(
+  MikroWeaver.config({ metadata: orm.getMetadata() }),
+  authorResolver,
+  bookResolver
 )
-await orm.getSchemaGenerator().createSchema()
-
-const authorResolver = new MikroResolverFactory(Author, () => orm.em.fork()).resolver()
-const bookResolver = new MikroResolverFactory(Book, () => orm.em.fork()).resolver()
-const weaverConfig = MikroWeaver.config({ metadata: orm.getMetadata() })
-export const schema = weave(weaverConfig, authorResolver, bookResolver)
 ```
 
 :::
-
-Before using them in resolvers, initialize MikroORM and provide a request-scoped Entity Manager; pass `MikroWeaver.config({ metadata: orm.getMetadata() })` into `weave` when weaving the schema.
 
 </template>
 </Tabs>
@@ -290,7 +356,7 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -300,14 +366,10 @@ export const Post = mikroSilk(PostEntity)
 import type { Middleware } from "@gqloom/core"
 import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 export const useSelectedFields = () => {
@@ -367,15 +429,15 @@ export const userResolver = resolver.of(User, {
 })
 ```
 
-As shown in the code above, we can directly use MikroORM entities wrapped with `mikroSilk` in the `resolver`. Here, we use `User` as the parent type for `resolver.of`, and define two queries, `user` and `users`, as well as a `createUser` mutation.
+As shown in the code above, we can use MikroORM entities wrapped with `mikroSilk` directly in the resolver. Here we use `User` as the parent type for `resolver.of`, and define two queries `user` and `users`, plus a `createUser` mutation.
 
-All database operations are performed through the request-scoped Entity Manager obtained via `useEm()`.   
-For mutation operations, we use a `flusher` middleware that automatically calls `em.flush()` to persist changes to the database after a successful mutation.  
-We also use the `useSelectedFields()` function to ensure that only the fields requested in the GraphQL query are selected, which helps optimize database query performance. This function requires [enabling context](../context).
+All database operations are performed through the request-scoped Entity Manager obtained via `useEm()`.  
+For mutations we use a `flusher` middleware that automatically calls `em.flush()` after a successful mutation to persist changes to the database.  
+We also use `useSelectedFields()` to ensure only the fields requested in the GraphQL query are selected, which helps optimize database query performance. This function requires [enabling context](../context).
 
 ### Derived Fields
 
-Adding derived fields to database entities is very simple:
+Adding derived fields to database entities is straightforward:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -401,7 +463,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -421,11 +483,11 @@ export const userResolver = resolver.of(User, {
     }),
 })
 ```
-Note: Derived fields need to use the `derivedFrom` method to declare the dependent columns, so that the `useSelectedFields` method can correctly select the required columns.
+Note: Derived fields must use the `derivedFrom` method to declare the columns they depend on, so that `useSelectedFields` can correctly select the required columns.
 
 ### Hiding Fields
 
-`@gqloom/mikro-orm` exposes all fields by default. If you want to hide certain fields, such as a password, you can use `field.hidden`:
+`@gqloom/mikro-orm` exposes all fields by default. To hide certain fields (e.g. password), use `field.hidden`:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -454,11 +516,11 @@ export const userResolver = resolver.of(User, {
 })
 ```
 
-In the code above, we hide the `password` field, which means it will not appear in the generated GraphQL Schema.
+In the code above we hide the `password` field, so it will not appear in the generated GraphQL schema.
 
 ### Mixing Fields
 
-Sometimes we use `json`, `enum` fields in database entities, and we want to correctly infer the types in both TypeScript and GraphQL. We can use libraries like `valibot` or `zod` to define these fields:
+When defining database entities we sometimes use fields like `json` or `enum`, and want correct type inference in both TypeScript and GraphQL. We can use libraries such as `valibot` or `zod` to define these fields:
 
 <Tabs groupId="schema-library">
 <template #Valibot>
@@ -476,7 +538,7 @@ Sometimes we use `json`, `enum` fields in database entities, and we want to corr
 ## Resolver Factory
 
 `@gqloom/mikro-orm` provides `MikroResolverFactory` to help you create resolver factories.
-With resolver factories, you can quickly define common queries, mutations, and fields. The resolver factory also provides preset input types for common operations, which can greatly reduce boilerplate code and is very useful for rapid development.
+With resolver factories you can quickly define common queries, mutations, and fields; they also come with preset input types for common operations, which greatly reduces boilerplate and is useful for rapid development.
 
 ```ts twoslash
 // @filename: entities.ts
@@ -508,7 +570,7 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -517,14 +579,10 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 
@@ -538,11 +596,11 @@ export const userResolverFactory = new MikroResolverFactory(User, useEm)
 export const postResolverFactory = new MikroResolverFactory(Post, useEm)
 ```
 
-In the code above, we created resolver factories for the `User` and `Post` models. The `MikroResolverFactory` constructor has two usages: first, pass the entity and a function that returns an `EntityManager`, i.e. `new MikroResolverFactory(Entity, getEntityManager)`; second, pass the entity and an options object `{ getEntityManager, input?, metadata? }`. Here `input` configures visibility and validation of fields in filter / create / update; `metadata` is only needed when using **class entities defined with decorators**, to resolve entity metadata from the class, but that option is deprecated—prefer setting it via **MikroWeaver.config({ metadata: orm.getMetadata() })** and passing that config into `weave`.
+In the code above we create resolver factories for the `User` and `Post` models. The `MikroResolverFactory` constructor has two usages: first, pass the entity and a function that returns an `EntityManager`, i.e. `new MikroResolverFactory(Entity, getEntityManager)`; second, pass the entity and an options object `{ getEntityManager, input?, metadata? }`. Here `input` configures visibility and validation of fields in filter / create / update; `metadata` is only needed when using **class entities defined with decorators** to resolve entity metadata from the class, but that option is deprecated—prefer setting it via **MikroWeaver.config({ metadata: orm.getMetadata() })** and passing that config into `weave`.
 
 ### Relation Fields
 
-The resolver factory provides `referenceField` and `collectionField` methods to define relation fields:
+The resolver factory provides `referenceField` and `collectionField` to define relation fields:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -566,7 +624,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -574,14 +632,11 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -605,7 +660,7 @@ export const postResolver = resolver.of(Post, {
 })
 ```
 
-In the code above, we use `userResolverFactory.collectionField('posts')` and `postResolverFactory.referenceField('author')` to define relation fields. `collectionField` is used for `one-to-many` and `many-to-many` relations, while `referenceField` is used for `many-to-one` and `one-to-one` relations.
+In the code above we use `userResolverFactory.collectionField('posts')` and `postResolverFactory.referenceField('author')` to define relation fields. `collectionField` is for `one-to-many` and `many-to-many` relations; `referenceField` is for `many-to-one` and `one-to-one` relations.
 
 ### Queries
 
@@ -643,7 +698,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -651,14 +706,10 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -677,7 +728,7 @@ export const userResolver = resolver.of(User, {
 })
 ```
 
-In the code above, we use `userResolverFactory.findOneQuery()` to define the `user` query. The resolver factory will automatically create the input type and resolver function.
+In the code above we use `userResolverFactory.findOneQuery()` to define the `user` query. The resolver factory will automatically create the input type and resolver function.
 
 ### Mutations
 
@@ -716,7 +767,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -724,14 +775,10 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -749,11 +796,11 @@ export const postResolver = resolver.of(Post, {
 })
 ```
 
-In the code above, we use `postResolverFactory.createMutation()` to define the `createPost` mutation. The factory will automatically create the input type and resolver function.
+In the code above we use `postResolverFactory.createMutation()` to define the `createPost` mutation. The factory will automatically create the input type and resolver function.
 
 ### Custom Input Fields
 
-The default preset inputs of the resolver factory are configurable. By passing the `input` option during the construction of `MikroResolverFactory`, you can configure the input validation and display behavior for each field:
+The resolver factory’s default preset inputs are configurable. By passing the `input` option when constructing `MikroResolverFactory`, you can configure each field’s input validation and display behavior:
 
 ```ts twoslash
 import { createMemoization } from "@gqloom/core/context"
@@ -786,8 +833,8 @@ const userFactory = new MikroResolverFactory(User, {
     email: v.pipe(v.string(), v.email()), // Validate email format [!code hl]
     password: {
       filters: field.hidden, // Hide this field in query filters [!code hl]
-      create: v.pipe(v.string(), v.minLength(6)), // Validate minimum length of 6 characters on creation [!code hl]
-      update: v.pipe(v.string(), v.minLength(6)), // Validate minimum length of 6 characters on update [!code hl]
+      create: v.pipe(v.string(), v.minLength(6)), // Validate min length 6 on create [!code hl]
+      update: v.pipe(v.string(), v.minLength(6)), // Validate min length 6 on update [!code hl]
     },
   },
 })
@@ -795,7 +842,7 @@ const userFactory = new MikroResolverFactory(User, {
 
 ### Custom Input Object
 
-The preset queries and mutations in the resolver factory support custom inputs. You can define the input type through the `input` option:
+The resolver factory’s preset queries and mutations support custom input objects. You can define the input type via the `input` option:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -815,14 +862,10 @@ export const User = mikroSilk(UserEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity],
+import { User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -836,20 +879,20 @@ import { useEm } from "./provider"
 export const userResolverFactory = new MikroResolverFactory(User, useEm)
 
 export const userResolver = resolver.of(User, {
-  user: userResolverFactory.findOneQuery({
-    input: v.pipe(
+  user: userResolverFactory.findOneQuery().input(
+    v.pipe(
       v.object({ id: v.number() }),
       v.transform(({ id }) => ({ where: { id } }))
     )
-  }),
+  ),
 })
 ```
 
-In the code above, we use `valibot` to define the input type. `v.object({ id: v.number() })` defines the type of the input object, and `v.transform(({ id }) => ({ where: { id } }))` transforms the input argument into MikroORM's query parameters.
+In the code above we use `valibot` to define the input type: `v.object({ id: v.number() })` defines the input object type, and `v.transform(({ id }) => ({ where: { id } }))` transforms the input into MikroORM query parameters.
 
 ### Adding Middleware
 
-The preset queries, mutations, and fields in the resolver factory support adding middleware. You can add middleware using the `use` method:
+The resolver factory’s preset queries, mutations, and fields support adding middleware. You can add middleware via the `use` method:
 
 ```ts twoslash
 // @filename: entities.ts
@@ -865,21 +908,17 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -903,9 +942,9 @@ const postResolver = resolver.of(Post, {
 })
 ```
 
-In the code above, we use the `use` method to add a middleware. `useAuthedUser()` is a custom function to get the currently logged-in user. If the user is not logged in, it throws an error; otherwise, it calls `next()` to proceed.
+In the code above we use the `use` method to add middleware. `useAuthedUser()` is a custom function to get the current logged-in user; if the user is not logged in it throws an error, otherwise it calls `next()` to continue.
 
-### Complete Resolver 
+### Complete Resolver
 
 You can create a complete Resolver directly from the resolver factory:
 
@@ -930,21 +969,17 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -962,7 +997,7 @@ const userQueriesResolver = userResolverFactory.queriesResolver()
 const userResolver = userResolverFactory.resolver()
 ```
 
-There are two methods for creating a Resolver (the example uses `userResolverFactory`):
+There are two methods to create a Resolver (the example variable is `userResolverFactory`):
 
 - **`userResolverFactory.queriesResolver(name?)`**: Creates a Resolver that only contains queries and relation fields. The optional `name` argument is used to generate field names; e.g. passing `"User"` yields `countUser`, `findUser`, `findUserByCursor`, `findOneUser`, `findOneUserOrFail`, and the entity’s relation fields (e.g. `posts`).
 - **`userResolverFactory.resolver(name?)`**: Adds mutation fields on top of queries and relation fields, such as `createUser`, `insertUser`, `insertManyUser`, `deleteUser`, `updateUser`, `upsertUser`, `upsertManyUser`. The `name` argument likewise controls the generated field name prefix.

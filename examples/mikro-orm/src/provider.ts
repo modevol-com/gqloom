@@ -3,15 +3,10 @@ import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
-export let orm: MikroORM
-
-export const ormPromise = MikroORM.init({
+export const orm = MikroORM.initSync({
   entities: [User, Post],
-  dbName: "./examples/mikro-orm/local.db",
+  dbName: "./local.db",
   debug: true,
-}).then(async (o) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 
 export const useEm = createMemoization(() => orm.em.fork())

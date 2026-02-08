@@ -3,6 +3,7 @@ import { transformerTwoslash } from "@shikijs/vitepress-twoslash"
 import { createFileSystemTypesCache } from "@shikijs/vitepress-twoslash/cache-fs"
 import tailwindcss from "@tailwindcss/vite"
 import vueJsx from "@vitejs/plugin-vue-jsx"
+import ts from "typescript"
 import { defineConfig } from "vitepress"
 import llmstxt, { copyOrDownloadAsMarkdownButtons } from "vitepress-plugin-llms"
 import sidebarEn from "./sidebar-en.js"
@@ -20,6 +21,7 @@ export default defineConfig({
           compilerOptions: {
             experimentalDecorators: true,
             emitDecoratorMetadata: true,
+            moduleResolution: ts.ModuleResolutionKind.Bundler,
           },
         },
       }),

@@ -27,10 +27,10 @@ const PostEntity = defineEntity({
     published: p.boolean().default(false),
     title: p.string(),
     content: p.string().lazy(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
-export interface IPost extends InferEntity<typeof PostEntity> {}
+export type IPost = InferEntity<typeof PostEntity>
 
 export const User = mikroSilk(UserEntity)
 export const Post = mikroSilk(PostEntity)

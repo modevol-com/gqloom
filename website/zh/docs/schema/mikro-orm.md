@@ -22,11 +22,11 @@ import { Tabs } from "@/components/tabs.tsx"
 <Tabs groupId="entity-definition">
 <template #defineEntity>
 
-使用 `defineEntity` 定义实体时，用 `mikroSilk` 包裹即可。
+使用 `defineEntity` 定义实体时，用 `mikroSilk` 包裹即可。在解析器中使用之前需初始化 MikroORM，示例如下：
 
 ::: code-group
 
-```ts twoslash [使用丝线]
+```ts twoslash [entities.ts]
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { type InferEntity, defineEntity } from "@mikro-orm/core"
 
@@ -54,44 +54,7 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
-  }),
-})
-export interface IPost extends InferEntity<typeof PostEntity> {}
-// ---cut---
-export const User = mikroSilk(UserEntity)
-export const Post = mikroSilk(PostEntity)
-```
-
-```ts twoslash [完整文件]
-import { mikroSilk } from "@gqloom/mikro-orm"
-import { type InferEntity, defineEntity } from "@mikro-orm/core"
-
-const UserEntity = defineEntity({
-  name: "User",
-  properties: (p) => ({
-    id: p.integer().primary().autoincrement(),
-    createdAt: p.datetime().onCreate(() => new Date()),
-    email: p.string(),
-    name: p.string(),
-    role: p.string().$type<"admin" | "user">().default("user"),
-    posts: () => p.oneToMany(PostEntity).mappedBy("author"),
-  }),
-})
-export interface IUser extends InferEntity<typeof UserEntity> {}
-
-const PostEntity = defineEntity({
-  name: "Post",
-  properties: (p) => ({
-    id: p.integer().primary().autoincrement(),
-    createdAt: p.datetime().onCreate(() => new Date()),
-    updatedAt: p
-      .datetime()
-      .onCreate(() => new Date())
-      .onUpdate(() => new Date()),
-    published: p.boolean().default(false),
-    title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -100,14 +63,11 @@ export const User = mikroSilk(UserEntity)
 export const Post = mikroSilk(PostEntity)
 ```
 
-:::
-
-在解析器中使用它们之前，需要初始化 MikroORM 并提供一个请求作用域的 Entity Manager。
-
-```ts twoslash title="provider.ts"
+```ts twoslash [provider.ts]
 // @filename: entities.ts
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { type InferEntity, defineEntity } from "@mikro-orm/core"
+
 const UserEntity = defineEntity({
   name: "User",
   properties: (p) => ({
@@ -120,6 +80,7 @@ const UserEntity = defineEntity({
   }),
 })
 export interface IUser extends InferEntity<typeof UserEntity> {}
+
 const PostEntity = defineEntity({
   name: "Post",
   properties: (p) => ({
@@ -131,73 +92,127 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
+
 export const User = mikroSilk(UserEntity)
 export const Post = mikroSilk(PostEntity)
-// @filename: index.ts
+
+// @filename: provider.ts
 // ---cut---
-import type { Middleware } from "@gqloom/core"
-import { createMemoization, useResolvingFields } from "@gqloom/core/context"
+import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
-export let orm: MikroORM
-
-export const ormPromise = MikroORM.init({
+export const orm = MikroORM.initSync({
   entities: [User, Post],
   dbName: ":memory:",
-  debug: true,
-}).then(async (o) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
+})
+
+export const useEm = createMemoization(() => orm.em.fork())
+```
+
+```ts twoslash [index.ts]
+// @filename: entities.ts
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { type InferEntity, defineEntity } from "@mikro-orm/core"
+
+const UserEntity = defineEntity({
+  name: "User",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    createdAt: p.datetime().onCreate(() => new Date()),
+    email: p.string(),
+    name: p.string(),
+    role: p.string().$type<"admin" | "user">().default("user"),
+    posts: () => p.oneToMany(PostEntity).mappedBy("author"),
+  }),
+})
+export interface IUser extends InferEntity<typeof UserEntity> {}
+
+const PostEntity = defineEntity({
+  name: "Post",
+  properties: (p) => ({
+    id: p.integer().primary().autoincrement(),
+    createdAt: p.datetime().onCreate(() => new Date()),
+    updatedAt: p
+      .datetime()
+      .onCreate(() => new Date())
+      .onUpdate(() => new Date()),
+    published: p.boolean().default(false),
+    title: p.string(),
+    author: () => p.manyToOne(UserEntity).ref(),
+  }),
+})
+export interface IPost extends InferEntity<typeof PostEntity> {}
+
+export const User = mikroSilk(UserEntity)
+export const Post = mikroSilk(PostEntity)
+
+// @filename: provider.ts
+import { createMemoization } from "@gqloom/core/context"
+import { MikroORM } from "@mikro-orm/libsql"
+import { Post, User } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
+  dbName: ":memory:",
 })
 
 export const useEm = createMemoization(() => orm.em.fork())
 
-export const useSelectedFields = () => {
-  return Array.from(useResolvingFields()?.selectedFields ?? ["*"]) as []
-}
+// @filename: index.ts
+// ---cut---
+import { weave } from "@gqloom/core"
+import { MikroResolverFactory } from "@gqloom/mikro-orm"
+import { Post, User } from "./entities"
+import { useEm } from "./provider"
 
-export const flusher: Middleware = async ({ next }) => {
-  const result = await next()
-  await useEm().flush()
-  return result
-}
+const userResolver = new MikroResolverFactory(User, useEm).resolver()
+const postResolver = new MikroResolverFactory(Post, useEm).resolver()
+
+export const schema = weave(userResolver, postResolver)
 ```
+
+:::
 
 </template>
 <template #装饰器与类>
 
-使用**装饰器与类**定义实体时，用 `@Entity()`、`@Property()`、`@PrimaryKey()`、`@ManyToOne()`、`@OneToMany()` 等装饰器定义类，再以 `mikroSilk(EntityClass)` 包裹即可作为丝线使用。  
-类实体需要从 MikroORM 的元数据中解析，因此必须在织 Schema 时通过 **MikroWeaver.config** 提供 `metadata`（如 `metadata: orm.getMetadata()` 或 `() => orm.getMetadata()`），并把该配置传入 `weave`，例如：`weave(mikroWeaverConfig, userResolver, postResolver)`。  
-此外，使用装饰器时请在应用入口最顶部 `import "reflect-metadata"`，并安装依赖 `reflect-metadata`。
+使用装饰器定义实体时，只需用 `mikroSilk` 包裹实体类。由于类实体需要从 MikroORM 的元数据中解析，在 `weave` 时需通过 `MikroWeaver.config` 提供 `metadata`。
+
+> [!IMPORTANT]
+> 使用装饰器时，请确保在应用入口顶部导入 `reflect-metadata` 并安装该依赖。
 
 ::: code-group
 
-```ts twoslash [实体与丝线]
+```ts twoslash [entities.ts]
 import "reflect-metadata"
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
 
-@Entity({ tableName: "authors" })
+@Entity()
 export class AuthorEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+
+  @Property()
   public name!: string
+
   @OneToMany(() => BookEntity, (b) => b.author)
   public books = new Collection<BookEntity>(this)
 }
 
-@Entity({ tableName: "books" })
+@Entity()
 export class BookEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+
+  @Property()
   public title!: string
+
   @ManyToOne(() => AuthorEntity, { ref: true })
   public author!: AuthorEntity
 }
@@ -206,27 +221,27 @@ export const Author = mikroSilk(AuthorEntity)
 export const Book = mikroSilk(BookEntity)
 ```
 
-```ts twoslash [初始化与织入]
+```ts twoslash [provider.ts]
 // @filename: entities.ts
 import "reflect-metadata"
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
 
-@Entity({ tableName: "authors" })
+@Entity()
 export class AuthorEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+  @Property()
   public name!: string
   @OneToMany(() => BookEntity, (b) => b.author)
   public books = new Collection<BookEntity>(this)
 }
 
-@Entity({ tableName: "books" })
+@Entity()
 export class BookEntity {
-  @PrimaryKey({ type: "number", autoincrement: true })
+  @PrimaryKey({ autoincrement: true })
   public id!: number
-  @Property({ type: "string" })
+  @Property()
   public title!: string
   @ManyToOne(() => AuthorEntity, { ref: true })
   public author!: AuthorEntity
@@ -235,28 +250,79 @@ export class BookEntity {
 export const Author = mikroSilk(AuthorEntity)
 export const Book = mikroSilk(BookEntity)
 
+// @filename: provider.ts
+// ---cut---
+import { createMemoization } from "@gqloom/core/context"
+import { MikroORM } from "@mikro-orm/libsql"
+import { Author, Book } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [Author, Book],
+  dbName: ":memory:",
+})
+
+export const useEm = createMemoization(() => orm.em.fork())
+```
+
+```ts twoslash [index.ts]
+// @filename: entities.ts
+import "reflect-metadata"
+import { mikroSilk } from "@gqloom/mikro-orm"
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+
+@Entity()
+export class AuthorEntity {
+  @PrimaryKey({ autoincrement: true })
+  public id!: number
+  @Property()
+  public name!: string
+  @OneToMany(() => BookEntity, (b) => b.author)
+  public books = new Collection<BookEntity>(this)
+}
+
+@Entity()
+export class BookEntity {
+  @PrimaryKey({ autoincrement: true })
+  public id!: number
+  @Property()
+  public title!: string
+  @ManyToOne(() => AuthorEntity, { ref: true })
+  public author!: AuthorEntity
+}
+
+export const Author = mikroSilk(AuthorEntity)
+export const Book = mikroSilk(BookEntity)
+
+// @filename: provider.ts
+import { createMemoization } from "@gqloom/core/context"
+import { MikroORM } from "@mikro-orm/libsql"
+import { Author, Book } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [Author, Book],
+  dbName: ":memory:",
+})
+
+export const useEm = createMemoization(() => orm.em.fork())
+
 // @filename: index.ts
 // ---cut---
-import "reflect-metadata"
 import { weave } from "@gqloom/core"
 import { MikroWeaver, MikroResolverFactory } from "@gqloom/mikro-orm"
-import { defineConfig, MikroORM } from "@mikro-orm/libsql"
-import { Author, AuthorEntity, Book, BookEntity } from "./entities"
+import { Author, Book } from "./entities"
+import { orm, useEm } from "./provider"
 
-const orm = await MikroORM.init(
-  defineConfig({ entities: [AuthorEntity, BookEntity], dbName: ":memory:" })
+const authorResolver = new MikroResolverFactory(Author, useEm).resolver()
+const bookResolver = new MikroResolverFactory(Book, useEm).resolver()
+
+export const schema = weave(
+  MikroWeaver.config({ metadata: orm.getMetadata() }),
+  authorResolver,
+  bookResolver
 )
-await orm.getSchemaGenerator().createSchema()
-
-const authorResolver = new MikroResolverFactory(Author, () => orm.em.fork()).resolver()
-const bookResolver = new MikroResolverFactory(Book, () => orm.em.fork()).resolver()
-const weaverConfig = MikroWeaver.config({ metadata: orm.getMetadata() })
-export const schema = weave(weaverConfig, authorResolver, bookResolver)
 ```
 
 :::
-
-在解析器中使用它们之前，需要初始化 MikroORM 并提供一个请求作用域的 Entity Manager；织入 Schema 时请将 `MikroWeaver.config({ metadata: orm.getMetadata() })` 传入 `weave`。
 
 </template>
 </Tabs>
@@ -290,7 +356,7 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -300,14 +366,10 @@ export const Post = mikroSilk(PostEntity)
 import type { Middleware } from "@gqloom/core"
 import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 export const useSelectedFields = () => {
@@ -401,7 +463,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -508,7 +570,7 @@ const PostEntity = defineEntity({
       .onUpdate(() => new Date()),
     published: p.boolean().default(false),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -517,14 +579,10 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 
@@ -566,7 +624,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -574,14 +632,11 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -643,7 +698,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -651,14 +706,10 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -716,7 +767,7 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export interface IPost extends InferEntity<typeof PostEntity> {}
@@ -724,14 +775,10 @@ export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -815,14 +862,10 @@ export const User = mikroSilk(UserEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity],
+import { User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -865,21 +908,17 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts
@@ -930,21 +969,17 @@ const PostEntity = defineEntity({
   properties: (p) => ({
     id: p.integer().primary().autoincrement(),
     title: p.string(),
-    author: () => p.manyToOne(UserEntity),
+    author: () => p.manyToOne(UserEntity).ref(),
   }),
 })
 export const Post = mikroSilk(PostEntity)
 // @filename: provider.ts
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
-import { Post as PostEntity, User as UserEntity } from "./entities"
-export let orm: MikroORM
-export const ormPromise = MikroORM.init({
-  entities: [UserEntity, PostEntity],
+import { Post, User } from "./entities"
+export const orm = MikroORM.initSync({
+  entities: [User, Post],
   dbName: ":memory:",
-}).then(async (o: MikroORM) => {
-  orm = o
-  await orm.getSchemaGenerator().updateSchema()
 })
 export const useEm = createMemoization(() => orm.em.fork())
 // @filename: index.ts

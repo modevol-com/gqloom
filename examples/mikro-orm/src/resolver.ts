@@ -34,15 +34,7 @@ export const userResolver = resolver.of(User, {
 
   createUser: userFactory.createMutation(),
 
-  posts: field(Post.list())
-    .derivedFrom("id")
-    .resolve((user) => {
-      return useEm().find(
-        Post,
-        { author: user.id },
-        { fields: useSelectedFields() }
-      )
-    }),
+  posts: userFactory.collectionField("posts"),
 })
 
 const postFactory = new MikroResolverFactory(Post, useEm)
