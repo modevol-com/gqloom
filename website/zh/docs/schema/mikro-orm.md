@@ -102,7 +102,7 @@ export const Post = mikroSilk(PostEntity)
 
 // @filename: provider.ts
 // ---cut---
-import { createMemoization } from "@gqloom/core/context"
+import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
@@ -112,6 +112,10 @@ export const orm = MikroORM.initSync({
 })
 
 export const useEm = createMemoization(() => orm.em.fork())
+
+export const useSelectedFields = () => {
+  return Array.from(useResolvingFields()?.selectedFields ?? ["*"]) as []
+}
 ```
 
 ```ts twoslash [index.ts]
