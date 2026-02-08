@@ -83,6 +83,11 @@ export interface PrismaModelConfig<TModel>
   [SYMBOLS.WEAVER_CONFIG]: `gqloom.prisma.model.${string}`
 }
 
+export interface PrismaModelSilkWithConfig<
+  TModel,
+  TName extends string = string,
+> extends GraphQLSilk<SelectiveModel<TModel, TName>> {}
+
 export type AnyPrismaModelSilk = PrismaModelSilk<
   any,
   string,

@@ -1,6 +1,7 @@
 import {
   type GraphQLSilk,
   isSilk,
+  type StandardSchemaV1,
   SYMBOLS,
   silk,
   weaverContext,
@@ -40,14 +41,16 @@ export class PrismaWeaver {
     model: DMMF.Model,
     meta: PrismaModelMeta
   ): PrismaModelSilk<TModal> {
+    const standard = {
+      version: 1,
+      vendor: PrismaWeaver.vendor,
+      validate: PrismaWeaver.compileValidator(undefined),
+    }
     return {
-      "~standard": {
-        version: 1,
-        vendor: PrismaWeaver.vendor,
-        validate: (value) => ({
-          value: value as SelectiveModel<TModal, typeof model.name>,
-        }),
-      },
+      "~standard": standard as StandardSchemaV1.Props<
+        unknown,
+        SelectiveModel<TModal, typeof model.name>
+      >,
       model,
       meta,
       name: model.name,
@@ -64,12 +67,97 @@ export class PrismaWeaver {
       config(
         options: PrismaModelConfigOptions<TModal>
       ): PrismaModelConfig<TModal> {
+        standard.validate = PrismaWeaver.compileValidator(options)
         return {
           ...options,
           [SYMBOLS.WEAVER_CONFIG]: `gqloom.prisma.model.${model.name}`,
         }
       },
     }
+  }
+
+  /**
+   * Compile a validate function from config.fields: each field with a Silk
+   * (~standard.validate) is validated; issues get path prefixed with the field key.
+   * When config is provided, validators are closed over (no weaverContext at validate-time).
+   */
+  protected static compileValidator(
+    config?: PrismaModelConfigOptions<any>
+  ): StandardSchemaV1.Props<unknown, unknown>["validate"] {
+    const rawFields =
+      config?.fields == null
+        ? undefined
+        : typeof config.fields === "function"
+          ? config.fields()
+          : config.fields
+
+    if (rawFields == null || typeof rawFields !== "object") {
+      return (value: unknown) => ({ value })
+    }
+
+    const validators = new Map<string, (v: unknown) => any>()
+    for (const key of Object.keys(rawFields)) {
+      const fn = PrismaWeaver.getFieldValidateFn(
+        (rawFields as Record<string, PrismaModelConfigOptionsField>)[key]
+      )
+      if (fn) validators.set(key, fn)
+    }
+
+    if (validators.size === 0) {
+      return (value: unknown) => ({ value })
+    }
+
+    return async (value: unknown) => {
+      if (value == null || typeof value !== "object") return { value }
+      const valueObj = value as Record<string, unknown>
+      const entries = Array.from(validators.entries()).filter(
+        ([key]) => key in valueObj
+      )
+      if (entries.length === 0) return { value: valueObj }
+
+      const results = await Promise.all(
+        entries.map(async ([key, validateFn]) => {
+          const fieldResult = await validateFn(valueObj[key])
+          return { key, fieldResult }
+        })
+      )
+
+      const result = { ...valueObj }
+      const issues: StandardSchemaV1.Issue[] = []
+      for (const { key, fieldResult } of results) {
+        if (fieldResult.issues) {
+          for (const issue of fieldResult.issues as StandardSchemaV1.Issue[]) {
+            issues.push({ ...issue, path: [key, ...(issue.path ?? [])] })
+          }
+        } else if ("value" in fieldResult) {
+          result[key] = fieldResult.value
+        }
+      }
+      if (issues.length > 0) return { issues }
+      return { value: result }
+    }
+  }
+
+  /** Extract validate from a field config (Silk) if it has ~standard.validate. */
+  protected static getFieldValidateFn(
+    fieldConfig: PrismaModelConfigOptionsField
+  ): ((v: unknown) => any) | null {
+    if (fieldConfig == null || fieldConfig === SYMBOLS.FIELD_HIDDEN) return null
+    if (isSilk(fieldConfig)) {
+      const validate = (fieldConfig as GraphQLSilk<unknown, unknown>)[
+        "~standard"
+      ]?.validate
+      return typeof validate === "function" ? validate : null
+    }
+    if (isOutputType(fieldConfig)) return null
+    const rawType =
+      typeof (fieldConfig as { type?: unknown }).type === "function"
+        ? ((fieldConfig as { type: () => unknown }).type as () => unknown)()
+        : (fieldConfig as { type?: unknown }).type
+    if (rawType == null || !isSilk(rawType)) return null
+    const validate = (rawType as GraphQLSilk<unknown, unknown>)["~standard"]
+      ?.validate
+    return typeof validate === "function" ? validate : null
   }
 
   public static unravelEnum<TEnum = any>(
@@ -137,14 +225,15 @@ export class PrismaWeaver {
     fieldConfig: PrismaModelConfigOptionsField,
     meta: PrismaModelMeta | undefined
   ): GraphQLFieldConfig<any, any> | undefined {
-    const [typeGetter, options, source] =
+    const [typeGetter, options] =
       PrismaWeaver.getFieldConfigOptions(fieldConfig)
 
-    const ensureNonNull = (type: GraphQLOutputType) => {
-      if (source === "silk") return type
-      if (!field.isRequired) return type
-      if (isNonNullType(type)) return type
-      return new GraphQLNonNull(type)
+    /** Align output nullability with Model: required → NonNull, optional → nullable */
+    const applyModelNullability = (
+      type: GraphQLOutputType
+    ): GraphQLOutputType => {
+      const ofType = isNonNullType(type) ? type.ofType : type
+      return field.isRequired ? new GraphQLNonNull(ofType) : ofType
     }
     const description = field.documentation
 
@@ -164,7 +253,11 @@ export class PrismaWeaver {
       }
     })()
     if (!unwrappedType) return
-    return { type: ensureNonNull(unwrappedType), description, ...options }
+    return {
+      type: applyModelNullability(unwrappedType),
+      description,
+      ...options,
+    }
   }
 
   public static config(config: PrismaWeaverConfigOptions): PrismaWeaverConfig {
