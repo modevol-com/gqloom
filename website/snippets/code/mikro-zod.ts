@@ -1,4 +1,3 @@
-import { silk } from "@gqloom/core"
 import { mikroSilk } from "@gqloom/mikro-orm"
 import { asEnumType } from "@gqloom/zod"
 import { defineEntity, type InferEntity, p } from "@mikro-orm/core"
@@ -30,8 +29,8 @@ const UserEntity = defineEntity({
 
 export interface IUser extends InferEntity<typeof UserEntity> {}
 export const User = mikroSilk(UserEntity, {
-  fields: () => ({
-    role: { type: silk.getType(Role) }, // [!code highlight]
-    contactInformation: { type: silk.getType(z.nullish(ContactInformation)) }, // [!code highlight]
-  }),
+  fields: {
+    role: Role,
+    contactInformation: z.nullish(ContactInformation),
+  },
 })
