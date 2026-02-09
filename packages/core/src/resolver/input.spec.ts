@@ -5,8 +5,13 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from "graphql"
-import { describe, expect, it } from "vitest"
-import { createInputParser, getStandardValue, parseInputValue } from "./input"
+import { describe, expect, expectTypeOf, it } from "vitest"
+import {
+  createInputParser,
+  getStandardValue,
+  type InferInputI,
+  parseInputValue,
+} from "./input"
 import { silk } from "./silk"
 
 describe("parseInput", () => {
@@ -230,6 +235,29 @@ describe("getStandardValue", () => {
   it("should throw GraphQLError when result does not have value and no issues", () => {
     const result = {} as any
     expect(() => getStandardValue(result)).toThrowError(`Invalid input`)
+  })
+})
+
+describe("InferInputI", () => {
+  it("should infer input type", () => {
+    const input1 = silk<IGiraffe, Partial<IGiraffe>>({} as any)
+    type c1 = InferInputI<typeof input1>
+    expectTypeOf<c1>().toEqualTypeOf<{
+      name?: string | undefined
+      birthday?: Date | undefined
+      heightInMeters?: number | undefined
+    }>()
+
+    const input2 = {
+      name: silk(GraphQLString),
+      birthday: silk(new GraphQLNonNull(GraphQLString)),
+    }
+    type c2 = InferInputI<typeof input2>
+
+    expectTypeOf<c2>().toEqualTypeOf<{
+      name?: string | null | undefined
+      birthday: string
+    }>()
   })
 })
 

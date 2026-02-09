@@ -12,8 +12,20 @@ export type InferInputI<
     ? StandardSchemaV1.InferInput<TInput>
     : TInput extends Record<string, GraphQLSilk>
       ? {
-          [K in keyof TInput]: StandardSchemaV1.InferInput<TInput[K]>
-        }
+          [K in keyof TInput as undefined extends StandardSchemaV1.InferInput<
+            TInput[K]
+          >
+            ? K
+            : never]?: StandardSchemaV1.InferInput<TInput[K]>
+        } & {
+          [K in keyof TInput as undefined extends StandardSchemaV1.InferInput<
+            TInput[K]
+          >
+            ? never
+            : K]: StandardSchemaV1.InferInput<TInput[K]>
+        } extends infer O
+        ? { [K in keyof O]: O[K] }
+        : never
       : void
 
 export type InferInputO<
