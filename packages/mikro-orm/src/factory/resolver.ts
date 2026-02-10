@@ -25,7 +25,7 @@ import {
   type EntityName,
   type EntityProperty,
   EntitySchema,
-  Reference,
+  type Reference,
   ReferenceKind,
 } from "@mikro-orm/core"
 import {
@@ -236,42 +236,11 @@ export class MikroResolverFactory<TEntity extends object> {
       silk.nullable(silk(MikroWeaver.getGraphQLType(targetEntity))),
       {
         ...options,
-        resolve: async (parent, _args, payload) => {
-          const em = await this.em(payload)
-          const value = (parent as any)[key] as unknown
-
-          // Prefer Reference.load when available (keeps dataloader and cache semantics)
-          if (Reference.isReference(value)) {
-            return value.load({
-              dataloader: true,
-              fields: getSelectedFields(payload),
-            })
-          }
-
-          if (value == null) return null
-
-          // Fallback for non-Reference values (entity instance or primary key)
-          const meta = this.getEntityMeta(property.entity())
-          const primaryKeys = meta.primaryKeys
-
-          let where: any
-          if (typeof value === "object") {
-            // Treat as entity instance and extract primary key fields
-            if (primaryKeys.length === 1) {
-              const pk = primaryKeys[0]
-              where = { [pk]: (value as any)[pk] }
-            } else {
-              where = Object.fromEntries(
-                primaryKeys.map((pk) => [pk, (value as any)[pk]])
-              )
-            }
-          } else {
-            // Scalar primary key value (single primary key only)
-            const pk = primaryKeys[0]
-            where = { [pk]: value }
-          }
-
-          return em.findOne(property.entity(), where, {
+        resolve: (parent, _args, payload) => {
+          const prop = (parent as any)[key] as Reference<any> | null | undefined
+          if (prop == null) return null
+          return prop.load({
+            dataloader: true,
             fields: getSelectedFields(payload),
           })
         },

@@ -236,6 +236,19 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer?.name).toBe("John Doe")
     })
 
+    it("should return null when relation value is null", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author"),
+      })
+      const postEx = r.toExecutor()
+      const post = await orm.em.findOneOrFail(Post, { title: "Post 1" })
+
+      const fakePost = { ...(post as any), author: null }
+
+      const answer = await postEx.author(fakePost as any)
+      expect(answer).toBeNull()
+    })
+
     it("should work with middlewares", async () => {
       const r = resolver.of(Post, {
         author: postFactory.referenceField("author", {
