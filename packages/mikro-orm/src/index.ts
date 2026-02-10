@@ -85,117 +85,6 @@ export class MikroWeaver {
     }) as EntitySchemaSilk<TEntityName>
   }
 
-  public static unravelKysely<
-    TEntityName extends EntitySchemaWithMeta,
-    TOptions extends MikroKyselyPluginOptions = {},
-  >(
-    entity: TEntityName,
-    config?: KyselySilkConfig<TEntityName, TOptions> & TOptions
-  ): KyselyTableSilk<TEntityName, TOptions> {
-    return {
-      "~standard": {
-        version: 1,
-        vendor: MikroWeaver.vendor,
-        validate: MikroWeaver.compileValidator(config as any) as any,
-      } satisfies StandardSchemaV1.Props<any, any>,
-      [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getKyselyGraphQLTypeBySelf,
-      nullable() {
-        return silk.nullable(this)
-      },
-      list() {
-        return silk.list(this)
-      },
-      "~silkConfig": config,
-      "~entity": entity,
-    }
-  }
-
-  public static KyselyObjectConfigMap = new WeakMap<
-    EntityMetadata,
-    KyselySilkConfig<any, any> & MikroKyselyPluginOptions
-  >()
-
-  private static kyselyNamingStrategy = new UnderscoreNamingStrategy()
-
-  public static getKyselyGraphQLTypeBySelf(
-    this: KyselyTableSilk<any, any>
-  ): ReturnType<typeof MikroWeaver.getKyselyGraphQLType> {
-    const config = this["~silkConfig"]
-    const meta = getMetadata(this["~entity"])
-    if (config) {
-      MikroWeaver.KyselyObjectConfigMap.set(meta, config)
-    }
-    return MikroWeaver.getKyselyGraphQLType(meta, config)
-  }
-
-  public static getKyselyGraphQLType(
-    meta: EntityMetadata,
-    options: MikroKyselyPluginOptions = {}
-  ): GraphQLOutputType {
-    const config = MikroWeaver.KyselyObjectConfigMap.get(meta)
-    const name = config?.name ?? meta.className ?? meta.tableName
-
-    const memoKey = {
-      meta,
-      type: "kysely",
-      columnNamingStrategy: options.columnNamingStrategy,
-    }
-    const existing = weaverContext.getGraphQLType(memoKey)
-    if (existing != null) return new GraphQLNonNull(existing)
-
-    return new GraphQLNonNull(
-      weaverContext.memoGraphQLType(
-        memoKey,
-        new GraphQLObjectType({
-          name: name,
-          ...config,
-          fields: () => {
-            const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
-            for (const [key, prop] of Object.entries(meta.properties)) {
-              if (prop.hidden === true) continue
-
-              let fieldName: string
-              if (options.columnNamingStrategy === "property") {
-                fieldName = key
-              } else if (prop.fieldNames?.[0]) {
-                fieldName = prop.fieldNames[0]
-              } else if (prop.kind === ReferenceKind.SCALAR) {
-                fieldName =
-                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key)
-              } else {
-                const targetMeta = getMetadata(prop.entity())
-                const targetPk = targetMeta.primaryKeys[0]
-                fieldName =
-                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key) +
-                  "_" +
-                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(
-                    targetPk
-                  )
-              }
-
-              let gqlType = MikroWeaver.getFieldType(prop, meta)
-              if (
-                !gqlType &&
-                prop.kind !== ReferenceKind.SCALAR &&
-                prop.kind !== ReferenceKind.EMBEDDED
-              ) {
-                gqlType = GraphQLID
-              }
-              if (gqlType == null) continue
-
-              gqlType = MikroWeaver.wrapPropertyType(gqlType, prop, undefined)
-              fields[fieldName] = {
-                type: gqlType,
-                description: prop.comment,
-              }
-            }
-            return fields
-          },
-        })
-      )
-    )
-  }
-
   /**
    * Compile a validate function from config.fields: each field with a Silk
    * (~standard.validate) is validated; issues get path prefixed with the field key.
@@ -532,6 +421,117 @@ export class MikroWeaver {
       default:
         return GraphQLString
     }
+  }
+
+  public static unravelKysely<
+    TEntityName extends EntitySchemaWithMeta,
+    TOptions extends MikroKyselyPluginOptions = {},
+  >(
+    entity: TEntityName,
+    config?: KyselySilkConfig<TEntityName, TOptions> & TOptions
+  ): KyselyTableSilk<TEntityName, TOptions> {
+    return {
+      "~standard": {
+        version: 1,
+        vendor: MikroWeaver.vendor,
+        validate: MikroWeaver.compileValidator(config as any) as any,
+      } satisfies StandardSchemaV1.Props<any, any>,
+      [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getKyselyGraphQLTypeBySelf,
+      nullable() {
+        return silk.nullable(this)
+      },
+      list() {
+        return silk.list(this)
+      },
+      "~silkConfig": config,
+      "~entity": entity,
+    }
+  }
+
+  public static KyselyObjectConfigMap = new WeakMap<
+    EntityMetadata,
+    KyselySilkConfig<any, any> & MikroKyselyPluginOptions
+  >()
+
+  protected static kyselyNamingStrategy = new UnderscoreNamingStrategy()
+
+  public static getKyselyGraphQLTypeBySelf(
+    this: KyselyTableSilk<any, any>
+  ): ReturnType<typeof MikroWeaver.getKyselyGraphQLType> {
+    const config = this["~silkConfig"]
+    const meta = getMetadata(this["~entity"])
+    if (config) {
+      MikroWeaver.KyselyObjectConfigMap.set(meta, config)
+    }
+    return MikroWeaver.getKyselyGraphQLType(meta, config)
+  }
+
+  public static getKyselyGraphQLType(
+    meta: EntityMetadata,
+    options: MikroKyselyPluginOptions = {}
+  ): GraphQLOutputType {
+    const config = MikroWeaver.KyselyObjectConfigMap.get(meta)
+    const name = config?.name ?? meta.className ?? meta.tableName
+
+    const memoKey = {
+      meta,
+      type: "kysely",
+      columnNamingStrategy: options.columnNamingStrategy,
+    }
+    const existing = weaverContext.getGraphQLType(memoKey)
+    if (existing != null) return new GraphQLNonNull(existing)
+
+    return new GraphQLNonNull(
+      weaverContext.memoGraphQLType(
+        memoKey,
+        new GraphQLObjectType({
+          name: name,
+          ...config,
+          fields: () => {
+            const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
+            for (const [key, prop] of Object.entries(meta.properties)) {
+              if (prop.hidden === true) continue
+
+              let fieldName: string
+              if (options.columnNamingStrategy === "property") {
+                fieldName = key
+              } else if (prop.fieldNames?.[0]) {
+                fieldName = prop.fieldNames[0]
+              } else if (prop.kind === ReferenceKind.SCALAR) {
+                fieldName =
+                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key)
+              } else {
+                const targetMeta = getMetadata(prop.entity())
+                const targetPk = targetMeta.primaryKeys[0]
+                fieldName =
+                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key) +
+                  "_" +
+                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(
+                    targetPk
+                  )
+              }
+
+              let gqlType = MikroWeaver.getFieldType(prop, meta)
+              if (
+                !gqlType &&
+                prop.kind !== ReferenceKind.SCALAR &&
+                prop.kind !== ReferenceKind.EMBEDDED
+              ) {
+                gqlType = GraphQLID
+              }
+              if (gqlType == null) continue
+
+              gqlType = MikroWeaver.wrapPropertyType(gqlType, prop, undefined)
+              fields[fieldName] = {
+                type: gqlType,
+                description: prop.comment,
+              }
+            }
+            return fields
+          },
+        })
+      )
+    )
   }
 
   protected static typeNames: Map<any, string> = new Map(
