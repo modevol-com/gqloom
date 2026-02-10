@@ -14,13 +14,16 @@ import {
   type EntityName,
   type EntityProperty,
   type EntitySchema,
+  type EntitySchemaWithMeta,
   type PropertyOptions,
   Reference,
   ReferenceKind,
   ScalarReference,
   Type,
   types,
+  UnderscoreNamingStrategy,
 } from "@mikro-orm/core"
+import type { InferKyselyTable, MikroKyselyPluginOptions } from "@mikro-orm/sql"
 import {
   GraphQLBoolean,
   type GraphQLField,
@@ -41,6 +44,7 @@ import {
 import { getMetadata, getWeaverConfigMetadata } from "./helper"
 import type {
   InferEntity,
+  KyselySilkConfig,
   MikroSilkConfig,
   MikroWeaverConfig,
   MikroWeaverConfigOptions,
@@ -79,6 +83,124 @@ export class MikroWeaver {
       },
       "~silkConfig": config,
     }) as EntitySchemaSilk<TEntityName>
+  }
+
+  public static unravelKysely<
+    TEntityName extends EntitySchemaWithMeta,
+    TOptions extends MikroKyselyPluginOptions = {},
+  >(
+    entity: TEntityName,
+    config?: KyselySilkConfig<TEntityName, TOptions> & TOptions
+  ): KyselyTableSilk<TEntityName, TOptions> {
+    return {
+      "~standard": {
+        version: 1,
+        vendor: MikroWeaver.vendor,
+        validate: MikroWeaver.compileValidator(config as any) as any,
+      } satisfies StandardSchemaV1.Props<any, any>,
+      [SYMBOLS.GET_GRAPHQL_TYPE]: MikroWeaver.getKyselyGraphQLTypeBySelf,
+      nullable() {
+        return silk.nullable(this)
+      },
+      list() {
+        return silk.list(this)
+      },
+      "~silkConfig": config,
+      "~entity": entity,
+    }
+  }
+
+  public static KyselyObjectConfigMap = new WeakMap<
+    EntityMetadata,
+    KyselySilkConfig<any, any> & MikroKyselyPluginOptions
+  >()
+
+  private static kyselyNamingStrategy = new UnderscoreNamingStrategy()
+
+  public static getKyselyGraphQLTypeBySelf(
+    this: KyselyTableSilk<any, any>
+  ): ReturnType<typeof MikroWeaver.getKyselyGraphQLType> {
+    const config = this["~silkConfig"]
+    const meta = getMetadata(this["~entity"])
+    if (config) {
+      MikroWeaver.KyselyObjectConfigMap.set(meta, config)
+    }
+    return MikroWeaver.getKyselyGraphQLType(meta, config)
+  }
+
+  public static getKyselyGraphQLType(
+    meta: EntityMetadata,
+    options: MikroKyselyPluginOptions = {}
+  ): GraphQLOutputType {
+    const config = MikroWeaver.KyselyObjectConfigMap.get(meta)
+    const name = config?.name ?? meta.className ?? meta.tableName
+
+    const memoKey = {
+      meta,
+      type: "kysely",
+      columnNamingStrategy: options.columnNamingStrategy,
+    }
+    const existing = weaverContext.getGraphQLType(memoKey)
+    if (existing != null) return new GraphQLNonNull(existing)
+
+    return new GraphQLNonNull(
+      weaverContext.memoGraphQLType(
+        memoKey,
+        new GraphQLObjectType({
+          name: name,
+          ...config,
+          fields: () => {
+            const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
+            for (const [key, prop] of Object.entries(meta.properties)) {
+              if (prop.hidden === true) continue
+
+              let fieldName: string
+              if (options.columnNamingStrategy === "property") {
+                fieldName = key
+              } else if (prop.fieldNames?.[0]) {
+                fieldName = prop.fieldNames[0]
+              } else if (prop.kind === ReferenceKind.SCALAR) {
+                fieldName =
+                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key)
+              } else {
+                const targetMeta = getMetadata(prop.entity())
+                const targetPk = targetMeta.primaryKeys[0]
+                fieldName =
+                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key) +
+                  "_" +
+                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(
+                    targetPk
+                  )
+              }
+
+              let gqlType = MikroWeaver.getFieldType(prop, meta)
+              if (!gqlType && prop.kind !== ReferenceKind.SCALAR) {
+                gqlType = GraphQLID
+              }
+              if (gqlType == null) continue
+
+              const nType = MikroWeaver.normalizeType(prop)
+              if (nType.endsWith("[]") || nType === "array") {
+                gqlType = new GraphQLList(new GraphQLNonNull(gqlType))
+              }
+
+              if (
+                prop.nullable !== true &&
+                !(gqlType instanceof GraphQLNonNull)
+              ) {
+                gqlType = new GraphQLNonNull(gqlType)
+              }
+
+              fields[fieldName] = {
+                type: gqlType as GraphQLOutputType,
+                description: prop.comment,
+              }
+            }
+            return fields
+          },
+        })
+      )
+    )
   }
 
   /**
@@ -509,6 +631,37 @@ export type EntitySchemaSilk<TEntityName extends EntityName<any>> =
       >
       "~silkConfig": MikroSilkConfig<EntitySchema> | undefined
     }
+
+export function kyselySilk<
+  TEntityName extends EntitySchemaWithMeta,
+  TOptions extends MikroKyselyPluginOptions = {},
+>(
+  entityName: TEntityName,
+  config?: KyselySilkConfig<TEntityName, TOptions> & TOptions
+): KyselyTableSilk<TEntityName, TOptions> {
+  return MikroWeaver.unravelKysely(entityName, config)
+}
+
+export interface KyselyTableSilk<
+  TEntityName extends EntitySchemaWithMeta,
+  TOptions extends MikroKyselyPluginOptions = {},
+> extends GraphQLSilk<
+    InferKyselyTable<TEntityName, TOptions>,
+    InferKyselyTable<TEntityName, TOptions>
+  > {
+  nullable: () => GraphQLSilk<
+    InferKyselyTable<TEntityName, TOptions> | null | undefined,
+    InferKyselyTable<TEntityName, TOptions> | null | undefined
+  >
+  list: () => GraphQLSilk<
+    InferKyselyTable<TEntityName, TOptions>[],
+    InferKyselyTable<TEntityName, TOptions>[]
+  >
+  "~entity": TEntityName
+  "~silkConfig":
+    | (KyselySilkConfig<TEntityName, TOptions> & TOptions)
+    | undefined
+}
 
 export * from "./entity-schema"
 export * from "./factory"
