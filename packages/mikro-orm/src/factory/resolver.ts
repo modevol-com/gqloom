@@ -20,13 +20,12 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
-  type Collection,
   type Cursor,
   type EntityManager,
   type EntityName,
   type EntityProperty,
   EntitySchema,
-  type Reference,
+  Reference,
   ReferenceKind,
 } from "@mikro-orm/core"
 import {
@@ -191,16 +190,28 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: (
+        resolve: async (
           parent: TEntity,
           args: CollectionFieldOptions<TEntity, TKey>,
           payload
         ) => {
-          const prop = (parent as any)[key] as Collection<any, any>
-          return prop.loadItems({
-            refresh: true,
+          const em = await this.em(payload)
+          const { where, ...rest } = args
+
+          // Always scope the collection to the current parent entity.
+          // For ONE_TO_MANY we can rely on mappedBy, for MANY_TO_MANY we
+          // fall back to the property name or inverse side if available.
+          const relationField =
+            property.mappedBy ?? property.inversedBy ?? property.name
+
+          const finalWhere = {
+            ...(where ?? {}),
+            [relationField]: parent,
+          }
+
+          return em.find(property.entity() as any, finalWhere, {
             fields: getSelectedFields(payload),
-            ...args,
+            ...rest,
           })
         },
       } as FieldOptions<any, any, any, any>
@@ -225,10 +236,42 @@ export class MikroResolverFactory<TEntity extends object> {
       silk.nullable(silk(MikroWeaver.getGraphQLType(targetEntity))),
       {
         ...options,
-        resolve: (parent, _args, payload) => {
-          const prop = (parent as any)[key] as Reference<any>
-          return prop.load({
-            dataloader: true,
+        resolve: async (parent, _args, payload) => {
+          const em = await this.em(payload)
+          const value = (parent as any)[key] as unknown
+
+          // Prefer Reference.load when available (keeps dataloader and cache semantics)
+          if (Reference.isReference(value)) {
+            return value.load({
+              dataloader: true,
+              fields: getSelectedFields(payload),
+            })
+          }
+
+          if (value == null) return null
+
+          // Fallback for non-Reference values (entity instance or primary key)
+          const meta = this.getEntityMeta(property.entity())
+          const primaryKeys = meta.primaryKeys
+
+          let where: any
+          if (typeof value === "object") {
+            // Treat as entity instance and extract primary key fields
+            if (primaryKeys.length === 1) {
+              const pk = primaryKeys[0]
+              where = { [pk]: (value as any)[pk] }
+            } else {
+              where = Object.fromEntries(
+                primaryKeys.map((pk) => [pk, (value as any)[pk]])
+              )
+            }
+          } else {
+            // Scalar primary key value (single primary key only)
+            const pk = primaryKeys[0]
+            where = { [pk]: value }
+          }
+
+          return em.findOne(property.entity(), where, {
             fields: getSelectedFields(payload),
           })
         },

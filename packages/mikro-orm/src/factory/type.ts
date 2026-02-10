@@ -105,15 +105,6 @@ export type InferScalarReferenceKeys<TEntity> = {
   [K in keyof TEntity]?: TEntity[K] extends ScalarReference<any> ? K : never
 }[keyof TEntity]
 
-export type RelationField<
-  TEntity extends object,
-  TKey,
-> = TKey extends InferCollectionKeys<TEntity>
-  ? CollectionField<TEntity, TKey>
-  : TKey extends InferReferenceKeys<TEntity>
-    ? ReferenceField<TEntity, TKey>
-    : never
-
 export interface ReferenceField<TEntity extends object, TKey>
   extends FieldFactoryWithResolve<
     GraphQLSilk<Partial<TEntity>, Partial<TEntity>>,

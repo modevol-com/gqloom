@@ -380,9 +380,7 @@ describe("Mikro Resolver", () => {
         [
           "[query] select \`u0\`.\`id\` from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1'",
           "[query] select \`p0\`.\`id\`, \`p0\`.\`title\`, \`p0\`.\`author_id\` from \`post\` as \`p0\` where \`p0\`.\`author_id\` in (1)",
-          "[query] select \`p0\`.\`id\`, \`p0\`.\`title\`, \`p0\`.\`author_id\` from \`post\` as \`p0\` where \`p0\`.\`author_id\` in (1)",
-          "[query] select \`p0\`.\`id\`, \`p0\`.\`content\` from \`post\` as \`p0\` where \`p0\`.\`id\` in (2)",
-          "[query] select \`p0\`.\`id\`, \`p0\`.\`content\` from \`post\` as \`p0\` where \`p0\`.\`id\` in (1)",
+          "[query] select \`p0\`.\`id\`, \`p0\`.\`title\`, \`p0\`.\`content\`, \`p0\`.\`author_id\` from \`post\` as \`p0\` where \`p0\`.\`author_id\` = 1",
         ]
       `)
     })

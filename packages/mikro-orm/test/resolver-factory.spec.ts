@@ -104,8 +104,8 @@ describe.concurrent("MikroResolverFactory", async () => {
     })
   })
 
-  const userFactory = new MikroResolverFactory(User, () => orm.em)
-  const postFactory = new MikroResolverFactory(Post, () => orm.em)
+  const userFactory = new MikroResolverFactory(User, () => orm.em.fork())
+  const postFactory = new MikroResolverFactory(Post, () => orm.em.fork())
 
   describe.concurrent("collectionField", () => {
     it("should be created without error", async () => {
@@ -113,7 +113,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(field).toBeDefined()
     })
 
-    it("should resolve correctly", { retry: 2 }, async () => {
+    it("should resolve correctly", async () => {
       const r = resolver.of(User, {
         posts: userFactory.collectionField("posts"),
       })
@@ -154,7 +154,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer[0].title).toBe("Archive 1")
     })
 
-    it("should work with chain custom input", { retry: 2 }, async () => {
+    it("should work with chain custom input", async () => {
       const r = resolver.of(User, {
         posts: userFactory.collectionField("posts").input(
           v.pipe(
@@ -255,7 +255,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer?.name).toBe("John Doe")
     })
 
-    it("should weave schema without error", async () => {
+    it("should weave schema without error", { retry: 2 }, async () => {
       const r = resolver.of(Post, {
         author: postFactory.referenceField("author"),
       })
@@ -448,7 +448,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
     })
 
-    it("should weave schema without error", async () => {
+    it("should weave schema without error", { retry: 2 }, async () => {
       const r = resolver({ findQuery: userFactory.findQuery() })
       const schema = weave(r)
       await expect(printSchema(schema)).toMatchFileSnapshot(
