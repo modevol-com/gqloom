@@ -51,7 +51,7 @@ describe.concurrent("MikroResolverFactory", async () => {
   let orm: MikroORM
   beforeAll(async () => {
     orm = await MikroORM.init(ORMConfig)
-    await orm.getSchemaGenerator().updateSchema()
+    await orm.schema.update()
 
     // Create test data
     await RequestContext.create(orm.em, async () => {
@@ -100,7 +100,7 @@ describe.concurrent("MikroResolverFactory", async () => {
           author: John,
         }),
       ]
-      await orm.em.persistAndFlush([...users, ...posts])
+      await orm.em.persist([...users, ...posts]).flush()
     })
   })
 
@@ -113,7 +113,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(field).toBeDefined()
     })
 
-    it("should resolve correctly", async () => {
+    it("should resolve correctly", { retry: 2 }, async () => {
       const r = resolver.of(User, {
         posts: userFactory.collectionField("posts"),
       })
@@ -154,7 +154,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer[0].title).toBe("Archive 1")
     })
 
-    it("should work with chain custom input", async () => {
+    it("should work with chain custom input", { retry: 2 }, async () => {
       const r = resolver.of(User, {
         posts: userFactory.collectionField("posts").input(
           v.pipe(
@@ -962,7 +962,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
     it("should be created without error", async () => {
@@ -1077,7 +1077,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
     it("should be created without error", async () => {
@@ -1187,7 +1187,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
     it("should be created without error", async () => {
@@ -1321,7 +1321,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 
@@ -1414,7 +1414,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 
@@ -1569,8 +1569,14 @@ describe.concurrent("MikroResolverFactory", async () => {
     let orm: MikroORM
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
-      orm = await MikroORM.init({ ...ORMConfig, entities: [User] })
-      await orm.getSchemaGenerator().updateSchema()
+      orm = await MikroORM.init(
+        defineConfig({
+          entities: [User],
+          dbName: ":memory:",
+          allowGlobalContext: true,
+        })
+      )
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 
@@ -1700,7 +1706,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 

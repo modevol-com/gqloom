@@ -7,14 +7,14 @@ import {
   resolver,
   weave,
 } from "@gqloom/core"
+import { Collection } from "@mikro-orm/core"
 import {
-  Collection,
   Entity,
   ManyToOne,
   OneToMany,
   PrimaryKey,
   Property,
-} from "@mikro-orm/core"
+} from "@mikro-orm/decorators/legacy"
 import { defineConfig, MikroORM } from "@mikro-orm/libsql"
 import {
   GraphQLNonNull,
@@ -68,7 +68,7 @@ describe("decorators + class entities (GraphQL schema)", () => {
         allowGlobalContext: true,
       })
     )
-    await orm.getSchemaGenerator().createSchema()
+    await orm.schema.create()
   })
 
   it("should weave GraphQL types from class entities with MikroWeaver.config(metadata)", () => {

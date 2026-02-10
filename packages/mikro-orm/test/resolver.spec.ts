@@ -118,7 +118,7 @@ describe("Mikro Resolver", () => {
         () => orm.em
       ).resolver("Post")
       schema = weave(userResolver, postResolver)
-      await orm.getSchemaGenerator().refreshDatabase()
+      await orm.schema.refresh()
       const user1 = orm.em.create(User, {
         id: 1,
         name: "User 1",
@@ -378,10 +378,11 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.\`id\`, \`p1\`.\`id\` as \`p1__id\`, \`p1\`.\`title\` as \`p1__title\`, \`p1\`.\`author_id\` as \`p1__author_id\` from \`user\` as \`u0\` left join \`post\` as \`p1\` on \`u0\`.\`id\` = \`p1\`.\`author_id\` where \`u0\`.\`name\` = 'User 1'",
+          "[query] select \`u0\`.\`id\` from \`user\` as \`u0\` where \`u0\`.\`name\` = 'User 1'",
           "[query] select \`p0\`.\`id\`, \`p0\`.\`title\`, \`p0\`.\`author_id\` from \`post\` as \`p0\` where \`p0\`.\`author_id\` in (1)",
-          "[query] select \`p0\`.\`id\`, \`p0\`.\`content\` from \`post\` as \`p0\` where \`p0\`.\`id\` in (1)",
+          "[query] select \`p0\`.\`id\`, \`p0\`.\`title\`, \`p0\`.\`author_id\` from \`post\` as \`p0\` where \`p0\`.\`author_id\` in (1)",
           "[query] select \`p0\`.\`id\`, \`p0\`.\`content\` from \`post\` as \`p0\` where \`p0\`.\`id\` in (2)",
+          "[query] select \`p0\`.\`id\`, \`p0\`.\`content\` from \`post\` as \`p0\` where \`p0\`.\`id\` in (1)",
         ]
       `)
     })
@@ -419,8 +420,8 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] select \`u0\`.\`id\` from \`user\` as \`u0\` order by \`u0\`.\`id\` asc limit 2",
           "[query] select count(*) as \`count\` from \`user\` as \`u0\`",
+          "[query] select \`u0\`.\`id\` from \`user\` as \`u0\` order by \`u0\`.\`id\` asc limit 2",
         ]
       `)
     })
@@ -429,7 +430,7 @@ describe("Mikro Resolver", () => {
   describe("mutation", () => {
     const createMutationExecutor = async () => {
       const orm = await MikroORM.init(config)
-      await orm.getSchemaGenerator().refreshDatabase()
+      await orm.schema.refresh()
       const userResolver = new MikroResolverFactory(
         User,
         () => orm.em
@@ -510,7 +511,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] insert into \`user\` (\`email\`, \`name\`) values ('new@test.com', 'New User') returning \`id\`",
+          "[query] insert into \`user\` (\`name\`, \`email\`) values ('New User', 'new@test.com') returning \`id\`",
           "[query] select \`u0\`.\`id\`, \`u0\`.\`name\`, \`u0\`.\`email\` from \`user\` as \`u0\` where \`u0\`.\`id\` = 1 limit 1",
         ]
       `)
@@ -535,8 +536,8 @@ describe("Mikro Resolver", () => {
         {
           "insertManyUser": [
             {
-              "id": "2",
-              "name": "New User 2",
+              "id": "1",
+              "name": "New User 1",
             },
           ],
         }
@@ -544,7 +545,7 @@ describe("Mikro Resolver", () => {
       expect(logs).toMatchInlineSnapshot(`
         [
           "[query] insert into \`user\` (\`name\`, \`email\`) values ('New User 1', 'new1@test.com'), ('New User 2', 'new2@test.com') returning \`id\`",
-          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\` from \`user\` as \`u0\` where \`u0\`.\`id\` in (2)",
+          "[query] select \`u0\`.\`id\`, \`u0\`.\`name\` from \`user\` as \`u0\` where \`u0\`.\`id\` in (1)",
         ]
       `)
     })
@@ -626,7 +627,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] insert into \`user\` (\`email\`, \`id\`, \`name\`) values ('upsert@test.com', '1', 'Upsert User') on conflict (\`id\`) do update set \`name\` = excluded.\`name\`, \`email\` = excluded.\`email\`",
+          "[query] insert into \`user\` (\`id\`, \`name\`, \`email\`) values ('1', 'Upsert User', 'upsert@test.com') on conflict (\`id\`) do update set \`name\` = excluded.\`name\`, \`email\` = excluded.\`email\`",
         ]
       `)
     })
@@ -658,7 +659,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] insert into \`user\` (\`email\`, \`id\`, \`name\`) values ('new@test.com', '1', 'New Name') on conflict (\`id\`) do update set \`name\` = excluded.\`name\`, \`email\` = excluded.\`email\`",
+          "[query] insert into \`user\` (\`id\`, \`name\`, \`email\`) values ('1', 'New Name', 'new@test.com') on conflict (\`id\`) do update set \`name\` = excluded.\`name\`, \`email\` = excluded.\`email\`",
         ]
       `)
     })
@@ -701,7 +702,7 @@ describe("Mikro Resolver", () => {
       `)
       expect(logs).toMatchInlineSnapshot(`
         [
-          "[query] insert into \`user\` (\`email\`, \`id\`, \`name\`) select 'new1@test.com' as \`email\`, '1' as \`id\`, 'New Name' as \`name\` union all select 'new2@test.com' as \`email\`, '2' as \`id\`, 'New User' as \`name\` where true on conflict (\`id\`) do update set \`name\` = excluded.\`name\`, \`email\` = excluded.\`email\` returning \`id\`",
+          "[query] insert into \`user\` (\`id\`, \`name\`, \`email\`) values ('1', 'New Name', 'new1@test.com'), ('2', 'New User', 'new2@test.com') on conflict (\`id\`) do update set \`name\` = excluded.\`name\`, \`email\` = excluded.\`email\` returning \`id\`",
         ]
       `)
     })

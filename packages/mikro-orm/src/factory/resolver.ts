@@ -365,15 +365,12 @@ export class MikroResolverFactory<TEntity extends object> {
         const fields = Array.from(
           deepFields.get("items")?.selectedFields ?? ["*"]
         )
-        return (await this.em(payload)).findByCursor(
-          this.entityName,
-          where ?? {},
-          {
-            fields,
-            includeCount,
-            ...args,
-          }
-        )
+        return (await this.em(payload)).findByCursor(this.entityName, {
+          where,
+          fields,
+          includeCount,
+          ...args,
+        })
       },
     } as QueryOptions<any, any>)
   }
@@ -466,7 +463,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args: CreateMutationOptions<any>, payload) => {
+      resolve: async (args: CreateMutationOptions<TEntity>, payload) => {
         const em = await this.em(payload)
         const instance = em.create(this.entityName, args.data)
         em.persist(instance)
@@ -492,10 +489,10 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args: InsertMutationOptions<any>, payload) => {
+      resolve: async (args: InsertMutationOptions<TEntity>, payload) => {
         const em = await this.em(payload)
         const key = await em.insert(this.entityName, args.data, args)
-        return em.findOneOrFail(this.entityName, key, {
+        return em.findOneOrFail(this.entityName, key as any, {
           fields: getSelectedFields(payload),
           ...args,
         })
@@ -519,9 +516,13 @@ export class MikroResolverFactory<TEntity extends object> {
     return new MutationFactoryWithResolve(silk(output), {
       input,
       ...options,
-      resolve: async (args: InsertManyMutationOptions<any>, payload) => {
+      resolve: async (args: InsertManyMutationOptions<TEntity>, payload) => {
         const em = await this.em(payload)
-        const keys = await em.insertMany(this.entityName, args.data, args)
+        const keys = await em.insertMany(
+          this.entityName as any,
+          args.data,
+          args
+        )
         return em.find(this.entityName, keys as any, {
           fields: getSelectedFields(payload),
           ...args,
@@ -571,7 +572,10 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: async (args, payload): Promise<number> => {
+        resolve: async (
+          args: UpdateMutationOptions<TEntity>,
+          payload
+        ): Promise<number> => {
           const em = await this.em(payload)
           return em.nativeUpdate(this.entityName, args.where, args.data, args)
         },

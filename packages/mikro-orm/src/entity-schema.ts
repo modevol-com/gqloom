@@ -61,10 +61,12 @@ export class EntitySchemaWeaver {
 
     const entity = new EntitySchema({
       name: gqlType.name,
+      // Allow mixing base field properties and our custom RelationProperty
+      // without forcing TS to reconcile their detailed shapes.
       properties: {
         ...EntitySchemaWeaver.toProperties(gqlType, options),
         ...relations,
-      },
+      } as any,
       ...options,
       hooks: {
         ...options?.hooks,
@@ -164,7 +166,7 @@ export class EntitySchemaWeaver {
             : simpleType
           return type
         })(),
-    }
+    } as PropertyType
     function unwrap(t: GraphQLOutputType) {
       if (t instanceof GraphQLNonNull) {
         nullable = false
@@ -298,24 +300,11 @@ export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver =
     }
   )
 
-export type PropertyType = Exclude<
-  EntitySchemaProperty<any, any>,
-  | {
-      kind:
-        | ReferenceKind.MANY_TO_ONE
-        | "m:1"
-        | ReferenceKind.ONE_TO_ONE
-        | "1:1"
-        | ReferenceKind.ONE_TO_MANY
-        | "1:m"
-        | ReferenceKind.MANY_TO_MANY
-        | "m:n"
-        | ReferenceKind.EMBEDDED
-        | "embedded"
-    }
-  | { enum: true }
-  | { entity: string | (() => EntityName<any>) }
->
+// In v7 the detailed shape of EntitySchemaProperty (especially relation
+// variants) is quite complex. For this deprecated helper we only need
+// "scalar-like" property options, so we keep the type simple to avoid
+// brittle unions that conflict with MikroORM internals.
+export type PropertyType = EntitySchemaProperty<any, any>
 
 export interface EntitySchemaWeaverOptions {
   getProperty?: (
@@ -368,7 +357,9 @@ export type RelationProperty<TTarget extends object, TOwner> =
 
 export interface ManyToOneProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.MANY_TO_ONE | "m:1"
-  entity: string | (() => string | EntityName<TTarget>)
+  // Loosen the entity type to avoid conflicts with internal
+  // EntitySchemaProperty relation definitions in MikroORM v7.
+  entity: string | EntityName<TTarget> | (() => any)
   nullable?: boolean
 }
 
@@ -409,7 +400,7 @@ export function manyToOne<TTarget extends object, TOwner>(
 
 export interface OneToManyProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.ONE_TO_MANY | "1:m"
-  entity: string | (() => string | EntityName<TTarget>)
+  entity: string | EntityName<TTarget> | (() => any)
 }
 
 /**
@@ -428,7 +419,7 @@ export function oneToMany<TTarget extends object, TOwner>(
 
 export interface OneToOneProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.ONE_TO_ONE | "1:1"
-  entity: string | (() => string | EntityName<TTarget>)
+  entity: string | EntityName<TTarget> | (() => any)
   nullable?: boolean
 }
 
@@ -469,7 +460,7 @@ export function oneToOne<TTarget extends object, TOwner>(
 
 export interface ManyToManyProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.MANY_TO_MANY | "m:n"
-  entity: string | (() => string | EntityName<TTarget>)
+  entity: string | EntityName<TTarget> | (() => any)
 }
 
 /**
