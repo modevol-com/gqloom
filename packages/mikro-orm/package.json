@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/mikro-orm",
-  "version": "0.17.0-next.1",
+  "version": "0.17.0-next.2",
   "description": "GQLoom integration with Mikro ORM",
   "type": "module",
   "main": "./dist/index.js",
@@ -38,16 +38,21 @@
   "author": "xcfox",
   "license": "MIT",
   "dependencies": {
-    "@mikro-orm/sql": "^7.0.0-rc.0"
+    "@mikro-orm/sql": "^7.0.0-rc.0",
+    "kysely": "^0.28.11"
   },
   "peerDependencies": {
     "@gqloom/core": ">= 0.16.0",
     "@mikro-orm/core": ">= 7.0.0",
     "@mikro-orm/sql": ">= 7.0.0",
-    "graphql": ">= 16.8.0"
+    "graphql": ">= 16.8.0",
+    "kysely": ">= 0.28.0"
   },
   "peerDependenciesMeta": {
     "@mikro-orm/sql": {
+      "optional": true
+    },
+    "kysely": {
       "optional": true
     }
   },

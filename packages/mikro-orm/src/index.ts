@@ -41,6 +41,7 @@ import {
   isNonNullType,
   isOutputType,
 } from "graphql"
+import type { Selectable } from "kysely"
 import { getMetadata, getWeaverConfigMetadata } from "./helper"
 import type {
   InferEntity,
@@ -638,16 +639,20 @@ export interface KyselyTableSilk<
   TEntityName extends EntitySchemaWithMeta,
   TOptions extends MikroKyselyPluginOptions = {},
 > extends GraphQLSilk<
-    Partial<InferKyselyTable<TEntityName, TOptions>>,
-    Partial<InferKyselyTable<TEntityName, TOptions>>
+    Partial<Selectable<InferKyselyTable<TEntityName, TOptions>>>,
+    Partial<Selectable<InferKyselyTable<TEntityName, TOptions>>>
   > {
   nullable: () => GraphQLSilk<
-    Partial<InferKyselyTable<TEntityName, TOptions>> | null | undefined,
-    Partial<InferKyselyTable<TEntityName, TOptions>> | null | undefined
+    | Partial<Selectable<InferKyselyTable<TEntityName, TOptions>>>
+    | null
+    | undefined,
+    | Partial<Selectable<InferKyselyTable<TEntityName, TOptions>>>
+    | null
+    | undefined
   >
   list: () => GraphQLSilk<
-    Partial<InferKyselyTable<TEntityName, TOptions>>[],
-    Partial<InferKyselyTable<TEntityName, TOptions>>[]
+    Partial<Selectable<InferKyselyTable<TEntityName, TOptions>>>[],
+    Partial<Selectable<InferKyselyTable<TEntityName, TOptions>>>[]
   >
   "~entity": TEntityName
   "~silkConfig":

@@ -594,9 +594,12 @@ describe("kyselySilk", () => {
       sales: p.integer(),
       salesRevenue: p.float().hidden(false),
       title: p.string(),
-      isPublished: p.boolean(),
-      price: p.float().nullable(),
-      tags: p.array().$type<string[]>(),
+      isPublished: p.boolean().default(false),
+      price: p.float().nullable().default(0),
+      tags: p
+        .array()
+        .$type<string[]>()
+        .onCreate(() => []),
       author: () => p.manyToOne(AuthorEntity).ref(),
     }),
   })
@@ -644,6 +647,7 @@ describe("kyselySilk", () => {
     const kyselyOptions = {
       columnNamingStrategy: "property",
       tableNamingStrategy: "entity",
+      processOnCreateHooks: true,
     } as const satisfies MikroKyselyPluginOptions
     const Author = kyselySilk(AuthorEntity, kyselyOptions)
     const Book = kyselySilk(BookEntity, kyselyOptions)
