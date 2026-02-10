@@ -638,16 +638,16 @@ export interface KyselyTableSilk<
   TEntityName extends EntitySchemaWithMeta,
   TOptions extends MikroKyselyPluginOptions = {},
 > extends GraphQLSilk<
-    InferKyselyTable<TEntityName, TOptions>,
-    InferKyselyTable<TEntityName, TOptions>
+    Partial<InferKyselyTable<TEntityName, TOptions>>,
+    Partial<InferKyselyTable<TEntityName, TOptions>>
   > {
   nullable: () => GraphQLSilk<
-    InferKyselyTable<TEntityName, TOptions> | null | undefined,
-    InferKyselyTable<TEntityName, TOptions> | null | undefined
+    Partial<InferKyselyTable<TEntityName, TOptions>> | null | undefined,
+    Partial<InferKyselyTable<TEntityName, TOptions>> | null | undefined
   >
   list: () => GraphQLSilk<
-    InferKyselyTable<TEntityName, TOptions>[],
-    InferKyselyTable<TEntityName, TOptions>[]
+    Partial<InferKyselyTable<TEntityName, TOptions>>[],
+    Partial<InferKyselyTable<TEntityName, TOptions>>[]
   >
   "~entity": TEntityName
   "~silkConfig":

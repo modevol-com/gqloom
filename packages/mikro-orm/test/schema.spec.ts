@@ -608,17 +608,19 @@ describe("kyselySilk", () => {
     type IAuthor = StandardJSONSchemaV1.InferOutput<typeof Author>
     type IBook = StandardJSONSchemaV1.InferOutput<typeof Book>
 
-    expectTypeOf<IAuthor>().toEqualTypeOf<{ name: string }>()
-    expectTypeOf<IBook>().toEqualTypeOf<{
-      isbn: string
-      sales: number
-      sales_revenue: number
-      title: string
-      is_published: NonNullable<boolean | null | undefined>
-      price: number | null
-      tags: string[]
-      author_name: string
-    }>()
+    expectTypeOf<IAuthor>().toEqualTypeOf<Partial<{ name: string }>>()
+    expectTypeOf<IBook>().toEqualTypeOf<
+      Partial<{
+        isbn: string
+        sales: number
+        sales_revenue: number
+        title: string
+        is_published: NonNullable<boolean | null | undefined>
+        price: number | null
+        tags: string[]
+        author_name: string
+      }>
+    >()
     const schema = weave(Author, Book)
     expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type Author {
@@ -649,17 +651,19 @@ describe("kyselySilk", () => {
     type IAuthor = StandardJSONSchemaV1.InferOutput<typeof Author>
     type IBook = StandardJSONSchemaV1.InferOutput<typeof Book>
 
-    expectTypeOf<IAuthor>().toEqualTypeOf<{ name: string }>()
-    expectTypeOf<IBook>().toEqualTypeOf<{
-      isbn: string
-      sales: number
-      salesRevenue: number
-      title: string
-      isPublished: NonNullable<boolean | null | undefined>
-      price: number | null
-      tags: string[]
-      author: string
-    }>()
+    expectTypeOf<IAuthor>().toEqualTypeOf<Partial<{ name: string }>>()
+    expectTypeOf<IBook>().toEqualTypeOf<
+      Partial<{
+        isbn: string
+        sales: number
+        salesRevenue: number
+        title: string
+        isPublished: NonNullable<boolean | null | undefined>
+        price: number | null
+        tags: string[]
+        author: string
+      }>
+    >()
     const schema = weave(Author, Book)
     expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type Author {
