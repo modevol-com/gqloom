@@ -174,25 +174,18 @@ export class MikroWeaver {
               }
 
               let gqlType = MikroWeaver.getFieldType(prop, meta)
-              if (!gqlType && prop.kind !== ReferenceKind.SCALAR) {
+              if (
+                !gqlType &&
+                prop.kind !== ReferenceKind.SCALAR &&
+                prop.kind !== ReferenceKind.EMBEDDED
+              ) {
                 gqlType = GraphQLID
               }
               if (gqlType == null) continue
 
-              const nType = MikroWeaver.normalizeType(prop)
-              if (nType.endsWith("[]") || nType === "array") {
-                gqlType = new GraphQLList(new GraphQLNonNull(gqlType))
-              }
-
-              if (
-                prop.nullable !== true &&
-                !(gqlType instanceof GraphQLNonNull)
-              ) {
-                gqlType = new GraphQLNonNull(gqlType)
-              }
-
+              gqlType = MikroWeaver.wrapPropertyType(gqlType, prop, undefined)
               fields[fieldName] = {
-                type: gqlType as GraphQLOutputType,
+                type: gqlType,
                 description: prop.comment,
               }
             }
@@ -381,9 +374,10 @@ export class MikroWeaver {
     } = {}
   ): GraphQLFieldConfig<any, any> | undefined {
     if (property.hidden != null) return
-    let gqlType = originField?.type ?? getGraphQLTypeByProperty()
+    let gqlType =
+      originField?.type ?? MikroWeaver.getFieldType(property, entity)
     if (gqlType == null) return
-    gqlType = nonNull(gqlType)
+    gqlType = MikroWeaver.wrapPropertyType(gqlType, property, nullable)
 
     const resolveReference = (parent: any) => {
       const prop = (parent as any)[property.name]
@@ -404,29 +398,27 @@ export class MikroWeaver {
           ? resolveReference
           : undefined,
     }
+  }
 
-    function getGraphQLTypeByProperty() {
-      let gqlType = MikroWeaver.getFieldType(property, entity)
-      if (gqlType == null) return
-
-      gqlType = list(gqlType)
-      return gqlType
-    }
-    function list(gqlType: GraphQLOutputType) {
+  protected static wrapPropertyType(
+    gqlType: GraphQLOutputType,
+    property: EntityProperty,
+    nullable: boolean | undefined
+  ): GraphQLOutputType {
+    // Handle array types - skip if already a GraphQLList
+    if (!(gqlType instanceof GraphQLList)) {
       const nType = MikroWeaver.normalizeType(property)
       if (nType.endsWith("[]") || nType === "array") {
-        return new GraphQLList(new GraphQLNonNull(gqlType))
+        const baseType = isNonNullType(gqlType) ? gqlType.ofType : gqlType
+        gqlType = new GraphQLList(new GraphQLNonNull(baseType))
       }
-      return gqlType
     }
 
-    // Optionality follows entity definition only; strip or add top-level NonNull to match.
-    function nonNull(gqlType: GraphQLOutputType) {
-      const baseType = isNonNullType(gqlType) ? gqlType.ofType : gqlType
-      const shouldBeNonNull =
-        nullable != null ? !nullable : property.nullable !== true
-      return shouldBeNonNull ? new GraphQLNonNull(baseType) : baseType
-    }
+    // Handle non-null types
+    const baseType = isNonNullType(gqlType) ? gqlType.ofType : gqlType
+    const shouldBeNonNull =
+      nullable != null ? !nullable : property.nullable !== true
+    return shouldBeNonNull ? new GraphQLNonNull(baseType) : baseType
   }
 
   /**
