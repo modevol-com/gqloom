@@ -19,7 +19,7 @@
     "@gqloom/prisma": "workspace:*",
     "@gqloom/valibot": "workspace:*",
     "@prisma/adapter-pg": "^7.1.0",
-    "@prisma/client": "^7.1.0",
+    "@prisma/client": "^7.3.0",
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.18.0",
     "pg": "^8.18.0",
