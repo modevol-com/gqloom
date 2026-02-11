@@ -624,13 +624,13 @@ describe("kyselySilk", () => {
         author_name: string
       }>
     >()
-    const schema = weave(Author, Book)
-    expect(printSchema(schema)).toMatchInlineSnapshot(`
-      "type Author {
-        name: ID!
-      }
 
-      type Book {
+    const bookResolver = resolver.of(Book, {
+      author: field(Author, (book) => ({ name: book.author_name })),
+    })
+    const schema = weave(Author, Book, bookResolver)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Book {
         isbn: ID!
         sales: Int!
         sales_revenue: Float!
@@ -639,6 +639,11 @@ describe("kyselySilk", () => {
         price: Float
         tags: [String!]!
         author_name: ID!
+        author: Author!
+      }
+
+      type Author {
+        name: ID!
       }"
     `)
   })

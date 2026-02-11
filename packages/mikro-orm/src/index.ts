@@ -458,81 +458,77 @@ export class MikroWeaver {
 
   public static getKyselyGraphQLTypeBySelf(
     this: KyselyTableSilk<any, any>
-  ): ReturnType<typeof MikroWeaver.getKyselyGraphQLType> {
+  ): GraphQLOutputType {
     const config = this["~silkConfig"]
     const meta = getMetadata(this["~entity"])
     if (config) {
       MikroWeaver.KyselyObjectConfigMap.set(meta, config)
     }
-    return MikroWeaver.getKyselyGraphQLType(meta, config)
+
+    return MikroWeaver.getKyselyGraphQLType(meta, config, this)
   }
 
   public static getKyselyGraphQLType(
     meta: EntityMetadata,
-    options: MikroKyselyPluginOptions = {}
+    config: (KyselySilkConfig<any, any> & MikroKyselyPluginOptions) | undefined,
+    memoKey?: object | undefined
   ): GraphQLOutputType {
-    const config = MikroWeaver.KyselyObjectConfigMap.get(meta)
-    const name = config?.name ?? meta.className ?? meta.tableName
-
-    const memoKey = {
-      meta,
-      type: "kysely",
-      columnNamingStrategy: options.columnNamingStrategy,
-    }
-    const existing = weaverContext.getGraphQLType(memoKey)
+    const existing =
+      memoKey != null ? weaverContext.getGraphQLType(memoKey) : null
     if (existing != null) return new GraphQLNonNull(existing)
 
-    return new GraphQLNonNull(
-      weaverContext.memoGraphQLType(
-        memoKey,
-        new GraphQLObjectType({
-          name: name,
-          ...config,
-          fields: () => {
-            const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
-            for (const [key, prop] of Object.entries(meta.properties)) {
-              if (prop.hidden === true) continue
+    const name = config?.name ?? meta.className ?? meta.tableName
 
-              let fieldName: string
-              if (options.columnNamingStrategy === "property") {
-                fieldName = key
-              } else if (prop.fieldNames?.[0]) {
-                fieldName = prop.fieldNames[0]
-              } else if (prop.kind === ReferenceKind.SCALAR) {
-                fieldName =
-                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key)
-              } else {
-                const targetMeta = getMetadata(prop.entity())
-                const targetPk = targetMeta.primaryKeys[0]
-                fieldName =
-                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key) +
-                  "_" +
-                  MikroWeaver.kyselyNamingStrategy.propertyToColumnName(
-                    targetPk
-                  )
-              }
+    const gqlType = new GraphQLObjectType({
+      name: name,
+      ...config,
+      fields: provideWeaverContext.inherit(() => {
+        const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
+        for (const [key, prop] of Object.entries(meta.properties)) {
+          if (prop.hidden === true) continue
 
-              let gqlType = MikroWeaver.getFieldType(prop, meta)
-              if (
-                !gqlType &&
-                prop.kind !== ReferenceKind.SCALAR &&
-                prop.kind !== ReferenceKind.EMBEDDED
-              ) {
-                gqlType = GraphQLID
-              }
-              if (gqlType == null) continue
+          let fieldName: string
+          if (config?.columnNamingStrategy === "property") {
+            fieldName = key
+          } else if (prop.fieldNames?.[0]) {
+            fieldName = prop.fieldNames[0]
+          } else if (prop.kind === ReferenceKind.SCALAR) {
+            fieldName =
+              MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key)
+          } else {
+            const targetMeta = getMetadata(prop.entity())
+            const targetPk = targetMeta.primaryKeys[0]
+            fieldName =
+              MikroWeaver.kyselyNamingStrategy.propertyToColumnName(key) +
+              "_" +
+              MikroWeaver.kyselyNamingStrategy.propertyToColumnName(targetPk)
+          }
 
-              gqlType = MikroWeaver.wrapPropertyType(gqlType, prop, undefined)
-              fields[fieldName] = {
-                type: gqlType,
-                description: prop.comment,
-              }
-            }
-            return fields
-          },
-        })
-      )
-    )
+          let gqlType = MikroWeaver.getFieldType(prop, meta)
+          if (
+            !gqlType &&
+            prop.kind !== ReferenceKind.SCALAR &&
+            prop.kind !== ReferenceKind.EMBEDDED
+          ) {
+            gqlType = GraphQLID
+          }
+          if (gqlType == null) continue
+
+          gqlType = MikroWeaver.wrapPropertyType(gqlType, prop, undefined)
+          fields[fieldName] = {
+            type: gqlType,
+            description: prop.comment,
+          }
+        }
+        return fields
+      }),
+    })
+
+    if (memoKey != null) {
+      weaverContext.memoGraphQLType(memoKey, gqlType)
+    }
+
+    return new GraphQLNonNull(gqlType)
   }
 
   protected static typeNames: Map<any, string> = new Map(
