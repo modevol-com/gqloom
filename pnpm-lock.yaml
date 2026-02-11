@@ -584,8 +584,8 @@ importers:
   packages/prisma:
     dependencies:
       '@prisma/generator-helper':
-        specifier: ^7.1.0
-        version: 7.1.0
+        specifier: ^7.3.0
+        version: 7.3.0
       graphql:
         specifier: ^16.12.0
         version: 16.12.0
@@ -2344,8 +2344,8 @@ packages:
   '@prisma/dev@0.17.0':
     resolution: {integrity: sha512-6sGebe5jxX+FEsQTpjHLzvOGPn6ypFQprcs3jcuIWv1Xp/5v6P/rjfdvAwTkP2iF6pDx2tCd8vGLNWcsWzImTA==}
 
-  '@prisma/dmmf@7.1.0':
-    resolution: {integrity: sha512-O4F5aaACdqpJKDEUOhArLfqaIJmiR3DtZ9gT0aMw+em+CBYD9z+mj6u1RQDdb4FJu60TN9ABDiVZLh4Nbf+stw==}
+  '@prisma/dmmf@7.3.0':
+    resolution: {integrity: sha512-LkalLBNFCmxpmnIuWI63363fWZqCS0oQa0+Zjv+xUaJjBKvRDgrU6MgTbkMib7XNekilhPHTUl2qSBOWnPK5vA==}
 
   '@prisma/driver-adapter-utils@7.1.0':
     resolution: {integrity: sha512-AlVLzeXkw81+47MvQ9M8DvTiHkRfJ8xzklTbYjpskb0cTTDVHboTI/OVwT6Wcep/bNvfLKJYO0nylBiM5rxgww==}
@@ -2362,11 +2362,11 @@ packages:
   '@prisma/fetch-engine@7.2.0':
     resolution: {integrity: sha512-Z5XZztJ8Ap+wovpjPD2lQKnB8nWFGNouCrglaNFjxIWAGWz0oeHXwUJRiclIoSSXN/ptcs9/behptSk8d0Yy6w==}
 
-  '@prisma/generator-helper@7.1.0':
-    resolution: {integrity: sha512-co1zrpEuNP4xvRmOEo3wzbyxr0BrP2Eag49z/EQe6yhlJorUZRD2HTkU2TZwsernbA7IZlvjsN2LOfUfxqMXVQ==}
+  '@prisma/generator-helper@7.3.0':
+    resolution: {integrity: sha512-zqo63nu3ptu2CzAFjg6LXm4VQlB/XXaEFRUK3TjGViNosKr7izz6U/v2yVMXqEOL5tz2bUsSg2JxfcmNPl0IJw==}
 
-  '@prisma/generator@7.1.0':
-    resolution: {integrity: sha512-Pik1tpYadYDaaZ7KSROzM2nZrwSGMH3mHT/C2RURRuQW3x15FWo3czkcaFyq8BNE82TdWGU06VC1LoZL3gGGQQ==}
+  '@prisma/generator@7.3.0':
+    resolution: {integrity: sha512-PRjhVXu+oNLY2PDahZRRmOgctT17rtKCp9+2odfw2GIqHhdOTeGhX9scGNPsZujiGRz6txJwvor24FdxZfEWLw==}
 
   '@prisma/get-platform@6.8.2':
     resolution: {integrity: sha512-vXSxyUgX3vm1Q70QwzwkjeYfRryIvKno1SXbIqwSptKwqKzskINnDUcx85oX+ys6ooN2ATGSD0xN2UTfg6Zcow==}
@@ -7983,7 +7983,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@prisma/dmmf@7.1.0': {}
+  '@prisma/dmmf@7.3.0': {}
 
   '@prisma/driver-adapter-utils@7.1.0':
     dependencies:
@@ -8008,13 +8008,13 @@ snapshots:
       '@prisma/engines-version': 7.2.0-4.0c8ef2ce45c83248ab3df073180d5eda9e8be7a3
       '@prisma/get-platform': 7.2.0
 
-  '@prisma/generator-helper@7.1.0':
+  '@prisma/generator-helper@7.3.0':
     dependencies:
-      '@prisma/debug': 7.1.0
-      '@prisma/dmmf': 7.1.0
-      '@prisma/generator': 7.1.0
+      '@prisma/debug': 7.3.0
+      '@prisma/dmmf': 7.3.0
+      '@prisma/generator': 7.3.0
 
-  '@prisma/generator@7.1.0': {}
+  '@prisma/generator@7.3.0': {}
 
   '@prisma/get-platform@6.8.2':
     dependencies:
