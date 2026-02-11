@@ -20,7 +20,6 @@ import {
   weaverContext,
 } from "@gqloom/core"
 import {
-  type Collection,
   type Cursor,
   type EntityManager,
   type EntityName,
@@ -191,16 +190,28 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: (
+        resolve: async (
           parent: TEntity,
           args: CollectionFieldOptions<TEntity, TKey>,
           payload
         ) => {
-          const prop = (parent as any)[key] as Collection<any, any>
-          return prop.loadItems({
-            refresh: true,
+          const em = await this.em(payload)
+          const { where, ...rest } = args
+
+          // Always scope the collection to the current parent entity.
+          // For ONE_TO_MANY we can rely on mappedBy, for MANY_TO_MANY we
+          // fall back to the property name or inverse side if available.
+          const relationField =
+            property.mappedBy ?? property.inversedBy ?? property.name
+
+          const finalWhere = {
+            ...(where ?? {}),
+            [relationField]: parent,
+          }
+
+          return em.find(property.entity() as any, finalWhere, {
             fields: getSelectedFields(payload),
-            ...args,
+            ...rest,
           })
         },
       } as FieldOptions<any, any, any, any>
@@ -226,7 +237,8 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         ...options,
         resolve: (parent, _args, payload) => {
-          const prop = (parent as any)[key] as Reference<any>
+          const prop = (parent as any)[key] as Reference<any> | null | undefined
+          if (prop == null) return null
           return prop.load({
             dataloader: true,
             fields: getSelectedFields(payload),
@@ -365,15 +377,12 @@ export class MikroResolverFactory<TEntity extends object> {
         const fields = Array.from(
           deepFields.get("items")?.selectedFields ?? ["*"]
         )
-        return (await this.em(payload)).findByCursor(
-          this.entityName,
-          where ?? {},
-          {
-            fields,
-            includeCount,
-            ...args,
-          }
-        )
+        return (await this.em(payload)).findByCursor(this.entityName, {
+          where,
+          fields,
+          includeCount,
+          ...args,
+        })
       },
     } as QueryOptions<any, any>)
   }
@@ -466,7 +475,7 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args: CreateMutationOptions<any>, payload) => {
+      resolve: async (args: CreateMutationOptions<TEntity>, payload) => {
         const em = await this.em(payload)
         const instance = em.create(this.entityName, args.data)
         em.persist(instance)
@@ -492,10 +501,10 @@ export class MikroResolverFactory<TEntity extends object> {
       input,
       middlewares: this.middlewaresWithFlush(middlewares),
       ...options,
-      resolve: async (args: InsertMutationOptions<any>, payload) => {
+      resolve: async (args: InsertMutationOptions<TEntity>, payload) => {
         const em = await this.em(payload)
         const key = await em.insert(this.entityName, args.data, args)
-        return em.findOneOrFail(this.entityName, key, {
+        return em.findOneOrFail(this.entityName, key as any, {
           fields: getSelectedFields(payload),
           ...args,
         })
@@ -519,9 +528,13 @@ export class MikroResolverFactory<TEntity extends object> {
     return new MutationFactoryWithResolve(silk(output), {
       input,
       ...options,
-      resolve: async (args: InsertManyMutationOptions<any>, payload) => {
+      resolve: async (args: InsertManyMutationOptions<TEntity>, payload) => {
         const em = await this.em(payload)
-        const keys = await em.insertMany(this.entityName, args.data, args)
+        const keys = await em.insertMany(
+          this.entityName as any,
+          args.data,
+          args
+        )
         return em.find(this.entityName, keys as any, {
           fields: getSelectedFields(payload),
           ...args,
@@ -571,7 +584,10 @@ export class MikroResolverFactory<TEntity extends object> {
       {
         input,
         ...options,
-        resolve: async (args, payload): Promise<number> => {
+        resolve: async (
+          args: UpdateMutationOptions<TEntity>,
+          payload
+        ): Promise<number> => {
           const em = await this.em(payload)
           return em.nativeUpdate(this.entityName, args.where, args.data, args)
         },

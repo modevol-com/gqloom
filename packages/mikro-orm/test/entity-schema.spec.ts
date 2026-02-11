@@ -61,7 +61,10 @@ const Giraffe = silk<Required<IGiraffe>, IGiraffe>(
       age: { type: GraphQLInt, extensions: { defaultValue: 2 } },
       birthDay: {
         type: GraphQLDate,
-        extensions: { defaultValue: () => new Date() },
+        // In MikroORM v7 the underlying column is mapped as string,
+        // so we use an ISO string here to avoid Date vs string
+        // validation errors when persisting entities.
+        extensions: { defaultValue: () => new Date().toISOString() },
       },
       height: { type: new GraphQLNonNull(GraphQLFloat) },
       isMale: {
@@ -145,14 +148,14 @@ describe("Entity Manager", () => {
   let orm = {} as MikroORM
   beforeAll(async () => {
     orm = await MikroORM.init(ORMConfig)
-    await orm.getSchemaGenerator().updateSchema()
+    await orm.schema.update()
   })
 
   it("should be able to create, find, update, delete", async () => {
     // create
     const g1 = await RequestContext.create(orm.em, async () => {
       const g1 = orm.em.create(GiraffeSchema, { name: "Galaxy", height: 1.5 })
-      await orm.em.persistAndFlush(g1)
+      await orm.em.persist(g1).flush()
       return g1
     })
 
@@ -175,7 +178,7 @@ describe("Entity Manager", () => {
       const g2 = await orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
       g2.name = "Galaxy2"
       g2.height = 3
-      await orm.em.persistAndFlush(g2)
+      await orm.em.persist(g2).flush()
       return g2
     })
 
@@ -195,7 +198,7 @@ describe("Entity Manager", () => {
     // delete
     await RequestContext.create(orm.em, async () => {
       const g3 = await orm.em.findOneOrFail(GiraffeSchema, { id: g1.id })
-      return orm.em.removeAndFlush(g3)
+      return orm.em.remove(g3).flush()
     })
 
     await expect(

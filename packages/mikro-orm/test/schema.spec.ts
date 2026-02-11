@@ -3,11 +3,13 @@ import {
   getGraphQLType,
   query,
   resolver,
+  type StandardJSONSchemaV1,
   silk,
   weave,
 } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { ArrayType, DateTimeType, defineEntity } from "@mikro-orm/core"
+import type { MikroKyselyPluginOptions } from "@mikro-orm/sql"
 import {
   GraphQLFloat,
   GraphQLNonNull,
@@ -18,8 +20,8 @@ import {
   printType,
 } from "graphql"
 import * as v from "valibot"
-import { describe, expect, it } from "vitest"
-import { MikroWeaver, mikroSilk } from "../src"
+import { describe, expect, expectTypeOf, it } from "vitest"
+import { kyselySilk, MikroWeaver, mikroSilk } from "../src"
 
 describe("mikroSilk", () => {
   const Author = mikroSilk(
@@ -574,6 +576,120 @@ describe("mikroSilk", () => {
         expect(result.value).toEqual({ id: "1", name: "hello" })
       })
     })
+  })
+})
+
+describe("kyselySilk", () => {
+  const AuthorEntity = defineEntity({
+    name: "Author",
+    properties: (p) => ({
+      name: p.string().primary(),
+    }),
+  })
+
+  const BookEntity = defineEntity({
+    name: "Book",
+    properties: (p) => ({
+      isbn: p.string().primary(),
+      sales: p.integer(),
+      salesRevenue: p.float().hidden(false),
+      title: p.string(),
+      isPublished: p.boolean().default(false),
+      price: p.float().nullable().default(0),
+      tags: p
+        .array()
+        .$type<string[]>()
+        .onCreate(() => []),
+      author: () => p.manyToOne(AuthorEntity).ref(),
+    }),
+  })
+
+  it("should handle kysely table", () => {
+    const Author = kyselySilk(AuthorEntity)
+    const Book = kyselySilk(BookEntity)
+
+    type IAuthor = StandardJSONSchemaV1.InferOutput<typeof Author>
+    type IBook = StandardJSONSchemaV1.InferOutput<typeof Book>
+
+    expectTypeOf<IAuthor>().toEqualTypeOf<Partial<{ name: string }>>()
+    expectTypeOf<IBook>().toEqualTypeOf<
+      Partial<{
+        isbn: string
+        sales: number
+        sales_revenue: number
+        title: string
+        is_published: NonNullable<boolean | null | undefined>
+        price: number | null
+        tags: string[]
+        author_name: string
+      }>
+    >()
+
+    const bookResolver = resolver.of(Book, {
+      author: field(Author, (book) => ({ name: book.author_name })),
+    })
+    const schema = weave(Author, Book, bookResolver)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Book {
+        isbn: ID!
+        sales: Int!
+        sales_revenue: Float!
+        title: String!
+        is_published: Boolean!
+        price: Float
+        tags: [String!]!
+        author_name: ID!
+        author: Author!
+      }
+
+      type Author {
+        name: ID!
+      }"
+    `)
+  })
+
+  it("should handle kysely table with columnNamingStrategy: property", () => {
+    const kyselyOptions = {
+      columnNamingStrategy: "property",
+      tableNamingStrategy: "entity",
+      processOnCreateHooks: true,
+    } as const satisfies MikroKyselyPluginOptions
+    const Author = kyselySilk(AuthorEntity, kyselyOptions)
+    const Book = kyselySilk(BookEntity, kyselyOptions)
+
+    type IAuthor = StandardJSONSchemaV1.InferOutput<typeof Author>
+    type IBook = StandardJSONSchemaV1.InferOutput<typeof Book>
+
+    expectTypeOf<IAuthor>().toEqualTypeOf<Partial<{ name: string }>>()
+    expectTypeOf<IBook>().toEqualTypeOf<
+      Partial<{
+        isbn: string
+        sales: number
+        salesRevenue: number
+        title: string
+        isPublished: NonNullable<boolean | null | undefined>
+        price: number | null
+        tags: string[]
+        author: string
+      }>
+    >()
+    const schema = weave(Author, Book)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Author {
+        name: ID!
+      }
+
+      type Book {
+        isbn: ID!
+        sales: Int!
+        salesRevenue: Float!
+        title: String!
+        isPublished: Boolean!
+        price: Float
+        tags: [String!]!
+        author: ID!
+      }"
+    `)
   })
 })
 
