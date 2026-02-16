@@ -84,7 +84,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@prisma/generator-helper": "^7.1.0",
+    "@prisma/generator-helper": "^7.4.0",
     "ts-morph": "^27.0.2"
   }
 }
