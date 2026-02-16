@@ -135,7 +135,7 @@ importers:
         version: 0.11.0(@gqloom/core@0.16.1(graphql@16.12.0))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.2)(@libsql/client@0.15.15)(@prisma/client@7.1.0(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.2)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(mysql2@3.16.0)(pg@8.18.0)(sqlite3@5.1.7))(mysql2@3.16.0)(pg@8.18.0)(postgres@3.4.7)(prisma@7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.2)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.12.0)
       '@gqloom/zod':
         specifier: latest
-        version: 0.15.2(@gqloom/core@0.16.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)
+        version: 0.15.2(@gqloom/core@0.16.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.3.6)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -152,8 +152,8 @@ importers:
         specifier: ^5.18.0
         version: 5.18.0(graphql@16.12.0)
       zod:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.6
+        version: 4.3.6
     devDependencies:
       '@types/node':
         specifier: ^24.3.0
@@ -278,8 +278,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0(typescript@5.9.3)
       zod:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.6
+        version: 4.3.6
 
   examples/mikro-orm:
     dependencies:
@@ -370,8 +370,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0(typescript@5.9.3)
       zod:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.6
+        version: 4.3.6
 
   examples/subscriptions:
     dependencies:
@@ -394,8 +394,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0(typescript@5.9.3)
       zod:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.6
+        version: 4.3.6
 
   examples/upload:
     dependencies:
@@ -615,8 +615,8 @@ importers:
         specifier: ^7.2.0
         version: 7.2.0(@types/react@19.2.7)(better-sqlite3@12.6.2)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)
       zod:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.6
+        version: 4.3.6
 
   packages/valibot:
     dependencies:
@@ -654,8 +654,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       zod:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.6
+        version: 4.3.6
 
   website:
     dependencies:
@@ -787,8 +787,8 @@ importers:
         specifier: ^1.7.1
         version: 1.7.1
       zod:
-        specifier: 4.2.1
-        version: 4.2.1
+        specifier: 4.3.6
+        version: 4.3.6
 
 packages:
 
@@ -6616,8 +6616,8 @@ packages:
   zeptomatch@2.0.2:
     resolution: {integrity: sha512-H33jtSKf8Ijtb5BW6wua3G5DhnFjbFML36eFu+VdOoVY4HD9e7ggjqdM6639B+L87rjnR6Y+XeRzBXZdy52B/g==}
 
-  zod@4.2.1:
-    resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -7531,11 +7531,11 @@ snapshots:
       graphql: 16.12.0
       valibot: 1.2.0(typescript@5.9.3)
 
-  '@gqloom/zod@0.15.2(@gqloom/core@0.16.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.2.1)':
+  '@gqloom/zod@0.15.2(@gqloom/core@0.16.1(graphql@16.12.0))(graphql@16.12.0)(zod@4.3.6)':
     dependencies:
       '@gqloom/core': 0.16.1(graphql@16.12.0)
       graphql: 16.12.0
-      zod: 4.2.1
+      zod: 4.3.6
 
   '@graphql-tools/executor@1.5.0(graphql@16.12.0)':
     dependencies:
@@ -12590,6 +12590,6 @@ snapshots:
     dependencies:
       grammex: 3.1.12
 
-  zod@4.2.1: {}
+  zod@4.3.6: {}
 
   zwitch@2.0.4: {}
