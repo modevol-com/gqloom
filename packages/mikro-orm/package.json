@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/mikro-orm",
-  "version": "0.17.0-next.4",
+  "version": "0.17.0-next.5",
   "description": "GQLoom integration with Mikro ORM",
   "type": "module",
   "main": "./dist/index.js",
