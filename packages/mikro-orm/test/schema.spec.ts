@@ -691,6 +691,73 @@ describe("kyselySilk", () => {
       }"
     `)
   })
+
+  it("should not expose oneToMany as GraphQL field (align with InferKyselyTable)", () => {
+    const AuthorEntityWithBooks = defineEntity({
+      name: "Author",
+      properties: (p) => ({
+        name: p.string().primary(),
+        books: () => p.oneToMany(BookEntity).mappedBy("author"),
+      }),
+    })
+    const Author = kyselySilk(AuthorEntityWithBooks)
+    const Book = kyselySilk(BookEntity)
+
+    const schema = weave(Author, Book)
+    const printed = printSchema(schema)
+
+    // oneToMany has no column on this table; must not appear as field
+    expect(printed).not.toMatch(/books_id|books:/)
+    expect(printed).toContain("type Author {")
+    expect(printed).toMatchInlineSnapshot(`
+      "type Author {
+        name: ID!
+      }
+
+      type Book {
+        isbn: ID!
+        sales: Int!
+        sales_revenue: Float!
+        title: String!
+        is_published: Boolean!
+        price: Float
+        tags: [String!]!
+        author_name: ID!
+      }"
+    `)
+  })
+
+  it("should not expose manyToMany as GraphQL field (align with InferKyselyTable)", () => {
+    const RoleEntity = defineEntity({
+      name: "Role",
+      properties: (p) => ({
+        name: p.string().primary(),
+      }),
+    })
+    const UserEntity = defineEntity({
+      name: "User",
+      properties: (p) => ({
+        id: p.string().primary(),
+        login: p.string(),
+        roles: () => p.manyToMany(RoleEntity),
+      }),
+    })
+
+    const User = kyselySilk(UserEntity)
+    const Role = kyselySilk(RoleEntity)
+
+    const schema = weave(User, Role)
+    const printed = printSchema(schema)
+
+    // manyToMany has no column on this table; must not appear as field
+    expect(printed).not.toMatch(/roles_id|roles:/)
+    // Type order in printSchema is not guaranteed; assert both types exist with expected fields
+    expect(printed).toContain("type User {")
+    expect(printed).toContain("id: ID!")
+    expect(printed).toContain("login: String!")
+    expect(printed).toContain("type Role {")
+    expect(printed).toContain("name: ID!")
+  })
 })
 
 function unwrap(gqlType: GraphQLOutputType) {

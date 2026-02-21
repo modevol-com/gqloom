@@ -486,6 +486,11 @@ export class MikroWeaver {
         const fields: Record<string, GraphQLFieldConfig<any, any>> = {}
         for (const [key, prop] of Object.entries(meta.properties)) {
           if (prop.hidden === true) continue
+          if (
+            prop.kind === ReferenceKind.ONE_TO_MANY ||
+            prop.kind === ReferenceKind.MANY_TO_MANY
+          )
+            continue
 
           let fieldName: string
           if (config?.columnNamingStrategy === "property") {
