@@ -758,6 +758,98 @@ describe("kyselySilk", () => {
     expect(printed).toContain("type Role {")
     expect(printed).toContain("name: ID!")
   })
+
+  it("should handle config.fields", async () => {
+    const UserEntity = defineEntity({
+      name: "User",
+      properties: (p) => ({
+        id: p.string().primary(),
+        name: p.string(),
+        email: p.string(),
+      }),
+    })
+
+    const User = kyselySilk(UserEntity, {
+      fields: {
+        id: v.string(),
+        name: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
+        email: v.pipe(v.string(), v.email()),
+      },
+    })
+
+    const nameResult = await User["~standard"].validate({
+      name: "J",
+    })
+    expect(nameResult.issues).toMatchObject([
+      {
+        message: "Invalid length: Expected >=3 but received 1",
+        path: ["name"],
+      },
+    ])
+
+    const emailResult = await User["~standard"].validate({
+      email: "invalid-email",
+    })
+    expect(emailResult.issues).toBeDefined()
+    expect(emailResult.issues).toHaveLength(1)
+    expect(emailResult.issues![0].path).toEqual(["email"])
+    expect(emailResult.issues![0].message).toMatchInlineSnapshot(
+      `"Invalid email: Received "invalid-email""`
+    )
+  })
+
+  it("should handle config.fields as function (getter)", async () => {
+    const UserEntity = defineEntity({
+      name: "User",
+      properties: (p) => ({
+        id: p.string().primary(),
+        name: p.string(),
+      }),
+    })
+
+    const User = kyselySilk(UserEntity, {
+      fields: () => ({
+        id: v.string(),
+        name: v.pipe(v.string(), v.minLength(1)),
+      }),
+    })
+
+    const result = await User["~standard"].validate({ id: "1", name: "a" })
+    if (!("value" in result)) throw new Error("validate failed")
+    expect(result.value).toEqual({ id: "1", name: "a" })
+
+    const schema = weave(ValibotWeaver, User)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type User {
+        id: String!
+        name: String!
+      }"
+    `)
+  })
+
+  it("should handle config.fields with { type: GraphQLType }", () => {
+    const Entity = kyselySilk(
+      defineEntity({
+        name: "Entity",
+        properties: (p) => ({
+          id: p.string().primary(),
+          score: p.integer(),
+        }),
+      }),
+      {
+        fields: {
+          score: { type: GraphQLFloat },
+        },
+      }
+    )
+
+    expect(printType(unwrap(getGraphQLType(Entity)))).toMatchInlineSnapshot(`
+      "type Entity {
+        id: ID!
+        score: Float!
+      }"
+    `)
+  })
 })
 
 function unwrap(gqlType: GraphQLOutputType) {

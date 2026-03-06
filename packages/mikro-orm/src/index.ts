@@ -329,7 +329,9 @@ export class MikroWeaver {
     const cached = MikroWeaver.fieldConfigsCache.get(entity)
     if (cached !== undefined) return cached
 
-    const entityConfig = MikroWeaver.ObjectConfigMap.get(entity)
+    const entityConfig =
+      MikroWeaver.ObjectConfigMap.get(entity) ??
+      MikroWeaver.KyselyObjectConfigMap.get(entity)
     const fieldsConfig =
       typeof entityConfig?.fields === "function"
         ? entityConfig.fields()
