@@ -548,6 +548,113 @@ For fields such as `json` or `enum`, to get consistent type inference in both Ty
 </template>
 </Tabs>
 
+### Using kyselySilk
+
+Besides `mikroSilk`, `@gqloom/mikro-orm` provides `kyselySilk` — a Silk wrapper for [Kysely](https://kysely.dev/).
+
+When using Kysely with MikroORM to build raw SQL queries, you can use `kyselySilk` to convert entities to Silks that match the database table structure. Unlike `mikroSilk`, which expands relations into nested objects, `kyselySilk` focuses on low-level column mapping:
+
+- **Snake-case naming**: Converts camelCase property names to snake_case by default.
+- **Foreign-key expansion**: Expands ManyToOne relations into foreign key columns (e.g., `author_name`).
+- **Collection omission**: Since Kysely is a table-level query builder, OneToMany and ManyToMany relations have no corresponding columns in the current table and thus are not exposed as GraphQL fields.
+
+```ts twoslash
+import { defineEntity } from "@mikro-orm/core"
+
+// Define entities
+const AuthorEntity = defineEntity({
+  name: "Author",
+  properties: (p) => ({
+    name: p.string().primary(),
+  }),
+})
+
+const BookEntity = defineEntity({
+  name: "Book",
+  properties: (p) => ({
+    isbn: p.string().primary(),
+    salesRevenue: p.float(), // camelCase property name
+    title: p.string(),
+    isPublished: p.boolean().default(false),
+    author: () => p.manyToOne(AuthorEntity).ref(), // ManyToOne relation
+    tags: () => p.manyToMany(AuthorEntity), // ManyToMany not exposed
+  }),
+})
+
+// ---cut---
+import { kyselySilk } from "@gqloom/mikro-orm"
+import { resolver, field, weave } from "@gqloom/core"
+
+// Create Kysely Silks
+const Author = kyselySilk(AuthorEntity)
+const Book = kyselySilk(BookEntity)
+
+// Manually resolve relation field
+const bookResolver = resolver.of(Book, {
+  author: field(Author, (book) => ({ name: book.author_name })),
+})
+
+// Weave Schema
+export const schema = weave(Author, Book, bookResolver)
+```
+
+The generated GraphQL Schema automatically converts field names to snake_case and resolves relations as foreign key IDs:
+
+```graphql
+type Book {
+  isbn: ID!
+  sales_revenue: Float!
+  title: String!
+  is_published: Boolean!
+  author_name: ID!
+  author: Author!
+}
+
+type Author {
+  name: ID!
+}
+```
+
+#### Kysely Naming Strategy
+
+If you want `kyselySilk` to keep the property names from the entity (no snake_case conversion), specify `columnNamingStrategy: "property"` in the options:
+
+```ts twoslash
+// @filename: entities.ts
+import { defineEntity } from "@mikro-orm/core"
+
+export const AuthorEntity = defineEntity({
+  name: "Author",
+  properties: (p) => ({
+    name: p.string().primary(),
+  }),
+})
+
+export const BookEntity = defineEntity({
+  name: "Book",
+  properties: (p) => ({
+    isbn: p.string().primary(),
+    salesRevenue: p.float(),
+    author: () => p.manyToOne(AuthorEntity).ref(),
+  }),
+})
+
+// @filename: index.ts
+// ---cut---
+import { kyselySilk } from "@gqloom/mikro-orm"
+import type { MikroKyselyPluginOptions } from "@mikro-orm/libsql"
+import { AuthorEntity, BookEntity } from "./entities"
+
+const kyselyOptions = {
+  columnNamingStrategy: "property",
+} as const satisfies MikroKyselyPluginOptions
+
+const Author = kyselySilk(AuthorEntity, kyselyOptions)
+const Book = kyselySilk(BookEntity, kyselyOptions)
+```
+
+With this configuration, `salesRevenue` remains camelCase and the foreign key uses the original property name `author` instead of `author_name`.
+
 ## Resolver Factory
 
 Besides manual resolvers, `@gqloom/mikro-orm` provides `MikroResolverFactory`. It greatly reduces boilerplate and quickly generates common queries, mutations, and relation fields from entity metadata.

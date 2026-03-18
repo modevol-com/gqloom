@@ -548,6 +548,113 @@ export const userResolver = resolver.of(User, {
 </template>
 </Tabs>
 
+### 使用 kyselySilk
+
+除了 `mikroSilk`，`@gqloom/mikro-orm` 还提供了针对 [Kysely](https://kysely.dev/) 的 Silk 包装器——`kyselySilk`。
+
+当你在 MikroORM 中结合使用 Kysely 构建原生 SQL 查询时，可以直接使用 `kyselySilk` 将实体转换为适配数据库表结构的 Silk。与 `mikroSilk` 将关系展开为嵌套对象不同，`kyselySilk` 侧重于数据库底层的列映射：
+
+- **下划线命名**：默认将驼峰命名（camelCase）转换为下划线命名（snake_case）。
+- **外键展开**：将多对一（ManyToOne）等关系展开为外键列（如 `author_name`）。
+- **集合忽略**：由于 Kysely 是表级别的查询构建器，一对多（OneToMany）等集合关系在当前表中没有对应的列，因此不会暴露为 GraphQL 字段。
+
+```ts twoslash
+import { defineEntity } from "@mikro-orm/core"
+
+// 定义实体
+const AuthorEntity = defineEntity({
+  name: "Author",
+  properties: (p) => ({
+    name: p.string().primary(),
+  }),
+})
+
+const BookEntity = defineEntity({
+  name: "Book",
+  properties: (p) => ({
+    isbn: p.string().primary(),
+    salesRevenue: p.float(), // camelCase 属性名
+    title: p.string(),
+    isPublished: p.boolean().default(false),
+    author: () => p.manyToOne(AuthorEntity).ref(), // 多对一关系
+    tags: () => p.manyToMany(AuthorEntity), // 多对多不会暴露
+  }),
+})
+
+// ---cut---
+import { kyselySilk } from "@gqloom/mikro-orm"
+import { resolver, field, weave } from "@gqloom/core"
+
+// 创建 Kysely Silk
+const Author = kyselySilk(AuthorEntity)
+const Book = kyselySilk(BookEntity)
+
+// 手动解析关系字段
+const bookResolver = resolver.of(Book, {
+  author: field(Author, (book) => ({ name: book.author_name })),
+})
+
+// 织入 Schema
+export const schema = weave(Author, Book, bookResolver)
+```
+
+生成的 GraphQL Schema 将自动转换字段名为下划线格式，并将关联属性解析为外键 ID：
+
+```graphql
+type Book {
+  isbn: ID!
+  sales_revenue: Float!
+  title: String!
+  is_published: Boolean!
+  author_name: ID!
+  author: Author!
+}
+
+type Author {
+  name: ID!
+}
+```
+
+#### Kysely 命名策略
+
+如果希望 `kyselySilk` 保持实体中的属性名（不进行下划线转换），可以在选项中指定 `columnNamingStrategy: "property"`：
+
+```ts twoslash
+// @filename: entities.ts
+import { defineEntity } from "@mikro-orm/core"
+
+export const AuthorEntity = defineEntity({
+  name: "Author",
+  properties: (p) => ({
+    name: p.string().primary(),
+  }),
+})
+
+export const BookEntity = defineEntity({
+  name: "Book",
+  properties: (p) => ({
+    isbn: p.string().primary(),
+    salesRevenue: p.float(),
+    author: () => p.manyToOne(AuthorEntity).ref(),
+  }),
+})
+
+// @filename: index.ts
+// ---cut---
+import { kyselySilk } from "@gqloom/mikro-orm"
+import type { MikroKyselyPluginOptions } from "@mikro-orm/libsql"
+import { AuthorEntity, BookEntity } from "./entities"
+
+const kyselyOptions = {
+  columnNamingStrategy: "property",
+} as const satisfies MikroKyselyPluginOptions
+
+const Author = kyselySilk(AuthorEntity, kyselyOptions)
+const Book = kyselySilk(BookEntity, kyselyOptions)
+```
+
+使用该配置后，`salesRevenue` 将保持驼峰格式，外键也会使用原属性名 `author` 而不是 `author_name`。
+
 ## 解析器工厂
 
 除了手写解析器，`@gqloom/mikro-orm` 还提供了 `MikroResolverFactory`。它能大大减少样板代码，根据实体元数据快速生成常用的查询、变更和关系字段。
