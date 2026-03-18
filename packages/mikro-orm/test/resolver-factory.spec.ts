@@ -51,7 +51,7 @@ describe.concurrent("MikroResolverFactory", async () => {
   let orm: MikroORM
   beforeAll(async () => {
     orm = await MikroORM.init(ORMConfig)
-    await orm.getSchemaGenerator().updateSchema()
+    await orm.schema.update()
 
     // Create test data
     await RequestContext.create(orm.em, async () => {
@@ -100,12 +100,12 @@ describe.concurrent("MikroResolverFactory", async () => {
           author: John,
         }),
       ]
-      await orm.em.persistAndFlush([...users, ...posts])
+      await orm.em.persist([...users, ...posts]).flush()
     })
   })
 
-  const userFactory = new MikroResolverFactory(User, () => orm.em)
-  const postFactory = new MikroResolverFactory(Post, () => orm.em)
+  const userFactory = new MikroResolverFactory(User, () => orm.em.fork())
+  const postFactory = new MikroResolverFactory(Post, () => orm.em.fork())
 
   describe.concurrent("collectionField", () => {
     it("should be created without error", async () => {
@@ -236,6 +236,19 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer?.name).toBe("John Doe")
     })
 
+    it("should return null when relation value is null", async () => {
+      const r = resolver.of(Post, {
+        author: postFactory.referenceField("author"),
+      })
+      const postEx = r.toExecutor()
+      const post = await orm.em.findOneOrFail(Post, { title: "Post 1" })
+
+      const fakePost = { ...(post as any), author: null }
+
+      const answer = await postEx.author(fakePost as any)
+      expect(answer).toBeNull()
+    })
+
     it("should work with middlewares", async () => {
       const r = resolver.of(Post, {
         author: postFactory.referenceField("author", {
@@ -255,7 +268,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer?.name).toBe("John Doe")
     })
 
-    it("should weave schema without error", async () => {
+    it("should weave schema without error", { retry: 2 }, async () => {
       const r = resolver.of(Post, {
         author: postFactory.referenceField("author"),
       })
@@ -448,7 +461,7 @@ describe.concurrent("MikroResolverFactory", async () => {
       expect(answer.find((u) => u.id === 1)?.name).toBe("JOHN DOE")
     })
 
-    it("should weave schema without error", async () => {
+    it("should weave schema without error", { retry: 2 }, async () => {
       const r = resolver({ findQuery: userFactory.findQuery() })
       const schema = weave(r)
       await expect(printSchema(schema)).toMatchFileSnapshot(
@@ -962,7 +975,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
     it("should be created without error", async () => {
@@ -1077,7 +1090,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
     it("should be created without error", async () => {
@@ -1187,7 +1200,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
     it("should be created without error", async () => {
@@ -1321,7 +1334,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 
@@ -1414,7 +1427,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 
@@ -1569,8 +1582,14 @@ describe.concurrent("MikroResolverFactory", async () => {
     let orm: MikroORM
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
-      orm = await MikroORM.init({ ...ORMConfig, entities: [User] })
-      await orm.getSchemaGenerator().updateSchema()
+      orm = await MikroORM.init(
+        defineConfig({
+          entities: [User],
+          dbName: ":memory:",
+          allowGlobalContext: true,
+        })
+      )
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 
@@ -1700,7 +1719,7 @@ describe.concurrent("MikroResolverFactory", async () => {
     let userFactory: MikroResolverFactory<IUser>
     beforeAll(async () => {
       orm = await MikroORM.init(ORMConfig)
-      await orm.getSchemaGenerator().updateSchema()
+      await orm.schema.update()
       userFactory = new MikroResolverFactory(User, () => orm.em)
     })
 

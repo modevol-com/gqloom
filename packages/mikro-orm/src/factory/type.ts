@@ -105,15 +105,6 @@ export type InferScalarReferenceKeys<TEntity> = {
   [K in keyof TEntity]?: TEntity[K] extends ScalarReference<any> ? K : never
 }[keyof TEntity]
 
-export type RelationField<
-  TEntity extends object,
-  TKey,
-> = TKey extends InferCollectionKeys<TEntity>
-  ? CollectionField<TEntity, TKey>
-  : TKey extends InferReferenceKeys<TEntity>
-    ? ReferenceField<TEntity, TKey>
-    : never
-
 export interface ReferenceField<TEntity extends object, TKey>
   extends FieldFactoryWithResolve<
     GraphQLSilk<Partial<TEntity>, Partial<TEntity>>,
@@ -371,12 +362,12 @@ export interface InsertManyMutation<
 
 export interface DeleteMutationArgs<TEntity extends object>
   extends Pick<DeleteOptions<TEntity>, never> {
-  where: FilterArgs<TEntity>
+  where: FilterArgs<NoInfer<TEntity>>
 }
 
 export interface DeleteMutationOptions<TEntity extends object>
   extends DeleteOptions<TEntity> {
-  where: FilterQuery<TEntity>
+  where: FilterQuery<NoInfer<TEntity>>
 }
 
 export interface DeleteMutation<
@@ -391,13 +382,13 @@ export interface DeleteMutation<
 export interface UpdateMutationArgs<TEntity extends object>
   extends Pick<UpdateOptions<TEntity>, never> {
   data: EntityData<TEntity>
-  where: FilterArgs<TEntity>
+  where: FilterArgs<NoInfer<TEntity>>
 }
 
 export interface UpdateMutationOptions<TEntity extends object>
   extends UpdateOptions<TEntity> {
   data: EntityData<TEntity>
-  where: FilterQuery<TEntity>
+  where: FilterQuery<NoInfer<TEntity>>
 }
 
 export interface UpdateMutation<
