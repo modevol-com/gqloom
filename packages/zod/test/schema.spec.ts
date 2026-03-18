@@ -32,7 +32,11 @@ import {
   asUnionType,
   ZodWeaver,
 } from "../src"
-import { resolveTypeByDiscriminatedUnion } from "../src/utils"
+import {
+  getFieldConfig,
+  isZodInt,
+  resolveTypeByDiscriminatedUnion,
+} from "../src/utils"
 
 declare module "graphql" {
   export interface GraphQLObjectTypeExtensions extends GQLoomExtensions {}
@@ -299,6 +303,98 @@ describe("ZodWeaver", () => {
     `)
   })
 
+  it("should map GlobalMeta to type config without metaToConfig", () => {
+    const User = z
+      .object({
+        id: z.string(),
+      })
+      .meta({
+        title: "UserTitle",
+        description: "UserDescription",
+      })
+
+    collectNames({ User })
+
+    expect(printZodSilk(User)).toMatchInlineSnapshot(`
+      """"UserDescription"""
+      type UserTitle {
+        id: String!
+      }"
+    `)
+  })
+
+  it("should map GlobalMeta to field description without metaToConfig", () => {
+    const User = z.object({
+      id: z.string().describe("User ID from describe"),
+    })
+
+    z.globalRegistry.add(User.shape.id, {
+      description: "User ID from GlobalMeta",
+    })
+
+    collectNames({ User })
+
+    expect(printZodSilk(User)).toMatchInlineSnapshot(`
+      "type User {
+        \"\"\"User ID from GlobalMeta\"\"\"
+        id: String!
+      }"
+    `)
+  })
+
+  it("should respect registry config over GlobalMeta", () => {
+    const Cat = z
+      .object({
+        name: z.string(),
+      })
+      .meta({
+        title: "MetaCat",
+        description: "Meta description",
+      })
+      .register(asObjectType, {
+        name: "RegistryCat",
+        description: "Registry description",
+      })
+
+    collectNames({ Cat })
+
+    expect(printZodSilk(Cat)).toMatchInlineSnapshot(`
+      "\"\"\"Registry description\"\"\"
+      type RegistryCat {
+        name: String!
+      }"
+    `)
+  })
+
+  it("should read GlobalMeta safely when schema.meta is not a function", () => {
+    const s = z.string().describe("safe")
+    ;(s as any).meta = 123
+
+    const config = getFieldConfig(s as any)
+
+    expect(config.description).toBe("safe")
+  })
+
+  it("should detect int formats in isZodInt", () => {
+    const safeint = {
+      _zod: { def: { type: "number", format: "safeint" } },
+    } as any
+    const int32 = {
+      _zod: { def: { type: "number", format: "int32" } },
+    } as any
+    const uint32 = {
+      _zod: { def: { type: "number", format: "uint32" } },
+    } as any
+    const noFormat = {
+      _zod: { def: { type: "number" } },
+    } as any
+
+    expect(isZodInt(safeint)).toBe(true)
+    expect(isZodInt(int32)).toBe(true)
+    expect(isZodInt(uint32)).toBe(true)
+    expect(isZodInt(noFormat)).toBe(false)
+  })
+
   it("should handle interfere", () => {
     const Fruit = z
       .object({
@@ -308,7 +404,7 @@ describe("ZodWeaver", () => {
         prize: z.number(),
       })
       .describe("Some fruits you might like")
-
+    Fruit.meta()
     const Orange = z
       .object({
         __typename: z.literal("Orange"),
@@ -340,6 +436,63 @@ describe("ZodWeaver", () => {
         prize: Float!
       }"
     `)
+  })
+
+  it("should use metaToUnionConfig when provided", () => {
+    const Cat = z.object({
+      name: z.string(),
+    })
+    const Dog = z.object({
+      name: z.string(),
+    })
+    const Animal = z
+      .union([Cat, Dog])
+      .meta({ title: "AnimalFromMeta", description: "Union from meta" })
+
+    collectNames({ Cat, Dog, Animal })
+
+    const config = ZodWeaver.config({
+      metaToUnionConfig(meta) {
+        return {
+          name: meta.title && `${meta.title}Configured`,
+          description: meta.description && `${meta.description}!`,
+        }
+      },
+    })
+
+    const r = resolver({
+      animal: query(Animal, () => 0 as any),
+    })
+
+    const schema = ZodWeaver.weave(r, config)
+
+    expect(printSchema(schema)).toContain(
+      "union AnimalFromMetaConfigured = Cat | Dog"
+    )
+  })
+
+  it("should use metaToFieldConfig when provided", () => {
+    const User = z.object({
+      id: z.string().meta({ description: "ID from meta" }),
+    })
+
+    collectNames({ User })
+
+    const config = ZodWeaver.config({
+      metaToFieldConfig(meta) {
+        return {
+          description: `META:${meta.description}`,
+        }
+      },
+    })
+
+    const r = resolver({
+      user: query(User, () => ({ id: "" })),
+    })
+
+    const schema = ZodWeaver.weave(r, config)
+
+    expect(printSchema(schema)).toContain('"""META:ID from meta"""')
   })
 
   it("should handle union", () => {

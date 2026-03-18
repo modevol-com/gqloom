@@ -404,6 +404,76 @@ type Dog {
 }
 ```
 
+### Using Zod native metadata
+
+Zod v4 provides native metadata support. GQLoom reads metadata from `.meta()` or the global registry, so you can rely less on GQLoom-specific registries.
+
+#### Auto-mapping rules
+
+By default, GQLoom maps Zod's `GlobalMeta` as follows:
+- `title` → GraphQL type or enum name.
+- `description` → description (takes precedence over `.describe()`).
+
+```ts twoslash
+import * as z from "zod/v4"
+
+export const User = z
+  .object({
+    id: z.string().meta({ description: "User unique identifier" }),
+    name: z.string(),
+  })
+  .meta({
+    title: "User",
+    description: "User information in the system",
+  })
+```
+
+::: tip Priority
+GQLoom reads metadata in this order (highest first):
+1. Config from `asObjectType` / `asField` and other registries.
+2. Custom `metaTo*Config` in `ZodWeaver.config`.
+3. Zod native metadata (`globalRegistry` over `.meta()`).
+4. Zod `.describe()` description.
+:::
+
+#### Using the global registry
+
+You can use Zod v4's `globalRegistry` to attach or inject metadata for existing schemas in bulk or from outside:
+
+```ts twoslash
+import * as z from "zod/v4"
+import { globalRegistry } from "zod/v4/core"
+
+export const User = z.object({
+  id: z.string(),
+  name: z.string(),
+})
+
+// Inject GraphQL metadata for User from outside
+globalRegistry.add(User, {
+  title: "User",
+  description: "Description injected via global registry",
+})
+```
+
+#### Advanced: custom mapping
+
+To use custom metadata fields or control how metadata becomes GraphQL config, configure the hooks in `ZodWeaver.config`:
+
+```ts twoslash
+import { ZodWeaver } from "@gqloom/zod"
+
+export const zodWeaverConfig = ZodWeaver.config({
+  // Map Zod metadata deprecated to GraphQL deprecation reason
+  metaToFieldConfig: (meta) => ({
+    description: meta.description,
+    deprecationReason: meta.deprecated ? "This field is deprecated, please migrate to the new field" : undefined,
+  }),
+})
+```
+
+Supported hooks: `metaToObjectConfig`, `metaToFieldConfig`, `metaToEnumConfig`, and `metaToUnionConfig`.
+
 ## Defining Union Types
 
 #### Using z.discriminatedUnion

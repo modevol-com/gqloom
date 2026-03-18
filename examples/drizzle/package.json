@@ -23,7 +23,7 @@
   "dependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "workspace:*",
-    "dotenv": "^16.4.7",
+    "dotenv": "^17.2.4",
     "drizzle-seed": "^0.3.1",
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.18.0",

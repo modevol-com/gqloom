@@ -404,6 +404,76 @@ type Dog {
 }
 ```
 
+### 使用 Zod 原生元数据
+
+Zod v4 提供了原生的元数据支持。GQLoom 可以直接识别通过 `.meta()` 或全局注册表定义的元数据，从而减少对 GQLoom 专用注册器的依赖。
+
+#### 自动映射规则
+
+默认情况下，GQLoom 会自动将 Zod 的 `GlobalMeta` 字段进行如下转换：
+- `title` → 映射为 GraphQL 类型或枚举的名称。
+- `description` → 映射为描述（优先级高于 `.describe()`）。
+
+```ts twoslash
+import * as z from "zod/v4"
+
+export const User = z
+  .object({
+    id: z.string().meta({ description: "用户唯一标识" }),
+    name: z.string(),
+  })
+  .meta({
+    title: "User",
+    description: "系统用户信息",
+  })
+```
+
+::: tip 优先级说明
+GQLoom 的元数据读取遵循以下优先级（从高到低）：
+1. 使用 `asObjectType` / `asField` 等注册器显式定义的配置。
+2. 通过 `ZodWeaver.config` 自定义的 `metaTo*Config` 转换。
+3. Zod 的原生元数据（`globalRegistry` 优先于 `.meta()`）。
+4. Zod 的 `.describe()` 描述。
+:::
+
+#### 使用全局注册表
+
+你也可以利用 Zod v4 的 `globalRegistry` 来为现有的 Zod Schema 批量配置或从外部注入元数据：
+
+```ts twoslash
+import * as z from "zod/v4"
+import { globalRegistry } from "zod/v4/core"
+
+export const User = z.object({
+  id: z.string(),
+  name: z.string(),
+})
+
+// 在外部为 User Schema 注入 GraphQL 元数据
+globalRegistry.add(User, {
+  title: "User",
+  description: "通过全局注册表注入的描述",
+})
+```
+
+#### 高级：自定义转换逻辑
+
+如果你定义了自定义的元数据字段，或者需要控制转换细节，可以在 `ZodWeaver.config` 中配置钩子函数：
+
+```ts twoslash
+import { ZodWeaver } from "@gqloom/zod"
+
+export const zodWeaverConfig = ZodWeaver.config({
+  // 将 Zod 元数据的 deprecated 字段映射为 GraphQL 的弃用理由
+  metaToFieldConfig: (meta) => ({
+    description: meta.description,
+    deprecationReason: meta.deprecated ? "该字段已废弃，请迁移至新字段" : undefined,
+  }),
+})
+```
+
+配置钩子支持 `metaToObjectConfig`、`metaToFieldConfig`、`metaToEnumConfig` 以及 `metaToUnionConfig`。
+
 ## 定义联合类型
 
 #### 使用 z.discriminatedUnion

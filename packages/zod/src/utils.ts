@@ -23,8 +23,10 @@ import type {
   $ZodString,
   $ZodType,
   $ZodUnion,
+  GlobalMeta,
   util,
 } from "zod/v4/core"
+import { globalRegistry } from "zod/v4/core"
 import { ZodWeaver } from "."
 import { asEnumType, asField, asObjectType, asUnionType } from "./metadata"
 import type {
@@ -32,7 +34,33 @@ import type {
   FieldConfig,
   ObjectConfig,
   UnionConfig,
+  ZodWeaverConfig,
+  ZodWeaverConfigOptions,
 } from "./types"
+
+const defaultMetaToConfig = (meta: GlobalMeta) => {
+  const config: { name?: string; description?: string } = {}
+  if (meta.title) config.name = meta.title
+  if (meta.description) config.description = meta.description
+  return config
+}
+
+const defaultMetaToFieldConfig = (meta: GlobalMeta) => {
+  const config: { description?: string } = {}
+  if (meta.description) config.description = meta.description
+  return config
+}
+
+function getGlobalMeta(schema: $ZodType): GlobalMeta | undefined {
+  const fromRegistry = globalRegistry.get(schema)
+  const fromMeta =
+    "meta" in schema && typeof schema.meta === "function"
+      ? (schema.meta() as GlobalMeta | undefined)
+      : undefined
+
+  if (!fromRegistry && !fromMeta) return undefined
+  return { ...fromMeta, ...fromRegistry }
+}
 
 export function resolveTypeByDiscriminatedUnion(
   schema: $ZodDiscriminatedUnion
@@ -188,6 +216,14 @@ export function getObjectConfig(
   schema: $ZodObject<$ZodShape>
 ): Partial<GraphQLObjectTypeConfig<any, any>> {
   const objectConfig = asObjectType.get(schema) as ObjectConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaToObjectConfig =
+    weaverConfig?.metaToObjectConfig ??
+    (defaultMetaToConfig as NonNullable<
+      ZodWeaverConfigOptions["metaToObjectConfig"]
+    >)
+  const metaConfig = meta ? metaToObjectConfig(meta) : undefined
   const interfaces = objectConfig?.interfaces?.map(
     ZodWeaver.ensureInterfaceType
   )
@@ -208,9 +244,11 @@ export function getObjectConfig(
   return {
     name,
     description: getDescription(schema),
+    ...metaConfig,
     ...objectConfig,
     interfaces,
     extensions: deepMerge(
+      metaConfig?.extensions,
       objectConfig?.extensions
     ) as GraphQLObjectTypeExtensions,
   }
@@ -218,12 +256,23 @@ export function getObjectConfig(
 
 export function getEnumConfig(schema: $ZodEnum<util.EnumLike>): EnumConfig {
   const enumConfig = asEnumType.get(schema) as EnumConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaConfig =
+    meta &&
+    (
+      weaverConfig?.metaToEnumConfig ??
+      (defaultMetaToConfig as NonNullable<
+        ZodWeaverConfigOptions["metaToEnumConfig"]
+      >)
+    )(meta)
 
   return {
     name: weaverContext.names.get(schema),
     description: getDescription(schema),
+    ...metaConfig,
     ...enumConfig,
-    extensions: deepMerge(enumConfig?.extensions),
+    extensions: deepMerge(metaConfig?.extensions, enumConfig?.extensions),
   }
 }
 
@@ -231,18 +280,40 @@ export function getUnionConfig(
   schema: $ZodUnion<$ZodType[]>
 ): Partial<GraphQLUnionTypeConfig<any, any>> {
   const unionConfig = asUnionType.get(schema) as UnionConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaConfig =
+    meta &&
+    (
+      weaverConfig?.metaToUnionConfig ??
+      (defaultMetaToConfig as NonNullable<
+        ZodWeaverConfigOptions["metaToUnionConfig"]
+      >)
+    )(meta)
   return {
     name: weaverContext.names.get(schema),
-    ...unionConfig,
     description: getDescription(schema),
-    extensions: deepMerge(unionConfig?.extensions),
+    ...metaConfig,
+    ...unionConfig,
+    extensions: deepMerge(metaConfig?.extensions, unionConfig?.extensions),
   }
 }
 
 export function getFieldConfig(schema: $ZodType): FieldConfig {
   const config = asField.get(schema) as FieldConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaConfig =
+    meta &&
+    (
+      weaverConfig?.metaToFieldConfig ??
+      (defaultMetaToFieldConfig as NonNullable<
+        ZodWeaverConfigOptions["metaToFieldConfig"]
+      >)
+    )(meta)
   return {
     description: getDescription(schema),
+    ...metaConfig,
     ...config,
   }
 }

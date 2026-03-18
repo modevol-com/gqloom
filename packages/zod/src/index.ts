@@ -1,6 +1,8 @@
+import type { GraphQLSilk } from "@gqloom/core"
 import {
   AUTO_ALIASING,
   ensureInterfaceType,
+  getGraphQLType,
   mapValue,
   provideWeaverContext,
   SYMBOLS,
@@ -31,7 +33,6 @@ import type { $ZodObject, $ZodType, $ZodTypeDef } from "zod/v4/core"
 import { asField } from "./metadata"
 import type {
   FieldConfig,
-  LooseZodObject,
   ZodWeaverConfig,
   ZodWeaverConfigOptions,
 } from "./types"
@@ -245,11 +246,11 @@ export class ZodWeaver {
   }
 
   public static ensureInterfaceType(
-    item: GraphQLInterfaceType | LooseZodObject
+    item: GraphQLInterfaceType | GraphQLSilk
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = ZodWeaver.toMemoriedGraphQLType(item as unknown as $ZodType)
-
+    let gqlType = getGraphQLType(item)
+    while (isNonNullType(gqlType)) gqlType = gqlType.ofType
     return ensureInterfaceType(gqlType)
   }
 

@@ -229,9 +229,9 @@ export class PrismaTypeFactory<
       new GraphQLEnumType({
         name,
         values: Object.fromEntries(
-          enumType.data.map((item) => [
-            item.value,
-            { value: item.value } as GraphQLEnumValueConfig,
+          enumType.values.map((value) => [
+            value,
+            { value: value } as GraphQLEnumValueConfig,
           ])
         ),
       })
@@ -337,18 +337,7 @@ export class PrismaTypeFactory<
   ): Map<string, DMMF.SchemaEnum> {
     const map = new Map<string, DMMF.SchemaEnum>()
     for (const enumType of schema.enumTypes.prisma ?? []) {
-      // Convert from old format { name, values: string[] } to new format { name, data: { key, value }[] }
-      const convertedEnum: DMMF.SchemaEnum = {
-        name: enumType.name,
-        data:
-          (enumType as any).data ??
-          (enumType as any).values?.map((value: string) => ({
-            key: value,
-            value: value,
-          })) ??
-          [],
-      }
-      map.set(enumType.name, convertedEnum)
+      map.set(enumType.name, enumType)
     }
     return map
   }

@@ -1,4 +1,4 @@
-import type { SYMBOLS, WeaverConfig } from "@gqloom/core"
+import type { GraphQLSilk, SYMBOLS, WeaverConfig } from "@gqloom/core"
 import type {
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfig,
@@ -8,15 +8,8 @@ import type {
   GraphQLOutputType,
   GraphQLUnionTypeConfig,
 } from "graphql"
-import type { $ZodObject, $ZodType } from "zod/v4/core"
+import type { $ZodType, GlobalMeta } from "zod/v4/core"
 import type { ZodWeaver } from "."
-
-export interface LooseZodObject extends Pick<$ZodObject, "~standard"> {
-  _zod: Omit<
-    $ZodObject<any, any>["_zod"],
-    "def" | "parent" | "parse" | "run" | "toJSONSchema" | "processJSONSchema"
-  >
-}
 
 export interface ObjectConfig
   extends Omit<
@@ -24,7 +17,7 @@ export interface ObjectConfig
       "fields" | "name" | "interfaces"
     >,
     Partial<Pick<GraphQLObjectTypeConfig<any, any>, "fields" | "name">> {
-  interfaces?: (LooseZodObject | GraphQLInterfaceType)[]
+  interfaces?: (GraphQLSilk | GraphQLInterfaceType)[]
   [k: string]: unknown
 }
 
@@ -44,13 +37,36 @@ export interface EnumConfig<TKey = string>
 }
 
 export interface UnionConfig
-  extends Omit<GraphQLUnionTypeConfig<any, any>, "types">,
+  extends Omit<GraphQLUnionTypeConfig<any, any>, "name" | "types">,
     Partial<Pick<GraphQLUnionTypeConfig<any, any>, "types">> {
   [k: string]: unknown
 }
 
 export interface ZodWeaverConfigOptions {
+  /**
+   * Optionally override the auto-inferred GraphQL output type for a given Zod schema.
+   */
   presetGraphQLType?: (schema: $ZodType) => GraphQLOutputType | undefined
+
+  /**
+   * Derive GraphQL object type config (name, description, interfaces, extensions, etc.) from global Zod meta.
+   */
+  metaToObjectConfig?: (meta: GlobalMeta) => ObjectConfig | undefined
+
+  /**
+   * Derive GraphQL field config (description, deprecation, extensions, etc.) from global Zod meta.
+   */
+  metaToFieldConfig?: (meta: GlobalMeta) => FieldConfig | undefined
+
+  /**
+   * Derive GraphQL enum config (values metadata, description, extensions, etc.) from global Zod meta.
+   */
+  metaToEnumConfig?: (meta: GlobalMeta) => EnumConfig | undefined
+
+  /**
+   * Derive GraphQL union config (description, resolveType hints, extensions, etc.) from global Zod meta.
+   */
+  metaToUnionConfig?: (meta: GlobalMeta) => UnionConfig | undefined
 }
 
 export interface ZodWeaverConfig extends WeaverConfig, ZodWeaverConfigOptions {
