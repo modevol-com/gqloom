@@ -67,11 +67,11 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/zod": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "^7.3.0",
-    "@prisma/client": "^7.1.0",
+    "@prisma/adapter-better-sqlite3": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.6.2",
-    "prisma": "^7.2.0",
+    "prisma": "^7.5.0",
     "zod": "4.3.6"
   },
   "homepage": "https://gqloom.dev/",
@@ -84,7 +84,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@prisma/generator-helper": "^7.1.0",
+    "@prisma/generator-helper": "^7.5.0",
     "ts-morph": "^27.0.2"
   }
 }
