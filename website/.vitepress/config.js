@@ -30,6 +30,9 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss(), vueJsx(), llmstxt({ ignoreFiles: ["zh/**/*"] })],
+    ssr: {
+      noExternal: ["floating-vue", "@shikijs/vitepress-twoslash"],
+    },
     resolve: {
       alias: [
         {
