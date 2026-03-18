@@ -39,7 +39,7 @@ describe("mikroSilk", () => {
       properties: (p) => ({
         ISBN: p.string().primary(),
         sales: p.integer(),
-        salesRevenue: p.float().hidden(false),
+        salesRevenue: p.float().hidden(),
         title: p.string(),
         isPublished: p.boolean(),
         price: p.float().nullable(),
@@ -592,7 +592,7 @@ describe("kyselySilk", () => {
     properties: (p) => ({
       isbn: p.string().primary(),
       sales: p.integer(),
-      salesRevenue: p.float().hidden(false),
+      salesRevenue: p.float(),
       title: p.string(),
       isPublished: p.boolean().default(false),
       price: p.float().nullable().default(0),

@@ -530,8 +530,8 @@ export class MikroResolverFactory<TEntity extends object> {
       ...options,
       resolve: async (args: InsertManyMutationOptions<TEntity>, payload) => {
         const em = await this.em(payload)
-        const keys = await em.insertMany(
-          this.entityName as any,
+        const keys = await em.insertMany<TEntity>(
+          this.entityName,
           args.data,
           args
         )

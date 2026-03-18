@@ -18,8 +18,8 @@
   "dependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/mikro-orm": "workspace:*",
-    "@mikro-orm/core": "^7.0.0-rc.0",
-    "@mikro-orm/libsql": "^7.0.0-rc.0",
+    "@mikro-orm/core": "^7.0.2",
+    "@mikro-orm/libsql": "^7.0.2",
     "graphql-yoga": "^5.18.0",
     "valibot": "^1.2.0"
   }

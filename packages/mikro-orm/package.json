@@ -38,7 +38,7 @@
   "author": "xcfox",
   "license": "MIT",
   "dependencies": {
-    "@mikro-orm/sql": "^7.0.0-rc.0",
+    "@mikro-orm/sql": "^7.0.2",
     "kysely": "^0.28.11"
   },
   "peerDependencies": {
@@ -59,9 +59,9 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/valibot": "workspace:*",
-    "@mikro-orm/core": "^7.0.0-rc.0",
-    "@mikro-orm/decorators": "^7.0.0-rc.0",
-    "@mikro-orm/libsql": "^7.0.0-rc.0",
+    "@mikro-orm/core": "^7.0.2",
+    "@mikro-orm/decorators": "^7.0.2",
+    "@mikro-orm/libsql": "^7.0.2",
     "reflect-metadata": "^0.2.2",
     "valibot": "1.2.0"
   },
