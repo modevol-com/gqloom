@@ -3,7 +3,7 @@ import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: "./local.db",
   debug: true,

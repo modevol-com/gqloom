@@ -3,8 +3,224 @@ type User {
   createdAt: String!
   email: String!
   name: String!
+  password: String
   role: String!
-  posts: [Post!]!
+  posts(where: PostFilter): [Post!]!
+}
+
+input PostFilter {
+  id: IDComparisonOperators
+  createdAt: StringComparisonOperators
+  updatedAt: StringComparisonOperators
+  published: BooleanComparisonOperators
+  title: StringComparisonOperators
+  content: StringComparisonOperators
+
+  """
+  Joins query clauses with a logical AND returns all documents that match the conditions of both clauses.
+  """
+  AND: [PostFilter!]
+
+  """
+  Joins query clauses with a logical OR returns all documents that match the conditions of either clause.
+  """
+  OR: [PostFilter!]
+
+  """
+  Inverts the effect of a query expression and returns documents that do not match the query expression.
+  """
+  NOT: PostFilter
+}
+
+input IDComparisonOperators {
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: ID
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: ID
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: ID
+
+  """
+  Contains, Matches any of the values specified in an array.
+  """
+  in: [ID!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: ID
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: ID
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: ID
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [ID!]
+
+  """
+  && (postgres only)
+  """
+  overlap: [ID!]
+
+  """
+  @> (postgres only)
+  """
+  contains: [ID!]
+
+  """
+  <@ (postgres only)
+  """
+  contained: [ID!]
+}
+
+input StringComparisonOperators {
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: String
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: String
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: String
+
+  """
+  Contains, Matches any of the values specified in an array.
+  """
+  in: [String!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: String
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: String
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: String
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [String!]
+
+  """
+  && (postgres only)
+  """
+  overlap: [String!]
+
+  """
+  @> (postgres only)
+  """
+  contains: [String!]
+
+  """
+  <@ (postgres only)
+  """
+  contained: [String!]
+
+  """
+  Like. Uses LIKE operator
+  """
+  like: String
+
+  """
+  Regexp. Uses REGEXP operator
+  """
+  re: String
+
+  """
+  Full text. A driver specific full text search function.
+  """
+  fulltext: String
+
+  """
+  ilike (postgres only)
+  """
+  ilike: String
+}
+
+input BooleanComparisonOperators {
+  """
+  Equals. Matches values that are equal to a specified value.
+  """
+  eq: Boolean
+
+  """
+  Greater. Matches values that are greater than a specified value.
+  """
+  gt: Boolean
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: Boolean
+
+  """
+  Contains, Matches any of the values specified in an array.
+  """
+  in: [Boolean!]
+
+  """
+  Lower, Matches values that are less than a specified value.
+  """
+  lt: Boolean
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: Boolean
+
+  """
+  Not equal. Matches all values that are not equal to a specified value.
+  """
+  ne: Boolean
+
+  """
+  Not contains. Matches none of the values specified in an array.
+  """
+  nin: [Boolean!]
+
+  """
+  && (postgres only)
+  """
+  overlap: [Boolean!]
+
+  """
+  @> (postgres only)
+  """
+  contains: [Boolean!]
+
+  """
+  <@ (postgres only)
+  """
+  contained: [Boolean!]
 }
 
 type Post {
@@ -41,206 +257,6 @@ type Query {
     orderBy: PostOrderBy
     offset: Int
   ): Post!
-}
-
-input PostFilter {
-  id: IDComparisonOperators
-  createdAt: StringComparisonOperators
-  updatedAt: StringComparisonOperators
-  published: BooleanComparisonOperators
-  title: StringComparisonOperators
-  content: StringComparisonOperators
-}
-
-input IDComparisonOperators {
-  """
-  Equals. Matches values that are equal to a specified value.
-  """
-  eq: ID
-
-  """
-  Greater. Matches values that are greater than a specified value.
-  """
-  gt: ID
-
-  """
-  Greater or Equal. Matches values that are greater than or equal to a specified value.
-  """
-  gte: ID
-
-  """
-  Contains, Contains, Matches any of the values specified in an array.
-  """
-  in: [ID!]
-
-  """
-  Lower, Matches values that are less than a specified value.
-  """
-  lt: ID
-
-  """
-  Lower or equal, Matches values that are less than or equal to a specified value.
-  """
-  lte: ID
-
-  """
-  Not equal. Matches all values that are not equal to a specified value.
-  """
-  ne: ID
-
-  """
-  Not contains. Matches none of the values specified in an array.
-  """
-  nin: [ID!]
-
-  """
-  &&
-  """
-  overlap: [ID!]
-
-  """
-  @>
-  """
-  contains: [ID!]
-
-  """
-  <@
-  """
-  contained: [ID!]
-}
-
-input StringComparisonOperators {
-  """
-  Equals. Matches values that are equal to a specified value.
-  """
-  eq: String
-
-  """
-  Greater. Matches values that are greater than a specified value.
-  """
-  gt: String
-
-  """
-  Greater or Equal. Matches values that are greater than or equal to a specified value.
-  """
-  gte: String
-
-  """
-  Contains, Contains, Matches any of the values specified in an array.
-  """
-  in: [String!]
-
-  """
-  Lower, Matches values that are less than a specified value.
-  """
-  lt: String
-
-  """
-  Lower or equal, Matches values that are less than or equal to a specified value.
-  """
-  lte: String
-
-  """
-  Not equal. Matches all values that are not equal to a specified value.
-  """
-  ne: String
-
-  """
-  Not contains. Matches none of the values specified in an array.
-  """
-  nin: [String!]
-
-  """
-  &&
-  """
-  overlap: [String!]
-
-  """
-  @>
-  """
-  contains: [String!]
-
-  """
-  <@
-  """
-  contained: [String!]
-
-  """
-  Like. Uses LIKE operator
-  """
-  like: String
-
-  """
-  Regexp. Uses REGEXP operator
-  """
-  re: String
-
-  """
-  Full text.	A driver specific full text search function.
-  """
-  fulltext: String
-
-  """
-  ilike
-  """
-  ilike: String
-}
-
-input BooleanComparisonOperators {
-  """
-  Equals. Matches values that are equal to a specified value.
-  """
-  eq: Boolean
-
-  """
-  Greater. Matches values that are greater than a specified value.
-  """
-  gt: Boolean
-
-  """
-  Greater or Equal. Matches values that are greater than or equal to a specified value.
-  """
-  gte: Boolean
-
-  """
-  Contains, Contains, Matches any of the values specified in an array.
-  """
-  in: [Boolean!]
-
-  """
-  Lower, Matches values that are less than a specified value.
-  """
-  lt: Boolean
-
-  """
-  Lower or equal, Matches values that are less than or equal to a specified value.
-  """
-  lte: Boolean
-
-  """
-  Not equal. Matches all values that are not equal to a specified value.
-  """
-  ne: Boolean
-
-  """
-  Not contains. Matches none of the values specified in an array.
-  """
-  nin: [Boolean!]
-
-  """
-  &&
-  """
-  overlap: [Boolean!]
-
-  """
-  @>
-  """
-  contains: [Boolean!]
-
-  """
-  <@
-  """
-  contained: [Boolean!]
 }
 
 input PostOrderBy {
@@ -299,6 +315,7 @@ input UserRequiredInput {
   createdAt: String
   email: String!
   name: String!
+  password: String
   role: String
   posts: [ID]
 }
