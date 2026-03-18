@@ -739,7 +739,7 @@ describe("Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE main.User.email LIKE ? LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE main.User.email LIKE (? || '%') LIMIT ? OFFSET ?
         SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.authorId IN (?) LIMIT ? OFFSET ?
         "
       `)
