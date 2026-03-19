@@ -5,19 +5,13 @@ on:
     branches: [main]
   workflow_call:
 
-jobs:
-  install:
-    name: Install packages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: ./.github/actions/pnpm
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
+jobs:
   lint:
     name: Run lint
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,11 +19,10 @@ jobs:
       - name: Setup pnpm
         uses: ./.github/actions/pnpm
       - name: Lint check
-        run: pnpm lint
+        run: pnpm run check:lint
 
   type-check:
     name: Run type check
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,7 +38,6 @@ jobs:
 
   test:
     name: Run Uint test
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
