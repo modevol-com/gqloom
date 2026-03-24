@@ -519,8 +519,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@mercuriusjs/federation':
-        specifier: ^5.0.0
-        version: 5.0.0
+        specifier: ^5.1.0
+        version: 5.1.0
       fastify:
         specifier: ^5.6.2
         version: 5.7.4
@@ -535,7 +535,7 @@ importers:
         version: 16.8.0(graphql@16.13.1)
       mercurius-integration-testing:
         specifier: ^9.0.1
-        version: 9.0.1(@mercuriusjs/federation@5.0.0)(fastify@5.7.4)(graphql@16.13.1)(mercurius@16.8.0(graphql@16.13.1))
+        version: 9.0.1(@mercuriusjs/federation@5.1.0)(fastify@5.7.4)(graphql@16.13.1)(mercurius@16.8.0(graphql@16.13.1))
 
   packages/json:
     dependencies:
@@ -2105,8 +2105,8 @@ packages:
     resolution: {integrity: sha512-9I2Zn6+NJLfaGoz9jN3lpwDgAYvfGeNYdbAIjJOqzs4Tpc+VU3Jqq4IofSUBKajiDS8k9fZIg18/z13mpk1bsA==}
     engines: {node: '>=8'}
 
-  '@mercuriusjs/federation@5.0.0':
-    resolution: {integrity: sha512-5E2S3mgxq+yK4XZm0UMms3lcG3QG/83xh8mmo/XyjwQiT8DulX8ibBXvlQtmOO4g4U9N+AUEqrqPfnoC5I+TSA==}
+  '@mercuriusjs/federation@5.1.0':
+    resolution: {integrity: sha512-F2eJNySdqiWvNSFEVe8wPodw8aiTfpcSn/XQfqQ3h67HUc2R76NI+YZp5YL3JV/9I73y30CfCxJ5hza4nRXcMw==}
 
   '@mikro-orm/core@7.0.2':
     resolution: {integrity: sha512-OzbvkyPiJnQhLpdbWcYQPh41v1jmv1KKrtJm9Irf1H7e55Kk5W2fogy74OOPIQN2mWpBz7VP6iz+o/ncEX29PQ==}
@@ -7585,7 +7585,7 @@ snapshots:
 
   '@lukeed/ms@2.0.2': {}
 
-  '@mercuriusjs/federation@5.0.0':
+  '@mercuriusjs/federation@5.1.0':
     dependencies:
       '@fastify/error': 4.2.0
       graphql: 16.13.1
@@ -10476,7 +10476,7 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mercurius-integration-testing@9.0.1(@mercuriusjs/federation@5.0.0)(fastify@5.7.4)(graphql@16.13.1)(mercurius@16.8.0(graphql@16.13.1)):
+  mercurius-integration-testing@9.0.1(@mercuriusjs/federation@5.1.0)(fastify@5.7.4)(graphql@16.13.1)(mercurius@16.8.0(graphql@16.13.1)):
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.13.1)
       cookie: 1.1.1
@@ -10485,7 +10485,7 @@ snapshots:
       mercurius: 16.8.0(graphql@16.13.1)
       ws: 8.19.0
     optionalDependencies:
-      '@mercuriusjs/federation': 5.0.0
+      '@mercuriusjs/federation': 5.1.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
