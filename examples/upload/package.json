@@ -14,7 +14,7 @@
   "license": "ISC",
   "description": "File upload example using graphql-upload and graphql-yoga with GQLoom",
   "devDependencies": {
-    "@types/node": "^24.3.0",
+    "@types/node": "^25.5.0",
     "fastify": "^5.7.4",
     "mercurius": "^16.8.0",
     "mercurius-upload": "^8.0.0",
