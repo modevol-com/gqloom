@@ -55,7 +55,7 @@
     "@gqloom/valibot": "workspace:*",
     "@libsql/client": "^0.15.15",
     "@types/pg": "^8.16.0",
-    "dotenv": "^17.2.4",
+    "dotenv": "^17.3.1",
     "drizzle-kit": "^0.31.5",
     "drizzle-orm": "^0.45.1",
     "mysql2": "^3.20.0",
