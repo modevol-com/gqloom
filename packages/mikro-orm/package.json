@@ -61,7 +61,7 @@
     "@gqloom/valibot": "workspace:*",
     "@mikro-orm/core": "^7.0.2",
     "@mikro-orm/decorators": "^7.0.2",
-    "@mikro-orm/libsql": "^7.0.2",
+    "@mikro-orm/libsql": "^7.0.10",
     "reflect-metadata": "^0.2.2",
     "valibot": "1.2.0"
   },
