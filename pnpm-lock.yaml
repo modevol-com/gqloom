@@ -581,8 +581,8 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2(dataloader@2.2.3)
       '@mikro-orm/decorators':
-        specifier: ^7.0.2
-        version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)
+        specifier: ^7.0.10
+        version: 7.0.10(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)
       '@mikro-orm/libsql':
         specifier: ^7.0.2
         version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))
@@ -2126,11 +2126,11 @@ packages:
       dataloader:
         optional: true
 
-  '@mikro-orm/decorators@7.0.2':
-    resolution: {integrity: sha512-La38yXtp+Xt9+hu8GPKaKC/zoAzdUG/hYwSquxFgm0jU3Sy8FaBL6GzbX7gb7RxMOr88j9MFQfUsko3r7lO7zg==}
+  '@mikro-orm/decorators@7.0.10':
+    resolution: {integrity: sha512-xLnj5Z9ufoNk0zlzTuhgUqSim1Q0Qel3kntPdZ6Vd0M2jWfVbH+jz6En9RjIASLOF05GyqevyTWL2NAoibFX3Q==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.0.2
+      '@mikro-orm/core': 7.0.10
       reflect-metadata: ^0.1.0 || ^0.2.0
     peerDependenciesMeta:
       reflect-metadata:
@@ -7629,7 +7629,7 @@ snapshots:
     optionalDependencies:
       dataloader: 2.2.3
 
-  '@mikro-orm/decorators@7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)':
+  '@mikro-orm/decorators@7.0.10(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)':
     dependencies:
       '@mikro-orm/core': 7.0.2(dataloader@2.2.3)
     optionalDependencies:
