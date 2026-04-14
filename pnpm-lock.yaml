@@ -62,10 +62,10 @@ importers:
         version: 0.2.2(graphql@16.13.1)
       '@hono/graphql-server':
         specifier: ^0.5.1
-        version: 0.5.1(hono@4.11.1)
+        version: 0.5.1(hono@4.12.12)
       '@hono/node-server':
         specifier: ^1.19.9
-        version: 1.19.9(hono@4.11.1)
+        version: 1.19.9(hono@4.12.12)
       fastify:
         specifier: ^5.6.2
         version: 5.7.4
@@ -76,8 +76,8 @@ importers:
         specifier: ^5.18.0
         version: 5.18.0(graphql@16.13.1)
       hono:
-        specifier: ^4.11.1
-        version: 4.11.1
+        specifier: ^4.12.12
+        version: 4.12.12
       mercurius:
         specifier: ^16.6.0
         version: 16.8.0(graphql@16.13.1)
@@ -4301,12 +4301,12 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
-  hono@4.11.1:
-    resolution: {integrity: sha512-KsFcH0xxHes0J4zaQgWbYwmz3UPOOskdqZmItstUG93+Wk1ePBLkLGwbP9zlmh1BFUiL8Qp+Xfu9P7feJWpGNg==}
-    engines: {node: '>=16.9.0'}
-
   hono@4.11.4:
     resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
+    engines: {node: '>=16.9.0'}
+
+  hono@4.12.12:
+    resolution: {integrity: sha512-p1JfQMKaceuCbpJKAPKVqyqviZdS0eUxH9v82oWo1kb9xjQ5wA6iP3FNVAPDFlz5/p7d45lO+BpSk1tuSZMF4Q==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -7473,18 +7473,18 @@ snapshots:
       '@repeaterjs/repeater': 3.0.6
       tslib: 2.8.1
 
-  '@hono/graphql-server@0.5.1(hono@4.11.1)':
+  '@hono/graphql-server@0.5.1(hono@4.12.12)':
     dependencies:
       graphql: 16.13.1
-      hono: 4.11.1
-
-  '@hono/node-server@1.19.9(hono@4.11.1)':
-    dependencies:
-      hono: 4.11.1
+      hono: 4.12.12
 
   '@hono/node-server@1.19.9(hono@4.11.4)':
     dependencies:
       hono: 4.11.4
+
+  '@hono/node-server@1.19.9(hono@4.12.12)':
+    dependencies:
+      hono: 4.12.12
 
   '@iconify-json/simple-icons@1.2.74':
     dependencies:
@@ -9835,9 +9835,9 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
 
-  hono@4.11.1: {}
-
   hono@4.11.4: {}
+
+  hono@4.12.12: {}
 
   hookable@5.5.3: {}
 
