@@ -19,7 +19,7 @@
     "@gqloom/core": "workspace:*",
     "@gqloom/mikro-orm": "workspace:*",
     "@mikro-orm/core": "^7.0.2",
-    "@mikro-orm/libsql": "^7.0.2",
+    "@mikro-orm/libsql": "^7.0.12",
     "graphql": "^16.13.1",
     "graphql-yoga": "^5.21.0",
     "valibot": "^1.2.0"
