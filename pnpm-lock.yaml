@@ -581,8 +581,8 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2(dataloader@2.2.3)
       '@mikro-orm/decorators':
-        specifier: ^7.0.2
-        version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)
+        specifier: ^7.0.12
+        version: 7.0.12(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)
       '@mikro-orm/libsql':
         specifier: ^7.0.2
         version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))
@@ -2126,11 +2126,11 @@ packages:
       dataloader:
         optional: true
 
-  '@mikro-orm/decorators@7.0.2':
-    resolution: {integrity: sha512-La38yXtp+Xt9+hu8GPKaKC/zoAzdUG/hYwSquxFgm0jU3Sy8FaBL6GzbX7gb7RxMOr88j9MFQfUsko3r7lO7zg==}
+  '@mikro-orm/decorators@7.0.12':
+    resolution: {integrity: sha512-CNK8kzXMxFYAibJpPULxfRF7fHhkZ4i8DqHbvd1cjaQD47WVgCL0g4A+2Tw88RfRu7vgYtY6ms7+vnnEo+lsIQ==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.0.2
+      '@mikro-orm/core': 7.0.12
       reflect-metadata: ^0.1.0 || ^0.2.0
     peerDependenciesMeta:
       reflect-metadata:
@@ -5343,6 +5343,10 @@ packages:
     resolution: {integrity: sha512-pMMHxBOZKFU6HgAZ4eyGnwXF/EvPGGqUr0MnZ5+99485wwW41kW91A4LOGxSHhgugZmSChL5AlElNdwlNgcnLQ==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postcss@8.5.12:
+    resolution: {integrity: sha512-W62t/Se6rA0Az3DfCL0AqJwXuKwBeYg6nOaIgzP+xZ7N5BFCI7DYi1qs6ygUYT6rvfi6t9k65UMLJC+PHZpDAA==}
+    engines: {node: ^10 || ^12 || >=14}
+
   postgres-array@2.0.0:
     resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
     engines: {node: '>=4'}
@@ -7625,7 +7629,7 @@ snapshots:
     optionalDependencies:
       dataloader: 2.2.3
 
-  '@mikro-orm/decorators@7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)':
+  '@mikro-orm/decorators@7.0.12(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)':
     dependencies:
       '@mikro-orm/core': 7.0.2(dataloader@2.2.3)
     optionalDependencies:
@@ -11122,6 +11126,12 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  postcss@8.5.12:
+    dependencies:
+      nanoid: 3.3.11
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
   postgres-array@2.0.0: {}
 
   postgres-array@3.0.4: {}
@@ -11407,7 +11417,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.10
+      postcss: 8.5.12
       rolldown: 1.0.0-beta.53(@emnapi/core@1.8.1)(@emnapi/runtime@1.8.1)
       tinyglobby: 0.2.16
     optionalDependencies:
@@ -11428,7 +11438,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.10
+      postcss: 8.5.12
       rolldown: 1.0.0-beta.53(@emnapi/core@1.8.1)(@emnapi/runtime@1.8.1)
       tinyglobby: 0.2.16
     optionalDependencies:
@@ -12157,7 +12167,7 @@ snapshots:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.10
+      postcss: 8.5.12
       rollup: 4.60.2
       tinyglobby: 0.2.16
     optionalDependencies:
