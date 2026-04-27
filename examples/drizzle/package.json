@@ -16,7 +16,7 @@
     "@types/node": "^25.5.0",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.5",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.2"
   },
