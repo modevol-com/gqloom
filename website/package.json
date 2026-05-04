@@ -36,7 +36,7 @@
     "arktype": "^2.1.29",
     "concurrently": "^9.2.1",
     "drizzle-kit": "^0.31.5",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "effect": "^3.19.15",
     "fastify": "^5.7.4",
     "graphql": "^16.12.0",
