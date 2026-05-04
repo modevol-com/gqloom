@@ -293,8 +293,8 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2(dataloader@2.2.3)
       '@mikro-orm/libsql':
-        specifier: ^7.0.2
-        version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))
+        specifier: ^7.0.13
+        version: 7.0.13(@mikro-orm/core@7.0.2(dataloader@2.2.3))
       graphql:
         specifier: ^16.13.1
         version: 16.13.1
@@ -584,8 +584,8 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))(reflect-metadata@0.2.2)
       '@mikro-orm/libsql':
-        specifier: ^7.0.2
-        version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))
+        specifier: ^7.0.13
+        version: 7.0.13(@mikro-orm/core@7.0.2(dataloader@2.2.3))
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -733,8 +733,8 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2(dataloader@2.2.3)
       '@mikro-orm/libsql':
-        specifier: ^7.0.2
-        version: 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))
+        specifier: ^7.0.13
+        version: 7.0.13(@mikro-orm/core@7.0.2(dataloader@2.2.3))
       '@shikijs/vitepress-twoslash':
         specifier: ^4.0.2
         version: 4.0.2(typescript@5.9.3)
@@ -2066,8 +2066,18 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@libsql/darwin-arm64@0.5.29':
+    resolution: {integrity: sha512-K+2RIB1OGFPYQbfay48GakLhqf3ArcbHqPFu7EZiaUcRgFcdw8RoltsMyvbj5ix2fY0HV3Q3Ioa/ByvQdaSM0A==}
+    cpu: [arm64]
+    os: [darwin]
+
   '@libsql/darwin-x64@0.5.22':
     resolution: {integrity: sha512-ny2HYWt6lFSIdNFzUFIJ04uiW6finXfMNJ7wypkAD8Pqdm6nAByO+Fdqu8t7sD0sqJGeUCiOg480icjyQ2/8VA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@libsql/darwin-x64@0.5.29':
+    resolution: {integrity: sha512-OtT+KFHsKFy1R5FVadr8FJ2Bb1mghtXTyJkxv0trocq7NuHntSki1eUbxpO5ezJesDvBlqFjnWaYYY516QNLhQ==}
     cpu: [x64]
     os: [darwin]
 
@@ -2086,8 +2096,18 @@ packages:
     cpu: [arm]
     os: [linux]
 
+  '@libsql/linux-arm-gnueabihf@0.5.29':
+    resolution: {integrity: sha512-CD4n4zj7SJTHso4nf5cuMoWoMSS7asn5hHygsDuhRl8jjjCTT3yE+xdUvI4J7zsyb53VO5ISh4cwwOtf6k2UhQ==}
+    cpu: [arm]
+    os: [linux]
+
   '@libsql/linux-arm-musleabihf@0.5.22':
     resolution: {integrity: sha512-LCsXh07jvSojTNJptT9CowOzwITznD+YFGGW+1XxUr7fS+7/ydUrpDfsMX7UqTqjm7xG17eq86VkWJgHJfvpNg==}
+    cpu: [arm]
+    os: [linux]
+
+  '@libsql/linux-arm-musleabihf@0.5.29':
+    resolution: {integrity: sha512-2Z9qBVpEJV7OeflzIR3+l5yAd4uTOLxklScYTwpZnkm2vDSGlC1PRlueLaufc4EFITkLKXK2MWBpexuNJfMVcg==}
     cpu: [arm]
     os: [linux]
 
@@ -2096,8 +2116,18 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@libsql/linux-arm64-gnu@0.5.29':
+    resolution: {integrity: sha512-gURBqaiXIGGwFNEaUj8Ldk7Hps4STtG+31aEidCk5evMMdtsdfL3HPCpvys+ZF/tkOs2MWlRWoSq7SOuCE9k3w==}
+    cpu: [arm64]
+    os: [linux]
+
   '@libsql/linux-arm64-musl@0.5.22':
     resolution: {integrity: sha512-mCHSMAsDTLK5YH//lcV3eFEgiR23Ym0U9oEvgZA0667gqRZg/2px+7LshDvErEKv2XZ8ixzw3p1IrBzLQHGSsw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@libsql/linux-arm64-musl@0.5.29':
+    resolution: {integrity: sha512-fwgYZ0H8mUkyVqXZHF3mT/92iIh1N94Owi/f66cPVNsk9BdGKq5gVpoKO+7UxaNzuEH1roJp2QEwsCZMvBLpqg==}
     cpu: [arm64]
     os: [linux]
 
@@ -2106,13 +2136,28 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@libsql/linux-x64-gnu@0.5.29':
+    resolution: {integrity: sha512-y14V0vY0nmMC6G0pHeJcEarcnGU2H6cm21ZceRkacWHvQAEhAG0latQkCtoS2njFOXiYIg+JYPfAoWKbi82rkg==}
+    cpu: [x64]
+    os: [linux]
+
   '@libsql/linux-x64-musl@0.5.22':
     resolution: {integrity: sha512-UZ4Xdxm4pu3pQXjvfJiyCzZop/9j/eA2JjmhMaAhe3EVLH2g11Fy4fwyUp9sT1QJYR1kpc2JLuybPM0kuXv/Tg==}
     cpu: [x64]
     os: [linux]
 
+  '@libsql/linux-x64-musl@0.5.29':
+    resolution: {integrity: sha512-gquqwA/39tH4pFl+J9n3SOMSymjX+6kZ3kWgY3b94nXFTwac9bnFNMffIomgvlFaC4ArVqMnOZD3nuJ3H3VO1w==}
+    cpu: [x64]
+    os: [linux]
+
   '@libsql/win32-x64-msvc@0.5.22':
     resolution: {integrity: sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@libsql/win32-x64-msvc@0.5.29':
+    resolution: {integrity: sha512-4/0CvEdhi6+KjMxMaVbFM2n2Z44escBRoEYpR+gZg64DdetzGnYm8mcNLcoySaDJZNaBd6wz5DNdgRmcI4hXcg==}
     cpu: [x64]
     os: [win32]
 
@@ -2142,11 +2187,17 @@ packages:
       reflect-metadata:
         optional: true
 
-  '@mikro-orm/libsql@7.0.2':
-    resolution: {integrity: sha512-LO9/canUpnA5jY1NSDr1T34M8/o+AB4WWVrNboEPRaMHOLQtQ8KBc94jmR/Aeg+4LJyPxA8EUM4TLOozGDmuGA==}
+  '@mikro-orm/libsql@7.0.13':
+    resolution: {integrity: sha512-DBVhCNkvK97LCvZpy8cffoXI/lCdj6GZV9TtlMFqqF81Yz11yCFpFSFRH5ymNprIJRLlHk1Ht/aAChh6xhpNTA==}
     engines: {node: '>= 22.17.0'}
     peerDependencies:
-      '@mikro-orm/core': 7.0.2
+      '@mikro-orm/core': 7.0.13
+
+  '@mikro-orm/sql@7.0.13':
+    resolution: {integrity: sha512-HPCPHnXBQTDSqpOfKfC3NkanPoqXHnqlrqegkGBoCspzJb2rTBza17PYlk4LsxCMMMNrTaYaa2K7j7NrSrcAFw==}
+    engines: {node: '>= 22.17.0'}
+    peerDependencies:
+      '@mikro-orm/core': 7.0.13
 
   '@mikro-orm/sql@7.0.2':
     resolution: {integrity: sha512-qWCtHdjgvDYHIaJDvgY0uEu4O3hzlTJn6nrfyGxHC2d3VGbAdx8UNSq8icNmb40CO8IK4MjbwOssUqcaDLwStQ==}
@@ -4409,8 +4460,8 @@ packages:
     resolution: {integrity: sha512-Ju0Bz/cEia55xDwUWEa8+olFpCiQoypjnQySseKtmjNrnps3P+xfpUmGr90T7yjlVJmOtybRvPXhKMbHr+fWnw==}
     engines: {node: '>= 0.10'}
 
-  ip-address@10.1.0:
-    resolution: {integrity: sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q==}
+  ip-address@10.2.0:
+    resolution: {integrity: sha512-/+S6j4E9AHvW9SWMSEY9Xfy66O5PWvVEJ08O0y5JGyEKQpojb0K0GKpz/v5HJ/G0vi3D2sjGK78119oXZeE0qA==}
     engines: {node: '>= 12'}
 
   ipaddr.js@2.3.0:
@@ -4575,6 +4626,11 @@ packages:
 
   libsql@0.5.22:
     resolution: {integrity: sha512-NscWthMQt7fpU8lqd7LXMvT9pi+KhhmTHAJWUB/Lj6MWa0MKFv0F2V4C6WKKpjCVZl0VwcDz4nOI3CyaT1DDiA==}
+    cpu: [x64, arm64, wasm32, arm]
+    os: [darwin, linux, win32]
+
+  libsql@0.5.29:
+    resolution: {integrity: sha512-8lMP8iMgiBzzoNbAPQ59qdVcj6UaE/Vnm+fiwX4doX4Narook0a4GPKWBEv+CR8a1OwbfkgL18uBfBjWdF0Fzg==}
     cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
@@ -5122,6 +5178,11 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@3.3.12:
+    resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
   napi-build-utils@2.0.0:
     resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
 
@@ -5349,8 +5410,8 @@ packages:
     resolution: {integrity: sha512-pMMHxBOZKFU6HgAZ4eyGnwXF/EvPGGqUr0MnZ5+99485wwW41kW91A4LOGxSHhgugZmSChL5AlElNdwlNgcnLQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.12:
-    resolution: {integrity: sha512-W62t/Se6rA0Az3DfCL0AqJwXuKwBeYg6nOaIgzP+xZ7N5BFCI7DYi1qs6ygUYT6rvfi6t9k65UMLJC+PHZpDAA==}
+  postcss@8.5.13:
+    resolution: {integrity: sha512-qif0+jGGZoLWdHey3UFHHWP0H7Gbmsk8T5VEqyYFbWqPr1XqvLGBbk/sl8V5exGmcYJklJOhOQq1pV9IcsiFag==}
     engines: {node: ^10 || ^12 || >=14}
 
   postgres-array@2.0.0:
@@ -5815,8 +5876,8 @@ packages:
     resolution: {integrity: sha512-a6KW9G+6B3nWZ1yB8G7pJwL3ggLy1uTzKAgCb7ttblwqdz9fMGJUuTy3uFzEP48FAs9FLILlmzDlE2JJhVQaXQ==}
     engines: {node: '>= 10'}
 
-  socks@2.8.7:
-    resolution: {integrity: sha512-HLpt+uLy/pxB+bum/9DzAgiKS8CX1EvbWxI4zlmgGCExImLdiad2iCwXT5Z4c9c3Eq8rP2318mPW2c+QbtjK8A==}
+  socks@2.8.8:
+    resolution: {integrity: sha512-NlGELfPrgX2f1TAAcz0WawlLn+0r3FyhhCRpFFK2CemXenPYvzMWWZINv3eDNo9ucdwme7oCHRY0Jnbs4aIkog==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
   sonic-boom@4.2.1:
@@ -6227,6 +6288,7 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   valibot@1.2.0:
@@ -7584,7 +7646,13 @@ snapshots:
   '@libsql/darwin-arm64@0.5.22':
     optional: true
 
+  '@libsql/darwin-arm64@0.5.29':
+    optional: true
+
   '@libsql/darwin-x64@0.5.22':
+    optional: true
+
+  '@libsql/darwin-x64@0.5.29':
     optional: true
 
   '@libsql/hrana-client@0.7.0':
@@ -7610,22 +7678,43 @@ snapshots:
   '@libsql/linux-arm-gnueabihf@0.5.22':
     optional: true
 
+  '@libsql/linux-arm-gnueabihf@0.5.29':
+    optional: true
+
   '@libsql/linux-arm-musleabihf@0.5.22':
+    optional: true
+
+  '@libsql/linux-arm-musleabihf@0.5.29':
     optional: true
 
   '@libsql/linux-arm64-gnu@0.5.22':
     optional: true
 
+  '@libsql/linux-arm64-gnu@0.5.29':
+    optional: true
+
   '@libsql/linux-arm64-musl@0.5.22':
+    optional: true
+
+  '@libsql/linux-arm64-musl@0.5.29':
     optional: true
 
   '@libsql/linux-x64-gnu@0.5.22':
     optional: true
 
+  '@libsql/linux-x64-gnu@0.5.29':
+    optional: true
+
   '@libsql/linux-x64-musl@0.5.22':
     optional: true
 
+  '@libsql/linux-x64-musl@0.5.29':
+    optional: true
+
   '@libsql/win32-x64-msvc@0.5.22':
+    optional: true
+
+  '@libsql/win32-x64-msvc@0.5.29':
     optional: true
 
   '@lukeed/ms@2.0.2': {}
@@ -7649,12 +7738,17 @@ snapshots:
     optionalDependencies:
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/libsql@7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))':
+  '@mikro-orm/libsql@7.0.13(@mikro-orm/core@7.0.2(dataloader@2.2.3))':
     dependencies:
       '@mikro-orm/core': 7.0.2(dataloader@2.2.3)
-      '@mikro-orm/sql': 7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))
-      kysely: 0.28.12
-      libsql: 0.5.22
+      '@mikro-orm/sql': 7.0.13(@mikro-orm/core@7.0.2(dataloader@2.2.3))
+      kysely: 0.28.16
+      libsql: 0.5.29
+
+  '@mikro-orm/sql@7.0.13(@mikro-orm/core@7.0.2(dataloader@2.2.3))':
+    dependencies:
+      '@mikro-orm/core': 7.0.2(dataloader@2.2.3)
+      kysely: 0.28.16
 
   '@mikro-orm/sql@7.0.2(@mikro-orm/core@7.0.2(dataloader@2.2.3))':
     dependencies:
@@ -9958,7 +10052,7 @@ snapshots:
   interpret@2.2.0:
     optional: true
 
-  ip-address@10.1.0:
+  ip-address@10.2.0:
     optional: true
 
   ipaddr.js@2.3.0: {}
@@ -10156,6 +10250,21 @@ snapshots:
       '@libsql/linux-x64-gnu': 0.5.22
       '@libsql/linux-x64-musl': 0.5.22
       '@libsql/win32-x64-msvc': 0.5.22
+
+  libsql@0.5.29:
+    dependencies:
+      '@neon-rs/load': 0.0.4
+      detect-libc: 2.0.2
+    optionalDependencies:
+      '@libsql/darwin-arm64': 0.5.29
+      '@libsql/darwin-x64': 0.5.29
+      '@libsql/linux-arm-gnueabihf': 0.5.29
+      '@libsql/linux-arm-musleabihf': 0.5.29
+      '@libsql/linux-arm64-gnu': 0.5.29
+      '@libsql/linux-arm64-musl': 0.5.29
+      '@libsql/linux-x64-gnu': 0.5.29
+      '@libsql/linux-x64-musl': 0.5.29
+      '@libsql/win32-x64-msvc': 0.5.29
 
   light-my-request@6.6.0:
     dependencies:
@@ -10885,6 +10994,8 @@ snapshots:
 
   nanoid@3.3.11: {}
 
+  nanoid@3.3.12: {}
+
   napi-build-utils@2.0.0: {}
 
   negotiator@0.6.4:
@@ -11140,9 +11251,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.12:
+  postcss@8.5.13:
     dependencies:
-      nanoid: 3.3.11
+      nanoid: 3.3.12
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -11431,7 +11542,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.12
+      postcss: 8.5.13
       rolldown: 1.0.0-beta.53(@emnapi/core@1.8.1)(@emnapi/runtime@1.8.1)
       tinyglobby: 0.2.16
     optionalDependencies:
@@ -11452,7 +11563,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.12
+      postcss: 8.5.13
       rolldown: 1.0.0-beta.53(@emnapi/core@1.8.1)(@emnapi/runtime@1.8.1)
       tinyglobby: 0.2.16
     optionalDependencies:
@@ -11699,14 +11810,14 @@ snapshots:
     dependencies:
       agent-base: 6.0.2
       debug: 4.4.3
-      socks: 2.8.7
+      socks: 2.8.8
     transitivePeerDependencies:
       - supports-color
     optional: true
 
-  socks@2.8.7:
+  socks@2.8.8:
     dependencies:
-      ip-address: 10.1.0
+      ip-address: 10.2.0
       smart-buffer: 4.2.0
     optional: true
 
@@ -12181,7 +12292,7 @@ snapshots:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.12
+      postcss: 8.5.13
       rollup: 4.60.2
       tinyglobby: 0.2.16
     optionalDependencies:

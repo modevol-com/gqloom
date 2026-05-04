@@ -29,7 +29,7 @@
     "@gqloom/yup": "workspace:*",
     "@gqloom/zod": "workspace:*",
     "@mikro-orm/core": "^7.0.2",
-    "@mikro-orm/libsql": "^7.0.2",
+    "@mikro-orm/libsql": "^7.0.13",
     "@shikijs/vitepress-twoslash": "^4.0.2",
     "@vitejs/plugin-vue-jsx": "^5.1.4",
     "ajv": "^8.17.1",
