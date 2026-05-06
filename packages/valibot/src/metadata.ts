@@ -14,8 +14,10 @@ import type {
   DescriptionAction,
   GenericSchema,
   GenericSchemaAsync,
+  MetadataAction,
   PipeItem,
   PipeItemAsync,
+  TitleAction,
 } from "valibot"
 import type { PipedSchema, SupportedSchema } from "./types"
 import { isNullish } from "./utils"
@@ -28,6 +30,7 @@ export class ValibotMetadataCollector {
 
     let defaultValue: any
     let description: string | undefined
+    let examples: unknown[] | undefined
     let config: FieldConfig | undefined
 
     for (const item of pipe) {
@@ -40,14 +43,27 @@ export class ValibotMetadataCollector {
         if (defaultValue !== undefined && config !== undefined) break
       }
       if (item.type === "description") {
-        description ??= (item as DescriptionAction<any, string>).description
+        description = (item as DescriptionAction<any, string>).description
+      }
+      if (item.type === "metadata") {
+        const metadata = (item as MetadataAction<any, Record<string, unknown>>)
+          .metadata
+        description ??= metadata.description as string | undefined
+        examples ??= metadata.examples as unknown[] | undefined
       }
     }
 
     if (config) {
       config.description ??= description
+      if (examples !== undefined) {
+        config.extensions ??= {}
+        ;(config.extensions as Record<string, unknown>).examples = examples
+      }
     } else {
       config = { description }
+      if (examples !== undefined) {
+        config.extensions = { examples }
+      }
     }
 
     return defaultValue !== undefined
@@ -101,8 +117,15 @@ export class ValibotMetadataCollector {
         ValibotMetadataCollector.getTypenameByLiteral(item)
       if (item.type === configType) {
         config = (item as T).config
+      } else if (item.type === "title") {
+        name ??= (item as TitleAction<any, string>).title
       } else if (item.type === "description") {
         description = (item as DescriptionAction<any, string>).description
+      } else if (item.type === "metadata") {
+        const metadata = (item as MetadataAction<any, Record<string, unknown>>)
+          .metadata
+        name ??= metadata.title as string | undefined
+        description ??= metadata.description as string | undefined
       }
     }
 
