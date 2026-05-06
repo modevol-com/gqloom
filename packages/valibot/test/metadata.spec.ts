@@ -353,7 +353,7 @@ describe("ValibotMetadataCollector", () => {
         id: v.string(),
         name: v.string(),
       }),
-      v.metadata({ title: 123 as unknown as string }),
+      v.metadata({ title: 123 }),
       v.title("Product")
     )
 
@@ -369,10 +369,7 @@ describe("ValibotMetadataCollector", () => {
   })
 
   it("should silently ignore non-string metadata.description", () => {
-    const name = v.pipe(
-      v.string(),
-      v.metadata({ description: 123 as unknown as string })
-    )
+    const name = v.pipe(v.string(), v.metadata({ description: 123 }))
 
     const config = ValibotMetadataCollector.getFieldConfig(name)
     // When metadata.description is not a string, no description is set
@@ -385,8 +382,8 @@ describe("ValibotMetadataCollector", () => {
         id: v.string(),
       }),
       v.metadata({
-        title: 123 as unknown as string,
-        description: 456 as unknown as string,
+        title: 123,
+        description: 456,
       }),
       v.title("Item")
     )
