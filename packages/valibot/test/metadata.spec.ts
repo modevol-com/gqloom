@@ -300,25 +300,6 @@ describe("ValibotMetadataCollector", () => {
     `)
   })
 
-  it("should get metadata with title, description and examples", () => {
-    const email = v.pipe(
-      v.string(),
-      v.metadata({
-        title: "Email",
-        description: "A valid email address",
-        examples: ["user@example.com"],
-      })
-    )
-
-    const config = ValibotMetadataCollector.getFieldConfig(email)
-    expect(config).toMatchObject({
-      description: "A valid email address",
-      extensions: {
-        examples: ["user@example.com"],
-      },
-    })
-  })
-
   it("should prefer v.description() over v.metadata() description", () => {
     const name = v.pipe(
       v.string(),

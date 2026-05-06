@@ -30,7 +30,6 @@ export class ValibotMetadataCollector {
 
     let defaultValue: any
     let description: string | undefined
-    let examples: unknown[] | undefined
     let config: FieldConfig | undefined
 
     for (const item of pipe) {
@@ -49,21 +48,13 @@ export class ValibotMetadataCollector {
         const metadata = (item as MetadataAction<any, Record<string, unknown>>)
           .metadata
         description ??= metadata.description as string | undefined
-        examples ??= metadata.examples as unknown[] | undefined
       }
     }
 
     if (config) {
       config.description ??= description
-      if (examples !== undefined) {
-        config.extensions ??= {}
-        ;(config.extensions as Record<string, unknown>).examples = examples
-      }
     } else {
       config = { description }
-      if (examples !== undefined) {
-        config.extensions = { examples }
-      }
     }
 
     return defaultValue !== undefined
