@@ -346,4 +346,76 @@ describe("ValibotMetadataCollector", () => {
       }"
     `)
   })
+
+  it("should silently ignore non-string metadata.title for type name", () => {
+    const Product = v.pipe(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+      }),
+      v.metadata({ title: 123 as unknown as string }),
+      v.title("Product")
+    )
+
+    collectNames({ Product })
+    const r = resolver.of(Product, {})
+    const schema = weave(r, ValibotWeaver)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Product {
+        id: String!
+        name: String!
+      }"
+    `)
+  })
+
+  it("should silently ignore non-string metadata.description", () => {
+    const name = v.pipe(
+      v.string(),
+      v.metadata({ description: 123 as unknown as string })
+    )
+
+    const config = ValibotMetadataCollector.getFieldConfig(name)
+    // When metadata.description is not a string, no description is set
+    expect(config).toEqual({ description: undefined })
+  })
+
+  it("should handle mixed valid and invalid metadata values", () => {
+    const Item = v.pipe(
+      v.object({
+        id: v.string(),
+      }),
+      v.metadata({
+        title: 123 as unknown as string,
+        description: 456 as unknown as string,
+      }),
+      v.title("Item")
+    )
+
+    collectNames({ Item })
+    const r = resolver.of(Item, {})
+    const schema = weave(r, ValibotWeaver)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Item {
+        id: String!
+      }"
+    `)
+  })
+
+  it("should use string metadata.title when valid", () => {
+    const Category = v.pipe(
+      v.object({
+        id: v.string(),
+      }),
+      v.metadata({ title: "Category" })
+    )
+
+    collectNames({ Category })
+    const r = resolver.of(Category, {})
+    const schema = weave(r, ValibotWeaver)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Category {
+        id: String!
+      }"
+    `)
+  })
 })

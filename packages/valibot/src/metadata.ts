@@ -47,7 +47,9 @@ export class ValibotMetadataCollector {
       if (item.type === "metadata") {
         const metadata = (item as MetadataAction<any, Record<string, unknown>>)
           .metadata
-        description ??= metadata.description as string | undefined
+        if (typeof metadata.description === "string") {
+          description ??= metadata.description
+        }
       }
     }
 
@@ -115,8 +117,12 @@ export class ValibotMetadataCollector {
       } else if (item.type === "metadata") {
         const metadata = (item as MetadataAction<any, Record<string, unknown>>)
           .metadata
-        name ??= metadata.title as string | undefined
-        description ??= metadata.description as string | undefined
+        if (typeof metadata.title === "string") {
+          name ??= metadata.title
+        }
+        if (typeof metadata.description === "string") {
+          description ??= metadata.description
+        }
       }
     }
 
