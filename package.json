@@ -30,7 +30,7 @@
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
-    "@graphql-tools/utils": "^11.0.0",
+    "@graphql-tools/utils": "^11.1.0",
     "@types/node": "^25.5.0",
     "@typescript/native-preview": "7.0.0-dev.20260329.1",
     "@vitest/coverage-v8": "^3.2.4",
