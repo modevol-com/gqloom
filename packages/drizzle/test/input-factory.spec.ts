@@ -2,8 +2,8 @@ import { weave } from "@gqloom/core"
 import { drizzle } from "drizzle-orm/node-postgres"
 import * as pg from "drizzle-orm/pg-core"
 import {
-  GraphQLEnumType,
-  GraphQLObjectType,
+  type GraphQLEnumType,
+  type GraphQLObjectType,
   GraphQLScalarType,
   lexicographicSortSchema,
   parse,
@@ -299,12 +299,12 @@ describe("DrizzleInputFactory", () => {
       expect(contractTypeFilters.name).toBe("ContractTypeFilters")
       expect(maritalStatusFilters.name).toBe("MaritalStatusFilters")
 
-      expect(
-        (genderFilters.getFields().eq.type as GraphQLEnumType).name
-      ).toBe("Gender")
-      expect(
-        (statusFilters.getFields().eq.type as GraphQLEnumType).name
-      ).toBe("EmployeeStatus")
+      expect((genderFilters.getFields().eq.type as GraphQLEnumType).name).toBe(
+        "Gender"
+      )
+      expect((statusFilters.getFields().eq.type as GraphQLEnumType).name).toBe(
+        "EmployeeStatus"
+      )
       expect(
         (contractTypeFilters.getFields().eq.type as GraphQLEnumType).name
       ).toBe("ContractType")
