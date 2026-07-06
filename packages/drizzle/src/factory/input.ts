@@ -368,11 +368,12 @@ export class DrizzleInputFactory<TTable extends Table> {
   }
 
   protected static columnFilters(column: Column) {
-    const name = `${pascalCase(column.columnType)}Filters`
+    const gqlType = DrizzleWeaver.getColumnType(column)
+    const baseName = DrizzleInputFactory.columnFiltersBaseName(column, gqlType)
+    const name = `${baseName}Filters`
     const existing = weaverContext.getNamedType(name) as GraphQLObjectType
     if (existing != null) return existing
 
-    const gqlType = DrizzleWeaver.getColumnType(column)
     const gqlListType = new GraphQLList(new GraphQLNonNull(gqlType))
     const baseFields: Record<string, GraphQLFieldConfig<any, any, any>> = {
       eq: { type: gqlType },
@@ -394,7 +395,7 @@ export class DrizzleInputFactory<TTable extends Table> {
     }
 
     const filtersOr = new GraphQLObjectType({
-      name: `${pascalCase(column.columnType)}FiltersOr`,
+      name: `${baseName}FiltersOr`,
       fields: { ...baseFields },
     })
 
@@ -407,6 +408,14 @@ export class DrizzleInputFactory<TTable extends Table> {
         },
       })
     )
+  }
+
+  protected static columnFiltersBaseName(
+    column: Column,
+    gqlType: ReturnType<typeof DrizzleWeaver.getColumnType>
+  ) {
+    if (gqlType instanceof GraphQLEnumType) return gqlType.name
+    return pascalCase(column.columnType)
   }
 
   public orderBy() {

@@ -60,7 +60,7 @@ input UsersFilters {
   createdAt: PgTimestampFilters
   email: PgTextFilters
   name: PgTextFilters
-  role: PgEnumColumnFilters
+  role: RoleFilters
   OR: [UsersFiltersOr!]
 }
 
@@ -161,7 +161,7 @@ input PgTextFiltersOr {
   isNotNull: Boolean
 }
 
-input PgEnumColumnFilters {
+input RoleFilters {
   eq: String
   ne: String
   lt: String
@@ -176,10 +176,10 @@ input PgEnumColumnFilters {
   notInArray: [String!]
   isNull: Boolean
   isNotNull: Boolean
-  OR: [PgEnumColumnFiltersOr!]
+  OR: [RoleFiltersOr!]
 }
 
-input PgEnumColumnFiltersOr {
+input RoleFiltersOr {
   eq: String
   ne: String
   lt: String
@@ -201,7 +201,7 @@ input UsersFiltersOr {
   createdAt: PgTimestampFilters
   email: PgTextFilters
   name: PgTextFilters
-  role: PgEnumColumnFilters
+  role: RoleFilters
 }
 
 input PostsOrderBy {
