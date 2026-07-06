@@ -19,7 +19,7 @@
     "@gqloom/core": "latest",
     "@gqloom/drizzle": "latest",
     "@gqloom/zod": "latest",
-    "@libsql/client": "^0.15.10",
+    "@libsql/client": "^0.17.4",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "graphql": "^16.12.0",
