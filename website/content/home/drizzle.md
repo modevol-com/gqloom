@@ -225,7 +225,7 @@ input UsersFilters {
   createdAt: PgTimestampFilters
   email: PgTextFilters
   name: PgTextFilters
-  role: PgEnumColumnFilters
+  role: RoleFilters
   OR: [UsersFiltersOr!]
 }
 
@@ -326,7 +326,7 @@ input PgTextFiltersOr {
   isNotNull: Boolean
 }
 
-input PgEnumColumnFilters {
+input RoleFilters {
   eq: Role
   ne: Role
   lt: Role
@@ -337,10 +337,10 @@ input PgEnumColumnFilters {
   notInArray: [Role!]
   isNull: Boolean
   isNotNull: Boolean
-  OR: [PgEnumColumnFiltersOr!]
+  OR: [RoleFiltersNested!]
 }
 
-input PgEnumColumnFiltersOr {
+input RoleFiltersNested {
   eq: Role
   ne: Role
   lt: Role
@@ -358,7 +358,7 @@ input UsersFiltersOr {
   createdAt: PgTimestampFilters
   email: PgTextFilters
   name: PgTextFilters
-  role: PgEnumColumnFilters
+  role: RoleFilters
 }
 
 input PostsOrderBy {
