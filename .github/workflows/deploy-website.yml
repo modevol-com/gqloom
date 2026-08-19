@@ -1,14 +1,3 @@
-# Production docs deploy for https://gqloom.vercel.app
-# (Vercel project: https://vercel.com/xcfoxs-projects/gqloom)
-#
-# Required repository secrets:
-#   VERCEL_TOKEN        Account token from https://vercel.com/account/settings/tokens
-#   VERCEL_ORG_ID       Team / org id from the Vercel project settings
-#   VERCEL_PROJECT_ID   Project id from the Vercel project settings
-#
-# Also turn off Vercel Git auto-deploys for this project so only this workflow
-# publishes production. vercel.json sets git.deploymentEnabled to false.
-
 name: Deploy documentation
 
 on:
