@@ -59,3 +59,21 @@ jobs:
         env:
           MYSQL_URL: mysql://root@localhost:3306/mysql
           POSTGRESQL_URL: postgresql://postgres@localhost:5432/postgres
+
+  website:
+    if: github.event_name == 'pull_request'
+    name: Build documentation website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: ./.github/actions/pnpm
+      - name: Build packages
+        run: pnpm run build
+      - name: Generate
+        run: pnpm -r run generate
+      - name: Build website
+        run: pnpm --filter website build
+        env:
+          NODE_OPTIONS: --max_old_space_size=8192

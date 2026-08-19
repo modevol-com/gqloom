@@ -335,19 +335,20 @@ export type InferRelations<
 export type InferRelation<
   TRelations extends Record<string, RelationProperty<any, any>>,
   TKey extends keyof TRelations,
-> = TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
-  ? Reference<TTarget>
-  : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
+> =
+  TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
     ? Reference<TTarget>
-    : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
-      ? TTarget extends object
-        ? Collection<TTarget>
-        : never
-      : TRelations[TKey] extends ManyToManyProperty<infer TTarget, any>
+    : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
+      ? Reference<TTarget>
+      : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
         ? TTarget extends object
           ? Collection<TTarget>
           : never
-        : never
+        : TRelations[TKey] extends ManyToManyProperty<infer TTarget, any>
+          ? TTarget extends object
+            ? Collection<TTarget>
+            : never
+          : never
 
 export type RelationProperty<TTarget extends object, TOwner> =
   | ManyToOneProperty<TTarget, TOwner>

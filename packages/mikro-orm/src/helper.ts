@@ -7,6 +7,7 @@ import {
   type EntityMetadata,
   type EntityName,
   EntitySchema,
+  type FilterQuery,
   type MetadataStorage,
 } from "@mikro-orm/core"
 import type { MikroWeaverConfig } from "./types"
@@ -21,14 +22,33 @@ export function getSelectedFields(
   payload: ResolverPayload | (ResolverPayload | undefined)[] | undefined
 ): [] {
   const selectedFields = new Set<string>()
-  if (!payload) return ["*"] as any
+  if (!payload) return toFieldHints(["*"])
   for (const p of Array.isArray(payload) ? payload : [payload]) {
     if (!p) continue
     const resolvingFields = getResolvingFields(p)
     for (const field of resolvingFields.selectedFields)
       selectedFields.add(field)
   }
-  return Array.from(selectedFields) as []
+  return toFieldHints(selectedFields)
+}
+
+/**
+ * GraphQL selection sets are runtime strings. MikroORM's default `Fields=never`
+ * types `FindOptions.fields` as `[]`, which is the hint this factory uses.
+ */
+export function toFieldHints(fields: Iterable<string>): [] {
+  return Array.from(fields) as []
+}
+
+/**
+ * MikroORM 7.1 wraps `findByCursor` options in `NoInfer<Entity>`.
+ * `FilterQuery<T>` is invariant, so it is not assignable to
+ * `FilterQuery<NoInfer<T>>` when `T` is a type parameter.
+ */
+export function toMikroFilter<T extends object>(
+  where: FilterQuery<T> | null | undefined
+): FilterQuery<NoInfer<T>> {
+  return (where ?? {}) as FilterQuery<NoInfer<T>>
 }
 
 /**

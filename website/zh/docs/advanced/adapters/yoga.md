@@ -6,7 +6,7 @@
 
 ## 安装
 
-<!--@include: ../../snippets/install-yoga.md-->
+<!--@include: @/snippets/install-yoga.md-->
 
 ## 使用
 

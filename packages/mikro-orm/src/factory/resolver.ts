@@ -42,6 +42,8 @@ import {
   getMetadata,
   getSelectedFields,
   getWeaverConfigMetadata,
+  toFieldHints,
+  toMikroFilter,
 } from "../helper"
 import { MikroInputFactory } from "./input"
 import type {
@@ -374,14 +376,19 @@ export class MikroResolverFactory<TEntity extends object> {
         const includeCount = deepFields
           .get("")
           ?.selectedFields.has("totalCount")
-        const fields = Array.from(
+        const fields = toFieldHints(
           deepFields.get("items")?.selectedFields ?? ["*"]
         )
+        const { orderBy, after, before, first, last } = args
         return (await this.em(payload)).findByCursor(this.entityName, {
-          where,
-          fields,
+          orderBy,
+          after,
+          before,
+          first,
+          last,
           includeCount,
-          ...args,
+          fields,
+          where: toMikroFilter(where),
         })
       },
     } as QueryOptions<any, any>)
