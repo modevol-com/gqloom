@@ -62,6 +62,6 @@ jobs:
       - name: Deploy to Vercel
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --prod --yes | tail -n1)
+          url=$(vercel deploy --prebuilt --prod --yes --archive=tgz | tail -n1)
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed to $url"
