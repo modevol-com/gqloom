@@ -1,0 +1,105 @@
+# Production docs deploy for https://gqloom.vercel.app
+# (Vercel project: https://vercel.com/xcfoxs-projects/gqloom)
+#
+# Required repository secrets:
+#   VERCEL_TOKEN        Account token from https://vercel.com/account/settings/tokens
+#   VERCEL_ORG_ID       Team / org id from the Vercel project settings
+#   VERCEL_PROJECT_ID   Project id from the Vercel project settings
+#
+# Also turn off Vercel Git auto-deploys for this project so only this workflow
+# publishes production. vercel.json sets git.deploymentEnabled to false.
+
+name: Deploy documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-website-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  NODE_OPTIONS: --max_old_space_size=8192
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Vercel secrets
+        run: |
+          missing=0
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Actions secret $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::Add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID as repository secrets, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: ./.github/actions/pnpm
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Generate
+        run: pnpm -r run generate
+
+      - name: Build website
+        run: pnpm --filter website build
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel project
+        run: vercel pull --yes --environment=production
+
+      - name: Package Vercel output
+        run: |
+          dist=website/.vitepress/dist
+          out=.vercel/output
+          if [ ! -d "$dist" ]; then
+            echo "::error::Missing $dist; website build did not produce output"
+            exit 1
+          fi
+          rm -rf "$out"
+          mkdir -p "$out/static"
+          cp -a "$dist"/. "$out/static/"
+          cat > "$out/config.json" <<'EOF'
+          {
+            "version": 3,
+            "routes": [
+              {
+                "src": "/assets/(.*)",
+                "headers": {
+                  "cache-control": "public, max-age=31536000, immutable"
+                }
+              },
+              { "handle": "filesystem" },
+              { "src": "/(.*)", "status": 404, "dest": "/404.html" }
+            ]
+          }
+          EOF
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --yes | tail -n1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url"
