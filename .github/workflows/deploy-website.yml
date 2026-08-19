@@ -1,0 +1,70 @@
+name: Deploy documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-website-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  NODE_OPTIONS: --max_old_space_size=8192
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Vercel secrets
+        run: |
+          missing=0
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Actions secret $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::Add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID as repository secrets, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: ./.github/actions/pnpm
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Generate
+        run: pnpm -r run generate
+
+      - name: Build website
+        run: pnpm --filter website build
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel project
+        run: vercel pull --yes --environment=production
+
+      - name: Package Vercel output
+        run: node .github/scripts/package-vercel-output.js
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --yes | tail -n1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url"
