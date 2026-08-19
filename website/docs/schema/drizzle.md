@@ -893,15 +893,17 @@ To adapt to more Drizzle types, we can extend GQLoom to add more type mappings.
 First, we use `DrizzleWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSONObject` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering `date` and `json` types, we map them to the corresponding GraphQL scalars.
 
 ```ts twoslash
+import { extractExtendedColumnType } from "drizzle-orm"
 import { GraphQLDateTime, GraphQLJSON } from "graphql-scalars"
 import { DrizzleWeaver } from "@gqloom/drizzle"
 
 const drizzleWeaverConfig = DrizzleWeaver.config({
   presetGraphQLType: (column) => {
-    if (column.dataType === "date") {
+    const { constraint } = extractExtendedColumnType(column)
+    if (constraint === "date") {
       return GraphQLDateTime
     }
-    if (column.dataType === "json") {
+    if (constraint === "json") {
       return GraphQLJSON
     }
   },
