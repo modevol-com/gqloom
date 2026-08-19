@@ -56,9 +56,6 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Pull Vercel project
-        run: vercel pull --yes --environment=production
-
       - name: Package Vercel output
         run: node .github/scripts/package-vercel-output.js
 
