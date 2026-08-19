@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
-    "effect": "^3.19.15"
+    "effect": "^3.22.1"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
