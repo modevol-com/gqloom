@@ -8,6 +8,7 @@ import {
   printSchema,
 } from "graphql"
 import { createYoga, type YogaServerInstance } from "graphql-yoga"
+import { createPool } from "mysql2"
 import * as v from "valibot"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
@@ -17,6 +18,7 @@ import { relations } from "./schema/mysql-relations"
 
 describe.runIf(config.mysqlUrl)("resolver by mysql", () => {
   let db: MySql2Database<typeof relations>
+  let mysqlClient: ReturnType<typeof createPool>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
@@ -44,7 +46,12 @@ describe.runIf(config.mysqlUrl)("resolver by mysql", () => {
 
   beforeAll(async () => {
     try {
-      db = drizzle(config.mysqlUrl, {
+      // drizzle-orm 1.0.0-rc.4 writes `client.config.supportBigNumbers`. A URL
+      // argument uses mysql2/promise.createPool(), whose PromisePool has no
+      // `.config`. Pass the callback pool as `client` instead.
+      mysqlClient = createPool(config.mysqlUrl)
+      db = drizzle({
+        client: mysqlClient,
         relations,
         logger: { logQuery: (query) => logs.push(query) },
       })
@@ -93,6 +100,9 @@ describe.runIf(config.mysqlUrl)("resolver by mysql", () => {
   afterAll(async () => {
     await db.delete(posts)
     await db.delete(users)
+    await new Promise<void>((resolve, reject) => {
+      mysqlClient.end((err: Error | null) => (err ? reject(err) : resolve()))
+    })
   })
 
   it("should weave GraphQL schema correctly", async () => {

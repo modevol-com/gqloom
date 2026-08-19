@@ -23,6 +23,7 @@ import {
 } from "drizzle-orm/node-postgres"
 import * as sqlite from "drizzle-orm/sqlite-core"
 import { execute, parse } from "graphql"
+import { createPool } from "mysql2"
 import * as v from "valibot"
 import {
   afterAll,
@@ -1578,17 +1579,29 @@ describe
   .runIf(config.mysqlUrl)
   .concurrent("DrizzleMySQLResolverFactory", () => {
     let db: MySql2Database<typeof mysqlRelations>
+    let mysqlClient: ReturnType<typeof createPool>
     let userFactory: DrizzleMySQLResolverFactory<
       typeof db,
       typeof mysqlSchemas.users
     >
 
     beforeAll(async () => {
-      db = mysqlDrizzle(config.mysqlUrl, {
+      // drizzle-orm 1.0.0-rc.4 writes `client.config.supportBigNumbers`. A URL
+      // argument uses mysql2/promise.createPool(), whose PromisePool has no
+      // `.config`. Pass the callback pool as `client` instead.
+      mysqlClient = createPool(config.mysqlUrl)
+      db = mysqlDrizzle({
+        client: mysqlClient,
         relations: mysqlRelations,
       })
       userFactory = drizzleResolverFactory(db, mysqlSchemas.users)
       await db.execute(sql`select 1`)
+    })
+
+    afterAll(async () => {
+      await new Promise<void>((resolve, reject) => {
+        mysqlClient.end((err: Error | null) => (err ? reject(err) : resolve()))
+      })
     })
 
     describe("insertArrayMutation", () => {

@@ -1,10 +1,11 @@
-import { createServer } from "node:http"
 import * as fs from "node:fs"
+import { createServer } from "node:http"
 import * as path from "node:path"
 import { type Middleware, weave } from "@gqloom/core"
 import { asyncContextProvider } from "@gqloom/core/context"
 import { DrizzleWeaver } from "@gqloom/drizzle"
 import { ValibotWeaver } from "@gqloom/valibot"
+import { extractExtendedColumnType } from "drizzle-orm"
 import { GraphQLError, printSchema } from "graphql"
 import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
 import { createYoga } from "graphql-yoga"
@@ -30,10 +31,11 @@ const schema = weave(
   exceptionFilter,
   DrizzleWeaver.config({
     presetGraphQLType(column) {
-      if (column.dataType === "date") {
+      const { constraint } = extractExtendedColumnType(column)
+      if (constraint === "date") {
         return GraphQLDateTime
       }
-      if (column.dataType === "json") {
+      if (constraint === "json") {
         return GraphQLJSONObject
       }
     },
