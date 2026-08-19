@@ -1,23 +1,22 @@
 import { weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
-import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql"
+import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql"
 import {
   type GraphQLSchema,
   lexicographicSortSchema,
   printSchema,
 } from "graphql"
-import { type YogaServerInstance, createYoga } from "graphql-yoga"
+import { createYoga, type YogaServerInstance } from "graphql-yoga"
 import * as v from "valibot"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { drizzleResolverFactory } from "../src"
-import type * as schema from "./schema/sqlite"
 import { posts, users } from "./schema/sqlite"
 import { relations } from "./schema/sqlite-relations"
 
 const pathToDB = new URL("./schema/sqlite-1.db", import.meta.url)
 
 describe("resolver by sqlite", () => {
-  let db: LibSQLDatabase<typeof schema, typeof relations>
+  let db: LibSQLDatabase<typeof relations>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>

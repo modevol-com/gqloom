@@ -1,17 +1,15 @@
-import type { MayPromise, StandardSchemaV1 } from "@gqloom/core"
-import type { GraphQLSilk } from "@gqloom/core"
+import type { GraphQLSilk, MayPromise, StandardSchemaV1 } from "@gqloom/core"
 import {
-  type Column,
-  type SQL,
-  type Table,
   and,
   asc,
+  type Column,
   desc,
   eq,
   getTableColumns,
   getTableName,
   gt,
   gte,
+  type InferInsertModel,
   ilike,
   inArray,
   isNotNull,
@@ -25,6 +23,8 @@ import {
   notInArray,
   notLike,
   or,
+  type SQL,
+  type Table,
 } from "drizzle-orm"
 import type { DrizzleResolverFactoryOptions } from "../types"
 import type {
@@ -246,10 +246,10 @@ export class DrizzleArgsTransformer<TTable extends Table> {
   }
 
   protected async validateInsertValues(
-    values: TTable["$inferInsert"][],
+    values: InferInsertModel<TTable>[],
     path: ReadonlyArray<PropertyKey>
-  ): Promise<StandardSchemaV1.Result<TTable["$inferInsert"][]>> {
-    const results: TTable["$inferInsert"][] = []
+  ): Promise<StandardSchemaV1.Result<InferInsertModel<TTable>[]>> {
+    const results: InferInsertModel<TTable>[] = []
     const issues: StandardSchemaV1.Issue[] = []
 
     await Promise.all(
@@ -266,18 +266,19 @@ export class DrizzleArgsTransformer<TTable extends Table> {
   }
 
   protected async validateInsertValue(
-    value: TTable["$inferInsert"],
+    value: InferInsertModel<TTable>,
     path: ReadonlyArray<PropertyKey>
-  ): Promise<StandardSchemaV1.Result<TTable["$inferInsert"]>> {
+  ): Promise<StandardSchemaV1.Result<InferInsertModel<TTable>>> {
     const result: Record<string, any> = {}
     const issues: StandardSchemaV1.Issue[] = []
     for (const key of Object.keys(getTableColumns(this.table))) {
+      const record = value as Record<string, unknown>
       const columnSilk = this.getColumnSilk(key, "insert")
       if (columnSilk == null) {
-        result[key] = value[key]
+        result[key] = record[key]
         continue
       }
-      const res = await columnSilk["~standard"].validate(value[key])
+      const res = await columnSilk["~standard"].validate(record[key])
       if ("value" in res) {
         result[key] = res.value
       }
@@ -290,22 +291,26 @@ export class DrizzleArgsTransformer<TTable extends Table> {
         )
       }
     }
-    return { value: result, ...(issues.length > 0 && { issues }) }
+    return {
+      value: result as InferInsertModel<TTable>,
+      ...(issues.length > 0 && { issues }),
+    }
   }
 
   protected async validateUpdateValue(
-    value: Partial<TTable["$inferInsert"]>,
+    value: Partial<InferInsertModel<TTable>>,
     path: ReadonlyArray<PropertyKey>
-  ): Promise<StandardSchemaV1.Result<Partial<TTable["$inferInsert"]>>> {
+  ): Promise<StandardSchemaV1.Result<Partial<InferInsertModel<TTable>>>> {
     const result: Record<string, any> = {}
     const issues: StandardSchemaV1.Issue[] = []
     for (const key of Object.keys(value)) {
+      const record = value as Record<string, unknown>
       const columnSilk = this.getColumnSilk(key, "update")
       if (columnSilk == null) {
-        result[key] = value[key]
+        result[key] = record[key]
         continue
       }
-      const res = await columnSilk["~standard"].validate(value[key])
+      const res = await columnSilk["~standard"].validate(record[key])
       if ("value" in res) {
         result[key] = res.value
       }
@@ -318,7 +323,10 @@ export class DrizzleArgsTransformer<TTable extends Table> {
         )
       }
     }
-    return { value: result, ...(issues.length > 0 && { issues }) }
+    return {
+      value: result as Partial<InferInsertModel<TTable>>,
+      ...(issues.length > 0 && { issues }),
+    }
   }
 
   protected toColumn(columnName: string) {

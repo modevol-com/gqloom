@@ -1,27 +1,28 @@
 import {
+  capitalize,
   FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
   type Loom,
+  loom,
   type Middleware,
+  mapValue,
   type ObjectChainResolver,
   QueryFactoryWithResolve,
   type QueryOptions,
-  capitalize,
-  loom,
-  mapValue,
   silk,
 } from "@gqloom/core"
 import {
+  type Column,
+  getTableColumns,
+  getTableName,
   type InferSelectModel,
   Many,
   type Relation,
   Table,
   type TableRelationalConfig,
   type TablesRelationalConfig,
-  getTableColumns,
-  getTableName,
 } from "drizzle-orm"
 import { GraphQLInt, GraphQLNonNull } from "graphql"
 import {
@@ -170,7 +171,7 @@ export abstract class DrizzleResolverFactory<
       input,
       ...options,
       resolve: (args: CountOptions) => {
-        return this.db.$count(this.table, args.where)
+        return (this.db as any).$count(this.table, args.where)
       },
     } as QueryOptions<any, any>)
   }
@@ -196,14 +197,12 @@ export abstract class DrizzleResolverFactory<
     } = {}
   ): RelationField<TDatabase, TTable, TRelationName> {
     const [relation, targetTable] = (() => {
-      const tableKey = matchTableByTablesConfig(
-        this.db._.relations.tablesConfig,
+      const tableConfig = matchTableByTablesConfig(
+        this.db._.relations,
         this.table
-      )?.tsName
-      if (!tableKey) return [undefined, undefined]
-      const relation = this.db._.relations["config"]?.[tableKey]?.[
-        relationName
-      ] as Relation
+      )
+      if (!tableConfig) return [undefined, undefined]
+      const relation = tableConfig.relations[relationName as string] as Relation
       const targetTable = relation?.targetTable
       return [relation, targetTable]
     })()
@@ -233,12 +232,10 @@ export abstract class DrizzleResolverFactory<
       TInputI
     >
 
-    /** columnTableName -> columnTsKey */
     const columnKeys = new Map(
-      Object.entries(getTableColumns(targetTable)).map(([name, col]) => [
-        col.name,
-        name,
-      ])
+      Object.entries(
+        getTableColumns(targetTable) as Record<string, Column>
+      ).map(([name, col]) => [col.name, name])
     )
     const dependencies = relation.sourceColumns.map(
       (col) => columnKeys.get(col.name) ?? col.name
@@ -274,7 +271,8 @@ export abstract class DrizzleResolverFactory<
     const name = options?.name ?? this.tableName
 
     const fields: Record<string, Loom.Field<any, any, any, any>> = mapValue(
-      this.db._.relations.config[this.tableName] ?? {},
+      matchTableByTablesConfig(this.db._.relations, this.table)?.relations ??
+        {},
       (_, key) => this.relationField(key)
     )
 
@@ -306,7 +304,8 @@ export abstract class DrizzleResolverFactory<
     const name = options?.name ?? this.tableName
 
     const fields: Record<string, Loom.Field<any, any, any, any>> = mapValue(
-      this.db._.schema?.[this.tableName]?.relations ?? {},
+      matchTableByTablesConfig(this.db._.relations, this.table)?.relations ??
+        {},
       (_, key) => this.relationField(key)
     )
 

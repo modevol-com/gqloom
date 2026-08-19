@@ -137,11 +137,9 @@ import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { posts, users } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
@@ -361,11 +359,9 @@ export const relations = defineRelations(tables, (r) => ({
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
@@ -432,11 +428,9 @@ import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
@@ -549,11 +543,9 @@ import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
@@ -638,11 +630,9 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
@@ -714,11 +704,9 @@ import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
@@ -795,11 +783,9 @@ import { drizzle } from "drizzle-orm/libsql"
 import { GraphQLError } from "graphql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { users, posts } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
@@ -879,11 +865,9 @@ import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import * as schema from "./schema"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
   relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })

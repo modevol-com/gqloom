@@ -13,11 +13,11 @@ import type {
   SQL,
   Table,
 } from "drizzle-orm"
-import type { MySqlDatabase } from "drizzle-orm/mysql-core"
+import type { MySqlAsyncDatabase } from "drizzle-orm/mysql-core"
 import type { RelationalQueryBuilder as MySqlRelationalQueryBuilder } from "drizzle-orm/mysql-core/query-builders/query"
-import type { PgDatabase } from "drizzle-orm/pg-core"
+import type { PgAsyncDatabase } from "drizzle-orm/pg-core"
 import type { RelationalQueryBuilder as PgRelationalQueryBuilder } from "drizzle-orm/pg-core/query-builders/query"
-import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core"
+import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core"
 import type { RelationalQueryBuilder as SQLiteRelationalQueryBuilder } from "drizzle-orm/sqlite-core/query-builders/query"
 import type { SelectiveTable } from "../types"
 import type {
@@ -90,7 +90,7 @@ export type DrizzleResolverRelations<
     QueryBuilder<TDatabase, TTable>
   >["relations"]]: InferTableRelationalConfig<
     QueryBuilder<TDatabase, TTable>
-  >["relations"][TRelationName] extends Many<any, any>
+  >["relations"][TRelationName] extends Many<any>
     ? RelationManyField<
         TTable,
         InferRelationTable<TDatabase, TTable, TRelationName>
@@ -152,17 +152,18 @@ export type RelationField<
   TRelationName extends keyof InferTableRelationalConfig<
     QueryBuilder<TDatabase, TTable>
   >["relations"],
-> = InferTableRelationalConfig<
-  QueryBuilder<TDatabase, TTable>
->["relations"][TRelationName] extends Many<any, any>
-  ? RelationManyField<
-      TTable,
-      InferRelationTable<TDatabase, TTable, TRelationName>
-    >
-  : RelationOneField<
-      TTable,
-      InferRelationTable<TDatabase, TTable, TRelationName>
-    >
+> =
+  InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"][TRelationName] extends Many<any>
+    ? RelationManyField<
+        TTable,
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      >
+    : RelationOneField<
+        TTable,
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      >
 
 export interface RelationManyField<
   TTable extends Table,
@@ -209,13 +210,16 @@ export type QueryFieldOptions<
   TRelationName extends keyof InferTableRelationalConfig<
     QueryBuilder<TDatabase, TTable>
   >["relations"],
-> = InferTableRelationalConfig<
-  QueryBuilder<TDatabase, TTable>
->["relations"][TRelationName] extends Many<any, any>
-  ? QueryToManyFieldOptions<
-      InferRelationTable<TDatabase, TTable, TRelationName>
-    >
-  : QueryToOneFieldOptions<InferRelationTable<TDatabase, TTable, TRelationName>>
+> =
+  InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"][TRelationName] extends Many<any>
+    ? QueryToManyFieldOptions<
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      >
+    : QueryToOneFieldOptions<
+        InferRelationTable<TDatabase, TTable, TRelationName>
+      >
 
 export type InsertArrayMutation<
   TTable extends Table,
@@ -363,77 +367,64 @@ export type QueryBuilder<
 
 export type AnyQueryBuilder =
   | MySqlRelationalQueryBuilder<any, any, any>
-  | PgRelationalQueryBuilder<any, any>
-  | SQLiteRelationalQueryBuilder<any, any, any>
+  | PgRelationalQueryBuilder<any, any, any>
+  | SQLiteRelationalQueryBuilder<any, any, any, any>
 
 export type InferTableRelationalConfig<TQueryBuilder extends AnyQueryBuilder> =
   TQueryBuilder extends MySqlRelationalQueryBuilder<
     any,
-    any,
-    infer TTableRelationalConfig
+    infer TTableRelationalConfig,
+    any
   >
     ? TTableRelationalConfig
     : TQueryBuilder extends PgRelationalQueryBuilder<
           any,
-          infer TTableRelationalConfig
+          infer TTableRelationalConfig,
+          any
         >
       ? TTableRelationalConfig
       : TQueryBuilder extends SQLiteRelationalQueryBuilder<
             any,
             any,
-            infer TTableRelationalConfig
+            infer TTableRelationalConfig,
+            any
           >
         ? TTableRelationalConfig
         : never
 
 export type BaseDatabase =
-  | BaseSQLiteDatabase<any, any, any, AnyRelations, any, any>
-  | PgDatabase<any, any, AnyRelations, any, any>
-  | MySqlDatabase<any, any, any, AnyRelations, any, any>
+  | SQLiteAsyncDatabase<any, any, AnyRelations>
+  | PgAsyncDatabase<any, AnyRelations>
+  | MySqlAsyncDatabase<any, AnyRelations>
 
 export type InferTablesConfig<TDatabase extends BaseDatabase> =
-  TDatabase extends BaseSQLiteDatabase<
-    any,
-    any,
-    any,
-    any,
-    infer TTablesConfig,
-    any
-  >
-    ? TTablesConfig
-    : TDatabase extends PgDatabase<any, any, any, infer TTablesConfig, any>
-      ? TTablesConfig
-      : TDatabase extends MySqlDatabase<
-            any,
-            any,
-            any,
-            any,
-            infer TTablesConfig,
-            any
-          >
-        ? TTablesConfig
-        : never
+  TDatabase["_"]["relations"]
 
 export type InferTableTsName<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-> = Extract<
-  ValueOf<InferTablesConfig<TDatabase>>,
-  { dbName: TTable["_"]["name"] }
->["tsName"]
+> = {
+  [K in keyof TDatabase["_"]["relations"]]: TDatabase["_"]["relations"][K]["table"] extends TTable
+    ? TTable extends TDatabase["_"]["relations"][K]["table"]
+      ? K & string
+      : never
+    : never
+}[keyof TDatabase["_"]["relations"]]
 
 export type InferTableName<TTable extends Table> = TTable["_"]["name"]
 
 export type InferRelationTable<
   TDatabase extends BaseDatabase,
   TTable extends Table,
-  TTargetTableName extends
-    keyof TDatabase["_"]["relations"]["config"][TTable["_"]["name"]],
-> = Extract<
-  ValueOf<InferTablesConfig<TDatabase>>,
-  {
-    dbName: TDatabase["_"]["relations"]["config"][TTable["_"]["name"]][TTargetTableName]["targetTable"]["_"]["name"]
-  }
->["table"]
-
-type ValueOf<T> = T[keyof T]
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"],
+> = InferTableRelationalConfig<
+  QueryBuilder<TDatabase, TTable>
+>["relations"][TRelationName] extends {
+  targetTableName: infer TName extends string
+}
+  ? TName extends keyof TDatabase["_"]["relations"]
+    ? Extract<TDatabase["_"]["relations"][TName]["table"], Table>
+    : never
+  : never

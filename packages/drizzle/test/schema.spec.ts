@@ -8,6 +8,7 @@ import {
   weave,
 } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
+import { extractExtendedColumnType } from "drizzle-orm"
 import * as pg from "drizzle-orm/pg-core"
 import { pgTable } from "drizzle-orm/pg-core"
 import * as sqlite from "drizzle-orm/sqlite-core"
@@ -297,6 +298,8 @@ describe("drizzleSilk", () => {
         real: sqlite.real(),
         text: sqlite.text(),
         blob: sqlite.blob(),
+        blobBuffer: sqlite.blob({ mode: "buffer" }),
+        blobBigint: sqlite.blob({ mode: "bigint" }),
         boolean: sqlite.integer({ mode: "boolean" }),
       })
     )
@@ -307,7 +310,9 @@ describe("drizzleSilk", () => {
         integer: Int!
         real: Float
         text: String
-        blob: [Int!]
+        blob: String
+        blobBuffer: [Int!]
+        blobBigint: String
         boolean: Boolean
       }"
     `)
@@ -318,7 +323,7 @@ describe("drizzleSilk", () => {
 
     const config = DrizzleWeaver.config({
       presetGraphQLType: (column) => {
-        if (column.dataType === "date") {
+        if (extractExtendedColumnType(column).constraint === "date") {
           return GraphQLDate
         }
       },
@@ -352,15 +357,7 @@ describe("drizzleSilk", () => {
     `)
   })
 
-  it("should throw error when not implemented", () => {
-    const notImplemented1 = drizzleSilk(
-      pgTable("not_implemented", {
-        line: pg.line(),
-      })
-    )
-    expect(() => getGraphQLType(notImplemented1)).toThrow(
-      "Type: PgLine is not implemented!"
-    )
+  it("should map geometric and custom column types", () => {
     const customType = pg.customType<{
       data: number
       notNull: true
@@ -368,14 +365,29 @@ describe("drizzleSilk", () => {
     }>({
       dataType: () => "CustomType",
     })
-    const notImplemented2 = drizzleSilk(
-      pgTable("not_implemented", {
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        line: pg.line(),
         customType: customType(),
       })
     )
 
-    expect(() => getGraphQLType(notImplemented2)).toThrow(
-      "Type: PgCustomColumn is not implemented!"
+    expect(printType(unwrap(getGraphQLType(Foo)))).toMatchInlineSnapshot(`
+      "type FooItem {
+        line: [Float!]
+        customType: String
+      }"
+    `)
+  })
+
+  it("should throw error when column data type is not implemented", () => {
+    const unknownColumn = {
+      dataType: "unknown",
+      columnType: "PgUnknown",
+    } as never
+
+    expect(() => DrizzleWeaver.getColumnType(unknownColumn)).toThrow(
+      "Type: PgUnknown is not implemented!"
     )
   })
 

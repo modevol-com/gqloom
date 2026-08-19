@@ -1,17 +1,17 @@
 import {
   type BaseField,
-  LoomDataLoader,
-  type ResolverPayload,
   getMemoizationMap,
+  LoomDataLoader,
   mapValue,
+  type ResolverPayload,
 } from "@gqloom/core"
 import {
   type Column,
+  getTableName,
+  inArray,
   Many,
   type Relation,
   type Table,
-  getTableName,
-  inArray,
 } from "drizzle-orm"
 import {
   getParentPath,
@@ -116,9 +116,10 @@ export class RelationFieldsLoader extends LoomDataLoader<
   ): Promise<Map<number, any>> {
     const { parents, relations } = this.getParentRelation(inputGroups)
 
-    const parentsWithRelationsList = await this.queryBuilder.findMany({
+    const parentsWithRelationsList = await (this.queryBuilder as any).findMany({
       where: {
-        RAW: (table) => whereByParent(table, Array.from(parents.values())),
+        RAW: (table: Table) =>
+          whereByParent(table, Array.from(parents.values())),
       },
       with: relations as never,
       columns: Object.fromEntries(
@@ -127,7 +128,7 @@ export class RelationFieldsLoader extends LoomDataLoader<
     })
 
     const parentsWithRelations = new Map<string, any>(
-      parentsWithRelationsList.map((parent) => [
+      parentsWithRelationsList.map((parent: Record<string, unknown>) => [
         keyForParent(this.table, parent),
         parent,
       ])
@@ -191,7 +192,7 @@ export class RelationFieldSelector {
 
   public constructor(
     public readonly relationName: string | number | symbol,
-    relation: Relation<string, string>,
+    relation: Relation<string>,
     public readonly targetTable: Table
   ) {
     this.isMany = relation instanceof Many

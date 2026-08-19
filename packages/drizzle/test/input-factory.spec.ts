@@ -1,11 +1,16 @@
-import { field, initWeaverContext, provideWeaverContext, weave } from "@gqloom/core"
+import {
+  field,
+  initWeaverContext,
+  provideWeaverContext,
+  weave,
+} from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
 import { defineRelations } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import * as pg from "drizzle-orm/pg-core"
 import {
-  GraphQLEnumType,
-  GraphQLObjectType,
+  type GraphQLEnumType,
+  type GraphQLObjectType,
   GraphQLScalarType,
   lexicographicSortSchema,
   parse,
@@ -319,12 +324,12 @@ describe("DrizzleInputFactory", () => {
       expect(contractTypeFilters.name).toBe("ContractTypeFilters")
       expect(maritalStatusFilters.name).toBe("MaritalStatusFilters")
 
-      expect(
-        (genderFilters.getFields().eq.type as GraphQLEnumType).name
-      ).toBe("Gender")
-      expect(
-        (statusFilters.getFields().eq.type as GraphQLEnumType).name
-      ).toBe("EmployeeStatus")
+      expect((genderFilters.getFields().eq.type as GraphQLEnumType).name).toBe(
+        "Gender"
+      )
+      expect((statusFilters.getFields().eq.type as GraphQLEnumType).name).toBe(
+        "EmployeeStatus"
+      )
       expect(
         (contractTypeFilters.getFields().eq.type as GraphQLEnumType).name
       ).toBe("ContractType")

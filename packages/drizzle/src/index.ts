@@ -10,6 +10,7 @@ import {
 } from "@gqloom/core"
 import {
   type Column,
+  extractExtendedColumnType,
   getTableColumns,
   getTableName,
   type InferSelectModel,
@@ -17,7 +18,7 @@ import {
   type Table,
 } from "drizzle-orm"
 import { MySqlInt, MySqlSerial } from "drizzle-orm/mysql-core"
-import { type PgArray, PgInteger, PgSerial } from "drizzle-orm/pg-core"
+import { PgInteger, PgSerial } from "drizzle-orm/pg-core"
 import { SQLiteInteger } from "drizzle-orm/sqlite-core"
 import {
   GraphQLBoolean,
@@ -164,41 +165,59 @@ export class DrizzleWeaver {
       )
     }
 
-    switch (column.dataType) {
+    const { type, constraint } = extractExtendedColumnType(column)
+    let gqlType: GraphQLOutputType
+
+    switch (type) {
       case "boolean": {
-        return GraphQLBoolean
+        gqlType = GraphQLBoolean
+        break
       }
       case "number": {
-        return is(column, PgInteger) ||
-          is(column, PgSerial) ||
-          is(column, MySqlInt) ||
-          is(column, MySqlSerial) ||
-          is(column, SQLiteInteger)
-          ? GraphQLInt
-          : GraphQLFloat
+        const isInt =
+          constraint != null
+            ? constraint !== "double" &&
+              constraint !== "float" &&
+              constraint !== "udouble" &&
+              constraint !== "ufloat"
+            : is(column, PgInteger) ||
+              is(column, PgSerial) ||
+              is(column, MySqlInt) ||
+              is(column, MySqlSerial) ||
+              is(column, SQLiteInteger)
+        gqlType = isInt ? GraphQLInt : GraphQLFloat
+        break
       }
-      case "json":
-      case "date":
       case "bigint":
-      case "string": {
-        return GraphQLString
+      case "string":
+      case "custom": {
+        gqlType = GraphQLString
+        break
       }
-      case "buffer": {
-        return new GraphQLList(new GraphQLNonNull(GraphQLInt))
+      case "object": {
+        gqlType =
+          constraint === "buffer"
+            ? new GraphQLList(new GraphQLNonNull(GraphQLInt))
+            : GraphQLString
+        break
       }
       case "array": {
-        if ("baseColumn" in column) {
-          const innerType = DrizzleWeaver.getColumnType(
-            (column as Column as PgArray<any, any>).baseColumn
-          )
-          return new GraphQLList(new GraphQLNonNull(innerType))
-        }
-        throw new Error(`Type: ${column.columnType} is not implemented!`)
+        gqlType = new GraphQLList(new GraphQLNonNull(GraphQLFloat))
+        break
       }
       default: {
         throw new Error(`Type: ${column.columnType} is not implemented!`)
       }
     }
+
+    const dimensions =
+      "dimensions" in column && typeof column.dimensions === "number"
+        ? column.dimensions
+        : 0
+    for (let i = 0; i < dimensions; i++) {
+      gqlType = new GraphQLList(new GraphQLNonNull(gqlType))
+    }
+    return gqlType
   }
 
   public static config(

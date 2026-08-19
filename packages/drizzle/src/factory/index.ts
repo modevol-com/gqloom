@@ -1,7 +1,7 @@
 import type { Table } from "drizzle-orm"
-import { MySqlDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
-import { PgDatabase, type PgTable } from "drizzle-orm/pg-core"
-import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
+import { MySqlAsyncDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
+import { PgAsyncDatabase, type PgTable } from "drizzle-orm/pg-core"
+import type { SQLiteAsyncDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { DrizzleResolverFactoryOptions } from "../types"
 import { DrizzleMySQLResolverFactory } from "./resolver-mysql"
 import { DrizzlePostgresResolverFactory } from "./resolver-postgres"
@@ -16,7 +16,7 @@ import type { BaseDatabase } from "./types"
  * @param options - The options for the resolver factory.
  */
 export function drizzleResolverFactory<
-  TDatabase extends BaseSQLiteDatabase<any, any, any, any, any, any>,
+  TDatabase extends SQLiteAsyncDatabase<any, any, any>,
   TTable extends SQLiteTable,
 >(
   db: TDatabase,
@@ -38,17 +38,17 @@ export function drizzleResolverFactory<
  * ```
  */
 export function drizzleResolverFactory<
-  TDatabase extends BaseSQLiteDatabase<any, any, any, any, any, any>,
-  TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
+  TDatabase extends SQLiteAsyncDatabase<any, any, any>,
+  TTableName extends keyof TDatabase["_"]["relations"],
 >(
   db: TDatabase,
   tableName: TTableName,
   options?: DrizzleResolverFactoryOptions<
-    NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+    Extract<TDatabase["_"]["relations"][TTableName]["table"], SQLiteTable>
   >
 ): DrizzleSQLiteResolverFactory<
   TDatabase,
-  NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+  Extract<TDatabase["_"]["relations"][TTableName]["table"], SQLiteTable>
 >
 
 /**
@@ -59,7 +59,7 @@ export function drizzleResolverFactory<
  * @param options - The options for the resolver factory.
  */
 export function drizzleResolverFactory<
-  TDatabase extends PgDatabase<any, any, any, any, any>,
+  TDatabase extends PgAsyncDatabase<any, any>,
   TTable extends PgTable,
 >(
   db: TDatabase,
@@ -75,7 +75,7 @@ export function drizzleResolverFactory<
  * @param options - The options for the resolver factory.
  */
 export function drizzleResolverFactory<
-  TDatabase extends MySqlDatabase<any, any, any, any, any, any>,
+  TDatabase extends MySqlAsyncDatabase<any, any>,
   TTable extends MySqlTable,
 >(
   db: TDatabase,
@@ -97,17 +97,17 @@ export function drizzleResolverFactory<
  * ```
  */
 export function drizzleResolverFactory<
-  TDatabase extends PgDatabase<any, any, any, any, any>,
-  TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
+  TDatabase extends PgAsyncDatabase<any, any>,
+  TTableName extends keyof TDatabase["_"]["relations"],
 >(
   db: TDatabase,
   tableName: TTableName,
   options?: DrizzleResolverFactoryOptions<
-    NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+    Extract<TDatabase["_"]["relations"][TTableName]["table"], PgTable>
   >
 ): DrizzlePostgresResolverFactory<
   TDatabase,
-  NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+  Extract<TDatabase["_"]["relations"][TTableName]["table"], PgTable>
 >
 
 /**
@@ -123,19 +123,18 @@ export function drizzleResolverFactory<
  * const userFactory = drizzleResolverFactory(db, users)
  * ```
  */
-
 export function drizzleResolverFactory<
-  TDatabase extends MySqlDatabase<any, any, any, any, any, any>,
-  TTableName extends keyof NonNullable<TDatabase["_"]["schema"]>,
+  TDatabase extends MySqlAsyncDatabase<any, any>,
+  TTableName extends keyof TDatabase["_"]["relations"],
 >(
   db: TDatabase,
   tableName: TTableName,
   options?: DrizzleResolverFactoryOptions<
-    NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+    Extract<TDatabase["_"]["relations"][TTableName]["table"], MySqlTable>
   >
 ): DrizzleMySQLResolverFactory<
   TDatabase,
-  NonNullable<TDatabase["_"]["fullSchema"]>[TTableName]
+  Extract<TDatabase["_"]["relations"][TTableName]["table"], MySqlTable>
 >
 
 export function drizzleResolverFactory(
@@ -145,12 +144,12 @@ export function drizzleResolverFactory(
 ) {
   const table =
     typeof tableOrName === "string"
-      ? (db._.fullSchema[tableOrName] as Table)
+      ? (db._.relations[tableOrName]?.table as Table)
       : tableOrName
-  if (db instanceof PgDatabase) {
+  if (db instanceof PgAsyncDatabase) {
     return new DrizzlePostgresResolverFactory(db, table as PgTable, options)
   }
-  if (db instanceof MySqlDatabase) {
+  if (db instanceof MySqlAsyncDatabase) {
     return new DrizzleMySQLResolverFactory(db, table as MySqlTable, options)
   }
   return new DrizzleSQLiteResolverFactory(db, table as SQLiteTable, options)

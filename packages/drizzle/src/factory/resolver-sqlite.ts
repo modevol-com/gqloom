@@ -7,7 +7,7 @@ import {
   type ObjectChainResolver,
   silk,
 } from "@gqloom/core"
-import type { BaseSQLiteDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
+import type { SQLiteAsyncDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { GraphQLOutputType } from "graphql"
 import { getSelectedColumns } from "../helper"
 import type { SelectiveTable } from "../types"
@@ -31,7 +31,7 @@ import type {
 } from "./types"
 
 export class DrizzleSQLiteResolverFactory<
-  TDatabase extends BaseSQLiteDatabase<any, any, any, any>,
+  TDatabase extends SQLiteAsyncDatabase<any, any, any>,
   TTable extends SQLiteTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
   public insertArrayMutation<TInputI = InsertArrayWithOnConflictArgs<TTable>>({

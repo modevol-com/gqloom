@@ -1,12 +1,12 @@
 import { weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
-import { type NodePgDatabase, drizzle } from "drizzle-orm/node-postgres"
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres"
 import {
   type GraphQLSchema,
   lexicographicSortSchema,
   printSchema,
 } from "graphql"
-import { type YogaServerInstance, createYoga } from "graphql-yoga"
+import { createYoga, type YogaServerInstance } from "graphql-yoga"
 import * as v from "valibot"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
@@ -14,10 +14,8 @@ import { drizzleResolverFactory } from "../src"
 import { posts, users } from "./schema/postgres"
 import { relations } from "./schema/postgres-relations"
 
-const schema = { users, posts }
-
 describe.runIf(config.postgresUrl)("resolver by postgres", () => {
-  let db: NodePgDatabase<typeof schema, typeof relations>
+  let db: NodePgDatabase<typeof relations>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>

@@ -6,6 +6,7 @@ import {
 } from "@gqloom/core"
 import {
   type Column,
+  getColumnTable,
   getTableColumns,
   getTableName,
   type SQL,
@@ -13,16 +14,16 @@ import {
   type Table,
 } from "drizzle-orm"
 import {
-  MySqlTable,
   getTableConfig as getMySQLTableConfig,
+  MySqlTable,
 } from "drizzle-orm/mysql-core"
 import {
-  PgTable,
   getTableConfig as getPgTableConfig,
+  PgTable,
 } from "drizzle-orm/pg-core"
 import {
-  SQLiteTable,
   getTableConfig as getSQLiteTableConfig,
+  SQLiteTable,
 } from "drizzle-orm/sqlite-core"
 import type { GraphQLResolveInfo } from "graphql"
 import type {
@@ -68,7 +69,7 @@ export function getEnumNameByColumn(column: Column): string | undefined {
   if (!column.enumValues?.length) return undefined
 
   const useColumnName = () =>
-    `${pascalCase(getTableName(column.table))}${pascalCase(column.name)}Enum`
+    `${pascalCase(getTableName(getColumnTable(column)))}${pascalCase(column.name)}Enum`
   if ("config" in column && "enum" in (column as any).config) {
     const enumName = (column as any).config.enum.enumName
     if (enumName) return pascalCase(enumName)
@@ -145,7 +146,7 @@ export function getSelectedColumns<TTable extends Table>(
     }
   } else {
     const resolvingFields = getResolvingFields(payload)
-    selectedFields = resolvingFields.selectedFields
+    selectedFields = new Set(resolvingFields.selectedFields)
   }
   return mapValue(getTableColumns(table), (column, columnName) => {
     if (selectedFields.has(columnName)) return column
