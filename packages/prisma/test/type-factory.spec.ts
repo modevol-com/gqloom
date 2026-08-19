@@ -140,13 +140,14 @@ describe("PrismaTypeFactory", () => {
       ["UserWhereInput", "filters"],
       ["UserWhereUniqueInput", "filters"],
     ]
-    it.each(
-      INPUT_OPERATIONS_FROM_RESOLVER_SPEC_GQL
-    )("returns %s for input %s", (inputName, expectedOperation) => {
-      expect(PrismaTypeFactory.getOperationByName(inputName)).toBe(
-        expectedOperation
-      )
-    })
+    it.each(INPUT_OPERATIONS_FROM_RESOLVER_SPEC_GQL)(
+      "returns %s for input %s",
+      (inputName, expectedOperation) => {
+        expect(PrismaTypeFactory.getOperationByName(inputName)).toBe(
+          expectedOperation
+        )
+      }
+    )
 
     it("handles edge cases where model names conflict with keywords", () => {
       // Model name is "Upsert"

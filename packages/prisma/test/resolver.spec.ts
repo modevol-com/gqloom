@@ -286,11 +286,10 @@ describe("Resolver", () => {
       })
     })
 
-    it(
-      "should be able to create a post with a author",
-      { retry: 6 },
-      async () => {
-        const query = /* GraphQL */ `
+    it("should be able to create a post with a author", {
+      retry: 6,
+    }, async () => {
+      const query = /* GraphQL */ `
         mutation createPost($data: PostCreateInput!) {
           createPost(data: $data) {
             id
@@ -303,35 +302,35 @@ describe("Resolver", () => {
         }
       `
 
-        const response = await execute(query, {
-          data: {
-            title: "Hello World",
-            author: {
-              connectOrCreate: {
-                where: {
-                  email: "bob@bob.com",
-                },
-                create: {
-                  email: "bob@bob.com",
-                  name: "Bob",
-                },
+      const response = await execute(query, {
+        data: {
+          title: "Hello World",
+          author: {
+            connectOrCreate: {
+              where: {
+                email: "bob@bob.com",
+              },
+              create: {
+                email: "bob@bob.com",
+                name: "Bob",
               },
             },
           },
-        })
+        },
+      })
 
-        expect(response).toMatchObject({
-          createPost: {
+      expect(response).toMatchObject({
+        createPost: {
+          id: expect.any(String),
+          title: "Hello World",
+          author: {
             id: expect.any(String),
-            title: "Hello World",
-            author: {
-              id: expect.any(String),
-              email: "bob@bob.com",
-            },
+            email: "bob@bob.com",
           },
-        })
+        },
+      })
 
-        expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
           "
           SELECT main.User.id FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
           INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id
@@ -341,8 +340,7 @@ describe("Resolver", () => {
           SELECT main.User.id, main.User.email FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
           "
         `)
-      }
-    )
+    })
 
     it("should be able to delete a user", { retry: 6 }, async () => {
       await db.user.create({ data: { email: "bob@bob.com" } })

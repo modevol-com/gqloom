@@ -213,7 +213,7 @@ export interface FindQueryArgs<TEntity extends object>
 }
 
 export interface FindQueryOptions<TEntity extends object>
-  extends FindOptions<TEntity, any, any, any> {
+  extends Omit<FindOptions<TEntity, any, any, any>, "using"> {
   where?: FilterQuery<TEntity> | null | undefined
 }
 
@@ -249,7 +249,7 @@ export interface FindByCursorQueryArgs<TEntity extends object>
 }
 
 export interface FindByCursorQueryOptions<TEntity extends object>
-  extends FindByCursorOptions<TEntity, any, any, any, any> {
+  extends Omit<FindByCursorOptions<TEntity, any, any, any, any>, "using"> {
   where?: FilterQuery<TEntity>
 }
 
@@ -281,7 +281,7 @@ export interface FindOneQueryArgs<TEntity extends object>
 }
 
 export interface FindOneQueryOptions<TEntity extends object>
-  extends FindOneOptions<TEntity, any, any, any> {
+  extends Omit<FindOneOptions<TEntity, any, any, any>, "using"> {
   where: FilterQuery<TEntity>
 }
 

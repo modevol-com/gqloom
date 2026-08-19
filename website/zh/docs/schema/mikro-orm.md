@@ -106,7 +106,7 @@ import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -160,7 +160,7 @@ import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -196,7 +196,8 @@ export const schema = weave(userResolver, postResolver)
 ```ts twoslash [entities.ts]
 import "reflect-metadata"
 import { mikroSilk } from "@gqloom/mikro-orm"
-import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+import { Collection } from "@mikro-orm/core"
+import { Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/decorators/legacy"
 
 @Entity()
 export class AuthorEntity {
@@ -206,7 +207,7 @@ export class AuthorEntity {
   @Property()
   public name!: string
 
-  @OneToMany(() => BookEntity, (b) => b.author)
+  @OneToMany(() => BookEntity, (b: BookEntity) => b.author)
   public books = new Collection<BookEntity>(this)
 }
 
@@ -230,7 +231,8 @@ export const Book = mikroSilk(BookEntity)
 // @filename: entities.ts
 import "reflect-metadata"
 import { mikroSilk } from "@gqloom/mikro-orm"
-import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+import { Collection } from "@mikro-orm/core"
+import { Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/decorators/legacy"
 
 @Entity()
 export class AuthorEntity {
@@ -238,7 +240,7 @@ export class AuthorEntity {
   public id!: number
   @Property()
   public name!: string
-  @OneToMany(() => BookEntity, (b) => b.author)
+  @OneToMany(() => BookEntity, (b: BookEntity) => b.author)
   public books = new Collection<BookEntity>(this)
 }
 
@@ -261,7 +263,7 @@ import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Author, Book } from "./entities"
 
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [Author, Book],
   dbName: ":memory:",
 })
@@ -273,7 +275,8 @@ export const useEm = createMemoization(() => orm.em.fork())
 // @filename: entities.ts
 import "reflect-metadata"
 import { mikroSilk } from "@gqloom/mikro-orm"
-import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+import { Collection } from "@mikro-orm/core"
+import { Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/decorators/legacy"
 
 @Entity()
 export class AuthorEntity {
@@ -281,7 +284,7 @@ export class AuthorEntity {
   public id!: number
   @Property()
   public name!: string
-  @OneToMany(() => BookEntity, (b) => b.author)
+  @OneToMany(() => BookEntity, (b: BookEntity) => b.author)
   public books = new Collection<BookEntity>(this)
 }
 
@@ -303,7 +306,7 @@ import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Author, Book } from "./entities"
 
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [Author, Book],
   dbName: ":memory:",
 })
@@ -376,7 +379,7 @@ import type { Middleware } from "@gqloom/core"
 import { createMemoization, useResolvingFields } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -699,7 +702,7 @@ export const Post = mikroSilk(PostEntity)
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -759,7 +762,7 @@ import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
 
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -832,7 +835,7 @@ export const Post = mikroSilk(PostEntity)
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -903,7 +906,7 @@ export const Post = mikroSilk(PostEntity)
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -990,7 +993,7 @@ export const User = mikroSilk(UserEntity)
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { User } from "./entities"
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User],
   dbName: ":memory:",
 })
@@ -1043,7 +1046,7 @@ export const Post = mikroSilk(PostEntity)
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })
@@ -1104,7 +1107,7 @@ export const Post = mikroSilk(PostEntity)
 import { createMemoization } from "@gqloom/core/context"
 import { MikroORM } from "@mikro-orm/libsql"
 import { Post, User } from "./entities"
-export const orm = MikroORM.initSync({
+export const orm = new MikroORM({
   entities: [User, Post],
   dbName: ":memory:",
 })

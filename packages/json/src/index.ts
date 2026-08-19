@@ -394,4 +394,4 @@ export function jsonSilk<
   return JSONWeaver.unravel(schema) as any
 }
 
-export type { JSONSchema, FromSchema }
+export type { FromSchema, JSONSchema }
