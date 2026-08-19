@@ -90,4 +90,4 @@ const subscription = Core.subscription
  */
 const weave = Core.weave
 
-export { resolver, query, mutation, field, subscription, weave }
+export { field, mutation, query, resolver, subscription, weave }

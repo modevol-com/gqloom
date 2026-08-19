@@ -34,7 +34,6 @@ export const asUnionType = Symbol.for("@gqloom/effect/asUnionType")
 declare module "effect/Schema" {
   // biome-ignore lint/style/noNamespace: Module augmentation requires namespace
   export namespace Annotations {
-    // biome-ignore lint/correctness/noUnusedVariables: Type parameter required for module augmentation
     export interface GenericSchema<A> {
       asObjectType?: Partial<ObjectConfig>
       [asObjectType]?: Partial<ObjectConfig>

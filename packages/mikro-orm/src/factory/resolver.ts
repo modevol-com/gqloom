@@ -382,7 +382,7 @@ export class MikroResolverFactory<TEntity extends object> {
           fields,
           includeCount,
           ...args,
-        })
+        } as any)
       },
     } as QueryOptions<any, any>)
   }
