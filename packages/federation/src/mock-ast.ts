@@ -5,6 +5,7 @@
  */
 import {
   type ArgumentNode,
+  astFromValue,
   type ConstDirectiveNode,
   type ConstValueNode,
   type DirectiveNode,
@@ -31,10 +32,9 @@ import {
   type ListTypeNode,
   type NamedTypeNode,
   type OperationTypeNode,
+  parseValue,
   type TypeNode,
   type ValueNode,
-  astFromValue,
-  parseValue,
 } from "graphql"
 
 export function mockAst(schema: GraphQLSchema) {
@@ -208,23 +208,23 @@ function directiveNodes(
   directives: DirectiveList | Record<string, {}> | undefined,
   deprecationReason?: string | null
 ): readonly ConstDirectiveNode[] {
-  if (!directives) {
-    return []
-  }
+  let directiveList: { name: string; args?: {} }[] = []
 
-  const directiveList = Array.isArray(directives)
-    ? directives
-    : Object.keys(directives).flatMap((name) =>
-        Array.isArray(directives[name])
-          ? (directives[name] as {}[]).map((args) => ({
-              name,
-              args,
-            }))
-          : {
-              name,
-              args: directives[name],
-            }
-      )
+  if (directives) {
+    directiveList = Array.isArray(directives)
+      ? directives
+      : Object.keys(directives).flatMap((name) =>
+          Array.isArray(directives[name])
+            ? (directives[name] as {}[]).map((args) => ({
+                name,
+                args,
+              }))
+            : {
+                name,
+                args: directives[name],
+              }
+        )
+  }
 
   if (deprecationReason) {
     directiveList.unshift({

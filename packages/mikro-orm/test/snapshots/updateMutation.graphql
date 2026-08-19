@@ -1,0 +1,162 @@
+type Mutation {
+  updateMutation(where: UserFilter, data: UserPartialInput!): Int!
+}
+
+input UserFilter {
+  id: IDComparisonOperators
+  name: StringComparisonOperators
+  email: StringComparisonOperators
+  age: IntComparisonOperators
+
+  """
+  Joins query clauses with a logical AND returns all documents that match the conditions of both clauses.
+  """
+  AND: [UserFilter!]
+
+  """
+  Joins query clauses with a logical OR returns all documents that match the conditions of either clause.
+  """
+  OR: [UserFilter!]
+
+  """
+  Inverts the effect of a query expression and returns documents that do not match the query expression.
+  """
+  NOT: UserFilter
+}
+
+input IDComparisonOperators {
+  """Equals. Matches values that are equal to a specified value."""
+  eq: ID
+
+  """Greater. Matches values that are greater than a specified value."""
+  gt: ID
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: ID
+
+  """Contains, Matches any of the values specified in an array."""
+  in: [ID!]
+
+  """Lower, Matches values that are less than a specified value."""
+  lt: ID
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: ID
+
+  """Not equal. Matches all values that are not equal to a specified value."""
+  ne: ID
+
+  """Not contains. Matches none of the values specified in an array."""
+  nin: [ID!]
+
+  """&& (postgres only)"""
+  overlap: [ID!]
+
+  """@> (postgres only)"""
+  contains: [ID!]
+
+  """<@ (postgres only)"""
+  contained: [ID!]
+}
+
+input StringComparisonOperators {
+  """Equals. Matches values that are equal to a specified value."""
+  eq: String
+
+  """Greater. Matches values that are greater than a specified value."""
+  gt: String
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: String
+
+  """Contains, Matches any of the values specified in an array."""
+  in: [String!]
+
+  """Lower, Matches values that are less than a specified value."""
+  lt: String
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: String
+
+  """Not equal. Matches all values that are not equal to a specified value."""
+  ne: String
+
+  """Not contains. Matches none of the values specified in an array."""
+  nin: [String!]
+
+  """&& (postgres only)"""
+  overlap: [String!]
+
+  """@> (postgres only)"""
+  contains: [String!]
+
+  """<@ (postgres only)"""
+  contained: [String!]
+
+  """Like. Uses LIKE operator"""
+  like: String
+
+  """Regexp. Uses REGEXP operator"""
+  re: String
+
+  """Full text. A driver specific full text search function."""
+  fulltext: String
+
+  """ilike (postgres only)"""
+  ilike: String
+}
+
+input IntComparisonOperators {
+  """Equals. Matches values that are equal to a specified value."""
+  eq: Int
+
+  """Greater. Matches values that are greater than a specified value."""
+  gt: Int
+
+  """
+  Greater or Equal. Matches values that are greater than or equal to a specified value.
+  """
+  gte: Int
+
+  """Contains, Matches any of the values specified in an array."""
+  in: [Int!]
+
+  """Lower, Matches values that are less than a specified value."""
+  lt: Int
+
+  """
+  Lower or equal, Matches values that are less than or equal to a specified value.
+  """
+  lte: Int
+
+  """Not equal. Matches all values that are not equal to a specified value."""
+  ne: Int
+
+  """Not contains. Matches none of the values specified in an array."""
+  nin: [Int!]
+
+  """&& (postgres only)"""
+  overlap: [Int!]
+
+  """@> (postgres only)"""
+  contains: [Int!]
+
+  """<@ (postgres only)"""
+  contained: [Int!]
+}
+
+input UserPartialInput {
+  id: ID
+  name: String
+  email: String
+  age: Int
+  posts: [ID]
+}

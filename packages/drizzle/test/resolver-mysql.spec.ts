@@ -1,13 +1,13 @@
 import { weave } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
-import { drizzle } from "drizzle-orm/mysql2"
 import type { MySql2Database } from "drizzle-orm/mysql2"
+import { drizzle } from "drizzle-orm/mysql2"
 import {
   type GraphQLSchema,
   lexicographicSortSchema,
   printSchema,
 } from "graphql"
-import { type YogaServerInstance, createYoga } from "graphql-yoga"
+import { createYoga, type YogaServerInstance } from "graphql-yoga"
 import * as v from "valibot"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { config } from "../env.config"
@@ -15,13 +15,8 @@ import { drizzleResolverFactory } from "../src"
 import { posts, users } from "./schema/mysql"
 import { relations } from "./schema/mysql-relations"
 
-const schema = {
-  users,
-  posts,
-}
-
-describe("resolver by mysql", () => {
-  let db: MySql2Database<typeof schema, typeof relations>
+describe.runIf(config.mysqlUrl)("resolver by mysql", () => {
+  let db: MySql2Database<typeof relations>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema
   let yoga: YogaServerInstance<{}, {}>
@@ -51,7 +46,6 @@ describe("resolver by mysql", () => {
     try {
       db = drizzle(config.mysqlUrl, {
         relations,
-        mode: "default",
         logger: { logQuery: (query) => logs.push(query) },
       })
       const userFactory = drizzleResolverFactory(db, users, {

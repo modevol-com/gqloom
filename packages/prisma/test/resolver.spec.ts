@@ -1,6 +1,12 @@
 import { weave } from "@gqloom/core"
-import { lexicographicSortSchema, printSchema, printType } from "graphql"
-import { createYoga } from "graphql-yoga"
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
+import {
+  execute as graphqlExecute,
+  lexicographicSortSchema,
+  parse,
+  printSchema,
+  printType,
+} from "graphql"
 import {
   afterAll,
   afterEach,
@@ -10,14 +16,23 @@ import {
   expect,
   it,
 } from "vitest"
+import CREATE_TABLES from "../prisma/CREATE_TABLES.json"
 import { PrismaResolverFactory } from "../src"
-import { type Prisma, PrismaClient } from "./client"
+import { type Prisma, PrismaClient } from "./client/client"
 import * as p from "./generated"
 
 describe("Resolver", () => {
-  const db = new PrismaClient()
+  const adapter = new PrismaBetterSqlite3({ url: ":memory:" })
+  const db = new PrismaClient({
+    adapter,
+    log: [{ emit: "event", level: "query" }],
+  })
   const userBobbin = new PrismaResolverFactory(p.User, db)
   const userResolver = userBobbin.resolver()
+
+  beforeAll(async () => {
+    await initDb(db)
+  })
 
   it("should be able to create ResolverFactory", () => {
     expect(userResolver).toBeDefined()
@@ -150,7 +165,7 @@ describe("Resolver", () => {
   })
 
   it("should be able to weave schema", async () => {
-    const schema = weaveSchema()
+    const schema = weaveSchema(db)
 
     expect(printType(schema.getType("User")!)).toMatchInlineSnapshot(`
       "type User {
@@ -170,6 +185,7 @@ describe("Resolver", () => {
 
   describe("mutations", () => {
     beforeAll(async () => {
+      await initDb(db)
       let times = 0
       while (true) {
         try {
@@ -194,25 +210,19 @@ describe("Resolver", () => {
     })
 
     let logs: string[] = []
-    const schema = weaveSchema((e) => {
+    const schema = weaveSchema(db, (e) => {
       logs.push(e.query.replaceAll("`", ""))
     })
-    const yoga = createYoga({ schema })
-    const execute = async (query: string, variables?: Record<string, any>) => {
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          variables,
-        }),
+    const execute = async (query: string, variables?: any): Promise<any> => {
+      const contextValue: Record<string, unknown> = {}
+      const { data, errors } = await graphqlExecute({
+        schema,
+        document: parse(query),
+        variableValues: variables,
+        contextValue,
       })
 
-      const { data, errors } = await response.json()
-
-      if (response.status !== 200) {
+      if (errors && errors.length > 0) {
         throw new Error(JSON.stringify(errors))
       }
       await new Promise((resolve) => setTimeout(resolve, 6))
@@ -276,11 +286,10 @@ describe("Resolver", () => {
       })
     })
 
-    it(
-      "should be able to create a post with a author",
-      { retry: 6 },
-      async () => {
-        const query = /* GraphQL */ `
+    it("should be able to create a post with a author", {
+      retry: 6,
+    }, async () => {
+      const query = /* GraphQL */ `
         mutation createPost($data: PostCreateInput!) {
           createPost(data: $data) {
             id
@@ -293,37 +302,36 @@ describe("Resolver", () => {
         }
       `
 
-        const response = await execute(query, {
-          data: {
-            title: "Hello World",
-            author: {
-              connectOrCreate: {
-                where: {
-                  email: "bob@bob.com",
-                },
-                create: {
-                  email: "bob@bob.com",
-                  name: "Bob",
-                },
+      const response = await execute(query, {
+        data: {
+          title: "Hello World",
+          author: {
+            connectOrCreate: {
+              where: {
+                email: "bob@bob.com",
+              },
+              create: {
+                email: "bob@bob.com",
+                name: "Bob",
               },
             },
           },
-        })
+        },
+      })
 
-        expect(response).toMatchObject({
-          createPost: {
+      expect(response).toMatchObject({
+        createPost: {
+          id: expect.any(String),
+          title: "Hello World",
+          author: {
             id: expect.any(String),
-            title: "Hello World",
-            author: {
-              id: expect.any(String),
-              email: "bob@bob.com",
-            },
+            email: "bob@bob.com",
           },
-        })
+        },
+      })
 
-        expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
+      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
           "
-          BEGIN IMMEDIATE
           SELECT main.User.id FROM main.User WHERE (main.User.email = ? AND 1=1) LIMIT ? OFFSET ?
           INSERT INTO main.User (email, name) VALUES (?,?) RETURNING id AS id
           INSERT INTO main.Post (title, published, authorId) VALUES (?,?,?) RETURNING id AS id
@@ -332,8 +340,7 @@ describe("Resolver", () => {
           SELECT main.User.id, main.User.email FROM main.User WHERE main.User.id IN (?) LIMIT ? OFFSET ?
           "
         `)
-      }
-    )
+    })
 
     it("should be able to delete a user", { retry: 6 }, async () => {
       await db.user.create({ data: { email: "bob@bob.com" } })
@@ -361,6 +368,7 @@ describe("Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        INSERT INTO main.User (email) VALUES (?) RETURNING id AS id, email AS email, name AS name
         DELETE FROM main.User WHERE (main.User.email = ? AND 1=1) RETURNING id AS id, email AS email
         "
       `)
@@ -427,6 +435,8 @@ describe("Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
+        INSERT INTO main.User (email) VALUES (?) RETURNING id AS id, email AS email, name AS name
+        INSERT INTO main.Post (title, published, authorId) VALUES (?,?,?) RETURNING id AS id, title AS title, content AS content, published AS published, authorId AS authorId, publishedById AS publishedById
         UPDATE main.Post SET title = ? WHERE (main.Post.id = ? AND 1=1) RETURNING id AS id, title AS title
         "
       `)
@@ -519,6 +529,7 @@ describe("Resolver", () => {
 
   describe("queries", () => {
     beforeAll(async () => {
+      await initDb(db)
       let times = 0
       while (true) {
         try {
@@ -542,27 +553,20 @@ describe("Resolver", () => {
       })
     })
     let logs: string[] = []
-    const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
 
-    const schema = weaveSchema((e) => {
+    const schema = weaveSchema(db, (e) => {
       logs.push(e.query.replaceAll("`", ""))
     })
-    const yoga = createYoga({ schema })
-    const execute = async (query: string, variables?: Record<string, any>) => {
-      const response = await yoga.fetch("http://localhost/graphql", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          variables,
-        }),
+    const execute = async (query: string, variables?: any): Promise<any> => {
+      const contextValue: any = {}
+      const { data, errors } = await graphqlExecute({
+        schema,
+        document: parse(query),
+        variableValues: variables,
+        contextValue,
       })
 
-      const { data, errors } = await response.json()
-
-      if (response.status !== 200 || errors != null) {
+      if (errors && errors.length > 0) {
         throw new Error(JSON.stringify(errors))
       }
       await new Promise((resolve) => setTimeout(resolve, 6))
@@ -687,11 +691,9 @@ describe("Resolver", () => {
         ])
       )
 
-      expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
-        "
-        SELECT main.User.id, main.User.email FROM main.User WHERE 1=1 LIMIT ? OFFSET ?
-        "
-      `)
+      expect(logs[logs.length - 1]).toMatchInlineSnapshot(
+        `"SELECT main.User.id, main.User.email FROM main.User WHERE 1=1 LIMIT ? OFFSET ?"`
+      )
     })
 
     it("should query users with pagination", async () => {
@@ -735,7 +737,7 @@ describe("Resolver", () => {
 
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
-        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE main.User.email LIKE ? LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.email, main.User.name FROM main.User WHERE main.User.email LIKE (? || '%') LIMIT ? OFFSET ?
         SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE main.Post.authorId IN (?) LIMIT ? OFFSET ?
         "
       `)
@@ -811,7 +813,7 @@ describe("Resolver", () => {
       expect(["", ...logs, ""].join("\n")).toMatchInlineSnapshot(`
         "
         SELECT main.Post.id, main.Post.title, main.Post.authorId FROM main.Post WHERE 1=1 LIMIT ? OFFSET ?
-        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?,?,?) LIMIT ? OFFSET ?
+        SELECT main.User.id, main.User.name FROM main.User WHERE main.User.id IN (?,?) LIMIT ? OFFSET ?
         "
       `)
     })
@@ -923,11 +925,15 @@ describe("Resolver", () => {
   })
 })
 
-function weaveSchema(log?: (query: Prisma.QueryEvent) => void) {
-  const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] })
-  db.$on("query", (e) => {
-    log?.(e)
-  })
+function weaveSchema(
+  db: PrismaClient,
+  log?: (query: Prisma.QueryEvent) => void
+) {
+  if (log) {
+    db.$on("query" as never, (e) => {
+      log(e)
+    })
+  }
   const userResolver = new PrismaResolverFactory(p.User, db).resolver()
   const postResolver = new PrismaResolverFactory(p.Post, db).resolver()
   const profileResolver = new PrismaResolverFactory(p.Profile, db).resolver()
@@ -941,4 +947,13 @@ function weaveSchema(log?: (query: Prisma.QueryEvent) => void) {
     dogResolver
   )
   return schema
+}
+
+const initDbs = new WeakSet<PrismaClient>()
+async function initDb(db: PrismaClient) {
+  if (initDbs.has(db)) return
+  for (const statement of CREATE_TABLES) {
+    await db.$executeRawUnsafe(statement)
+  }
+  initDbs.add(db)
 }

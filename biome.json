@@ -1,16 +1,21 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.9/schema.json",
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "**/dist/**/*",
-      ".vercel/",
-      "website/.next/",
-      "docs/doc_build/",
-      "**/generated/**/*",
-      "packages/prisma/test/client/**/*",
-      "coverage/"
+    "includes": [
+      "**",
+      "!**/dist/**/*",
+      "!**/.vercel/**/*",
+      "!**/coverage/**/*",
+      "!**/website-fuma/",
+      "!**/website/.vitepress/cache",
+      "!**/docs/doc_build/",
+      "!**/generated/**/*",
+      "!**/packages/prisma/test/client/**/*",
+      "!**/coverage/",
+      "!**/*.css",
+      "!**/snapshots/**/*"
     ]
   },
   "formatter": {
@@ -23,19 +28,18 @@
     "lineWidth": 80,
     "attributePosition": "auto",
     "bracketSpacing": true,
-    "ignore": ["**/pnpm-lock.yaml", "**/*.spec.gql"]
+    "includes": ["**", "!**/pnpm-lock.yaml", "!**/*.spec.gql"]
   },
-  "organizeImports": { "enabled": true },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": false,
+      "preset": "none",
       "complexity": {
         "noExtraBooleanCast": "error",
-        "noMultipleSpacesInRegularExpressionLiterals": "error",
         "noUselessCatch": "error",
         "noUselessTypeConstraint": "error",
-        "noWith": "error"
+        "noAdjacentSpacesInRegex": "error"
       },
       "correctness": {
         "noConstAssign": "error",
@@ -58,17 +62,18 @@
         "noUnusedLabels": "error",
         "noUnusedPrivateClassMembers": "error",
         "noUnusedVariables": "error",
-        "useArrayLiterals": "off",
         "useIsNan": "error",
         "useValidForDirection": "error",
         "useYield": "error",
-        "useExhaustiveDependencies": "warn"
+        "useExhaustiveDependencies": "warn",
+        "useValidTypeof": "error"
       },
       "style": {
         "noNamespace": "error",
         "useAsConstAssertion": "error",
         "useBlockStatements": "off",
-        "useImportType": "warn"
+        "useImportType": "warn",
+        "useArrayLiterals": "off"
       },
       "suspicious": {
         "noAsyncPromiseExecutor": "error",
@@ -98,10 +103,16 @@
         "noUnsafeNegation": "error",
         "useGetterReturn": "error",
         "useNamespaceKeyword": "error",
-        "useValidTypeof": "error"
+        "noWith": "error"
       }
     },
-    "ignore": ["**/*.js", "**/generated/**", "**/draft/**/*"]
+    "includes": [
+      "**",
+      "!**/*.js",
+      "!**/generated/**",
+      "!**/draft/**/*",
+      "!**/*.vue"
+    ]
   },
   "javascript": {
     "formatter": {
@@ -119,7 +130,7 @@
   },
   "overrides": [
     {
-      "include": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "linter": {
         "rules": {
           "correctness": {
@@ -127,20 +138,24 @@
             "noGlobalObjectCalls": "off",
             "noInvalidBuiltinInstantiation": "off",
             "noInvalidConstructorSuper": "off",
-            "noNewSymbol": "off",
             "noSetterReturn": "off",
             "noUndeclaredVariables": "off",
             "noUnreachable": "off",
             "noUnreachableSuper": "off",
             "noUnusedImports": {
+              "options": {},
               "level": "warn",
               "fix": "unsafe"
             }
           },
           "style": {
-            "noArguments": "error",
-            "noVar": "error",
-            "useConst": { "level": "warn", "fix": "unsafe" }
+            "useConst": { "options": {}, "level": "warn", "fix": "unsafe" },
+            "useConsistentMemberAccessibility": {
+              "level": "warn",
+              "options": {
+                "accessibility": "explicit"
+              }
+            }
           },
           "suspicious": {
             "noDuplicateClassMembers": "off",
@@ -150,24 +165,22 @@
             "noImportAssign": "off",
             "noRedeclare": "off",
             "noUnsafeNegation": "off",
-            "useGetterReturn": "off"
+            "useGetterReturn": "off",
+            "noVar": "error"
           },
-          "nursery": {
-            "useConsistentMemberAccessibility": {
-              "level": "warn",
-              "options": {
-                "accessibility": "explicit"
-              }
-            }
+          "nursery": {},
+          "complexity": {
+            "noArguments": "error"
           }
         }
       }
     },
     {
-      "include": ["website/**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "includes": ["**/website/**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "linter": {
         "rules": {
-          "nursery": {
+          "nursery": {},
+          "style": {
             "useConsistentMemberAccessibility": "off"
           }
         }

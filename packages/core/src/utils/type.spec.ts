@@ -1,5 +1,4 @@
-import { GraphQLList, GraphQLNonNull } from "graphql"
-import { GraphQLString } from "graphql"
+import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql"
 import { describe, expect, it } from "vitest"
 import { unwrapType } from "./type"
 

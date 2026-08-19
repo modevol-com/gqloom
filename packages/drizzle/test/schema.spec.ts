@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from "@gqloom/core"
 import {
   field,
   getGraphQLType,
@@ -6,12 +7,12 @@ import {
   silk,
   weave,
 } from "@gqloom/core"
-import type { StandardSchemaV1 } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
-import { pgTable } from "drizzle-orm/pg-core"
+import { extractExtendedColumnType } from "drizzle-orm"
 import * as pg from "drizzle-orm/pg-core"
-import { sqliteTable } from "drizzle-orm/sqlite-core"
+import { pgTable } from "drizzle-orm/pg-core"
 import * as sqlite from "drizzle-orm/sqlite-core"
+import { sqliteTable } from "drizzle-orm/sqlite-core"
 import {
   GraphQLNonNull,
   type GraphQLObjectType,
@@ -27,6 +28,7 @@ import { DrizzleWeaver, drizzleSilk } from "../src"
 describe("drizzleSilk", () => {
   it("should handle pg table and column types", () => {
     const moodEnum = pg.pgEnum("mood", ["sad", "ok", "happy"])
+    const fruitEnum = v.picklist(["apple", "banana", "orange"])
     const Foo = drizzleSilk(
       pgTable("foo", {
         serial: pg.serial().primaryKey(),
@@ -49,11 +51,17 @@ describe("drizzleSilk", () => {
         interval: pg.interval(),
         array: pg.text().array(),
         enum: moodEnum(),
-      })
+        enum2: pg.text({ enum: fruitEnum.options }),
+      }),
+      {
+        fields: () => ({
+          enum2: { type: silk.getType(fruitEnum) },
+        }),
+      }
     )
 
-    const gqlType = getGraphQLType(Foo)
-    expect(printType(unwrap(gqlType))).toMatchInlineSnapshot(`
+    const schema = weave(ValibotWeaver, Foo)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type FooItem {
         serial: Int!
         integer: Int
@@ -75,6 +83,19 @@ describe("drizzleSilk", () => {
         interval: String
         array: [String!]
         enum: Mood
+        enum2: FooItemEnum2!
+      }
+
+      enum Mood {
+        SAD
+        OK
+        HAPPY
+      }
+
+      enum FooItemEnum2 {
+        apple
+        banana
+        orange
       }"
     `)
   })
@@ -277,6 +298,8 @@ describe("drizzleSilk", () => {
         real: sqlite.real(),
         text: sqlite.text(),
         blob: sqlite.blob(),
+        blobBuffer: sqlite.blob({ mode: "buffer" }),
+        blobBigint: sqlite.blob({ mode: "bigint" }),
         boolean: sqlite.integer({ mode: "boolean" }),
       })
     )
@@ -287,7 +310,9 @@ describe("drizzleSilk", () => {
         integer: Int!
         real: Float
         text: String
-        blob: [Int!]
+        blob: String
+        blobBuffer: [Int!]
+        blobBigint: String
         boolean: Boolean
       }"
     `)
@@ -298,7 +323,7 @@ describe("drizzleSilk", () => {
 
     const config = DrizzleWeaver.config({
       presetGraphQLType: (column) => {
-        if (column.dataType === "date") {
+        if (extractExtendedColumnType(column).constraint === "date") {
           return GraphQLDate
         }
       },
@@ -332,15 +357,7 @@ describe("drizzleSilk", () => {
     `)
   })
 
-  it("should throw error when not implemented", () => {
-    const notImplemented1 = drizzleSilk(
-      pgTable("not_implemented", {
-        line: pg.line(),
-      })
-    )
-    expect(() => getGraphQLType(notImplemented1)).toThrow(
-      "Type: PgLine is not implemented!"
-    )
+  it("should map geometric and custom column types", () => {
     const customType = pg.customType<{
       data: number
       notNull: true
@@ -348,14 +365,29 @@ describe("drizzleSilk", () => {
     }>({
       dataType: () => "CustomType",
     })
-    const notImplemented2 = drizzleSilk(
-      pgTable("not_implemented", {
+    const Foo = drizzleSilk(
+      pgTable("foo", {
+        line: pg.line(),
         customType: customType(),
       })
     )
 
-    expect(() => getGraphQLType(notImplemented2)).toThrow(
-      "Type: PgCustomColumn is not implemented!"
+    expect(printType(unwrap(getGraphQLType(Foo)))).toMatchInlineSnapshot(`
+      "type FooItem {
+        line: [Float!]
+        customType: String
+      }"
+    `)
+  })
+
+  it("should throw error when column data type is not implemented", () => {
+    const unknownColumn = {
+      dataType: "unknown",
+      columnType: "PgUnknown",
+    } as never
+
+    expect(() => DrizzleWeaver.getColumnType(unknownColumn)).toThrow(
+      "Type: PgUnknown is not implemented!"
     )
   })
 

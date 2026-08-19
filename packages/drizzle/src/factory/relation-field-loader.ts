@@ -1,17 +1,18 @@
 import {
   type BaseField,
-  LoomDataLoader,
-  type ResolverPayload,
   getMemoizationMap,
+  LoomDataLoader,
   mapValue,
+  type ResolverPayload,
 } from "@gqloom/core"
 import {
   type Column,
+  getTableName,
+  inArray,
+  isTable,
   Many,
   type Relation,
   type Table,
-  getTableName,
-  inArray,
 } from "drizzle-orm"
 import {
   getParentPath,
@@ -19,12 +20,13 @@ import {
   getSelectedColumns,
   inArrayMultiple,
 } from "../helper"
-import type { AnyQueryBuilder, BaseDatabase } from "./types"
+import { queryBuilderForTable } from "./query"
+import type { BaseDatabase } from "./types"
 
 interface RelationFieldsLoaderInput {
   id: number
   selector: RelationFieldSelector
-  parent: any
+  parent: Record<string, unknown>
   args: any
   payload: ResolverPayload | undefined
 }
@@ -32,7 +34,7 @@ interface RelationFieldsLoaderInput {
 export class RelationFieldsLoader extends LoomDataLoader<
   [
     selector: (loader: RelationFieldsLoader) => RelationFieldSelector,
-    parent: any,
+    parent: Record<string, unknown>,
     args: any,
     payload: ResolverPayload | undefined,
   ],
@@ -56,14 +58,14 @@ export class RelationFieldsLoader extends LoomDataLoader<
     return loader
   }
 
-  protected queryBuilder: AnyQueryBuilder
+  protected queryBuilder: NonNullable<ReturnType<typeof queryBuilderForTable>>
   protected selectors: Map<Function, RelationFieldSelector>
 
   public constructor(
     protected db: BaseDatabase,
     protected table: Table
   ) {
-    const queryBuilder = matchQueryBuilder(db.query, table)
+    const queryBuilder = queryBuilderForTable(db, table)
     if (!queryBuilder) {
       throw new Error(
         `Query builder not found for source table ${getTableName(table)}`
@@ -78,7 +80,7 @@ export class RelationFieldsLoader extends LoomDataLoader<
   protected async batchLoad(
     inputBatch: [
       selector: (loader: RelationFieldsLoader) => RelationFieldSelector,
-      parent: any,
+      parent: Record<string, unknown>,
       args: any,
       payload: ResolverPayload<object, BaseField> | undefined,
     ][]
@@ -118,15 +120,22 @@ export class RelationFieldsLoader extends LoomDataLoader<
 
     const parentsWithRelationsList = await this.queryBuilder.findMany({
       where: {
-        RAW: (table) => whereByParent(table, Array.from(parents.values())),
+        RAW: (table, _operators) => {
+          if (!isTable(table)) {
+            throw new Error(
+              `GQLoom-Drizzle Error: Expected table ${getTableName(this.table)}`
+            )
+          }
+          return whereByParent(table, Array.from(parents.values()))
+        },
       },
-      with: relations as never,
+      with: relations,
       columns: Object.fromEntries(
         getPrimaryColumns(this.table).map(([key]) => [key, true])
       ),
     })
 
-    const parentsWithRelations = new Map<string, any>(
+    const parentsWithRelations = new Map<string, Record<string, unknown>>(
       parentsWithRelationsList.map((parent) => [
         keyForParent(this.table, parent),
         parent,
@@ -142,7 +151,8 @@ export class RelationFieldsLoader extends LoomDataLoader<
           keyForParent(this.table, input.parent)
         )
         const result =
-          parent?.[selector.relationName] ?? (selector.isMany ? [] : null)
+          parent?.[String(selector.relationName)] ??
+          (selector.isMany ? [] : null)
         results.set(input.id, result)
       }
     }
@@ -153,8 +163,11 @@ export class RelationFieldsLoader extends LoomDataLoader<
   protected getParentRelation(
     inputGroups: Map<RelationFieldSelector, RelationFieldsLoaderInput[]>
   ) {
-    const parents = new Map<string, any>()
-    const relations: any = {}
+    const parents = new Map<string, Record<string, unknown>>()
+    const relations: Record<
+      string,
+      ReturnType<RelationFieldSelector["selectField"]>
+    > = {}
     for (const [selector, inputs] of inputGroups) {
       const selectedColumns = getSelectedColumns(
         selector.targetTable,
@@ -164,7 +177,7 @@ export class RelationFieldsLoader extends LoomDataLoader<
         getPrimaryColumns(selector.targetTable)
       )
       const columns = { ...selectedColumns, ...primaryColumns }
-      relations[selector.relationName] = selector.selectField(
+      relations[String(selector.relationName)] = selector.selectField(
         inputs[0].args,
         columns
       )
@@ -191,7 +204,7 @@ export class RelationFieldSelector {
 
   public constructor(
     public readonly relationName: string | number | symbol,
-    relation: Relation<string, string>,
+    relation: Relation<string>,
     public readonly targetTable: Table
   ) {
     this.isMany = relation instanceof Many
@@ -214,20 +227,13 @@ export class RelationFieldSelector {
   }
 }
 
-function matchQueryBuilder(
-  queries: Record<string, any>,
-  table: any
-): AnyQueryBuilder | undefined {
-  return Object.values(queries).find((qb) => qb.table === table)
-}
-
-function keyForParent(table: Table, parent: any) {
+function keyForParent(table: Table, parent: Record<string, unknown>) {
   return getPrimaryColumns(table)
     .map(([key]) => parent[key])
     .join()
 }
 
-function whereByParent(table: Table, parents: any[]) {
+function whereByParent(table: Table, parents: Record<string, unknown>[]) {
   const primaryColumns = getPrimaryColumns(table)
   if (primaryColumns.length === 1) {
     const [key, column] = primaryColumns[0]

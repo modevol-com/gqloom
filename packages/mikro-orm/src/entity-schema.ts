@@ -1,12 +1,11 @@
 import {
   type GQLoomExtensions,
   type GraphQLSilk,
-  type StandardSchemaV1,
-  type WeaverContext,
   getGraphQLType,
   mapValue,
-  notNullish,
   provideWeaverContext,
+  type StandardSchemaV1,
+  type WeaverContext,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -39,10 +38,13 @@ import {
   GraphQLScalarType,
   GraphQLString,
 } from "graphql"
-import { type EntitySchemaSilk, type EntitySilk, mikroSilk } from "."
+import { type EntitySchemaSilk, mikroSilk } from "."
 import type { GQLoomMikroFieldExtensions } from "./types"
 import { EntityGraphQLTypes, unwrapGraphQLType } from "./utils"
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export class EntitySchemaWeaver {
   public static weave(
     silk: GraphQLSilk<any, any>,
@@ -59,10 +61,12 @@ export class EntitySchemaWeaver {
 
     const entity = new EntitySchema({
       name: gqlType.name,
+      // Allow mixing base field properties and our custom RelationProperty
+      // without forcing TS to reconcile their detailed shapes.
       properties: {
         ...EntitySchemaWeaver.toProperties(gqlType, options),
         ...relations,
-      },
+      } as any,
       ...options,
       hooks: {
         ...options?.hooks,
@@ -85,12 +89,12 @@ export class EntitySchemaWeaver {
           },
           ...(Array.isArray(options?.hooks?.onInit)
             ? options.hooks.onInit
-            : [options?.hooks?.onInit].filter(notNullish)),
+            : [options?.hooks?.onInit].filter((x) => x != null)),
         ],
       },
     })
 
-    EntityGraphQLTypes.set(entity, gqlType)
+    EntityGraphQLTypes.set(entity.meta, gqlType)
 
     return mikroSilk(entity, options?.asObjectType)
   }
@@ -162,7 +166,7 @@ export class EntitySchemaWeaver {
             : simpleType
           return type
         })(),
-    }
+    } as PropertyType
     function unwrap(t: GraphQLOutputType) {
       if (t instanceof GraphQLNonNull) {
         nullable = false
@@ -244,6 +248,9 @@ function getGraphQLTypeWithName(
   }
 }
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export interface CallableEntitySchemaWeaver {
   <TSilk extends GraphQLSilk>(
     silk: TSilk,
@@ -267,11 +274,17 @@ export interface CallableEntitySchemaWeaver {
   ) => EntitySilk<SilkSchemaEntityWithRelations<TSilk, TRelations>>
 }
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export type SilkSchemaEntityWithRelations<
   TSilk extends GraphQLSilk,
   TRelations extends Record<string, RelationProperty<any, any>> = never,
 > = SilkSchemaEntity<TSilk> & InferRelations<TRelations>
 
+/**
+ * @deprecated use `defineEntity` and `mikroSilk` instead.
+ */
 export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver =
   Object.assign(
     (
@@ -287,24 +300,11 @@ export const weaveEntitySchemaBySilk: CallableEntitySchemaWeaver =
     }
   )
 
-export type PropertyType = Exclude<
-  EntitySchemaProperty<any, any>,
-  | {
-      kind:
-        | ReferenceKind.MANY_TO_ONE
-        | "m:1"
-        | ReferenceKind.ONE_TO_ONE
-        | "1:1"
-        | ReferenceKind.ONE_TO_MANY
-        | "1:m"
-        | ReferenceKind.MANY_TO_MANY
-        | "m:n"
-        | ReferenceKind.EMBEDDED
-        | "embedded"
-    }
-  | { enum: true }
-  | { entity: string | (() => EntityName<any>) }
->
+// In v7 the detailed shape of EntitySchemaProperty (especially relation
+// variants) is quite complex. For this deprecated helper we only need
+// "scalar-like" property options, so we keep the type simple to avoid
+// brittle unions that conflict with MikroORM internals.
+export type PropertyType = EntitySchemaProperty<any, any>
 
 export interface EntitySchemaWeaverOptions {
   getProperty?: (
@@ -335,19 +335,20 @@ export type InferRelations<
 export type InferRelation<
   TRelations extends Record<string, RelationProperty<any, any>>,
   TKey extends keyof TRelations,
-> = TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
-  ? Reference<TTarget>
-  : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
+> =
+  TRelations[TKey] extends ManyToOneProperty<infer TTarget, any>
     ? Reference<TTarget>
-    : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
-      ? TTarget extends object
-        ? Collection<TTarget>
-        : never
-      : TRelations[TKey] extends ManyToManyProperty<infer TTarget, any>
+    : TRelations[TKey] extends OneToOneProperty<infer TTarget, any>
+      ? Reference<TTarget>
+      : TRelations[TKey] extends OneToManyProperty<infer TTarget, any>
         ? TTarget extends object
           ? Collection<TTarget>
           : never
-        : never
+        : TRelations[TKey] extends ManyToManyProperty<infer TTarget, any>
+          ? TTarget extends object
+            ? Collection<TTarget>
+            : never
+          : never
 
 export type RelationProperty<TTarget extends object, TOwner> =
   | ManyToOneProperty<TTarget, TOwner>
@@ -357,22 +358,35 @@ export type RelationProperty<TTarget extends object, TOwner> =
 
 export interface ManyToOneProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.MANY_TO_ONE | "m:1"
-  entity: string | (() => string | EntityName<TTarget>)
+  // Loosen the entity type to avoid conflicts with internal
+  // EntitySchemaProperty relation definitions in MikroORM v7.
+  entity: string | EntityName<TTarget> | (() => any)
   nullable?: boolean
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<ManyToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable?: false
   }
 ): ManyToOneProperty<TTarget, TOwner>
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<ManyToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable: true
   }
 ): ManyToOneProperty<TTarget, TOwner> & WithNullable
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: ManyToOneOptions<TOwner, TTarget>
@@ -387,9 +401,12 @@ export function manyToOne<TTarget extends object, TOwner>(
 
 export interface OneToManyProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.ONE_TO_MANY | "1:m"
-  entity: string | (() => string | EntityName<TTarget>)
+  entity: string | EntityName<TTarget> | (() => any)
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToMany<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options: OneToManyOptions<TOwner, TTarget>
@@ -403,22 +420,33 @@ export function oneToMany<TTarget extends object, TOwner>(
 
 export interface OneToOneProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.ONE_TO_ONE | "1:1"
-  entity: string | (() => string | EntityName<TTarget>)
+  entity: string | EntityName<TTarget> | (() => any)
   nullable?: boolean
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<OneToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable?: false
   }
 ): OneToOneProperty<TTarget, TOwner>
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: Omit<OneToOneOptions<TOwner, TTarget>, "nullable"> & {
     nullable: true
   }
 ): OneToOneProperty<TTarget, TOwner> & WithNullable
+
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function oneToOne<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: OneToOneOptions<TOwner, TTarget>
@@ -433,9 +461,12 @@ export function oneToOne<TTarget extends object, TOwner>(
 
 export interface ManyToManyProperty<TTarget extends object, _TOwner> {
   kind: ReferenceKind.MANY_TO_MANY | "m:n"
-  entity: string | (() => string | EntityName<TTarget>)
+  entity: string | EntityName<TTarget> | (() => any)
 }
 
+/**
+ * @deprecated use `defineEntity` instead.
+ */
 export function manyToMany<TTarget extends object, TOwner>(
   entity: string | (() => string | EntityName<TTarget>),
   options?: ManyToManyOptions<TOwner, TTarget>
@@ -459,3 +490,5 @@ type NullishKeys<T> = Exclude<
 export interface WithNullable {
   nullable: true
 }
+
+export type EntitySilk<TEntity> = EntitySchemaSilk<EntitySchema<TEntity>>

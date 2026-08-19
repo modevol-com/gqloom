@@ -1,0 +1,71 @@
+"""
+A user in the system
+"""
+type User {
+  id: String!
+  name: String!
+
+  """
+  User's email address
+  """
+  email: String!
+  age: Float
+  role: UserRole!
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  GUEST
+}
+
+"""
+A blog post
+"""
+type Post {
+  id: String!
+  title: String!
+
+  """
+  Post content
+  """
+  content: String!
+  published: Boolean!
+  authorId: String!
+  createdAt: String!
+  author: User
+}
+
+type Query {
+  hello(name: String): String!
+  users: [User!]!
+  user(id: String!): User
+  posts: [Post!]!
+  publishedPosts: [Post!]!
+  post(id: String!): Post
+}
+
+type Mutation {
+  createUser(input: CreateUserInputInput!): User!
+  createPost(input: CreatePostInputInput!): Post!
+  publishPost(id: String!): Post
+}
+
+input CreateUserInputInput {
+  name: String!
+  email: String!
+  age: Float
+  role: CreateUserRoleInput
+}
+
+enum CreateUserRoleInput {
+  ADMIN
+  USER
+  GUEST
+}
+
+input CreatePostInputInput {
+  title: String!
+  content: String!
+  authorId: String!
+}

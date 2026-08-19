@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLString, execute, parse } from "graphql"
+import { execute, GraphQLObjectType, GraphQLString, parse } from "graphql"
 import { describe, expect, it } from "vitest"
 import { field, query, resolver, silk } from "../resolver"
 import { weave } from "../schema"

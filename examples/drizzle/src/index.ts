@@ -7,13 +7,13 @@ import { drizzle } from "drizzle-orm/node-postgres"
 import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
 import { config } from "../env.config"
-import * as tables from "./schema"
+import { relations } from "./relations"
+import { posts, users } from "./schema"
 
-const db = drizzle(config.databaseUrl, { schema: tables })
+const db = drizzle(config.databaseUrl, { relations })
 
-const userResolver = drizzleResolverFactory(db, "users").resolver()
-
-const postResolver = drizzleResolverFactory(db, "posts").resolver()
+const userResolver = drizzleResolverFactory(db, users).resolver()
+const postResolver = drizzleResolverFactory(db, posts).resolver()
 
 const schema = weave(userResolver, postResolver)
 

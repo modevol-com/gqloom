@@ -1,5 +1,11 @@
 import { type GraphQLSilk, SYMBOLS, type WeaverConfig } from "@gqloom/core"
-import type { Column, InferSelectModel, SQL, Table } from "drizzle-orm"
+import type {
+  Column,
+  InferInsertModel,
+  InferSelectModel,
+  SQL,
+  Table,
+} from "drizzle-orm"
 import type {
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
@@ -50,8 +56,13 @@ export interface ColumnBehavior<TOutput> {
 
 export type DrizzleFactoryInputBehaviors<TTable extends Table> = {
   [K in keyof TTable["_"]["columns"]]?:
-    | ColumnBehavior<TTable["$inferInsert"][K]>
-    | GraphQLSilk<TTable["$inferInsert"][K], any>
+    | ColumnBehavior<
+        InferInsertModel<TTable>[Extract<K, keyof InferInsertModel<TTable>>]
+      >
+    | GraphQLSilk<
+        InferInsertModel<TTable>[Extract<K, keyof InferInsertModel<TTable>>],
+        any
+      >
     | boolean
     | undefined
 } & {
@@ -81,17 +92,16 @@ export interface DrizzleSilkConfig<TTable extends Table>
   }>
 }
 
-export type HideFields<TConfig extends DrizzleSilkConfig<any>> = UnwrapGetter<
-  TConfig["fields"]
-> extends Record<string | number | symbol, any>
-  ? {
-      [K in keyof UnwrapGetter<TConfig["fields"]>]: UnwrapGetter<
-        TConfig["fields"]
-      >[K] extends typeof SYMBOLS.FIELD_HIDDEN
-        ? K
-        : never
-    }[keyof UnwrapGetter<TConfig["fields"]>]
-  : never
+export type HideFields<TConfig extends DrizzleSilkConfig<any>> =
+  UnwrapGetter<TConfig["fields"]> extends Record<string | number | symbol, any>
+    ? {
+        [K in keyof UnwrapGetter<TConfig["fields"]>]: UnwrapGetter<
+          TConfig["fields"]
+        >[K] extends typeof SYMBOLS.FIELD_HIDDEN
+          ? K
+          : never
+      }[keyof UnwrapGetter<TConfig["fields"]>]
+    : never
 
 export type ValueOrGetter<T> = T | (() => T)
 

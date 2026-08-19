@@ -1,8 +1,11 @@
-import type { GraphQLOutputType } from "graphql"
+import type { GraphQLArgumentConfig, GraphQLOutputType } from "graphql"
 
 export interface SchemaWeaver {
   vendor: string
   getGraphQLType: (schema: any) => GraphQLOutputType
+  getGraphQLArgumentConfig?: (
+    schema: any
+  ) => Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined
 }
 
 export function isSchemaVendorWeaver(some: any): some is SchemaWeaver {

@@ -13,8 +13,9 @@ createServer(yoga).listen(4000, () => {
 })
 
 import * as fs from "fs"
-import * as path from "path"
 import { printSchema } from "graphql"
+import * as path from "path"
+
 if (process.env.NODE_ENV !== "production") {
   fs.writeFileSync(
     path.resolve(__dirname, "../schema.graphql"),

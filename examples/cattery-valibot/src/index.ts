@@ -1,7 +1,11 @@
 import { createServer } from "node:http"
+import * as fs from "node:fs"
+import * as path from "node:path"
 import { type Middleware, weave } from "@gqloom/core"
 import { asyncContextProvider } from "@gqloom/core/context"
+import { DrizzleWeaver } from "@gqloom/drizzle"
 import { ValibotWeaver } from "@gqloom/valibot"
+import { GraphQLError, printSchema } from "graphql"
 import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
 import { createYoga } from "graphql-yoga"
 import { resolvers } from "./resolvers"
@@ -41,10 +45,6 @@ createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
 
-import * as fs from "fs"
-import * as path from "path"
-import { DrizzleWeaver } from "@gqloom/drizzle"
-import { GraphQLError, printSchema } from "graphql"
 if (process.env.NODE_ENV !== "production") {
   fs.writeFileSync(
     path.resolve(__dirname, "../schema.graphql"),

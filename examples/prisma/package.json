@@ -12,15 +12,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "prisma": "^5.20.0"
+    "prisma": "^7.9.1"
   },
   "dependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/prisma": "workspace:*",
     "@gqloom/valibot": "workspace:*",
-    "@prisma/client": "5.20.0",
-    "graphql": "^16.8.1",
-    "graphql-yoga": "^5.6.0",
-    "valibot": "1.0.0-beta.7"
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "graphql": "^16.12.0",
+    "graphql-yoga": "^5.21.0",
+    "pg": "^8.23.0",
+    "valibot": "1.4.2"
   }
 }

@@ -6,23 +6,27 @@ import type {
   GraphQLUnionTypeConfig,
 } from "graphql"
 import type {
-  util,
   $ZodArray,
   $ZodBoolean,
   $ZodDate,
   $ZodDefault,
   $ZodDiscriminatedUnion,
   $ZodEnum,
+  $ZodLazy,
   $ZodLiteral,
   $ZodNullable,
   $ZodNumber,
   $ZodObject,
   $ZodOptional,
+  $ZodPipe,
   $ZodShape,
   $ZodString,
   $ZodType,
   $ZodUnion,
+  GlobalMeta,
+  util,
 } from "zod/v4/core"
+import { globalRegistry } from "zod/v4/core"
 import { ZodWeaver } from "."
 import { asEnumType, asField, asObjectType, asUnionType } from "./metadata"
 import type {
@@ -30,48 +34,64 @@ import type {
   FieldConfig,
   ObjectConfig,
   UnionConfig,
+  ZodWeaverConfig,
+  ZodWeaverConfigOptions,
 } from "./types"
 
-function matchDiscriminators(
-  input: any,
-  discs: util.DiscriminatorMap
-): boolean {
-  let matched = true
-  for (const [key, value] of discs) {
-    const data = input?.[key]
+const defaultMetaToConfig = (meta: GlobalMeta) => {
+  const config: { name?: string; description?: string } = {}
+  if (meta.title) config.name = meta.title
+  if (meta.description) config.description = meta.description
+  return config
+}
 
-    if (value.values.size && !value.values.has(data)) {
-      matched = false
-    }
-    if (value.maps.length > 0) {
-      for (const m of value.maps) {
-        if (!matchDiscriminators(data, m)) {
-          matched = false
-        }
-      }
-    }
-  }
+const defaultMetaToFieldConfig = (meta: GlobalMeta) => {
+  const config: { description?: string } = {}
+  if (meta.description) config.description = meta.description
+  return config
+}
 
-  return matched
+function getGlobalMeta(schema: $ZodType): GlobalMeta | undefined {
+  const fromRegistry = globalRegistry.get(schema)
+  const fromMeta =
+    "meta" in schema && typeof schema.meta === "function"
+      ? (schema.meta() as GlobalMeta | undefined)
+      : undefined
+
+  if (!fromRegistry && !fromMeta) return undefined
+  return { ...fromMeta, ...fromRegistry }
 }
 
 export function resolveTypeByDiscriminatedUnion(
   schema: $ZodDiscriminatedUnion
 ): GraphQLTypeResolver<any, any> {
-  return (data) => {
-    const def = schema._zod.def
-    const filteredOptions: $ZodType[] = []
-    for (const option of def.options) {
-      if (option._zod.disc) {
-        if (matchDiscriminators(data, option._zod.disc)) {
-          filteredOptions.push(option)
-        }
-      } else {
-        // no discriminator
-        filteredOptions.push(option)
+  const discriminator = schema._zod.def.discriminator
+
+  const optionsMap = new Map<any, $ZodObject<$ZodShape>>()
+  for (const option of schema._zod.def.options) {
+    if (!isZodObject(option)) continue
+
+    const propValues = option._zod.propValues
+    if (propValues && discriminator in propValues) {
+      const values = propValues[discriminator]!
+      for (const value of values) {
+        optionsMap.set(value, option)
       }
     }
-    return getObjectConfig(filteredOptions[0] as $ZodObject).name
+  }
+
+  return (data) => {
+    if (!data || typeof data !== "object") {
+      return undefined
+    }
+    const discriminatorValue = data[discriminator]
+    const matchedOption = optionsMap.get(discriminatorValue)
+
+    if (matchedOption) {
+      return getObjectConfig(matchedOption).name
+    }
+
+    return undefined
   }
 }
 
@@ -157,23 +177,53 @@ export function isZodNullish(
   return isZodOptional(schema) || isZodNullable(schema)
 }
 
+export function isZodPipe(schema: unknown): schema is $ZodPipe {
+  return isZodType(schema) && schema._zod.def.type === "pipe"
+}
+
+export function isZodLazy(schema: unknown): schema is $ZodLazy {
+  return isZodType(schema) && schema._zod.def.type === "lazy"
+}
+
 export function getDescription(schema: $ZodType): string | undefined {
-  if ("description" in schema && typeof schema.description === "string") {
-    return schema.description
+  while (true) {
+    if ("description" in schema && typeof schema.description === "string") {
+      return schema.description
+    }
+    if (isZodPipe(schema)) {
+      schema = schema._zod.def.in
+    } else if (isZodOptional(schema)) {
+      schema = schema._zod.def.innerType
+    } else if (isZodNullable(schema)) {
+      schema = schema._zod.def.innerType
+    } else if (isZodArray(schema)) {
+      schema = schema._zod.def.element
+    } else if (isZodLazy(schema)) {
+      schema = schema._zod.def.getter()
+    } else {
+      break
+    }
   }
-  return undefined
 }
 
 export function isZodDiscriminatedUnion(
   schema: $ZodUnion<$ZodType[]>
 ): schema is $ZodDiscriminatedUnion<$ZodType[]> {
-  return isZodType(schema) && "disc" in schema._zod
+  return isZodUnion(schema) && "discriminator" in schema._zod.def
 }
 
 export function getObjectConfig(
   schema: $ZodObject<$ZodShape>
 ): Partial<GraphQLObjectTypeConfig<any, any>> {
   const objectConfig = asObjectType.get(schema) as ObjectConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaToObjectConfig =
+    weaverConfig?.metaToObjectConfig ??
+    (defaultMetaToConfig as NonNullable<
+      ZodWeaverConfigOptions["metaToObjectConfig"]
+    >)
+  const metaConfig = meta ? metaToObjectConfig(meta) : undefined
   const interfaces = objectConfig?.interfaces?.map(
     ZodWeaver.ensureInterfaceType
   )
@@ -194,9 +244,11 @@ export function getObjectConfig(
   return {
     name,
     description: getDescription(schema),
+    ...metaConfig,
     ...objectConfig,
     interfaces,
     extensions: deepMerge(
+      metaConfig?.extensions,
       objectConfig?.extensions
     ) as GraphQLObjectTypeExtensions,
   }
@@ -204,12 +256,23 @@ export function getObjectConfig(
 
 export function getEnumConfig(schema: $ZodEnum<util.EnumLike>): EnumConfig {
   const enumConfig = asEnumType.get(schema) as EnumConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaConfig =
+    meta &&
+    (
+      weaverConfig?.metaToEnumConfig ??
+      (defaultMetaToConfig as NonNullable<
+        ZodWeaverConfigOptions["metaToEnumConfig"]
+      >)
+    )(meta)
 
   return {
     name: weaverContext.names.get(schema),
     description: getDescription(schema),
+    ...metaConfig,
     ...enumConfig,
-    extensions: deepMerge(enumConfig?.extensions),
+    extensions: deepMerge(metaConfig?.extensions, enumConfig?.extensions),
   }
 }
 
@@ -217,18 +280,40 @@ export function getUnionConfig(
   schema: $ZodUnion<$ZodType[]>
 ): Partial<GraphQLUnionTypeConfig<any, any>> {
   const unionConfig = asUnionType.get(schema) as UnionConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaConfig =
+    meta &&
+    (
+      weaverConfig?.metaToUnionConfig ??
+      (defaultMetaToConfig as NonNullable<
+        ZodWeaverConfigOptions["metaToUnionConfig"]
+      >)
+    )(meta)
   return {
     name: weaverContext.names.get(schema),
-    ...unionConfig,
     description: getDescription(schema),
-    extensions: deepMerge(unionConfig?.extensions),
+    ...metaConfig,
+    ...unionConfig,
+    extensions: deepMerge(metaConfig?.extensions, unionConfig?.extensions),
   }
 }
 
 export function getFieldConfig(schema: $ZodType): FieldConfig {
   const config = asField.get(schema) as FieldConfig | undefined
+  const meta = getGlobalMeta(schema)
+  const weaverConfig = weaverContext.getConfig<ZodWeaverConfig>("gqloom.zod")
+  const metaConfig =
+    meta &&
+    (
+      weaverConfig?.metaToFieldConfig ??
+      (defaultMetaToFieldConfig as NonNullable<
+        ZodWeaverConfigOptions["metaToFieldConfig"]
+      >)
+    )(meta)
   return {
     description: getDescription(schema),
+    ...metaConfig,
     ...config,
   }
 }

@@ -1,13 +1,18 @@
-import { SYMBOLS, mapValue, pascalCase, weaverContext } from "@gqloom/core"
-import { getGraphQLType } from "@gqloom/core"
+import {
+  getGraphQLType,
+  mapValue,
+  pascalCase,
+  SYMBOLS,
+  weaverContext,
+} from "@gqloom/core"
 import {
   type Column,
+  getTableColumns,
+  getTableName,
   type InferInsertModel,
   type InferSelectModel,
   type Many,
   type Table,
-  getTableColumns,
-  getTableName,
 } from "drizzle-orm"
 import {
   GraphQLBoolean,
@@ -575,11 +580,12 @@ export type RelationArgs<
   TRelationName extends keyof InferTableRelationalConfig<
     QueryBuilder<TDatabase, TTable>
   >["relations"],
-> = InferTableRelationalConfig<
-  QueryBuilder<TDatabase, TTable>
->["relations"][TRelationName] extends Many<any, any>
-  ? RelationToManyArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
-  : RelationToOneArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
+> =
+  InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"][TRelationName] extends Many<any>
+    ? RelationToManyArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
+    : RelationToOneArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
 
 export interface RelationToManyArgs<TTable extends Table> {
   where?: Filters<TTable>

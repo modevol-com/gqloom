@@ -1,0 +1,8 @@
+type UserOrderBy {
+  id: QueryOrder
+  name: QueryOrder
+  email: QueryOrder
+  password: QueryOrder
+  age: QueryOrder
+  isActive: QueryOrder
+}

@@ -13,8 +13,8 @@ export interface FieldMeta extends GraphQLFieldOptions {
   operation: "field" | "query" | "mutation" | "subscription"
   output: GraphQLSilk
   input: GraphQLSilk | Record<string, GraphQLSilk> | void
-  middlewares?: Middleware[]
-  dependencies?: string[]
+  middlewares?: Middleware[] | undefined
+  dependencies?: string[] | undefined
   resolve: (...args: any) => MayPromise<any>
 }
 
@@ -32,11 +32,9 @@ export interface Field<
     operation: "field"
     output: TOutput
     input: TInput
-    middlewares?: Middleware[]
+    middlewares?: Middleware[] | undefined
     dependencies?: TDependencies
-    types?: {
-      parent: ReSilk<TParent>
-    }
+    types?: { parent: ReSilk<TParent> } | undefined
     resolve: (
       parent: StandardSchemaV1.InferOutput<NonNullable<TParent>>,
       input: InferInputO<TInput>,
@@ -54,7 +52,7 @@ export interface Query<
     parent?: undefined
     output: TOutput
     input: TInput
-    middlewares?: Middleware[]
+    middlewares?: Middleware[] | undefined
     resolve: (
       input: InferInputO<TInput>,
       payload: ResolverPayload | void
@@ -71,7 +69,7 @@ export interface Mutation<
     parent?: undefined
     output: TOutput
     input: TInput
-    middlewares?: Middleware[]
+    middlewares?: Middleware[] | undefined
     resolve: (
       input: InferInputO<TInput>,
       payload: ResolverPayload | void
@@ -89,10 +87,8 @@ export interface Subscription<
     parent?: undefined
     output: TOutput
     input: TInput
-    middlewares?: Middleware[]
-    types?: {
-      value: TValue
-    } & GraphQLFieldOptions
+    middlewares?: Middleware[] | undefined
+    types?: ({ value: TValue } & GraphQLFieldOptions) | undefined
 
     resolve: (
       value: TValue,
@@ -111,8 +107,8 @@ export interface Resolver {
   readonly "~meta": {
     [IS_RESOLVER]: true
     fields: Record<string, BaseField | typeof FIELD_HIDDEN>
-    options?: ResolverOptionsWithExtensions<any>
-    parent?: GraphQLSilk
+    options?: ResolverOptionsWithExtensions<any> | undefined
+    parent?: GraphQLSilk | undefined
   }
 }
 

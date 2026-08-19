@@ -56,7 +56,7 @@ import { relations as sqliteRelations } from "./schema/sqlite-relations"
 const pathToDB = new URL("./schema/sqlite.db", import.meta.url)
 
 describe("DrizzleResolverFactory", () => {
-  let db: LibSQLDatabase<typeof sqliteSchemas, typeof sqliteRelations>
+  let db: LibSQLDatabase<typeof sqliteRelations>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
     typeof sqliteSchemas.users
@@ -1574,329 +1574,330 @@ describe("DrizzleResolverFactory", () => {
   })
 })
 
-describe.concurrent("DrizzleMySQLResolverFactory", () => {
-  const schema = {
-    users: mysqlSchemas.users,
-  }
-  let db: MySql2Database<typeof schema, typeof mysqlRelations>
-  let userFactory: DrizzleMySQLResolverFactory<
-    typeof db,
-    typeof mysqlSchemas.users
-  >
+describe
+  .runIf(config.mysqlUrl)
+  .concurrent("DrizzleMySQLResolverFactory", () => {
+    let db: MySql2Database<typeof mysqlRelations>
+    let userFactory: DrizzleMySQLResolverFactory<
+      typeof db,
+      typeof mysqlSchemas.users
+    >
 
-  beforeAll(async () => {
-    db = mysqlDrizzle(config.mysqlUrl, {
-      relations: mysqlRelations,
-      mode: "default",
+    beforeAll(async () => {
+      db = mysqlDrizzle(config.mysqlUrl, {
+        relations: mysqlRelations,
+      })
+      userFactory = drizzleResolverFactory(db, mysqlSchemas.users)
+      await db.execute(sql`select 1`)
     })
-    userFactory = drizzleResolverFactory(db, mysqlSchemas.users)
-    await db.execute(sql`select 1`)
-  })
 
-  describe("insertArrayMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(mysqlSchemas.users, {
-        insertArrayMutation: userFactory.insertArrayMutation(),
+    describe("insertArrayMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(mysqlSchemas.users, {
+          insertArrayMutation: userFactory.insertArrayMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+      it("should be created without error", async () => {
+        const mutation = userFactory.insertArrayMutation()
+        expect(mutation).toBeDefined()
       })
 
-      expect(userResolver).toBeDefined()
-    })
-    it("should be created without error", async () => {
-      const mutation = userFactory.insertArrayMutation()
-      expect(mutation).toBeDefined()
+      it("should resolve correctly", async () => {
+        const mutation = userFactory.insertArrayMutation()
+        expect(
+          await mutation["~meta"].resolve({
+            values: [
+              { name: "John", age: 5 },
+              { name: "Jane", age: 6 },
+            ],
+          })
+        ).toMatchObject({ isSuccess: true })
+
+        await db
+          .delete(mysqlSchemas.users)
+          .where(inArray(mysqlSchemas.users.age, [5, 6]))
+      })
+
+      it("should be created with custom input", async () => {
+        const mutation = userFactory
+          .insertArrayMutation()
+          .description("Insert users")
+          .input(
+            v.pipe(
+              v.array(v.object({ name: v.string(), age: v.number() })),
+              v.transform((values) => ({ values }))
+            )
+          )
+
+        expect(mutation).toBeDefined()
+        const executor = resolver({ mutation }).toExecutor()
+        expect(
+          await executor.mutation([
+            { name: "John", age: 5 },
+            { name: "Jane", age: 6 },
+          ])
+        ).toMatchObject({
+          isSuccess: true,
+        })
+
+        await db
+          .delete(mysqlSchemas.users)
+          .where(inArray(mysqlSchemas.users.age, [5, 6]))
+      })
     })
 
-    it("should resolve correctly", async () => {
-      const mutation = userFactory.insertArrayMutation()
-      expect(
-        await mutation["~meta"].resolve({
+    describe("insertSingleMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(mysqlSchemas.users, {
+          insertSingleMutation: userFactory.insertSingleMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+
+      it("should be created without error", async () => {
+        const mutation = userFactory.insertSingleMutation()
+        expect(mutation).toBeDefined()
+      })
+
+      it("should resolve correctly", async () => {
+        const mutation = userFactory.insertSingleMutation()
+        const answer = await mutation["~meta"].resolve({
+          value: { name: "John", age: 7 },
+        })
+        expect(answer).toMatchObject({ isSuccess: true })
+
+        await db.delete(mysqlSchemas.users).where(eq(mysqlSchemas.users.age, 7))
+      })
+    })
+
+    describe("updateMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(mysqlSchemas.users, {
+          updateMutation: userFactory.updateMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+      it("should be created without error", async () => {
+        const mutation = userFactory.updateMutation()
+        expect(mutation).toBeDefined()
+      })
+
+      it("should resolve correctly", async () => {
+        await db.insert(mysqlSchemas.users).values({ name: "Bob", age: 18 })
+        const mutation = userFactory.updateMutation()
+        expect(
+          await mutation["~meta"].resolve({
+            where: eq(mysqlSchemas.users.name, "Bob"),
+            set: { age: 19 },
+          })
+        ).toMatchObject({ isSuccess: true })
+        await db
+          .delete(mysqlSchemas.users)
+          .where(eq(mysqlSchemas.users.name, "Bob"))
+      })
+    })
+
+    describe("deleteMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(mysqlSchemas.users, {
+          deleteMutation: userFactory.deleteMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+      it("should be created without error", async () => {
+        const mutation = userFactory.deleteMutation()
+        expect(mutation).toBeDefined()
+      })
+
+      it("should resolve correctly", async () => {
+        await db.insert(mysqlSchemas.users).values({ name: "Alice", age: 18 })
+        try {
+          const mutation = userFactory.deleteMutation()
+          const answer = await mutation["~meta"].resolve({
+            where: eq(mysqlSchemas.users.name, "Alice"),
+          })
+          expect(answer).toMatchObject({ isSuccess: true })
+        } finally {
+          await db
+            .delete(mysqlSchemas.users)
+            .where(eq(mysqlSchemas.users.name, "Alice"))
+        }
+      })
+    })
+  })
+
+describe
+  .runIf(config.postgresUrl)
+  .concurrent("DrizzlePostgresResolverFactory", () => {
+    let db: NodePgDatabase<typeof pgRelations>
+    let userFactory: DrizzlePostgresResolverFactory<
+      typeof db,
+      typeof pgSchemas.users
+    >
+
+    beforeAll(async () => {
+      db = pgDrizzle(config.postgresUrl, {
+        relations: pgRelations,
+      })
+      userFactory = drizzleResolverFactory(db, pgSchemas.users)
+      await db.execute(sql`select 1`)
+    })
+
+    describe("insertArrayMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(pgSchemas.users, {
+          insertArrayMutation: userFactory.insertArrayMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+      it("should be created without error", async () => {
+        const mutation = userFactory.insertArrayMutation()
+        expect(mutation).toBeDefined()
+      })
+
+      it("should resolve correctly", async () => {
+        const mutation = userFactory.insertArrayMutation()
+        const answer = await mutation["~meta"].resolve({
           values: [
             { name: "John", age: 5 },
             { name: "Jane", age: 6 },
           ],
         })
-      ).toMatchObject({ isSuccess: true })
-
-      await db
-        .delete(mysqlSchemas.users)
-        .where(inArray(mysqlSchemas.users.age, [5, 6]))
-    })
-
-    it("should be created with custom input", async () => {
-      const mutation = userFactory
-        .insertArrayMutation()
-        .description("Insert users")
-        .input(
-          v.pipe(
-            v.array(v.object({ name: v.string(), age: v.number() })),
-            v.transform((values) => ({ values }))
-          )
-        )
-
-      expect(mutation).toBeDefined()
-      const executor = resolver({ mutation }).toExecutor()
-      expect(
-        await executor.mutation([
+        expect(answer).toMatchObject([
           { name: "John", age: 5 },
           { name: "Jane", age: 6 },
         ])
-      ).toMatchObject({
-        isSuccess: true,
-      })
 
-      await db
-        .delete(mysqlSchemas.users)
-        .where(inArray(mysqlSchemas.users.age, [5, 6]))
-    })
-  })
-
-  describe("insertSingleMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(mysqlSchemas.users, {
-        insertSingleMutation: userFactory.insertSingleMutation(),
-      })
-
-      expect(userResolver).toBeDefined()
-    })
-
-    it("should be created without error", async () => {
-      const mutation = userFactory.insertSingleMutation()
-      expect(mutation).toBeDefined()
-    })
-
-    it("should resolve correctly", async () => {
-      const mutation = userFactory.insertSingleMutation()
-      const answer = await mutation["~meta"].resolve({
-        value: { name: "John", age: 7 },
-      })
-      expect(answer).toMatchObject({ isSuccess: true })
-
-      await db.delete(mysqlSchemas.users).where(eq(mysqlSchemas.users.age, 7))
-    })
-  })
-
-  describe("updateMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(mysqlSchemas.users, {
-        updateMutation: userFactory.updateMutation(),
-      })
-
-      expect(userResolver).toBeDefined()
-    })
-    it("should be created without error", async () => {
-      const mutation = userFactory.updateMutation()
-      expect(mutation).toBeDefined()
-    })
-
-    it("should resolve correctly", async () => {
-      await db.insert(mysqlSchemas.users).values({ name: "Bob", age: 18 })
-      const mutation = userFactory.updateMutation()
-      expect(
-        await mutation["~meta"].resolve({
-          where: eq(mysqlSchemas.users.name, "Bob"),
-          set: { age: 19 },
-        })
-      ).toMatchObject({ isSuccess: true })
-      await db
-        .delete(mysqlSchemas.users)
-        .where(eq(mysqlSchemas.users.name, "Bob"))
-    })
-  })
-
-  describe("deleteMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(mysqlSchemas.users, {
-        deleteMutation: userFactory.deleteMutation(),
-      })
-
-      expect(userResolver).toBeDefined()
-    })
-    it("should be created without error", async () => {
-      const mutation = userFactory.deleteMutation()
-      expect(mutation).toBeDefined()
-    })
-
-    it("should resolve correctly", async () => {
-      await db.insert(mysqlSchemas.users).values({ name: "Alice", age: 18 })
-      try {
-        const mutation = userFactory.deleteMutation()
-        const answer = await mutation["~meta"].resolve({
-          where: eq(mysqlSchemas.users.name, "Alice"),
-        })
-        expect(answer).toMatchObject({ isSuccess: true })
-      } finally {
-        await db
-          .delete(mysqlSchemas.users)
-          .where(eq(mysqlSchemas.users.name, "Alice"))
-      }
-    })
-  })
-})
-
-describe.concurrent("DrizzlePostgresResolverFactory", () => {
-  const schema = {
-    users: pgSchemas.users,
-  }
-  let db: NodePgDatabase<typeof schema, typeof pgRelations>
-  let userFactory: DrizzlePostgresResolverFactory<
-    typeof db,
-    typeof pgSchemas.users
-  >
-
-  beforeAll(async () => {
-    db = pgDrizzle(config.postgresUrl, {
-      relations: pgRelations,
-    })
-    userFactory = drizzleResolverFactory(db, pgSchemas.users)
-    await db.execute(sql`select 1`)
-  })
-
-  describe("insertArrayMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(pgSchemas.users, {
-        insertArrayMutation: userFactory.insertArrayMutation(),
-      })
-
-      expect(userResolver).toBeDefined()
-    })
-    it("should be created without error", async () => {
-      const mutation = userFactory.insertArrayMutation()
-      expect(mutation).toBeDefined()
-    })
-
-    it("should resolve correctly", async () => {
-      const mutation = userFactory.insertArrayMutation()
-      const answer = await mutation["~meta"].resolve({
-        values: [
-          { name: "John", age: 5 },
-          { name: "Jane", age: 6 },
-        ],
-      })
-      expect(answer).toMatchObject([
-        { name: "John", age: 5 },
-        { name: "Jane", age: 6 },
-      ])
-
-      await db
-        .delete(pgSchemas.users)
-        .where(inArray(pgSchemas.users.age, [5, 6]))
-    })
-
-    it("should be created with custom input", async () => {
-      const mutation = userFactory
-        .insertArrayMutation()
-        .description("Insert users")
-        .input(
-          v.pipe(
-            v.array(v.object({ name: v.string(), age: v.number() })),
-            v.transform((values) => ({ values }))
-          )
-        )
-
-      expect(mutation).toBeDefined()
-      const executor = resolver({ mutation }).toExecutor()
-      expect(
-        await executor.mutation([
-          { name: "John", age: 5 },
-          { name: "Jane", age: 6 },
-        ])
-      ).toMatchObject([
-        { name: "John", age: 5 },
-        { name: "Jane", age: 6 },
-      ])
-
-      await db
-        .delete(pgSchemas.users)
-        .where(inArray(mysqlSchemas.users.age, [5, 6]))
-    })
-  })
-
-  describe("insertSingleMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(pgSchemas.users, {
-        insertSingleMutation: userFactory.insertSingleMutation(),
-      })
-
-      expect(userResolver).toBeDefined()
-    })
-    it("should be created without error", async () => {
-      const mutation = userFactory.insertSingleMutation()
-      expect(mutation).toBeDefined()
-    })
-
-    it("should resolve correctly", async () => {
-      const mutation = userFactory.insertSingleMutation()
-      const answer = await mutation["~meta"].resolve({
-        value: { name: "John", age: 7 },
-      })
-
-      expect(answer).toMatchObject({ name: "John", age: 7 })
-
-      await db.delete(pgSchemas.users).where(eq(pgSchemas.users.id, answer!.id))
-    })
-  })
-
-  describe("updateMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(pgSchemas.users, {
-        updateMutation: userFactory.updateMutation(),
-      })
-
-      expect(userResolver).toBeDefined()
-    })
-    it("should be created without error", async () => {
-      const mutation = userFactory.updateMutation()
-      expect(mutation).toBeDefined()
-    })
-
-    it("should resolve correctly", async () => {
-      await db.insert(pgSchemas.users).values({ name: "Bob", age: 18 })
-      try {
-        const mutation = userFactory.updateMutation()
-        const answer = await mutation["~meta"].resolve({
-          where: eq(pgSchemas.users.name, "Bob"),
-          set: { age: 19 },
-        })
-        expect(answer).toMatchObject([{ name: "Bob", age: 19 }])
-      } finally {
-        await db.delete(pgSchemas.users).where(eq(pgSchemas.users.name, "Bob"))
-      }
-    })
-  })
-
-  describe("deleteMutation", () => {
-    it("should be used without error", () => {
-      const userResolver = resolver.of(pgSchemas.users, {
-        deleteMutation: userFactory.deleteMutation(),
-      })
-
-      expect(userResolver).toBeDefined()
-    })
-
-    it("should be created without error", async () => {
-      const mutation = userFactory.deleteMutation()
-      expect(mutation).toBeDefined()
-    })
-
-    it("should resolve correctly", async () => {
-      await db.insert(pgSchemas.users).values({ name: "Alice", age: 18 })
-      try {
-        const mutation = userFactory.deleteMutation()
-        const answer = await mutation["~meta"].resolve({
-          where: eq(pgSchemas.users.name, "Alice"),
-        })
-        expect(answer).toMatchObject([{ name: "Alice", age: 18 }])
-      } finally {
         await db
           .delete(pgSchemas.users)
-          .where(eq(pgSchemas.users.name, "Alice"))
-      }
+          .where(inArray(pgSchemas.users.age, [5, 6]))
+      })
+
+      it("should be created with custom input", async () => {
+        const mutation = userFactory
+          .insertArrayMutation()
+          .description("Insert users")
+          .input(
+            v.pipe(
+              v.array(v.object({ name: v.string(), age: v.number() })),
+              v.transform((values) => ({ values }))
+            )
+          )
+
+        expect(mutation).toBeDefined()
+        const executor = resolver({ mutation }).toExecutor()
+        expect(
+          await executor.mutation([
+            { name: "John", age: 5 },
+            { name: "Jane", age: 6 },
+          ])
+        ).toMatchObject([
+          { name: "John", age: 5 },
+          { name: "Jane", age: 6 },
+        ])
+
+        await db
+          .delete(pgSchemas.users)
+          .where(inArray(mysqlSchemas.users.age, [5, 6]))
+      })
+    })
+
+    describe("insertSingleMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(pgSchemas.users, {
+          insertSingleMutation: userFactory.insertSingleMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+      it("should be created without error", async () => {
+        const mutation = userFactory.insertSingleMutation()
+        expect(mutation).toBeDefined()
+      })
+
+      it("should resolve correctly", async () => {
+        const mutation = userFactory.insertSingleMutation()
+        const answer = await mutation["~meta"].resolve({
+          value: { name: "John", age: 7 },
+        })
+
+        expect(answer).toMatchObject({ name: "John", age: 7 })
+
+        await db
+          .delete(pgSchemas.users)
+          .where(eq(pgSchemas.users.id, answer!.id))
+      })
+    })
+
+    describe("updateMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(pgSchemas.users, {
+          updateMutation: userFactory.updateMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+      it("should be created without error", async () => {
+        const mutation = userFactory.updateMutation()
+        expect(mutation).toBeDefined()
+      })
+
+      it("should resolve correctly", async () => {
+        await db.insert(pgSchemas.users).values({ name: "Bob", age: 18 })
+        try {
+          const mutation = userFactory.updateMutation()
+          const answer = await mutation["~meta"].resolve({
+            where: eq(pgSchemas.users.name, "Bob"),
+            set: { age: 19 },
+          })
+          expect(answer).toMatchObject([{ name: "Bob", age: 19 }])
+        } finally {
+          await db
+            .delete(pgSchemas.users)
+            .where(eq(pgSchemas.users.name, "Bob"))
+        }
+      })
+    })
+
+    describe("deleteMutation", () => {
+      it("should be used without error", () => {
+        const userResolver = resolver.of(pgSchemas.users, {
+          deleteMutation: userFactory.deleteMutation(),
+        })
+
+        expect(userResolver).toBeDefined()
+      })
+
+      it("should be created without error", async () => {
+        const mutation = userFactory.deleteMutation()
+        expect(mutation).toBeDefined()
+      })
+
+      it("should resolve correctly", async () => {
+        await db.insert(pgSchemas.users).values({ name: "Alice", age: 18 })
+        try {
+          const mutation = userFactory.deleteMutation()
+          const answer = await mutation["~meta"].resolve({
+            where: eq(pgSchemas.users.name, "Alice"),
+          })
+          expect(answer).toMatchObject([{ name: "Alice", age: 18 }])
+        } finally {
+          await db
+            .delete(pgSchemas.users)
+            .where(eq(pgSchemas.users.name, "Alice"))
+        }
+      })
     })
   })
-})
 
 describe.concurrent("DrizzleSQLiteResolverFactory", () => {
-  let db: LibSQLDatabase<typeof sqliteSchemas, typeof sqliteRelations>
+  let db: LibSQLDatabase<typeof sqliteRelations>
   let userFactory: DrizzleSQLiteResolverFactory<
     typeof db,
     typeof sqliteSchemas.users

@@ -8,7 +8,7 @@ import {
   silk,
 } from "@gqloom/core"
 import type { InferSelectModel } from "drizzle-orm"
-import type { MySqlDatabase, MySqlTable } from "drizzle-orm/mysql-core"
+import type { MySqlAsyncDatabase, MySqlTable } from "drizzle-orm/mysql-core"
 import type { GraphQLOutputType } from "graphql"
 import {
   type DeleteArgs,
@@ -32,7 +32,7 @@ import type {
 } from "./types"
 
 export class DrizzleMySQLResolverFactory<
-  TDatabase extends MySqlDatabase<any, any, any, any>,
+  TDatabase extends MySqlAsyncDatabase<any, any>,
   TTable extends MySqlTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
   protected static get mutationResult() {
@@ -154,10 +154,7 @@ export class DrizzleMySQLResolverFactory<
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(
-    options: {
-      name?: TTableName
-      middlewares?: Middleware[]
-    } = {}
+    options: { name?: TTableName; middlewares?: Middleware[] } = {}
   ): ObjectChainResolver<
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
     DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName>

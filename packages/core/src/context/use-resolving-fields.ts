@@ -1,6 +1,6 @@
 import {
-  type ResolvingFields,
   getResolvingFields,
+  type ResolvingFields,
 } from "../utils/parse-resolving-fields"
 import { createContext, useResolverPayload } from "./context"
 

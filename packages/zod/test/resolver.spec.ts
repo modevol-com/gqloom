@@ -1,4 +1,12 @@
-import { collectNames, silk, weave } from "@gqloom/core"
+import {
+  collectNames,
+  field,
+  mutation,
+  query,
+  resolver,
+  silk,
+  weave,
+} from "@gqloom/core"
 import {
   GraphQLInt,
   GraphQLObjectType,
@@ -8,14 +16,7 @@ import {
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import * as z from "zod/v4"
-import {
-  ZodWeaver,
-  asUnionType,
-  field,
-  mutation,
-  query,
-  resolver,
-} from "../src/index"
+import { asUnionType, ZodWeaver } from "../src/index"
 
 describe("zod resolver", () => {
   const Giraffe = z.object({
@@ -208,6 +209,54 @@ describe("zod resolver", () => {
     })
   })
 
+  it("should generate args description", () => {
+    const r1 = resolver({
+      hello: query(z.string())
+        .description("Say hello to someone (or to the World by default).")
+        .input(
+          z.object({
+            name: z
+              .string()
+              .describe("The name of the person to greet")
+              .nullish()
+              .transform((value) => value ?? "World"),
+          })
+        )
+        .resolve(({ name }) => `Hello, ${name}!`),
+    })
+    expect(printSchema(weave(r1, ZodWeaver))).toMatchInlineSnapshot(`
+      "type Query {
+        """Say hello to someone (or to the World by default)."""
+        hello(
+          """The name of the person to greet"""
+          name: String
+        ): String!
+      }"
+    `)
+    const r2 = resolver({
+      hello: query(z.string())
+        .description("Say hello to someone (or to the World by default).")
+        .input({
+          names: z
+            .string()
+            .describe("The name of the person to greet")
+            .nullish()
+            .transform((value) => value ?? "World")
+            .array(),
+        })
+        .resolve(({ names }) => `Hello, ${names.join(", ")}!`),
+    })
+    expect(printSchema(weave(r2, ZodWeaver))).toMatchInlineSnapshot(`
+      "type Query {
+        """Say hello to someone (or to the World by default)."""
+        hello(
+          """The name of the person to greet"""
+          names: [String]!
+        ): String!
+      }"
+    `)
+  })
+
   describe("it should handle GraphQLSilk", () => {
     interface IHorse {
       name: string
@@ -367,6 +416,21 @@ describe("zod resolver", () => {
           age: Float!
         }"
       `)
+    })
+  })
+
+  describe("input type validation", () => {
+    it("should throw error when using raw schema as input", () => {
+      const testResolver = resolver({
+        string: query(z.string())
+          // @ts-expect-error - Type system should reject raw scalar schema as input
+          .input(z.int())
+          .resolve(() => "Hello, World!"),
+      })
+
+      expect(() => weave(ZodWeaver, testResolver)).toThrow(
+        /Cannot convert .* to input type/
+      )
     })
   })
 })

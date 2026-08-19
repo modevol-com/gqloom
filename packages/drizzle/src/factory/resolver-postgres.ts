@@ -8,7 +8,7 @@ import {
   silk,
 } from "@gqloom/core"
 import type { InferSelectModel } from "drizzle-orm"
-import type { PgDatabase, PgTable } from "drizzle-orm/pg-core"
+import type { PgAsyncDatabase, PgTable } from "drizzle-orm/pg-core"
 import type { GraphQLOutputType } from "graphql"
 import { getSelectedColumns } from "../helper"
 import type {
@@ -31,7 +31,7 @@ import type {
 } from "./types"
 
 export class DrizzlePostgresResolverFactory<
-  TDatabase extends PgDatabase<any, any, any>,
+  TDatabase extends PgAsyncDatabase<any, any>,
   TTable extends PgTable,
 > extends DrizzleResolverFactory<TDatabase, TTable> {
   public insertArrayMutation<TInputI = InsertArrayWithOnConflictArgs<TTable>>({
@@ -158,10 +158,7 @@ export class DrizzlePostgresResolverFactory<
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(
-    options: {
-      name?: TTableName
-      middlewares?: Middleware[]
-    } = {}
+    options: { name?: TTableName; middlewares?: Middleware[] } = {}
   ): ObjectChainResolver<
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
     DrizzleResolverReturningItems<TDatabase, TTable, TTableName>

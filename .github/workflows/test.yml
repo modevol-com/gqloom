@@ -5,19 +5,13 @@ on:
     branches: [main]
   workflow_call:
 
-jobs:
-  install:
-    name: Install packages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: ./.github/actions/pnpm
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
+jobs:
   lint:
     name: Run lint
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,11 +19,10 @@ jobs:
       - name: Setup pnpm
         uses: ./.github/actions/pnpm
       - name: Lint check
-        run: pnpm lint
+        run: pnpm run check:lint
 
   type-check:
     name: Run type check
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,7 +38,6 @@ jobs:
 
   test:
     name: Run Uint test
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,5 +51,29 @@ jobs:
         run: pnpm run build
       - name: Init Tables
         run: pnpm push
+        env:
+          MYSQL_URL: mysql://root@localhost:3306/mysql
+          POSTGRESQL_URL: postgresql://postgres@localhost:5432/postgres
       - name: Test
         run: pnpm test
+        env:
+          MYSQL_URL: mysql://root@localhost:3306/mysql
+          POSTGRESQL_URL: postgresql://postgres@localhost:5432/postgres
+
+  website:
+    if: github.event_name == 'pull_request'
+    name: Build documentation website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: ./.github/actions/pnpm
+      - name: Build packages
+        run: pnpm run build
+      - name: Generate
+        run: pnpm -r run generate
+      - name: Build website
+        run: pnpm --filter website build
+        env:
+          NODE_OPTIONS: --max_old_space_size=8192

@@ -1,28 +1,29 @@
 import {
-  type ResolverPayload,
   getResolvingFields,
   mapValue,
   pascalCase,
+  type ResolverPayload,
 } from "@gqloom/core"
 import {
   type Column,
-  type SQL,
-  type Table,
+  getColumnTable,
   getTableColumns,
   getTableName,
+  type SQL,
   sql,
+  type Table,
 } from "drizzle-orm"
 import {
-  MySqlTable,
   getTableConfig as getMySQLTableConfig,
+  MySqlTable,
 } from "drizzle-orm/mysql-core"
 import {
-  PgTable,
   getTableConfig as getPgTableConfig,
+  PgTable,
 } from "drizzle-orm/pg-core"
 import {
-  SQLiteTable,
   getTableConfig as getSQLiteTableConfig,
+  SQLiteTable,
 } from "drizzle-orm/sqlite-core"
 import type { GraphQLResolveInfo } from "graphql"
 import type {
@@ -68,13 +69,32 @@ export function getEnumNameByColumn(column: Column): string | undefined {
   if (!column.enumValues?.length) return undefined
 
   const useColumnName = () =>
-    `${pascalCase(getTableName(column.table))}${pascalCase(column.name)}Enum`
-  if ("config" in column && "enum" in (column as any).config) {
-    const enumName = (column as any).config.enum.enumName
-    if (enumName) return pascalCase(enumName)
-  }
+    `${pascalCase(getTableName(getColumnTable(column)))}${pascalCase(column.name)}Enum`
+  const enumName = pgEnumNameFromColumn(column)
+  if (enumName) return pascalCase(enumName)
 
   return useColumnName()
+}
+
+function pgEnumNameFromColumn(column: Column): string | undefined {
+  const fromColumn = enumNameFromUnknown(Reflect.get(column, "enum"))
+  if (fromColumn) return fromColumn
+
+  const config = Reflect.get(column, "config")
+  if (!isObjectOrFunction(config)) return undefined
+  return enumNameFromUnknown(Reflect.get(config, "enum"))
+}
+
+function enumNameFromUnknown(value: unknown): string | undefined {
+  if (!isObjectOrFunction(value)) return undefined
+  const enumName = Reflect.get(value, "enumName")
+  return typeof enumName === "string" ? enumName : undefined
+}
+
+function isObjectOrFunction(value: unknown): value is object {
+  return (
+    value != null && (typeof value === "object" || typeof value === "function")
+  )
 }
 
 export function isColumnVisible(
@@ -145,7 +165,7 @@ export function getSelectedColumns<TTable extends Table>(
     }
   } else {
     const resolvingFields = getResolvingFields(payload)
-    selectedFields = resolvingFields.selectedFields
+    selectedFields = new Set(resolvingFields.selectedFields)
   }
   return mapValue(getTableColumns(table), (column, columnName) => {
     if (selectedFields.has(columnName)) return column
