@@ -71,31 +71,7 @@ jobs:
         run: vercel pull --yes --environment=production
 
       - name: Package Vercel output
-        run: |
-          dist=website/.vitepress/dist
-          out=.vercel/output
-          if [ ! -d "$dist" ]; then
-            echo "::error::Missing $dist; website build did not produce output"
-            exit 1
-          fi
-          rm -rf "$out"
-          mkdir -p "$out/static"
-          cp -a "$dist"/. "$out/static/"
-          cat > "$out/config.json" <<'EOF'
-          {
-            "version": 3,
-            "routes": [
-              {
-                "src": "/assets/(.*)",
-                "headers": {
-                  "cache-control": "public, max-age=31536000, immutable"
-                }
-              },
-              { "handle": "filesystem" },
-              { "src": "/(.*)", "status": 404, "dest": "/404.html" }
-            ]
-          }
-          EOF
+        run: node .github/scripts/package-vercel-output.js
 
       - name: Deploy to Vercel
         id: deploy
