@@ -15,3 +15,5 @@ export type RequireKeys<T, TKey extends string | number | symbol> = {
 } & {
   [P in keyof T as P extends TKey ? never : P]: T[P]
 }
+
+export type MayGetter<T> = T | (() => T)

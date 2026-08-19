@@ -16,7 +16,7 @@ import {
 } from "graphql"
 import * as v from "valibot"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
-import { ValibotWeaver, asUnionType } from "../src"
+import { asUnionType, ValibotWeaver } from "../src"
 
 describe("valibot resolver", () => {
   const Giraffe = v.object({
@@ -295,6 +295,30 @@ describe("valibot resolver", () => {
     ).rejects.toThrow("Invalid length")
   })
 
+  it("should generate args description", () => {
+    const r1 = resolver({
+      hello: query(v.string())
+        .description("Say hello to someone (or to the World by default).")
+        .input({
+          name: v.pipe(
+            v.string(),
+            v.description("The name of the person to greet")
+          ),
+        })
+        .resolve(({ name }) => `Hello, ${name}!`),
+    })
+
+    expect(printSchema(weave(r1, ValibotWeaver))).toMatchInlineSnapshot(`
+      "type Query {
+        """Say hello to someone (or to the World by default)."""
+        hello(
+          """The name of the person to greet"""
+          name: String!
+        ): String!
+      }"
+    `)
+  })
+
   describe("it should handle GraphQLSilk", () => {
     interface IHorse {
       name: string
@@ -454,6 +478,21 @@ describe("valibot resolver", () => {
           age: Float!
         }"
       `)
+    })
+  })
+
+  describe("input type validation", () => {
+    it("should throw error when using raw schema as input", () => {
+      const testResolver = resolver({
+        string: query(v.string())
+          // @ts-expect-error - Type system should reject raw scalar schema as input
+          .input(v.pipe(v.number(), v.integer()))
+          .resolve(() => "Hello, World!"),
+      })
+
+      expect(() => weave(ValibotWeaver, testResolver)).toThrow(
+        /Cannot convert .* to input type/
+      )
     })
   })
 })

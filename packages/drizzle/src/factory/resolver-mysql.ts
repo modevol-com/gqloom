@@ -154,10 +154,7 @@ export class DrizzleMySQLResolverFactory<
   }
 
   public resolver<TTableName extends string = TTable["_"]["name"]>(
-    options: {
-      name?: TTableName
-      middlewares?: Middleware[]
-    } = {}
+    options: { name?: TTableName; middlewares?: Middleware[] } = {}
   ): ObjectChainResolver<
     GraphQLSilk<InferSelectModel<TTable>, InferSelectModel<TTable>>,
     DrizzleResolverReturningSuccess<TDatabase, TTable, TTableName>

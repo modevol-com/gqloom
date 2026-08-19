@@ -4,6 +4,7 @@ node_modules
 
 ./dev.db
 /prisma/dev.db*
+/prisma/CREATE_TABLES.json
 /prisma/migrations
 /generated
 /test/client

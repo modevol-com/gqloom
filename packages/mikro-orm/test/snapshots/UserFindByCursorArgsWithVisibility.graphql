@@ -1,0 +1,8 @@
+type UserFindByCursorArgs {
+  where: UserFilter
+  orderBy: UserOrderBy
+  after: String
+  before: String
+  first: Int
+  last: Int
+}

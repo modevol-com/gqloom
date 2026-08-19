@@ -2,19 +2,19 @@ import { printSubgraphSchema } from "@apollo/subgraph"
 import {
   AnyType,
   EntityType,
-  ServiceType,
   entitiesResolver,
+  ServiceType,
 } from "@apollo/subgraph/dist/types"
 import {
+  filterMiddlewares,
   GraphQLSchemaLoom,
   type GraphQLSilk,
   type Loom,
   type Middleware,
-  type WeaverConfig,
-  filterMiddlewares,
   query,
   resolver,
   silk,
+  type WeaverConfig,
 } from "@gqloom/core"
 import {
   GraphQLList,

@@ -1574,7 +1574,7 @@ describe("DrizzleResolverFactory", () => {
   })
 })
 
-describe.concurrent("DrizzleMySQLResolverFactory", () => {
+describe.runIf(config.mysqlUrl).concurrent("DrizzleMySQLResolverFactory", () => {
   const schema = {
     users: mysqlSchemas.users,
   }
@@ -1733,7 +1733,7 @@ describe.concurrent("DrizzleMySQLResolverFactory", () => {
   })
 })
 
-describe.concurrent("DrizzlePostgresResolverFactory", () => {
+describe.runIf(config.postgresUrl).concurrent("DrizzlePostgresResolverFactory", () => {
   const schema = {
     users: pgSchemas.users,
   }

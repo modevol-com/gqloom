@@ -18,6 +18,7 @@ type Post {
   updatedAt: String!
   published: Boolean!
   title: String!
+  content: String!
   authorId: Int
   author: User
 }
@@ -221,8 +222,9 @@ input PostWhereInput {
   updatedAt: DateTimeFilter
   published: BoolFilter
   title: StringFilter
+  content: StringFilter
   authorId: IntNullableFilter
-  author: UserNullableRelationFilter
+  author: UserNullableScalarRelationFilter
 }
 
 input BoolFilter {
@@ -257,7 +259,7 @@ input NestedIntNullableFilter {
   not: NestedIntNullableFilter
 }
 
-input UserNullableRelationFilter {
+input UserNullableScalarRelationFilter {
   is: UserWhereInput
   isNot: UserWhereInput
 }
@@ -316,6 +318,7 @@ input PostOrderByWithRelationInput {
   updatedAt: SortOrder
   published: SortOrder
   title: SortOrder
+  content: SortOrder
   authorId: SortOrderInput
   author: UserOrderByWithRelationInput
 }
@@ -329,8 +332,9 @@ input PostWhereUniqueInput {
   updatedAt: DateTimeFilter
   published: BoolFilter
   title: StringFilter
+  content: StringFilter
   authorId: IntNullableFilter
-  author: UserNullableRelationFilter
+  author: UserNullableScalarRelationFilter
 }
 
 enum PostScalarFieldEnum {
@@ -339,6 +343,7 @@ enum PostScalarFieldEnum {
   updatedAt
   published
   title
+  content
   authorId
 }
 
@@ -393,6 +398,7 @@ input PostCreateWithoutAuthorInput {
   updatedAt: String
   published: Boolean
   title: String!
+  content: String!
 }
 
 input PostCreateOrConnectWithoutAuthorInput {
@@ -411,6 +417,7 @@ input PostCreateManyAuthorInput {
   updatedAt: String
   published: Boolean
   title: String!
+  content: String!
 }
 
 type BatchPayload {
@@ -474,6 +481,7 @@ input PostUpdateWithoutAuthorInput {
   updatedAt: DateTimeFieldUpdateOperationsInput
   published: BoolFieldUpdateOperationsInput
   title: StringFieldUpdateOperationsInput
+  content: StringFieldUpdateOperationsInput
 }
 
 input BoolFieldUpdateOperationsInput {
@@ -499,6 +507,7 @@ input PostScalarWhereInput {
   updatedAt: DateTimeFilter
   published: BoolFilter
   title: StringFilter
+  content: StringFilter
   authorId: IntNullableFilter
 }
 
@@ -507,6 +516,7 @@ input PostUpdateManyMutationInput {
   updatedAt: DateTimeFieldUpdateOperationsInput
   published: BoolFieldUpdateOperationsInput
   title: StringFieldUpdateOperationsInput
+  content: StringFieldUpdateOperationsInput
 }
 
 input UserUpdateManyMutationInput {
@@ -521,6 +531,7 @@ input PostCreateInput {
   updatedAt: String
   published: Boolean
   title: String!
+  content: String!
   author: UserCreateNestedOneWithoutPostsInput
 }
 
@@ -548,6 +559,7 @@ input PostCreateManyInput {
   updatedAt: String
   published: Boolean
   title: String!
+  content: String!
   authorId: Int
 }
 
@@ -556,6 +568,7 @@ input PostUpdateInput {
   updatedAt: DateTimeFieldUpdateOperationsInput
   published: BoolFieldUpdateOperationsInput
   title: StringFieldUpdateOperationsInput
+  content: StringFieldUpdateOperationsInput
   author: UserUpdateOneWithoutPostsNestedInput
 }
 

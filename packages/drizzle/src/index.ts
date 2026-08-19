@@ -1,20 +1,20 @@
 import {
   type GraphQLSilk,
-  SYMBOLS,
-  type StandardSchemaV1,
   mapValue,
   pascalCase,
+  type StandardSchemaV1,
+  SYMBOLS,
   screamingSnakeCase,
   silk,
   weaverContext,
 } from "@gqloom/core"
 import {
   type Column,
-  type InferSelectModel,
-  type Table,
   getTableColumns,
   getTableName,
+  type InferSelectModel,
   is,
+  type Table,
 } from "drizzle-orm"
 import { MySqlInt, MySqlSerial } from "drizzle-orm/mysql-core"
 import { type PgArray, PgInteger, PgSerial } from "drizzle-orm/pg-core"

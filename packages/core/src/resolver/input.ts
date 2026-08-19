@@ -12,8 +12,20 @@ export type InferInputI<
     ? StandardSchemaV1.InferInput<TInput>
     : TInput extends Record<string, GraphQLSilk>
       ? {
-          [K in keyof TInput]: StandardSchemaV1.InferInput<TInput[K]>
-        }
+          [K in keyof TInput as undefined extends StandardSchemaV1.InferInput<
+            TInput[K]
+          >
+            ? K
+            : never]?: StandardSchemaV1.InferInput<TInput[K]>
+        } & {
+          [K in keyof TInput as undefined extends StandardSchemaV1.InferInput<
+            TInput[K]
+          >
+            ? never
+            : K]: StandardSchemaV1.InferInput<TInput[K]>
+        } extends infer O
+        ? { [K in keyof O]: O[K] }
+        : never
       : void
 
 export type InferInputO<
@@ -143,7 +155,11 @@ export function getStandardValue<T>(
 ): T | null
 export function getStandardValue<T>(
   result?: StandardSchemaV1.Result<T> | null
-): T | null | undefined {
+): T | null | undefined
+
+export function getStandardValue(
+  result?: StandardSchemaV1.Result<any> | null
+): any | null | undefined {
   if (result == null) return result
   const { issues } = result
   if (issues?.length) {

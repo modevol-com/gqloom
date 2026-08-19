@@ -1,6 +1,4 @@
-import type { WeaverConfig } from "@gqloom/core"
-// biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
-import type { SYMBOLS } from "@gqloom/core"
+import type { SYMBOLS, WeaverConfig } from "@gqloom/core"
 import type { GraphQLOutputType } from "graphql"
 import type {
   ArraySchema,
@@ -15,6 +13,8 @@ import type {
   EnumSchema,
   GenericSchema,
   GenericSchemaAsync,
+  LazySchema,
+  LazySchemaAsync,
   Literal,
   LiteralSchema,
   LooseObjectSchema,
@@ -82,6 +82,8 @@ export type SupportedSchema =
   | DateSchema<any>
   | EnumSchema<Enum, any>
   | LiteralSchema<Literal, any>
+  | LazySchema<any>
+  | LazySchemaAsync<any>
   | LooseObjectSchema<ObjectEntries, any>
   | LooseObjectSchemaAsync<ObjectEntriesAsync, any>
   | NonNullableSchema<BaseSchema<unknown, unknown, BaseIssue<unknown>>, any>

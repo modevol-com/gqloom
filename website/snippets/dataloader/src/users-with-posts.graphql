@@ -1,0 +1,10 @@
+query usersWithPosts {
+  users {
+    id
+    name
+    posts {
+      id
+      title
+    }
+  }
+}

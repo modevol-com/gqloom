@@ -1,0 +1,56 @@
+import * as fs from "node:fs"
+import * as fsPromises from "node:fs/promises"
+import { createServer } from "node:http"
+import * as path from "node:path"
+import { mutation, query, resolver, silk, weave } from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+import { GraphQLNonNull, GraphQLScalarType, printSchema } from "graphql"
+import { createYoga } from "graphql-yoga"
+import * as v from "valibot"
+
+const FileScalar = silk(
+  new GraphQLNonNull(
+    new GraphQLScalarType<File, File>({
+      name: "File",
+      description: "The `File` scalar type represents a file upload.",
+    })
+  )
+)
+
+const helloResolver = resolver({
+  hello: query(v.string())
+    .input({ name: v.nullish(v.string(), "World") })
+    .resolve(({ name }) => `Hello, ${name}!`),
+
+  upload: mutation(v.string())
+    .input({
+      fileName: v.nullish(v.string()),
+      file: FileScalar,
+    })
+    .resolve(async ({ fileName, file }) => {
+      const name = fileName ?? file.name
+      const uploadsDir = path.join(import.meta.dirname, "uploads")
+      await fsPromises.mkdir(uploadsDir, { recursive: true })
+      await fsPromises.writeFile(
+        path.join(uploadsDir, name),
+        Buffer.from(await file.arrayBuffer())
+      )
+      return `file uploaded: ${name}`
+    }),
+})
+
+const schema = weave(ValibotWeaver, helloResolver)
+
+// Write schema to file in development
+if (process.env.NODE_ENV !== "production") {
+  fs.writeFileSync(
+    path.resolve(import.meta.dirname, "../schema-yoga.graphql"),
+    printSchema(schema)
+  )
+}
+
+const yoga = createYoga({ schema })
+const server = createServer(yoga)
+server.listen(4000, () => {
+  console.info("Server is running on http://localhost:4000/graphql")
+})

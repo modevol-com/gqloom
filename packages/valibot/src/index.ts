@@ -1,13 +1,15 @@
 import {
-  type GraphQLSilk,
-  SYMBOLS,
+  AUTO_ALIASING,
   ensureInterfaceType,
+  type GraphQLSilk,
   mapValue,
+  provideWeaverContext,
+  SYMBOLS,
   weave,
   weaverContext,
 } from "@gqloom/core"
-import { LoomObjectType } from "@gqloom/core"
 import {
+  type GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
@@ -129,10 +131,18 @@ export class ValibotWeaver {
         return GraphQLBoolean
       case "date":
         return GraphQLString
+      case "lazy":
+        return ValibotWeaver.toGraphQLType(
+          schema.getter(undefined),
+          ...wrappers
+        )
       case "enum":
       case "picklist": {
-        const { name, valuesConfig, ...enumConfig } =
-          ValibotMetadataCollector.getEnumConfig(schema, ...wrappers) ?? {}
+        const {
+          name = AUTO_ALIASING,
+          valuesConfig,
+          ...enumConfig
+        } = ValibotMetadataCollector.getEnumConfig(schema, ...wrappers) ?? {}
 
         const values: GraphQLEnumValueConfigMap = {}
         if (schema.type === "picklist") {
@@ -146,12 +156,6 @@ export class ValibotWeaver {
             values[key] = { value, ...valuesConfig?.[key] }
           })
         }
-        if (!name)
-          throw new Error(
-            `Enum (${Object.values(values)
-              .map((it) => it.value)
-              .join(", ")}) must have a name`
-          )
 
         return new GraphQLEnumType({
           name,
@@ -184,29 +188,35 @@ export class ValibotWeaver {
             ...wrappers
           )
         }
-        const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
+        const { name = AUTO_ALIASING, ...objectConfig } =
           ValibotMetadataCollector.getObjectConfig(schema, ...wrappers) ?? {}
 
         return new GraphQLObjectType({
           name,
-          fields: mapValue(schema.entries, (field, key) => {
-            if (key.startsWith("__")) return mapValue.SKIP
-            const { type, ...fieldConfig } =
-              ValibotMetadataCollector.getFieldConfig(field) ?? {}
+          fields: provideWeaverContext.inherit(() =>
+            mapValue(schema.entries as Record<string, any>, (field, key) => {
+              if (key.startsWith("__")) return mapValue.SKIP
+              const { type, ...fieldConfig } =
+                ValibotMetadataCollector.getFieldConfig(
+                  field as GenericSchemaOrAsync
+                ) ?? {}
 
-            if (type === null || type === SYMBOLS.FIELD_HIDDEN)
-              return mapValue.SKIP
+              if (type === null || type === SYMBOLS.FIELD_HIDDEN)
+                return mapValue.SKIP
 
-            return {
-              type:
-                type === undefined
-                  ? ValibotWeaver.toNullableGraphQLType(field)
-                  : typeof type === "function"
-                    ? type()
-                    : type,
-              ...fieldConfig,
-            }
-          }),
+              return {
+                type:
+                  type === undefined
+                    ? ValibotWeaver.toNullableGraphQLType(
+                        field as GenericSchemaOrAsync
+                      )
+                    : typeof type === "function"
+                      ? type()
+                      : type,
+                ...fieldConfig,
+              }
+            })
+          ),
           ...objectConfig,
           interfaces: objectConfig.interfaces?.map(
             ValibotWeaver.ensureInterfaceType
@@ -234,14 +244,13 @@ export class ValibotWeaver {
       }
       case "union":
       case "variant": {
-        const { name, ...unionConfig } =
+        const { name = AUTO_ALIASING, ...unionConfig } =
           ValibotMetadataCollector.getUnionConfig(schema, ...wrappers) ?? {}
-        if (!name) throw new Error("Union type must have a name")
 
         const options =
           schema.type === "variant" ? flatVariant(schema) : schema.options
 
-        const types = options.map((s) => {
+        const types = (options as GenericSchemaOrAsync[]).map((s) => {
           const gqlType = ValibotWeaver.toGraphQLType(s)
           if (isObjectType(gqlType)) return gqlType
           throw new Error(
@@ -320,6 +329,15 @@ export class ValibotWeaver {
     return ValibotWeaver.toNullableGraphQLType(schema)
   }
 
+  public static getGraphQLArgumentConfig(
+    schema: GenericSchemaOrAsync
+  ): Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined {
+    const fieldConfig = ValibotMetadataCollector.getFieldConfig(schema)
+    if (fieldConfig == null) return undefined
+    const { type: _, ...rest } = fieldConfig
+    return rest
+  }
+
   public static getGraphQLTypeBySelf(
     this: GenericSchemaOrAsync
   ): GraphQLOutputType {
@@ -328,5 +346,5 @@ export class ValibotWeaver {
 }
 
 export * from "./metadata"
-export * from "@gqloom/core"
+export * from "./re-export"
 export * from "./types"

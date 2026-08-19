@@ -1,6 +1,6 @@
-import { GraphQLString, execute, parse } from "graphql"
+import { execute, GraphQLString, parse } from "graphql"
 import { beforeAll, describe, expect, it } from "vitest"
-import { GraphQLSchemaLoom, type Middleware, loom, silk } from "../src"
+import { GraphQLSchemaLoom, loom, type Middleware, silk } from "../src"
 
 const { query, resolver } = loom
 

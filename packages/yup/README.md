@@ -27,21 +27,20 @@ pnpm add @gqloom/core yup @gqloom/yup
 yarn add @gqloom/core yup @gqloom/yup
 ```
 
-
 ## Hello World
 
 ```ts
 import { query, resolver, weave } from "@gqloom/core"
-import { yupSilk } from "@gqloom/yup"
+import { YupWeaver } from "@gqloom/yup"
 import { string } from "yup"
 
 const helloResolver = resolver({
-  hello: query(yupSilk(string()))
-    .input({ name: yupSilk(string().default("World")) })
+  hello: query(string())
+    .input({ name: string().default("World") })
     .resolve(({ name }) => `Hello, ${name}!`),
 })
 
-export const schema = weave(helloResolver)
+export const schema = weave(YupWeaver, helloResolver)
 ```
 
 Read more at [GQLoom Document](https://gqloom.dev/docs/schema/yup).

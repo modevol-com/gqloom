@@ -1,49 +1,46 @@
 import {
-  type GraphQLArgument,
   type GraphQLFieldConfig,
-  type GraphQLFieldConfigArgumentMap,
   type GraphQLFieldMap,
   GraphQLList,
+  type GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
   type GraphQLObjectTypeConfig,
   type GraphQLOutputType,
   GraphQLUnionType,
-  type ThunkObjMap,
-  assertName,
+  isEnumType,
+  isInterfaceType,
   isListType,
   isNonNullType,
   isObjectType,
+  isScalarType,
   isUnionType,
-  resolveObjMapThunk,
 } from "graphql"
 import {
-  type Loom,
-  type ResolverOptions,
   createInputParser,
   getGraphQLType,
+  type Loom,
+  type ResolverOptions,
 } from "../resolver"
 import {
   applyMiddlewares,
   deepMerge,
   filterMiddlewares,
-  mapValue,
   pascalCase,
-  toObjMap,
+  toFieldMap,
 } from "../utils"
+import { AUTO_ALIASING } from "../utils/constants"
 import { inputToArgs } from "./input"
 import {
-  type WeaverContext,
   initWeaverContext,
   provideWeaverContext,
+  WeaverContext,
   weaverContext,
 } from "./weaver-context"
 
 export class LoomObjectType extends GraphQLObjectType {
   protected extraFields = new Map<string, Loom.BaseField>()
   protected hiddenFields = new Set<string>()
-
-  public static AUTO_ALIASING = "__gqloom_auto_aliasing" as const
 
   protected weaverContext: WeaverContext
   protected globalOptions?: ResolverOptions
@@ -81,35 +78,20 @@ export class LoomObjectType extends GraphQLObjectType {
     this.weaverContext = options.weaverContext ?? initWeaverContext()
     this.resolvers = new Map()
 
-    if (this.name !== LoomObjectType.AUTO_ALIASING) {
-      this.hasExplicitName = true
+    if (this.name === AUTO_ALIASING) {
+      WeaverContext.autoAliasTypes.add(this)
     }
   }
 
-  protected hasExplicitName?: boolean
-  protected _aliases: string[] = []
-  public get aliases(): string[] {
-    return this._aliases
-  }
-
-  public addAlias(name: string) {
-    if (this.hasExplicitName) return
-    this._aliases.push(name)
-    this.renameByAliases()
-  }
-
-  protected renameByAliases() {
-    let name: string | undefined
-    for (const alias of this.aliases) {
-      if (name === undefined || alias.length < name.length) {
-        name = alias
-      }
-    }
-    if (name) this.name = name
+  public addAlias(alias?: string) {
+    if (!WeaverContext.autoAliasTypes.has(this) || !alias) return
+    const name = alias.length < this.name.length ? alias : this.name
+    this.name = name
   }
 
   public hideField(name: string) {
     this.hiddenFields.add(name)
+    delete this._fieldsCache
   }
 
   public addField(
@@ -123,6 +105,7 @@ export class LoomObjectType extends GraphQLObjectType {
     }
     this.extraFields.set(name, field)
     if (resolver) this.resolvers.set(name, resolver)
+    delete this._fieldsCache
   }
 
   public mergeExtensions(
@@ -131,17 +114,22 @@ export class LoomObjectType extends GraphQLObjectType {
     this.extensions = deepMerge(this.extensions, extensions)
   }
 
-  private extraFieldMap?: GraphQLFieldMap<any, any>
-  public override getFields(): GraphQLFieldMap<any, any> {
+  protected collectedFieldNames() {
     const fieldsBySuper = super.getFields()
-
     Object.entries(fieldsBySuper).forEach(
       ([fieldName, field]) =>
         (field.type = this.getCacheType(field.type, fieldName))
     )
+  }
 
+  private extraFieldMap?: GraphQLFieldMap<any, any>
+  private _fieldsCache?: GraphQLFieldMap<any, any>
+  public override getFields(): GraphQLFieldMap<any, any> {
+    if (this._fieldsCache) return this._fieldsCache
+    const fieldsBySuper = super.getFields()
+    this.collectedFieldNames()
     const extraFields = provideWeaverContext(
-      () => defineFieldMap(this.mapToFieldConfig(this.extraFields)),
+      () => toFieldMap(this.mapToFieldConfig(this.extraFields)),
       this.weaverContext
     )
 
@@ -159,6 +147,7 @@ export class LoomObjectType extends GraphQLObjectType {
     for (const fieldName of this.hiddenFields) {
       delete answer[fieldName]
     }
+    this._fieldsCache = answer
     return answer
   }
 
@@ -189,9 +178,7 @@ export class LoomObjectType extends GraphQLObjectType {
     return {
       ...extract(field),
       type: outputType,
-      args: inputToArgs(field["~meta"].input, {
-        fieldName: fieldName ? parentName(this.name) + fieldName : undefined,
-      }),
+      args: inputToArgs(field["~meta"].input, { fieldName }),
       resolve,
       ...(subscribe ? { subscribe } : {}),
     }
@@ -349,43 +336,6 @@ function extract(field: Loom.BaseField): Partial<GraphQLFieldConfig<any, any>> {
   }
 }
 
-// https://github.com/graphql/graphql-js/blob/main/src/type/definition.ts#L774
-function defineFieldMap(
-  fields: ThunkObjMap<GraphQLFieldConfig<any, any>>
-): GraphQLFieldMap<any, any> {
-  const fieldMap = resolveObjMapThunk(fields)
-
-  return mapValue(fieldMap, (fieldConfig, fieldName) => {
-    const argsConfig = fieldConfig.args ?? {}
-    return {
-      name: assertName(fieldName),
-      description: fieldConfig.description,
-      type: fieldConfig.type,
-      args: defineArguments(argsConfig),
-      resolve: fieldConfig.resolve,
-      subscribe: fieldConfig.subscribe,
-      deprecationReason: fieldConfig.deprecationReason,
-      extensions: toObjMap(fieldConfig.extensions),
-      astNode: fieldConfig.astNode,
-    }
-  })
-}
-
-// https://github.com/graphql/graphql-js/blob/main/src/type/definition.ts#L795
-function defineArguments(
-  args: GraphQLFieldConfigArgumentMap
-): ReadonlyArray<GraphQLArgument> {
-  return Object.entries(args).map(([argName, argConfig]) => ({
-    name: assertName(argName),
-    description: argConfig.description,
-    type: argConfig.type,
-    defaultValue: argConfig.defaultValue,
-    deprecationReason: argConfig.deprecationReason,
-    extensions: toObjMap(argConfig.extensions),
-    astNode: argConfig.astNode,
-  }))
-}
-
 export const OPERATION_OBJECT_NAMES = new Set([
   "Query",
   "Mutation",
@@ -402,18 +352,22 @@ export function getCacheType(
   } = {}
 ): GraphQLOutputType {
   const context = options.weaverContext ?? weaverContext
+
   if (gqlType instanceof LoomObjectType) return gqlType
+  const parent = excludeOperationObject(options.parent)
+  const fieldName = options.fieldName
+    ? pascalCase(options.fieldName)
+    : undefined
   if (isObjectType(gqlType)) {
     const gqlObject = context.loomObjectMap?.get(gqlType)
-    if (gqlObject != null) return gqlObject
+    if (gqlObject != null) {
+      context.setAlias(gqlObject, fieldName, parent)
+      return gqlObject
+    }
 
     const loomObject = new LoomObjectType(gqlType, options)
     context.loomObjectMap?.set(gqlType, loomObject)
-    if (options.fieldName && options.parent) {
-      loomObject.addAlias(
-        parentName(options.parent.name) + pascalCase(options.fieldName)
-      )
-    }
+    context.setAlias(loomObject, fieldName, parent)
     return loomObject
   } else if (isListType(gqlType)) {
     return new GraphQLList(getCacheType(gqlType.ofType, options))
@@ -421,21 +375,41 @@ export function getCacheType(
     return new GraphQLNonNull(getCacheType(gqlType.ofType, options))
   } else if (isUnionType(gqlType)) {
     const existing = context.loomUnionMap?.get(gqlType)
-    if (existing != null) return existing
+    if (existing != null) {
+      context.setAlias(existing, fieldName, parent)
+      return existing
+    }
     const config = gqlType.toConfig()
     const unionType = new GraphQLUnionType({
       ...config,
       types: config.types.map(
-        (type) => getCacheType(type, options) as GraphQLObjectType
+        (type, i) =>
+          getCacheType(type, {
+            ...options,
+            fieldName: options.fieldName
+              ? `${options.fieldName}Item${i + 1}`
+              : undefined,
+          }) as GraphQLObjectType
       ),
     })
     context.loomUnionMap?.set(gqlType, unionType)
+    context.setAlias(unionType, fieldName, parent)
     return unionType
+  } else if (
+    isEnumType(gqlType) ||
+    isInterfaceType(gqlType) ||
+    isScalarType(gqlType)
+  ) {
+    context.setAlias(gqlType, fieldName, parent)
+    return gqlType
   }
   return gqlType
 }
 
-function parentName(name: string): string {
-  if (OPERATION_OBJECT_NAMES.has(name)) name = ""
-  return name
+function excludeOperationObject(
+  object: GraphQLNamedType | undefined
+): GraphQLNamedType | undefined {
+  if (object == null) return undefined
+  if (OPERATION_OBJECT_NAMES.has(object.name)) return undefined
+  return object
 }

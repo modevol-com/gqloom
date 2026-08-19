@@ -21,7 +21,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  // biome-ignore lint/suspicious/noConsole: <explanation>
+  // biome-ignore lint/suspicious/noConsole: catch clause
   console.error(err)
   process.exit(1)
 })

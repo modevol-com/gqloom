@@ -16,7 +16,7 @@ import {
 } from "graphql"
 import { assertType, describe, expect, expectTypeOf, it } from "vitest"
 import * as z from "zod/v3"
-import { ZodWeaver, asUnionType } from "../../src/v3"
+import { asUnionType, ZodWeaver } from "../../src/v3"
 
 describe("zod resolver", () => {
   const Giraffe = z.object({

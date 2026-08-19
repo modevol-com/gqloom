@@ -3,9 +3,9 @@ import { assert, describe, expect, it } from "vitest"
 import {
   GraphQLSchemaLoom,
   type Loom,
+  loom,
   type Middleware,
   type ResolverPayload,
-  loom,
   silk,
   weave,
 } from "../src"
@@ -22,7 +22,7 @@ describe("subscription integration", () => {
 
   it("should work using chian", () => {
     const s = subscription
-      .input(silk(GraphQLString))
+      .input({ value: silk(GraphQLString) })
       .output(silk(GraphQLString))
       .description("a simple subscription")
       .subscribe(fooGenerator)
@@ -34,7 +34,7 @@ describe("subscription integration", () => {
     })
 
     const s2 = subscription(silk(GraphQLString))
-      .input(silk(GraphQLString))
+      .input({ value: silk(GraphQLString) })
       .description("a simple subscription")
       .subscribe(fooGenerator)
 

@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/federation",
-  "version": "0.10.0",
+  "version": "0.12.0",
   "description": "Building subGraphs with GQLoom",
   "type": "module",
   "main": "./dist/index.js",
@@ -18,26 +18,27 @@
     }
   },
   "scripts": {
-    "build": "tsup",
-    "check:type": "tsc --noEmit"
+    "build": "tsdown",
+    "check:type": "tsgo --noEmit"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "peerDependencies": {
     "@apollo/subgraph": ">= 2.0.0",
     "@gqloom/core": ">= 0.10.0",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
-    "@apollo/server": "^4.10.4",
-    "@apollo/subgraph": "^2.8.2",
+    "@apollo/server": "^5.3.0",
+    "@apollo/subgraph": "^2.13.0",
     "@gqloom/core": "workspace:*",
-    "@mercuriusjs/federation": "^3.0.0",
-    "fastify": "^4.28.1",
-    "graphql": "^16.8.1",
+    "@mercuriusjs/federation": "^5.1.0",
+    "fastify": "^5.8.5",
     "graphql-tag": "^2.12.6",
-    "graphql-yoga": "^5.6.0",
-    "mercurius": "^14.1.0",
-    "mercurius-integration-testing": "^9.0.0"
+    "graphql-yoga": "^5.21.0",
+    "mercurius": "^16.8.0",
+    "mercurius-integration-testing": "^9.0.1"
   },
   "keywords": [
     "gqloom",

@@ -1,11 +1,11 @@
 import { EasyDataLoader, type ResolverPayload, silk, weave } from "@gqloom/core"
 import {
+  execute,
   GraphQLFloat,
   GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  execute,
   parse,
 } from "graphql"
 import { beforeEach, describe, expect, it } from "vitest"

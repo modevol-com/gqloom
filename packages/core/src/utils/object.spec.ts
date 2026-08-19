@@ -1,5 +1,6 @@
+import { GraphQLInt, GraphQLString } from "graphql"
 import { describe, expect, it } from "vitest"
-import { deepMerge, toObjMap } from "./object"
+import { deepMerge, toArguments, toFieldMap, toObjMap } from "./object"
 
 describe("deepMerge", () => {
   it("should return the first object when only one is provided", () => {
@@ -74,5 +75,116 @@ describe("toObjMap", () => {
     const result = toObjMap(obj)
     expect(result).not.toBe(obj)
     expect(result).toEqual({ key: "value" })
+  })
+})
+
+describe("toArguments", () => {
+  it("should convert argument config map to array", () => {
+    const args = {
+      name: {
+        type: GraphQLString,
+        description: "The name",
+      },
+      age: {
+        type: GraphQLInt,
+        defaultValue: 0,
+      },
+    }
+
+    const result = toArguments(args)
+
+    expect(result).toHaveLength(2)
+    expect(result[0]).toMatchObject({
+      name: "name",
+      type: GraphQLString,
+      description: "The name",
+    })
+    expect(result[1]).toMatchObject({
+      name: "age",
+      type: GraphQLInt,
+      defaultValue: 0,
+    })
+  })
+
+  it("should handle empty map", () => {
+    const result = toArguments({})
+    expect(result).toHaveLength(0)
+  })
+
+  it("should handle optional fields", () => {
+    const args = {
+      name: {
+        type: GraphQLString,
+      },
+    }
+
+    const result = toArguments(args)
+
+    expect(result[0]).toMatchObject({
+      name: "name",
+      type: GraphQLString,
+      description: undefined,
+      defaultValue: undefined,
+      deprecationReason: undefined,
+    })
+  })
+})
+
+describe("toFieldMap", () => {
+  it("should convert field config map to field map", () => {
+    const fields = {
+      name: {
+        type: GraphQLString,
+        description: "The name field",
+        args: {
+          prefix: {
+            type: GraphQLString,
+          },
+        },
+      },
+      age: {
+        type: GraphQLInt,
+      },
+    }
+
+    const result = toFieldMap(fields)
+
+    expect(result.name).toMatchObject({
+      name: "name",
+      type: GraphQLString,
+      description: "The name field",
+    })
+    expect(result.name.args).toHaveLength(1)
+    expect(result.name.args[0].name).toBe("prefix")
+
+    expect(result.age).toMatchObject({
+      name: "age",
+      type: GraphQLInt,
+    })
+    expect(result.age.args).toHaveLength(0)
+  })
+
+  it("should handle empty map", () => {
+    const result = toFieldMap({})
+    expect(Object.keys(result)).toHaveLength(0)
+  })
+
+  it("should handle optional fields", () => {
+    const fields = {
+      name: {
+        type: GraphQLString,
+      },
+    }
+
+    const result = toFieldMap(fields)
+
+    expect(result.name).toMatchObject({
+      name: "name",
+      type: GraphQLString,
+      description: undefined,
+      deprecationReason: undefined,
+      resolve: undefined,
+      subscribe: undefined,
+    })
   })
 })

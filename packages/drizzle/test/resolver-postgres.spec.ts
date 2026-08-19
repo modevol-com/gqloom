@@ -16,7 +16,7 @@ import { relations } from "./schema/postgres-relations"
 
 const schema = { users, posts }
 
-describe("resolver by postgres", () => {
+describe.runIf(config.postgresUrl)("resolver by postgres", () => {
   let db: NodePgDatabase<typeof schema, typeof relations>
   let logs: string[] = []
   let gqlSchema: GraphQLSchema

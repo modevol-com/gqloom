@@ -1,8 +1,13 @@
+import type { ResolverPayload } from "@gqloom/core"
 import {
+  EasyDataLoader,
   FieldFactoryWithResolve,
   type FieldOptions,
   type GraphQLFieldOptions,
   type GraphQLSilk,
+  getMemoizationMap,
+  loom,
+  type MayPromise,
   type Middleware,
   MutationFactoryWithResolve,
   type MutationOptions,
@@ -11,15 +16,12 @@ import {
   type QueryOptions,
   type ResolverOptionsWithExtensions,
   type StandardSchemaV1,
-  getMemoizationMap,
-  loom,
   silk,
 } from "@gqloom/core"
-import { EasyDataLoader } from "@gqloom/core"
-import type { ResolverPayload } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
+import { GraphQLInt, GraphQLNonNull } from "graphql"
 import { PrismaWeaver } from "."
-import { PrismaActionArgsWeaver } from "./type-weaver"
+import { PrismaActionArgsFactory } from "./type-factory"
 import type {
   IBatchPayload,
   InferDelegateCountArgs,
@@ -39,26 +41,39 @@ import type {
   PrismaModelMeta,
   PrismaModelSilk,
 } from "./types"
-import { capitalize, getSelectedFields, gqlType as gt } from "./utils"
+import { capitalize, getSelectedFields } from "./utils"
 
 export class PrismaResolverFactory<
   TModelSilk extends PrismaModelSilk<any, string, Record<string, any>>,
   TClient extends PrismaClient,
 > {
   protected modelData: PrismaModelMeta
-  protected delegate: InferPrismaDelegate<TClient, TModelSilk["name"]>
-  protected typeWeaver: PrismaActionArgsWeaver
+  protected typeFactory: PrismaActionArgsFactory<TModelSilk>
 
   public constructor(
     protected readonly silk: TModelSilk,
-    protected readonly client: TClient
+    protected readonly client:
+      | MayPromise<TClient>
+      | ((payload: ResolverPayload | undefined) => MayPromise<TClient>)
   ) {
     this.modelData = silk.meta
-    this.delegate = PrismaResolverFactory.getDelegate(
-      silk.model.name,
-      client
+    this.typeFactory = new PrismaActionArgsFactory(silk)
+  }
+
+  protected async getDelegate(
+    payload: ResolverPayload | undefined,
+    name: string = this.silk.model.name
+  ): Promise<InferPrismaDelegate<TClient, TModelSilk["name"]>> {
+    if (typeof this.client === "function") {
+      return PrismaResolverFactory.getDelegate(
+        name,
+        await this.client(payload)
+      ) as InferPrismaDelegate<TClient, TModelSilk["name"]>
+    }
+    return PrismaResolverFactory.getDelegate(
+      name,
+      await this.client
     ) as InferPrismaDelegate<TClient, TModelSilk["name"]>
-    this.typeWeaver = new PrismaActionArgsWeaver(silk)
   }
 
   public relationField<TKey extends keyof NonNullable<TModelSilk["relations"]>>(
@@ -74,16 +89,13 @@ export class PrismaResolverFactory<
       )
 
     const targetModel = this.modelData.models[field.type]
-    const delegate = PrismaResolverFactory.getDelegate(
-      targetModel.name,
-      this.client
-    )
+
     let relationFromFields = field.relationFromFields
     let relationToFields = field.relationToFields
+    const targetField = this.modelData.models[field.type].fields.find(
+      (f) => f.relationName === field.relationName
+    )
     if (relationFromFields?.length === 0) {
-      const targetField = this.modelData.models[field.type].fields.find(
-        (f) => f.relationName === field.relationName
-      )
       if (targetField == null)
         throw new Error(`Field ${String(key)} is not a relation`)
       relationFromFields = targetField.relationToFields
@@ -94,8 +106,7 @@ export class PrismaResolverFactory<
       field.relationName == null ||
       relationFromFields == null ||
       relationToFields == null ||
-      targetModel == null ||
-      delegate == null
+      targetModel == null
     )
       throw new Error(`Field ${String(key)} is not a relation`)
     const getKeyByReference = (item: any) => {
@@ -121,14 +132,20 @@ export class PrismaResolverFactory<
             relationFromFields.length,
             relationToFields.length
           )
-          const where = (() => {
-            if (length === 1) {
-              const field = relationToFields[0]
-              const values = inputs.map(
-                ([parent]) => parent[relationFromFields[0]]
-              )
-              return { [field]: { in: values } }
+          let where
+          if (length === 1) {
+            const fieldName = relationToFields[0]
+            const values = new Set(
+              inputs.map(([parent]) => parent[relationFromFields[0]])
+            )
+            if (targetField?.isRequired) {
+              values.delete(null)
             }
+            if (values.size === 0) {
+              return inputs.map(() => (field.isList ? [] : null))
+            }
+            where = { [fieldName]: { in: [...values] } }
+          } else {
             const OR: any[] = []
             for (const [parent] of inputs) {
               const item = {} as any
@@ -137,8 +154,9 @@ export class PrismaResolverFactory<
               }
               OR.push(item)
             }
-            return { OR }
-          })()
+            where = { OR }
+          }
+
           const select = getSelectedFields(
             targetModel,
             inputs.map((input) => input[1])
@@ -147,7 +165,10 @@ export class PrismaResolverFactory<
           const relationTo = Object.fromEntries(
             relationToFields.map((f) => [f, true])
           )
-
+          const delegate = await this.getDelegate(
+            inputs[0]?.[1],
+            targetModel.name
+          )
           const list = await (delegate as any).findMany({
             select: { ...select, ...relationTo },
             where,
@@ -171,7 +192,7 @@ export class PrismaResolverFactory<
     return new FieldFactoryWithResolve(output, {
       ...options,
       dependencies: relationFromFields,
-      resolve: (parent, _input, payload) => {
+      resolve: async (parent, _input, payload) => {
         const loader = (() => {
           if (!payload) return initLoader()
           const memoMap = getMemoizationMap(payload)
@@ -196,7 +217,7 @@ export class PrismaResolverFactory<
   protected uniqueWhere(
     instance: Omit<
       StandardSchemaV1.InferOutput<NonNullable<TModelSilk>>,
-      `__selective_${typeof this.silk.name}_brand__`
+      `__selective_${string}_brand__`
     >
   ): any {
     if (this.silk.model.primaryKey == null) {
@@ -287,17 +308,18 @@ export class PrismaResolverFactory<
       PrismaResolverCountQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCountQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.countArgs()) as GraphQLSilk<
+    input ??= silk(() => this.typeFactory.countArgs()) as GraphQLSilk<
       InferDelegateCountArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
       TInputI
     >
 
     return new QueryFactoryWithResolve(
-      silk<number>(() => gt.nonNull(gt.int)),
+      silk<number>(() => new GraphQLNonNull(GraphQLInt)),
       {
         ...options,
         input,
-        resolve: (input) => this.delegate.count(input),
+        resolve: async (input, payload) =>
+          (await this.getDelegate(payload)).count(input),
       } as QueryOptions<any, any>
     )
   }
@@ -320,15 +342,15 @@ export class PrismaResolverFactory<
       PrismaResolverFindFirstQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverFindFirstQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.findFirstArgs())
+    input ??= silk(() => this.typeFactory.findFirstArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
     return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.findFirst({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).findFirst({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -353,15 +375,15 @@ export class PrismaResolverFactory<
       PrismaResolverFindManyQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverFindManyQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.findManyArgs())
+    input ??= silk(() => this.typeFactory.findManyArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
     return new QueryFactoryWithResolve(output.list(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.findMany({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).findMany({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -386,15 +408,15 @@ export class PrismaResolverFactory<
       PrismaResolverFindUniqueQuery<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverFindUniqueQuery<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => this.typeWeaver.findUniqueArgs())
+    input ??= silk(() => this.typeFactory.findUniqueArgs())
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
     return new QueryFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.findUnique({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).findUnique({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -417,15 +439,18 @@ export class PrismaResolverFactory<
       PrismaResolverCreateMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCreateMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.createArgs()))
+    input ??= this.typeFactory.createArgsSilk() as GraphQLSilk<
+      InferDelegateCreateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
+      TInputI
+    >
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
     return new MutationFactoryWithResolve(output.nullable(), {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.create({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).create({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -450,14 +475,20 @@ export class PrismaResolverFactory<
       PrismaResolverCreateManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverCreateManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.createManyArgs()))
+    input ??= this.typeFactory.createManyArgsSilk() as GraphQLSilk<
+      InferDelegateCreateManyArgs<
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
+      >,
+      TInputI
+    >
 
     const output = PrismaResolverFactory.batchPayloadSilk()
 
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input) => this.delegate.createMany(input),
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).createMany(input),
     } as MutationOptions<any, any>)
   }
 
@@ -477,7 +508,7 @@ export class PrismaResolverFactory<
       PrismaResolverDeleteMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverDeleteMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.deleteArgs()))
+    input ??= silk(() => new GraphQLNonNull(this.typeFactory.deleteArgs()))
 
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
 
@@ -488,7 +519,7 @@ export class PrismaResolverFactory<
         // we should return null if the row is not found
         // https://github.com/prisma/prisma/issues/4072
         try {
-          return await this.delegate.delete({
+          return await (await this.getDelegate(payload)).delete({
             select: getSelectedFields(this.silk, payload),
             ...input,
           })
@@ -517,13 +548,13 @@ export class PrismaResolverFactory<
       PrismaResolverDeleteManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverDeleteManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.deleteManyArgs()))
+    input ??= silk(() => new GraphQLNonNull(this.typeFactory.deleteManyArgs()))
     const output = PrismaResolverFactory.batchPayloadSilk()
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: async (input) => {
-        return await this.delegate.deleteMany(input)
+      resolve: async (input, payload) => {
+        return (await this.getDelegate(payload)).deleteMany(input)
       },
     } as MutationOptions<any, any>)
   }
@@ -544,13 +575,16 @@ export class PrismaResolverFactory<
       PrismaResolverUpdateMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpdateMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.updateArgs()))
+    input ??= this.typeFactory.updateArgsSilk() as GraphQLSilk<
+      InferDelegateUpdateArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
+      TInputI
+    >
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input, payload) =>
-        this.delegate.update({
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).update({
           select: getSelectedFields(this.silk, payload),
           ...input,
         }),
@@ -575,13 +609,19 @@ export class PrismaResolverFactory<
       PrismaResolverUpdateManyMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpdateManyMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.updateManyArgs()))
+    input ??= this.typeFactory.updateManyArgsSilk() as GraphQLSilk<
+      InferDelegateUpdateManyArgs<
+        InferPrismaDelegate<TClient, TModelSilk["name"]>
+      >,
+      TInputI
+    >
     const output = PrismaResolverFactory.batchPayloadSilk()
 
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input) => this.delegate.updateMany(input),
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).updateMany(input),
     } as MutationOptions<any, any>)
   }
 
@@ -601,12 +641,16 @@ export class PrismaResolverFactory<
       PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI>
     >[]
   } = {}): PrismaResolverUpsertMutation<TModelSilk, TClient, TInputI> {
-    input ??= silk(() => gt.nonNull(this.typeWeaver.upsertArgs()))
+    input ??= this.typeFactory.upsertArgsSilk() as GraphQLSilk<
+      InferDelegateUpsertArgs<InferPrismaDelegate<TClient, TModelSilk["name"]>>,
+      TInputI
+    >
     const output = PrismaWeaver.unravel(this.silk.model, this.modelData)
     return new MutationFactoryWithResolve(output, {
       ...options,
       input,
-      resolve: (input) => this.delegate.upsert(input),
+      resolve: async (input, payload) =>
+        (await this.getDelegate(payload)).upsert(input),
     } as MutationOptions<any, any>)
   }
 
@@ -620,7 +664,6 @@ export class PrismaResolverFactory<
       lowerCase in client
         ? (client as PrismaClient & Record<string, unknown>)[lowerCase]
         : null
-
     if (!delegate) {
       throw new Error(`Unable to find delegate for model ${modelName}`)
     }
@@ -629,7 +672,7 @@ export class PrismaResolverFactory<
   }
 
   public static batchPayloadSilk(): GraphQLSilk<IBatchPayload, IBatchPayload> {
-    return silk(() => PrismaActionArgsWeaver.batchPayload()) as GraphQLSilk<
+    return silk(() => PrismaActionArgsFactory.batchPayload()) as GraphQLSilk<
       IBatchPayload,
       IBatchPayload
     >

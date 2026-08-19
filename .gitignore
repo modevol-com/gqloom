@@ -29,8 +29,9 @@ draft
 temp
 tmp
 
-# Local env files
+# Local files
 .env*.local
+*local.db
 
 # IDEs and editors
 .idea

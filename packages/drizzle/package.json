@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/drizzle",
-  "version": "0.11.0-beta.0",
+  "version": "0.17.0-rc.0",
   "description": "GQLoom integration with Drizzle ORM",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,11 +28,13 @@
     }
   },
   "scripts": {
-    "build": "tsup",
-    "check:type": "tsc --noEmit",
-    "push": "drizzle-kit push --config=drizzle-mysql.config.ts && drizzle-kit push --config=drizzle-postgres.config.ts && drizzle-kit push --config=drizzle-sqlite.config.ts && drizzle-kit push --config=drizzle-sqlite-1.config.ts"
+    "build": "tsdown",
+    "check:type": "tsgo --noEmit",
+    "push": "node scripts/push.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "gqloom",
     "graphql",
@@ -45,23 +47,23 @@
   "license": "MIT",
   "peerDependencies": {
     "@gqloom/core": ">= 0.10.0",
-    "drizzle-orm": ">= 1.0.0-beta.1",
+    "drizzle-orm": ">= 1.0.0-rc.4",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/valibot": "workspace:*",
-    "@libsql/client": "^0.14.0",
-    "@types/pg": "^8.11.10",
-    "dotenv": "^16.4.7",
-    "drizzle-kit": "1.0.0-beta.1-7946562",
-    "drizzle-orm": "1.0.0-beta.1-7946562",
-    "graphql": "^16.8.1",
-    "graphql-yoga": "^5.6.0",
-    "mysql2": "^3.14.0",
-    "pg": "^8.13.1",
-    "tsx": "^4.7.2",
-    "valibot": "1.0.0-beta.12"
+    "@libsql/client": "^0.15.15",
+    "@types/pg": "^8.20.0",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "1.0.0-rc.4",
+    "drizzle-orm": "1.0.0-rc.4",
+    "graphql": "^16.12.0",
+    "graphql-yoga": "^5.21.0",
+    "mysql2": "^3.22.5",
+    "pg": "^8.20.0",
+    "tsx": "^4.21.0",
+    "valibot": "1.2.0"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {

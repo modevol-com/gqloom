@@ -1,12 +1,16 @@
+import type { GraphQLSilk } from "@gqloom/core"
 import {
-  SYMBOLS,
+  AUTO_ALIASING,
   ensureInterfaceType,
+  getGraphQLType,
   mapValue,
+  provideWeaverContext,
+  SYMBOLS,
   weave,
   weaverContext,
 } from "@gqloom/core"
-import { LoomObjectType } from "@gqloom/core"
 import {
+  type GraphQLArgumentConfig,
   GraphQLBoolean,
   GraphQLEnumType,
   type GraphQLEnumValueConfigMap,
@@ -25,7 +29,7 @@ import {
   isObjectType,
 } from "graphql"
 import type { ZodTypeAny } from "zod/v3"
-import type { $ZodObject, $ZodShape, $ZodType, $ZodTypeDef } from "zod/v4/core"
+import type { $ZodObject, $ZodType, $ZodTypeDef } from "zod/v4/core"
 import { asField } from "./metadata"
 import type {
   FieldConfig,
@@ -45,15 +49,17 @@ import {
   isZodDiscriminatedUnion,
   isZodEnum,
   isZodInt,
+  isZodLazy,
   isZodLiteral,
   isZodNumber,
   isZodObject,
+  isZodPipe,
   isZodString,
   isZodType,
   isZodUnion,
   resolveTypeByDiscriminatedUnion,
 } from "./utils"
-import { ZodWeaver as ZodWeaverV3 } from "./v3"
+import { getConfig, ZodWeaver as ZodWeaverV3 } from "./v3"
 
 export class ZodWeaver {
   public static vendor = "zod"
@@ -85,20 +91,18 @@ export class ZodWeaver {
   }
 
   protected static toNullableGraphQLType(schema: $ZodType): GraphQLOutputType {
-    const nullable = (ofType: GraphQLOutputType) => {
-      if (
-        (["null", "nullable", "optional"] as $ZodTypeDef["type"][]).includes(
-          schema._zod.def.type
-        )
-      )
-        return ofType
-      if (isNonNullType(ofType)) return ofType
-      return new GraphQLNonNull(ofType)
+    while (isZodPipe(schema)) {
+      schema = schema._zod.def.in
     }
-
     const gqlType = ZodWeaver.toMemoriedGraphQLType(schema)
 
-    return nullable(gqlType)
+    const isNullable = (
+      ["null", "nullable", "optional", "default"] as $ZodTypeDef["type"][]
+    ).includes(schema._zod.def.type)
+    if (isNullable) return gqlType
+
+    if (isNonNullType(gqlType)) return gqlType
+    return new GraphQLNonNull(gqlType)
   }
 
   protected static toMemoriedGraphQLType(schema: $ZodType): GraphQLOutputType {
@@ -159,19 +163,21 @@ export class ZodWeaver {
       return GraphQLBoolean
     }
 
+    if (isZodLazy(schema)) {
+      return ZodWeaver.toMemoriedGraphQLType(schema._zod.def.getter())
+    }
+
     if (isZodDate(schema)) {
       return GraphQLString
     }
 
     if (isZodObject(schema)) {
-      const { name = LoomObjectType.AUTO_ALIASING, ...objectConfig } =
-        getObjectConfig(schema)
+      const { name = AUTO_ALIASING, ...objectConfig } = getObjectConfig(schema)
 
       return new GraphQLObjectType({
         name,
-        fields: mapValue(
-          (schema as $ZodObject)._zod.def.shape,
-          (field, key) => {
+        fields: provideWeaverContext.inherit(() =>
+          mapValue((schema as $ZodObject)._zod.def.shape, (field, key) => {
             if (key.startsWith("__")) return mapValue.SKIP
             const { type, ...fieldConfig } = getFieldConfig(field)
             if (type === null || type === SYMBOLS.FIELD_HIDDEN)
@@ -180,14 +186,18 @@ export class ZodWeaver {
               type: type ?? ZodWeaver.toNullableGraphQLType(field),
               ...fieldConfig,
             }
-          }
+          })
         ),
         ...objectConfig,
       })
     }
 
     if (isZodEnum(schema)) {
-      const { name, valuesConfig, ...enumConfig } = getEnumConfig(schema)
+      const {
+        name = AUTO_ALIASING,
+        valuesConfig,
+        ...enumConfig
+      } = getEnumConfig(schema)
 
       const values: GraphQLEnumValueConfigMap = {}
 
@@ -200,11 +210,6 @@ export class ZodWeaver {
         values[key] = { value, ...valuesConfig?.[key] }
       })
 
-      if (!name)
-        throw new Error(
-          `Enum (${Object.keys(values).join(", ")}) must have a name`
-        )
-
       return new GraphQLEnumType({
         name,
         values,
@@ -213,7 +218,7 @@ export class ZodWeaver {
     }
 
     if (isZodUnion(schema)) {
-      const { name, ...unionConfig } = getUnionConfig(schema)
+      const { name = AUTO_ALIASING, ...unionConfig } = getUnionConfig(schema)
 
       const types = (schema._zod.def.options as $ZodType[]).map((s) => {
         const gqlType = ZodWeaver.toMemoriedGraphQLType(s)
@@ -223,13 +228,7 @@ export class ZodWeaver {
         )
       })
 
-      if (!name)
-        throw new Error(
-          `Union (${types.map((t) => t.name).join(", ")}) must have a name`
-        )
-
       return new GraphQLUnionType({
-        // TODO: resolve type
         resolveType: isZodDiscriminatedUnion(schema)
           ? resolveTypeByDiscriminatedUnion(schema)
           : undefined,
@@ -239,15 +238,19 @@ export class ZodWeaver {
       })
     }
 
+    if (isZodPipe(schema)) {
+      return ZodWeaver.toNullableGraphQLType(schema._zod.def.in)
+    }
+
     throw new Error(`zod type ${schema.constructor.name} is not supported`)
   }
 
   public static ensureInterfaceType(
-    item: GraphQLInterfaceType | $ZodObject<$ZodShape>
+    item: GraphQLInterfaceType | GraphQLSilk
   ): GraphQLInterfaceType {
     if (isInterfaceType(item)) return item
-    const gqlType = ZodWeaver.toMemoriedGraphQLType(item)
-
+    let gqlType = getGraphQLType(item)
+    while (isNonNullType(gqlType)) gqlType = gqlType.ofType
     return ensureInterfaceType(gqlType)
   }
 
@@ -261,6 +264,7 @@ export class ZodWeaver {
   ): ZodWeaverConfig {
     return {
       ...config,
+      vendorWeaver: ZodWeaver,
       [SYMBOLS.WEAVER_CONFIG]: "gqloom.zod",
     }
   }
@@ -293,11 +297,21 @@ export class ZodWeaver {
     }
   }
 
+  public static getGraphQLArgumentConfig(
+    schema: $ZodType | ZodTypeAny
+  ): Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined {
+    if ("_zod" in schema) {
+      return getFieldConfig(schema)
+    } else {
+      return getConfig(schema)
+    }
+  }
+
   protected static getGraphQLTypeBySelf(this: $ZodType): GraphQLOutputType {
     return ZodWeaver.toNullableGraphQLType(this)
   }
 }
 
-export * from "./types"
 export * from "./metadata"
-export * from "@gqloom/core"
+export * from "./re-export"
+export * from "./types"

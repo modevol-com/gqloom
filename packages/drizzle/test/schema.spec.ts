@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from "@gqloom/core"
 import {
   field,
   getGraphQLType,
@@ -6,12 +7,11 @@ import {
   silk,
   weave,
 } from "@gqloom/core"
-import type { StandardSchemaV1 } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
-import { pgTable } from "drizzle-orm/pg-core"
 import * as pg from "drizzle-orm/pg-core"
-import { sqliteTable } from "drizzle-orm/sqlite-core"
+import { pgTable } from "drizzle-orm/pg-core"
 import * as sqlite from "drizzle-orm/sqlite-core"
+import { sqliteTable } from "drizzle-orm/sqlite-core"
 import {
   GraphQLNonNull,
   type GraphQLObjectType,
@@ -27,6 +27,7 @@ import { DrizzleWeaver, drizzleSilk } from "../src"
 describe("drizzleSilk", () => {
   it("should handle pg table and column types", () => {
     const moodEnum = pg.pgEnum("mood", ["sad", "ok", "happy"])
+    const fruitEnum = v.picklist(["apple", "banana", "orange"])
     const Foo = drizzleSilk(
       pgTable("foo", {
         serial: pg.serial().primaryKey(),
@@ -49,11 +50,17 @@ describe("drizzleSilk", () => {
         interval: pg.interval(),
         array: pg.text().array(),
         enum: moodEnum(),
-      })
+        enum2: pg.text({ enum: fruitEnum.options }),
+      }),
+      {
+        fields: () => ({
+          enum2: { type: silk.getType(fruitEnum) },
+        }),
+      }
     )
 
-    const gqlType = getGraphQLType(Foo)
-    expect(printType(unwrap(gqlType))).toMatchInlineSnapshot(`
+    const schema = weave(ValibotWeaver, Foo)
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
       "type FooItem {
         serial: Int!
         integer: Int
@@ -75,6 +82,19 @@ describe("drizzleSilk", () => {
         interval: String
         array: [String!]
         enum: Mood
+        enum2: FooItemEnum2!
+      }
+
+      enum Mood {
+        SAD
+        OK
+        HAPPY
+      }
+
+      enum FooItemEnum2 {
+        apple
+        banana
+        orange
       }"
     `)
   })

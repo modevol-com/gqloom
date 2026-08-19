@@ -1,5 +1,4 @@
-import type { WeaverConfig } from "@gqloom/core"
-import type { SYMBOLS } from "@gqloom/core"
+import type { SYMBOLS, WeaverConfig } from "@gqloom/core"
 import type {
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfig,

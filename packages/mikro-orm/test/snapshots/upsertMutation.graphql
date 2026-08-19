@@ -1,0 +1,22 @@
+type Mutation {
+  upsertMutation(data: UserPartialInput!, onConflictAction: MikroOnConflictAction, onConflictExcludeFields: [String!], onConflictFields: [String!], onConflictMergeFields: [String!]): User!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  age: Int
+}
+
+input UserPartialInput {
+  id: ID
+  name: String
+  email: String
+  age: Int
+}
+
+enum MikroOnConflictAction {
+  ignore
+  merge
+}

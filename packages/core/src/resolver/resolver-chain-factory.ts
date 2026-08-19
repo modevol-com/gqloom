@@ -78,7 +78,7 @@ export interface IChainFactory<
  */
 export interface ChainFactoryOptions extends Loom.FieldMeta {
   /** Middleware functions to be applied to the field */
-  middlewares?: Middleware[]
+  middlewares?: Middleware[] | undefined
 }
 
 /**
@@ -278,9 +278,11 @@ export class FieldChainFactory<
    * @template TInputNew - The new input type
    * @param input - The input type definition
    */
-  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
-    input: TInputNew
-  ): FieldChainFactory<TOutput, TInputNew, TDependencies> {
+  public input<
+    TInputNew extends
+      | GraphQLSilk<any, Record<string, any>>
+      | Record<string, GraphQLSilk>,
+  >(input: TInputNew): FieldChainFactory<TOutput, TInputNew, TDependencies> {
     return new FieldChainFactory({ ...this.options, input })
   }
 
@@ -413,9 +415,11 @@ export class QueryChainFactory<
    * @param input - The input type definition
    * @returns A new QueryChainFactory instance with the updated input type
    */
-  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
-    input: TInputNew
-  ): QueryChainFactory<TOutput, TInputNew> {
+  public input<
+    TInputNew extends
+      | GraphQLSilk<any, Record<string, any>>
+      | Record<string, GraphQLSilk>,
+  >(input: TInputNew): QueryChainFactory<TOutput, TInputNew> {
     return new QueryChainFactory({ ...this.options, input })
   }
 
@@ -495,9 +499,11 @@ export class MutationChainFactory<
    * @param input - The input type definition
    * @returns A new MutationChainFactory instance with the updated input type
    */
-  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
-    input: TInputNew
-  ): MutationChainFactory<TOutput, TInputNew> {
+  public input<
+    TInputNew extends
+      | GraphQLSilk<any, Record<string, any>>
+      | Record<string, GraphQLSilk>,
+  >(input: TInputNew): MutationChainFactory<TOutput, TInputNew> {
     return new MutationChainFactory({ ...this.options, input })
   }
 
@@ -577,9 +583,11 @@ export class SubscriptionChainFactory<
    * @param input - The input type definition
    * @returns A new SubscriptionChainFactory instance with the updated input type
    */
-  public input<TInputNew extends GraphQLSilk | Record<string, GraphQLSilk>>(
-    input: TInputNew
-  ): SubscriptionChainFactory<TOutput, TInputNew> {
+  public input<
+    TInputNew extends
+      | GraphQLSilk<any, Record<string, any>>
+      | Record<string, GraphQLSilk>,
+  >(input: TInputNew): SubscriptionChainFactory<TOutput, TInputNew> {
     return new SubscriptionChainFactory({ ...this.options, input })
   }
 
@@ -697,14 +705,16 @@ export class QueryFactoryWithResolve<
     super(options)
   }
 
-  protected clone(options?: Partial<typeof this.options> | undefined): this {
+  protected clone(
+    options?: Partial<QueryOptions<TOutput, TInput>> | undefined
+  ): this {
     return new QueryFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
     }) as this
   }
 
-  public input<TInputNew extends GraphQLSilk<TInputO>>(
+  public input<TInputNew extends GraphQLSilk<TInputO, Record<string, any>>>(
     input: TInputNew
   ): QueryFactoryWithResolve<TInputO, TOutput, TInputNew> {
     return new QueryFactoryWithResolve(this.outputSilk, {
@@ -748,14 +758,16 @@ export class MutationFactoryWithResolve<
     super(options)
   }
 
-  protected clone(options?: Partial<typeof this.options> | undefined): this {
+  protected clone(
+    options?: Partial<MutationOptions<TOutput, TInput>> | undefined
+  ): this {
     return new MutationFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
     }) as this
   }
 
-  public input<TInputNew extends GraphQLSilk<TInputO>>(
+  public input<TInputNew extends GraphQLSilk<TInputO, Record<string, any>>>(
     input: TInputNew
   ): MutationFactoryWithResolve<TInputO, TOutput, TInputNew> {
     return new MutationFactoryWithResolve(this.outputSilk, {
@@ -812,14 +824,18 @@ export class FieldFactoryWithResolve<
     super(options)
   }
 
-  protected clone(options?: Partial<typeof this.options> | undefined): this {
+  protected clone(
+    options?:
+      | Partial<FieldOptions<TParent, TOutput, TInput, string[] | undefined>>
+      | undefined
+  ): this {
     return new FieldFactoryWithResolve(this.outputSilk, {
       ...this.options,
       ...options,
     }) as this
   }
 
-  public input<TInputNew extends GraphQLSilk<TInputO>>(
+  public input<TInputNew extends GraphQLSilk<TInputO, Record<string, any>>>(
     input: TInputNew
   ): FieldFactoryWithResolve<TParent, TOutput, TInputO, TInputNew> {
     return new FieldFactoryWithResolve(this.outputSilk, {

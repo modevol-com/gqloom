@@ -1,4 +1,4 @@
-import { type SYMBOLS, deepMerge, weaverContext } from "@gqloom/core"
+import { deepMerge, type SYMBOLS, weaverContext } from "@gqloom/core"
 import type {
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfig,
@@ -14,8 +14,10 @@ import type {
   DescriptionAction,
   GenericSchema,
   GenericSchemaAsync,
+  MetadataAction,
   PipeItem,
   PipeItemAsync,
+  TitleAction,
 } from "valibot"
 import type { PipedSchema, SupportedSchema } from "./types"
 import { isNullish } from "./utils"
@@ -40,7 +42,14 @@ export class ValibotMetadataCollector {
         if (defaultValue !== undefined && config !== undefined) break
       }
       if (item.type === "description") {
-        description ??= (item as DescriptionAction<any, string>).description
+        description = (item as DescriptionAction<any, string>).description
+      }
+      if (item.type === "metadata") {
+        const metadata = (item as MetadataAction<any, Record<string, unknown>>)
+          .metadata
+        if (typeof metadata.description === "string") {
+          description ??= metadata.description
+        }
       }
     }
 
@@ -101,8 +110,19 @@ export class ValibotMetadataCollector {
         ValibotMetadataCollector.getTypenameByLiteral(item)
       if (item.type === configType) {
         config = (item as T).config
+      } else if (item.type === "title") {
+        name ??= (item as TitleAction<any, string>).title
       } else if (item.type === "description") {
         description = (item as DescriptionAction<any, string>).description
+      } else if (item.type === "metadata") {
+        const metadata = (item as MetadataAction<any, Record<string, unknown>>)
+          .metadata
+        if (typeof metadata.title === "string") {
+          name ??= metadata.title
+        }
+        if (typeof metadata.description === "string") {
+          description ??= metadata.description
+        }
       }
     }
 
@@ -136,7 +156,12 @@ export class ValibotMetadataCollector {
     return pipe.some((item) => item.type === "integer")
   }
 
-  public static IDActionTypes: Set<string> = new Set(["cuid2", "ulid", "uuid"])
+  public static IDActionTypes: Set<string> = new Set([
+    "cuid2",
+    "nanoid",
+    "ulid",
+    "uuid",
+  ])
 
   public static isID(...schemas: PipedSchema[]): boolean {
     const pipe = ValibotMetadataCollector.getPipe(...schemas)
@@ -158,6 +183,10 @@ export class ValibotMetadataCollector {
     }
     for (const schema of schemas) {
       if (schema == null) continue
+      if (schema.type === "lazy") {
+        pushToPipe((schema as any).getter(undefined))
+        continue
+      }
       pushToPipe(schema)
       if ("wrapped" in schema) {
         pushToPipe(schema.wrapped as PipedSchema)

@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/prisma",
-  "version": "0.10.0",
+  "version": "0.16.0",
   "description": "GQLoom integration with Prisma",
   "type": "module",
   "main": "./dist/index.js",
@@ -32,37 +32,47 @@
         "default": "./generated/index.js"
       },
       "require": {
-        "types": "./generated/index.d.ts",
+        "types": "./generated/index.d.cts",
         "default": "./generated/index.cjs"
       }
     }
   },
   "scripts": {
-    "build": "tsup",
-    "check:type": "tsc --noEmit",
-    "init": "exec prisma migrate dev --name init",
-    "generate": "pnpm build && prisma generate",
-    "push": "pnpm build && pnpm generate && pnpm run init"
+    "build": "tsdown",
+    "check:type": "tsgo --noEmit",
+    "init": "node scripts/init_tables.cjs",
+    "generate": "pnpm build && prisma generate && pnpm run init",
+    "push": "pnpm build && pnpm generate"
   },
   "bin": {
     "prisma-gqloom": "./bin/generator.cjs"
   },
-  "files": ["dist"],
-  "keywords": ["gqloom", "graphql", "schema", "typescript", "prisma"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "gqloom",
+    "graphql",
+    "schema",
+    "typescript",
+    "prisma"
+  ],
   "author": "xcfox",
   "license": "MIT",
   "peerDependencies": {
-    "@gqloom/core": ">= 0.10.0",
+    "@gqloom/core": ">= 0.16.0",
     "graphql": ">= 16.8.0",
-    "prisma": ">= 5.0.0"
+    "prisma": ">= 7.0.0"
   },
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/zod": "workspace:*",
-    "@prisma/client": "^6.1.0",
-    "graphql-yoga": "^5.6.0",
-    "prisma": "^6.1.0",
-    "zod": "4.0.0-beta.20250415T232143"
+    "@prisma/adapter-better-sqlite3": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.6.2",
+    "prisma": "^7.5.0",
+    "zod": "4.3.6"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
@@ -74,7 +84,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@prisma/generator-helper": "^6.1.0",
-    "ts-morph": "^25.0.0"
+    "@prisma/generator-helper": "^7.5.0",
+    "ts-morph": "^28.0.0"
   }
 }

@@ -1,13 +1,14 @@
+import type { Loom, SchemaWeaver } from "@gqloom/core"
 import {
+  field,
   type GQLoomExtensions,
   GraphQLSchemaLoom,
-  field,
   query,
   resolver,
   weave,
 } from "@gqloom/core"
-import type { Loom, SchemaWeaver } from "@gqloom/core"
 import {
+  execute,
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
@@ -18,7 +19,6 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
-  execute,
   parse,
   printSchema,
   printType,
@@ -26,11 +26,11 @@ import {
 import * as v from "valibot"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import {
-  ValibotWeaver,
   asEnumType,
   asField,
   asObjectType,
   asUnionType,
+  ValibotWeaver,
 } from "../src"
 import type { PipedSchema } from "../src/types"
 
@@ -71,11 +71,35 @@ describe("ValibotWeaver", () => {
     schema = v.optional(v.pipe(v.string(), v.uuid()))
     expect(getGraphQLType(schema)).toEqual(GraphQLID)
 
+    schema = v.optional(v.pipe(v.string(), v.nanoid()))
+    expect(getGraphQLType(schema)).toEqual(GraphQLID)
+
     schema = v.optional(v.pipe(v.string(), v.cuid2()))
     expect(getGraphQLType(schema)).toEqual(GraphQLID)
 
     schema = v.optional(v.pipe(v.string(), v.email()))
     expect(getGraphQLType(schema)).toEqual(GraphQLString)
+  })
+
+  it("should handle lazy type", () => {
+    interface Category {
+      name: string
+      subCategories?: Category[]
+    }
+    const Category: v.GenericSchema<Category> = v.lazy(() =>
+      v.object({
+        __typename: v.nullish(v.literal("Category")),
+        name: v.string(),
+        subCategories: v.optional(v.array(Category)),
+      })
+    )
+
+    expect(print(Category)).toMatchInlineSnapshot(`
+      "type Category {
+        name: String!
+        subCategories: [Category!]
+      }"
+    `)
   })
 
   it("should keep default value in extensions", () => {
@@ -102,33 +126,6 @@ describe("ValibotWeaver", () => {
         v.pipe(v.nullable(v.date()), asField({ type: GraphQLDate }))
       )
     ).toEqual(GraphQLDate)
-
-    const Cat = v.pipe(
-      v.object({
-        name: v.string(),
-        age: v.pipe(
-          v.number(),
-          asField({ type: GraphQLInt, description: "How old is the cat" })
-        ),
-        loveFish: v.nullish(v.boolean()),
-      }),
-      asObjectType({
-        name: "Cat",
-        description: "A cute cat",
-      })
-    )
-    expect(
-      printType(getGraphQLType(v.nullish(Cat)) as GraphQLNamedType)
-    ).toMatchInlineSnapshot(`
-      """"A cute cat"""
-      type Cat {
-        name: String!
-
-        """How old is the cat"""
-        age: Int
-        loveFish: Boolean
-      }"
-    `)
   })
 
   it("should handle hidden field", () => {
@@ -186,7 +183,12 @@ describe("ValibotWeaver", () => {
       birthday: v.optional(v.date()),
     })
 
-    const r1 = resolver({ dog: query(Dog, () => ({})) })
+    const r1 = resolver.of(Dog, {
+      dog: query(Dog, () => ({})),
+      derivedBirthday: field(v.date())
+        .derivedFrom("birthday")
+        .resolve((dog) => dog.birthday),
+    })
     const config = ValibotWeaver.config({
       presetGraphQLType: (schema) => {
         switch (schema.type) {
@@ -201,9 +203,7 @@ describe("ValibotWeaver", () => {
     const r2 = resolver({ dog: query(vSilk(Dog), () => ({})) })
     const schema2 = weave(r2)
 
-    expect(printSchema(schema2)).toEqual(printSchema(schema1))
-
-    expect(printSchema(schema1)).toMatchInlineSnapshot(`
+    expect(printSchema(schema2)).toMatchInlineSnapshot(`
       "type Query {
         dog: Dog!
       }
@@ -214,6 +214,20 @@ describe("ValibotWeaver", () => {
       }
 
       scalar Date"
+    `)
+
+    expect(printSchema(schema1)).toMatchInlineSnapshot(`
+      "type Dog {
+        name: String
+        birthday: Date
+        derivedBirthday: Date!
+      }
+
+      scalar Date
+
+      type Query {
+        dog: Dog!
+      }"
     `)
   })
 

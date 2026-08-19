@@ -1,8 +1,5 @@
-import type { GraphQLNonNull } from "graphql"
-import type { GraphQLOutputType } from "graphql"
-import { isListType } from "graphql"
-import type { GraphQLList } from "graphql"
-import { isNonNullType } from "graphql"
+import type { GraphQLList, GraphQLNonNull, GraphQLOutputType } from "graphql"
+import { isListType, isNonNullType } from "graphql"
 
 export function unwrapType(
   gqlType: GraphQLOutputType

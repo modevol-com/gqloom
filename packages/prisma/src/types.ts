@@ -1,8 +1,10 @@
-import type { GraphQLSilk, WeaverConfig } from "@gqloom/core"
-// biome-ignore lint/correctness/noUnusedImports: SYMBOLS used in type
-import type { SYMBOLS } from "@gqloom/core"
+import type { GraphQLSilk, SYMBOLS, WeaverConfig } from "@gqloom/core"
 import type { DMMF } from "@prisma/generator-helper"
-import type { GraphQLOutputType } from "graphql"
+import type {
+  GraphQLFieldConfig,
+  GraphQLObjectTypeConfig,
+  GraphQLOutputType,
+} from "graphql"
 
 export interface PrismaModelSilk<
   TModel,
@@ -12,12 +14,85 @@ export interface PrismaModelSilk<
   nullable(): GraphQLSilk<SelectiveModel<TModel, TName> | null>
   list(): GraphQLSilk<SelectiveModel<TModel, TName>[]>
 
+  config(options: PrismaModelConfigOptions<TModel>): PrismaModelConfig<TModel>
+
   model: DMMF.Model
   meta: PrismaModelMeta
   name: TName
 
   relations?: TRelation
 }
+
+export interface PrismaModelConfigOptions<TModel>
+  extends Partial<Omit<GraphQLObjectTypeConfig<any, any>, "fields">> {
+  fields?: Getter<{
+    [K in keyof TModel]?: PrismaModelConfigOptionsField
+  }>
+  input?: Getter<PrismaModelFieldBehaviors<TModel>>
+}
+
+export type PrismaModelConfigOptionsField =
+  | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
+      /**
+       * The type of the field, set to `null` to hide the field
+       */
+      type?:
+        | Getter<
+            GraphQLOutputType | GraphQLSilk | typeof SYMBOLS.FIELD_HIDDEN | null
+          >
+        | undefined
+    })
+  | typeof SYMBOLS.FIELD_HIDDEN
+  | GraphQLOutputType
+  | GraphQLSilk
+  | undefined
+
+export interface PrismaModelFieldBehavior<TOutput> {
+  /**
+   * Is this field visible in the filters?
+   */
+  filters?: boolean | undefined
+
+  /**
+   * Is this field visible in the create mutation input?
+   */
+  create?: boolean | GraphQLSilk<TOutput, any> | GraphQLOutputType | undefined
+  /**
+   * Is this field visible in the update mutation input?
+   */
+  update?: boolean | GraphQLSilk<any, any> | GraphQLOutputType | undefined
+}
+
+export type PrismaModelFieldBehaviors<TModel> = {
+  [K in keyof TModel]?:
+    | PrismaModelFieldBehavior<TModel[K]>
+    | GraphQLSilk<TModel[K], any>
+    | GraphQLOutputType
+    | boolean
+    | undefined
+} & {
+  /**
+   * Config the default behavior of all fields
+   */
+  "*"?: PrismaModelFieldBehavior<never> | boolean | undefined
+}
+
+export interface PrismaModelConfig<TModel>
+  extends PrismaModelConfigOptions<TModel>,
+    WeaverConfig {
+  [SYMBOLS.WEAVER_CONFIG]: `gqloom.prisma.model.${string}`
+}
+
+export interface PrismaModelSilkWithConfig<
+  TModel,
+  TName extends string = string,
+> extends GraphQLSilk<SelectiveModel<TModel, TName>> {}
+
+export type AnyPrismaModelSilk = PrismaModelSilk<
+  any,
+  string,
+  Record<string, any>
+>
 
 export type InferPrismaModelSilkRelations<T extends PrismaModelSilk<any, any>> =
   NonNullable<T["relations"]>
@@ -27,6 +102,15 @@ export interface PrismaEnumSilk<TEnum> extends GraphQLSilk<TEnum> {
 }
 
 export interface PrismaWeaverConfigOptions {
+  /**
+   * Emit id fields (Prisma @id) as GraphQL `ID` scalar in **output** types only.
+   * When `true` (default), object type id fields use GraphQLID (e.g. for Relay).
+   * When `false`, id fields use underlying scalar (Int / String).
+   * Input types (WhereUniqueInput, CreateInput, etc.) always use Int/String so Prisma receives the correct type.
+   * @default true
+   */
+  emitIdAsIDType?: boolean
+
   presetGraphQLType?: (
     type: string,
     field?: DMMF.Field
@@ -38,6 +122,8 @@ export interface PrismaWeaverConfig
     PrismaWeaverConfigOptions {
   [SYMBOLS.WEAVER_CONFIG]: "gqloom.prisma"
 }
+
+export type PrismaInputOperation = "filters" | "create" | "update"
 
 export interface PrismaModelMeta {
   models: Record<string, DMMF.Model>
@@ -59,6 +145,13 @@ export interface PrismaDelegate {
   findUniqueOrThrow: (args: { where: any }) => any
   count: (args: any) => any
 }
+
+export type InferTModelSilkName<TModelSilk extends AnyPrismaModelSilk> =
+  TModelSilk extends { name: infer N }
+    ? N extends string
+      ? Capitalize<N>
+      : never
+    : never
 
 export type InferPrismaDelegate<
   TClient extends PrismaClient,
@@ -137,20 +230,29 @@ export interface IBatchPayload {
 
 export type SelectedModelFields<
   TSilk extends PrismaModelSilk<unknown, string, Record<string, unknown>>,
-> = TSilk extends PrismaModelSilk<
-  infer TModel,
-  infer TName,
-  Record<string, unknown>
->
-  ? {
-      [K in `__selective_${TName}_brand__`]: true
-    } & {
-      [K in keyof TModel]?: false | undefined
-    }
-  : never
+> =
+  TSilk extends PrismaModelSilk<
+    infer TModel,
+    infer TName,
+    Record<string, unknown>
+  >
+    ? {
+        [K in `__selective_${TName}_brand__`]: true
+      } & {
+        [K in keyof TModel]?: false | undefined
+      }
+    : never
 
 export type SelectiveModel<TModel, TName extends string> =
   | TModel
   | (Partial<TModel> & {
       [K in `__selective_${TName}_brand__`]: never
     })
+
+export interface PrismaTypes {
+  [key: string]: {
+    [key: string]: unknown
+  }
+}
+
+export type Getter<T> = T | (() => T)

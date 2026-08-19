@@ -3,12 +3,16 @@ import { createServer } from "node:http"
 import * as path from "node:path"
 import { weave } from "@gqloom/core"
 import { PrismaResolverFactory } from "@gqloom/prisma"
+import { PrismaPg } from "@prisma/adapter-pg"
 import { printSchema } from "graphql"
 import { createYoga } from "graphql-yoga"
-import { PrismaClient } from "./generated/client"
+import { PrismaClient } from "./generated/client/client"
 import { Post, User } from "./generated/gqloom"
 
-const db = new PrismaClient()
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
+})
+const db = new PrismaClient({ adapter })
 
 const userResolver = new PrismaResolverFactory(User, db).resolver()
 const postResolver = new PrismaResolverFactory(Post, db).resolver()

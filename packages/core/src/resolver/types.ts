@@ -1,12 +1,17 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec"
 import type {
+  GraphQLArgumentConfig,
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
   GraphQLResolveInfo,
 } from "graphql"
-import type { MayPromise, Middleware, RequireKeys } from "../utils"
-import type { FIELD_HIDDEN, GET_GRAPHQL_TYPE } from "../utils/symbols"
+import type { MayGetter, MayPromise, Middleware, RequireKeys } from "../utils"
+import type {
+  FIELD_HIDDEN,
+  GET_GRAPHQL_ARGUMENT_CONFIG,
+  GET_GRAPHQL_TYPE,
+} from "../utils/symbols"
 import type { InferInputO } from "./input"
 import type {
   FieldChainFactory,
@@ -27,13 +32,20 @@ export interface GraphQLSilk<TOutput = any, TInput = any>
   /**
    * GraphQL type for schema
    */
-  [GET_GRAPHQL_TYPE]?: () => GraphQLOutputType
+  [GET_GRAPHQL_TYPE]?: MayGetter<GraphQLOutputType>
+
+  /**
+   * GraphQL argument config for schema
+   */
+  [GET_GRAPHQL_ARGUMENT_CONFIG]?: MayGetter<
+    Omit<GraphQLArgumentConfig, "type" | "astNode"> | undefined
+  >
 }
 
 export interface ResolverOptions<
   TField extends Loom.FieldOrOperation = Loom.FieldOrOperation,
 > {
-  middlewares?: Middleware<TField>[]
+  middlewares?: Middleware<TField>[] | undefined
 }
 
 export interface ResolverOptionsWithExtensions<
@@ -44,9 +56,11 @@ export interface ResolverOptionsWithExtensions<
 export interface ResolverOptionsWithParent<
   TField extends Loom.FieldOrOperation = Loom.FieldOrOperation,
 > extends ResolverOptionsWithExtensions<TField> {
-  parent?: TField extends Loom.Field<infer TParent, any, any, any>
-    ? TParent
-    : undefined
+  parent?:
+    | (TField extends Loom.Field<infer TParent, any, any, any>
+        ? TParent
+        : undefined)
+    | undefined
 }
 
 export interface ResolvingOptions extends Pick<ResolverOptions, "middlewares"> {
@@ -77,7 +91,7 @@ export interface QueryOptions<
   TInput extends GraphQLSilk | Record<string, GraphQLSilk> | void = void,
 > extends ResolverOptions<Loom.Query<TOutput, TInput>>,
     GraphQLFieldOptions {
-  input?: TInput
+  input?: TInput | undefined
   resolve: (
     input: InferInputO<TInput>,
     payload: ResolverPayload | undefined
@@ -95,7 +109,7 @@ export interface MutationOptions<
     | undefined = undefined,
 > extends ResolverOptions<Loom.Mutation<TOutput, TInput>>,
     GraphQLFieldOptions {
-  input?: TInput
+  input?: TInput | undefined
   resolve: (
     input: InferInputO<TInput>,
     payload: ResolverPayload | undefined
@@ -176,8 +190,8 @@ export interface FieldOptions<
   TDependencies extends string[] | undefined = undefined,
 > extends ResolverOptions<Loom.Field<TParent, TOutput, TInput, TDependencies>>,
     GraphQLFieldOptions {
-  input?: TInput
-  dependencies?: TDependencies
+  input?: TInput | undefined
+  dependencies?: TDependencies | undefined
   resolve: (
     parent: TDependencies extends string[]
       ? RequireKeys<
@@ -267,16 +281,18 @@ export interface SubscriptionOptions<
   TValue = StandardSchemaV1.InferOutput<TOutput>,
 > extends ResolverOptions<Loom.Subscription<TOutput, TInput, TValue>>,
     GraphQLFieldOptions {
-  input?: TInput
+  input?: TInput | undefined
   subscribe: (
     input: InferInputO<TInput>,
     payload: ResolverPayload | undefined
   ) => MayPromise<AsyncIterator<TValue>>
-  resolve?: (
-    value: TValue,
-    input: InferInputO<TInput>,
-    payload: ResolverPayload | undefined
-  ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>
+  resolve?:
+    | ((
+        value: TValue,
+        input: InferInputO<TInput>,
+        payload: ResolverPayload | undefined
+      ) => MayPromise<StandardSchemaV1.InferOutput<TOutput>>)
+    | undefined
 }
 
 /**
