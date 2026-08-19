@@ -10,6 +10,8 @@ import { Tabs } from '@/components/tabs'
 - Use Drizzle Table as [Silk](../silk);
 - Use the resolver factory to quickly create CRUD operations from Drizzle.
 
+`@gqloom/drizzle` supports Drizzle Relational Query API v1 (`drizzle-orm` 0.x, `@gqloom/drizzle`) and v2 (`drizzle-orm` 1.0, `@gqloom/drizzle@rc`). Use the **Relational API v1 / v2** tabs to switch examples; they stay in sync across this page.
+
 ## Installation
 
 <!--@include: ../../snippets/install-drizzle.md-->
@@ -18,172 +20,33 @@ import { Tabs } from '@/components/tabs'
 
 We can easily use Drizzle Schemas as [Silk](../silk) by simply wrapping them with `drizzleSilk`.
 
-```ts twoslash title="schema.ts" tab="schema.ts"
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
+<Tabs groupId="drizzle-api-version">
+<template #Relational_API_v2>
 
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
+<!--@include: @/snippets/drizzle/v2-silk-schema.md-->
 
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-```
+</template>
+<template #Relational_API_v1>
 
-```ts twoslash title="relations.ts" tab="relations.ts"
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
+<!--@include: @/snippets/drizzle/v1-silk-schema.md-->
 
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
-
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-// @filename: relations.ts
-// ---cut---
-import { defineRelations } from "drizzle-orm"
-import * as tables from "./schema"
-
-export const relations = defineRelations(tables, (r) => ({
-  users: {
-    posts: r.many.posts({
-      from: r.users.id,
-      to: r.posts.authorId,
-    }),
-  },
-  posts: {
-    author: r.one.users({
-      from: r.posts.authorId,
-      to: r.users.id,
-    }),
-  },
-}))
-```
+</template>
+</Tabs>
 
 Let's use them in the resolver. At the same time, we use the `useSelectedColumns()` function to know which columns are needed for the current GraphQL query: 
 
-```ts twoslash title="resolver.ts"
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
+<Tabs groupId="drizzle-api-version">
+<template #Relational_API_v2>
 
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
+<!--@include: @/snippets/drizzle/v2-silk-resolver.md-->
 
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-// @filename: relations.ts
-import { defineRelations } from "drizzle-orm"
-import * as tables from "./schema"
+</template>
+<template #Relational_API_v1>
 
-export const relations = defineRelations(tables, (r) => ({
-  users: {
-    posts: r.many.posts({
-      from: r.users.id,
-      to: r.posts.authorId,
-    }),
-  },
-  posts: {
-    author: r.one.users({
-      from: r.posts.authorId,
-      to: r.users.id,
-    }),
-  },
-}))
-// @filename: resolver.ts
-// ---cut---
-import { field, query, resolver } from "@gqloom/core"
-import { useSelectedColumns } from "@gqloom/drizzle/context"
-import { eq, inArray } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/libsql"
-import * as v from "valibot"
-import { relations } from "./relations"
-import { posts, users } from "./schema"
+<!--@include: @/snippets/drizzle/v1-silk-resolver.md-->
 
-const db = drizzle({
-  relations,
-  connection: { url: process.env.DB_FILE_NAME! },
-})
-
-export const usersResolver = resolver.of(users, {
-  user: query
-    .output(users.$nullable())
-    .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return db
-        .select(useSelectedColumns(users))
-        .from(users)
-        .where(eq(users.id, id))
-        .get()
-    }),
-
-  users: query.output(users.$list()).resolve(() => {
-    return db.select(useSelectedColumns(users)).from(users).all()
-  }),
-
-  posts: field
-    .output(posts.$list())
-    .derivedFrom("id")
-    .load(async (userList) => {
-      const postList = await db
-        .select()
-        .from(posts)
-        .where(
-          inArray(
-            users.id,
-            userList.map((user) => user.id)
-          )
-        )
-      const groups = new Map<number, (typeof posts.$inferSelect)[]>()
-
-      for (const post of postList) {
-        const key = post.authorId
-        if (key == null) continue
-        groups.set(key, [...(groups.get(key) ?? []), post])
-      }
-      return userList.map((user) => groups.get(user.id) ?? [])
-    }),
-})
-```
+</template>
+</Tabs>
 
 As shown in the code above, we can directly use the Drizzle Table wrapped by `drizzleSilk` in the `resolver`. 
 Here, we use `users` as the parent type of `resolver.of`, and define two queries named `user` and `users` and a field named `posts` in the resolver. Among them:
@@ -296,78 +159,12 @@ Sometimes we use `json`, `enum` columns in database tables, and we want to corre
 <Tabs groupId="drizzle-api-version">
 <template #Relational_API_v2>
 
-```ts [schema.ts]
-import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { drizzle } from "drizzle-orm/libsql"
-import { relations } from "./relations"
-import { users } from "./schema"
-
-const db = drizzle({
-  relations,
-  connection: { url: process.env.DB_FILE_NAME! },
-})
-
-const usersResolverFactory = drizzleResolverFactory(db, users)
-```
+<!--@include: @/snippets/drizzle/v2-factory-intro.md-->
 
 </template>
 <template #Relational_API_v1>
 
-```ts twoslash [schema.ts]
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
-
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-// @filename: relations.ts
-import { defineRelations } from "drizzle-orm"
-import * as tables from "./schema"
-
-export const relations = defineRelations(tables, (r) => ({
-  users: {
-    posts: r.many.posts({
-      from: r.users.id,
-      to: r.posts.authorId,
-    }),
-  },
-  posts: {
-    author: r.one.users({
-      from: r.posts.authorId,
-      to: r.users.id,
-    }),
-  },
-}))
-// @filename: resolver.ts
-// ---cut---
-import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { drizzle } from "drizzle-orm/libsql"
-import { relations } from "./relations"
-import { users } from "./schema"
-
-const db = drizzle({
-  relations,
-  connection: { url: process.env.DB_FILE_NAME! },
-})
-
-const usersResolverFactory = drizzleResolverFactory(db, users)
-```
+<!--@include: @/snippets/drizzle/v1-factory-intro.md-->
 
 </template>
 </Tabs>
@@ -376,114 +173,18 @@ const usersResolverFactory = drizzleResolverFactory(db, users)
 
 In Drizzle Table, we can easily create [relationships](https://orm.drizzle.team/docs/relations). We can use the `relationField` method of the resolver factory to create corresponding GraphQL fields for relationships.
 
-```ts twoslash [resolver.ts]
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
+<Tabs groupId="drizzle-api-version">
+<template #Relational_API_v2>
 
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
+<!--@include: @/snippets/drizzle/v2-relation-field.md-->
 
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-// @filename: relations.ts
-import { defineRelations } from "drizzle-orm"
-import * as tables from "./schema"
+</template>
+<template #Relational_API_v1>
 
-export const relations = defineRelations(tables, (r) => ({
-  users: {
-    posts: r.many.posts({
-      from: r.users.id,
-      to: r.posts.authorId,
-    }),
-  },
-  posts: {
-    author: r.one.users({
-      from: r.posts.authorId,
-      to: r.users.id,
-    }),
-  },
-}))
-// @filename: resolver.ts
-import { field, EasyDataLoader } from "@gqloom/core"
-import { createMemoization } from "@gqloom/core/context"
-import { posts } from "schema"
-// ---cut---
-import { query, resolver } from "@gqloom/core"
-import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { eq, inArray } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/libsql"
-import * as v from "valibot"
-import { relations } from "./relations"
-import { users } from "./schema"
+<!--@include: @/snippets/drizzle/v1-relation-field.md-->
 
-const db = drizzle({
-  relations,
-  connection: { url: process.env.DB_FILE_NAME! },
-})
-
-const usersResolverFactory = drizzleResolverFactory(db, users)
-
-const usePostsLoader = createMemoization( // [!code --]
-  () => // [!code --]
-    new EasyDataLoader< // [!code --]
-      { id: number }, // [!code --]
-      (typeof posts.$inferSelect)[] // [!code --]
-    >(async (userList) => { // [!code --]
-      const postList = await db // [!code --]
-        .select() // [!code --]
-        .from(posts) // [!code --]
-        .where( // [!code --]
-          inArray( // [!code --]
-            users.id, // [!code --]
-            userList.map((user) => user.id) // [!code --]
-          ) // [!code --]
-        ) // [!code --]
-      const groups = new Map<number, (typeof posts.$inferSelect)[]>() // [!code --]
-      // [!code --]
-      for (const post of postList) { // [!code --]
-        const key = post.authorId // [!code --]
-        if (key == null) continue // [!code --]
-        groups.set(key, [...(groups.get(key) ?? []), post]) // [!code --]
-      } // [!code --]
-      return userList.map((user) => groups.get(user.id) ?? []) // [!code --]
-    }) // [!code --]
-) // [!code --]
- 
-export const usersResolver = resolver.of(users, {
-  user: query
-    .output(users.$nullable())
-    .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return db.select().from(users).where(eq(users.id, id)).get()
-    }),
-
-  users: query.output(users.$list()).resolve(() => {
-    return db.select().from(users).all()
-  }),
-
-  posts_: field.output(posts.$list()) // [!code --]
-    .derivedFrom('id') // [!code --]
-    .resolve((user) => { // [!code --]
-      return usePostsLoader().load(user) // [!code --]
-    }), // [!code --]
-
-  posts: usersResolverFactory.relationField("posts"), // [!code ++]
-})
-```
+</template>
+</Tabs>
 
 ### Queries
 
@@ -492,6 +193,8 @@ The Drizzle resolver factory pre-defines some commonly used queries:
 - `selectArrayQuery`: Find multiple records in the corresponding table according to the conditions.
 - `selectSingleQuery`: Find a single record in the corresponding table according to the conditions.
 - `countQuery`: Count the number of records in the corresponding table according to the conditions.
+
+The query and mutation factories below use the same GQLoom API on both Relational API versions. Schema and `db` setup follow the version selected in the tabs above.
 
 We can use the queries from the resolver factory in the resolver:
 
@@ -892,23 +595,18 @@ To adapt to more Drizzle types, we can extend GQLoom to add more type mappings.
 
 First, we use `DrizzleWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSONObject` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering `date` and `json` types, we map them to the corresponding GraphQL scalars.
 
-```ts twoslash
-import { extractExtendedColumnType } from "drizzle-orm"
-import { GraphQLDateTime, GraphQLJSON } from "graphql-scalars"
-import { DrizzleWeaver } from "@gqloom/drizzle"
+<Tabs groupId="drizzle-api-version">
+<template #Relational_API_v2>
 
-const drizzleWeaverConfig = DrizzleWeaver.config({
-  presetGraphQLType: (column) => {
-    const { constraint } = extractExtendedColumnType(column)
-    if (constraint === "date") {
-      return GraphQLDateTime
-    }
-    if (constraint === "json") {
-      return GraphQLJSON
-    }
-  },
-})
-```
+<!--@include: @/snippets/drizzle/v2-type-mapping.md-->
+
+</template>
+<template #Relational_API_v1>
+
+<!--@include: @/snippets/drizzle/v1-type-mapping.md-->
+
+</template>
+</Tabs>
 
 Pass the configuration to the `weave` function when weaving the GraphQL Schema:
 
@@ -920,15 +618,17 @@ export const schema = weave(drizzleWeaverConfig, usersResolver, postsResolver)
 
 ## Default Type Mapping
 
-The following table lists the default mapping relationships between Drizzle `dataType` and GraphQL types in GQLoom:
+The following table lists the default mapping relationships between Drizzle types and GraphQL types in GQLoom:
 
-| Drizzle `dataType` | GraphQL Type     |
-| ------------------ | ---------------- |
-| boolean            | `GraphQLBoolean` |
-| number             | `GraphQLFloat`   |
-| json               | `GraphQLString`  |
-| date               | `GraphQLString`  |
-| bigint             | `GraphQLString`  |
-| string             | `GraphQLString`  |
-| buffer             | `GraphQLList`    |
-| array              | `GraphQLList`    |
+<Tabs groupId="drizzle-api-version">
+<template #Relational_API_v2>
+
+<!--@include: @/snippets/drizzle/v2-default-mapping.md-->
+
+</template>
+<template #Relational_API_v1>
+
+<!--@include: @/snippets/drizzle/v1-default-mapping.md-->
+
+</template>
+</Tabs>
