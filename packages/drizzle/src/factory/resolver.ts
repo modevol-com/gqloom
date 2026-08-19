@@ -14,13 +14,12 @@ import {
   silk,
 } from "@gqloom/core"
 import {
-  type Column,
   getTableColumns,
   getTableName,
   type InferSelectModel,
+  isTable,
   Many,
-  type Relation,
-  Table,
+  type Table,
   type TableRelationalConfig,
   type TablesRelationalConfig,
 } from "drizzle-orm"
@@ -31,7 +30,6 @@ import {
   type SelectiveTable,
   type TableSilk,
 } from ".."
-import { getSelectedColumns } from "../helper"
 import {
   type CountArgs,
   type DeleteArgs,
@@ -45,6 +43,7 @@ import {
   type SelectSingleArgs,
   type UpdateArgs,
 } from "./input"
+import { countRows, selectRow, selectRows } from "./query"
 import {
   RelationFieldSelector,
   RelationFieldsLoader,
@@ -115,14 +114,7 @@ export abstract class DrizzleResolverFactory<
       input,
       ...options,
       resolve: (opts: SelectArrayOptions | undefined, payload) => {
-        let query: any = (this.db as any)
-          .select(getSelectedColumns(this.table, payload))
-          .from(this.table)
-        if (opts?.where) query = query.where(opts.where)
-        if (opts?.orderBy?.length) query = query.orderBy(...opts.orderBy)
-        if (opts?.limit) query = query.limit(opts.limit)
-        if (opts?.offset) query = query.offset(opts.offset)
-        return query
+        return selectRows(this.db, this.table, payload, opts ?? {})
       },
     } as QueryOptions<any, any>)
   }
@@ -143,14 +135,7 @@ export abstract class DrizzleResolverFactory<
       input,
       ...options,
       resolve: (opts: SelectSingleOptions | undefined, payload) => {
-        let query: any = (this.db as any)
-          .select(getSelectedColumns(this.table, payload))
-          .from(this.table)
-        if (opts?.where) query = query.where(opts.where)
-        if (opts?.orderBy?.length) query = query.orderBy(...opts.orderBy)
-        query = query.limit(1)
-        if (opts?.offset) query = query.offset(opts.offset)
-        return query.then((res: any) => res[0])
+        return selectRow(this.db, this.table, payload, opts ?? {})
       },
     } as QueryOptions<any, any>)
   }
@@ -171,7 +156,7 @@ export abstract class DrizzleResolverFactory<
       input,
       ...options,
       resolve: (args: CountOptions) => {
-        return (this.db as any).$count(this.table, args.where)
+        return countRows(this.db, this.table, args.where)
       },
     } as QueryOptions<any, any>)
   }
@@ -202,11 +187,11 @@ export abstract class DrizzleResolverFactory<
         this.table
       )
       if (!tableConfig) return [undefined, undefined]
-      const relation = tableConfig.relations[relationName as string] as Relation
+      const relation = tableConfig.relations[String(relationName)]
       const targetTable = relation?.targetTable
       return [relation, targetTable]
     })()
-    if (!relation || !(targetTable instanceof Table)) {
+    if (!relation || !isTable(targetTable)) {
       throw new Error(
         `GQLoom-Drizzle Error: Relation ${this.tableName}.${String(
           relationName
@@ -233,9 +218,10 @@ export abstract class DrizzleResolverFactory<
     >
 
     const columnKeys = new Map(
-      Object.entries(
-        getTableColumns(targetTable) as Record<string, Column>
-      ).map(([name, col]) => [col.name, name])
+      Object.entries(getTableColumns(targetTable)).map(([name, col]) => [
+        col.name,
+        name,
+      ])
     )
     const dependencies = relation.sourceColumns.map(
       (col) => columnKeys.get(col.name) ?? col.name

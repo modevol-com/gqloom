@@ -1,7 +1,8 @@
-import type { Table } from "drizzle-orm"
-import { MySqlAsyncDatabase, type MySqlTable } from "drizzle-orm/mysql-core"
-import { PgAsyncDatabase, type PgTable } from "drizzle-orm/pg-core"
-import type { SQLiteAsyncDatabase, SQLiteTable } from "drizzle-orm/sqlite-core"
+import { getTableName, isTable, type Table } from "drizzle-orm"
+import { MySqlAsyncDatabase, MySqlTable } from "drizzle-orm/mysql-core"
+import { PgAsyncDatabase, PgTable } from "drizzle-orm/pg-core"
+import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core"
+import { SQLiteTable } from "drizzle-orm/sqlite-core"
 import type { DrizzleResolverFactoryOptions } from "../types"
 import { DrizzleMySQLResolverFactory } from "./resolver-mysql"
 import { DrizzlePostgresResolverFactory } from "./resolver-postgres"
@@ -144,15 +145,40 @@ export function drizzleResolverFactory(
 ) {
   const table =
     typeof tableOrName === "string"
-      ? (db._.relations[tableOrName]?.table as Table)
+      ? requireNamedTable(db, tableOrName)
       : tableOrName
   if (db instanceof PgAsyncDatabase) {
-    return new DrizzlePostgresResolverFactory(db, table as PgTable, options)
+    if (!(table instanceof PgTable)) {
+      throw new Error(
+        `GQLoom-Drizzle Error: Expected a PostgreSQL table, got ${getTableName(table)}`
+      )
+    }
+    return new DrizzlePostgresResolverFactory(db, table, options)
   }
   if (db instanceof MySqlAsyncDatabase) {
-    return new DrizzleMySQLResolverFactory(db, table as MySqlTable, options)
+    if (!(table instanceof MySqlTable)) {
+      throw new Error(
+        `GQLoom-Drizzle Error: Expected a MySQL table, got ${getTableName(table)}`
+      )
+    }
+    return new DrizzleMySQLResolverFactory(db, table, options)
   }
-  return new DrizzleSQLiteResolverFactory(db, table as SQLiteTable, options)
+  if (!(table instanceof SQLiteTable)) {
+    throw new Error(
+      `GQLoom-Drizzle Error: Expected a SQLite table, got ${getTableName(table)}`
+    )
+  }
+  return new DrizzleSQLiteResolverFactory(db, table, options)
+}
+
+function requireNamedTable(db: BaseDatabase, tableName: string): Table {
+  const table = db._.relations[tableName]?.table
+  if (!isTable(table)) {
+    throw new Error(
+      `GQLoom-Drizzle Error: Table "${tableName}" not found in drizzle relations`
+    )
+  }
+  return table
 }
 
 export * from "./input"

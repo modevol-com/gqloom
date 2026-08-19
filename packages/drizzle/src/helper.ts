@@ -70,12 +70,31 @@ export function getEnumNameByColumn(column: Column): string | undefined {
 
   const useColumnName = () =>
     `${pascalCase(getTableName(getColumnTable(column)))}${pascalCase(column.name)}Enum`
-  if ("config" in column && "enum" in (column as any).config) {
-    const enumName = (column as any).config.enum.enumName
-    if (enumName) return pascalCase(enumName)
-  }
+  const enumName = pgEnumNameFromColumn(column)
+  if (enumName) return pascalCase(enumName)
 
   return useColumnName()
+}
+
+function pgEnumNameFromColumn(column: Column): string | undefined {
+  const fromColumn = enumNameFromUnknown(Reflect.get(column, "enum"))
+  if (fromColumn) return fromColumn
+
+  const config = Reflect.get(column, "config")
+  if (!isObjectOrFunction(config)) return undefined
+  return enumNameFromUnknown(Reflect.get(config, "enum"))
+}
+
+function enumNameFromUnknown(value: unknown): string | undefined {
+  if (!isObjectOrFunction(value)) return undefined
+  const enumName = Reflect.get(value, "enumName")
+  return typeof enumName === "string" ? enumName : undefined
+}
+
+function isObjectOrFunction(value: unknown): value is object {
+  return (
+    value != null && (typeof value === "object" || typeof value === "function")
+  )
 }
 
 export function isColumnVisible(
