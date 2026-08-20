@@ -10,12 +10,12 @@ import { Tabs } from '@/components/tabs'
 - 使用 Drizzle Table 作为[丝线](../silk)使用；
 - 使用解析器工厂从 Drizzle 快速生成 CRUD 操作。
 
-GQLoom 文档同时覆盖两个 Drizzle Relational API 版本。**推荐使用 v2 (rc)**。本页中的版本标签会保持同步。
+GQLoom 文档同时覆盖 [Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1)（当前通过 `drizzle-orm@rc` 安装，**推荐**）和 0.x。Drizzle v1 使用 [Relational Queries v2](https://orm.drizzle.team/docs/relations-v1-v2)（`defineRelations`）；0.x 使用 Relational Queries v1（`relations`）。本页中的版本标签会保持同步。
 
-| 版本 | `drizzle-orm` | `@gqloom/drizzle` |
-| --- | --- | --- |
-| **v2（rc，推荐）** | `1.0.0-rc.4+`（`drizzle-orm@rc`） | `0.17.0-rc.0+`（`@gqloom/drizzle@rc`） |
-| v1 | `0.44+` | `0.16.x`（latest） |
+| Drizzle | Relational Queries | `drizzle-orm` | `@gqloom/drizzle` |
+| --- | --- | --- | --- |
+| **v1** (`@rc`) | v2 | `1.0.0-rc.4+` | `0.17.0-rc.0+` (`@gqloom/drizzle@rc`) |
+| 0.x | v1 | `0.44+` | `0.16.x` |
 
 ## 安装
 
@@ -141,7 +141,7 @@ export const usersResolver = resolver.of(users, {
 
 <!--@include: ../../../snippets/drizzle/factory-setup.md-->
 
-下面的查询、变更和字段辅助方法在两个版本上 API 相同。v2 使用 `relations` 创建 `db`，v1 使用 `schema`，如上所示。
+下面的查询、变更和字段辅助方法在两个版本上 API 相同。Drizzle v1 使用 `relations` 创建 `db`，0.x 使用 `schema`，如上所示。
 
 ### 关系字段
 
@@ -667,7 +667,7 @@ const usersResolver = usersResolverFactory.resolver()
 
 为了适应更多的 Drizzle 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
 
-首先我们使用 `DrizzleWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime` 和 `GraphQLJSON`，当遇到 `date` 和 `json` 类型时，我们将其映射到对应的 GraphQL 标量。v2 使用 `extractExtendedColumnType`，v1 使用 `column.dataType`。
+首先我们使用 `DrizzleWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime` 和 `GraphQLJSON`，当遇到 `date` 和 `json` 类型时，我们将其映射到对应的 GraphQL 标量。Drizzle v1 使用 `extractExtendedColumnType`，0.x 使用 `column.dataType`。
 
 <!--@include: ../../../snippets/drizzle/custom-type-mapping.md-->
 

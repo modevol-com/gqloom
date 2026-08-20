@@ -10,12 +10,12 @@ import { Tabs } from '@/components/tabs'
 - Use Drizzle Table as [Silk](../silk);
 - Use the resolver factory to quickly create CRUD operations from Drizzle.
 
-GQLoom documents two Drizzle Relational API versions. **v2 (rc) is recommended.** Version tabs on this page stay in sync.
+GQLoom documents [Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1) (currently `drizzle-orm@rc`, **recommended**) and 0.x. Drizzle v1 uses [Relational Queries v2](https://orm.drizzle.team/docs/relations-v1-v2) (`defineRelations`); 0.x uses Relational Queries v1 (`relations`). Version tabs on this page stay in sync.
 
-| Version | `drizzle-orm` | `@gqloom/drizzle` |
-| --- | --- | --- |
-| **v2 (rc, recommended)** | `1.0.0-rc.4+` (`drizzle-orm@rc`) | `0.17.0-rc.0+` (`@gqloom/drizzle@rc`) |
-| v1 | `0.44+` | `0.16.x` (latest) |
+| Drizzle | Relational Queries | `drizzle-orm` | `@gqloom/drizzle` |
+| --- | --- | --- | --- |
+| **v1** (`@rc`) | v2 | `1.0.0-rc.4+` | `0.17.0-rc.0+` (`@gqloom/drizzle@rc`) |
+| 0.x | v1 | `0.44+` | `0.16.x` |
 
 ## Installation
 
@@ -141,7 +141,7 @@ Sometimes we use `json`, `enum` columns in database tables, and we want to corre
 
 <!--@include: ../../snippets/drizzle/factory-setup.md-->
 
-The query, mutation, and field helpers below share the same API on both versions. Create `db` with `relations` on v2, or with `schema` on v1, as shown above.
+The query, mutation, and field helpers below share the same API on both versions. Create `db` with `relations` on Drizzle v1, or with `schema` on 0.x, as shown above.
 
 ### Relationship Fields
 
@@ -667,7 +667,7 @@ There are two functions for creating Resolvers:
 
 To adapt to more Drizzle types, we can extend GQLoom to add more type mappings.
 
-First, we use `DrizzleWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSON` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering `date` and `json` types, we map them to the corresponding GraphQL scalars. v2 uses `extractExtendedColumnType`; v1 uses `column.dataType`.
+First, we use `DrizzleWeaver.config` to define the configuration of type mapping. Here we import `GraphQLDateTime` and `GraphQLJSON` from [graphql-scalars](https://the-guild.dev/graphql/scalars). When encountering `date` and `json` types, we map them to the corresponding GraphQL scalars. Drizzle v1 uses `extractExtendedColumnType`; 0.x uses `column.dataType`.
 
 <!--@include: ../../snippets/drizzle/custom-type-mapping.md-->
 

@@ -1,7 +1,7 @@
 <Tabs groupId="drizzle-api-version">
-<template #v2_(rc)>
+<template #v1_(rc)>
 
-Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration. For Relational API v2, install `drizzle-orm@rc`.
+Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) and [Upgrading to Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1). Install `drizzle-orm@rc` (this uses [Relational Queries v2](https://orm.drizzle.team/docs/relations-v1-v2)).
 
 After completing the Drizzle installation, install `@gqloom/drizzle@rc`:
 
@@ -24,9 +24,9 @@ deno add npm:graphql npm:@gqloom/core npm:drizzle-orm@rc npm:@gqloom/drizzle@rc
 :::
 
 </template>
-<template #v1>
+<template #_0__x>
 
-Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration.
+Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration (drizzle-orm 0.x, Relational Queries v1).
 
 After completing the Drizzle installation, install `@gqloom/drizzle`:
 

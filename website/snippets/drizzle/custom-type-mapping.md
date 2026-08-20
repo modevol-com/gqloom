@@ -1,5 +1,5 @@
 <Tabs groupId="drizzle-api-version">
-<template #v2_(rc)>
+<template #v1_(rc)>
 
 ```ts twoslash
 import { extractExtendedColumnType } from "drizzle-orm"
@@ -20,7 +20,7 @@ const drizzleWeaverConfig = DrizzleWeaver.config({
 ```
 
 </template>
-<template #v1>
+<template #_0__x>
 
 ```ts twoslash
 // @paths: {"@gqloom/drizzle":["node_modules/@gqloom/drizzle-rqbv1/dist/index.d.ts"],"@gqloom/drizzle/context":["node_modules/@gqloom/drizzle-rqbv1/dist/context.d.ts"],"drizzle-orm":["node_modules/drizzle-orm-rqbv1/index.d.ts"],"drizzle-orm/sqlite-core":["node_modules/drizzle-orm-rqbv1/sqlite-core/index.d.ts"],"drizzle-orm/libsql":["node_modules/drizzle-orm-rqbv1/libsql/index.d.ts"]}
