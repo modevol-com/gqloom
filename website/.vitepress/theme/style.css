@@ -200,6 +200,8 @@
 
     /* Capsule wrapping all controls on the right: 40px height, adaptive width, semi-transparent frosted glass + shadow + rounded corners, right padding reserved */
     >.content-body {
+      /* VitePress menu/flyout height and line-height read this variable (default 64px). */
+      --vp-nav-height: 40px;
       @apply h-10 flex flex-row items-center bg-(--vp-c-bg)/40 backdrop-blur-sm shadow-sm rounded-lg;
       @apply pr-4 mr-0;
 
@@ -209,12 +211,6 @@
         @apply h-10;
       }
 
-      /*
-       * VitePress 2 wraps nav items in `nav > ul.list > li > a`.
-       * Default `.VPNavBarMenuLink` / flyout `.button` / `.text` still use
-       * `line-height` / `height: var(--vp-nav-height)` (64px), so text sits
-       * at the bottom of the 40px capsule. Reset the nested chain to 40px.
-       */
       .VPNavBarMenu .list,
       .VPNavBarMenu .list > li {
         @apply flex h-10 items-center;
@@ -223,8 +219,8 @@
       .VPNavBarMenuLink,
       .VPFlyout .button,
       .VPFlyout .text {
-        height: 40px;
-        line-height: 40px;
+        height: 40px !important;
+        line-height: 40px !important;
       }
     }
   }
