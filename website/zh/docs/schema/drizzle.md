@@ -10,8 +10,6 @@ import { Tabs } from '@/components/tabs'
 - 使用 Drizzle Table 作为[丝线](../silk)使用；
 - 使用解析器工厂从 Drizzle 快速生成 CRUD 操作。
 
-GQLoom 文档同时覆盖 [Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1)（当前通过 `drizzle-orm@rc` 安装，**推荐**）和 v0，命名与 Drizzle 的 [v0 → v1](https://orm.drizzle.team/docs/v0-v1-changes) 一致。Drizzle v1 使用 [Relational Queries v2](https://orm.drizzle.team/docs/relations-v1-v2)（`defineRelations`）；v0 使用 Relational Queries v1（`relations`）。本页中的版本标签会保持同步。
-
 | Drizzle | Relational Queries | `drizzle-orm` | `@gqloom/drizzle` |
 | --- | --- | --- | --- |
 | **v1** (`@rc`) | v2 | `1.0.0-rc.4+` | `0.17.0-rc.0+` (`@gqloom/drizzle@rc`) |
@@ -140,8 +138,6 @@ export const usersResolver = resolver.of(users, {
 `gqloom/drizzle` 提供了解析器工厂 `DrizzleResolverFactory`，用于从 Drizzle 轻松地生成 CRUD 解析器，同时支持自定参数和添加中间件。
 
 <!--@include: ../../../snippets/drizzle/factory-setup.md-->
-
-下面的查询、变更和字段辅助方法在两个版本上 API 相同。Drizzle v1 使用 `relations` 创建 `db`，v0 使用 `schema`，如上所示。
 
 ### 关系字段
 

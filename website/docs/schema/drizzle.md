@@ -10,8 +10,6 @@ import { Tabs } from '@/components/tabs'
 - Use Drizzle Table as [Silk](../silk);
 - Use the resolver factory to quickly create CRUD operations from Drizzle.
 
-GQLoom documents [Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1) (currently `drizzle-orm@rc`, **recommended**) and v0, matching Drizzle's [v0 → v1](https://orm.drizzle.team/docs/v0-v1-changes) naming. Drizzle v1 uses [Relational Queries v2](https://orm.drizzle.team/docs/relations-v1-v2) (`defineRelations`); v0 uses Relational Queries v1 (`relations`). Version tabs on this page stay in sync.
-
 | Drizzle | Relational Queries | `drizzle-orm` | `@gqloom/drizzle` |
 | --- | --- | --- | --- |
 | **v1** (`@rc`) | v2 | `1.0.0-rc.4+` | `0.17.0-rc.0+` (`@gqloom/drizzle@rc`) |
@@ -140,8 +138,6 @@ Sometimes we use `json`, `enum` columns in database tables, and we want to corre
 `gqloom/drizzle` provides a resolver factory `DrizzleResolverFactory` to easily create CRUD resolvers from Drizzle, and it also supports custom parameters and adding middleware.
 
 <!--@include: ../../snippets/drizzle/factory-setup.md-->
-
-The query, mutation, and field helpers below share the same API on both versions. Create `db` with `relations` on Drizzle v1, or with `schema` on v0, as shown above.
 
 ### Relationship Fields
 
