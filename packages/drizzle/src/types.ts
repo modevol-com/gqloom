@@ -72,23 +72,39 @@ export type DrizzleFactoryInputBehaviors<TTable extends Table> = {
   "*"?: ColumnBehavior<never> | boolean | undefined
 }
 
+export type DrizzleSilkFieldType =
+  | GraphQLOutputType
+  | GraphQLSilk<any, any>
+  | typeof SYMBOLS.FIELD_HIDDEN
+  | null
+
+/**
+ * A `drizzleSilk` field override: GraphQL type, Silk (Zod / Valibot / `silk()`),
+ * field config object, or `FIELD_HIDDEN`.
+ */
+export type DrizzleSilkFieldConfig =
+  | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
+      /**
+       * The type of the field, set to `null` to hide the field.
+       * Accepts a GraphQL output type, a Silk, or a getter of either.
+       */
+      type?: ValueOrGetter<DrizzleSilkFieldType> | undefined
+    })
+  | GraphQLSilk<any, any>
+  | GraphQLOutputType
+  | typeof SYMBOLS.FIELD_HIDDEN
+  | undefined
+
+export interface ResolvedDrizzleFieldConfig {
+  hidden: boolean
+  type: GraphQLOutputType | undefined
+  options: Omit<GraphQLFieldConfig<any, any>, "type">
+}
+
 export interface DrizzleSilkConfig<TTable extends Table>
   extends Partial<Omit<GraphQLObjectTypeConfig<any, any>, "fields">> {
   fields?: ValueOrGetter<{
-    [K in keyof TTable["_"]["columns"]]?:
-      | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
-          /**
-           * The type of the field, set to `null` to hide the field
-           */
-          type?:
-            | GraphQLOutputType
-            | typeof SYMBOLS.FIELD_HIDDEN
-            | null
-            | (() => GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN | null)
-            | undefined
-        })
-      | typeof SYMBOLS.FIELD_HIDDEN
-      | undefined
+    [K in keyof TTable["_"]["columns"]]?: DrizzleSilkFieldConfig
   }>
 }
 

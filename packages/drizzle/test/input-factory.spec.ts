@@ -1,7 +1,9 @@
 import {
   field,
+  type GraphQLSilk,
   initWeaverContext,
   provideWeaverContext,
+  silk,
   weave,
 } from "@gqloom/core"
 import { ValibotWeaver } from "@gqloom/valibot"
@@ -10,6 +12,7 @@ import { drizzle } from "drizzle-orm/node-postgres"
 import * as pg from "drizzle-orm/pg-core"
 import {
   type GraphQLEnumType,
+  GraphQLFloat,
   type GraphQLObjectType,
   GraphQLScalarType,
   lexicographicSortSchema,
@@ -25,6 +28,7 @@ import {
   drizzleResolverFactory,
   drizzleSilk,
 } from "../src"
+import { DrizzleArgsTransformer } from "../src/factory/transform"
 import type { DrizzleFactoryInputBehaviors } from "../src/types"
 
 describe("DrizzleInputFactory", () => {
@@ -271,6 +275,148 @@ describe("DrizzleInputFactory", () => {
           email: EmailAddress
         }"
       `)
+    })
+
+    it("should accept GraphQL type as a field value in InsertInput", () => {
+      const users = drizzleSilk(
+        pg.pgTable("userTagsAsValue", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: EmailAddress } }
+      )
+      expect(printType(new DrizzleInputFactory(users).insertInput())).toBe(
+        "type UserTagsAsValueInsertInput {\n  id: Int\n  email: EmailAddress!\n}"
+      )
+    })
+
+    it("should omit hidden fields from InsertInput and UpdateInput", () => {
+      const users = drizzleSilk(
+        pg.pgTable("userTagsHidden", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+          password: pg.text("password").notNull(),
+        }),
+        { fields: { password: field.hidden } }
+      )
+      const factory = new DrizzleInputFactory(users)
+      expect(printType(factory.insertInput())).toMatchInlineSnapshot(`
+        "type UserTagsHiddenInsertInput {
+          id: Int
+          email: String!
+        }"
+      `)
+      expect(printType(factory.updateInput())).toMatchInlineSnapshot(`
+        "type UserTagsHiddenUpdateInput {
+          id: Int
+          email: String
+        }"
+      `)
+    })
+  })
+
+  describe("silk field types", () => {
+    const weaverContext = initWeaverContext()
+    weaverContext.vendorWeavers.set(ValibotWeaver.vendor, ValibotWeaver)
+
+    it("should use Silk field types in InsertInput and UpdateInput", () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkUsers", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const factory = new DrizzleInputFactory(users)
+      expect(
+        printType(
+          provideWeaverContext(() => factory.insertInput(), weaverContext)
+        )
+      ).toMatchInlineSnapshot(`
+        "type SilkUsersInsertInput {
+          id: Int
+          email: String!
+        }"
+      `)
+      expect(
+        printType(
+          provideWeaverContext(() => factory.updateInput(), weaverContext)
+        )
+      ).toMatchInlineSnapshot(`
+        "type SilkUsersUpdateInput {
+          id: Int
+          email: String
+        }"
+      `)
+    })
+
+    it("should let factory input override fields Silk", () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkUsersOverride", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const factory = new DrizzleInputFactory(users, {
+        input: {
+          email: silk(GraphQLFloat) as unknown as GraphQLSilk<string>,
+        },
+      })
+      expect(
+        printType(
+          provideWeaverContext(() => factory.insertInput(), weaverContext)
+        )
+      ).toMatchInlineSnapshot(`
+        "type SilkUsersOverrideInsertInput {
+          id: Int
+          email: Float!
+        }"
+      `)
+    })
+  })
+
+  describe("insert/update validation from fields Silk", () => {
+    it("validates insert using fields Silk when factory input is absent", async () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkValidateUsers", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const transformer = new DrizzleArgsTransformer(users, undefined)
+      const invalid = await transformer.toInsertSingleOptions({
+        value: { email: "not-an-email" },
+      })
+      expect(invalid.issues).toBeDefined()
+      const valid = await transformer.toInsertSingleOptions({
+        value: { email: "user@example.com" },
+      })
+      expect(valid).toMatchObject({
+        value: { value: { email: "user@example.com" } },
+      })
+    })
+
+    it("lets factory input Silk override fields Silk for insert validation", async () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkValidateOverrideUsers", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const transformer = new DrizzleArgsTransformer(users, {
+        input: { email: v.pipe(v.string(), v.minLength(8)) },
+      })
+      const tooShortEmail = await transformer.toInsertSingleOptions({
+        value: { email: "a@b.com" },
+      })
+      expect(tooShortEmail.issues).toBeDefined()
+      const longNonEmail = await transformer.toInsertSingleOptions({
+        value: { email: "not-mail" },
+      })
+      expect(longNonEmail.issues).toBeUndefined()
     })
   })
 

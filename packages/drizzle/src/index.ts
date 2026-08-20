@@ -1,5 +1,6 @@
 import {
   type GraphQLSilk,
+  isSilk,
   mapValue,
   pascalCase,
   type StandardSchemaV1,
@@ -23,6 +24,7 @@ import { SQLiteInteger } from "drizzle-orm/sqlite-core"
 import {
   GraphQLBoolean,
   GraphQLEnumType,
+  type GraphQLFieldConfig,
   GraphQLFloat,
   GraphQLInt,
   GraphQLList,
@@ -31,13 +33,16 @@ import {
   type GraphQLOutputType,
   GraphQLString,
   isNonNullType,
+  isOutputType,
 } from "graphql"
 import { getEnumNameByColumn, getValue } from "./helper"
 import type {
   DrizzleSilkConfig,
+  DrizzleSilkFieldConfig,
   DrizzleWeaverConfig,
   DrizzleWeaverConfigOptions,
   HideFields,
+  ResolvedDrizzleFieldConfig,
   SelectiveTable,
 } from "./types"
 
@@ -52,13 +57,19 @@ export class DrizzleWeaver {
   public static unravel<TTable extends Table>(
     table: TTable
   ): TableSilk<TTable> {
+    let compiledValidate:
+      | StandardSchemaV1.Props<unknown, unknown>["validate"]
+      | undefined
     Object.defineProperty(table, "~standard", {
       value: {
         version: 1,
         vendor: DrizzleWeaver.vendor,
-        validate: (value: unknown) => ({
-          value: value as InferSelectModel<TTable>,
-        }),
+        validate: (value: unknown) => {
+          compiledValidate ??= DrizzleWeaver.compileValidator(
+            DrizzleWeaver.silkConfigs.get(table)
+          )
+          return compiledValidate(value)
+        },
       } satisfies StandardSchemaV1.Props<InferSelectModel<TTable>, unknown>,
       enumerable: false,
       writable: true,
@@ -110,6 +121,7 @@ export class DrizzleWeaver {
       return new GraphQLNonNull(existing as GraphQLObjectType)
     }
 
+    const { fields: _fields, ...objectConfig } = config ?? {}
     const fieldsConfig = getValue(config?.fields) ?? {}
 
     const columns = getTableColumns(table)
@@ -117,27 +129,161 @@ export class DrizzleWeaver {
       weaverContext.memoNamedType(
         new GraphQLObjectType({
           name,
-          ...config,
+          ...objectConfig,
           fields: mapValue(columns, (column, columnName) => {
-            const fieldConfig = fieldsConfig[columnName]
-            if (fieldConfig === SYMBOLS.FIELD_HIDDEN) return mapValue.SKIP
-            const fieldType = getValue(fieldConfig?.type)
-            let type =
-              fieldType === undefined
-                ? DrizzleWeaver.getColumnType(column)
-                : fieldType
+            const resolved = DrizzleWeaver.resolveFieldConfig(
+              fieldsConfig[columnName]
+            )
+            if (resolved.hidden) return mapValue.SKIP
 
-            if (type === null || type === SYMBOLS.FIELD_HIDDEN)
-              return mapValue.SKIP
-
-            if (column.notNull && !isNonNullType(type)) {
-              type = new GraphQLNonNull(type)
-            }
-            return { ...fieldConfig, type }
+            const type = DrizzleWeaver.applyColumnNullability(
+              resolved.type ?? DrizzleWeaver.getColumnType(column),
+              column.notNull
+            )
+            return { ...resolved.options, type }
           }),
         })
       )
     )
+  }
+
+  /**
+   * Align output/input nullability with the column: required → NonNull, optional → nullable.
+   */
+  public static applyColumnNullability(
+    type: GraphQLOutputType,
+    notNull: boolean
+  ): GraphQLOutputType {
+    const ofType = isNonNullType(type) ? type.ofType : type
+    return notNull ? new GraphQLNonNull(ofType) : ofType
+  }
+
+  /**
+   * Normalize a `drizzleSilk` field override to GraphQL type, hidden flag, and field options.
+   */
+  public static resolveFieldConfig(
+    fieldConfig: DrizzleSilkFieldConfig
+  ): ResolvedDrizzleFieldConfig {
+    if (fieldConfig == null) {
+      return { hidden: false, type: undefined, options: {} }
+    }
+    if (fieldConfig === SYMBOLS.FIELD_HIDDEN) {
+      return { hidden: true, type: undefined, options: {} }
+    }
+    if (isSilk(fieldConfig)) {
+      return {
+        hidden: false,
+        type: silk.getType(fieldConfig),
+        options: {},
+      }
+    }
+    if (isOutputType(fieldConfig)) {
+      return { hidden: false, type: fieldConfig, options: {} }
+    }
+
+    const { type: typeGetter, ...options } = fieldConfig as {
+      type?: unknown
+    } & Omit<GraphQLFieldConfig<any, any>, "type">
+    const rawType = getValue(typeGetter as Parameters<typeof getValue>[0])
+    if (rawType === null || rawType === SYMBOLS.FIELD_HIDDEN) {
+      return { hidden: true, type: undefined, options: {} }
+    }
+    if (isSilk(rawType)) {
+      return { hidden: false, type: silk.getType(rawType), options }
+    }
+    if (rawType == null) {
+      return { hidden: false, type: undefined, options }
+    }
+    return { hidden: false, type: rawType as GraphQLOutputType, options }
+  }
+
+  /**
+   * Extract a Silk from a field override for validation (does not resolve GraphQL types).
+   */
+  public static getFieldSilk(
+    fieldConfig: DrizzleSilkFieldConfig
+  ): GraphQLSilk<any, any> | undefined {
+    if (fieldConfig == null || fieldConfig === SYMBOLS.FIELD_HIDDEN) {
+      return undefined
+    }
+    if (isSilk(fieldConfig)) return fieldConfig
+    if (isOutputType(fieldConfig)) return undefined
+    const rawType = (fieldConfig as { type?: unknown }).type
+    if (isSilk(rawType)) return rawType
+    if (typeof rawType === "function") {
+      try {
+        const resolved = (rawType as () => unknown)()
+        if (isSilk(resolved)) return resolved
+      } catch {
+        return undefined
+      }
+    }
+    return undefined
+  }
+
+  /**
+   * Compile a validate function from config.fields: each field with a Silk
+   * (`~standard.validate`) is validated; issues get path prefixed with the field key.
+   */
+  public static compileValidator(
+    config?: DrizzleSilkConfig<any>
+  ): StandardSchemaV1.Props<unknown, unknown>["validate"] {
+    const rawFields =
+      config?.fields == null
+        ? undefined
+        : typeof config.fields === "function"
+          ? config.fields()
+          : config.fields
+
+    if (rawFields == null || typeof rawFields !== "object") {
+      return (value: unknown) => ({ value })
+    }
+
+    const validators = new Map<
+      string,
+      StandardSchemaV1.Props<unknown, unknown>["validate"]
+    >()
+    for (const key of Object.keys(rawFields)) {
+      const fieldSilk = DrizzleWeaver.getFieldSilk(
+        (rawFields as Record<string, DrizzleSilkFieldConfig>)[key]
+      )
+      const validate = fieldSilk?.["~standard"]?.validate
+      if (typeof validate === "function") validators.set(key, validate)
+    }
+
+    if (validators.size === 0) {
+      return (value: unknown) => ({ value })
+    }
+
+    return async (value: unknown) => {
+      if (value == null || typeof value !== "object") return { value }
+      const valueObj = value as Record<string, unknown>
+      const entries = Array.from(validators.entries()).filter(
+        ([key]) => key in valueObj
+      )
+      if (entries.length === 0) return { value: valueObj }
+
+      const results = await Promise.all(
+        entries.map(async ([key, validateFn]) => ({
+          key,
+          fieldResult: await validateFn(valueObj[key]),
+        }))
+      )
+
+      const result = { ...valueObj }
+      const issues: StandardSchemaV1.Issue[] = []
+      for (const { key, fieldResult } of results) {
+        if (fieldResult.issues) {
+          for (const issue of fieldResult.issues) {
+            issues.push({ ...issue, path: [key, ...(issue.path ?? [])] })
+          }
+        } else if ("value" in fieldResult) {
+          result[key] = fieldResult.value
+        }
+      }
+      if (issues.length > 0) return { issues }
+      return { value: result }
+    }
   }
 
   public static getColumnType(column: Column): GraphQLOutputType {

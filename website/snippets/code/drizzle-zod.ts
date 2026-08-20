@@ -1,4 +1,3 @@
-import { silk } from "@gqloom/core"
 import { drizzleSilk } from "@gqloom/drizzle"
 import { asEnumType } from "@gqloom/zod"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
@@ -29,8 +28,8 @@ export const users = drizzleSilk(
   }),
   {
     fields: () => ({
-      role: { type: silk.getType(Role) },
-      contactInformation: { type: silk.getType(z.nullish(ContactInformation)) },
+      role: Role,
+      contactInformation: z.nullish(ContactInformation),
     }),
   }
 )

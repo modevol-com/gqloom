@@ -2,7 +2,6 @@ import {
   getGraphQLType,
   mapValue,
   pascalCase,
-  SYMBOLS,
   weaverContext,
 } from "@gqloom/core"
 import {
@@ -242,11 +241,14 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLEnumType({
         name,
         values: mapValue(getTableColumns(this.table), (_, columnName) => {
-          const columnConfig = DrizzleInputFactory.getColumnConfig(
+          const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
             columnName
           )
-          return { value: columnName, description: columnConfig?.description }
+          return {
+            value: columnName,
+            description: columnConfig.options.description,
+          }
         }),
       })
     )
@@ -256,10 +258,10 @@ export class DrizzleInputFactory<TTable extends Table> {
     key: string,
     mutation: "insert" | "update",
     column: Column,
-    columnConfig: ReturnType<typeof DrizzleInputFactory.getColumnConfig>
+    columnConfig: ReturnType<typeof DrizzleInputFactory.getResolvedColumnConfig>
   ) {
     const colSilk = (() => {
-      const behavior = this.options?.input[key]
+      const behavior = this.options?.input?.[key]
       if (typeof behavior != "object" || behavior == null) return undefined
       if ("~standard" in behavior) {
         return behavior
@@ -273,7 +275,7 @@ export class DrizzleInputFactory<TTable extends Table> {
       return mutationConfigBehavior
     })()
     if (colSilk != null) return getGraphQLType(colSilk)
-    return getValue(columnConfig?.type) || DrizzleWeaver.getColumnType(column)
+    return columnConfig.type ?? DrizzleWeaver.getColumnType(column)
   }
 
   public insertInput() {
@@ -294,17 +296,17 @@ export class DrizzleInputFactory<TTable extends Table> {
             return mapValue.SKIP
           }
 
-          const fieldConfig = DrizzleInputFactory.getColumnConfig(
+          const fieldConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
             key
           )
-          let type = this.getColumnInputType(key, "insert", column, fieldConfig)
-          const isNotNull =
-            !column.hasDefault && column.notNull && !isNonNullType(type)
-          if (isNotNull) {
-            type = new GraphQLNonNull(type)
+          if (fieldConfig.hidden) {
+            return mapValue.SKIP
           }
-          return { type, description: fieldConfig?.description }
+          let type = this.getColumnInputType(key, "insert", column, fieldConfig)
+          const isRequired = !column.hasDefault && column.notNull
+          type = DrizzleWeaver.applyColumnNullability(type, isRequired)
+          return { type, description: fieldConfig.options.description }
         }),
       })
     )
@@ -373,20 +375,23 @@ export class DrizzleInputFactory<TTable extends Table> {
           if (!isColumnVisible(key, this.options?.input ?? {}, "update")) {
             return mapValue.SKIP
           }
-          const columnConfig = DrizzleInputFactory.getColumnConfig(
+          const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
             key
           )
+          if (columnConfig.hidden) {
+            return mapValue.SKIP
+          }
           let type = this.getColumnInputType(
             key,
             "update",
             column,
             columnConfig
           )
-          if (type instanceof GraphQLNonNull) {
+          if (isNonNullType(type)) {
             type = type.ofType
           }
-          return { type, description: columnConfig?.description }
+          return { type, description: columnConfig.options.description }
         }),
       })
     )
@@ -411,13 +416,13 @@ export class DrizzleInputFactory<TTable extends Table> {
       ) {
         return mapValue.SKIP
       }
-      const columnConfig = DrizzleInputFactory.getColumnConfig(
+      const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
         tableConfig,
         columnName
       )
       return {
         type: DrizzleInputFactory.columnFilters(column),
-        description: columnConfig?.description,
+        description: columnConfig.options.description,
       }
     })
 
@@ -506,11 +511,11 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: mapValue(columns, (_, columnName) => {
           const type = DrizzleInputFactory.orderDirection()
-          const columnConfig = DrizzleInputFactory.getColumnConfig(
+          const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
             columnName
           )
-          return { type, description: columnConfig?.description }
+          return { type, description: columnConfig.options.description }
         }),
       })
     )
@@ -547,13 +552,12 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
-  protected static getColumnConfig(
+  protected static getResolvedColumnConfig(
     config: DrizzleSilkConfig<any> | undefined,
     columnName: string
   ) {
     const configFields = getValue(config?.fields) ?? {}
-    if (configFields[columnName] === SYMBOLS.FIELD_HIDDEN) return undefined
-    return configFields[columnName]
+    return DrizzleWeaver.resolveFieldConfig(configFields[columnName])
   }
 }
 

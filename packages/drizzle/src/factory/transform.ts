@@ -26,6 +26,8 @@ import {
   type SQL,
   type Table,
 } from "drizzle-orm"
+import { DrizzleWeaver } from ".."
+import { getValue } from "../helper"
 import type { DrizzleResolverFactoryOptions } from "../types"
 import type {
   ColumnFilters,
@@ -344,12 +346,16 @@ export class DrizzleArgsTransformer<TTable extends Table> {
     mutation: "insert" | "update"
   ): GraphQLSilk<any, any> | undefined {
     const behavior = this.options?.input?.[columnName]
-    if (behavior == null || typeof behavior === "boolean") return undefined
-    if ("~standard" in behavior) return behavior
-    const mutationBehavior = behavior[mutation]
-    if (mutationBehavior == null || typeof mutationBehavior === "boolean")
-      return undefined
-    return mutationBehavior
+    if (behavior != null && typeof behavior !== "boolean") {
+      if ("~standard" in behavior) return behavior
+      const mutationBehavior = behavior[mutation]
+      if (mutationBehavior != null && typeof mutationBehavior !== "boolean") {
+        return mutationBehavior
+      }
+    }
+    const tableConfig = DrizzleWeaver.silkConfigs.get(this.table)
+    const fields = getValue(tableConfig?.fields) ?? {}
+    return DrizzleWeaver.getFieldSilk(fields[columnName])
   }
 
   public extractFilters(
