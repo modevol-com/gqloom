@@ -139,8 +139,7 @@ export const Tabs = defineComponent({
               }}
               class="cursor-pointer px-2 py-1 font-medium text-slate-500 data-[state=active]:text-pink-600 dark:text-slate-400 dark:data-[state=active]:text-rose-400 whitespace-nowrap flex-shrink-0"
             >
-              {/* "_" → space, "__" → ".", e.g. v1_(rc) → "v1 (rc)", _0__x → "0.x" */}
-              {title.replace(/__/g, ".").replace(/_/g, " ").trim()}
+              {title.replace(/_/g, " ")}
             </TabsTrigger>
           ))}
           <TabsIndicator class="absolute bottom-[-1px] h-[2px] w-[var(--reka-tabs-indicator-size)] translate-x-[var(--reka-tabs-indicator-position)] rounded-t-lg bg-pink-600 transition-all duration-200 dark:bg-rose-400" />

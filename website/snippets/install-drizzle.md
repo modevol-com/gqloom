@@ -24,9 +24,9 @@ deno add npm:graphql npm:@gqloom/core npm:drizzle-orm@rc npm:@gqloom/drizzle@rc
 :::
 
 </template>
-<template #_0__x>
+<template #v0>
 
-Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration (drizzle-orm 0.x, Relational Queries v1).
+Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration (Drizzle v0 / `drizzle-orm@0.x`, Relational Queries v1).
 
 After completing the Drizzle installation, install `@gqloom/drizzle`:
 

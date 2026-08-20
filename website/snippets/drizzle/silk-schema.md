@@ -70,7 +70,7 @@ export const relations = defineRelations(tables, (r) => ({
 ```
 
 </template>
-<template #_0__x>
+<template #v0>
 
 ```ts twoslash title="schema.ts"
 // @paths: {"@gqloom/drizzle":["node_modules/@gqloom/drizzle-rqbv1/dist/index.d.ts"],"@gqloom/drizzle/context":["node_modules/@gqloom/drizzle-rqbv1/dist/context.d.ts"],"drizzle-orm":["node_modules/drizzle-orm-rqbv1/index.d.ts"],"drizzle-orm/sqlite-core":["node_modules/drizzle-orm-rqbv1/sqlite-core/index.d.ts"],"drizzle-orm/libsql":["node_modules/drizzle-orm-rqbv1/libsql/index.d.ts"]}
