@@ -1,9 +1,9 @@
 <Tabs groupId="drizzle-api-version">
-<template #Relational_API_v2>
+<template #v1>
 
-请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。
+请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)和 [升级到 Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1)。
 
-在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
+在完成 Drizzle 安装后，安装 `@gqloom/drizzle@rc`：
 
 ::: code-group
 ```sh [npm]
@@ -24,7 +24,7 @@ deno add npm:graphql npm:@gqloom/core npm:drizzle-orm@rc npm:@gqloom/drizzle@rc
 :::
 
 </template>
-<template #Relational_API_v1>
+<template #v0>
 
 请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。
 

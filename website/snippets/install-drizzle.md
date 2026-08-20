@@ -1,9 +1,9 @@
 <Tabs groupId="drizzle-api-version">
-<template #Relational_API_v2>
+<template #v1>
 
-Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration.
+Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) and [Upgrading to Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1).
 
-After completing the Drizzle installation, install `@gqloom/drizzle`:
+After completing the Drizzle installation, install `@gqloom/drizzle@rc`:
 
 ::: code-group
 ```sh [npm]
@@ -24,7 +24,7 @@ deno add npm:graphql npm:@gqloom/core npm:drizzle-orm@rc npm:@gqloom/drizzle@rc
 :::
 
 </template>
-<template #Relational_API_v1>
+<template #v0>
 
 Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) to install Drizzle and the corresponding database integration.
 

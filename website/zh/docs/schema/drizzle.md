@@ -10,6 +10,11 @@ import { Tabs } from '@/components/tabs'
 - 使用 Drizzle Table 作为[丝线](../silk)使用；
 - 使用解析器工厂从 Drizzle 快速生成 CRUD 操作。
 
+| Drizzle | Relational Queries | `drizzle-orm` | `@gqloom/drizzle` |
+| --- | --- | --- | --- |
+| **v1** (`@rc`) | v2 | `1.0.0-rc.4+` | `0.17.0-rc.0+` (`@gqloom/drizzle@rc`) |
+| v0 | v1 | `0.x` | `0.16.x` |
+
 ## 安装
 
 <!--@include: ../../snippets/install-drizzle.md-->
@@ -18,172 +23,11 @@ import { Tabs } from '@/components/tabs'
 
 只需要使用 `drizzleSilk` 包裹 Drizzle Table，我们就可以轻松地将它们作为[丝线](../silk)使用。
 
-```ts twoslash title="schema.ts" tab="schema.ts"
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
-
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-```
-
-```ts twoslash title="relations.ts" tab="relations.ts"
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
-
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-// @filename: relations.ts
-// ---cut---
-import { defineRelations } from "drizzle-orm"
-import * as tables from "./schema"
-
-export const relations = defineRelations(tables, (r) => ({
-  users: {
-    posts: r.many.posts({
-      from: r.users.id,
-      to: r.posts.authorId,
-    }),
-  },
-  posts: {
-    author: r.one.users({
-      from: r.posts.authorId,
-      to: r.users.id,
-    }),
-  },
-}))
-```
+<!--@include: ../../../snippets/drizzle/silk-schema.md-->
 
 让我们在解析器中使用它们，同时我们使用 `useSelectedColumns()` 函数以得知当前 GraphQL 查询需要选取哪些列：
 
-```ts twoslash title="resolver.ts"
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
-
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-// @filename: relations.ts
-import { defineRelations } from "drizzle-orm"
-import * as tables from "./schema"
-
-export const relations = defineRelations(tables, (r) => ({
-  users: {
-    posts: r.many.posts({
-      from: r.users.id,
-      to: r.posts.authorId,
-    }),
-  },
-  posts: {
-    author: r.one.users({
-      from: r.posts.authorId,
-      to: r.users.id,
-    }),
-  },
-}))
-// @filename: resolver.ts
-// ---cut---
-import { field, query, resolver } from "@gqloom/core"
-import { useSelectedColumns } from "@gqloom/drizzle/context"
-import { eq, inArray } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/libsql"
-import * as v from "valibot"
-import { relations } from "./relations"
-import { posts, users } from "./schema"
-
-const db = drizzle({
-  relations,
-  connection: { url: process.env.DB_FILE_NAME! },
-})
-
-export const usersResolver = resolver.of(users, {
-  user: query
-    .output(users.$nullable())
-    .input({ id: v.number() })
-    .resolve(({ id }) => {
-      return db
-        .select(useSelectedColumns(users))
-        .from(users)
-        .where(eq(users.id, id))
-        .get()
-    }),
-
-  users: query.output(users.$list()).resolve(() => {
-    return db.select(useSelectedColumns(users)).from(users).all()
-  }),
-
-  posts: field
-    .output(posts.$list())
-    .derivedFrom("id")
-    .load(async (userList) => {
-      const postList = await db
-        .select()
-        .from(posts)
-        .where(
-          inArray(
-            users.id,
-            userList.map((user) => user.id)
-          )
-        )
-      const groups = new Map<number, (typeof posts.$inferSelect)[]>()
-
-      for (const post of postList) {
-        const key = post.authorId
-        if (key == null) continue
-        groups.set(key, [...(groups.get(key) ?? []), post])
-      }
-      return userList.map((user) => groups.get(user.id) ?? [])
-    }),
-})
-```
+<!--@include: ../../../snippets/drizzle/silk-resolver.md-->
 
 如上面的代码所示，我们可以直接在 `resolver` 里使用 `drizzleSilk` 包裹的 Drizzle Table。  
 在这里我们使用了 `users` 作为 `resolver.of` 的父类型，并在 resolver 中定义了 `user`、`users` 两个查询和一个名为 `posts` 的字段。其中：  
@@ -293,84 +137,7 @@ export const usersResolver = resolver.of(users, {
 
 `gqloom/drizzle` 提供了解析器工厂 `DrizzleResolverFactory`，用于从 Drizzle 轻松地生成 CRUD 解析器，同时支持自定参数和添加中间件。
 
-<Tabs groupId="drizzle-api-version">
-<template #Relational_API_v2>
-
-```ts [schema.ts]
-import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { drizzle } from "drizzle-orm/libsql"
-import { relations } from "./relations"
-import { users } from "./schema"
-
-const db = drizzle({
-  relations,
-  connection: { url: process.env.DB_FILE_NAME! },
-})
-
-const usersResolverFactory = drizzleResolverFactory(db, users)
-```
-
-</template>
-<template #Relational_API_v1>
-
-```ts twoslash [schema.ts]
-// @filename: schema.ts
-import { drizzleSilk } from "@gqloom/drizzle"
-import * as t from "drizzle-orm/sqlite-core"
-
-export const users = drizzleSilk(
-  t.sqliteTable("users", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    name: t.text().notNull(),
-    age: t.int(),
-    email: t.text(),
-    password: t.text(),
-  })
-)
-
-export const posts = drizzleSilk(
-  t.sqliteTable("posts", {
-    id: t.int().primaryKey({ autoIncrement: true }),
-    title: t.text().notNull(),
-    content: t.text(),
-    authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
-  })
-)
-// @filename: relations.ts
-import { defineRelations } from "drizzle-orm"
-import * as tables from "./schema"
-
-export const relations = defineRelations(tables, (r) => ({
-  users: {
-    posts: r.many.posts({
-      from: r.users.id,
-      to: r.posts.authorId,
-    }),
-  },
-  posts: {
-    author: r.one.users({
-      from: r.posts.authorId,
-      to: r.users.id,
-    }),
-  },
-}))
-// @filename: resolver.ts
-// ---cut---
-import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { drizzle } from "drizzle-orm/libsql"
-import { relations } from "./relations"
-import { users } from "./schema"
-
-const db = drizzle({
-  relations,
-  connection: { url: process.env.DB_FILE_NAME! },
-})
-
-const usersResolverFactory = drizzleResolverFactory(db, users)
-```
-
-</template>
-</Tabs>
+<!--@include: ../../../snippets/drizzle/factory-setup.md-->
 
 ### 关系字段
 
@@ -399,6 +166,7 @@ export const posts = drizzleSilk(
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
   })
 )
+
 // @filename: relations.ts
 import { defineRelations } from "drizzle-orm"
 import * as tables from "./schema"
@@ -518,6 +286,7 @@ export const posts = drizzleSilk(
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
   })
 )
+
 // @filename: relations.ts
 import { defineRelations } from "drizzle-orm"
 import * as tables from "./schema"
@@ -606,6 +375,7 @@ export const posts = drizzleSilk(
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
   })
 )
+
 // @filename: relations.ts
 import { defineRelations } from "drizzle-orm"
 import * as tables from "./schema"
@@ -679,6 +449,7 @@ export const posts = drizzleSilk(
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
   })
 )
+
 // @filename: relations.ts
 import { defineRelations } from "drizzle-orm"
 import * as tables from "./schema"
@@ -727,7 +498,7 @@ export const usersResolver = resolver.of(users, {
 })
 ```
 
-在上面的代码中，我们使用 `valibot` 来定义输入类型， `v.object({ id: v.number() })` 定义了输入对象的类型，`v.transform(({ id }) => ({ where: { id } }))` 将输入参数转换为 Drizzle 的查询参数。
+在上面的代码中，我们使用 `valibot` 来定义输入类型， `v.object({ id: v.number() })` 定义了输入对象的类型，`v.transform(({ id }) => ({ where: eq(users.id, id) }))` 将输入参数转换为 Drizzle 的查询参数。
 
 ### 添加中间件
 
@@ -756,6 +527,7 @@ export const posts = drizzleSilk(
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
   })
 )
+
 // @filename: relations.ts
 import { defineRelations } from "drizzle-orm"
 import * as tables from "./schema"
@@ -783,7 +555,7 @@ import { drizzle } from "drizzle-orm/libsql"
 import { GraphQLError } from "graphql"
 import * as v from "valibot"
 import { relations } from "./relations"
-import { users, posts } from "./schema"
+import { posts, users } from "./schema"
 
 const db = drizzle({
   relations,
@@ -840,6 +612,7 @@ export const posts = drizzleSilk(
     authorId: t.int().references(() => users.id, { onDelete: "cascade" }),
   })
 )
+
 // @filename: relations.ts
 import { defineRelations } from "drizzle-orm"
 import * as tables from "./schema"
@@ -890,25 +663,9 @@ const usersResolver = usersResolverFactory.resolver()
 
 为了适应更多的 Drizzle 类型，我们可以拓展 GQLoom 为其添加更多的类型映射。
 
-首先我们使用 `DrizzleWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime` 和  `GraphQLJSONObject` ，当遇到 `date` 和 `json` 类型时，我们将其映射到对应的 GraphQL 标量。
+首先我们使用 `DrizzleWeaver.config` 来定义类型映射的配置。这里我们导入来自 [graphql-scalars](https://the-guild.dev/graphql/scalars) 的 `GraphQLDateTime` 和 `GraphQLJSON`，当遇到 `date` 和 `json` 类型时，我们将其映射到对应的 GraphQL 标量。Drizzle v1 使用 `extractExtendedColumnType`，v0 使用 `column.dataType`。
 
-```ts twoslash
-import { extractExtendedColumnType } from "drizzle-orm"
-import { GraphQLDateTime, GraphQLJSON } from "graphql-scalars"
-import { DrizzleWeaver } from "@gqloom/drizzle"
-
-const drizzleWeaverConfig = DrizzleWeaver.config({
-  presetGraphQLType: (column) => {
-    const { constraint } = extractExtendedColumnType(column)
-    if (constraint === "date") {
-      return GraphQLDateTime
-    }
-    if (constraint === "json") {
-      return GraphQLJSON
-    }
-  },
-})
-```
+<!--@include: ../../../snippets/drizzle/custom-type-mapping.md-->
 
 在编织 GraphQL Schema 时传入配置到 weave 函数中：
 

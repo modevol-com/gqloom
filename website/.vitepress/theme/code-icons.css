@@ -98,7 +98,7 @@ html.dark [data-title$=".json"]:before {
 [data-title="effect" i] {
   &:before {
     content: "";
-    --icon: url('https://effect.website/icon.png');
+    --icon: url('https://effect.website/favicon.svg');
   }
 }
 
