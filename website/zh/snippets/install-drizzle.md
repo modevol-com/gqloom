@@ -1,5 +1,5 @@
 <Tabs groupId="drizzle-api-version">
-<template #v1_(rc)>
+<template #v1>
 
 请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)和 [升级到 Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1)。请安装 `drizzle-orm@rc`（对应 [Relational Queries v2](https://orm.drizzle.team/docs/relations-v1-v2)）。
 

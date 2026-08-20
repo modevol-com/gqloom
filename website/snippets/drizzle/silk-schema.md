@@ -1,5 +1,5 @@
 <Tabs groupId="drizzle-api-version">
-<template #v1_(rc)>
+<template #v1>
 
 ```ts twoslash title="schema.ts" tab="schema.ts"
 import { drizzleSilk } from "@gqloom/drizzle"

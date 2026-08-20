@@ -1,5 +1,5 @@
 <Tabs groupId="drizzle-api-version">
-<template #v1_(rc)>
+<template #v1>
 
 Please refer to Drizzle's [Getting Started guide](https://orm.drizzle.team/docs/get-started) and [Upgrading to Drizzle v1](https://orm.drizzle.team/docs/upgrade-v1). Install `drizzle-orm@rc` (this uses [Relational Queries v2](https://orm.drizzle.team/docs/relations-v1-v2)).
 
