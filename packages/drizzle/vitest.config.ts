@@ -1,3 +1,4 @@
-import { projectConfig } from "../../vitest.config"
+import { mergeConfig } from "vitest/config"
+import { dedupeGraphqlConfig, projectConfig } from "../../vitest.config"
 
-export default projectConfig
+export default mergeConfig(projectConfig, dedupeGraphqlConfig)

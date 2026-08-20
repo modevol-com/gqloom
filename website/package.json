@@ -19,7 +19,7 @@
     "@apollo/server": "^5.5.1",
     "@apollo/subgraph": "^2.14.4",
     "@gqloom/core": "workspace:*",
-    "@gqloom/drizzle": "npm:@gqloom/drizzle@0.17.0-rc.0",
+    "@gqloom/drizzle": "npm:@gqloom/drizzle@0.17.0-rc.1",
     "@gqloom/drizzle-rqbv1": "npm:@gqloom/drizzle@0.16.0",
     "@gqloom/effect": "workspace:*",
     "@gqloom/federation": "workspace:*",

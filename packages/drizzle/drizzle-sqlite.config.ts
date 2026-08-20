@@ -7,10 +7,10 @@ export default defineConfig({
     url: "file:./test/schema/sqlite.db",
   },
   tablesFilter: [
-    "user",
-    "post",
-    "course",
-    "studentToCourse",
-    "studentCourseGrade",
+    "users",
+    "posts",
+    "courses",
+    "studentToCourses",
+    "studentCourseGrades",
   ],
 })

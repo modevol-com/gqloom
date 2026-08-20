@@ -1,10 +1,16 @@
-import { mapValue, pascalCase, SYMBOLS, weaverContext } from "@gqloom/core"
+import {
+  getGraphQLType,
+  mapValue,
+  pascalCase,
+  weaverContext,
+} from "@gqloom/core"
 import {
   type Column,
   getTableColumns,
   getTableName,
   type InferInsertModel,
   type InferSelectModel,
+  type Many,
   type Table,
 } from "drizzle-orm"
 import {
@@ -19,8 +25,13 @@ import {
   isNonNullType,
 } from "graphql"
 import { getValue, isColumnVisible } from "../helper"
-import { DrizzleWeaver } from "../index"
+import { type BaseDatabase, DrizzleWeaver } from "../index"
 import type { DrizzleResolverFactoryOptions, DrizzleSilkConfig } from "../types"
+import type {
+  InferRelationTable,
+  InferTableRelationalConfig,
+  QueryBuilder,
+} from "./types"
 
 export class DrizzleInputFactory<TTable extends Table> {
   public constructor(
@@ -40,7 +51,7 @@ export class DrizzleInputFactory<TTable extends Table> {
           offset: { type: GraphQLInt },
           limit: { type: GraphQLInt },
           orderBy: {
-            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+            type: this.orderBy(),
           },
           where: { type: this.filters() },
         },
@@ -59,7 +70,7 @@ export class DrizzleInputFactory<TTable extends Table> {
         fields: {
           offset: { type: GraphQLInt },
           orderBy: {
-            type: new GraphQLList(new GraphQLNonNull(this.orderBy())),
+            type: this.orderBy(),
           },
           where: { type: this.filters() },
         },
@@ -74,6 +85,39 @@ export class DrizzleInputFactory<TTable extends Table> {
 
     return weaverContext.memoNamedType(
       new GraphQLObjectType<CountArgs<TTable>>({
+        name,
+        fields: {
+          where: { type: this.filters() },
+        },
+      })
+    )
+  }
+
+  public relationToManyArgs() {
+    const name = `${pascalCase(getTableName(this.table))}RelationToManyArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<RelationToManyArgs<TTable>>({
+        name,
+        fields: {
+          where: { type: this.filters() },
+          orderBy: { type: this.orderBy() },
+          limit: { type: GraphQLInt },
+          offset: { type: GraphQLInt },
+        },
+      })
+    )
+  }
+
+  public relationToOneArgs() {
+    const name = `${pascalCase(getTableName(this.table))}RelationToOneArgs`
+    const existing = weaverContext.getNamedType(name) as GraphQLObjectType
+    if (existing != null) return existing
+
+    return weaverContext.memoNamedType(
+      new GraphQLObjectType<RelationToOneArgs<TTable>>({
         name,
         fields: {
           where: { type: this.filters() },
@@ -197,14 +241,41 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLEnumType({
         name,
         values: mapValue(getTableColumns(this.table), (_, columnName) => {
-          const columnConfig = DrizzleInputFactory.getColumnConfig(
+          const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
             columnName
           )
-          return { value: columnName, description: columnConfig?.description }
+          return {
+            value: columnName,
+            description: columnConfig.options.description,
+          }
         }),
       })
     )
+  }
+
+  protected getColumnInputType(
+    key: string,
+    mutation: "insert" | "update",
+    column: Column,
+    columnConfig: ReturnType<typeof DrizzleInputFactory.getResolvedColumnConfig>
+  ) {
+    const colSilk = (() => {
+      const behavior = this.options?.input?.[key]
+      if (typeof behavior != "object" || behavior == null) return undefined
+      if ("~standard" in behavior) {
+        return behavior
+      }
+      const mutationConfigBehavior = behavior[mutation]
+      if (
+        typeof mutationConfigBehavior != "object" ||
+        mutationConfigBehavior == null
+      )
+        return undefined
+      return mutationConfigBehavior
+    })()
+    if (colSilk != null) return getGraphQLType(colSilk)
+    return columnConfig.type ?? DrizzleWeaver.getColumnType(column)
   }
 
   public insertInput() {
@@ -220,26 +291,22 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLObjectType({
         name,
         description: tableConfig?.description,
-        fields: mapValue(columns, (column, columnName) => {
-          if (
-            !isColumnVisible(columnName, this.options?.input ?? {}, "insert")
-          ) {
+        fields: mapValue(columns, (column, key) => {
+          if (!isColumnVisible(key, this.options?.input ?? {}, "insert")) {
             return mapValue.SKIP
           }
 
-          const fieldConfig = DrizzleInputFactory.getColumnConfig(
+          const fieldConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
-            columnName
+            key
           )
-          const type = (() => {
-            const t =
-              getValue(fieldConfig?.type) || DrizzleWeaver.getColumnType(column)
-            if (column.hasDefault) return t
-            if (column.notNull && !isNonNullType(t))
-              return new GraphQLNonNull(t)
-            return t
-          })()
-          return { type, description: fieldConfig?.description }
+          if (fieldConfig.hidden) {
+            return mapValue.SKIP
+          }
+          let type = this.getColumnInputType(key, "insert", column, fieldConfig)
+          const isRequired = !column.hasDefault && column.notNull
+          type = DrizzleWeaver.applyColumnNullability(type, isRequired)
+          return { type, description: fieldConfig.options.description }
         }),
       })
     )
@@ -304,19 +371,27 @@ export class DrizzleInputFactory<TTable extends Table> {
       new GraphQLObjectType({
         name,
         description: tableConfig?.description,
-        fields: mapValue(columns, (column, columnName) => {
-          if (
-            !isColumnVisible(columnName, this.options?.input ?? {}, "update")
-          ) {
+        fields: mapValue(columns, (column, key) => {
+          if (!isColumnVisible(key, this.options?.input ?? {}, "update")) {
             return mapValue.SKIP
           }
-          const columnConfig = DrizzleInputFactory.getColumnConfig(
+          const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
-            columnName
+            key
           )
-          const type =
-            getValue(columnConfig?.type) || DrizzleWeaver.getColumnType(column)
-          return { type, description: columnConfig?.description }
+          if (columnConfig.hidden) {
+            return mapValue.SKIP
+          }
+          let type = this.getColumnInputType(
+            key,
+            "update",
+            column,
+            columnConfig
+          )
+          if (isNonNullType(type)) {
+            type = type.ofType
+          }
+          return { type, description: columnConfig.options.description }
         }),
       })
     )
@@ -341,18 +416,18 @@ export class DrizzleInputFactory<TTable extends Table> {
       ) {
         return mapValue.SKIP
       }
-      const columnConfig = DrizzleInputFactory.getColumnConfig(
+      const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
         tableConfig,
         columnName
       )
       return {
         type: DrizzleInputFactory.columnFilters(column),
-        description: columnConfig?.description,
+        description: columnConfig.options.description,
       }
     })
 
-    const filtersOr = new GraphQLObjectType({
-      name: `${pascalCase(tableName)}FiltersOr`,
+    const filtersNested = new GraphQLObjectType({
+      name: `${pascalCase(tableName)}FiltersNested`,
       fields: { ...filterFields },
     })
     return weaverContext.memoNamedType(
@@ -361,7 +436,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         description: tableConfig?.description,
         fields: {
           ...filterFields,
-          OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+          OR: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          AND: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          NOT: { type: filtersNested },
         },
       })
     )
@@ -388,14 +465,14 @@ export class DrizzleInputFactory<TTable extends Table> {
         ilike: { type: GraphQLString },
         notIlike: { type: GraphQLString },
       }),
-      inArray: { type: gqlListType },
-      notInArray: { type: gqlListType },
+      in: { type: gqlListType },
+      notIn: { type: gqlListType },
       isNull: { type: GraphQLBoolean },
       isNotNull: { type: GraphQLBoolean },
     }
 
-    const filtersOr = new GraphQLObjectType({
-      name: `${baseName}FiltersOr`,
+    const filtersNested = new GraphQLObjectType({
+      name: `${baseName}FiltersNested`,
       fields: { ...baseFields },
     })
 
@@ -404,7 +481,9 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: {
           ...baseFields,
-          OR: { type: new GraphQLList(new GraphQLNonNull(filtersOr)) },
+          OR: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          AND: { type: new GraphQLList(new GraphQLNonNull(filtersNested)) },
+          NOT: { type: filtersNested },
         },
       })
     )
@@ -432,11 +511,11 @@ export class DrizzleInputFactory<TTable extends Table> {
         name,
         fields: mapValue(columns, (_, columnName) => {
           const type = DrizzleInputFactory.orderDirection()
-          const columnConfig = DrizzleInputFactory.getColumnConfig(
+          const columnConfig = DrizzleInputFactory.getResolvedColumnConfig(
             tableConfig,
             columnName
           )
-          return { type, description: columnConfig?.description }
+          return { type, description: columnConfig.options.description }
         }),
       })
     )
@@ -473,30 +552,53 @@ export class DrizzleInputFactory<TTable extends Table> {
     )
   }
 
-  protected static getColumnConfig(
+  protected static getResolvedColumnConfig(
     config: DrizzleSilkConfig<any> | undefined,
     columnName: string
   ) {
     const configFields = getValue(config?.fields) ?? {}
-    if (configFields[columnName] === SYMBOLS.FIELD_HIDDEN) return undefined
-    return configFields[columnName]
+    return DrizzleWeaver.resolveFieldConfig(configFields[columnName])
   }
 }
 
 export interface SelectArrayArgs<TTable extends Table> {
   offset?: number
   limit?: number
-  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
   where?: Filters<TTable>
 }
 
 export interface SelectSingleArgs<TTable extends Table> {
   offset?: number
-  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>[]
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
   where?: Filters<TTable>
 }
 
 export interface CountArgs<TTable extends Table> {
+  where?: Filters<TTable>
+}
+
+export type RelationArgs<
+  TDatabase extends BaseDatabase,
+  TTable extends Table,
+  TRelationName extends keyof InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"],
+> =
+  InferTableRelationalConfig<
+    QueryBuilder<TDatabase, TTable>
+  >["relations"][TRelationName] extends Many<any>
+    ? RelationToManyArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
+    : RelationToOneArgs<InferRelationTable<TDatabase, TTable, TRelationName>>
+
+export interface RelationToManyArgs<TTable extends Table> {
+  where?: Filters<TTable>
+  orderBy?: Partial<Record<keyof InferSelectModel<TTable>, "asc" | "desc">>
+  limit?: number
+  offset?: number
+}
+
+export interface RelationToOneArgs<TTable extends Table> {
   where?: Filters<TTable>
 }
 
@@ -505,25 +607,18 @@ export interface InsertArrayArgs<TTable extends Table> {
 }
 
 export interface InsertArrayWithOnConflictArgs<TTable extends Table>
-  extends InsertArrayArgs<TTable> {
-  onConflictDoUpdate?: {
-    target: string[]
-    set?: Partial<InferInsertModel<TTable>>
-    targetWhere?: Filters<TTable>
-    setWhere?: Filters<TTable>
-  }
-  onConflictDoNothing?: {
-    target?: string[]
-    where?: Filters<TTable>
-  }
-}
+  extends InsertArrayArgs<TTable>,
+    InsertOnConflictInputArgs<TTable> {}
 
 export interface InsertSingleArgs<TTable extends Table> {
   value: InferInsertModel<TTable>
 }
 
 export interface InsertSingleWithOnConflictArgs<TTable extends Table>
-  extends InsertSingleArgs<TTable> {
+  extends InsertSingleArgs<TTable>,
+    InsertOnConflictInputArgs<TTable> {}
+
+export interface InsertOnConflictInputArgs<TTable extends Table> {
   onConflictDoUpdate?: {
     target: string[]
     set?: Partial<InferInsertModel<TTable>>
@@ -535,6 +630,7 @@ export interface InsertSingleWithOnConflictArgs<TTable extends Table>
     where?: Filters<TTable>
   }
 }
+
 export interface UpdateArgs<TTable extends Table> {
   where?: Filters<TTable>
   set: Partial<InferInsertModel<TTable>>
@@ -552,27 +648,31 @@ export type FiltersCore<TTable extends Table> = Partial<{
 
 export type Filters<TTable extends Table> = FiltersCore<TTable> & {
   OR?: FiltersCore<TTable>[]
+  AND?: FiltersCore<TTable>[]
+  NOT?: FiltersCore<TTable>
 }
 
 export interface ColumnFiltersCore<TType = any> {
   eq?: TType
   ne?: TType
-  lt?: TType
-  lte?: TType
   gt?: TType
   gte?: TType
+  lt?: TType
+  lte?: TType
+  in?: TType[]
+  notIn?: TType[]
   like?: TType extends string ? string : never
-  notLike?: TType extends string ? string : never
   ilike?: TType extends string ? string : never
+  notLike?: TType extends string ? string : never
   notIlike?: TType extends string ? string : never
-  inArray?: TType[]
-  notInArray?: TType[]
   isNull?: boolean
   isNotNull?: boolean
 }
 
 export interface ColumnFilters<TType = any> extends ColumnFiltersCore<TType> {
   OR?: ColumnFiltersCore<TType>[]
+  AND?: ColumnFiltersCore<TType>[]
+  NOT?: ColumnFiltersCore<TType>
 }
 
 export interface MutationResult {

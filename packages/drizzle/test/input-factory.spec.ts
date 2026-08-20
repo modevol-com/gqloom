@@ -1,8 +1,18 @@
-import { weave } from "@gqloom/core"
+import {
+  field,
+  type GraphQLSilk,
+  initWeaverContext,
+  provideWeaverContext,
+  silk,
+  weave,
+} from "@gqloom/core"
+import { ValibotWeaver } from "@gqloom/valibot"
+import { defineRelations } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import * as pg from "drizzle-orm/pg-core"
 import {
   type GraphQLEnumType,
+  GraphQLFloat,
   type GraphQLObjectType,
   GraphQLScalarType,
   lexicographicSortSchema,
@@ -11,13 +21,15 @@ import {
   printType,
   validate,
 } from "graphql"
+import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import {
   DrizzleInputFactory,
   drizzleResolverFactory,
   drizzleSilk,
 } from "../src"
-import type { DrizzleFactoryInputVisibilityBehaviors } from "../src/types"
+import { DrizzleArgsTransformer } from "../src/factory/transform"
+import type { DrizzleFactoryInputBehaviors } from "../src/types"
 
 describe("DrizzleInputFactory", () => {
   const userTable = pg.pgTable("users", {
@@ -68,7 +80,9 @@ describe("DrizzleInputFactory", () => {
         password: PgTextFilters
         createdAt: PgTimestampFilters
         updatedAt: PgTimestampFilters
-        OR: [UsersFiltersOr!]
+        OR: [UsersFiltersNested!]
+        AND: [UsersFiltersNested!]
+        NOT: UsersFiltersNested
       }"
     `)
   })
@@ -124,14 +138,15 @@ describe("DrizzleInputFactory", () => {
   })
 
   describe("with column visibility options", () => {
-    const options: DrizzleFactoryInputVisibilityBehaviors<typeof userTable> = {
+    const options: DrizzleFactoryInputBehaviors<typeof userTable> = {
+      email: v.pipe(v.string(), v.email()),
       "*": {
         filters: true,
         insert: true,
         update: true,
       },
       password: {
-        filters: false,
+        filters: field.hidden,
         insert: true,
         update: true,
       },
@@ -150,10 +165,17 @@ describe("DrizzleInputFactory", () => {
     const inputFactoryWithOptions = new DrizzleInputFactory(userTable, {
       input: options,
     })
+    const weaverContext = initWeaverContext()
+    weaverContext.vendorWeavers.set(ValibotWeaver.vendor, ValibotWeaver)
 
     it("should respect column visibility in InsertInput", () => {
       expect(
-        printType(inputFactoryWithOptions.insertInput())
+        printType(
+          provideWeaverContext(
+            () => inputFactoryWithOptions.insertInput(),
+            weaverContext
+          )
+        )
       ).toMatchInlineSnapshot(`
         "type UsersInsertInput {
           id: Int
@@ -166,7 +188,12 @@ describe("DrizzleInputFactory", () => {
 
     it("should respect column visibility in UpdateInput", () => {
       expect(
-        printType(inputFactoryWithOptions.updateInput())
+        printType(
+          provideWeaverContext(
+            () => inputFactoryWithOptions.updateInput(),
+            weaverContext
+          )
+        )
       ).toMatchInlineSnapshot(`
         "type UsersUpdateInput {
           id: Int
@@ -187,7 +214,9 @@ describe("DrizzleInputFactory", () => {
           email: PgTextFilters
           createdAt: PgTimestampFilters
           updatedAt: PgTimestampFilters
-          OR: [UsersFiltersOr!]
+          OR: [UsersFiltersNested!]
+          AND: [UsersFiltersNested!]
+          NOT: UsersFiltersNested
         }"
       `)
     })
@@ -247,6 +276,148 @@ describe("DrizzleInputFactory", () => {
         }"
       `)
     })
+
+    it("should accept GraphQL type as a field value in InsertInput", () => {
+      const users = drizzleSilk(
+        pg.pgTable("userTagsAsValue", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: EmailAddress } }
+      )
+      expect(printType(new DrizzleInputFactory(users).insertInput())).toBe(
+        "type UserTagsAsValueInsertInput {\n  id: Int\n  email: EmailAddress!\n}"
+      )
+    })
+
+    it("should omit hidden fields from InsertInput and UpdateInput", () => {
+      const users = drizzleSilk(
+        pg.pgTable("userTagsHidden", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+          password: pg.text("password").notNull(),
+        }),
+        { fields: { password: field.hidden } }
+      )
+      const factory = new DrizzleInputFactory(users)
+      expect(printType(factory.insertInput())).toMatchInlineSnapshot(`
+        "type UserTagsHiddenInsertInput {
+          id: Int
+          email: String!
+        }"
+      `)
+      expect(printType(factory.updateInput())).toMatchInlineSnapshot(`
+        "type UserTagsHiddenUpdateInput {
+          id: Int
+          email: String
+        }"
+      `)
+    })
+  })
+
+  describe("silk field types", () => {
+    const weaverContext = initWeaverContext()
+    weaverContext.vendorWeavers.set(ValibotWeaver.vendor, ValibotWeaver)
+
+    it("should use Silk field types in InsertInput and UpdateInput", () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkUsers", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const factory = new DrizzleInputFactory(users)
+      expect(
+        printType(
+          provideWeaverContext(() => factory.insertInput(), weaverContext)
+        )
+      ).toMatchInlineSnapshot(`
+        "type SilkUsersInsertInput {
+          id: Int
+          email: String!
+        }"
+      `)
+      expect(
+        printType(
+          provideWeaverContext(() => factory.updateInput(), weaverContext)
+        )
+      ).toMatchInlineSnapshot(`
+        "type SilkUsersUpdateInput {
+          id: Int
+          email: String
+        }"
+      `)
+    })
+
+    it("should let factory input override fields Silk", () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkUsersOverride", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const factory = new DrizzleInputFactory(users, {
+        input: {
+          email: silk(GraphQLFloat) as unknown as GraphQLSilk<string>,
+        },
+      })
+      expect(
+        printType(
+          provideWeaverContext(() => factory.insertInput(), weaverContext)
+        )
+      ).toMatchInlineSnapshot(`
+        "type SilkUsersOverrideInsertInput {
+          id: Int
+          email: Float!
+        }"
+      `)
+    })
+  })
+
+  describe("insert/update validation from fields Silk", () => {
+    it("validates insert using fields Silk when factory input is absent", async () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkValidateUsers", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const transformer = new DrizzleArgsTransformer(users, undefined)
+      const invalid = await transformer.toInsertSingleOptions({
+        value: { email: "not-an-email" },
+      })
+      expect(invalid.issues).toBeDefined()
+      const valid = await transformer.toInsertSingleOptions({
+        value: { email: "user@example.com" },
+      })
+      expect(valid).toMatchObject({
+        value: { value: { email: "user@example.com" } },
+      })
+    })
+
+    it("lets factory input Silk override fields Silk for insert validation", async () => {
+      const users = drizzleSilk(
+        pg.pgTable("silkValidateOverrideUsers", {
+          id: pg.serial("id").primaryKey(),
+          email: pg.text("email").notNull(),
+        }),
+        { fields: { email: v.pipe(v.string(), v.email()) } }
+      )
+      const transformer = new DrizzleArgsTransformer(users, {
+        input: { email: v.pipe(v.string(), v.minLength(8)) },
+      })
+      const tooShortEmail = await transformer.toInsertSingleOptions({
+        value: { email: "a@b.com" },
+      })
+      expect(tooShortEmail.issues).toBeDefined()
+      const longNonEmail = await transformer.toInsertSingleOptions({
+        value: { email: "not-mail" },
+      })
+      expect(longNonEmail.issues).toBeUndefined()
+    })
   })
 
   describe("pg enum column filters", () => {
@@ -282,16 +453,16 @@ describe("DrizzleInputFactory", () => {
     it("should type each enum column filter with its own enum", () => {
       const inputFactory = new DrizzleInputFactory(employees)
       const filtersType = inputFactory.filters()
-      const filtersOrType = filtersType.getFields().OR.type as any
-      const filtersOrFields = (
-        filtersOrType.ofType.ofType as GraphQLObjectType
+      const filtersNestedType = filtersType.getFields().OR.type as any
+      const filtersNestedFields = (
+        filtersNestedType.ofType.ofType as GraphQLObjectType
       ).getFields()
 
-      const genderFilters = filtersOrFields.gender.type as GraphQLObjectType
-      const statusFilters = filtersOrFields.status.type as GraphQLObjectType
-      const contractTypeFilters = filtersOrFields.contractType
+      const genderFilters = filtersNestedFields.gender.type as GraphQLObjectType
+      const statusFilters = filtersNestedFields.status.type as GraphQLObjectType
+      const contractTypeFilters = filtersNestedFields.contractType
         .type as GraphQLObjectType
-      const maritalStatusFilters = filtersOrFields.maritalStatus
+      const maritalStatusFilters = filtersNestedFields.maritalStatus
         .type as GraphQLObjectType
 
       expect(genderFilters.name).toBe("GenderFilters")
@@ -314,11 +485,11 @@ describe("DrizzleInputFactory", () => {
     })
 
     it("should generate distinct filter input types per enum in woven schema", () => {
-      const db = drizzle("postgres://localhost/test", {
-        schema: { employees },
-      })
-      const schema = weave(drizzleResolverFactory(db, employees).resolver())
-      const printed = printSchema(lexicographicSortSchema(schema))
+      const schema = { employees }
+      const relations = defineRelations(schema, () => ({}))
+      const db = drizzle("postgres://localhost/test", { relations })
+      const gqlSchema = weave(drizzleResolverFactory(db, employees).resolver())
+      const printed = printSchema(lexicographicSortSchema(gqlSchema))
 
       expect(printed).toContain("input GenderFilters")
       expect(printed).toContain("input EmployeeStatusFilters")
@@ -339,10 +510,10 @@ describe("DrizzleInputFactory", () => {
     })
 
     it("should validate filter variables against the correct enum", () => {
-      const db = drizzle("postgres://localhost/test", {
-        schema: { employees },
-      })
-      const schema = weave(drizzleResolverFactory(db, employees).resolver())
+      const schema = { employees }
+      const relations = defineRelations(schema, () => ({}))
+      const db = drizzle("postgres://localhost/test", { relations })
+      const gqlSchema = weave(drizzleResolverFactory(db, employees).resolver())
 
       const validQuery = parse(/* GraphQL */ `
         query {
@@ -351,7 +522,7 @@ describe("DrizzleInputFactory", () => {
           }
         }
       `)
-      expect(validate(schema, validQuery)).toEqual([])
+      expect(validate(gqlSchema, validQuery)).toEqual([])
 
       const invalidQuery = parse(/* GraphQL */ `
         query {
@@ -361,7 +532,7 @@ describe("DrizzleInputFactory", () => {
         }
       `)
       expect(
-        validate(schema, invalidQuery).map((error) => error.message)
+        validate(gqlSchema, invalidQuery).map((error) => error.message)
       ).toEqual(['Value "MALE" does not exist in "EmployeeStatus" enum.'])
     })
 
@@ -381,14 +552,14 @@ describe("DrizzleInputFactory", () => {
         })
       )
 
-      const db = drizzle("postgres://localhost/test", {
-        schema: { users, posts },
-      })
-      const schema = weave(
-        drizzleResolverFactory(db, users).resolver({ name: "user" }),
-        drizzleResolverFactory(db, posts).resolver({ name: "post" })
+      const schema = { users, posts }
+      const relations = defineRelations(schema, () => ({}))
+      const db = drizzle("postgres://localhost/test", { relations })
+      const gqlSchema = weave(
+        drizzleResolverFactory(db, users).resolver(),
+        drizzleResolverFactory(db, posts).resolver()
       )
-      const printed = printSchema(lexicographicSortSchema(schema))
+      const printed = printSchema(lexicographicSortSchema(gqlSchema))
 
       expect(printed.match(/^input RoleFilters \{/m)?.length).toBe(1)
       expect(printed).toContain("role: RoleFilters")

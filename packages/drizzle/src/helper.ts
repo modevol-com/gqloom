@@ -6,17 +6,31 @@ import {
 } from "@gqloom/core"
 import {
   type Column,
+  getColumnTable,
   getTableColumns,
   getTableName,
   type SQL,
   sql,
   type Table,
 } from "drizzle-orm"
+import {
+  getTableConfig as getMySQLTableConfig,
+  MySqlTable,
+} from "drizzle-orm/mysql-core"
+import {
+  getTableConfig as getPgTableConfig,
+  PgTable,
+} from "drizzle-orm/pg-core"
+import {
+  getTableConfig as getSQLiteTableConfig,
+  SQLiteTable,
+} from "drizzle-orm/sqlite-core"
+import type { GraphQLResolveInfo } from "graphql"
 import type {
-  DrizzleFactoryInputVisibilityBehaviors,
+  ColumnBehavior,
+  DrizzleFactoryInputBehaviors,
   SelectedTableColumns,
   ValueOrGetter,
-  VisibilityBehavior,
 } from "./types"
 
 /**
@@ -25,14 +39,15 @@ import type {
  */
 export function inArrayMultiple(
   columns: Column[],
-  values: readonly unknown[][]
+  values: readonly unknown[][],
+  table: any
 ): SQL<unknown> {
   // Early return for empty values
   if (values.length === 0) return sql`FALSE`
 
   // Create (col1, col2, ...) part
   const columnsPart = sql`(${sql.join(
-    columns.map((c) => sql`${c}`),
+    columns.map((c) => sql`${table[c.name]}`),
     sql`, `
   )})`
 
@@ -54,31 +69,52 @@ export function getEnumNameByColumn(column: Column): string | undefined {
   if (!column.enumValues?.length) return undefined
 
   const useColumnName = () =>
-    `${pascalCase(getTableName(column.table))}${pascalCase(column.name)}Enum`
-  if ("config" in column && "enum" in (column as any).config) {
-    const enumName = (column as any).config.enum.enumName
-    if (enumName) return pascalCase(enumName)
-  }
+    `${pascalCase(getTableName(getColumnTable(column)))}${pascalCase(column.name)}Enum`
+  const enumName = pgEnumNameFromColumn(column)
+  if (enumName) return pascalCase(enumName)
 
   return useColumnName()
 }
 
+function pgEnumNameFromColumn(column: Column): string | undefined {
+  const fromColumn = enumNameFromUnknown(Reflect.get(column, "enum"))
+  if (fromColumn) return fromColumn
+
+  const config = Reflect.get(column, "config")
+  if (!isObjectOrFunction(config)) return undefined
+  return enumNameFromUnknown(Reflect.get(config, "enum"))
+}
+
+function enumNameFromUnknown(value: unknown): string | undefined {
+  if (!isObjectOrFunction(value)) return undefined
+  const enumName = Reflect.get(value, "enumName")
+  return typeof enumName === "string" ? enumName : undefined
+}
+
+function isObjectOrFunction(value: unknown): value is object {
+  return (
+    value != null && (typeof value === "object" || typeof value === "function")
+  )
+}
+
 export function isColumnVisible(
   columnName: string,
-  options: DrizzleFactoryInputVisibilityBehaviors<Table>,
-  behavior: keyof VisibilityBehavior
+  options: DrizzleFactoryInputBehaviors<Table>,
+  behavior: keyof ColumnBehavior<any>
 ): boolean {
   // Get specific column configuration
   const columnConfig = options?.[columnName as keyof typeof options]
-  // Get global default configuration
+  // Get table default configuration
   const defaultConfig = options?.["*"]
   if (columnConfig != null) {
     if (typeof columnConfig === "boolean") {
       return columnConfig
     }
-    const specificBehavior = columnConfig[behavior]
-    if (specificBehavior != null) {
-      return specificBehavior
+    if (!("~standard" in columnConfig)) {
+      const specificBehavior = columnConfig[behavior]
+      if (specificBehavior != null) {
+        return specificBehavior !== false
+      }
     }
   }
 
@@ -88,7 +124,7 @@ export function isColumnVisible(
     }
     const defaultBehavior = defaultConfig[behavior]
     if (defaultBehavior != null) {
-      return defaultBehavior
+      return defaultBehavior !== false
     }
   }
 
@@ -112,11 +148,13 @@ export function getSelectedColumns<TTable extends Table>(
   table: TTable,
   payload: ResolverPayload | (ResolverPayload | undefined)[] | undefined
 ): SelectedTableColumns<TTable> {
-  if (!payload) {
+  if (
+    !payload ||
+    (Array.isArray(payload) && payload.filter(Boolean).length === 0)
+  ) {
     return getTableColumns(table) as SelectedTableColumns<TTable>
   }
-  let selectedFields
-  selectedFields = new Set<string>()
+  let selectedFields = new Set<string>()
   if (Array.isArray(payload)) {
     for (const p of payload) {
       if (p) {
@@ -127,10 +165,67 @@ export function getSelectedColumns<TTable extends Table>(
     }
   } else {
     const resolvingFields = getResolvingFields(payload)
-    selectedFields = resolvingFields.selectedFields
+    selectedFields = new Set(resolvingFields.selectedFields)
   }
   return mapValue(getTableColumns(table), (column, columnName) => {
     if (selectedFields.has(columnName)) return column
     return mapValue.SKIP
   }) as SelectedTableColumns<TTable>
+}
+
+const tablePrimaryKeys = new WeakMap<Table, [key: string, column: Column][]>()
+
+export function getPrimaryColumns(
+  table: Table
+): [key: string, column: Column][] {
+  const cached = tablePrimaryKeys.get(table)
+  if (cached) return cached
+  let primaryColumns = Object.entries(getTableColumns(table)).filter(
+    ([_, col]) => col.primary
+  )
+  if (primaryColumns.length === 0) {
+    let primaryKey
+    if (table instanceof SQLiteTable) {
+      primaryKey = getSQLiteTableConfig(table).primaryKeys[0]
+    } else if (table instanceof MySqlTable) {
+      primaryKey = getMySQLTableConfig(table).primaryKeys[0]
+    } else if (table instanceof PgTable) {
+      primaryKey = getPgTableConfig(table).primaryKeys[0]
+    }
+    const colToKey = new Map<string, string>(
+      Object.entries(getTableColumns(table)).map(([key, col]) => [
+        col.name,
+        key,
+      ])
+    )
+    const cols = new Map<string, Column>(
+      Object.values(getTableColumns(table)).map((col) => [col.name, col])
+    )
+
+    if (primaryKey) {
+      primaryColumns = primaryKey.columns.map((col) => [
+        colToKey.get(col.name)!,
+        cols.get(col.name)!,
+      ])
+    }
+  }
+  if (primaryColumns.length === 0) {
+    throw new Error(`No primary key found for table ${getTableName(table)}`)
+  }
+  tablePrimaryKeys.set(table, primaryColumns)
+  return primaryColumns
+}
+
+export function getParentPath(info: GraphQLResolveInfo): string {
+  let path = ""
+  let prev = info.path.prev
+  while (prev) {
+    path = path ? `${pathKey(prev)}.${path}` : pathKey(prev)
+    prev = prev.prev
+  }
+  return path
+}
+
+export function pathKey(path: GraphQLResolveInfo["path"]): string {
+  return typeof path.key === "number" ? `[n]` : path.key
 }

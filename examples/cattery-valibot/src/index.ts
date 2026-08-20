@@ -1,20 +1,51 @@
+import * as fs from "node:fs"
 import { createServer } from "node:http"
-import { weave } from "@gqloom/core"
+import * as path from "node:path"
+import { type Middleware, weave } from "@gqloom/core"
+import { asyncContextProvider } from "@gqloom/core/context"
+import { DrizzleWeaver } from "@gqloom/drizzle"
 import { ValibotWeaver } from "@gqloom/valibot"
+import { extractExtendedColumnType } from "drizzle-orm"
+import { GraphQLError, printSchema } from "graphql"
+import { GraphQLDateTime, GraphQLJSONObject } from "graphql-scalars"
 import { createYoga } from "graphql-yoga"
 import { resolvers } from "./resolvers"
 
-const schema = weave(asyncContextProvider, ValibotWeaver, ...resolvers)
+const exceptionFilter: Middleware = async (next) => {
+  try {
+    return await next()
+  } catch (error) {
+    // biome-ignore lint/suspicious/noConsole: log error
+    console.error(error)
+    if (error instanceof Error) {
+      throw new GraphQLError(error.message)
+    }
+    throw new GraphQLError("There has been something wrong...")
+  }
+}
+
+const schema = weave(
+  asyncContextProvider,
+  ValibotWeaver,
+  ...resolvers,
+  exceptionFilter,
+  DrizzleWeaver.config({
+    presetGraphQLType(column) {
+      const { constraint } = extractExtendedColumnType(column)
+      if (constraint === "date") {
+        return GraphQLDateTime
+      }
+      if (constraint === "json") {
+        return GraphQLJSONObject
+      }
+    },
+  })
+)
 
 const yoga = createYoga({ schema })
 createServer(yoga).listen(4000, () => {
   console.info("Server is running on http://localhost:4000/graphql")
 })
-
-import { asyncContextProvider } from "@gqloom/core/context"
-import * as fs from "fs"
-import { printSchema } from "graphql"
-import * as path from "path"
 
 if (process.env.NODE_ENV !== "production") {
   fs.writeFileSync(
