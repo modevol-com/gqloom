@@ -1,5 +1,5 @@
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
+import { defineRelations } from "drizzle-orm"
 import {
   boolean,
   integer,
@@ -23,10 +23,6 @@ export const User = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(User, ({ many }) => ({
-  posts: many(Post),
-}))
-
 export const Post = drizzleSilk(
   pgTable("posts", {
     id: serial().primaryKey(),
@@ -40,6 +36,17 @@ export const Post = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(Post, ({ one }) => ({
-  author: one(User, { fields: [Post.authorId], references: [User.id] }),
+export const relations = defineRelations({ users: User, posts: Post }, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))

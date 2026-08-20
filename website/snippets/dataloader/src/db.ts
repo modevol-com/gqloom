@@ -1,6 +1,6 @@
 // @paths: {"src/*": ["snippets/dataloader/src/*"]}
 import { drizzle } from "drizzle-orm/node-postgres"
-import * as tables from "src/schema"
+import { relations } from "src/schema"
 
 const config = { databaseUrl: "" }
-export const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+export const db = drizzle(config.databaseUrl, { relations, logger: true })

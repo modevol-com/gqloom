@@ -1,6 +1,6 @@
 // @paths: {"src/*": ["snippets/dataloader/src/*"]}
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
+import { defineRelations } from "drizzle-orm"
 import * as t from "drizzle-orm/pg-core"
 
 export const roleEnum = t.pgEnum("role", ["user", "admin"])
@@ -14,10 +14,6 @@ export const users = drizzleSilk(
     role: roleEnum().default("user"),
   })
 )
-
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
 
 export const posts = drizzleSilk(
   t.pgTable("posts", {
@@ -33,6 +29,17 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, { fields: [posts.authorId], references: [users.id] }),
+export const relations = defineRelations({ users, posts }, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
