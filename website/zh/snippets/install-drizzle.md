@@ -1,30 +1,30 @@
 <Tabs groupId="drizzle-api-version">
-<template #Relational_API_v2>
+<template #v2_(rc)>
 
-请参考 Drizzle 的[入门指南](https://rqbv2.drizzle-orm-fe.pages.dev/docs/get-started)安装 Drizzle 与对应的数据库集成。
+请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。Relational API v2 请安装 `drizzle-orm@rc`。
 
-在完成 Drizzle 安装后，安装 `@gqloom/drizzle`：
+在完成 Drizzle 安装后，安装 `@gqloom/drizzle@rc`：
 
 ::: code-group
 ```sh [npm]
-npm i graphql @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+npm i graphql @gqloom/core drizzle-orm@rc @gqloom/drizzle@rc
 ```
 ```sh [pnpm]
-pnpm add graphql @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+pnpm add graphql @gqloom/core drizzle-orm@rc @gqloom/drizzle@rc
 ```
 ```sh [yarn]
-yarn add graphql @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+yarn add graphql @gqloom/core drizzle-orm@rc @gqloom/drizzle@rc
 ```
 ```sh [bun]
-bun add graphql @gqloom/core @drizzle-orm@beta @gqloom/drizzle@beta
+bun add graphql @gqloom/core drizzle-orm@rc @gqloom/drizzle@rc
 ```
 ```sh [deno]
-deno add npm:graphql npm:@gqloom/core npm:@drizzle-orm@beta npm:@gqloom/drizzle@beta
+deno add npm:graphql npm:@gqloom/core npm:drizzle-orm@rc npm:@gqloom/drizzle@rc
 ```
 :::
 
 </template>
-<template #Relational_API_v1>
+<template #v1>
 
 请参考 Drizzle 的[入门指南](https://orm.drizzle.team/docs/get-started)安装 Drizzle 与对应的数据库集成。
 
