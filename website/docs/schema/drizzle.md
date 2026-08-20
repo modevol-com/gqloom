@@ -150,7 +150,6 @@ In Drizzle Table, we can easily create [relationships](https://orm.drizzle.team/
 ```ts twoslash [resolver.ts]
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
 
 export const users = drizzleSilk(
@@ -163,10 +162,6 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
-
 export const posts = drizzleSilk(
   t.sqliteTable("posts", {
     id: t.int().primaryKey({ autoIncrement: true }),
@@ -176,11 +171,23 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 // @filename: resolver.ts
 import { field, EasyDataLoader } from "@gqloom/core"
@@ -192,11 +199,11 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq, inArray } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
-import * as schema from "./schema"
+import { relations } from "./relations"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
+  relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
@@ -263,7 +270,6 @@ We can use the queries from the resolver factory in the resolver:
 ```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
 
 export const users = drizzleSilk(
@@ -276,10 +282,6 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
-
 export const posts = drizzleSilk(
   t.sqliteTable("posts", {
     id: t.int().primaryKey({ autoIncrement: true }),
@@ -289,11 +291,23 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 // @filename: resolver.ts
 import { query, resolver } from "@gqloom/core"
@@ -301,11 +315,11 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
-import * as schema from "./schema"
+import { relations } from "./relations"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
+  relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
@@ -345,7 +359,6 @@ We can use the mutations from the resolver factory in the resolver:
 ```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
 
 export const users = drizzleSilk(
@@ -358,10 +371,6 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
-
 export const posts = drizzleSilk(
   t.sqliteTable("posts", {
     id: t.int().primaryKey({ autoIncrement: true }),
@@ -371,22 +380,34 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 // @filename: resolver.ts
 import { resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
-import * as schema from "./schema"
+import { relations } from "./relations"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
+  relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
@@ -412,7 +433,6 @@ The pre-defined queries and mutations of the resolver factory support custom inp
 ```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
 
 export const users = drizzleSilk(
@@ -425,10 +445,6 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
-
 export const posts = drizzleSilk(
   t.sqliteTable("posts", {
     id: t.int().primaryKey({ autoIncrement: true }),
@@ -438,11 +454,23 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 // @filename: resolver.ts
 import { query, resolver } from "@gqloom/core"
@@ -450,11 +478,11 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
-import * as schema from "./schema"
+import { relations } from "./relations"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
+  relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
@@ -483,7 +511,6 @@ The pre-defined queries, mutations, and fields of the resolver factory support a
 ```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
 
 export const users = drizzleSilk(
@@ -496,10 +523,6 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
-
 export const posts = drizzleSilk(
   t.sqliteTable("posts", {
     id: t.int().primaryKey({ autoIncrement: true }),
@@ -509,11 +532,23 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 // @filename: resolver.ts
 import { query, field, resolver } from "@gqloom/core"
@@ -523,11 +558,11 @@ import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import { GraphQLError } from "graphql"
 import * as v from "valibot"
-import * as schema from "./schema"
-import { users, posts } from "./schema"
+import { relations } from "./relations"
+import { posts, users } from "./schema"
 
 const db = drizzle({
-  schema,
+  relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
@@ -561,7 +596,6 @@ We can directly create a complete Resolver with the resolver factory:
 ```ts twoslash
 // @filename: schema.ts
 import { drizzleSilk } from "@gqloom/drizzle"
-import { relations } from "drizzle-orm"
 import * as t from "drizzle-orm/sqlite-core"
 
 export const users = drizzleSilk(
@@ -574,10 +608,6 @@ export const users = drizzleSilk(
   })
 )
 
-export const usersRelations = relations(users, ({ many }) => ({
-  posts: many(posts),
-}))
-
 export const posts = drizzleSilk(
   t.sqliteTable("posts", {
     id: t.int().primaryKey({ autoIncrement: true }),
@@ -587,11 +617,23 @@ export const posts = drizzleSilk(
   })
 )
 
-export const postsRelations = relations(posts, ({ one }) => ({
-  author: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
+// @filename: relations.ts
+import { defineRelations } from "drizzle-orm"
+import * as tables from "./schema"
+
+export const relations = defineRelations(tables, (r) => ({
+  users: {
+    posts: r.many.posts({
+      from: r.users.id,
+      to: r.posts.authorId,
+    }),
+  },
+  posts: {
+    author: r.one.users({
+      from: r.posts.authorId,
+      to: r.users.id,
+    }),
+  },
 }))
 // @filename: resolver.ts
 import { query, resolver } from "@gqloom/core"
@@ -599,11 +641,11 @@ import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/libsql"
 import * as v from "valibot"
-import * as schema from "./schema"
+import { relations } from "./relations"
 import { users } from "./schema"
 
 const db = drizzle({
-  schema,
+  relations,
   connection: { url: process.env.DB_FILE_NAME! },
 })
 
