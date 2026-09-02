@@ -1,7 +1,5 @@
 # Migrating from TypeGraphQL
 
-This page maps TypeGraphQL to GQLoom: the parts that are easy to guess wrong, plus links to [Silk](../silk.md), [Resolver](../resolver.md), [Weave](../weave.md), [Context](../context.md), and [Middleware](../middleware.md).
-
 ## Why GQLoom
 
 TypeGraphQL uses classes, decorators, and `reflect-metadata`. GQLoom weaves runtime schemas (such as Zod, Valibot, or Yup) and ORM models (such as Prisma, Drizzle, or MikroORM) into GraphQL schemas.

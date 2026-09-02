@@ -1,7 +1,5 @@
 # 从 TypeGraphQL 迁移到 GQLoom
 
-本文梳理 TypeGraphQL 到 GQLoom 的映射关系与容易踩坑的差异点。完整 API 请参阅[丝线](../silk.md)、[解析器](../resolver.md)、[编织](../weave.md)、[上下文](../context.md)与[中间件](../middleware.md)。
-
 ## 为什么迁到 GQLoom
 
 TypeGraphQL 使用类、装饰器与 `reflect-metadata`；GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema。
