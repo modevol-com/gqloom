@@ -1,0 +1,15 @@
+type Query {
+  recipe(
+    """Accepts provided id or generates a random one."""
+    id: Int
+  ): Recipe
+  recipes(skip: Int, take: Int): [Recipe!]!
+}
+
+type Recipe {
+  averageRating: Float
+  description: String
+  id: Int!
+  ratings: [Int!]!
+  title: String!
+}
