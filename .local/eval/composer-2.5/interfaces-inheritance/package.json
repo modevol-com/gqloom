@@ -1,0 +1,12 @@
+{
+  "name": "eval-interfaces-inheritance",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@gqloom/core": "file:../../../../packages/core",
+    "@gqloom/zod": "file:../../../../packages/zod",
+    "graphql": "^16.13.1",
+    "graphql-scalars": "^1.26.0",
+    "zod": "4.4.3"
+  }
+}
