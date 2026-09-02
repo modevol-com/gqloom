@@ -40,14 +40,14 @@ The table below highlights concepts and APIs with notable differences:
 | `@Arg` / `@Args` | `.input({ ... })` | Arguments become one object |
 | `@Ctx` | [`useContext()`](../context.md) | Requires `asyncContextProvider` |
 | `@Info` | `useResolverPayload().info` | |
-| `@Authorized` + `authChecker` | [Middleware](../middleware.md) | No built-in role checker |
+| `@Authorized` + `authChecker` | [Middleware](../middleware.md) | Operations use `.use()`, fields use `field().use()` |
 | `@UseMiddleware` | `.use()` or `weave(..., middleware)` | Koa-style onion model |
 | `container` / constructor injection | Context or a module-level provider | No built-in IoC container |
-| `class-validator` | Zod rules | See validation below |
+| `class-validator` | Zod rules | See validation gotchas below |
 | `emitSchemaFile` | `printSchema(lexicographicSortSchema(schema))` | See [Printing Schema](../advanced/printing-schema.md) |
 | `registerEnumType` | `z.enum` + `asEnumType` | |
 | `createUnionType` | `z.union` + `asUnionType` / `resolveType` | |
-| `@InterfaceType` | `asObjectType({ interfaces })` | |
+| `@InterfaceType` | `asObjectType({ interfaces })` | See interfaces gotcha below for polymorphic queries |
 | `@Directive` / `@Extensions` | `extensions` (Federation: [Federation](../advanced/federation.md)) | |
 | `complexity` | `extensions.complexity` | |
 | `DataLoader` | [`field().load()`](../dataloader.md) | |
@@ -102,6 +102,26 @@ export const zodWeaverConfig = ZodWeaver.config({
 
 Pass `zodWeaverConfig` to `weave`. For HTTP server setup, see [Adapters](../advanced/adapters/).
 
+`ZodWeaver.config` with `GraphQLDateTimeISO` maps all `z.date()` instances to the SDL scalar name `DateTimeISO` (ISO string). TypeGraphQL's `graphql-scalars` example uses `Timestamp` (unix milliseconds). These are different scalars; pick the one that matches your existing SDL rather than copying the `DateTimeISO` configuration blindly. `presetGraphQLType` for `DateTimeISO` on `z.date()` still follows Zod nullability (`z.date()` maps to `DateTimeISO!`, `.nullish()` maps to nullable `DateTimeISO`).
+
+Per-field custom scalars (`NonEmptyString`, `NonNegativeInt`, `Timestamp`, etc.) go through `asField({ type })` as the last line of defense (see [Zod](../schema/zod.md)). Unlike `presetGraphQLType`, `asField({ type: GraphQLTimestamp })` replaces the GraphQL type directly and does not retain the non-null `!` modifier: `z.date().register(asField, { type: GraphQLTimestamp })` weaves a nullable `Timestamp`. To match non-null `Timestamp!`, wrap the scalar in `new GraphQLNonNull(GraphQLTimestamp)` (imported from `graphql`). The same applies to `GraphQLNonEmptyString`.
+
+```ts
+import { asField } from "@gqloom/zod"
+import { GraphQLNonEmptyString, GraphQLTimestamp } from "graphql-scalars"
+import { GraphQLNonNull } from "graphql"
+import * as z from "zod"
+
+const Recipe = z.object({
+  title: z.string().register(asField, {
+    type: new GraphQLNonNull(GraphQLNonEmptyString),
+  }),
+  creationDate: z.date().register(asField, {
+    type: new GraphQLNonNull(GraphQLTimestamp),
+  }),
+})
+```
+
 ### Types and resolvers
 
 Name object types using `__typename` or `z.meta({ title })`. Define input types as separate silks named with `z.meta({ title })`. Reserve `asObjectType` as the last line of defense for GraphQL-only configurations. Queries, mutations, and computed fields are defined in `resolver` or `resolver.of`. See the [reference implementation](#reference-implementation) for a complete example.
@@ -131,6 +151,21 @@ export function authGuard(...roles: string[]): Middleware {
 
 Attach the middleware to an individual operation with `.use(authGuard("ADMIN"))`, or pass it to `weave` as global middleware.
 
+TypeGraphQL `@Authorized()` or `@Authorized("ADMIN")` on a class field is not the same as on a query or mutation. Keep the property on the object silk so the GraphQL SDL includes the field (such as `ratings` or `ingredients`). Place the authorization guard on `field().use(authGuard())` or `field().use(authGuard("ADMIN"))` inside `resolver.of`. Fields defined only on silks do not execute middleware. Operations continue to use `.use(authGuard())` as shown above.
+
+```ts
+import { field, resolver } from "@gqloom/core"
+import * as z from "zod"
+
+const Recipe = z.object({ ratings: z.array(z.int()) }).meta({ title: "Recipe" })
+
+export const recipeResolver = resolver.of(Recipe, {
+  ratings: field(z.array(z.int()))
+    .use(authGuard("ADMIN"))
+    .resolve((recipe) => recipe.ratings),
+})
+```
+
 Services previously injected via constructor parameters should be moved to the request context or module-level providers. Do not instantiate services with `new Service()` inside `resolve` unless the service is completely stateless.
 
 ### ORMs
@@ -150,13 +185,60 @@ For N+1 queries on relational fields, use [`field().load()`](../dataloader.md) w
 | `@Field() title: string` | `String!` | `z.string()` |
 | `@Field({ nullable: true }) description?: string` | `String` | `z.string().nullish()` |
 
-- Input validation and error formats: TypeGraphQL allows disabling validation via `validate: false`, whereas GQLoom validates inputs against the schema before invoking the `resolve` function. Arguments that fail validation reject the request before execution. If your application previously depended on receiving unvalidated input, adjust the schema accordingly. The error format also changes: `class-validator` throws `ArgumentValidationError`, while GQLoom returns standard schema issues. Update any clients that parse `extensions.validationErrors`.
+- Input validation and error formats: TypeGraphQL allows disabling validation via `validate: false`, whereas GQLoom has no `validate: false` and validates inputs against the schema before invoking the `resolve` function. Arguments that fail validation reject the request before execution. If your application previously depended on receiving unvalidated input, adjust the schema accordingly. The error format also changes: `class-validator` throws `ArgumentValidationError` (`extensions.validationErrors`), while GQLoom returns standard schema issues (`extensions.issues` in Zod). Update any clients that parse `extensions.validationErrors`. See [Zod](../schema/zod.md) for schema validation rules.
+
+| class-validator | Zod |
+| --- | --- |
+| `@MaxLength(n)` | `z.string().max(n)` |
+| `@MinLength(n)` | `z.string().min(n)` |
+| `@Length(min, max)` | `z.string().min(min).max(max)` |
+| `@Min(n)` / `@Max(n)` on int | `z.int().min(n)` / `z.int().max(n)` |
+
+When migrating nullable fields with constraints such as `@Field({ nullable: true })` and `@Length(30, 255)`, use `z.string().min(30).max(255).nullish()` with `.nullish()` on the outside of the chain, rather than `.optional()`.
 
 - `useContext()` requires `asyncContextProvider`: Calling `useContext()` requires `asyncContextProvider` to be passed into `weave`. On runtimes without `AsyncLocalStorage` support (such as certain Edge runtimes or browsers), access context directly via [`useResolverPayload().context`](../context.md#access-to-resolver-payload-directly).
 
 - `Date` types and `DateTimeISO`: By default, `z.date()` is woven as a GraphQL `String`. To match TypeGraphQL and output a `DateTimeISO` scalar, configure the scalar mapping explicitly using `ZodWeaver.config`.
 
 - Argument default values in SDL: Using `.default(...)` on an input schema applies the default value during runtime parsing. However, the generated GraphQL SDL may still show the argument as nullable rather than `Int! = 0`.
+
+- Interfaces and polymorphic queries: When implementor silks declare interfaces using `asObjectType({ interfaces: [IPerson] })`, GQLoom weaves `interface IPerson` and `type Student implements IPerson`. However, querying an interface silk directly with `query(z.array(IPerson))` causes GQLoom to weave `IPerson` as an object type. If both `query(z.array(IPerson))` and implementors referencing `interfaces: [IPerson]` exist in the same weave, GraphQL throws `Schema must contain uniquely named types but contains multiple types named "IPerson"`. To return polymorphic lists without type conflicts, use a discriminated union on the query instead: `z.discriminatedUnion("__typename", [Student, Employee])` (or `z.union` with `asUnionType` / `resolveType`), and do not call `query(z.array(IPerson))` in the same weave as those implementors. The resulting SDL produces `union Persons = Employee | Student`, and clients query fields using `__typename` and inline fragments. Note that a plain `z.string()` for an `id` field weaves as `String!`; to produce GraphQL `ID!`, use `z.string().uuid()`, `cuid()`, or `ulid()` (see [Zod](../schema/zod.md)).
+
+```ts
+import { query, resolver } from "@gqloom/core"
+import { asObjectType } from "@gqloom/zod"
+import * as z from "zod"
+
+const IPerson = z.object({
+  __typename: z.literal("IPerson").nullish(),
+  id: z.string(),
+  name: z.string(),
+})
+
+const Student = z
+  .object({
+    __typename: z.literal("Student"),
+    id: z.string(),
+    name: z.string(),
+    universityName: z.string(),
+  })
+  .register(asObjectType, { interfaces: [IPerson] })
+
+const Employee = z
+  .object({
+    __typename: z.literal("Employee"),
+    id: z.string(),
+    name: z.string(),
+    companyName: z.string(),
+  })
+  .register(asObjectType, { interfaces: [IPerson] })
+
+const Persons = z.discriminatedUnion("__typename", [Student, Employee])
+
+export const personResolver = resolver({
+  persons: query(z.array(Persons)).resolve(() => []),
+})
+```
 
 ## When to stop
 

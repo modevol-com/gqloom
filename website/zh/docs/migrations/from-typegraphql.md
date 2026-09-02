@@ -40,14 +40,14 @@ TypeGraphQL 使用类、装饰器与 `reflect-metadata`；GQLoom 直接将运行
 | `@Arg` / `@Args` | `.input({ ... })` | 参数合并为一个对象 |
 | `@Ctx` | [`useContext()`](../context.md) | 必须先注入 `asyncContextProvider` |
 | `@Info` | `useResolverPayload().info` | |
-| `@Authorized` + `authChecker` | [中间件](../middleware.md) | 无内置 role checker |
+| `@Authorized` + `authChecker` | [中间件](../middleware.md) | 操作使用 `.use()`，字段级鉴权使用 `field().use()` |
 | `@UseMiddleware` | `.use()` 或 `weave(..., middleware)` | Koa 洋葱模型 |
 | `container` / 构造注入 | context 或模块级 provider | 无内置 IoC 容器 |
-| `class-validator` | Zod 规则 | 见下方校验说明 |
+| `class-validator` | Zod 规则 | 参见下方校验说明 |
 | `emitSchemaFile` | `printSchema(lexicographicSortSchema(schema))` | 参见[打印 Schema](../advanced/printing-schema.md) |
 | `registerEnumType` | `z.enum` + `asEnumType` | |
 | `createUnionType` | `z.union` + `asUnionType` / `resolveType` | |
-| `@InterfaceType` | `asObjectType({ interfaces })` | |
+| `@InterfaceType` | `asObjectType({ interfaces })` | 参见下方多态查询与接口陷阱 |
 | `@Directive` / `@Extensions` | `extensions`（联邦参见[Federation](../advanced/federation.md)） | |
 | `complexity` | `extensions.complexity` | |
 | `DataLoader` | [`field().load()`](../dataloader.md) | |
@@ -102,6 +102,26 @@ export const zodWeaverConfig = ZodWeaver.config({
 
 将 `zodWeaverConfig` 传入 `weave` 即可。关于 HTTP 服务的挂载方式，请参阅[适配器](../advanced/adapters/)。
 
+`ZodWeaver.config` 配合 `GraphQLDateTimeISO` 会将所有 `z.date()` 实例映射为 SDL 标量名称 `DateTimeISO`（ISO 字符串）。TypeGraphQL 的 `graphql-scalars` 示例使用 `Timestamp`（Unix 毫秒时间戳）。这两者是不同的标量，请选择与原有 SDL 一致的标量，不要盲目复制 `DateTimeISO` 配置。通过 `presetGraphQLType` 配置的 `z.date()` 仍然遵循 Zod 的可空性规则（`z.date()` 映射为 `DateTimeISO!`，`.nullish()` 映射为可空的 `DateTimeISO`）。
+
+单个字段级别的 `graphql-scalars`（如 `NonEmptyString`、`NonNegativeInt`、`Timestamp` 等）通过 `asField({ type })` 作为最后防线进行配置（参见 [Zod](../schema/zod.md)）。与 `presetGraphQLType` 不同，`asField({ type: GraphQLTimestamp })` 会直接替换 GraphQL 类型，且不会保留非空修饰符 `!`：`z.date().register(asField, { type: GraphQLTimestamp })` 会编织为可空的 `Timestamp`。若要匹配非空的 `Timestamp!`，需使用从 `graphql` 导入的 `GraphQLNonNull` 进行包装（`type: new GraphQLNonNull(GraphQLTimestamp)`）。`GraphQLNonEmptyString` 等标量同理。
+
+```ts
+import { asField } from "@gqloom/zod"
+import { GraphQLNonEmptyString, GraphQLTimestamp } from "graphql-scalars"
+import { GraphQLNonNull } from "graphql"
+import * as z from "zod"
+
+const Recipe = z.object({
+  title: z.string().register(asField, {
+    type: new GraphQLNonNull(GraphQLNonEmptyString),
+  }),
+  creationDate: z.date().register(asField, {
+    type: new GraphQLNonNull(GraphQLTimestamp),
+  }),
+})
+```
+
 ### 类型与解析器
 
 Object 类型通过 `__typename` 或 `z.meta({ title })` 命名；Input 类型需使用独立的 Silk 并通过 `z.meta({ title })` 命名。`asObjectType` 仅作为最后防线用于声明 GraphQL 特有配置。Query、Mutation 以及计算字段统一在 `resolver` 或 `resolver.of` 中定义，完整示例参见[参考实现与文档索引](#参考实现与文档索引)。
@@ -131,6 +151,21 @@ export function authGuard(...roles: string[]): Middleware {
 
 通过 `.use(authGuard("ADMIN"))` 可将中间件应用到单个操作，也可在 `weave` 中作为全局中间件传入。
 
+TypeGraphQL 在类字段上声明的 `@Authorized()` 或 `@Authorized("ADMIN")` 与 Query/Mutation 操作上的鉴权不同。在 Object Silk 上保留该属性以确保 GraphQL SDL 包含该字段（例如 `ratings` 或 `ingredients`）。在 `resolver.of` 中使用 `field().use(authGuard())` 或 `field().use(authGuard("ADMIN"))` 为该字段添加鉴权保护。仅在 Silk 中声明的字段不会执行中间件。操作级别依然使用前述 `.use(authGuard())`。
+
+```ts
+import { field, resolver } from "@gqloom/core"
+import * as z from "zod"
+
+const Recipe = z.object({ ratings: z.array(z.int()) }).meta({ title: "Recipe" })
+
+export const recipeResolver = resolver.of(Recipe, {
+  ratings: field(z.array(z.int()))
+    .use(authGuard("ADMIN"))
+    .resolve((recipe) => recipe.ratings),
+})
+```
+
 TypeGraphQL 中通过构造函数注入的 Service，在 GQLoom 中应改由上下文（Context）或模块级 Provider 提供。除非 Service 是纯无状态的，否则不要在 `resolve` 函数内直接 `new Service()`。
 
 ### ORM
@@ -150,13 +185,60 @@ TypeGraphQL 中通过构造函数注入的 Service，在 GQLoom 中应改由上�
 | `@Field() title: string` | `String!` | `z.string()` |
 | `@Field({ nullable: true }) description?: string` | `String` | `z.string().nullish()` |
 
-- 输入校验与错误格式：TypeGraphQL 支持关闭校验（`validate: false`），而 GQLoom 默认在进入 `resolve` 函数前通过 Schema 校验输入。如果不符合规则，请求会在执行前抛出错误。若此前依赖在解析函数内部手动校验或接收未校验数据，需要调整 Schema 定义。此外，错误结构也有所不同：`class-validator` 抛出 `ArgumentValidationError`，而 GQLoom 抛出标准 Schema Issue。若客户端解析了 `extensions.validationErrors`，需同步调整客户端逻辑。
+- 输入校验与错误格式：TypeGraphQL 支持通过 `validate: false` 关闭校验，而 GQLoom 没有 `validate: false` 选项，默认在进入 `resolve` 函数前通过 Schema 校验输入。如果不符合规则，请求会在执行前抛出错误。若此前依赖在解析函数内部手动校验或接收未校验数据，需要调整 Schema 定义。此外，错误结构也有所不同：`class-validator` 抛出 `ArgumentValidationError`（`extensions.validationErrors`），而 GQLoom 返回标准 Schema Issue（Zod 中对应 `extensions.issues`）。若客户端解析了 `extensions.validationErrors`，需同步调整客户端逻辑。完整校验规则参见 [Zod](../schema/zod.md)。
+
+| class-validator | Zod |
+| --- | --- |
+| `@MaxLength(n)` | `z.string().max(n)` |
+| `@MinLength(n)` | `z.string().min(n)` |
+| `@Length(min, max)` | `z.string().min(min).max(max)` |
+| `@Min(n)` / `@Max(n)`（针对 int） | `z.int().min(n)` / `z.int().max(n)` |
+
+迁移带有约束的可空字段（如 `@Field({ nullable: true })` 与 `@Length(30, 255)`）时，使用 `z.string().min(30).max(255).nullish()` 并将 `.nullish()` 放在最外层，而不是 `.optional()`。
 
 - `useContext()` 依赖 `asyncContextProvider`：调用 `useContext()` 前必须在 `weave` 中注入 `asyncContextProvider` 中间件，否则无法获取上下文对象。在不支持 `AsyncLocalStorage` 的运行环境（如部分 Edge Runtime 或浏览器）中，应改用 [`useResolverPayload().context`](../context.md#直接访问解析器负载)。
 
 - `Date` 类型与 `DateTimeISO` 标量：`z.date()` 默认会被编织为 GraphQL `String`。若要与 TypeGraphQL 对齐生成 `DateTimeISO` 标量，必须显式通过 `ZodWeaver.config` 配置类型映射。
 
 - 参数默认值与 SDL 表现：在输入字段上调用 `.default(...)` 会在运行时解析时填充默认值，但生成的 GraphQL SDL 中该参数仍可能声明为可空类型，而不是 `Int! = 0`。
+
+- 接口与多态查询（Interfaces）：当实现类型仅通过 `asObjectType({ interfaces: [IPerson] })` 声明接口时，GQLoom 会正确编织出 `interface IPerson` 与 `type Student implements IPerson`。但如果直接在查询中声明 `query(z.array(IPerson))`，GQLoom 会将 `IPerson` 编织为普通 Object 类型。若在同一个 weave 中同时存在 `query(z.array(IPerson))` 与带有 `interfaces: [IPerson]` 的实现类型，GraphQL 会抛出错误：`Schema must contain uniquely named types but contains multiple types named "IPerson"`。为了安全地返回多态列表，推荐在查询端使用可辨识联合（Discriminated Union）：`z.discriminatedUnion("__typename", [Student, Employee])`（或 `z.union` 配合 `asUnionType` / `resolveType`），避免在同一个 weave 中直接 `query(z.array(IPerson))`。生成的 SDL 将展示为 `union Persons = Employee | Student`，客户端依然通过 `__typename` 与内联片段（Inline Fragments）进行查询。此外，普通的 `z.string()` 会被编织为 `String!`；若要输出 GraphQL `ID!` 标量，需使用 `z.string().uuid()`、`cuid()` 或 `ulid()`（参见 [Zod](../schema/zod.md)）。
+
+```ts
+import { query, resolver } from "@gqloom/core"
+import { asObjectType } from "@gqloom/zod"
+import * as z from "zod"
+
+const IPerson = z.object({
+  __typename: z.literal("IPerson").nullish(),
+  id: z.string(),
+  name: z.string(),
+})
+
+const Student = z
+  .object({
+    __typename: z.literal("Student"),
+    id: z.string(),
+    name: z.string(),
+    universityName: z.string(),
+  })
+  .register(asObjectType, { interfaces: [IPerson] })
+
+const Employee = z
+  .object({
+    __typename: z.literal("Employee"),
+    id: z.string(),
+    name: z.string(),
+    companyName: z.string(),
+  })
+  .register(asObjectType, { interfaces: [IPerson] })
+
+const Persons = z.discriminatedUnion("__typename", [Student, Employee])
+
+export const personResolver = resolver({
+  persons: query(z.array(Persons)).resolve(() => []),
+})
+```
 
 ## 边界与停机条件
 
