@@ -1,8 +1,8 @@
 # Migrating from TypeGraphQL
 
-TypeGraphQL describes a GraphQL schema with classes and decorators. GQLoom weaves the runtime schemas you already have — [Zod](https://zod.dev/) by default — into a GraphQL schema. Both are code-first. The skeleton is not: there is no `reflect-metadata`, no global metadata store, and no built-in IoC container.
+TypeGraphQL uses classes and decorators to define GraphQL schemas, while GQLoom weaves runtime schemas (such as [Zod](https://zod.dev/)) into GraphQL schemas. Both are code-first, but their architectures differ: GQLoom does not rely on `reflect-metadata`, global metadata registries, or a built-in IoC container.
 
-This guide covers **the parts that are easy to guess wrong**. For GQLoom APIs, see [Silk](../silk.md), [Resolver](../resolver.md), [Weave](../weave.md), [Context](../context.md), and [Middleware](../middleware.md).
+This guide outlines the differences, mapping rules, and common gotchas when migrating from TypeGraphQL to GQLoom. For complete API details, see [Silk](../silk.md), [Resolver](../resolver.md), [Weave](../weave.md), [Context](../context.md), and [Middleware](../middleware.md).
 
 ## Overview and mental model
 
@@ -14,16 +14,15 @@ This guide covers **the parts that are easy to guess wrong**. For GQLoom APIs, s
 | Validation | Optional `class-validator` | The schema itself; inputs are validated by default |
 | Auth / DI | `@Authorized`, `container` | Middleware, `useContext()` |
 
-**Defaults:**
+Migration recommendations:
 
-- Use **Zod** (`@gqloom/zod`). If the project already uses Valibot, or the source of truth is Prisma / Drizzle / Mikro, weave those types instead of copying another DTO layer.
-- Migrate module by module. Do not uninstall `type-graphql` first. Keep both `GraphQLSchema` instances and combine them with [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging), or serve two HTTP paths for a while.
-
-Queries and mutations stay separate in GQLoom. Do not fold them into a single handler.
+- Use Zod (`@gqloom/zod`) by default. If your project already uses Valibot, or the data layer is backed by Prisma, Drizzle, or MikroORM, weave those existing schemas or models directly instead of defining duplicate DTOs.
+- Migrate incrementally by module. Keep `type-graphql` installed during migration. Both `GraphQLSchema` instances can coexist and be combined with [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging), or mounted on separate HTTP endpoints.
+- Queries and mutations remain separate definitions in GQLoom. Do not combine them into a single handler.
 
 ## Concept map
 
-Only the mappings that are **not a straight rename**:
+The table below highlights concepts and APIs with notable differences:
 
 | TypeGraphQL | GQLoom | Notes |
 | --- | --- | --- |
@@ -35,8 +34,8 @@ Only the mappings that are **not a straight rename**:
 | `@Ctx` | [`useContext()`](../context.md) | Requires `asyncContextProvider` |
 | `@Info` | `useResolverPayload().info` | |
 | `@Authorized` + `authChecker` | [Middleware](../middleware.md) | No built-in role checker |
-| `@UseMiddleware` | `.use()` or `weave(..., middleware)` | Koa-style onion |
-| `container` / constructor injection | Context or a module-level provider | **No TypeDI** |
+| `@UseMiddleware` | `.use()` or `weave(..., middleware)` | Koa-style onion model |
+| `container` / constructor injection | Context or a module-level provider | No built-in IoC container |
 | `class-validator` | Zod rules | See validation below |
 | `emitSchemaFile` | `printSchema(lexicographicSortSchema(schema))` | See [Printing Schema](../advanced/printing-schema.md) |
 | `registerEnumType` | `z.enum` + `asEnumType` | |
@@ -47,7 +46,7 @@ Only the mappings that are **not a straight rename**:
 | `DataLoader` | [`field().load()`](../dataloader.md) | |
 | `orphanedTypes` | Pass unused silks into `weave` | |
 
-Common field options:
+Common field options mapping:
 
 - `description` → `.description()` or `asField` / Zod `.meta({ description })`
 - `deprecationReason` → `.deprecationReason()`
@@ -58,7 +57,7 @@ Common field options:
 
 ### Scaffold
 
-Install `graphql`, `@gqloom/core`, `zod`, `@gqloom/zod`, and whichever Yoga / Apollo adapter you already use. New files do not need `experimentalDecorators`.
+Install `graphql`, `@gqloom/core`, `zod`, `@gqloom/zod`, and your HTTP server adapter. New GQLoom files do not require `experimentalDecorators`.
 
 ```ts twoslash
 import { weave } from "@gqloom/core"
@@ -78,7 +77,7 @@ export const schema = weave(
 )
 ```
 
-To match TypeGraphQL's `DateTimeISO` scalar, map `z.date()` with `ZodWeaver.config` and [`GraphQLDateTimeISO`](https://the-guild.dev/graphql/scalars) (its SDL name is `DateTimeISO`):
+To match TypeGraphQL's `DateTimeISO` scalar, map `z.date()` using `ZodWeaver.config` and [`GraphQLDateTimeISO`](https://the-guild.dev/graphql/scalars) (where the scalar name in SDL is `DateTimeISO`):
 
 ```ts twoslash
 import { ZodWeaver } from "@gqloom/zod"
@@ -92,11 +91,11 @@ export const zodWeaverConfig = ZodWeaver.config({
 })
 ```
 
-Pass `zodWeaverConfig` into `weave`. For HTTP wiring, see [Adapters](../advanced/adapters/).
+Pass `zodWeaverConfig` to `weave`. For HTTP server setup, see [Adapters](../advanced/adapters/).
 
 ### Types and resolvers
 
-Name objects with `__typename` or `asObjectType`. Give inputs their own silk and an explicit name. Put queries, mutations, and computed fields on `resolver` / `resolver.of`. The [reference implementation](#reference-implementation) is a full Recipe port.
+Name object types using `__typename` or `asObjectType`. Define input types as separate silks with explicit names. Queries, mutations, and computed fields are defined in `resolver` or `resolver.of`. See the [reference implementation](#reference-implementation) for a complete example.
 
 ### Auth and context
 
@@ -121,56 +120,52 @@ export function authGuard(...roles: string[]): Middleware {
 }
 ```
 
-Attach it with `.use(authGuard("ADMIN"))` on one operation, or pass it to `weave` as global middleware.
+Attach the middleware to an individual operation with `.use(authGuard("ADMIN"))`, or pass it to `weave` as global middleware.
 
-Move constructor-injected services onto context or a module-level provider. Do not `new Service()` inside `resolve` unless the service was already stateless.
+Services previously injected via constructor parameters should be moved to the request context or module-level providers. Do not instantiate services with `new Service()` inside `resolve` unless the service is completely stateless.
 
 ### ORMs
 
-If you already use Prisma, Drizzle, or Mikro, weave the models and let the resolver factory build CRUD instead of translating `@Entity` + `@ObjectType` into Zod. See [Prisma](../schema/prisma.md#resolver-factory), [Drizzle](../schema/drizzle.md#resolver-factory), and [MikroORM](../schema/mikro-orm.md#resolver-factory).
+If your project already uses Prisma, Drizzle, or MikroORM, pass the entity models directly as silks and generate standard CRUD operations using resolver factories instead of translating `@Entity` and `@ObjectType` into Zod schemas manually. See [Prisma](../schema/prisma.md#resolver-factory), [Drizzle](../schema/drizzle.md#resolver-factory), and [MikroORM](../schema/mikro-orm.md#resolver-factory).
 
-For N+1 on relations, use [`field().load()`](../dataloader.md) instead of a hand-rolled DataLoader class.
+For N+1 queries on relational fields, use [`field().load()`](../dataloader.md) without creating custom DataLoader classes.
 
 ## Gotchas
 
-**Keep object and input silks separate.** GraphQL forbids using the same type as both output and input. TypeGraphQL uses `@ObjectType` and `@InputType`; GQLoom uses two silks.
+- Object and input silk separation: GraphQL requires output types and input types to remain distinct. TypeGraphQL uses separate `@ObjectType` and `@InputType` classes; in GQLoom, create separate silks rather than reusing an object silk as an input type.
 
-**Do not map `nullable: true` to `.optional()`.**
+- Nullability and `.optional()`: In Zod, `.optional()` indicates that an object property may be omitted (`undefined`), but does not map to a nullable GraphQL field (`null`). To match TypeGraphQL's `nullable: true` (which produces a nullable `String`), use `.nullish()` or `.nullable()`:
 
 | TypeGraphQL | GraphQL | Zod |
 | --- | --- | --- |
 | `@Field() title: string` | `String!` | `z.string()` |
 | `@Field({ nullable: true }) description?: string` | `String` | `z.string().nullish()` |
 
-`.optional()` means the property may be missing. It does not mean GraphQL `null`. For `nullable: true`, use `.nullish()` or `.nullable()`.
+- Input validation and error formats: TypeGraphQL allows disabling validation via `validate: false`, whereas GQLoom validates inputs against the schema before invoking the `resolve` function. Arguments that fail validation reject the request before execution. If your application previously depended on receiving unvalidated input, adjust the schema accordingly. The error format also changes: `class-validator` throws `ArgumentValidationError`, while GQLoom returns standard schema issues. Update any clients that parse `extensions.validationErrors`.
 
-**GQLoom validates inputs.** TypeGraphQL can run with `validate: false`. After migration, arguments that fail Zod never reach `resolve`. If you relied on receiving dirty input, relax the schema or accept the new behavior.
+- `useContext()` requires `asyncContextProvider`: Calling `useContext()` requires `asyncContextProvider` to be passed into `weave`. On runtimes without `AsyncLocalStorage` support (such as certain Edge runtimes or browsers), access context directly via [`useResolverPayload().context`](../context.md#access-to-resolver-payload-directly).
 
-The error shape changes too: `class-validator` used `ArgumentValidationError`; GQLoom surfaces schema issues. Clients that read `extensions.validationErrors` need an update.
+- `Date` types and `DateTimeISO`: By default, `z.date()` is woven as a GraphQL `String`. To match TypeGraphQL and output a `DateTimeISO` scalar, configure the scalar mapping explicitly using `ZodWeaver.config`.
 
-**`useContext()` needs `asyncContextProvider`.** Without it, context is empty. On runtimes without `AsyncLocalStorage` (some Edge / browser setups), use [`useResolverPayload().context`](../context.md#access-to-resolver-payload-directly).
-
-**`z.date()` is not `DateTimeISO` by default.** GQLoom weaves it to `String`. Map the scalar explicitly to match TypeGraphQL 2.
-
-**`.default()` on an argument may not print as GraphQL `= 0`.** The default is applied when parsing; the SDL argument can still be nullable.
+- Argument default values in SDL: Using `.default(...)` on an input schema applies the default value during runtime parsing. However, the generated GraphQL SDL may still show the argument as nullable rather than `Int! = 0`.
 
 ## When to stop
 
-Do not invent equivalents for these. Pause and inspect the architecture:
+If you encounter the following patterns, evaluate your architecture before attempting a direct migration:
 
-- **NestJS + TypeGraphQL**, or `@nestjs/graphql` code-first. That is a different decorator and DI runtime.
-- **Request-scoped IoC** (`using-scoped-container`, per-request `container.get`). GQLoom has no container lifecycle.
-- **Generic resolvers, deep class inheritance, mixins.** Flatten them into plain `resolver` objects; if that is not feasible, migrate by hand.
-- **Custom parameter decorators** (`createParameterDecorator`). Rewrite as `useContext` or `.input()`. If the semantics are unclear, stop.
+- NestJS integration: Projects using NestJS with TypeGraphQL or `@nestjs/graphql` code-first rely heavily on NestJS decorators and dependency injection, requiring architectural redesign.
+- Request-scoped IoC: TypeGraphQL's `using-scoped-container` and per-request `container.get` patterns have no container lifecycle equivalent in GQLoom. Use request-scoped context instead.
+- Generic resolvers, deep inheritance, and mixins: GQLoom uses functional composition. Flatten these patterns into standalone `resolver` objects or helper factory functions.
+- Custom parameter decorators (`createParameterDecorator`): Replace these with `useContext()` or `.input()` definitions.
 
-`simpleResolvers` can usually be ignored. For federation, subscriptions, and custom scalars, see [Federation](../advanced/federation.md), [Subscription](../advanced/subscription.md), and [custom Zod mappings](../schema/zod.md#customize-type-mappings).
+TypeGraphQL's `simpleResolvers` setting can generally be ignored. For federation, subscriptions, and custom scalars, see [Federation](../advanced/federation.md), [Subscription](../advanced/subscription.md), and [custom Zod mappings](../schema/zod.md#customize-type-mappings).
 
 ## Verification
 
-You are migrating the contract, not the classes.
+The goal of migration is maintaining schema contracts and operation behavior:
 
-1. Freeze SDL from TypeGraphQL (`emitSchemaFile` or `printSchema`).
-2. Print the GQLoom schema the same way:
+1. Export the existing GraphQL SDL from TypeGraphQL using `emitSchemaFile` or `printSchema`.
+2. Export the GQLoom schema using the same method:
 
 ```ts twoslash
 import { weave } from "@gqloom/core"
@@ -187,14 +182,14 @@ const schema = weave(ZodWeaver, helloResolver)
 export const sdl = printSchema(lexicographicSortSchema(schema))
 ```
 
-3. Diff type names, fields, arguments, nullability, and enum values. Match descriptions and deprecations if you care about docs parity.
-4. Replay the original queries, mutations, and subscriptions, and check `data`. Treat validation and authorization errors against [the new shapes above](#gotchas), not as a byte-for-byte copy of TypeGraphQL.
+3. Compare type names, fields, arguments, nullability, and enum values between both SDL files.
+4. Replay existing queries, mutations, and subscriptions to verify response `data`. Validate authorization and input validation errors against the updated error formats (see [Gotchas](#gotchas)).
 
-When every module is migrated and SDL plus requests are stable, uninstall `type-graphql`, `reflect-metadata`, and `class-validator`, and drop `experimentalDecorators` / `emitDecoratorMetadata`.
+After all modules are migrated and verified, remove `type-graphql`, `reflect-metadata`, and `class-validator` from your dependencies, and disable `experimentalDecorators` and `emitDecoratorMetadata` in `tsconfig.json`.
 
 ## Reference implementation
 
-This is TypeGraphQL's official `simple-usage` Recipe, ported to GQLoom. Computed fields (`specification`, `averageRating`, `ratingsCount`) live on `resolver.of`, not on the silk.
+The following example ports the official TypeGraphQL `simple-usage` Recipe example to GQLoom. Computed fields (`specification`, `averageRating`, `ratingsCount`) are defined on `resolver.of` rather than the base object silk.
 
 ::: code-group
 
@@ -338,12 +333,12 @@ class RecipeResolver {
 
 :::
 
-Compared with TypeGraphQL's official SDL, `minRate` weaves as a nullable argument: `.default(0)` fills the value at parse time and does not always become GraphQL `Int! = 0`. Field set, nullability of the main types, and the `DateTimeISO` scalar do match.
+Compared with TypeGraphQL's official SDL, `ratingsCount.minRate` weaves as a nullable argument because `.default(0)` supplies the default at parse time rather than generating `Int! = 0` in SDL. The field set, main type nullability, and the `DateTimeISO` scalar match the original schema.
 
-Read next:
+Related documentation:
 
-- [Zod](../schema/zod.md) — enums, unions, interfaces, `asField`
-- [Resolver](../resolver.md) — `resolver.of`, `query` / `mutation` / `field`
-- [Middleware](../middleware.md) — auth, logging, output validation
-- [Context](../context.md) — `useContext`, `asyncContextProvider`
-- [DataLoader](../dataloader.md) — `field().load()`
+- [Zod](../schema/zod.md): Enums, unions, interfaces, and `asField`
+- [Resolver](../resolver.md): `resolver.of`, `query`, `mutation`, and `field`
+- [Middleware](../middleware.md): Auth, logging, and output validation
+- [Context](../context.md): `useContext` and `asyncContextProvider`
+- [DataLoader](../dataloader.md): `field().load()`

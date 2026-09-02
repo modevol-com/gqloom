@@ -1,8 +1,8 @@
 # 从 TypeGraphQL 迁移到 GQLoom
 
-TypeGraphQL 用 class 和装饰器描述 GraphQL Schema。GQLoom 用你已经在用的运行时 Schema（默认 [Zod](https://zod.dev/)）直接编织出 Schema。两边都是 Code-First，但骨架不同：没有 `reflect-metadata`，没有全局元数据仓库，也没有内置 IoC。
+TypeGraphQL 使用类与装饰器定义 GraphQL Schema，GQLoom 则使用运行时 Schema（例如 [Zod](https://zod.dev/)）作为丝线编织 Schema。两者同属 Code-First 方案，但架构不同：GQLoom 不需要 `reflect-metadata`、全局元数据仓库与内置 IoC 容器。
 
-这篇指南只写**迁的时候容易猜错的地方**。GQLoom 的 API 细节见 [丝线](../silk.md)、[解析器](../resolver.md)、[编织](../weave.md)、[上下文](../context.md)、[中间件](../middleware.md)。
+本文档梳理从 TypeGraphQL 迁移至 GQLoom 的核心差异、类型映射与常见问题。关于 GQLoom 各特性的完整 API，请参阅[丝线](../silk.md)、[解析器](../resolver.md)、[编织](../weave.md)、[上下文](../context.md)与[中间件](../middleware.md)。
 
 ## 概述与心智转变
 
@@ -11,54 +11,53 @@ TypeGraphQL 用 class 和装饰器描述 GraphQL Schema。GQLoom 用你已经在
 | 类型 | `@ObjectType` class | Zod / Valibot / ORM 模型（Silk） |
 | 操作 | `@Resolver` class | `resolver({ ... })` 对象 |
 | Schema | `buildSchema({ resolvers })` 扫描全局 metadata | `weave(ZodWeaver, ...resolvers)` 显式传入 |
-| 校验 | 可选的 `class-validator` | Schema 本身，输入默认就会校验 |
+| 校验 | 可选的 `class-validator` | Schema 本身，输入默认执行校验 |
 | 鉴权 / DI | `@Authorized`、`container` | 中间件、`useContext()` |
 
-**默认选择：**
+建议与迁移策略：
 
-- Schema 库用 **Zod**（`@gqloom/zod`）。项目里已经是 Valibot，或主体是 Prisma / Drizzle / Mikro，就织现有类型，不要再抄一层 DTO。
-- 按模块渐进迁移，先不要卸载 `type-graphql`。两个 `GraphQLSchema` 可以并存，再用 [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging) 合成，或暂时挂两条 HTTP 路径。
-
-Query 和 Mutation 在 GQLoom 里仍然分开，不要收成一个 handler。
+- 默认推荐使用 Zod（`@gqloom/zod`）。若项目中已使用 Valibot，或数据层为 Prisma、Drizzle、MikroORM，可直接使用现有 Schema 或模型作为丝线，无需重复定义 DTO。
+- 建议按模块渐进迁移。迁移期间保留 `type-graphql` 依赖，两个 `GraphQLSchema` 实例可共存并通过 [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging) 合并，或在 HTTP 服务中分别挂载到不同路由。
+- Query 与 Mutation 操作在 GQLoom 中依然保持独立定义，不应合并为单个 handler。
 
 ## 核心概念与映射表
 
-只列出**不能按名字直译**的部分：
+下表列出两者概念与 API 存在差异的映射关系：
 
 | TypeGraphQL | GQLoom | 注意 |
 | --- | --- | --- |
-| `@ObjectType` / `@Field` | `z.object()`，必要时 `asObjectType` / `asField` | 计算字段放到 `resolver.of`，不要写进 silk |
+| `@ObjectType` / `@Field` | `z.object()`，必要时 `asObjectType` / `asField` | 计算字段定义在 `resolver.of` 中，不写入 Silk |
 | `@InputType` / `@ArgsType` | 独立的 input silk | 不要和 Object 共用同一份 Schema |
 | `@Resolver` + `@Query` / `@Mutation` | `resolver` + `query` / `mutation` | |
-| `@FieldResolver` + `@Root` | `resolver.of(Type, { field })` | parent 是 `resolve` 的第一个参数 |
-| `@Arg` / `@Args` | `.input({ ... })` | 参数变成一个对象 |
-| `@Ctx` | [`useContext()`](../context.md) | 必须先挂 `asyncContextProvider` |
+| `@FieldResolver` + `@Root` | `resolver.of(Type, { field })` | parent 为 `resolve` 的第一个参数 |
+| `@Arg` / `@Args` | `.input({ ... })` | 参数合并为一个对象 |
+| `@Ctx` | [`useContext()`](../context.md) | 必须先注入 `asyncContextProvider` |
 | `@Info` | `useResolverPayload().info` | |
-| `@Authorized` + `authChecker` | [中间件](../middleware.md) | 没有内置 role checker |
+| `@Authorized` + `authChecker` | [中间件](../middleware.md) | 无内置 role checker |
 | `@UseMiddleware` | `.use()` 或 `weave(..., middleware)` | Koa 洋葱模型 |
-| `container` / 构造注入 | context 或模块级 provider | **没有 TypeDI** |
-| `class-validator` | Zod 规则 | 见下方校验 |
-| `emitSchemaFile` | `printSchema(lexicographicSortSchema(schema))` | 见 [打印 Schema](../advanced/printing-schema.md) |
+| `container` / 构造注入 | context 或模块级 provider | 无内置 IoC 容器 |
+| `class-validator` | Zod 规则 | 见下方校验说明 |
+| `emitSchemaFile` | `printSchema(lexicographicSortSchema(schema))` | 参见[打印 Schema](../advanced/printing-schema.md) |
 | `registerEnumType` | `z.enum` + `asEnumType` | |
 | `createUnionType` | `z.union` + `asUnionType` / `resolveType` | |
 | `@InterfaceType` | `asObjectType({ interfaces })` | |
-| `@Directive` / `@Extensions` | `extensions`（联邦见 [Federation](../advanced/federation.md)） | |
+| `@Directive` / `@Extensions` | `extensions`（联邦参见[Federation](../advanced/federation.md)） | |
 | `complexity` | `extensions.complexity` | |
 | `DataLoader` | [`field().load()`](../dataloader.md) | |
-| `orphanedTypes` | 把未引用的 silk 传给 `weave` | |
+| `orphanedTypes` | 将未引用的 Silk 传给 `weave` | |
 
-常用字段选项：
+常用字段选项映射：
 
 - `description` → `.description()` 或 `asField` / Zod `.meta({ description })`
 - `deprecationReason` → `.deprecationReason()`
-- `nullable: true` → `.nullish()`（见[陷阱](#关键陷阱与行为差异)）
+- `nullable: true` → `.nullish()`（参见[关键陷阱与行为差异](#关键陷阱与行为差异)）
 - `defaultValue` → Zod `.default(...)`
 
 ## 关键迁移实践
 
 ### 骨架
 
-安装 `graphql`、`@gqloom/core`、`zod`、`@gqloom/zod`，以及你现有的 Yoga / Apollo 适配器。新文件不必再开 `experimentalDecorators`。
+安装 `graphql`、`@gqloom/core`、`zod`、`@gqloom/zod` 以及所需的 HTTP 适配器。新编写的 GQLoom 代码无需开启 TypeScript 的 `experimentalDecorators`。
 
 ```ts twoslash
 import { weave } from "@gqloom/core"
@@ -78,7 +77,7 @@ export const schema = weave(
 )
 ```
 
-需要 `Date` 与 TypeGraphQL 的 `DateTimeISO` 对齐时，用 `ZodWeaver.config` 映射 [`GraphQLDateTimeISO`](https://the-guild.dev/graphql/scalars)（SDL 名就是 `DateTimeISO`）：
+若需要使 `Date` 类型与 TypeGraphQL 的 `DateTimeISO` 标量保持一致，可通过 `ZodWeaver.config` 配置 [`GraphQLDateTimeISO`](https://the-guild.dev/graphql/scalars)（SDL 标量名称为 `DateTimeISO`）：
 
 ```ts twoslash
 import { ZodWeaver } from "@gqloom/zod"
@@ -92,11 +91,11 @@ export const zodWeaverConfig = ZodWeaver.config({
 })
 ```
 
-把 `zodWeaverConfig` 一并传给 `weave`。HTTP 层见 [适配器](../advanced/adapters/)。
+将 `zodWeaverConfig` 传入 `weave` 即可。关于 HTTP 服务的挂载方式，请参阅[适配器](../advanced/adapters/)。
 
 ### 类型与解析器
 
-Object 用 `__typename` 或 `asObjectType` 命名；Input 用另一份 silk 并显式命名。Query / Mutation / 计算字段写在 `resolver` / `resolver.of` 里，完整对照见[参考实现](#参考实现与文档索引)。
+Object 类型通过 `__typename` 或 `asObjectType` 命名；Input 类型需使用独立的 Silk 并显式指定名称。Query、Mutation 以及计算字段统一在 `resolver` 或 `resolver.of` 中定义，完整示例参见[参考实现与文档索引](#参考实现与文档索引)。
 
 ### 鉴权与上下文
 
@@ -121,56 +120,52 @@ export function authGuard(...roles: string[]): Middleware {
 }
 ```
 
-挂到单个操作上用 `.use(authGuard("ADMIN"))`，或作为 `weave` 的全局中间件。
+通过 `.use(authGuard("ADMIN"))` 可将中间件应用到单个操作，也可在 `weave` 中作为全局中间件传入。
 
-原先构造函数注入的 service，改放到 context 或模块顶层的 provider。不要在 `resolve` 里随意 `new Service()`，除非它本来就是无状态的。
+TypeGraphQL 中通过构造函数注入的 Service，在 GQLoom 中应改由上下文（Context）或模块级 Provider 提供。除非 Service 是纯无状态的，否则不要在 `resolve` 函数内直接 `new Service()`。
 
 ### ORM
 
-已经在用 Prisma、Drizzle 或 Mikro 时，把实体直接当 silk，CRUD 交给解析器工厂，而不是再把 `@Entity` + `@ObjectType` 译成 Zod。见 [Prisma](../schema/prisma.md#解析器工厂)、[Drizzle](../schema/drizzle.md#解析器工厂)、[MikroORM](../schema/mikro-orm.md#解析器工厂)。
+如果已在项目中集成 Prisma、Drizzle 或 MikroORM，可直接将数据模型作为 Silk 传入，并通过解析器工厂生成基础 CRUD 操作，无需将 `@Entity` 与 `@ObjectType` 手动转换为 Zod Schema。详情请参阅 [Prisma](../schema/prisma.md#解析器工厂)、[Drizzle](../schema/drizzle.md#解析器工厂) 与 [MikroORM](../schema/mikro-orm.md#解析器工厂)。
 
-关联字段上的 N+1 用 [`field().load()`](../dataloader.md)，不必手写 DataLoader 类。
+针对关联字段的 N+1 查询问题，使用 [`field().load()`](../dataloader.md) 即可，无需单独手写 DataLoader 类。
 
 ## 关键陷阱与行为差异
 
-**Object 和 Input 必须分开。** GraphQL 不允许同一个类型既当 output 又当 input。TypeGraphQL 用 `@ObjectType` / `@InputType` 两套 class；GQLoom 就准备两份 silk。
+- Object 与 Input 类型的区分：GraphQL 规范要求 Output 与 Input 类型必须分离。TypeGraphQL 分别使用 `@ObjectType` 与 `@InputType` 类；在 GQLoom 中需分别为其定义独立的 Silk，不能共用同一个 Object Silk 作为输入类型。
 
-**Nullability 不要用 `.optional()` 去对 `nullable: true`。**
+- 空值处理（Nullability）与 `.optional()`：在 Zod 中，`.optional()` 仅表示输入对象中该属性可以缺失（`undefined`），并不会将其在 GraphQL 中声明为可空（`null`）。若要对应 TypeGraphQL 的 `nullable: true`（生成可空的 `String`），应使用 `.nullish()` 或 `.nullable()`：
 
 | TypeGraphQL | GraphQL | Zod |
 | --- | --- | --- |
 | `@Field() title: string` | `String!` | `z.string()` |
 | `@Field({ nullable: true }) description?: string` | `String` | `z.string().nullish()` |
 
-`.optional()` 只表示「属性可以缺」，不表示 GraphQL 的 `null`。要对齐 `nullable: true`，用 `.nullish()` 或 `.nullable()`。
+- 输入校验与错误格式：TypeGraphQL 支持关闭校验（`validate: false`），而 GQLoom 默认在进入 `resolve` 函数前通过 Schema 校验输入。如果不符合规则，请求会在执行前抛出错误。若此前依赖在解析函数内部手动校验或接收未校验数据，需要调整 Schema 定义。此外，错误结构也有所不同：`class-validator` 抛出 `ArgumentValidationError`，而 GQLoom 抛出标准 Schema Issue。若客户端解析了 `extensions.validationErrors`，需同步调整客户端逻辑。
 
-**GQLoom 会校验输入。** TypeGraphQL 可以 `validate: false`。迁过来之后，不符合 Zod 的参数会在进 `resolve` 之前失败。若你依赖「先拿脏数据再自己处理」，需要改 Schema 或接受新行为。
+- `useContext()` 依赖 `asyncContextProvider`：调用 `useContext()` 前必须在 `weave` 中注入 `asyncContextProvider` 中间件，否则无法获取上下文对象。在不支持 `AsyncLocalStorage` 的运行环境（如部分 Edge Runtime 或浏览器）中，应改用 [`useResolverPayload().context`](../context.md#直接访问解析器负载)。
 
-校验错误形状也不同：`class-validator` 走 `ArgumentValidationError`；GQLoom 走 Schema issue。客户端如果解析了旧的 `extensions.validationErrors`，要一起改。
+- `Date` 类型与 `DateTimeISO` 标量：`z.date()` 默认会被编织为 GraphQL `String`。若要与 TypeGraphQL 对齐生成 `DateTimeISO` 标量，必须显式通过 `ZodWeaver.config` 配置类型映射。
 
-**`useContext()` 依赖 `asyncContextProvider`。** 没挂上时拿不到上下文。不支持 `AsyncLocalStorage` 的环境（部分 Edge / 浏览器）改用 [`useResolverPayload().context`](../context.md#直接访问解析器负载)。
-
-**默认不要把 Date 当成 `DateTimeISO`。** `z.date()` 默认织成 `String`。要和 TypeGraphQL 2 对齐，显式映射标量。
-
-**参数上的 `.default()` 不一定变成 GraphQL `= 0`。** 解析时会补默认值，SDL 里该参数仍可能是可空的。
+- 参数默认值与 SDL 表现：在输入字段上调用 `.default(...)` 会在运行时解析时填充默认值，但生成的 GraphQL SDL 中该参数仍可能声明为可空类型，而不是 `Int! = 0`。
 
 ## 边界与停机条件
 
-遇到这些情况，不要硬编等价物，先停下来看架构：
+如果项目中使用了以下模式，建议先评估架构方案，避免强行机械迁移：
 
-- **NestJS + TypeGraphQL**，或 `@nestjs/graphql` 的 code-first。那是另一套装饰器 / DI 运行时。
-- **Request-scoped IoC**（`using-scoped-container`、按请求 `container.get`）。GQLoom 没有容器生命周期。
-- **泛型 Resolver、深层 class 继承、mixin**。通常展平成普通 `resolver` 对象；展不平就人工处理。
-- **自定义参数装饰器**（`createParameterDecorator`）。改成 `useContext` 或 `.input()`；语义不清就停。
+- NestJS 集成：若使用 NestJS + TypeGraphQL 或 `@nestjs/graphql` 的 Code-First 模式，由于其深度依赖 NestJS 的装饰器与 IoC 容器，需要作为独立模块重新设计。
+- 请求作用域 IoC（Request-scoped Container）：TypeGraphQL 的 `using-scoped-container` 或按请求 `container.get` 机制在 GQLoom 中没有对应的容器生命周期管理，应改用请求级 Context。
+- 泛型 Resolver、复杂类继承与 Mixin：GQLoom 采用纯函数与对象组合方式，此类继承结构通常需展平为独立的 `resolver` 对象或通过工厂函数生成。
+- 自定义参数装饰器（`createParameterDecorator`）：应改用 `useContext()` 或 `.input()` 实现相应逻辑。
 
-`simpleResolvers` 一般可以忽略。Federation、订阅、自定义标量分别看 [联邦](../advanced/federation.md)、[订阅](../advanced/subscription.md)、[Zod 自定义映射](../schema/zod.md#自定义类型映射)。
+TypeGraphQL 的 `simpleResolvers` 配置通常无需特殊处理。关于 Federation、订阅与自定义标量，请参阅[联邦](../advanced/federation.md)、[订阅](../advanced/subscription.md)与 [Zod 自定义类型映射](../schema/zod.md#自定义类型映射)。
 
 ## 验证与验收标准
 
-迁的不是 class，是契约。
+迁移的核心目标是保证 GraphQL Schema 契约与接口行为的一致性：
 
-1. 用 TypeGraphQL 的 `emitSchemaFile`（或一次 `printSchema`）冻一份 SDL。
-2. GQLoom 用同样方式导出：
+1. 使用 TypeGraphQL 的 `emitSchemaFile` 或 `printSchema` 导出迁移前的完整 GraphQL SDL。
+2. 使用 GQLoom 以相同方式导出 Schema SDL：
 
 ```ts twoslash
 import { weave } from "@gqloom/core"
@@ -187,14 +182,14 @@ const schema = weave(ZodWeaver, helloResolver)
 export const sdl = printSchema(lexicographicSortSchema(schema))
 ```
 
-3. 对比类型名、字段、参数、nullability、enum 值。描述和弃用信息按你是否要保持文档一致来决定。
-4. 把原来的查询 / 变更 / 订阅重放一遍，核对 `data`。校验失败和未授权的错误码、`extensions` 按[上文声明的新形状](#关键陷阱与行为差异)验收，而不是假装和 TypeGraphQL 完全一样。
+3. 比对两份 SDL 中的类型名称、字段列表、参数定义、可空性（Nullability）与枚举值。
+4. 重放原有的 Query、Mutation 与 Subscription 测试用例，核对返回的 `data` 数据。针对输入校验失败与鉴权异常，按照 GQLoom 的错误结构与 `extensions`（参见[关键陷阱与行为差异](#关键陷阱与行为差异)）进行验收。
 
-全部模块迁完、SDL 与请求都稳定之后，再卸载 `type-graphql`、`reflect-metadata`、`class-validator`，并去掉 `experimentalDecorators` / `emitDecoratorMetadata`。
+当所有模块迁移完成且 SDL 与接口测试均通过后，可移除 `type-graphql`、`reflect-metadata` 与 `class-validator` 依赖，并从 `tsconfig.json` 中移除 `experimentalDecorators` 与 `emitDecoratorMetadata` 配置。
 
 ## 参考实现与文档索引
 
-下面把 TypeGraphQL 官方 `simple-usage` 的 Recipe 迁成 GQLoom。计算字段（`specification`、`averageRating`、`ratingsCount`）放在 `resolver.of` 里，不放进 silk。
+以下示例展示将 TypeGraphQL 官方 `simple-usage` 中的 Recipe 示例迁移至 GQLoom 的完整实现。计算字段（`specification`、`averageRating`、`ratingsCount`）定义在 `resolver.of` 中，不包含在基础 Object Silk 内。
 
 ::: code-group
 
@@ -338,12 +333,12 @@ class RecipeResolver {
 
 :::
 
-和 TypeGraphQL 官方 SDL 相比，`ratingsCount` 的 `minRate` 在这里会织成可空参数：`.default(0)` 在解析时补默认值，不一定变成 GraphQL 里的 `Int! = 0`。字段集合、nullability 主体和 `DateTimeISO` 标量是对齐的。
+与 TypeGraphQL 官方生成的 SDL 相比，`ratingsCount` 操作中的 `minRate` 参数在此处会被编织为可空参数：`.default(0)` 在运行时解析输入时提供默认值，但在 SDL 中不会输出为 `Int! = 0`。其余字段集合、核心类型可空性以及 `DateTimeISO` 标量均与原 Schema 一致。
 
-继续阅读：
+相关文档：
 
-- [Zod](../schema/zod.md) — 枚举、联合、接口、`asField`
-- [解析器](../resolver.md) — `resolver.of`、`query` / `mutation` / `field`
-- [中间件](../middleware.md) — 鉴权、日志、输出校验
-- [上下文](../context.md) — `useContext`、`asyncContextProvider`
-- [数据加载器](../dataloader.md) — `field().load()`
+- [Zod](../schema/zod.md): 枚举、联合、接口与 `asField`
+- [解析器](../resolver.md): `resolver.of`、`query`、`mutation` 与 `field`
+- [中间件](../middleware.md): 鉴权、日志与输出校验
+- [上下文](../context.md): `useContext` 与 `asyncContextProvider`
+- [数据加载器](../dataloader.md): `field().load()`
