@@ -1,19 +1,17 @@
 # 从 TypeGraphQL 迁移到 GQLoom
 
-TypeGraphQL 使用类与装饰器定义 GraphQL Schema，GQLoom 则使用运行时 Schema（例如 [Zod](https://zod.dev/)）作为丝线编织 Schema。两者同属 Code-First 方案，但架构不同：GQLoom 不需要 `reflect-metadata`、全局元数据仓库与内置 IoC 容器。
-
-本文档梳理从 TypeGraphQL 迁移至 GQLoom 的核心差异、类型映射与常见问题。关于 GQLoom 各特性的完整 API，请参阅[丝线](../silk.md)、[解析器](../resolver.md)、[编织](../weave.md)、[上下文](../context.md)与[中间件](../middleware.md)。
+本文梳理 TypeGraphQL 到 GQLoom 的映射关系与容易踩坑的差异点。完整 API 请参阅[丝线](../silk.md)、[解析器](../resolver.md)、[编织](../weave.md)、[上下文](../context.md)与[中间件](../middleware.md)。
 
 ## 为什么迁到 GQLoom
 
-GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema。从 TypeGraphQL 迁移会带来明确的架构变化：
+TypeGraphQL 使用类、装饰器与 `reflect-metadata`；GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema。
 
-- 你可以将一份 Zod 或 ORM 模型作为唯一事实源：TypeScript 类型由其自动推导，GraphQL 类型由其编织，输入校验即为 Schema 本身。TypeGraphQL 通常需要拆分 GraphQL 类、TypeScript 类型与可选的 `class-validator` 装饰器。
-- GQLoom 不需要 `reflect-metadata`、`experimentalDecorators`、`emitDecoratorMetadata`、全局元数据仓库与内置 IoC 容器（如 TypeDI）。
-- Prisma、Drizzle 与 MikroORM 实体可以直接作为丝线使用，并通过解析器工厂生成 CRUD 操作。
-- 使用 `field().load()` 即可解决关联查询的 N+1 问题，无需编写 DataLoader 类。
-- 中间件与 `useContext()` 替代了 `@Authorized` 与构造函数注入，无需装饰器或代码生成即可支持订阅与 Apollo Federation。
-- 支持渐进式迁移：迁移期间可以保留 `type-graphql` 依赖，两个 `GraphQLSchema` 实例可通过 `mergeSchemas` 合并或挂载在不同的 HTTP 路由上。完成迁移后，可以移除 `type-graphql`、`reflect-metadata` 与 `class-validator`，并关闭 `tsconfig.json` 中的装饰器相关配置。
+- 一份 Schema 或 ORM 模型作为唯一事实源，替代原本分散的 GraphQL 类、TypeScript 类型与 `class-validator` 装饰器。TypeScript 类型由其自动推导，GraphQL 类型由其编织，输入校验即为 Schema 本身。
+- 不再需要 `reflect-metadata`、`experimentalDecorators`、`emitDecoratorMetadata`、全局元数据仓库与内置 IoC 容器（如 TypeDI）。迁移完成后可以移除 `type-graphql`、`reflect-metadata` 与 `class-validator` 依赖，并关闭 `tsconfig.json` 中的装饰器编译器选项。
+- 直接将 Prisma、Drizzle 与 MikroORM 模型作为丝线使用，通过解析器工厂生成标准 CRUD 操作，无需手写 DTO 类。
+- `field().load()` 批量处理关联查询的 N+1 问题，无需编写自定义 DataLoader 类。
+- 使用中间件与 `useContext()` 处理鉴权与请求数据，替代 `@Authorized` 装饰器与构造函数注入。订阅与 Apollo Federation 无需装饰器或代码生成即可支持。
+- 迁移期间可以保留 `type-graphql` 依赖，通过 `mergeSchemas` 合并两个 Schema 实例或分别挂载到不同 HTTP 路由，按模块逐步完成替换。
 
 ## 概述与心智转变
 
