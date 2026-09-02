@@ -122,4 +122,14 @@ export default [
       },
     ],
   },
+  {
+    text: "Migrations",
+    collapsed: false,
+    items: [
+      {
+        text: "From TypeGraphQL",
+        link: "/docs/migrations/from-typegraphql",
+      },
+    ],
+  },
 ]
