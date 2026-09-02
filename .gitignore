@@ -32,6 +32,7 @@ tmp
 # Local files
 .env*.local
 *local.db
+.local
 
 # IDEs and editors
 .idea
