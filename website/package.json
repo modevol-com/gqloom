@@ -38,7 +38,7 @@
     "arktype": "^2.2.3",
     "concurrently": "^9.2.1",
     "drizzle-kit": "1.0.0-rc.4",
-    "drizzle-orm": "1.0.0-rc.4",
+    "drizzle-orm": "1.0.0-rc.5-169397b",
     "drizzle-orm-rqbv1": "npm:drizzle-orm@0.45.2",
     "effect": "^3.22.1",
     "fastify": "^5.12.1",
