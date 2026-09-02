@@ -35,7 +35,7 @@ The table below highlights concepts and APIs with notable differences:
 
 | TypeGraphQL | GQLoom | Notes |
 | --- | --- | --- |
-| `@ObjectType` / `@Field` | `z.object()`, plus `asObjectType` / `asField` when needed | Put computed fields on `resolver.of`, not on the silk |
+| `@ObjectType` / `@Field` | `z.object()`, names via `__typename` or `z.meta({ title })`, descriptions via `z.describe()` or `z.meta({ description })` | Put computed fields on `resolver.of`, not on the silk |
 | `@InputType` / `@ArgsType` | A separate input silk | Do not reuse the object silk |
 | `@Resolver` + `@Query` / `@Mutation` | `resolver` + `query` / `mutation` | |
 | `@FieldResolver` + `@Root` | `resolver.of(Type, { field })` | Parent is the first argument of `resolve` |
@@ -57,10 +57,12 @@ The table below highlights concepts and APIs with notable differences:
 
 Common field options mapping:
 
-- `description` → `.description()` or `asField` / Zod `.meta({ description })`
+- `description` on silk fields → `z.describe()` or `z.meta({ description })` (operations use `.description()`)
 - `deprecationReason` → `.deprecationReason()`
 - `nullable: true` → `.nullish()` (see [Gotchas](#gotchas))
 - `defaultValue` → Zod `.default(...)`
+
+`asObjectType` and `asField` are the last line of defense between a Zod schema and the GraphQL schema. Declare ordinary names and descriptions with `z.describe()` or `z.meta()`. Reach for `asObjectType` and `asField` only when Zod metadata cannot express GraphQL-only configurations, such as interfaces (`asObjectType({ interfaces })`), hiding a field or overriding its GraphQL type (`asField({ type })`), complexity, or extensions.
 
 ## Migration practices
 
@@ -104,7 +106,7 @@ Pass `zodWeaverConfig` to `weave`. For HTTP server setup, see [Adapters](../adva
 
 ### Types and resolvers
 
-Name object types using `__typename` or `asObjectType`. Define input types as separate silks with explicit names. Queries, mutations, and computed fields are defined in `resolver` or `resolver.of`. See the [reference implementation](#reference-implementation) for a complete example.
+Name object types using `__typename` or `z.meta({ title })`. Define input types as separate silks named with `z.meta({ title })`. Reserve `asObjectType` as the last line of defense for GraphQL-only configurations. Queries, mutations, and computed fields are defined in `resolver` or `resolver.of`. See the [reference implementation](#reference-implementation) for a complete example.
 
 ### Auth and context
 
@@ -210,7 +212,7 @@ import {
   resolver,
   weave,
 } from "@gqloom/core"
-import { asField, asObjectType, ZodWeaver } from "@gqloom/zod"
+import { ZodWeaver } from "@gqloom/zod"
 import { GraphQLDateTimeISO } from "graphql-scalars"
 import * as z from "zod"
 
@@ -223,14 +225,15 @@ const zodWeaverConfig = ZodWeaver.config({
 const Recipe = z
   .object({
     title: z.string(),
-    description: z.string().nullish().register(asField, {
-      description: "The recipe description with preparation info",
-    }),
+    description: z
+      .string()
+      .nullish()
+      .describe("The recipe description with preparation info"),
     ratings: z.array(z.int()),
     creationDate: z.date(),
   })
-  .register(asObjectType, {
-    name: "Recipe",
+  .meta({
+    title: "Recipe",
     description: "Object representing cooking recipe",
   })
 
@@ -241,7 +244,7 @@ const RecipeInput = z
     title: z.string(),
     description: z.string().nullish(),
   })
-  .register(asObjectType, { name: "RecipeInput" })
+  .meta({ title: "RecipeInput" })
 
 const items: IRecipe[] = [
   {
@@ -346,7 +349,7 @@ Compared with TypeGraphQL's official SDL, `ratingsCount.minRate` weaves as a nul
 
 Related documentation:
 
-- [Zod](../schema/zod.md): Enums, unions, interfaces, and `asField`
+- [Zod](../schema/zod.md): `z.describe()`, `z.meta()`, enums, unions, interfaces, and `asObjectType` / `asField` as the last line of defense
 - [Resolver](../resolver.md): `resolver.of`, `query`, `mutation`, and `field`
 - [Middleware](../middleware.md): Auth, logging, and output validation
 - [Context](../context.md): `useContext` and `asyncContextProvider`

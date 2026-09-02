@@ -35,7 +35,7 @@ TypeGraphQL 使用类、装饰器与 `reflect-metadata`；GQLoom 直接将运行
 
 | TypeGraphQL | GQLoom | 注意 |
 | --- | --- | --- |
-| `@ObjectType` / `@Field` | `z.object()`，必要时 `asObjectType` / `asField` | 计算字段定义在 `resolver.of` 中，不写入 Silk |
+| `@ObjectType` / `@Field` | `z.object()`，通过 `__typename` 或 `z.meta({ title })` 命名，通过 `z.describe()` 或 `z.meta({ description })` 添加描述 | 计算字段定义在 `resolver.of` 中，不写入 Silk |
 | `@InputType` / `@ArgsType` | 独立的 input silk | 不要和 Object 共用同一份 Schema |
 | `@Resolver` + `@Query` / `@Mutation` | `resolver` + `query` / `mutation` | |
 | `@FieldResolver` + `@Root` | `resolver.of(Type, { field })` | parent 为 `resolve` 的第一个参数 |
@@ -57,10 +57,12 @@ TypeGraphQL 使用类、装饰器与 `reflect-metadata`；GQLoom 直接将运行
 
 常用字段选项映射：
 
-- `description` → `.description()` 或 `asField` / Zod `.meta({ description })`
+- `description`（丝线字段）→ `z.describe()` 或 `z.meta({ description })`（操作使用 `.description()`）
 - `deprecationReason` → `.deprecationReason()`
 - `nullable: true` → `.nullish()`（参见[关键陷阱与行为差异](#关键陷阱与行为差异)）
 - `defaultValue` → Zod `.default(...)`
+
+`asObjectType` 与 `asField` 是 Zod Schema 与 GraphQL Schema 之间的最后防线。通常用 `z.describe()` 或 `z.meta()` 声明元信息。仅在 Zod 元数据无法表达 GraphQL 特有配置时使用它们，例如接口（`asObjectType({ interfaces })`）、隐藏字段或覆盖字段 GraphQL 类型（`asField({ type })`）、复杂度或扩展等。
 
 ## 关键迁移实践
 
@@ -104,7 +106,7 @@ export const zodWeaverConfig = ZodWeaver.config({
 
 ### 类型与解析器
 
-Object 类型通过 `__typename` 或 `asObjectType` 命名；Input 类型需使用独立的 Silk 并显式指定名称。Query、Mutation 以及计算字段统一在 `resolver` 或 `resolver.of` 中定义，完整示例参见[参考实现与文档索引](#参考实现与文档索引)。
+Object 类型通过 `__typename` 或 `z.meta({ title })` 命名；Input 类型需使用独立的 Silk 并通过 `z.meta({ title })` 命名。`asObjectType` 仅作为最后防线用于声明 GraphQL 特有配置。Query、Mutation 以及计算字段统一在 `resolver` 或 `resolver.of` 中定义，完整示例参见[参考实现与文档索引](#参考实现与文档索引)。
 
 ### 鉴权与上下文
 
@@ -210,7 +212,7 @@ import {
   resolver,
   weave,
 } from "@gqloom/core"
-import { asField, asObjectType, ZodWeaver } from "@gqloom/zod"
+import { ZodWeaver } from "@gqloom/zod"
 import { GraphQLDateTimeISO } from "graphql-scalars"
 import * as z from "zod"
 
@@ -223,14 +225,15 @@ const zodWeaverConfig = ZodWeaver.config({
 const Recipe = z
   .object({
     title: z.string(),
-    description: z.string().nullish().register(asField, {
-      description: "The recipe description with preparation info",
-    }),
+    description: z
+      .string()
+      .nullish()
+      .describe("The recipe description with preparation info"),
     ratings: z.array(z.int()),
     creationDate: z.date(),
   })
-  .register(asObjectType, {
-    name: "Recipe",
+  .meta({
+    title: "Recipe",
     description: "Object representing cooking recipe",
   })
 
@@ -241,7 +244,7 @@ const RecipeInput = z
     title: z.string(),
     description: z.string().nullish(),
   })
-  .register(asObjectType, { name: "RecipeInput" })
+  .meta({ title: "RecipeInput" })
 
 const items: IRecipe[] = [
   {
@@ -346,7 +349,7 @@ class RecipeResolver {
 
 相关文档：
 
-- [Zod](../schema/zod.md): 枚举、联合、接口与 `asField`
+- [Zod](../schema/zod.md): `z.describe()`、`z.meta()`、枚举、联合、接口，以及作为最后防线的 `asObjectType` / `asField`
 - [解析器](../resolver.md): `resolver.of`、`query`、`mutation` 与 `field`
 - [中间件](../middleware.md): 鉴权、日志与输出校验
 - [上下文](../context.md): `useContext` 与 `asyncContextProvider`
