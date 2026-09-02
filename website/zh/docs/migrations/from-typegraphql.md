@@ -5,11 +5,11 @@
 TypeGraphQL 使用类、装饰器与 `reflect-metadata`；GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema。
 
 - 一份 Schema 或 ORM 模型作为唯一事实源，替代原本分散的 GraphQL 类、TypeScript 类型与 `class-validator` 装饰器。TypeScript 类型由其自动推导，GraphQL 类型由其编织，输入校验即为 Schema 本身。
+- 更少的样板代码，无需编写 `@ObjectType` 类、字段装饰器与平行的 TypeScript 类型层，校验直接内置于 Schema。
 - 不再需要 `reflect-metadata`、`experimentalDecorators`、`emitDecoratorMetadata`、全局元数据仓库与内置 IoC 容器（如 TypeDI）。迁移完成后可以移除 `type-graphql`、`reflect-metadata` 与 `class-validator` 依赖，并关闭 `tsconfig.json` 中的装饰器编译器选项。
 - 直接将 Prisma、Drizzle 与 MikroORM 模型作为丝线使用，通过解析器工厂生成标准 CRUD 操作，无需手写 DTO 类。
 - `field().load()` 批量处理关联查询的 N+1 问题，无需编写自定义 DataLoader 类。
 - 使用中间件与 `useContext()` 处理鉴权与请求数据，替代 `@Authorized` 装饰器与构造函数注入。订阅与 Apollo Federation 无需装饰器或代码生成即可支持。
-- 迁移期间可以保留 `type-graphql` 依赖，通过 `mergeSchemas` 合并两个 Schema 实例或分别挂载到不同 HTTP 路由，按模块逐步完成替换。
 
 ## 概述与心智转变
 
