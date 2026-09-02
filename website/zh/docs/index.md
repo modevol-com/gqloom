@@ -24,7 +24,7 @@ GQLoom 的职责就是将这些运行时类型编织为 GraphQL Schema。
 除此之外，GQLoom 的**解析器工厂**还可以为 [Prisma](./schema/prisma.md#解析器工厂)、[MikroORM](./schema/mikro-orm.md#解析器工厂)、[Drizzle](./schema/drizzle.md#解析器工厂) 生成 CRUD 接口，并支持自定义输入和添加中间件。
 
 ::: info
-GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)启发，在一些技术实现上参考了 [Pothos](https://pothos-graphql.dev/) 。
+GQLoom 的设计受 [tRPC](https://trpc.io/)、[TypeGraphQL](https://typegraphql.com/)启发，在一些技术实现上参考了 [Pothos](https://pothos-graphql.dev/) 。从 TypeGraphQL 迁过来？见[从 TypeGraphQL 迁移到 GQLoom](./migrations/from-typegraphql.md)。
 :::
 
 ### 你好，世界

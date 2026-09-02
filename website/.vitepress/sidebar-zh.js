@@ -122,4 +122,14 @@ export default [
       },
     ],
   },
+  {
+    text: "迁移",
+    collapsed: false,
+    items: [
+      {
+        text: "从 TypeGraphQL 迁移",
+        link: "/zh/docs/migrations/from-typegraphql",
+      },
+    ],
+  },
 ]
