@@ -4,6 +4,17 @@ TypeGraphQL uses classes and decorators to define GraphQL schemas, while GQLoom 
 
 This guide outlines the differences, mapping rules, and common gotchas when migrating from TypeGraphQL to GQLoom. For complete API details, see [Silk](../silk.md), [Resolver](../resolver.md), [Weave](../weave.md), [Context](../context.md), and [Middleware](../middleware.md).
 
+## Why GQLoom
+
+GQLoom weaves runtime schemas (such as Zod, Valibot, and Yup) and ORM models (such as Prisma, Drizzle, and MikroORM) directly into GraphQL schemas. Migrating from TypeGraphQL brings concrete architectural changes:
+
+- You keep one Zod or ORM model as the source of truth. TypeScript types are inferred from it, GraphQL types are woven from it, and input validation is the schema itself. TypeGraphQL typically splits GraphQL classes, TypeScript types, and optional `class-validator` decorators.
+- GQLoom does not need `reflect-metadata`, `experimentalDecorators`, `emitDecoratorMetadata`, a global metadata registry, or a built-in IoC container (such as TypeDI).
+- Prisma, Drizzle, and MikroORM entities can be used directly as silks, and resolver factories can generate CRUD operations.
+- `field().load()` covers N+1 relational queries without writing DataLoader classes.
+- Middleware and `useContext()` replace `@Authorized` and constructor injection. Subscriptions and Apollo Federation are supported without decorators or code generation.
+- Migration can be incremental. Keep `type-graphql` installed and run two `GraphQLSchema` instances side by side with `mergeSchemas` or separate HTTP routes. After full migration, you can remove `type-graphql`, `reflect-metadata`, and `class-validator`, and turn off decorator tsconfig flags.
+
 ## Overview and mental model
 
 | | TypeGraphQL | GQLoom |
