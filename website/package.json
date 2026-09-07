@@ -57,7 +57,7 @@
     "zod": "4.4.3"
   },
   "dependencies": {
-    "@iconify/vue": "^5.0.0",
+    "@iconify/vue": "^5.0.1",
     "@tailwindcss/vite": "^4.3.3",
     "colord": "^2.9.3",
     "postcss": "^8.5.10",
