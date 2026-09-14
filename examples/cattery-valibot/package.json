@@ -10,7 +10,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^25.5.0",
+    "@types/node": "^26.5.1",
     "drizzle-kit": "^0.31.5",
     "tsx": "^4.23.12",
     "typescript": "^5.9.2"
