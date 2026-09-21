@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^25.5.0",
+    "@types/node": "^26.6.1",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.5",
     "drizzle-orm": "^0.45.2",
