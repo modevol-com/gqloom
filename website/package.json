@@ -17,7 +17,7 @@
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
     "@apollo/server": "^5.5.1",
-    "@apollo/subgraph": "^2.14.4",
+    "@apollo/subgraph": "^2.15.1",
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "npm:@gqloom/drizzle@0.17.0-rc.1",
     "@gqloom/drizzle-rqbv1": "npm:@gqloom/drizzle@0.16.0",

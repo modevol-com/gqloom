@@ -513,8 +513,8 @@ importers:
         specifier: ^5.5.1
         version: 5.5.1(graphql@16.13.1)
       '@apollo/subgraph':
-        specifier: ^2.14.4
-        version: 2.14.4(graphql@16.13.1)
+        specifier: ^2.15.1
+        version: 2.15.1(graphql@16.13.1)
       '@gqloom/core':
         specifier: workspace:*
         version: link:../core
@@ -697,8 +697,8 @@ importers:
         specifier: ^5.5.1
         version: 5.5.1(graphql@16.13.1)
       '@apollo/subgraph':
-        specifier: ^2.14.4
-        version: 2.14.4(graphql@16.13.1)
+        specifier: ^2.15.1
+        version: 2.15.1(graphql@16.13.1)
       '@gqloom/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -826,12 +826,6 @@ packages:
     peerDependencies:
       graphql: ^16.13.1
 
-  '@apollo/federation-internals@2.14.4':
-    resolution: {integrity: sha512-z8h/T0N4HROGY8o/l3WQZpj3OKNuPRt14Onm38aaksthDaw8z/nhz426USJVa50ZRU19LIN3RY28dE0tcTmCAQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      graphql: ^16.13.1
-
   '@apollo/protobufjs@1.2.8':
     resolution: {integrity: sha512-r7xNeUqZX+eBBEmyvaPw0/cSz6zgf5jdH8mjUz8ynKpNs/GU7vi2T7sNcZINk2ZID7wwjG91FCgdpCrQuJ8rzA==}
     hasBin: true
@@ -847,9 +841,9 @@ packages:
     peerDependencies:
       graphql: ^16.13.1
 
-  '@apollo/subgraph@2.14.4':
-    resolution: {integrity: sha512-voALjXu3aOp2vq3LXGom2yWgG/wDmH2CMuPrZVxG/TkqcNYFzmlESC4E/XI18qfGqnvWGjMckQ2EgwRwmLaJoQ==}
-    engines: {node: '>=14.15.0'}
+  '@apollo/subgraph@2.15.1':
+    resolution: {integrity: sha512-y9G5Mw5Pn/kW7u4IoyrmdFfDUe1A7s4vXYKvsqlXLO1xSYRANmVnHTRY90qGqR5Vohe79BZ/lMWDDXGsiiX+AQ==}
+    engines: {node: '>=22.0.0'}
     peerDependencies:
       graphql: ^16.13.1
 
@@ -2147,6 +2141,12 @@ packages:
     peerDependencies:
       graphql: ^16.13.1
 
+  '@graphql-tools/utils@12.0.1':
+    resolution: {integrity: sha512-8YC6jn4xYDS6YTY6xDAgQAs/nGgvzRaIGHS8GeSfVItQzNK7Ms24CQtE3EJY+amvR+tBnhRSX0N83aGj+V/RIg==}
+    engines: {node: '>=16.0.0'}
+    peerDependencies:
+      graphql: ^16.13.1
+
   '@graphql-typed-document-node/core@3.2.0':
     resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
     peerDependencies:
@@ -3325,9 +3325,6 @@ packages:
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
-
-  '@types/uuid@9.0.8':
-    resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
 
   '@types/web-bluetooth@0.0.21':
     resolution: {integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==}
@@ -5002,10 +4999,6 @@ packages:
 
   js-base64@3.7.8:
     resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
-
-  js-levenshtein@1.1.6:
-    resolution: {integrity: sha512-X2BB11YZtrRqY4EnQcLX5Rh373zbK4alC1FW7D7MBhL2gtcC17cTnr6DmfHZeS0s2rTHjUTMMHfG7gO8SSdw+g==}
-    engines: {node: '>=0.10.0'}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -6690,11 +6683,6 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
-  uuid@9.0.1:
-    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
-    hasBin: true
-
   valibot@1.4.2:
     resolution: {integrity: sha512-gjdCvJ6d3RyHAneqxMYMW9QMCwYMb3jpOO0IyHZV1bnRHFBHrX3VkIILt5XYR0WhwHiH7Mty8ovuPZ/O3gamrg==}
     peerDependencies:
@@ -6969,14 +6957,6 @@ snapshots:
     dependencies:
       graphql: 16.13.1
 
-  '@apollo/federation-internals@2.14.4(graphql@16.13.1)':
-    dependencies:
-      '@types/uuid': 9.0.8
-      chalk: 4.1.2
-      graphql: 16.13.1
-      js-levenshtein: 1.1.6
-      uuid: 9.0.1
-
   '@apollo/protobufjs@1.2.8':
     dependencies:
       '@protobufjs/aspromise': 1.1.2
@@ -7026,10 +7006,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@apollo/subgraph@2.14.4(graphql@16.13.1)':
+  '@apollo/subgraph@2.15.1(graphql@16.13.1)':
     dependencies:
       '@apollo/cache-control-types': 1.0.3(graphql@16.13.1)
-      '@apollo/federation-internals': 2.14.4(graphql@16.13.1)
+      '@graphql-tools/utils': 12.0.1(graphql@16.13.1)
       graphql: 16.13.1
 
   '@apollo/usage-reporting-protobuf@4.1.2':
@@ -7967,7 +7947,7 @@ snapshots:
 
   '@graphql-tools/merge@9.2.3(graphql@16.13.1)':
     dependencies:
-      '@graphql-tools/utils': 12.0.0(graphql@16.13.1)
+      '@graphql-tools/utils': 12.0.1(graphql@16.13.1)
       graphql: 16.13.1
       tslib: 2.8.1
 
@@ -8002,6 +7982,14 @@ snapshots:
       tslib: 2.8.1
 
   '@graphql-tools/utils@12.0.0(graphql@16.13.1)':
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.13.1)
+      '@whatwg-node/promise-helpers': 1.3.2
+      cross-inspect: 1.0.1
+      graphql: 16.13.1
+      tslib: 2.8.1
+
+  '@graphql-tools/utils@12.0.1(graphql@16.13.1)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.13.1)
       '@whatwg-node/promise-helpers': 1.3.2
@@ -8984,8 +8972,6 @@ snapshots:
       csstype: 3.2.3
 
   '@types/unist@3.0.3': {}
-
-  '@types/uuid@9.0.8': {}
 
   '@types/web-bluetooth@0.0.21': {}
 
@@ -10705,8 +10691,6 @@ snapshots:
   jiti@2.7.0: {}
 
   js-base64@3.7.8: {}
-
-  js-levenshtein@1.1.6: {}
 
   js-tokens@4.0.0: {}
 
@@ -12656,8 +12640,6 @@ snapshots:
   urlpattern-polyfill@10.1.0: {}
 
   util-deprecate@1.0.2: {}
-
-  uuid@9.0.1: {}
 
   valibot@1.4.2(typescript@5.9.3):
     optionalDependencies:
