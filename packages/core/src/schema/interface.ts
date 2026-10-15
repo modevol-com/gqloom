@@ -5,15 +5,14 @@ import {
   isInterfaceType,
   isObjectType,
 } from "graphql"
-import { mapValue } from "../utils"
-import { getCacheType, markLoomInterface } from "./object"
+import { getCacheInterface } from "./object"
 import { weaverContext } from "./weaver-context"
 
 export function ensureInterfaceType(
   gqlType: GraphQLOutputType,
   interfaceConfig?: Partial<GraphQLInterfaceTypeConfig<any, any>>
 ): GraphQLInterfaceType {
-  if (isInterfaceType(gqlType)) return gqlType
+  if (isInterfaceType(gqlType)) return internInterface(gqlType)
 
   if (!isObjectType(gqlType))
     throw new Error(`${gqlType.toString()} is not an object`)
@@ -23,21 +22,26 @@ export function ensureInterfaceType(
   const existing = weaverContext.interfaceMap?.get(key)
   if (existing != null) return existing
 
-  const {
-    astNode: _,
-    extensionASTNodes: _1,
-    fields,
-    ...config
-  } = gqlType.toConfig()
-  const interfaceType = new GraphQLInterfaceType({
-    ...config,
-    ...interfaceConfig,
-    fields: mapValue(fields, (field) => {
-      return { ...field, type: getCacheType(field.type) }
-    }),
-  })
+  const { astNode: _, extensionASTNodes: _1, ...config } = gqlType.toConfig()
+  const interfaceType = internInterface(
+    new GraphQLInterfaceType({
+      ...config,
+      ...interfaceConfig,
+    })
+  )
 
-  markLoomInterface(interfaceType)
   weaverContext.interfaceMap?.set(key, interfaceType)
   return interfaceType
+}
+
+/**
+ * Intern `gqlInterface` for the current weave when a weaver context is
+ * present. Without a context the interface is returned as is, so a later
+ * `weave()` can still run it through `getCacheInterface`.
+ */
+function internInterface(
+  gqlInterface: GraphQLInterfaceType
+): GraphQLInterfaceType {
+  const context = weaverContext.value
+  return context ? getCacheInterface(gqlInterface, context) : gqlInterface
 }

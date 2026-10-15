@@ -737,6 +737,69 @@ describe("GraphQLSchemaLoom", () => {
       expect(schema.getType("Node")).toBe(NodeInterface)
     })
 
+    it("should intern an interface created by ensureInterfaceType outside a weave", () => {
+      const { Inner, Outer, Woven } = createTypes()
+
+      const NodeObject = new GraphQLObjectType({
+        name: "Node",
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+      const NodeInterface = ensureInterfaceType(NodeObject)
+      const Impl = new GraphQLObjectType({
+        name: "Impl",
+        interfaces: () => [NodeInterface],
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+
+      const schema = weave(
+        resolver({
+          impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+          woven: query(silk<{ inner: object }>(Woven), () => ({
+            inner: {},
+          })),
+        })
+      )
+
+      expect(validateSchema(schema)).toEqual([])
+      expect(
+        Object.values(schema.getTypeMap()).filter((it) => it.name === "Inner")
+      ).toHaveLength(1)
+      expect(schema.getType("Inner")).not.toBe(Inner)
+      expect(schema.getType("Node")).not.toBe(NodeInterface)
+      expect(
+        (schema.getType("Impl") as GraphQLObjectType).getInterfaces()[0]
+      ).toBe(schema.getType("Node"))
+    })
+
+    it("should not share interned interfaces across independent weaves", () => {
+      const { Impl, Woven, Node } = createTypes()
+      const build = () =>
+        weave(
+          resolver({
+            impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+            woven: query(silk<{ inner: object }>(Woven), () => ({
+              inner: {},
+            })),
+          })
+        )
+
+      const schema1 = build()
+      const schema2 = build()
+
+      expect(validateSchema(schema1)).toEqual([])
+      expect(validateSchema(schema2)).toEqual([])
+      expect(schema1.getType("Node")).not.toBe(Node)
+      expect(schema2.getType("Node")).not.toBe(Node)
+      expect(schema1.getType("Node")).not.toBe(schema2.getType("Node"))
+      expect(schema1.getType("Inner")).not.toBe(schema2.getType("Inner"))
+    })
+
     it("should support an interface implementing another interface", () => {
       const { Outer, Woven } = createTypes()
       const Entity = new GraphQLInterfaceType({
