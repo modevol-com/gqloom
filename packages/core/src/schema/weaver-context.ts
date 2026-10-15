@@ -30,6 +30,7 @@ export class WeaverContext {
   public id: number
   public loomObjectMap: Map<GraphQLObjectType, LoomObjectType>
   public loomUnionMap: Map<GraphQLUnionType, GraphQLUnionType>
+  public loomInterfaceMap: Map<GraphQLInterfaceType, GraphQLInterfaceType>
   public inputMap: Map<
     GraphQLObjectType | GraphQLInterfaceType,
     GraphQLInputObjectType
@@ -43,6 +44,7 @@ export class WeaverContext {
     this.id = WeaverContext.increasingID++
     this.loomObjectMap = new Map()
     this.loomUnionMap = new Map()
+    this.loomInterfaceMap = new Map()
     this.inputMap = new Map()
     this.interfaceMap = new Map()
     this.configs = new Map()
@@ -275,6 +277,9 @@ export class GlobalWeaverContext
   }
   public get loomUnionMap() {
     return WeaverContext.ref?.loomUnionMap
+  }
+  public get loomInterfaceMap() {
+    return WeaverContext.ref?.loomInterfaceMap
   }
   public get inputMap() {
     return WeaverContext.ref?.inputMap

@@ -1,5 +1,6 @@
 import {
   type GraphQLNamedType,
+  type GraphQLOutputType,
   GraphQLSchema,
   type GraphQLSchemaConfig,
   isListType,
@@ -112,12 +113,19 @@ export class GraphQLSchemaLoom {
     const { query, mutation, subscription, types } = this
     const config =
       this.context.getConfig<CoreSchemaWeaverConfig>("gqloom.core.schema")
+    const configTypes = provideWeaverContext(
+      () =>
+        (config?.types ?? []).map(
+          (it) => getCacheType(it as GraphQLOutputType) as GraphQLNamedType
+        ),
+      this.context
+    )
     const schema = new GraphQLSchema({
       query,
       mutation,
       subscription,
-      types: [...(types ?? []), ...(config?.types ?? [])],
       ...config,
+      types: [...(types ?? []), ...configTypes],
     })
 
     return schema

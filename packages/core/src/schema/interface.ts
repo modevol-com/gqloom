@@ -6,7 +6,7 @@ import {
   isObjectType,
 } from "graphql"
 import { mapValue } from "../utils"
-import { getCacheType } from "./object"
+import { getCacheType, markLoomInterface } from "./object"
 import { weaverContext } from "./weaver-context"
 
 export function ensureInterfaceType(
@@ -37,6 +37,7 @@ export function ensureInterfaceType(
     }),
   })
 
+  markLoomInterface(interfaceType)
   weaverContext.interfaceMap?.set(key, interfaceType)
   return interfaceType
 }
