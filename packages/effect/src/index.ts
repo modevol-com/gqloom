@@ -215,18 +215,6 @@ export class EffectWeaver {
                   ),
                 }
               }
-              if (unwrappedFieldAst._tag === "Union") {
-                const suspendType = unwrappedFieldAst.types.find(
-                  (t) => t._tag === "Suspend"
-                ) as SchemaAST.Suspend | undefined
-                if (suspendType) {
-                  return {
-                    type: EffectWeaver.toNullableGraphQLType(
-                      Schema.make(suspendType.f())
-                    ),
-                  }
-                }
-              }
               const { type, ...fieldConfig } = getFieldConfig(
                 field,
                 propertySignature
