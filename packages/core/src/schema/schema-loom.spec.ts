@@ -1,12 +1,14 @@
 import {
   GraphQLFloat,
   GraphQLInt,
+  GraphQLInterfaceType,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
   GraphQLUnionType,
   lexicographicSortSchema,
   printSchema,
+  validateSchema,
 } from "graphql"
 import { describe, expect, it } from "vitest"
 import { getGraphQLType, loom, silk } from "../resolver"
@@ -559,5 +561,450 @@ describe("GraphQLSchemaLoom", () => {
         name: String
       }"
     `)
+  })
+
+  describe("interface sharing object types with the woven graph", () => {
+    const createTypes = () => {
+      const Inner = new GraphQLObjectType({
+        name: "Inner",
+        fields: { value: { type: GraphQLString } },
+      })
+      const Outer = new GraphQLObjectType({
+        name: "Outer",
+        fields: { inner: { type: new GraphQLNonNull(Inner) } },
+      })
+      const Woven = new GraphQLObjectType({
+        name: "Woven",
+        fields: { inner: { type: new GraphQLNonNull(Inner) } },
+      })
+      const Node = new GraphQLInterfaceType({
+        name: "Node",
+        fields: () => ({
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        }),
+      })
+      const Impl = new GraphQLObjectType({
+        name: "Impl",
+        interfaces: [Node],
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+      return { Inner, Outer, Woven, Node, Impl }
+    }
+
+    it("should avoid duplicate nested object between a raw interface and the woven graph", () => {
+      const { Impl, Woven } = createTypes()
+
+      const schema = weave(
+        resolver({
+          impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+          woven: query(silk<{ inner: object }>(Woven), () => ({ inner: {} })),
+        })
+      )
+
+      expect(validateSchema(schema)).toEqual([])
+      expect(
+        printSchema(lexicographicSortSchema(schema))
+      ).toMatchInlineSnapshot(`
+        "type Impl implements Node {
+          id: String!
+          outer: Outer
+        }
+
+        type Inner {
+          value: String
+        }
+
+        interface Node {
+          id: String!
+          outer: Outer
+        }
+
+        type Outer {
+          inner: Inner!
+        }
+
+        type Query {
+          impl: Impl
+          woven: Woven
+        }
+
+        type Woven {
+          inner: Inner!
+        }"
+      `)
+    })
+
+    it("should use the same object for the interface field and the woven field", () => {
+      const { Impl, Woven } = createTypes()
+
+      const schema = weave(
+        resolver({
+          impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+          woven: query(silk<{ inner: object }>(Woven), () => ({ inner: {} })),
+        })
+      )
+
+      const node = schema.getType("Node") as GraphQLInterfaceType
+      const outerFromInterface = node.getFields().outer.type
+      const outer = schema.getType("Outer") as GraphQLObjectType
+      expect(outerFromInterface).toBe(outer)
+
+      const woven = schema.getType("Woven") as GraphQLObjectType
+      const innerFromWoven = (
+        woven.getFields().inner.type as GraphQLNonNull<any>
+      ).ofType
+      const innerFromOuter = (
+        outer.getFields().inner.type as GraphQLNonNull<any>
+      ).ofType
+      expect(innerFromWoven).toBe(schema.getType("Inner"))
+      expect(innerFromOuter).toBe(schema.getType("Inner"))
+    })
+
+    it("should keep one interface instance for implementors and queries", () => {
+      const { Node, Impl, Outer } = createTypes()
+      const OtherImpl = new GraphQLObjectType({
+        name: "OtherImpl",
+        interfaces: [Node],
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+
+      const schema = weave(
+        resolver({
+          node: query(silk<{ id: string }>(Node), () => ({ id: "1" })),
+          impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+          other: query(silk<{ id: string }>(OtherImpl), () => ({ id: "1" })),
+        })
+      )
+
+      expect(validateSchema(schema)).toEqual([])
+      const node = schema.getType("Node")
+      expect(node).toBeInstanceOf(GraphQLInterfaceType)
+      expect(schema.getQueryType()?.getFields().node.type).toBe(node)
+      for (const name of ["Impl", "OtherImpl"]) {
+        const implementor = schema.getType(name) as GraphQLObjectType
+        expect(implementor.getInterfaces()).toHaveLength(1)
+        expect(implementor.getInterfaces()[0]).toBe(node)
+      }
+    })
+
+    it("should avoid duplicate nested object in an interface created by ensureInterfaceType", () => {
+      const { Inner, Outer, Woven } = createTypes()
+      const weaver = new GraphQLSchemaLoom()
+
+      const NodeObject = new GraphQLObjectType({
+        name: "Node",
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+      const NodeInterface = provideWeaverContext(
+        () => ensureInterfaceType(NodeObject),
+        weaver.context
+      )
+      const Impl = new GraphQLObjectType({
+        name: "Impl",
+        interfaces: () => [NodeInterface],
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+
+      const schema = weaver
+        .add(
+          resolver({
+            impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+            woven: query(silk<{ inner: object }>(Woven), () => ({
+              inner: {},
+            })),
+          })
+        )
+        .weaveGraphQLSchema()
+
+      expect(validateSchema(schema)).toEqual([])
+      expect(
+        Object.values(schema.getTypeMap()).filter((it) => it.name === "Inner")
+      ).toHaveLength(1)
+      expect(schema.getType("Inner")).not.toBe(Inner)
+      expect(schema.getType("Node")).toBe(NodeInterface)
+    })
+
+    it("should intern an interface created by ensureInterfaceType outside a weave", () => {
+      const { Inner, Outer, Woven } = createTypes()
+
+      const NodeObject = new GraphQLObjectType({
+        name: "Node",
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+      const NodeInterface = ensureInterfaceType(NodeObject)
+      const Impl = new GraphQLObjectType({
+        name: "Impl",
+        interfaces: () => [NodeInterface],
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+
+      const schema = weave(
+        resolver({
+          impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+          woven: query(silk<{ inner: object }>(Woven), () => ({
+            inner: {},
+          })),
+        })
+      )
+
+      expect(validateSchema(schema)).toEqual([])
+      expect(
+        Object.values(schema.getTypeMap()).filter((it) => it.name === "Inner")
+      ).toHaveLength(1)
+      expect(schema.getType("Inner")).not.toBe(Inner)
+      expect(schema.getType("Node")).not.toBe(NodeInterface)
+      expect(
+        (schema.getType("Impl") as GraphQLObjectType).getInterfaces()[0]
+      ).toBe(schema.getType("Node"))
+    })
+
+    it("should not share interned interfaces across independent weaves", () => {
+      const { Impl, Woven, Node } = createTypes()
+      const build = () =>
+        weave(
+          resolver({
+            impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+            woven: query(silk<{ inner: object }>(Woven), () => ({
+              inner: {},
+            })),
+          })
+        )
+
+      const schema1 = build()
+      const schema2 = build()
+
+      expect(validateSchema(schema1)).toEqual([])
+      expect(validateSchema(schema2)).toEqual([])
+      expect(schema1.getType("Node")).not.toBe(Node)
+      expect(schema2.getType("Node")).not.toBe(Node)
+      expect(schema1.getType("Node")).not.toBe(schema2.getType("Node"))
+      expect(schema1.getType("Inner")).not.toBe(schema2.getType("Inner"))
+    })
+
+    it("should support an interface implementing another interface", () => {
+      const { Outer, Woven } = createTypes()
+      const Entity = new GraphQLInterfaceType({
+        name: "Entity",
+        fields: { id: { type: new GraphQLNonNull(GraphQLString) } },
+      })
+      const Node = new GraphQLInterfaceType({
+        name: "Node",
+        interfaces: [Entity],
+        fields: () => ({
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        }),
+      })
+      const Impl = new GraphQLObjectType({
+        name: "Impl",
+        interfaces: [Node, Entity],
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          outer: { type: Outer },
+        },
+      })
+
+      const schema = weave(
+        resolver({
+          impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+          woven: query(silk<{ inner: object }>(Woven), () => ({ inner: {} })),
+        })
+      )
+
+      expect(validateSchema(schema)).toEqual([])
+      expect(
+        printSchema(lexicographicSortSchema(schema))
+      ).toMatchInlineSnapshot(`
+        "interface Entity {
+          id: String!
+        }
+
+        type Impl implements Entity & Node {
+          id: String!
+          outer: Outer
+        }
+
+        type Inner {
+          value: String
+        }
+
+        interface Node implements Entity {
+          id: String!
+          outer: Outer
+        }
+
+        type Outer {
+          inner: Inner!
+        }
+
+        type Query {
+          impl: Impl
+          woven: Woven
+        }
+
+        type Woven {
+          inner: Inner!
+        }"
+      `)
+    })
+
+    it("should handle an interface referencing its implementor", () => {
+      const Node: GraphQLInterfaceType = new GraphQLInterfaceType({
+        name: "Node",
+        fields: () => ({
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          parent: { type: Impl },
+        }),
+      })
+      const Impl: GraphQLObjectType = new GraphQLObjectType({
+        name: "Impl",
+        interfaces: () => [Node],
+        fields: () => ({
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          parent: { type: Impl },
+        }),
+      })
+
+      const schema = weave(
+        resolver({
+          node: query(silk<{ id: string }>(Node), () => ({ id: "1" })),
+        })
+      )
+
+      expect(validateSchema(schema)).toEqual([])
+      expect(
+        printSchema(lexicographicSortSchema(schema))
+      ).toMatchInlineSnapshot(`
+        "type Impl implements Node {
+          id: String!
+          parent: Impl
+        }
+
+        interface Node {
+          id: String!
+          parent: Impl
+        }
+
+        type Query {
+          node: Node
+        }"
+      `)
+    })
+
+    it("should preserve the config of the interface", () => {
+      const resolveType = () => "Impl"
+      const Node = new GraphQLInterfaceType({
+        name: "Node",
+        description: "Something with an id",
+        resolveType,
+        extensions: { custom: true },
+        fields: {
+          id: {
+            type: new GraphQLNonNull(GraphQLString),
+            description: "The id",
+            deprecationReason: "Use something else",
+          },
+        },
+      })
+      const Impl = new GraphQLObjectType({
+        name: "Impl",
+        interfaces: [Node],
+        fields: { id: { type: new GraphQLNonNull(GraphQLString) } },
+      })
+
+      const schema = weave(
+        resolver({
+          impl: query(silk<{ id: string }>(Impl), () => ({ id: "1" })),
+        })
+      )
+
+      const node = schema.getType("Node") as GraphQLInterfaceType
+      expect(node.description).toBe("Something with an id")
+      expect(node.resolveType).toBe(resolveType)
+      expect(node.extensions).toEqual({ custom: true })
+      expect(node.getFields().id.description).toBe("The id")
+      expect(node.getFields().id.deprecationReason).toBe("Use something else")
+    })
+
+    it("should avoid duplicate raw types passed by config.types", () => {
+      const Animal = new GraphQLInterfaceType({
+        name: "Animal",
+        fields: { name: { type: GraphQLString } },
+      })
+      const Cat = new GraphQLObjectType({
+        name: "Cat",
+        interfaces: [Animal],
+        fields: { name: { type: GraphQLString } },
+      })
+
+      const schema = weave(
+        resolver({
+          animal: query(silk<{ name: string }>(Animal), () => ({
+            name: "Tom",
+          })),
+        }),
+        GraphQLSchemaLoom.config({ types: [Cat] })
+      )
+
+      expect(validateSchema(schema)).toEqual([])
+      expect(
+        printSchema(lexicographicSortSchema(schema))
+      ).toMatchInlineSnapshot(`
+        "interface Animal {
+          name: String
+        }
+
+        type Cat implements Animal {
+          name: String
+        }
+
+        type Query {
+          animal: Animal
+        }"
+      `)
+    })
+
+    it("should merge config.types with other types of the schema", () => {
+      const Extra = silk<{ name: string }>(
+        new GraphQLObjectType({
+          name: "Extra",
+          fields: { name: { type: GraphQLString } },
+        })
+      )
+      const Other = new GraphQLObjectType({
+        name: "Other",
+        fields: { name: { type: GraphQLString } },
+      })
+
+      const schema = weave(
+        resolver({
+          hello: query(silk(GraphQLString), () => "hello"),
+        }),
+        Extra,
+        GraphQLSchemaLoom.config({ types: [Other] })
+      )
+
+      expect(schema.getType("Extra")).toBeDefined()
+      expect(schema.getType("Other")).toBeDefined()
+    })
   })
 })

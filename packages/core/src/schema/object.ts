@@ -1,6 +1,7 @@
 import {
   type GraphQLFieldConfig,
   type GraphQLFieldMap,
+  GraphQLInterfaceType,
   GraphQLList,
   type GraphQLNamedType,
   GraphQLNonNull,
@@ -26,6 +27,7 @@ import {
   applyMiddlewares,
   deepMerge,
   filterMiddlewares,
+  mapValue,
   pascalCase,
   toFieldMap,
 } from "../utils"
@@ -73,9 +75,18 @@ export class LoomObjectType extends GraphQLObjectType {
       }
     })()
 
-    super(config)
+    const context = options.weaverContext ?? initWeaverContext()
+    const rawInterfaces = config.interfaces
+    super({
+      ...config,
+      interfaces: () =>
+        (typeof rawInterfaces === "function"
+          ? rawInterfaces()
+          : (rawInterfaces ?? [])
+        ).map((it) => getCacheInterface(it, context)),
+    })
     this.globalOptions = options.globalOptions
-    this.weaverContext = options.weaverContext ?? initWeaverContext()
+    this.weaverContext = context
     this.resolvers = new Map()
 
     if (this.name === AUTO_ALIASING) {
@@ -365,7 +376,10 @@ export function getCacheType(
       return gqlObject
     }
 
-    const loomObject = new LoomObjectType(gqlType, options)
+    const loomObject = new LoomObjectType(gqlType, {
+      ...options,
+      weaverContext: options.weaverContext ?? weaverContext.value,
+    })
     context.loomObjectMap?.set(gqlType, loomObject)
     context.setAlias(loomObject, fieldName, parent)
     return loomObject
@@ -395,15 +409,52 @@ export function getCacheType(
     context.loomUnionMap?.set(gqlType, unionType)
     context.setAlias(unionType, fieldName, parent)
     return unionType
-  } else if (
-    isEnumType(gqlType) ||
-    isInterfaceType(gqlType) ||
-    isScalarType(gqlType)
-  ) {
+  } else if (isInterfaceType(gqlType)) {
+    const currentContext = options.weaverContext ?? weaverContext.value
+    const interfaceType = currentContext
+      ? getCacheInterface(gqlType, currentContext)
+      : gqlType
+    context.setAlias(interfaceType, fieldName, parent)
+    return interfaceType
+  } else if (isEnumType(gqlType) || isScalarType(gqlType)) {
     context.setAlias(gqlType, fieldName, parent)
     return gqlType
   }
   return gqlType
+}
+
+/**
+ * Rebuild an interface so that every object type reachable from it goes
+ * through the same cache as the rest of the woven graph. Without this, an
+ * interface keeps pointing at the original object types while the woven graph
+ * holds `LoomObjectType` copies of them, which GraphQL rejects as duplicate
+ * type names.
+ *
+ * Both the original and the copy are stored in `context.loomInterfaceMap`, so
+ * a later `getCacheInterface(copy)` returns the copy as is. The mapping lives
+ * on the weaver context: an interface is only treated as interned for the
+ * weave that interned it.
+ */
+export function getCacheInterface(
+  gqlInterface: GraphQLInterfaceType,
+  context: WeaverContext
+): GraphQLInterfaceType {
+  const existing = context.loomInterfaceMap.get(gqlInterface)
+  if (existing != null) return existing
+
+  const loomInterface = new GraphQLInterfaceType({
+    ...gqlInterface.toConfig(),
+    interfaces: () =>
+      gqlInterface.getInterfaces().map((it) => getCacheInterface(it, context)),
+    fields: () =>
+      mapValue(gqlInterface.toConfig().fields, (field) => ({
+        ...field,
+        type: getCacheType(field.type, { weaverContext: context }),
+      })),
+  })
+  context.loomInterfaceMap.set(gqlInterface, loomInterface)
+  context.loomInterfaceMap.set(loomInterface, loomInterface)
+  return loomInterface
 }
 
 function excludeOperationObject(

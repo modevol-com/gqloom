@@ -47,4 +47,13 @@ describe("ensureInterfaceType", () => {
       expect(result).toBe(ensureInterfaceType(objectType))
     }, initWeaverContext())
   })
+
+  it("should not intern an interface when there is no weaver context", () => {
+    const objectType = new GraphQLObjectType({
+      name: "Dog",
+      fields: { name: { type: GraphQLString } },
+    })
+    const result = ensureInterfaceType(objectType)
+    expect(result).not.toBe(ensureInterfaceType(objectType))
+  })
 })

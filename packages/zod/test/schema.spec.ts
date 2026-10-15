@@ -13,6 +13,7 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLInterfaceType,
   GraphQLList,
   type GraphQLNamedType,
   GraphQLNonNull,
@@ -21,6 +22,7 @@ import {
   GraphQLString,
   printSchema,
   printType,
+  validateSchema,
 } from "graphql"
 import { describe, expect, expectTypeOf, it } from "vitest"
 import * as z3 from "zod/v3"
@@ -434,6 +436,213 @@ describe("ZodWeaver", () => {
         name: String!
         color: String!
         prize: Float!
+      }"
+    `)
+  })
+
+  it("should share an object type between a raw interface and a woven field", () => {
+    // zod's `$replace` meta type drops the private members of graphql classes,
+    // so object and interface types need a cast to be registered.
+    const asRegistered = <T>(type: T) => type as never
+
+    const Inner = new GraphQLObjectType({
+      name: "ProbeInner",
+      fields: { x: { type: GraphQLString } },
+    })
+    const Outer = new GraphQLObjectType({
+      name: "ProbeOuter",
+      fields: { inner: { type: new GraphQLNonNull(Inner) } },
+    })
+    const Node = new GraphQLInterfaceType({
+      name: "ProbeNode",
+      fields: () => ({
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        outer: { type: Outer },
+      }),
+    })
+
+    const Impl = z
+      .object({
+        __typename: z.literal("ProbeImpl").optional(),
+        id: z.string(),
+        outer: z.unknown().register(asField, { type: asRegistered(Outer) }),
+      })
+      .register(asObjectType, { interfaces: [asRegistered(Node)] })
+
+    const Woven = z
+      .object({
+        inner: z.unknown().register(asField, {
+          type: asRegistered(new GraphQLNonNull(Inner)),
+        }),
+      })
+      .register(asObjectType, { name: "ProbeWoven" })
+
+    const schema = ZodWeaver.weave(
+      resolver({
+        probe: query(Impl, () => ({ id: "1", outer: null })),
+        woven: query(Woven, () => ({ inner: { x: "1" } })),
+      })
+    )
+
+    expect(validateSchema(schema)).toEqual([])
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        probe: ProbeImpl!
+        woven: ProbeWoven!
+      }
+
+      type ProbeImpl implements ProbeNode {
+        id: String!
+        outer: ProbeOuter
+      }
+
+      interface ProbeNode {
+        id: String!
+        outer: ProbeOuter
+      }
+
+      type ProbeOuter {
+        inner: ProbeInner!
+      }
+
+      type ProbeInner {
+        x: String
+      }
+
+      type ProbeWoven {
+        inner: ProbeInner!
+      }"
+    `)
+  })
+
+  it("should share a nested Zod object between a Zod interface and a woven field", () => {
+    const Inner = z
+      .object({ x: z.string().nullish() })
+      .register(asObjectType, { name: "ProbeInner" })
+    const Outer = z
+      .object({ inner: Inner })
+      .register(asObjectType, { name: "ProbeOuter" })
+    const Node = z.object({
+      __typename: z.literal("ProbeNode").nullish(),
+      id: z.string(),
+      outer: Outer.nullish(),
+    })
+    const Impl = z
+      .object({
+        __typename: z.literal("ProbeImpl").optional(),
+        id: z.string(),
+        outer: Outer.nullish(),
+      })
+      .register(asObjectType, { interfaces: [Node] })
+    const Woven = z
+      .object({ inner: Inner })
+      .register(asObjectType, { name: "ProbeWoven" })
+
+    const schema = ZodWeaver.weave(
+      resolver({
+        probe: query(Impl, () => ({ id: "1", outer: null })),
+        woven: query(Woven, () => ({ inner: { x: "1" } })),
+      })
+    )
+
+    expect(validateSchema(schema)).toEqual([])
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        probe: ProbeImpl!
+        woven: ProbeWoven!
+      }
+
+      type ProbeImpl implements ProbeNode {
+        id: String!
+        outer: ProbeOuter
+      }
+
+      interface ProbeNode {
+        id: String!
+        outer: ProbeOuter
+      }
+
+      type ProbeOuter {
+        inner: ProbeInner!
+      }
+
+      type ProbeInner {
+        x: String
+      }
+
+      type ProbeWoven {
+        inner: ProbeInner!
+      }"
+    `)
+  })
+
+  it("should share a raw object type between a Zod interface and a woven field", () => {
+    // zod's `$replace` meta type drops the private members of graphql classes,
+    // so object types need a cast to be registered as a field type.
+    const asRegistered = <T>(type: T) => type as never
+
+    const Inner = new GraphQLObjectType({
+      name: "ProbeInner",
+      fields: { x: { type: GraphQLString } },
+    })
+    const Outer = new GraphQLObjectType({
+      name: "ProbeOuter",
+      fields: { inner: { type: new GraphQLNonNull(Inner) } },
+    })
+    const Node = z.object({
+      __typename: z.literal("ProbeNode").nullish(),
+      id: z.string(),
+      outer: z.unknown().register(asField, { type: asRegistered(Outer) }),
+    })
+    const Impl = z
+      .object({
+        __typename: z.literal("ProbeImpl").optional(),
+        id: z.string(),
+        outer: z.unknown().register(asField, { type: asRegistered(Outer) }),
+      })
+      .register(asObjectType, { interfaces: [Node] })
+    const Woven = z
+      .object({
+        inner: z.unknown().register(asField, {
+          type: asRegistered(new GraphQLNonNull(Inner)),
+        }),
+      })
+      .register(asObjectType, { name: "ProbeWoven" })
+
+    const schema = ZodWeaver.weave(
+      resolver({
+        probe: query(Impl, () => ({ id: "1", outer: null })),
+        woven: query(Woven, () => ({ inner: { x: "1" } })),
+      })
+    )
+
+    expect(validateSchema(schema)).toEqual([])
+    expect(printSchema(schema)).toMatchInlineSnapshot(`
+      "type Query {
+        probe: ProbeImpl!
+        woven: ProbeWoven!
+      }
+
+      type ProbeImpl implements ProbeNode {
+        id: String!
+        outer: ProbeOuter
+      }
+
+      interface ProbeNode {
+        id: String!
+        outer: ProbeOuter
+      }
+
+      type ProbeOuter {
+        inner: ProbeInner!
+      }
+
+      type ProbeInner {
+        x: String
+      }
+
+      type ProbeWoven {
+        inner: ProbeInner!
       }"
     `)
   })

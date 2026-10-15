@@ -17,6 +17,7 @@ describe("weaverContext", () => {
       expect(weaverContext.inputMap).toBeDefined()
       expect(weaverContext.loomUnionMap).toBeDefined()
       expect(weaverContext.loomObjectMap).toBeDefined()
+      expect(weaverContext.loomInterfaceMap).toBeDefined()
       expect(weaverContext.interfaceMap).toBeDefined()
     }, initWeaverContext())
   })
@@ -24,6 +25,7 @@ describe("weaverContext", () => {
   it("should get undefined if not in context", () => {
     expect(weaverContext.inputMap).toBeUndefined()
     expect(weaverContext.loomObjectMap).toBeUndefined()
+    expect(weaverContext.loomInterfaceMap).toBeUndefined()
     expect(weaverContext.interfaceMap).toBeUndefined()
   })
 
