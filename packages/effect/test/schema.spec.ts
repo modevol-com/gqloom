@@ -335,10 +335,29 @@ describe("EffectWeaver", () => {
       Wrapper
     ) as GraphQLNonNull<GraphQLObjectType>
     const fields = gql.ofType.getFields()
-    expect(fields.friend.type).toBeInstanceOf(GraphQLNonNull)
-    expect((fields.friend.type as GraphQLNonNull<any>).ofType).toBeInstanceOf(
-      GraphQLObjectType
+    expect(fields.friend.type).toBeInstanceOf(GraphQLObjectType)
+  })
+
+  it("should execute null for a nullable suspended field", async () => {
+    const Friend = Schema.Struct({ name: Schema.String }).annotations({
+      title: "Friend",
+    })
+    const Wrapper = Schema.Struct({
+      friend: Schema.NullOr(Schema.suspend(() => Friend)),
+    }).annotations({ title: "Wrapper" })
+
+    const schema = weave(
+      EffectWeaver,
+      resolver({
+        wrapper: query(standard(Wrapper)).resolve(() => ({ friend: null })),
+      })
     )
+    const result = await execute({
+      schema,
+      document: parse("{ wrapper { friend { name } } }"),
+    })
+
+    expect(result).toEqual({ data: { wrapper: { friend: null } } })
   })
 
   it("should handle object types", () => {
