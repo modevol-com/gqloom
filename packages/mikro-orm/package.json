@@ -38,8 +38,8 @@
   "author": "xcfox",
   "license": "MIT",
   "dependencies": {
-    "@mikro-orm/sql": "^7.1.12",
-    "kysely": "^0.28.16"
+    "@mikro-orm/sql": "^7.2.5",
+    "kysely": "^0.28.18"
   },
   "peerDependencies": {
     "@gqloom/core": ">= 0.16.0",
@@ -59,9 +59,9 @@
   "devDependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/valibot": "workspace:*",
-    "@mikro-orm/core": "^7.1.12",
-    "@mikro-orm/decorators": "^7.1.12",
-    "@mikro-orm/libsql": "^7.1.12",
+    "@mikro-orm/core": "^7.2.5",
+    "@mikro-orm/decorators": "^7.2.5",
+    "@mikro-orm/libsql": "^7.2.5",
     "reflect-metadata": "^0.2.2",
     "valibot": "1.5.0"
   },

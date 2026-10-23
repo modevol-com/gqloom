@@ -11,15 +11,15 @@
   "license": "ISC",
   "description": "Basic example using Effect Schema with GQLoom",
   "devDependencies": {
-    "@types/node": "^26.6.1",
-    "tsx": "^4.23.12",
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "@gqloom/core": "workspace:*",
     "@gqloom/effect": "workspace:*",
-    "effect": "^3.22.1",
-    "graphql": "^16.12.0",
-    "graphql-yoga": "^5.21.0"
+    "effect": "^3.22.4",
+    "graphql": "^16.14.2",
+    "graphql-yoga": "^5.24.6"
   }
 }

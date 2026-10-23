@@ -29,26 +29,26 @@
   "author": "xcfox",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
-    "@graphql-tools/utils": "^12.0.0",
-    "@types/node": "^26.6.1",
+    "@biomejs/biome": "2.5.15",
+    "@graphql-tools/utils": "^12.1.0",
+    "@types/node": "^26.6.5",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
-    "@vitest/coverage-v8": "^3.2.4",
-    "graphql": "^16.13.1",
+    "@vitest/coverage-v8": "^3.2.7",
+    "graphql": "^16.14.2",
     "husky": "^9.1.7",
-    "lint-staged": "^17.3.0",
-    "tsdown": "^0.21.7",
-    "tsx": "^4.23.12",
+    "lint-staged": "^17.6.0",
+    "tsdown": "^0.21.10",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.7"
   },
   "packageManager": "pnpm@10.26.0+sha512.3b3f6c725ebe712506c0ab1ad4133cf86b1f4b687effce62a9b38b4d72e3954242e643190fc51fa1642949c735f403debd44f5cb0edd657abe63a8b6a7e1e402",
   "pnpm": {
     "overrides": {
-      "fastify": "^5.6.2",
-      "mercurius": "^16.6.0",
-      "graphql": "^16.13.1",
-      "pg": "^8.13.2",
+      "fastify": "^5.12.7",
+      "mercurius": "^16.12.0",
+      "graphql": "^16.14.2",
+      "pg": "^8.23.1",
       "vite": "npm:rolldown-vite@latest"
     },
     "ignoredBuiltDependencies": [

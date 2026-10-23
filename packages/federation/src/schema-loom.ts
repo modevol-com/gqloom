@@ -1,10 +1,4 @@
-import { printSubgraphSchema } from "@apollo/subgraph"
-import {
-  AnyType,
-  EntityType,
-  entitiesResolver,
-  ServiceType,
-} from "@apollo/subgraph/dist/types"
+import { entitiesResolver, printSubgraphSchema } from "@apollo/subgraph"
 import {
   filterMiddlewares,
   GraphQLSchemaLoom,
@@ -26,6 +20,7 @@ import {
   isObjectType,
   lexicographicSortSchema,
 } from "graphql"
+import { AnyType, EntityType, ServiceType } from "./federation-types"
 import { mockAst } from "./mock-ast"
 import { FederatedChainResolver } from "./resolver"
 

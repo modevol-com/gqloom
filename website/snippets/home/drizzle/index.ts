@@ -4,7 +4,7 @@ import { weave } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { createYoga } from "graphql-yoga"
-import { Post, User, relations } from "src/schema"
+import { Post, relations, User } from "src/schema"
 
 const db = drizzle(process.env.DATABASE_URL!, {
   relations,

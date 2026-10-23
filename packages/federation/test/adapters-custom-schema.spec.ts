@@ -1,7 +1,6 @@
 import { ApolloServer } from "@apollo/server"
 import { ApolloServerPluginInlineTraceDisabled } from "@apollo/server/plugin/disabled"
 import { printSubgraphSchema } from "@apollo/subgraph"
-import { entitiesField } from "@apollo/subgraph/dist/types"
 import type { MayPromise } from "@gqloom/core"
 import { printSchemaWithDirectives } from "@graphql-tools/utils"
 import Fastify from "fastify"
@@ -18,6 +17,7 @@ import { createYoga } from "graphql-yoga"
 import Mercurius from "mercurius"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
 import { describe, expect, it } from "vitest"
+import { entitiesField } from "../src/federation-types"
 import { mockAst } from "../src/mock-ast"
 
 declare module "graphql" {
@@ -148,19 +148,27 @@ const queries = {
 describe("schema", () => {
   it("should print Subgraph Schema", () => {
     expect(printSubgraphSchema(schema)).toMatchInlineSnapshot(`
-      "extend schema
-        @link(url: "https://specs.apollo.dev/federation/v2.6", import: ["@extends", "@external", "@inaccessible", "@key", "@override", "@provides", "@shareable", "@tag"])
+      "schema @link(url: "https://specs.apollo.dev/federation/v2.6", import: ["@extends", "@external", "@inaccessible", "@key", "@override", "@provides", "@shareable", "@tag"]) {
+        query: Query
+      }
 
       type Query {
         me: User
+        _entities(representations: [_Any!]!): [_Entity]!
+        _service: _Service
       }
 
-      type User
-        @extends
-        @key(fields: "id")
-      {
+      type User @extends @key(fields: "id") {
         id: String
         name: String
+      }
+
+      union _Entity = User
+
+      scalar _Any
+
+      type _Service {
+        sdl: String
       }"
     `)
   })

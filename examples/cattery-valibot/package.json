@@ -10,9 +10,9 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^26.6.1",
-    "drizzle-kit": "^0.31.5",
-    "tsx": "^4.23.12",
+    "@types/node": "^26.6.5",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.2"
   },
   "dependencies": {
@@ -21,9 +21,9 @@
     "@gqloom/valibot": "latest",
     "@libsql/client": "^0.15.10",
     "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.2",
-    "graphql": "^16.12.0",
-    "graphql-yoga": "^5.21.0",
+    "drizzle-orm": "^0.45.4",
+    "graphql": "^16.14.2",
+    "graphql-yoga": "^5.24.6",
     "valibot": "1.5.0"
   }
 }
