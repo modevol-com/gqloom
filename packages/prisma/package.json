@@ -72,7 +72,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.11.1",
     "prisma": "^7.10.1",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "homepage": "https://gqloom.dev/",
   "repository": {
