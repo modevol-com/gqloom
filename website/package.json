@@ -50,6 +50,7 @@
     "oxc-minify": "^0.108.0",
     "reflect-metadata": "^0.2.2",
     "typebox": "^1.4.3",
+    "typescript": "5.9.3",
     "valibot": "^1.5.0",
     "vitepress": "2.0.0-alpha.19",
     "vitepress-plugin-llms": "^1.14.0",
