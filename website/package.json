@@ -55,7 +55,7 @@
     "vitepress": "2.0.0-alpha.19",
     "vitepress-plugin-llms": "^1.14.0",
     "yup": "^1.7.1",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "dependencies": {
     "@iconify/vue": "^5.0.4",
