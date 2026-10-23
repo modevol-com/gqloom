@@ -1,5 +1,11 @@
-import { SYMBOLS, type WeaverConfig } from "@gqloom/core"
-import type { Column, InferSelectModel, SQL, Table } from "drizzle-orm"
+import { type GraphQLSilk, SYMBOLS, type WeaverConfig } from "@gqloom/core"
+import type {
+  Column,
+  InferInsertModel,
+  InferSelectModel,
+  SQL,
+  Table,
+} from "drizzle-orm"
 import type {
   GraphQLFieldConfig,
   GraphQLObjectTypeConfig,
@@ -27,12 +33,12 @@ export interface DrizzleWeaverConfig
  */
 export interface DrizzleResolverFactoryOptions<TTable extends Table> {
   /**
-   * Config the visibility behavior of the columns
+   * Config the behavior of the columns
    */
-  input: DrizzleFactoryInputVisibilityBehaviors<TTable>
+  input: DrizzleFactoryInputBehaviors<TTable>
 }
 
-export interface VisibilityBehavior {
+export interface ColumnBehavior<TOutput> {
   /**
    * Is this column visible in the filters?
    */
@@ -41,39 +47,64 @@ export interface VisibilityBehavior {
   /**
    * Is this column visible in the insert mutation input?
    */
-  insert?: boolean
+  insert?: boolean | GraphQLSilk<TOutput, any>
   /**
    * Is this column visible in the update mutation input?
    */
-  update?: boolean
+  update?: boolean | GraphQLSilk<TOutput, any>
 }
 
-export type DrizzleFactoryInputVisibilityBehaviors<TTable extends Table> = {
-  [K in keyof TTable["_"]["columns"]]?: VisibilityBehavior | boolean | undefined
+export type DrizzleFactoryInputBehaviors<TTable extends Table> = {
+  [K in keyof TTable["_"]["columns"]]?:
+    | ColumnBehavior<
+        InferInsertModel<TTable>[Extract<K, keyof InferInsertModel<TTable>>]
+      >
+    | GraphQLSilk<
+        InferInsertModel<TTable>[Extract<K, keyof InferInsertModel<TTable>>],
+        any
+      >
+    | boolean
+    | undefined
 } & {
   /**
    * Config the default visibility behavior of all columns
    */
-  "*"?: VisibilityBehavior | boolean | undefined
+  "*"?: ColumnBehavior<never> | boolean | undefined
+}
+
+export type DrizzleSilkFieldType =
+  | GraphQLOutputType
+  | GraphQLSilk<any, any>
+  | typeof SYMBOLS.FIELD_HIDDEN
+  | null
+
+/**
+ * A `drizzleSilk` field override: GraphQL type, Silk (Zod / Valibot / `silk()`),
+ * field config object, or `FIELD_HIDDEN`.
+ */
+export type DrizzleSilkFieldConfig =
+  | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
+      /**
+       * The type of the field, set to `null` to hide the field.
+       * Accepts a GraphQL output type, a Silk, or a getter of either.
+       */
+      type?: ValueOrGetter<DrizzleSilkFieldType> | undefined
+    })
+  | GraphQLSilk<any, any>
+  | GraphQLOutputType
+  | typeof SYMBOLS.FIELD_HIDDEN
+  | undefined
+
+export interface ResolvedDrizzleFieldConfig {
+  hidden: boolean
+  type: GraphQLOutputType | undefined
+  options: Omit<GraphQLFieldConfig<any, any>, "type">
 }
 
 export interface DrizzleSilkConfig<TTable extends Table>
   extends Partial<Omit<GraphQLObjectTypeConfig<any, any>, "fields">> {
   fields?: ValueOrGetter<{
-    [K in keyof TTable["_"]["columns"]]?:
-      | (Omit<GraphQLFieldConfig<any, any>, "type"> & {
-          /**
-           * The type of the field, set to `null` to hide the field
-           */
-          type?:
-            | GraphQLOutputType
-            | typeof SYMBOLS.FIELD_HIDDEN
-            | null
-            | (() => GraphQLOutputType | typeof SYMBOLS.FIELD_HIDDEN | null)
-            | undefined
-        })
-      | typeof SYMBOLS.FIELD_HIDDEN
-      | undefined
+    [K in keyof TTable["_"]["columns"]]?: DrizzleSilkFieldConfig
   }>
 }
 

@@ -177,10 +177,10 @@ input RoleFilters {
   notInArray: [Role!]
   isNull: Boolean
   isNotNull: Boolean
-  OR: [RoleFiltersOr!]
+  OR: [RoleFiltersNested!]
 }
 
-input RoleFiltersOr {
+input RoleFiltersNested {
   eq: Role
   ne: Role
   lt: Role

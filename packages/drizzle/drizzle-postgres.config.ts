@@ -8,5 +8,5 @@ export default defineConfig({
   dbCredentials: {
     url: config.postgresUrl,
   },
-  tablesFilter: ["drizzle_user", "drizzle_post"],
+  tablesFilter: ["users", "posts"],
 })

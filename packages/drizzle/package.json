@@ -1,6 +1,6 @@
 {
   "name": "@gqloom/drizzle",
-  "version": "0.16.0",
+  "version": "0.17.0-rc.2",
   "description": "GQLoom integration with Drizzle ORM",
   "type": "module",
   "main": "./dist/index.js",
@@ -47,7 +47,7 @@
   "license": "MIT",
   "peerDependencies": {
     "@gqloom/core": ">= 0.10.0",
-    "drizzle-orm": ">= 0.44.0",
+    "drizzle-orm": ">= 1.0.0-rc.5",
     "graphql": ">= 16.8.0"
   },
   "devDependencies": {
@@ -56,8 +56,9 @@
     "@libsql/client": "^0.15.15",
     "@types/pg": "^8.23.1",
     "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.11",
-    "drizzle-orm": "^0.45.4",
+    "drizzle-kit": "1.0.0-rc.5",
+    "drizzle-orm": "1.0.0-rc.5",
+    "graphql-yoga": "^5.24.6",
     "mysql2": "^3.24.6",
     "pg": "^8.23.1",
     "tsx": "^4.23.15",
