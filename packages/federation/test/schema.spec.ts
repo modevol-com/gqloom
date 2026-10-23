@@ -108,19 +108,31 @@ describe("FederatedSchemaLoom", () => {
 
     expect(federatedSdl2).toEqual(federatedSdl)
     expect(federatedSdl).toMatchInlineSnapshot(`
-      "extend schema
-        @link(url: "https://specs.apollo.dev/federation/v2.6", import: ["@extends", "@external", "@key", "@shareable"])
+      "schema @link(url: "https://specs.apollo.dev/federation/v2.6", import: ["@extends", "@external", "@key", "@shareable"]) {
+        query: Query
+      }
 
       type Query {
+        _entities(representations: [_Any!]!): [_Entity]!
+        _service: _Service
         me: User
       }
 
-      type User
-        @key(fields: "id", resolvable: true)
-      {
+      type User @key(fields: "id", resolvable: true) {
+        deprecated: Boolean! @deprecated(reason: "test")
         id: String!
         name: String!
-        deprecated: Boolean! @deprecated(reason: "test")
+      }
+
+      scalar _Any
+
+      union _Entity = User
+
+      type _Service {
+        """
+        The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied
+        """
+        sdl: String
       }"
     `)
   })

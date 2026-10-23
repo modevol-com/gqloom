@@ -37,8 +37,44 @@ import {
   type ValueNode,
 } from "graphql"
 
+/**
+ * @apollo/subgraph 2.15's printSubgraphSchema delegates to
+ * printSchemaWithDirectives, which iterates extensions.directives as a record.
+ * Array-form directives would otherwise print as `@0(name: "key", ...)`.
+ */
+function normalizeDirectiveExtensions(target: {
+  extensions?: Record<string, unknown> | null
+}) {
+  const directives = target.extensions?.directives as
+    | DirectiveList
+    | Record<string, {}>
+    | undefined
+  if (!Array.isArray(directives)) return
+
+  const record: Record<string, {} | {}[]> = {}
+  for (const directive of directives) {
+    const args = directive.args ?? {}
+    const existing = record[directive.name]
+    if (existing == null) {
+      record[directive.name] = args
+    } else if (Array.isArray(existing)) {
+      existing.push(args)
+    } else {
+      record[directive.name] = [existing, args]
+    }
+  }
+
+  target.extensions = {
+    ...target.extensions,
+    directives: record,
+  }
+}
+
 export function mockAst(schema: GraphQLSchema) {
   const types = schema.getTypeMap()
+  normalizeDirectiveExtensions(
+    schema as { extensions?: Record<string, unknown> }
+  )
 
   schema.extensionASTNodes = [
     {
@@ -80,6 +116,9 @@ export function mockAst(schema: GraphQLSchema) {
 
   Object.keys(types).forEach((typeName) => {
     const type = types[typeName]
+    normalizeDirectiveExtensions(
+      type as { extensions?: Record<string, unknown> }
+    )
 
     if (type instanceof GraphQLObjectType) {
       type.astNode = {
@@ -259,6 +298,9 @@ function fieldNodes(
 ): FieldDefinitionNode[] {
   return Object.keys(fields).map((fieldName) => {
     const field: GraphQLField<unknown, unknown> = fields[fieldName]
+    normalizeDirectiveExtensions(
+      field as { extensions?: Record<string, unknown> }
+    )
 
     field.astNode = {
       kind: Kind.FIELD_DEFINITION,
@@ -283,6 +325,9 @@ function inputFieldNodes(
 ): InputValueDefinitionNode[] {
   return Object.keys(fields).map((fieldName) => {
     const field: GraphQLInputField = fields[fieldName]
+    normalizeDirectiveExtensions(
+      field as { extensions?: Record<string, unknown> }
+    )
 
     const defaultValueNode = astFromValue(
       field.defaultValue,
@@ -312,6 +357,9 @@ function argumentNodes(
   args: readonly GraphQLArgument[]
 ): InputValueDefinitionNode[] {
   return args.map((arg): InputValueDefinitionNode => {
+    normalizeDirectiveExtensions(
+      arg as { extensions?: Record<string, unknown> }
+    )
     const defaultValueNode = astFromValue(
       arg.defaultValue,
       arg.type
@@ -340,6 +388,9 @@ function enumValueNodes(
   values: readonly GraphQLEnumValue[]
 ): readonly EnumValueDefinitionNode[] {
   return values.map((value): EnumValueDefinitionNode => {
+    normalizeDirectiveExtensions(
+      value as { extensions?: Record<string, unknown> }
+    )
     value.astNode = {
       kind: Kind.ENUM_VALUE_DEFINITION,
       description: value.description

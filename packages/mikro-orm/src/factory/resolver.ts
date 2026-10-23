@@ -214,7 +214,7 @@ export class MikroResolverFactory<TEntity extends object> {
           return em.find(property.entity() as any, finalWhere, {
             fields: getSelectedFields(payload),
             ...rest,
-          })
+          } as any)
         },
       } as FieldOptions<any, any, any, any>
     )

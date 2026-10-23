@@ -67,7 +67,7 @@ const queries = {
 }
 
 describe("Apollo", () => {
-  const schema = buildSubgraphSchema({ typeDefs, resolvers })
+  const schema = buildSubgraphSchema([{ typeDefs, resolvers }])
   const server = new ApolloServer({
     schema,
     plugins: [ApolloServerPluginInlineTraceDisabled()],
@@ -121,7 +121,7 @@ describe("Apollo", () => {
 })
 
 describe("Yoga", () => {
-  const schema = buildSubgraphSchema({ typeDefs, resolvers })
+  const schema = buildSubgraphSchema([{ typeDefs, resolvers }])
   const yoga = createYoga({ schema })
 
   it("should build schema", () => {

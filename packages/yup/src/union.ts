@@ -33,7 +33,7 @@ export class UnionSchema<
   extends Schema<TType, TContext, TDefault, TFlags>
   implements IUnionSchema<TType, TContext, TDefault, TFlags>
 {
-  public declare spec: UnionSchemaSpec
+  declare public spec: UnionSchemaSpec
 
   public constructor(types: ReadonlyArray<Schema>) {
     super({
