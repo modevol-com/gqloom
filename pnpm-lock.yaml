@@ -135,7 +135,7 @@ importers:
         version: 0.16.0(@gqloom/core@0.16.2(graphql@16.14.2))(drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(better-sqlite3@12.11.1)(knex@3.1.0(better-sqlite3@12.11.1)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(sqlite3@5.1.7))(kysely@0.29.6)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7))(graphql@16.14.2)
       '@gqloom/zod':
         specifier: latest
-        version: 0.16.0(@gqloom/core@0.16.2(graphql@16.14.2))(graphql@16.14.2)(zod@4.4.3)
+        version: 0.16.0(@gqloom/core@0.16.2(graphql@16.14.2))(graphql@16.14.2)(zod@4.6.7)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.15
@@ -152,8 +152,8 @@ importers:
         specifier: ^5.24.6
         version: 5.24.6(graphql@16.14.2)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: ^26.6.5
@@ -278,8 +278,8 @@ importers:
         specifier: 1.5.0
         version: 1.5.0(typescript@5.9.3)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
 
   examples/mikro-orm:
     dependencies:
@@ -373,8 +373,8 @@ importers:
         specifier: 1.5.0
         version: 1.5.0(typescript@5.9.3)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
 
   examples/subscriptions:
     dependencies:
@@ -397,8 +397,8 @@ importers:
         specifier: 1.5.0
         version: 1.5.0(typescript@5.9.3)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
 
   examples/upload:
     dependencies:
@@ -627,8 +627,8 @@ importers:
         specifier: ^7.10.1
         version: 7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
 
   packages/valibot:
     dependencies:
@@ -666,8 +666,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
 
   website:
     dependencies:
@@ -704,10 +704,10 @@ importers:
         version: link:../packages/core
       '@gqloom/drizzle':
         specifier: npm:@gqloom/drizzle@0.17.0-rc.1
-        version: 0.17.0-rc.1(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3))(graphql@16.14.2)
+        version: 0.17.0-rc.1(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7))(graphql@16.14.2)
       '@gqloom/drizzle-rqbv1':
         specifier: npm:@gqloom/drizzle@0.16.0
-        version: '@gqloom/drizzle@0.16.0(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3))(graphql@16.14.2)'
+        version: '@gqloom/drizzle@0.16.0(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7))(graphql@16.14.2)'
       '@gqloom/effect':
         specifier: workspace:*
         version: link:../packages/effect
@@ -761,7 +761,7 @@ importers:
         version: 1.0.0-rc.4
       drizzle-orm:
         specifier: 1.0.0-rc.4
-        version: 1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3)
+        version: 1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7)
       drizzle-orm-rqbv1:
         specifier: npm:drizzle-orm@0.45.4
         version: drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(better-sqlite3@12.11.1)(knex@3.1.0(better-sqlite3@12.11.1)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(sqlite3@5.1.7))(kysely@0.29.6)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7)
@@ -808,8 +808,8 @@ importers:
         specifier: ^1.7.1
         version: 1.7.1
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.7
+        version: 4.6.7
 
 packages:
 
@@ -6674,8 +6674,8 @@ packages:
   zeptomatch@2.1.0:
     resolution: {integrity: sha512-KiGErG2J0G82LSpniV0CtIzjlJ10E04j02VOudJsPyPwNZgGnRKQy7I1R7GMyg/QswnE4l7ohSGrQbQbjXPPDA==}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -7583,16 +7583,16 @@ snapshots:
       drizzle-orm: 0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(better-sqlite3@12.11.1)(knex@3.1.0(better-sqlite3@12.11.1)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(sqlite3@5.1.7))(kysely@0.29.6)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7)
       graphql: 16.14.2
 
-  '@gqloom/drizzle@0.16.0(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3))(graphql@16.14.2)':
+  '@gqloom/drizzle@0.16.0(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7))(graphql@16.14.2)':
     dependencies:
       '@gqloom/core': link:packages/core
-      drizzle-orm: 1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3)
+      drizzle-orm: 1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7)
       graphql: 16.14.2
 
-  '@gqloom/drizzle@0.17.0-rc.1(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3))(graphql@16.14.2)':
+  '@gqloom/drizzle@0.17.0-rc.1(@gqloom/core@packages+core)(drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7))(graphql@16.14.2)':
     dependencies:
       '@gqloom/core': link:packages/core
-      drizzle-orm: 1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3)
+      drizzle-orm: 1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7)
       graphql: 16.14.2
 
   '@gqloom/json@0.12.0(@gqloom/core@0.13.0(graphql@16.14.2))(graphql@16.14.2)':
@@ -7607,11 +7607,11 @@ snapshots:
       graphql: 16.14.2
       valibot: 1.5.0(typescript@5.9.3)
 
-  '@gqloom/zod@0.16.0(@gqloom/core@0.16.2(graphql@16.14.2))(graphql@16.14.2)(zod@4.4.3)':
+  '@gqloom/zod@0.16.0(@gqloom/core@0.16.2(graphql@16.14.2))(graphql@16.14.2)(zod@4.6.7)':
     dependencies:
       '@gqloom/core': 0.16.2(graphql@16.14.2)
       graphql: 16.14.2
-      zod: 4.4.3
+      zod: 4.6.7
 
   '@graphql-tools/executor@2.1.0(graphql@16.14.2)':
     dependencies:
@@ -9612,7 +9612,7 @@ snapshots:
       prisma: 7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)
       sqlite3: 5.1.7
 
-  drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.4.3):
+  drizzle-orm@1.0.0-rc.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(arktype@2.2.9)(better-sqlite3@12.11.1)(effect@3.22.4)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(sqlite3@5.1.7)(typebox@1.4.3)(valibot@1.5.0(typescript@5.9.3))(zod@4.6.7):
     optionalDependencies:
       '@electric-sql/pglite': 0.4.3
       '@libsql/client': 0.15.15
@@ -9627,7 +9627,7 @@ snapshots:
       sqlite3: 5.1.7
       typebox: 1.4.3
       valibot: 1.5.0(typescript@5.9.3)
-      zod: 4.4.3
+      zod: 4.6.7
 
   drizzle-seed@0.3.1(drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.15.15)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(@types/pg@8.23.1)(better-sqlite3@12.11.1)(knex@3.1.0(better-sqlite3@12.11.1)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(sqlite3@5.1.7))(kysely@0.29.6)(mysql2@3.24.6(@types/node@26.6.5))(pg@8.23.1)(postgres@3.4.7)(prisma@7.10.1(@types/node@26.6.5)(@types/react@19.2.18)(better-sqlite3@12.11.1)(magicast@0.3.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3))(sqlite3@5.1.7)):
     dependencies:
@@ -12558,6 +12558,6 @@ snapshots:
       grammex: 3.1.13
       graphmatch: 1.1.1
 
-  zod@4.4.3: {}
+  zod@4.6.7: {}
 
   zwitch@2.0.4: {}
