@@ -15,6 +15,8 @@ export default defineConfig({
   dts: true,
   outDir: "./dist",
   clean: true,
-  tsconfig: "../../tsconfig.json",
-  external: ["@gqloom/core"],
+  tsconfig: "./tsconfig.build.json",
+  deps: {
+    neverBundle: ["@gqloom/core"],
+  },
 })

@@ -20,7 +20,9 @@ export default defineConfig({
   },
   outDir: "./dist",
   clean: true,
-  external: ["node:async_hooks"],
-  noExternal: ["@standard-schema/spec"],
-  tsconfig: "../../tsconfig.json",
+  deps: {
+    neverBundle: ["node:async_hooks"],
+    alwaysBundle: ["@standard-schema/spec"],
+  },
+  tsconfig: "./tsconfig.build.json",
 })
