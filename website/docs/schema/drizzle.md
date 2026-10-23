@@ -12,7 +12,7 @@ import { Tabs } from '@/components/tabs'
 
 | Drizzle | Relational Queries | `drizzle-orm` | `@gqloom/drizzle` |
 | --- | --- | --- | --- |
-| **v1** (`@rc`) | v2 | `1.0.0-rc.4+` | `0.17.0-rc.0+` (`@gqloom/drizzle@rc`) |
+| **v1** (`@rc`) | v2 | `1.0.0-rc.5+` | `0.17.0-rc.2+` (`@gqloom/drizzle@rc`) |
 | v0 | v1 | `0.x` | `0.16.x` |
 
 ## Installation

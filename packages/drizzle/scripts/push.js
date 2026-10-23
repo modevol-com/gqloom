@@ -14,17 +14,17 @@ const commands = []
 
 // Check if MySQL URL exists
 if (process.env.MYSQL_URL) {
-  commands.push("drizzle-kit push --config=drizzle-mysql.config.ts")
+  commands.push("drizzle-kit push --force --config=drizzle-mysql.config.ts")
 }
 
 // Check if PostgreSQL URL exists
 if (process.env.POSTGRESQL_URL) {
-  commands.push("drizzle-kit push --config=drizzle-postgres.config.ts")
+  commands.push("drizzle-kit push --force --config=drizzle-postgres.config.ts")
 }
 
 // SQLite always executes (no URL required)
-commands.push("drizzle-kit push --config=drizzle-sqlite.config.ts")
-commands.push("drizzle-kit push --config=drizzle-sqlite-1.config.ts")
+commands.push("drizzle-kit push --force --config=drizzle-sqlite.config.ts")
+commands.push("drizzle-kit push --force --config=drizzle-sqlite-1.config.ts")
 
 // Execute all commands
 if (commands.length === 0) {
