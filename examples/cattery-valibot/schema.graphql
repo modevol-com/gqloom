@@ -8,11 +8,16 @@ type UsersItem {
 type CatsItem {
   id: Int!
   name: String!
-  birthday: String!
+  birthday: DateTime!
   ownerId: Int!
   age(currentYear: Int): Float!
   owner: UsersItem
 }
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
 
 type Query {
   hello(name: String): String!
@@ -22,7 +27,7 @@ type Query {
   cats(
     offset: Int
     limit: Int
-    orderBy: [CatsOrderBy!]
+    orderBy: CatsOrderBy
     where: CatsFilters
   ): [CatsItem!]!
 }
@@ -44,7 +49,9 @@ input CatsFilters {
   name: SQLiteTextFilters
   birthday: SQLiteTimestampFilters
   ownerId: SQLiteIntegerFilters
-  OR: [CatsFiltersOr!]
+  OR: [CatsFiltersNested!]
+  AND: [CatsFiltersNested!]
+  NOT: CatsFiltersNested
 }
 
 input SQLiteIntegerFilters {
@@ -54,22 +61,24 @@ input SQLiteIntegerFilters {
   lte: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
-  notInArray: [Int!]
+  in: [Int!]
+  notIn: [Int!]
   isNull: Boolean
   isNotNull: Boolean
-  OR: [SQLiteIntegerFiltersOr!]
+  OR: [SQLiteIntegerFiltersNested!]
+  AND: [SQLiteIntegerFiltersNested!]
+  NOT: SQLiteIntegerFiltersNested
 }
 
-input SQLiteIntegerFiltersOr {
+input SQLiteIntegerFiltersNested {
   eq: Int
   ne: Int
   lt: Int
   lte: Int
   gt: Int
   gte: Int
-  inArray: [Int!]
-  notInArray: [Int!]
+  in: [Int!]
+  notIn: [Int!]
   isNull: Boolean
   isNotNull: Boolean
 }
@@ -85,14 +94,16 @@ input SQLiteTextFilters {
   notLike: String
   ilike: String
   notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+  in: [String!]
+  notIn: [String!]
   isNull: Boolean
   isNotNull: Boolean
-  OR: [SQLiteTextFiltersOr!]
+  OR: [SQLiteTextFiltersNested!]
+  AND: [SQLiteTextFiltersNested!]
+  NOT: SQLiteTextFiltersNested
 }
 
-input SQLiteTextFiltersOr {
+input SQLiteTextFiltersNested {
   eq: String
   ne: String
   lt: String
@@ -103,48 +114,42 @@ input SQLiteTextFiltersOr {
   notLike: String
   ilike: String
   notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+  in: [String!]
+  notIn: [String!]
   isNull: Boolean
   isNotNull: Boolean
 }
 
 input SQLiteTimestampFilters {
-  eq: String
-  ne: String
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  like: String
-  notLike: String
-  ilike: String
-  notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+  eq: DateTime
+  ne: DateTime
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
   isNull: Boolean
   isNotNull: Boolean
-  OR: [SQLiteTimestampFiltersOr!]
+  OR: [SQLiteTimestampFiltersNested!]
+  AND: [SQLiteTimestampFiltersNested!]
+  NOT: SQLiteTimestampFiltersNested
 }
 
-input SQLiteTimestampFiltersOr {
-  eq: String
-  ne: String
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  like: String
-  notLike: String
-  ilike: String
-  notIlike: String
-  inArray: [String!]
-  notInArray: [String!]
+input SQLiteTimestampFiltersNested {
+  eq: DateTime
+  ne: DateTime
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
   isNull: Boolean
   isNotNull: Boolean
 }
 
-input CatsFiltersOr {
+input CatsFiltersNested {
   id: SQLiteIntegerFilters
   name: SQLiteTextFilters
   birthday: SQLiteTimestampFilters
@@ -153,7 +158,12 @@ input CatsFiltersOr {
 
 type Mutation {
   createUser(data: CreateUserDataInput!): UsersItem!
-  createCats(values: [CreateCatsValuesInput!]!): [CatsItem!]!
+  insertCats(
+    values: [CatsInsertInput!]!
+    onConflictDoUpdate: CatsInsertOnConflictDoUpdateInput
+    onConflictDoNothing: CatsInsertOnConflictDoNothingInput
+  ): [CatsItem!]!
+  createManyCats(values: [CreateManyCatsValuesInput!]!): [CatsItem!]!
 }
 
 input CreateUserDataInput {
@@ -161,7 +171,33 @@ input CreateUserDataInput {
   phone: String!
 }
 
-input CreateCatsValuesInput {
+input CatsInsertInput {
+  id: Int
+  name: String!
+  birthday: DateTime!
+  ownerId: Int!
+}
+
+input CatsInsertOnConflictDoUpdateInput {
+  target: [CatsTableColumn!]!
+  set: CatsInsertInput
+  targetWhere: CatsFilters
+  setWhere: CatsFilters
+}
+
+enum CatsTableColumn {
+  id
+  name
+  birthday
+  ownerId
+}
+
+input CatsInsertOnConflictDoNothingInput {
+  target: [CatsTableColumn!]
+  where: CatsFilters
+}
+
+input CreateManyCatsValuesInput {
   name: String!
   birthday: String!
 }

@@ -4,10 +4,9 @@ import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { createYoga } from "graphql-yoga"
 import { config } from "../env.config"
-import * as tables from "./schema"
 import { posts, users } from "./schema"
 
-const db = drizzle(config.databaseUrl, { schema: tables, logger: true })
+const db = drizzle(config.databaseUrl, { logger: true })
 
 const userResolver = resolver.of(users, {
   users: query(users.$list()).resolve(() => db.select().from(users)),

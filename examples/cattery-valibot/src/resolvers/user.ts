@@ -1,12 +1,11 @@
 import { mutation, query, resolver } from "@gqloom/core"
 import { drizzleResolverFactory } from "@gqloom/drizzle"
-import { eq } from "drizzle-orm"
 import * as v from "valibot"
 import { useCurrentUser } from "../contexts"
 import { db } from "../providers"
 import { users } from "../schema"
 
-const userResolverFactory = drizzleResolverFactory(db, "users")
+const userResolverFactory = drizzleResolverFactory(db, users)
 
 export const userResolver = resolver.of(users, {
   cats: userResolverFactory.relationField("cats"),
@@ -15,19 +14,11 @@ export const userResolver = resolver.of(users, {
 
   usersByName: query(users.$list())
     .input({ name: v.string() })
-    .resolve(({ name }) => {
-      return db.query.users.findMany({
-        where: eq(users.name, name),
-      })
-    }),
+    .resolve(({ name }) => db.query.users.findMany({ where: { name } })),
 
   userByPhone: query(users.$nullable())
     .input({ phone: v.string() })
-    .resolve(({ phone }) => {
-      return db.query.users.findFirst({
-        where: eq(users.phone, phone),
-      })
-    }),
+    .resolve(({ phone }) => db.query.users.findFirst({ where: { phone } })),
 
   createUser: mutation(users)
     .input({

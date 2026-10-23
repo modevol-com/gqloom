@@ -11,17 +11,17 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "drizzle-kit": "^0.31.11",
+    "drizzle-kit": "1.0.0-rc.5",
     "tsx": "^4.23.15",
     "typescript": "^5.9.2"
   },
   "dependencies": {
     "@gqloom/core": "latest",
-    "@gqloom/drizzle": "latest",
+    "@gqloom/drizzle": "workspace:*",
     "@gqloom/zod": "latest",
     "@libsql/client": "^0.15.10",
     "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.4",
+    "drizzle-orm": "1.0.0-rc.5",
     "graphql": "^16.14.2",
     "graphql-yoga": "^5.24.6",
     "zod": "4.6.7"

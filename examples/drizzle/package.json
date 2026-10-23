@@ -15,8 +15,7 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.11",
-    "drizzle-orm": "^0.45.4",
+    "drizzle-kit": "1.0.0-rc.5",
     "tsx": "^4.23.15",
     "typescript": "^5.9.2"
   },
@@ -24,7 +23,8 @@
     "@gqloom/core": "workspace:*",
     "@gqloom/drizzle": "workspace:*",
     "dotenv": "^17.4.2",
-    "drizzle-seed": "^0.3.1",
+    "drizzle-orm": "1.0.0-rc.5",
+    "drizzle-seed": "1.0.0-rc.5",
     "graphql": "^16.14.2",
     "graphql-yoga": "^5.24.6",
     "pg": "^8.23.1"
