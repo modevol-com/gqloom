@@ -20,7 +20,7 @@
     "@gqloom/drizzle": "latest",
     "@gqloom/valibot": "latest",
     "@libsql/client": "^0.15.10",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.9",
     "drizzle-orm": "^0.45.4",
     "graphql": "^16.14.2",
     "graphql-yoga": "^5.24.6",
