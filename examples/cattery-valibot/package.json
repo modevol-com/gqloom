@@ -21,7 +21,7 @@
     "@gqloom/valibot": "latest",
     "@libsql/client": "^0.15.10",
     "dotenv": "^18.0.9",
-    "drizzle-orm": "^0.45.4",
+    "drizzle-orm": "^1.0.0-rc.5",
     "graphql": "^16.14.2",
     "graphql-yoga": "^5.24.6",
     "valibot": "1.5.0"
