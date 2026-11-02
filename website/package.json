@@ -45,7 +45,7 @@
     "graphql": "^16.14.2",
     "graphql-scalars": "^1.26.0",
     "graphql-upload-minimal": "^1.6.4",
-    "graphql-yoga": "^5.24.6",
+    "graphql-yoga": "^6.0.1",
     "mercurius": "^16.12.0",
     "oxc-minify": "^0.108.0",
     "reflect-metadata": "^0.2.2",

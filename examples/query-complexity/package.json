@@ -16,7 +16,7 @@
     "@gqloom/zod": "workspace:*",
     "graphql": "^16.14.2",
     "graphql-query-complexity": "^1.1.1",
-    "graphql-yoga": "^5.24.6",
+    "graphql-yoga": "^6.0.1",
     "valibot": "1.5.0",
     "zod": "4.6.7"
   }
