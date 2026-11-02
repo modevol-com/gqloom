@@ -21,7 +21,7 @@
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "graphql": "^16.14.2",
-    "graphql-yoga": "^5.24.6",
+    "graphql-yoga": "^6.0.1",
     "pg": "^8.23.1",
     "valibot": "1.5.0"
   }

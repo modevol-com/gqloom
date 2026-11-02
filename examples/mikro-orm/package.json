@@ -21,7 +21,7 @@
     "@mikro-orm/core": "^7.2.5",
     "@mikro-orm/libsql": "^7.2.5",
     "graphql": "^16.14.2",
-    "graphql-yoga": "^5.24.6",
+    "graphql-yoga": "^6.0.1",
     "valibot": "^1.5.0"
   }
 }

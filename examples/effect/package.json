@@ -20,6 +20,6 @@
     "@gqloom/effect": "workspace:*",
     "effect": "^3.22.4",
     "graphql": "^16.14.2",
-    "graphql-yoga": "^5.24.6"
+    "graphql-yoga": "^6.0.1"
   }
 }
