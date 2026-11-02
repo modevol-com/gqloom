@@ -36,7 +36,7 @@
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "ajv": "^8.20.0",
     "arktype": "^2.2.9",
-    "concurrently": "^9.2.5",
+    "concurrently": "^10.0.6",
     "drizzle-kit": "1.0.0-rc.4",
     "drizzle-orm": "1.0.0-rc.4",
     "drizzle-orm-rqbv1": "npm:drizzle-orm@0.45.4",
