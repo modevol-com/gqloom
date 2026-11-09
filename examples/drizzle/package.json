@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.11",
+    "drizzle-kit": "^1.0.0-rc.5",
     "drizzle-orm": "^0.45.4",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
