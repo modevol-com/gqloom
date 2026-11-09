@@ -11,7 +11,7 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "drizzle-kit": "^0.31.11",
+    "drizzle-kit": "^1.0.0-rc.5",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
