@@ -29,7 +29,7 @@ import {
   isObjectType,
 } from "graphql"
 import type { ZodTypeAny } from "zod/v3"
-import type { $ZodObject, $ZodType, $ZodTypeDef } from "zod/v4/core"
+import type { $ZodObject, $ZodType } from "zod/v4/core"
 import { asField } from "./metadata"
 import type {
   FieldConfig,
@@ -48,6 +48,7 @@ import {
   isZodDefault,
   isZodDiscriminatedUnion,
   isZodEnum,
+  isZodGraphQLNullable,
   isZodInt,
   isZodLazy,
   isZodLiteral,
@@ -96,10 +97,7 @@ export class ZodWeaver {
     }
     const gqlType = ZodWeaver.toMemoriedGraphQLType(schema)
 
-    const isNullable = (
-      ["null", "nullable", "optional", "default"] as $ZodTypeDef["type"][]
-    ).includes(schema._zod.def.type)
-    if (isNullable) return gqlType
+    if (isZodGraphQLNullable(schema)) return gqlType
 
     if (isNonNullType(gqlType)) return gqlType
     return new GraphQLNonNull(gqlType)

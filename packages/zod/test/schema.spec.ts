@@ -20,6 +20,8 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLString,
+  graphql,
+  isNonNullType,
   printSchema,
   printType,
   validateSchema,
@@ -1088,6 +1090,133 @@ describe("ZodWeaver", () => {
           color: String!
         }"
       `)
+    })
+  })
+
+  describe("wrapper nullability (issue #425)", () => {
+    it("preserves inner nullability for readonly, lazy, and catch wrappers", () => {
+      expect(getGraphQLType(z.string().nullable().readonly())).toEqual(
+        GraphQLString
+      )
+      expect(getGraphQLType(z.string().optional().readonly())).toEqual(
+        GraphQLString
+      )
+      expect(getGraphQLType(z.lazy(() => z.string().nullable()))).toEqual(
+        GraphQLString
+      )
+      expect(getGraphQLType(z.string().nullable().catch(null))).toEqual(
+        GraphQLString
+      )
+
+      expect(getGraphQLType(z.string().readonly())).toEqual(
+        new GraphQLNonNull(GraphQLString)
+      )
+      expect(getGraphQLType(z.lazy(() => z.string()))).toEqual(
+        new GraphQLNonNull(GraphQLString)
+      )
+      expect(getGraphQLType(z.string().catch("x"))).toEqual(
+        new GraphQLNonNull(GraphQLString)
+      )
+      expect(getGraphQLType(z.string().optional().nonoptional())).toEqual(
+        new GraphQLNonNull(GraphQLString)
+      )
+    })
+
+    it("handles nested wrapper order", () => {
+      expect(
+        getGraphQLType(z.string().nullable().readonly().catch(null))
+      ).toEqual(GraphQLString)
+      expect(
+        getGraphQLType(z.lazy(() => z.string().nullable().readonly()))
+      ).toEqual(GraphQLString)
+      expect(
+        getGraphQLType(z.readonly(z.lazy(() => z.string().optional())))
+      ).toEqual(GraphQLString)
+    })
+
+    it("weaves issue reproduction schema and executes nullable resolvers", async () => {
+      interface Node {
+        id: string
+        parent: Node | null
+      }
+      const Node: z.ZodType<Node> = z
+        .object({
+          id: z.string(),
+          get parent() {
+            return z.lazy(() => Node.nullable())
+          },
+        })
+        .meta({ title: "Node" })
+
+      const Item = z
+        .object({ a: z.number().optional().readonly() })
+        .meta({ title: "Item" })
+
+      const r = resolver({
+        optReadonly: query(z.string().optional().readonly())
+          .input({ filter: z.string().optional().readonly() })
+          .resolve(() => undefined),
+        nullReadonly: query(z.string().nullable().readonly()).resolve(
+          () => null
+        ),
+        lazyNullable: query(z.lazy(() => z.string().nullable())).resolve(
+          () => null
+        ),
+        nullCatch: query(z.string().nullable().catch(null)).resolve(() => null),
+        node: query(Node).resolve(() => ({ id: "1", parent: null })),
+        item: query(Item).resolve(() => ({})),
+      })
+
+      expect(printResolver(r)).toMatchInlineSnapshot(`
+        "type Query {
+          optReadonly(filter: String): String
+          nullReadonly: String
+          lazyNullable: String
+          nullCatch: String
+          node: Node!
+          item: Item!
+        }
+
+        type Node {
+          id: String!
+          parent: Node
+        }
+
+        type Item {
+          a: Float
+        }"
+      `)
+
+      const schema = ZodWeaver.weave(r)
+      expect(
+        JSON.stringify(
+          await graphql({
+            schema,
+            source: "{ nullReadonly lazyNullable nullCatch }",
+          })
+        )
+      ).toBe(
+        JSON.stringify({
+          data: { nullReadonly: null, lazyNullable: null, nullCatch: null },
+        })
+      )
+      expect(
+        JSON.stringify(
+          await graphql({
+            schema,
+            source: "{ node { id parent { id } } }",
+          })
+        )
+      ).toBe(JSON.stringify({ data: { node: { id: "1", parent: null } } }))
+    })
+
+    it("uses nullability from inner schema on object fields", () => {
+      let gqlType = getGraphQLType(
+        z.object({ value: z.string().nullable().readonly() })
+      )
+      while (isNonNullType(gqlType)) gqlType = gqlType.ofType
+      const valueType = (gqlType as GraphQLObjectType).getFields().value.type
+      expect(isNonNullType(valueType)).toBe(false)
     })
   })
 })

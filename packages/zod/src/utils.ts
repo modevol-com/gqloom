@@ -185,6 +185,66 @@ export function isZodLazy(schema: unknown): schema is $ZodLazy {
   return isZodType(schema) && schema._zod.def.type === "lazy"
 }
 
+/**
+ * Whether a Zod schema should map to a nullable GraphQL type (no {@link GraphQLNonNull}).
+ */
+export function isZodGraphQLNullable(
+  schema: $ZodType,
+  seen = new WeakSet<$ZodType>()
+): boolean {
+  let current: $ZodType = schema
+  while (isZodPipe(current)) {
+    current = current._zod.def.in
+  }
+
+  const defType = current._zod.def.type
+
+  if (defType === "catch") {
+    const innerType = (current._zod.def as unknown as { innerType: $ZodType })
+      .innerType
+    if (seen.has(innerType)) return false
+    seen.add(innerType)
+    return isZodGraphQLNullable(innerType, seen)
+  }
+
+  if (defType === "nonoptional") {
+    return false
+  }
+
+  if (
+    defType === "null" ||
+    defType === "nullable" ||
+    defType === "optional" ||
+    defType === "default"
+  ) {
+    return true
+  }
+
+  if (defType === "readonly") {
+    const innerType = (current._zod.def as unknown as { innerType: $ZodType })
+      .innerType
+    if (seen.has(innerType)) return false
+    seen.add(innerType)
+    return isZodGraphQLNullable(innerType, seen)
+  }
+
+  if (defType === "lazy") {
+    const resolved = (current as $ZodLazy)._zod.def.getter()
+    if (seen.has(resolved)) return false
+    seen.add(resolved)
+    return isZodGraphQLNullable(resolved, seen)
+  }
+
+  if (
+    "coerce" in current._zod.def &&
+    (current._zod.def as { coerce?: boolean }).coerce === true
+  ) {
+    return false
+  }
+
+  return false
+}
+
 export function getDescription(schema: $ZodType): string | undefined {
   while (true) {
     if ("description" in schema && typeof schema.description === "string") {
