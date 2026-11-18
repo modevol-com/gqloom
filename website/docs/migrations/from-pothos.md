@@ -2,29 +2,81 @@
 
 ## Why GQLoom
 
-Pothos builds a GraphQL schema through a `SchemaBuilder` instance: every type is declared on the builder (`objectRef` + `implement`, `t.exposeX('field')`), and the backing TypeScript type is passed to the builder as a generic. GQLoom weaves runtime schemas (such as Zod, Valibot, or Yup) and ORM models (such as Prisma, Drizzle, or MikroORM) into a GraphQL schema, with no builder instance.
+Both Pothos and GQLoom run natively in TypeScript without decorators, yet they start from fundamentally different philosophies.
 
-The numbers below come from porting the official Pothos [`examples/simple-interfaces`](https://github.com/hayes/pothos/tree/main/examples/simple-interfaces) (`@pothos/core` 4.18.0, `graphql` 16.14.2) to GQLoom. The full port is in the [reference implementation](#reference-implementation).
+Pothos takes a **GraphQL-first Builder** approach. It treats your internal data and your GraphQL API as two separate schemas, anchored on a shared builder where fields are defined inside callbacks and features are added through plugins.
 
-| Measured on the same example | Pothos | GQLoom (Zod) |
+GQLoom takes a **runtime-type-first Weaving** approach. Your validation schemas and ORM models already define your data and rules—so GQLoom weaves the GraphQL schema directly from them, keeping data, logic, and assembly cleanly separated.
+
+- **One source of truth instead of parallel layers**
+
+  Pothos separates internal models, GraphQL definitions, and validation rules into distinct layers you have to keep in sync. GQLoom starts from the schemas and ORM models you already have: one definition drives your TypeScript types, input validation, and GraphQL contract, while keeping your domain models decoupled from GraphQL.
+
+- **Independent modules instead of a central Builder**
+
+  Pothos's Builder pattern ties every file to one shared builder and wraps fields in callbacks. Modules rely on import-time registration and are harder to compose freely or run outside GraphQL. GQLoom has no shared builder: domain modules are plain, self-contained objects assembled explicitly at the entry point, and the same logic can also run directly in tests or non-GraphQL entry points.
+
+- **Unified design instead of plugin sprawl**
+
+  Pothos keeps its core narrow and splits everyday needs—validation, auth, batching, ORM integration—across plugins, each with its own options and coordination overhead. GQLoom connects directly to existing validation and ORM tools while building common cross-cutting concerns into one consistent core model.
+
+If you intentionally want a strict wall between internal models and your GraphQL API, or depend on Pothos's builder plugins, Pothos remains a solid choice. When you want a single source of truth, independent modules, and less ceremony overall, GQLoom offers a simpler foundation.
+
+## Overview and mental model
+
+| | Pothos | GQLoom |
 | --- | --- | --- |
-| Schema code files | `builder.ts` + `schema.ts`, 96 lines | `schema.ts`, 90 lines (includes the two ID helpers) |
-| `SchemaBuilder` instance and its generic | 1 | 0 |
-| `objectRef` + `.implement(...)` | 3 + 3 | 0 |
-| `builder.queryType(...)` and `t.expose*('name')` string-keyed declarations | 1 and 8 | 0 (fields are the properties of `z.object`) |
-| Places that declare the shape of `Post` | 3 (backing interface, `objectRef<IPost>`, `t.expose*` list) | 1 (`z.object`; `z.infer` gives the TypeScript type) |
-| `printSchema(lexicographicSortSchema(schema))`, before vs. after | n/a | `diff` is empty |
-| Replay of 4 queries (3 data queries, 1 validation error) | n/a | identical JSON, including the error text |
-| Runtime packages in `package.json` | `@pothos/core` | `@gqloom/core`, `@gqloom/zod`, `zod` |
+| Types | `objectRef` + `implement`, `t.expose*` | Zod / Valibot / ORM models (silks) |
+| Operations | `builder.queryType` / `mutationType` / `subscriptionType` | `resolver({ ... })` and `resolver.of(Silk, { ... })` |
+| Schema | `builder.toSchema()` | `weave(ZodWeaver, ...resolvers)` takes them explicitly |
+| Validation | Optional `@pothos/plugin-zod` / `@pothos/plugin-validation` | The schema itself; inputs are validated by default |
+| Auth / Context | `authScopes`, `context` argument | Middleware, `useContext()` |
 
-The port keeps the `IPost` interface in `data.ts` so that `data.ts` stays unchanged; deleting it in favor of `z.infer<typeof Post>` is optional.
+Migration recommendations:
 
-What the table does not claim: the port is not meaningfully shorter on a schema this small, and it adds `zod`. The gain shows up when you remove plugins. After a full migration you can uninstall `@pothos/core` and every `@pothos/plugin-*` package, drop the `PrismaTypes` generic and the `prisma-pothos-types` generator, and stop maintaining a second declaration of each model next to the Prisma schema or Drizzle table.
+- Use Zod (`@gqloom/zod`) by default. If your project already uses Valibot, or the data layer is backed by Prisma, Drizzle, or MikroORM, weave those existing schemas or models directly instead of maintaining a parallel Pothos declaration.
+- Migrate incrementally by module. Keep `@pothos/core` installed during migration. Both `GraphQLSchema` instances can coexist and be combined with [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging), or mounted on separate HTTP endpoints.
+- Keep object silks for data properties only, and define computed or relational fields in `resolver.of(Silk, { ... })`. Copy nullability from the printed Pothos SDL (using `.nullish()` for nullable outputs and optional inputs) rather than guessing.
 
-- One runtime schema or ORM model is the single source of truth. TypeScript types are inferred from it, GraphQL types are woven from it, and the schema itself validates inputs (no `@pothos/plugin-zod` or `@pothos/plugin-validation`).
-- Prisma, Drizzle, and MikroORM models are used directly as silks. Resolver factories generate CRUD operations and relation fields.
-- `field().load()` batches relation loads. It replaces `@pothos/plugin-dataloader` without a `loadableObject` declaration.
-- Middleware and `useContext()` replace `@pothos/plugin-scope-auth` and the `context` argument of every resolver.
+## Concept map
+
+The table below highlights concepts and APIs with notable differences:
+
+| Pothos | GQLoom | Notes |
+| --- | --- | --- |
+| `SchemaBuilder` + `builder.toSchema()` | `weave(ZodWeaver, config, ...resolvers)` | Add `asyncContextProvider` when `useContext()` is called; unreachable silks are omitted from the SDL |
+| `builder.objectType` / `objectRef` + `implement` | `z.object({ ... }).meta({ title })` | Put computed and relational fields in `resolver.of`, not on the silk |
+| `t.exposeString` / `Int` / `Float` / `Boolean` | Properties of `z.object` | All properties are exposed by default; hide private ones with `field.hidden` |
+| `t.exposeID` / `t.arg.id` | `asField({ type: GraphQLID })` (`NullableID`) / `new GraphQLNonNull(GraphQLID)` (`ID`) | `z.string()` prints `String`; pick helper from SDL (rule 8) |
+| `t.string` / `t.field({ resolve })` | `resolver.of(Silk, { name: field(type).resolve((parent) => ...) })` | Parent is the first argument of `resolve` |
+| `builder.objectFields(Ref, fields)` | Another `resolver.of(Silk, { ... })` | Extend a type from another module |
+| `builder.inputType` / `builder.inputRef` | Separate `z.object({ ... }).meta({ title })` | Do not reuse an object silk as an input |
+| `builder.queryType` / `mutationType` / `subscriptionType` / `*Field` | `resolver({ ... })` with `query`, `mutation`, `subscription` | Subscriptions use `.subscribe(async function* ...)` |
+| `t.arg.*` / `args` | `.input({ ... })` | Arguments become one object |
+| `builder.enumType` | `z.enum([...]).meta({ title })` | |
+| `builder.unionType` + `resolveType` | `z.discriminatedUnion("__typename", [...]).meta({ title })` | Or `z.union` with `asUnionType` / `resolveType` |
+| `builder.interfaceType` + `interfaces: [I]` | `asObjectType({ interfaces: [I] })` | Do not return an interface silk directly (see [Gotchas](#gotchas)) |
+| `builder.scalarType` / `addScalarType` | `ZodWeaver.config({ presetGraphQLType })` or `asField({ type })` | Map `Date` (`z.ZodDate`) globally in `presetGraphQLType` |
+| `context` argument | [`useContext<Ctx>()`](../context.md) | Requires `asyncContextProvider` |
+| `info` argument | `useResolverPayload().info` | |
+| `@pothos/plugin-scope-auth` (`authScopes`) | [Middleware](../middleware.md) with `.use()` | Operations use `.use()`, object fields use `field().use()` |
+| `@pothos/plugin-dataloader` (`loadableObject`, `t.loadable`) | [`field().load()`](../dataloader.md) | Pass `contextValue: {}` in tests |
+| `@pothos/plugin-zod` / `@pothos/plugin-validation` | Zod schema rules | Inputs are validated before `resolve` |
+| `@pothos/plugin-complexity` | `extensions: { complexity }` | Repository example: `examples/query-complexity` |
+| `@pothos/plugin-federation` | [Federation](../advanced/federation.md) | |
+| `@pothos/plugin-simple-objects` (`builder.simpleObject`) | `z.object` | |
+| `@pothos/plugin-with-input` (`t.fieldWithInput`) | `.input({ input: NamedInputSilk })` | Name the input silk explicitly |
+| `@pothos/plugin-prisma` / `@pothos/plugin-drizzle` | Resolver factories and `relationField` | See [Prisma and Drizzle plugins](#prisma-and-drizzle-plugins) |
+| `@pothos/plugin-relay`, `-errors`, `-sub-graph`, `-smart-subscriptions` | Stop; keep Pothos for that module | See [When to stop](#when-to-migrate-when-to-stop) |
+
+Common field options mapping:
+
+- `description` → `z.describe()` or `z.meta({ description })` on silk properties (operations and fields use `.description()`)
+- `deprecationReason` → `.deprecationReason()`
+- `nullable: true` / optional args → `.nullish()` (`z.array(X.nullish()).nullish()` for `nullable: { list: true, items: true }`)
+- `required: true` on args and inputs → bare Zod type (omit `.nullish()`)
+
+Declare ordinary names and descriptions with `z.describe()` or `z.meta()`, and map global scalars such as `Date` once with `ZodWeaver.config({ presetGraphQLType })`. Use `asObjectType` and `asField` only when Zod metadata cannot express GraphQL-only configurations, such as interfaces (`asObjectType({ interfaces })`), `ID` scalars (`asField({ type })`), or extensions.
 
 ## Rules
 
@@ -65,307 +117,6 @@ Stop and evaluate the architecture first when you depend on:
 - Query planning that the Pothos Prisma or Drizzle plugin does across nested selections (a single `include` tree). GQLoom batches per relation field. Measure query counts before and after.
 
 Migrate module by module. Keep `@pothos/core` installed during the migration. Both `GraphQLSchema` instances can coexist and be combined with [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging), or mounted on separate HTTP endpoints.
-
-## Concept map
-
-The builder below sets `defaultFieldNullability: false`, so unmarked Pothos fields are non-null, like Zod. The block after it is the same schema in GQLoom. `printSchema(lexicographicSortSchema(schema))` of both builds was compared with `diff`: identical (59 lines of SDL).
-
-::: code-group
-
-```ts [Pothos]
-import SchemaBuilder from "@pothos/core"
-import { GraphQLDateTime } from "graphql-scalars"
-
-interface Ctx {
-  user?: { id: string; role: "USER" | "ADMIN" }
-}
-
-const builder = new SchemaBuilder<{
-  Context: Ctx
-  DefaultFieldNullability: false
-  Scalars: { DateTime: { Input: Date; Output: Date } }
-}>({ defaultFieldNullability: false })
-
-builder.addScalarType("DateTime", GraphQLDateTime)
-
-const Role = builder.enumType("Role", { values: ["USER", "ADMIN"] as const })
-
-const PostInput = builder.inputType("PostInput", {
-  fields: (t) => ({
-    title: t.string({ required: true }),
-    tags: t.stringList(),
-    role: t.field({ type: Role }),
-  }),
-})
-
-interface IPost {
-  id: string
-  title: string
-  views: number
-  createdAt: Date
-}
-
-const Post = builder.objectRef<IPost>("Post").implement({
-  description: "A post",
-  fields: (t) => ({
-    id: t.exposeID("id"),
-    title: t.exposeString("title", { description: "The title" }),
-    views: t.exposeInt("views"),
-    createdAt: t.expose("createdAt", { type: "DateTime" }),
-    summary: t.string({
-      nullable: true,
-      deprecationReason: "Use title",
-      resolve: (post) => post.title,
-    }),
-    shout: t.string({
-      args: { times: t.arg.int({ required: true }) },
-      resolve: (post, { times }) => post.title.repeat(times),
-    }),
-    tags: t.stringList({ resolve: () => [] }),
-    maybeTags: t.field({
-      type: ["String"],
-      nullable: { list: true, items: true },
-      resolve: () => null,
-    }),
-  }),
-})
-
-const Node = builder.interfaceRef<{ id: string }>("Node").implement({
-  fields: (t) => ({ id: t.exposeID("id") }),
-})
-const Dog = builder.objectRef<{ id: string; name: string }>("Dog").implement({
-  interfaces: [Node],
-  isTypeOf: () => true,
-  fields: (t) => ({ name: t.exposeString("name") }),
-})
-const Cat = builder.objectRef<{ id: string; lives: number }>("Cat").implement({
-  interfaces: [Node],
-  isTypeOf: () => false,
-  fields: (t) => ({ lives: t.exposeInt("lives") }),
-})
-const Animal = builder.unionType("Animal", {
-  types: [Dog, Cat],
-  resolveType: (animal) => ("lives" in animal ? Cat : Dog),
-})
-
-builder.queryType({
-  fields: (t) => ({
-    post: t.field({
-      type: Post,
-      nullable: true,
-      args: { id: t.arg.id({ required: true }) },
-      resolve: () => null,
-    }),
-    animals: t.field({ type: [Animal], resolve: () => [] }),
-    me: t.string({ nullable: true, resolve: (_root, _args, ctx) => ctx.user?.id }),
-  }),
-})
-
-builder.mutationType({
-  fields: (t) => ({
-    createPost: t.field({
-      type: Post,
-      args: { input: t.arg({ type: PostInput, required: true }) },
-      resolve: (_root, { input }) => ({
-        id: "1",
-        title: input.title,
-        views: 0,
-        createdAt: new Date(),
-      }),
-    }),
-  }),
-})
-
-builder.subscriptionType({
-  fields: (t) => ({
-    countdown: t.int({
-      args: { from: t.arg.int({ required: true }) },
-      subscribe: async function* (_root, { from }) {
-        for (let i = from; i >= 0; i--) yield i
-      },
-      resolve: (n) => n as number,
-    }),
-  }),
-})
-
-export const schema = builder.toSchema()
-```
-
-```ts twoslash [GQLoom]
-import {
-  field,
-  mutation,
-  query,
-  resolver,
-  subscription,
-  weave,
-} from "@gqloom/core"
-import { asyncContextProvider, useContext } from "@gqloom/core/context"
-import { ZodWeaver, asField, asObjectType } from "@gqloom/zod"
-import { GraphQLID, GraphQLNonNull } from "graphql"
-import { GraphQLDateTime } from "graphql-scalars"
-import * as z from "zod"
-
-interface Ctx {
-  user?: { id: string; role: "USER" | "ADMIN" }
-}
-
-const ID = z.string().register(asField, { type: new GraphQLNonNull(GraphQLID) })
-
-const zodWeaverConfig = ZodWeaver.config({
-  presetGraphQLType: (schema) => {
-    if (schema instanceof z.ZodDate) return GraphQLDateTime
-  },
-})
-
-const Role = z.enum(["USER", "ADMIN"]).meta({ title: "Role" })
-
-const PostInput = z
-  .object({
-    title: z.string(),
-    tags: z.array(z.string()).nullish(),
-    role: Role.nullish(),
-  })
-  .meta({ title: "PostInput" })
-
-const Post = z
-  .object({
-    id: ID,
-    title: z.string().describe("The title"),
-    views: z.int(),
-    createdAt: z.date(),
-  })
-  .meta({ title: "Post", description: "A post" })
-
-const postFields = resolver.of(Post, {
-  summary: field(z.string().nullish())
-    .deprecationReason("Use title")
-    .resolve((post) => post.title),
-  shout: field(z.string())
-    .input({ times: z.int() })
-    .resolve((post, { times }) => post.title.repeat(times)),
-  tags: field(z.array(z.string())).resolve(() => []),
-  maybeTags: field(z.array(z.string().nullish()).nullish()).resolve(
-    () => null
-  ),
-})
-
-const Node = z.object({ __typename: z.literal("Node").nullish(), id: ID })
-const Dog = z
-  .object({ __typename: z.literal("Dog"), id: ID, name: z.string() })
-  .register(asObjectType, { interfaces: [Node] })
-const Cat = z
-  .object({ __typename: z.literal("Cat"), id: ID, lives: z.int() })
-  .register(asObjectType, { interfaces: [Node] })
-const Animal = z
-  .discriminatedUnion("__typename", [Dog, Cat])
-  .meta({ title: "Animal" })
-
-const rootResolver = resolver({
-  post: query(Post.nullish())
-    .input({ id: ID })
-    .resolve(() => null),
-  animals: query(z.array(Animal)).resolve(() => []),
-  me: query(z.string().nullish()).resolve(() => useContext<Ctx>().user?.id),
-  createPost: mutation(Post)
-    .input({ input: PostInput })
-    .resolve(({ input }) => ({
-      id: "1",
-      title: input.title,
-      views: 0,
-      createdAt: new Date(),
-    })),
-  countdown: subscription(z.int())
-    .input({ from: z.int() })
-    .subscribe(async function* ({ from }) {
-      for (let i = from; i >= 0; i--) yield i
-    }),
-})
-
-export const schema = weave(
-  ZodWeaver,
-  zodWeaverConfig,
-  asyncContextProvider,
-  rootResolver,
-  postFields
-)
-```
-
-:::
-
-Both builds print this SDL (excerpt):
-
-```graphql
-union Animal = Cat | Dog
-
-type Cat implements Node {
-  id: ID!
-  lives: Int!
-}
-
-type Mutation {
-  createPost(input: PostInput!): Post!
-}
-
-"""A post"""
-type Post {
-  createdAt: DateTime!
-  id: ID!
-  maybeTags: [String]
-  shout(times: Int!): String!
-  summary: String @deprecated(reason: "Use title")
-  tags: [String!]!
-
-  """The title"""
-  title: String!
-  views: Int!
-}
-
-input PostInput {
-  role: Role
-  tags: [String!]
-  title: String!
-}
-
-type Subscription {
-  countdown(from: Int!): Int!
-}
-```
-
-Lookup table for what the code block above does not show:
-
-| Pothos | GQLoom |
-| --- | --- |
-| `new SchemaBuilder<Types>({ plugins })` | No builder. `weave(ZodWeaver, ...)` |
-| `builder.toSchema()` | `weave(ZodWeaver, config, ...resolvers)` (add `asyncContextProvider` when `useContext()` is called) |
-| `builder.objectType('X', { fields })`, `objectRef` + `implement` | `z.object({ ... }).meta({ title: "X" })` |
-| `t.exposeString/Int/Float/Boolean('p')` | property of `z.object`: `z.string()`, `z.int()`, `z.number()`, `z.boolean()` |
-| `t.exposeID('p')`, `t.arg.id()` | `ID` / `NullableID` helpers (rule 8) |
-| `t.string/int/field({ resolve })` | `field(schema).resolve(parent => ...)` in `resolver.of` |
-| `builder.objectFields(Ref, fields)` (extend a type from another module) | another `resolver.of(Silk, { ... })` |
-| `nullable: true` / `nullable: { list, items }` | `.nullish()` / `z.array(X.nullish()).nullish()` |
-| `required: true` on args and inputs | the bare Zod type; omit `required`, use `.nullish()` for optional |
-| `t.arg.string/int/float/boolean/id/stringList/...` | Zod types inside `.input({ ... })` |
-| `t.arg({ type: Input, required: true })` | `.input({ input: InputSilk })` |
-| `builder.inputType`, `builder.inputRef` | separate `z.object` with `.meta({ title })` |
-| `description` | `.describe()` or `.meta({ description })`; on operations and fields `.description()` |
-| `deprecationReason` | `.deprecationReason()` |
-| `builder.enumType('E', { values })` | `z.enum([...]).meta({ title: "E" })` |
-| `builder.unionType` + `resolveType` | `z.discriminatedUnion("__typename", [...]).meta({ title })` |
-| `builder.interfaceType` + `interfaces: [I]` | `asObjectType({ interfaces: [I] })` |
-| `builder.scalarType`, `addScalarType` | `ZodWeaver.config({ presetGraphQLType })` or `asField({ type })` |
-| `builder.queryField`, `builder.mutationField` | an entry in `resolver({ ... })` |
-| `context` argument | `useContext<Ctx>()` |
-| `info` argument | `useResolverPayload().info` |
-| `@pothos/plugin-scope-auth` `authScopes` | `Middleware` with `.use()` |
-| `@pothos/plugin-dataloader` | `field().load()` |
-| `@pothos/plugin-zod`, `@pothos/plugin-validation` | the Zod schema itself |
-| `@pothos/plugin-complexity` | `extensions: { complexity }` on the field (repository example: `examples/query-complexity`) |
-| `@pothos/plugin-federation` | [Federation](../advanced/federation.md) |
-| `@pothos/plugin-simple-objects` (`builder.simpleObject`) | `z.object` |
-| `@pothos/plugin-with-input` (`t.fieldWithInput`) | `.input({ input: NamedInputSilk })`, name the input type yourself |
-| `@pothos/plugin-prisma`, `@pothos/plugin-drizzle` | resolver factories and `relationField` (see below) |
-| `@pothos/plugin-relay`, `-errors`, `-sub-graph`, `-smart-subscriptions` | stop (see [When to stop](#when-to-migrate-when-to-stop)) |
 
 ## Migration practices
 
