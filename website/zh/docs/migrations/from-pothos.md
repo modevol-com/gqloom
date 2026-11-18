@@ -38,11 +38,11 @@ Pothos 通过 `SchemaBuilder` 实例构建 GraphQL Schema：每个类型都要�
 6. 必须用 `resolver.of` 中的 `name: field.hidden` 隐藏 Pothos 没有用 `t.expose*` 暴露的每个属性。Zod 对象会暴露全部属性。
 7. 必须把输入对象声明为独立的 Silk，并各自使用 `.meta({ title })`。禁止把对象 Silk 当作输入。
 8. 必须一次性定义两个 ID 辅助常量：`NullableID`（`asField({ type: GraphQLID })`，输出 `ID`）与 `ID`（`asField({ type: new GraphQLNonNull(GraphQLID) })`，输出 `ID!`）。`z.string()` 输出 `String`，`.nullish()` 不会撤销 `GraphQLNonNull`。
-9. 必须把 `asyncContextProvider` 传给 `weave`，并通过 `useContext<Context>()` 读取上下文。缺少它时 `useContext()` 会抛错。
+9. 只要有任何解析函数或中间件调用 `useContext<Context>()`，就必须把 `asyncContextProvider` 传给 `weave`；缺少它时 `useContext()` 会抛错。如果没有任何地方调用 `useContext()`，则不要传。
 10. 必须把每个 `authScopes` 改写为 `Middleware`。操作使用 `.use(guard)`；对象的属性使用 `resolver.of` 中的 `field(...).use(guard).resolve(...)`。加在 query 上的守卫不会保护其返回对象的字段。
 11. 必须把 `builder.addScalarType` 与 `Date` 映射到 `ZodWeaver.config({ presetGraphQLType })`。枚举写成 `z.enum([...]).meta({ title })`。联合成员是带 `__typename` 字面量的 `z.object`，用 `z.discriminatedUnion("__typename", [...]).meta({ title })` 组合。
 12. 必须用 `field(...).load(...)` 或解析器工厂的 `relationField()` 替代 N+1 写法（`loadableObject`、`t.loadable`、Prisma/Drizzle 关联插件）。测试中执行时要传入 `contextValue: {}`，否则批处理不会生效。
-13. 必须用 `weave(ZodWeaver, config, asyncContextProvider, ...resolvers)` 替代 `builder.toSchema()`。没有任何解析器可达的 Silk 不会出现在 SDL 中。
+13. 必须用 `weave(ZodWeaver, config, ...resolvers)` 替代 `builder.toSchema()`（仅在规则 9 适用时才加入 `asyncContextProvider`）。没有任何解析器可达的 Silk 不会出现在 SDL 中。
 14. 禁止从 query 或字段返回接口 Silk。在实现类型上声明 `asObjectType({ interfaces: [Iface] })`，并返回联合类型。
 15. 禁止凭猜测手工翻译 Relay（`builder.node`、`t.connection`）、`@pothos/plugin-errors`、`@pothos/plugin-sub-graph`、`@pothos/plugin-smart-subscriptions`。应当停下，该模块继续使用 Pothos。
 16. 在每个模块都通过规则 1 之前，禁止卸载任何 `@pothos/*` 包，也禁止在同一文件中混用 `builder` 与 GQLoom 解析器。
@@ -337,7 +337,7 @@ type Subscription {
 | Pothos | GQLoom |
 | --- | --- |
 | `new SchemaBuilder<Types>({ plugins })` | 没有 builder。使用 `weave(ZodWeaver, ...)` |
-| `builder.toSchema()` | `weave(ZodWeaver, config, asyncContextProvider, ...resolvers)` |
+| `builder.toSchema()` | `weave(ZodWeaver, config, ...resolvers)`（调用 `useContext()` 时再加 `asyncContextProvider`） |
 | `builder.objectType('X', { fields })`、`objectRef` + `implement` | `z.object({ ... }).meta({ title: "X" })` |
 | `t.exposeString/Int/Float/Boolean('p')` | `z.object` 的属性：`z.string()`、`z.int()`、`z.number()`、`z.boolean()` |
 | `t.exposeID('p')`、`t.arg.id()` | `ID` / `NullableID` 辅助常量（规则 8） |
@@ -375,11 +375,10 @@ type Subscription {
 
 <!--@include: @/snippets/install-zod.md-->
 
-创建 weave 入口。上下文、全局标量与所有解析器都在这里汇合：
+创建 weave 入口。全局标量与所有解析器都在这里汇合。只有当某个解析函数或中间件调用 `useContext()` 时才需要加入 `asyncContextProvider`（见[鉴权与上下文](#鉴权与上下文)）：
 
 ```ts twoslash
 import { weave, resolver, query } from "@gqloom/core"
-import { asyncContextProvider } from "@gqloom/core/context"
 import { ZodWeaver } from "@gqloom/zod"
 import * as z from "zod"
 
@@ -387,11 +386,7 @@ const helloResolver = resolver({
   hello: query(z.string()).resolve(() => "Hello"),
 })
 
-export const schema = weave(
-  ZodWeaver,
-  asyncContextProvider, // [!code hl]
-  helloResolver
-)
+export const schema = weave(ZodWeaver, helloResolver)
 ```
 
 用打印 Pothos Schema 时相同的方式打印 GQLoom Schema，并在每个模块迁移后比较两个文件：
@@ -1169,16 +1164,20 @@ export const schema = builder.toSchema()
 
    - 在 `schema.prisma` 中删除 `generator pothos { provider = "prisma-pothos-types" ... }`，并删除其 `output` 指向的文件（例如 `./generated.ts`）。没有设置 `output` 时，类型被写入 `node_modules/@pothos/plugin-prisma/`，卸载后随之消失。然后运行 `npx prisma generate`。
    - 删除 `builder.ts` 以及所有 `import { builder }` 行。
+   - 重写示例或包的 `README.md`，使现行文档不再描述 Pothos API：把标题和包列表中的 `@pothos/core` 改为 `@gqloom/core`、`@gqloom/zod`、`zod`，并把其中内嵌的 SDL 替换为 `printSchema(lexicographicSortSchema(schema))` 的输出。从 Pothos 示例复制来的 README 往往带着旧的全非空 SDL（Pothos 3 的默认值），不要保留。
+   - 如果复制了整个 Pothos 示例目录，其中的 `CHANGELOG.md` 是历史记录，每个版本都列出 `@pothos/core`。请删除它，或保留它并在下面的检查中排除。
    - 删除只为 `SchemaBuilder` 服务的 `PrismaTypes`、`DrizzleRelations`、`Context`、`AuthScopes` 泛型。
    - 最后一次比较之后删除 `before.graphql`，或将其保留为契约测试。
 
-3. 检查是否还有残留：
+3. 检查是否还有残留。请在仓库根目录执行，以便搜索到 `README.md` 与配置文件，而不只是 `src/`。只排除 `node_modules`、锁文件与 `CHANGELOG.md`（历史变更日志可能仍提到 Pothos）：
 
    ```sh
-   rg -n "@pothos|SchemaBuilder|prisma-pothos-types|pothos" . -g '!node_modules' -g '!pnpm-lock.yaml'
+   rg -n -i "@pothos|SchemaBuilder|prisma-pothos-types|pothos" . \
+     -g '!node_modules' -g '!CHANGELOG.md' \
+     -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!yarn.lock' -g '!bun.lock'
    ```
 
-   该命令必须没有任何输出。
+   该命令必须没有任何输出。`README.md` 中出现任何匹配都说明第 2 步还没有完成。
 
 相关文档：
 

@@ -38,11 +38,11 @@ A model that only reads this page must follow these rules. Each rule is repeated
 6. MUST hide every property of the Zod object (or ORM model) that Pothos did not expose with `t.expose*`, using `name: field.hidden` inside `resolver.of`. A Zod object exposes every property.
 7. MUST declare input objects as separate silks with their own `.meta({ title })`. MUST NOT use an object silk as an input.
 8. MUST define two ID helpers once: `NullableID` (`asField({ type: GraphQLID })`, prints `ID`) and `ID` (`asField({ type: new GraphQLNonNull(GraphQLID) })`, prints `ID!`). `z.string()` prints `String`, and `.nullish()` does not undo `GraphQLNonNull`.
-9. MUST pass `asyncContextProvider` to `weave` and read the context with `useContext<Context>()`. Without it `useContext()` throws.
+9. MUST pass `asyncContextProvider` to `weave` whenever any resolver or middleware calls `useContext<Context>()`; without it `useContext()` throws. If nothing calls `useContext()`, leave it out.
 10. MUST turn each `authScopes` into a `Middleware`. On operations use `.use(guard)`; on a property of an object use `field(...).use(guard).resolve(...)` inside `resolver.of`. A guard on a query does not protect fields of the object it returns.
 11. MUST map `builder.addScalarType` and `Date` to `ZodWeaver.config({ presetGraphQLType })`. Enums are `z.enum([...]).meta({ title })`. Union members are `z.object` with a `__typename` literal, combined by `z.discriminatedUnion("__typename", [...]).meta({ title })`.
 12. MUST replace N+1 patterns (`loadableObject`, `t.loadable`, Prisma/Drizzle relation plugins) with `field(...).load(...)` or the resolver factory's `relationField()`. In tests, execute with `contextValue: {}` or batching is disabled.
-13. MUST replace `builder.toSchema()` with `weave(ZodWeaver, config, asyncContextProvider, ...resolvers)`. A silk that no resolver can reach is not in the SDL.
+13. MUST replace `builder.toSchema()` with `weave(ZodWeaver, config, ...resolvers)` (add `asyncContextProvider` only when rule 9 applies). A silk that no resolver can reach is not in the SDL.
 14. MUST NOT return an interface silk from a query or field. Declare `asObjectType({ interfaces: [Iface] })` on the implementors and return a union.
 15. MUST NOT hand-translate Relay (`builder.node`, `t.connection`), `@pothos/plugin-errors`, `@pothos/plugin-sub-graph`, or `@pothos/plugin-smart-subscriptions`. Stop and keep Pothos for that module.
 16. MUST NOT uninstall any `@pothos/*` package or mix `builder` and GQLoom resolvers in one file until rule 1 passes for every module.
@@ -337,7 +337,7 @@ Lookup table for what the code block above does not show:
 | Pothos | GQLoom |
 | --- | --- |
 | `new SchemaBuilder<Types>({ plugins })` | No builder. `weave(ZodWeaver, ...)` |
-| `builder.toSchema()` | `weave(ZodWeaver, config, asyncContextProvider, ...resolvers)` |
+| `builder.toSchema()` | `weave(ZodWeaver, config, ...resolvers)` (add `asyncContextProvider` when `useContext()` is called) |
 | `builder.objectType('X', { fields })`, `objectRef` + `implement` | `z.object({ ... }).meta({ title: "X" })` |
 | `t.exposeString/Int/Float/Boolean('p')` | property of `z.object`: `z.string()`, `z.int()`, `z.number()`, `z.boolean()` |
 | `t.exposeID('p')`, `t.arg.id()` | `ID` / `NullableID` helpers (rule 8) |
@@ -375,11 +375,10 @@ Install the packages and delete the builder module:
 
 <!--@include: ../../snippets/install-zod.md-->
 
-Create the weave entry. Context, global scalars, and every resolver go here:
+Create the weave entry. Global scalars and every resolver go here. Add `asyncContextProvider` only if some resolver or middleware calls `useContext()` (see [Auth and context](#auth-and-context)):
 
 ```ts twoslash
 import { weave, resolver, query } from "@gqloom/core"
-import { asyncContextProvider } from "@gqloom/core/context"
 import { ZodWeaver } from "@gqloom/zod"
 import * as z from "zod"
 
@@ -387,11 +386,7 @@ const helloResolver = resolver({
   hello: query(z.string()).resolve(() => "Hello"),
 })
 
-export const schema = weave(
-  ZodWeaver,
-  asyncContextProvider, // [!code hl]
-  helloResolver
-)
+export const schema = weave(ZodWeaver, helloResolver)
 ```
 
 Print the schema the same way you printed the Pothos one, and diff the two files after every module:
@@ -1169,16 +1164,20 @@ After every module passes the SDL diff and request replay:
 
    - In `schema.prisma`, delete `generator pothos { provider = "prisma-pothos-types" ... }`, and delete the file at its `output` (for example `./generated.ts`). Without `output`, the types were written into `node_modules/@pothos/plugin-prisma/`, which disappears when you uninstall. Then run `npx prisma generate`.
    - Delete `builder.ts` and every `import { builder }` line.
+   - Rewrite the example or package `README.md` so current docs no longer describe a Pothos API: change the title and the package list from `@pothos/core` to `@gqloom/core`, `@gqloom/zod`, `zod`, and replace its embedded SDL with the output of `printSchema(lexicographicSortSchema(schema))`. A README copied from a Pothos example often carries an older all-non-null SDL (Pothos 3 defaults); do not keep it.
+   - If you copied a whole Pothos example directory, its `CHANGELOG.md` is historical and lists `@pothos/core` on every release. Delete it, or leave it and exclude it from the check below.
    - Delete the `PrismaTypes`, `DrizzleRelations`, `Context`, and `AuthScopes` generics that only fed `SchemaBuilder`.
    - Delete `before.graphql` after the last comparison, or keep it as a contract test.
 
-3. Check that nothing is left:
+3. Check that nothing is left. Run it from the repository root, so `README.md` and config files are searched and not only `src/`. Exclude only `node_modules`, lockfiles, and `CHANGELOG.md` (historical changelogs may still mention Pothos):
 
    ```sh
-   rg -n "@pothos|SchemaBuilder|prisma-pothos-types|pothos" . -g '!node_modules' -g '!pnpm-lock.yaml'
+   rg -n -i "@pothos|SchemaBuilder|prisma-pothos-types|pothos" . \
+     -g '!node_modules' -g '!CHANGELOG.md' \
+     -g '!pnpm-lock.yaml' -g '!package-lock.json' -g '!yarn.lock' -g '!bun.lock'
    ```
 
-   The command must print nothing.
+   The command must print nothing. Any match in `README.md` means step 2 is not finished.
 
 Related documentation:
 
