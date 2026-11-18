@@ -55,7 +55,7 @@ The table below highlights concepts and APIs with notable differences:
 | `t.arg.*` / `args` | `.input({ ... })` | Arguments become one object |
 | `builder.enumType` | `z.enum([...]).meta({ title })` | |
 | `builder.unionType` + `resolveType` | `z.discriminatedUnion("__typename", [...]).meta({ title })` | Or `z.union` with `asUnionType` / `resolveType` |
-| `builder.interfaceType` + `interfaces: [I]` | `asObjectType({ interfaces: [I] })` | Do not return an interface silk directly (see [Gotchas](#gotchas)) |
+| `builder.interfaceType` + `interfaces: [I]` | `silk(new GraphQLInterfaceType(...))` + `asObjectType({ interfaces: [I] })` | Wrap `GraphQLInterfaceType` with `silk()` when queries/fields return the interface; pass unreferenced implementors to `weave()` |
 | `builder.scalarType` / `addScalarType` | `ZodWeaver.config({ presetGraphQLType })` or `asField({ type })` | Map `Date` (`z.ZodDate`) globally in `presetGraphQLType` |
 | `context` argument | [`useContext<Ctx>()`](../context.md) | Requires `asyncContextProvider` |
 | `info` argument | `useResolverPayload().info` | |
@@ -67,7 +67,11 @@ The table below highlights concepts and APIs with notable differences:
 | `@pothos/plugin-simple-objects` (`builder.simpleObject`) | `z.object` | |
 | `@pothos/plugin-with-input` (`t.fieldWithInput`) | `.input({ input: NamedInputSilk })` | Name the input silk explicitly |
 | `@pothos/plugin-prisma` / `@pothos/plugin-drizzle` | Resolver factories and `relationField` | See [Prisma and Drizzle plugins](#prisma-and-drizzle-plugins) |
-| `@pothos/plugin-relay`, `-errors`, `-sub-graph`, `-smart-subscriptions` | Stop; keep Pothos for that module | See [When to stop](#when-to-migrate-when-to-stop) |
+| `@pothos/plugin-relay` (`builder.node`, `t.connection`) | `silk(new GraphQLInterfaceType(...))` for `Node`; Zod silks for `PageInfo`, `*Edge`, `*Connection` | Keep exact SDL and ID/cursor encoding; see [Relay](#relay) |
+| `@pothos/plugin-errors` (`errors: { types }`) | Result union (`z.discriminatedUnion` / `z.union`) or `GraphQLError` with `extensions` | Pick by whether `before.graphql` has a union; see [Errors](#errors) |
+| `@pothos/plugin-sub-graph` (`subGraphs`) | Separate `weave()` per audience | Pass only that audience's resolvers; see [Sub-graphs](#sub-graphs) |
+| `@pothos/plugin-smart-subscriptions` (`smartSubscriptions`) | `subscription()` + pubsub (`createPubSub`) | Publish explicitly from mutations; see [Smart Subscriptions](#smart-subscriptions) |
+| `variant`, `@pothos/plugin-prisma-utils` / Drizzle filter & order inputs | Separate silks named with `.meta({ title })` | Keep original SDL type names; see [Variants and generated inputs](#variants-and-generated-inputs) |
 
 Common field options mapping:
 
@@ -82,7 +86,7 @@ Declare ordinary names and descriptions with `z.describe()` or `z.meta()`, and m
 
 A model that only reads this page must follow these rules. Each rule is repeated with its snippet later on.
 
-1. MUST save the Pothos SDL before touching code: `printSchema(lexicographicSortSchema(builder.toSchema()))` written to `before.graphql`. The migration is done only when the GQLoom SDL has an empty `diff` and replayed requests return the same JSON.
+1. MUST save the Pothos SDL before touching code: `printSchema(lexicographicSortSchema(builder.toSchema()))` written to `before.graphql`. The migration is done only when every module is migrated, the GQLoom SDL has an empty `diff` (aside from any intentionally documented contract changes), and replayed requests return the expected JSON.
 2. MUST copy nullability from the printed SDL, never from memory. Pothos 4 prints nullable outputs and optional args unless the builder sets `defaultFieldNullability: false`; Pothos 3 printed non-null outputs. Port every nullable output and every optional input as `.nullish()` (one spelling; `.nullable()` makes TypeScript reject a resolver that returns `undefined`). Everything else is the bare Zod type.
 3. MUST turn each Pothos object type into one `z.object({ ... }).meta({ title: "Name" })`. Do not copy `objectRef`, `implement`, or `builder`.
 4. MUST define every computed or relational field with `resolver.of(Silk, { name: field(type).resolve((parent) => ...) })`. The parent is the first argument of `resolve`; there is no `t` callback and no `ctx` argument.
@@ -94,29 +98,15 @@ A model that only reads this page must follow these rules. Each rule is repeated
 10. MUST turn each `authScopes` into a `Middleware`. On operations use `.use(guard)`; on a property of an object use `field(...).use(guard).resolve(...)` inside `resolver.of`. A guard on a query does not protect fields of the object it returns.
 11. MUST map `builder.addScalarType` and `Date` to `ZodWeaver.config({ presetGraphQLType })`. Enums are `z.enum([...]).meta({ title })`. Union members are `z.object` with a `__typename` literal, combined by `z.discriminatedUnion("__typename", [...]).meta({ title })`.
 12. MUST replace N+1 patterns (`loadableObject`, `t.loadable`, Prisma/Drizzle relation plugins) with `field(...).load(...)` or the resolver factory's `relationField()`. In tests, execute with `contextValue: {}` or batching is disabled.
-13. MUST replace `builder.toSchema()` with `weave(ZodWeaver, config, ...resolvers)` (add `asyncContextProvider` only when rule 9 applies). A silk that no resolver can reach is not in the SDL.
-14. MUST NOT return an interface silk from a query or field. Declare `asObjectType({ interfaces: [Iface] })` on the implementors and return a union.
-15. MUST NOT hand-translate Relay (`builder.node`, `t.connection`), `@pothos/plugin-errors`, `@pothos/plugin-sub-graph`, or `@pothos/plugin-smart-subscriptions`. Stop and keep Pothos for that module.
-16. MUST NOT uninstall any `@pothos/*` package or mix `builder` and GQLoom resolvers in one file until rule 1 passes for every module.
-
-## When to migrate, when to stop
-
-Migrate when:
-
-- the schema is plain objects, enums, unions, inputs, and simple resolvers, and the `t.exposeX` and `objectRef` ceremony is the main cost;
-- you already keep a Zod or Valibot schema, a Prisma model, or a Drizzle table for each type and Pothos is a third declaration;
-- you use `@pothos/plugin-zod` or `@pothos/plugin-validation` only to validate arguments;
-- you use `@pothos/plugin-scope-auth` for role checks that a middleware can express.
-
-Stop and evaluate the architecture first when you depend on:
-
-- Relay: `builder.node`, `t.connection`, `prismaConnection`, `drizzleConnection`, global IDs. GQLoom has no Relay helpers; you would hand-write the `Connection`, `Edge`, `PageInfo` types and cursor logic, and the SDL will differ.
-- `@pothos/plugin-errors`, `@pothos/plugin-sub-graph`, `@pothos/plugin-smart-subscriptions`, and Pothos "variants" (`variant`, `Viewer` style prisma/drizzle variants). They have no GQLoom equivalent.
-- Fields whose declared type is a GraphQL interface (for example `node(id): Node`). GQLoom cannot return an interface silk from a field (see [gotchas](#gotchas)); a union changes the SDL.
-- `@pothos/plugin-prisma-utils` or `@pothos/plugin-drizzle` generated filter and order inputs. The GQLoom resolver factories generate different input type names, so keep those operations hand-written until clients move.
-- Query planning that the Pothos Prisma or Drizzle plugin does across nested selections (a single `include` tree). GQLoom batches per relation field. Measure query counts before and after.
-
-Migrate module by module. Keep `@pothos/core` installed during the migration. Both `GraphQLSchema` instances can coexist and be combined with [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging), or mounted on separate HTTP endpoints.
+13. MUST replace `builder.toSchema()` with `weave(ZodWeaver, config, ...resolvers)` (add `asyncContextProvider` only when rule 9 applies). A silk that no resolver can reach is not in the SDL; pass unreferenced interface or union implementors directly to `weave()`.
+14. MUST wrap `new GraphQLInterfaceType({ ... })` with `silk()` when a query or field returns an interface (such as Relay `Node` or `Error`), and reference it in `asObjectType({ interfaces: [Iface] })`. MUST NOT pass a `z.object` interface definition directly to `query()` or `field()` alongside `asObjectType({ interfaces: [Iface] })`—that creates duplicate types with the same name.
+15. MUST migrate every Pothos module and plugin completely to GQLoom—never leave a Pothos module behind:
+    - Relay: model `Node` with `silk(new GraphQLInterfaceType(...))`, and `PageInfo`, `*Edge`, and `*Connection` with Zod silks whose SDL matches `before.graphql`.
+    - Errors: model result unions (`z.discriminatedUnion` / `z.union`) when `before.graphql` has a union, or throw `GraphQLError` with `extensions` when it does not (documenting the contract change if switching away from a union).
+    - Sub-graphs: create a separate `weave()` per audience with only the resolvers that audience needs.
+    - Smart Subscriptions: use ordinary `subscription()` + pubsub and publish explicitly from mutations.
+    - Variants and generated filter/order inputs: create separate silks using the original SDL type names so clients do not notice.
+16. MUST NOT uninstall any `@pothos/*` package or mix `builder` and GQLoom resolvers in one file until every module is migrated and passes rule 1.
 
 ## Migration practices
 
@@ -536,7 +526,482 @@ export const postFields = resolver.of(Post, {
 
 On the example's data (5 posts, `posts { id author { id } }`), the batch function ran 1 time with a context object and 5 times without one: batching is keyed by the request context object. Servers such as Yoga always provide one; in unit tests pass `contextValue: {}` to `graphql()`.
 
-Check query counts yourself before and after: enable `log: ["query"]` (Prisma) or `logger: true` (Drizzle) and compare the number of statements for the same request. With the ORM plugins, `relationField` replaces `t.relation`; do not assume it produces the same single joined query.
+Check query counts yourself before and after: enable `log: ["query"]` (Prisma) or `logger: true` (Drizzle) and compare the number of statements for the same request. With the ORM plugins, `relationField` replaces `t.relation`; do not assume it produces the same single joined query. When a hot path needs a single joined query or `include` / `with` tree instead of per-field batching, write that query explicitly in `resolver` using Prisma `include` (or `useSelectedFields`) or Drizzle `db.query.*.findMany({ with: ... })` (or `useSelectedColumns`).
+
+### Relay
+
+`@pothos/plugin-relay` generates the `Node` interface, `node`/`nodes` queries, global IDs, `PageInfo`, `*Edge`, and `*Connection` types. Model every piece with GQLoom silks so `after.graphql` matches `before.graphql` verbatim:
+
+- Define `Node` with `silk(new GraphQLInterfaceType(...))` (never a `z.object` if a query or field returns `Node`; see rule 14).
+- Implement `Node` on each node object via `.register(asObjectType, { interfaces: [Node] })`, override `id` in `resolver.of` to return the encoded global ID (preserving Pothos's `TypeName:id` base64 format), and pass any unreferenced implementor silks to `weave(...)`.
+- Define `PageInfo`, `*Edge`, and `*Connection` as Zod object silks whose `.meta({ title })` names and field nullability match `before.graphql` (`z.array(Edge.nullish())` for `[UserEdge]!`, `z.array(Edge.nullish()).nullish()` for `[UserEdge]`, `z.array(Edge)` for `[UserEdge!]!`).
+
+```ts
+// Pothos (@pothos/plugin-relay)
+builder.node(User, {
+  id: { resolve: (user) => user.id },
+  loadOne: (id) => usersDb.get(id),
+  fields: (t) => ({ name: t.exposeString("name") }),
+})
+
+builder.queryType({
+  fields: (t) => ({
+    users: t.connection({
+      type: User,
+      resolve: (_root, args) => resolveArrayConnection({ args }, [...usersDb.values()]),
+    }),
+  }),
+})
+```
+
+```ts twoslash
+import { field, query, resolver, silk, weave } from "@gqloom/core"
+import { ZodWeaver, asField, asObjectType } from "@gqloom/zod"
+import {
+  GraphQLID,
+  GraphQLInterfaceType,
+  GraphQLList,
+  GraphQLNonNull,
+} from "graphql"
+import * as z from "zod"
+
+const ID = z.string().register(asField, { type: new GraphQLNonNull(GraphQLID) })
+
+function encodeGlobalId(type: string, id: string) {
+  return Buffer.from(`${type}:${id}`).toString("base64")
+}
+
+function decodeGlobalId(globalId: string) {
+  const decoded = Buffer.from(globalId, "base64").toString("utf8")
+  const sep = decoded.indexOf(":")
+  if (sep === -1) throw new Error(`Invalid global ID: ${globalId}`)
+  return { type: decoded.slice(0, sep), id: decoded.slice(sep + 1) }
+}
+
+interface INode {
+  id: string
+}
+
+const NodeInterface = new GraphQLInterfaceType({
+  name: "Node",
+  fields: () => ({ id: { type: new GraphQLNonNull(GraphQLID) } }),
+  resolveType: (value: { __typename?: string }) => value.__typename,
+})
+
+const Node = silk<INode>(NodeInterface)
+const NullableNodeList = silk<(INode | null)[]>(
+  new GraphQLNonNull(new GraphQLList(NodeInterface))
+)
+
+const User = z
+  .object({
+    __typename: z.literal("User").nullish(),
+    id: ID,
+    name: z.string(),
+  })
+  // Zod v4 registry's $replace drops GraphQLInterfaceType private members
+  .register(asObjectType, { interfaces: [Node as never] })
+
+const PageInfo = z
+  .object({
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+    startCursor: z.string().nullish(),
+    endCursor: z.string().nullish(),
+  })
+  .meta({ title: "PageInfo" })
+
+function createConnectionSilks<TNode extends z.ZodType>(
+  namePrefix: string,
+  nodeSilk: TNode
+) {
+  const Edge = z
+    .object({ cursor: z.string(), node: nodeSilk })
+    .meta({ title: `${namePrefix}Edge` })
+  const Connection = z
+    .object({
+      pageInfo: PageInfo,
+      edges: z.array(Edge.nullish()),
+    })
+    .meta({ title: `${namePrefix}Connection` })
+  return { Edge, Connection }
+}
+
+const { Connection: UserConnection } = createConnectionSilks("User", User)
+
+const usersDb = new Map<string, { id: string; name: string }>([
+  ["1", { id: "1", name: "Ada" }],
+])
+
+function resolveNode(globalId: string) {
+  const { type, id } = decodeGlobalId(globalId)
+  if (type === "User") {
+    const user = usersDb.get(id)
+    return user ? { ...user, __typename: "User" as const } : null
+  }
+  return null
+}
+
+function paginateSlice<T>(
+  items: T[],
+  args: {
+    first?: number | null
+    after?: string | null
+    last?: number | null
+    before?: string | null
+  }
+) {
+  const decodeCursor = (c: string) =>
+    Number(Buffer.from(c, "base64").toString("utf8").replace("cursor:", ""))
+  const encodeCursor = (idx: number) =>
+    Buffer.from(`cursor:${idx}`).toString("base64")
+
+  const start = args.after ? Math.max(0, decodeCursor(args.after) + 1) : 0
+  const end = args.before
+    ? Math.min(items.length, decodeCursor(args.before))
+    : items.length
+  const window = items.slice(start, end)
+  const sliced =
+    args.first != null
+      ? window.slice(0, args.first)
+      : args.last != null
+        ? window.slice(Math.max(0, window.length - args.last))
+        : window
+
+  const edges = sliced.map((node, i) => ({
+    cursor: encodeCursor(start + i),
+    node,
+  }))
+  return {
+    edges,
+    pageInfo: {
+      hasPreviousPage: start > 0,
+      hasNextPage: start + sliced.length < end,
+      startCursor: edges[0]?.cursor ?? null,
+      endCursor: edges.at(-1)?.cursor ?? null,
+    },
+  }
+}
+
+const userFields = resolver.of(User, {
+  id: field(ID).resolve((user) => encodeGlobalId("User", user.id)),
+})
+
+const relayQueries = resolver({
+  node: query(silk.nullable(Node))
+    .input({ id: ID })
+    .resolve(({ id }) => resolveNode(id)),
+  nodes: query(NullableNodeList)
+    .input({ ids: z.array(ID) })
+    .resolve(({ ids }) => ids.map((id) => resolveNode(id))),
+  users: query(UserConnection)
+    .input({
+      first: z.int().nullish(),
+      after: z.string().nullish(),
+      last: z.int().nullish(),
+      before: z.string().nullish(),
+    })
+    .resolve((args) => paginateSlice([...usersDb.values()], args)),
+})
+
+export const schema = weave(ZodWeaver, relayQueries, userFields, User)
+```
+
+For nested connection fields on an object (`t.connection` / `t.relatedConnection`), add `field(PostConnection).input({ ... }).resolve(...)` (or `.load(...)` for batching) inside `resolver.of(User, { ... })`. If `before.graphql` uses `ID` for cursors (`cursorType: "ID"`), swap `z.string()` on `cursor`, `startCursor`, `endCursor`, `after`, and `before` for `NullableID` / `ID`. If you use Drizzle or Prisma column selection alongside the `id` override above, chain `.derivedFrom("id")` on `id: field(ID)` so the primary key is always fetched.
+
+### Errors
+
+Check `before.graphql` to choose between the two GQLoom patterns:
+
+1. **Original SDL has a result union** (`union MutationCreatePostResult = BaseError | MutationCreatePostSuccess` or `directResult: true` unions): keep the exact SDL using `silk(new GraphQLInterfaceType(...))` for `Error` and `z.discriminatedUnion` (or `z.union` with `asUnionType`) for the result union.
+2. **Original SDL does not have a union** (or you intentionally migrate away from error unions): throw `new GraphQLError(message, { extensions: { code } })` inside resolvers or map domain error classes in a global middleware passed to `weave`.
+
+```ts twoslash
+import { mutation, query, resolver, silk, weave, type Middleware } from "@gqloom/core"
+import { ZodWeaver, asField, asObjectType } from "@gqloom/zod"
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLInterfaceType,
+  GraphQLNonNull,
+  GraphQLString,
+} from "graphql"
+import * as z from "zod"
+
+const ID = z.string().register(asField, { type: new GraphQLNonNull(GraphQLID) })
+const Post = z.object({ id: ID, title: z.string() }).meta({ title: "Post" })
+
+// Option A: before.graphql has a result union (SDL unchanged)
+const ErrorInterface = silk<{ message: string }>(
+  new GraphQLInterfaceType({
+    name: "Error",
+    fields: () => ({ message: { type: new GraphQLNonNull(GraphQLString) } }),
+    resolveType: (value: { __typename?: string }) => value.__typename,
+  })
+)
+
+const BaseError = z
+  .object({ __typename: z.literal("BaseError"), message: z.string() })
+  // Zod v4 registry's $replace drops GraphQLInterfaceType private members
+  .register(asObjectType, { interfaces: [ErrorInterface as never] })
+
+const MutationCreatePostSuccess = z
+  .object({
+    __typename: z.literal("MutationCreatePostSuccess"),
+    data: Post,
+  })
+  .meta({ title: "MutationCreatePostSuccess" })
+
+const MutationCreatePostResult = z
+  .discriminatedUnion("__typename", [BaseError, MutationCreatePostSuccess])
+  .meta({ title: "MutationCreatePostResult" })
+
+// Option B: no union in SDL -> throw GraphQLError with extensions
+class NotFoundError extends Error {
+  public readonly code = "NOT_FOUND"
+}
+
+const mapDomainErrors: Middleware = async (next) => {
+  try {
+    return await next()
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      throw new GraphQLError(err.message, { extensions: { code: err.code } })
+    }
+    throw err
+  }
+}
+
+const postResolver = resolver({
+  post: query(Post).input({ id: ID }).resolve(() => {
+    throw new NotFoundError("Post not found")
+  }),
+  createPost: mutation(MutationCreatePostResult)
+    .input({ title: z.string() })
+    .resolve(({ title }) => {
+      if (!title.trim()) {
+        return { __typename: "BaseError", message: "Title is required" }
+      }
+      return {
+        __typename: "MutationCreatePostSuccess",
+        data: { id: "1", title },
+      }
+    }),
+})
+
+export const schema = weave(ZodWeaver, mapDomainErrors, postResolver)
+```
+
+For Pothos `directResult: true` unions (for example `union CreatePostResult = BaseError | Post`), use `z.union([BaseError, Post]).register(asUnionType, { name: "CreatePostResult", resolveType: (v) => ("message" in v ? "BaseError" : "Post") })`.
+
+Contract change when switching away from an error union to `GraphQLError`: `interface Error`, `*Error`, `*Success`, and `union *Result` are removed from the SDL, and the operation returns `Post!` (or `Post`) directly. Runtime errors move from `data.<op>` (`{ __typename: "BaseError", message }`) to the top-level `errors` array (`errors[0].extensions.code`) with `data.<op>: null` (or `data: null` if non-null). Update clients to drop `... on *Success` / `... on Error` fragments, select fields directly on the return type, and inspect `result.errors`.
+
+### Sub-graphs
+
+`@pothos/plugin-sub-graph` tags fields and types on a shared builder and emits filtered schemas with `builder.toSchema({ subGraph })`. In GQLoom, compose a separate `weave()` call for each audience, passing only the resolvers and silks that audience should see:
+
+```ts twoslash
+import { field, query, resolver, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import * as z from "zod"
+
+const User = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    internalNotes: z.string(),
+  })
+  .meta({ title: "User" })
+
+// Hide internal-only columns in the public sub-graph without affecting other weaves
+const publicUserFields = resolver.of(User, {
+  internalNotes: field.hidden,
+})
+
+const publicQueries = resolver({
+  user: query(User.nullish()).resolve(() => null),
+})
+
+const internalQueries = resolver({
+  user: query(User.nullish()).resolve(() => null),
+  auditLog: query(z.array(z.string())).resolve(() => []),
+})
+
+export const publicSchema = weave(ZodWeaver, publicQueries, publicUserFields)
+export const internalSchema = weave(ZodWeaver, internalQueries)
+```
+
+Each `weave()` runs in its own isolated context, so `field.hidden` in `publicUserFields` only hides `internalNotes` from `publicSchema`. Any type reachable only from `internalQueries` is omitted automatically from `publicSchema`. Add `asyncContextProvider` to every `weave()` whose resolvers or middlewares call `useContext()`. Diff each audience schema separately (`before.public.graphql` vs `after.public.graphql`).
+
+### Smart Subscriptions
+
+`@pothos/plugin-smart-subscriptions` hooks live invalidation into queries and fields via topic registration. In GQLoom, replace it with standard `subscription()` operations backed by a pubsub (such as `createPubSub` from `graphql-yoga`, or Redis pubsub in multi-instance deployments), and call `pubSub.publish(...)` explicitly from mutations:
+
+```ts twoslash
+import { mutation, query, resolver, subscription, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import { createPubSub } from "graphql-yoga"
+import * as z from "zod"
+
+const Post = z.object({ id: z.string(), title: z.string() }).meta({ title: "Post" })
+type IPost = z.infer<typeof Post>
+
+const pubSub = createPubSub<{
+  postsUpdated: []
+  postUpdated: [postId: string, post: IPost]
+}>()
+
+const postsStore: IPost[] = []
+
+export const postResolver = resolver({
+  posts: query(z.array(Post)).resolve(() => postsStore),
+
+  createPost: mutation(Post)
+    .input({ title: z.string() })
+    .resolve(({ title }) => {
+      const post = { id: String(postsStore.length + 1), title }
+      postsStore.push(post)
+      pubSub.publish("postsUpdated")
+      pubSub.publish("postUpdated", post.id, post)
+      return post
+    }),
+
+  watchPosts: subscription(z.array(Post))
+    .subscribe(() => pubSub.subscribe("postsUpdated"))
+    .resolve(() => postsStore),
+
+  watchPost: subscription(Post)
+    .input({ id: z.string() })
+    .subscribe(({ id }) => pubSub.subscribe("postUpdated", id))
+    .resolve((post) => post),
+})
+
+export const schema = weave(ZodWeaver, postResolver)
+```
+
+Contract and behavior differences to account for:
+
+- If `before.graphql` already exposed the field on `type Subscription`, matching the field name, input args, and output silk keeps the SDL identical.
+- If Pothos Smart Subscriptions exposed a live field on `type Query` or relied on automatic child-type invalidation (for example, re-running a `posts` subscription automatically whenever a nested `Comment` mutated), GQLoom does not turn `Query` fields into subscriptions or track nested selection dependencies implicitly. Move any live operation onto `Subscription` (clients send `subscription { ... }` instead of a smart `query`), and publish all affected parent and item topics explicitly from every relevant mutation or domain service.
+
+### Variants and generated inputs
+
+One ORM silk maps to one GraphQL object type name (`User` or `users`), and GQLoom's resolver factories emit their own input type names (`UserWhereInput`, `UsersFilters`, `UsersOrderBy`). To preserve Pothos `variant` types and `@pothos/plugin-prisma-utils` / `@pothos/plugin-drizzle` generated filter and order input types without changing the SDL, define separate silks with the original SDL names:
+
+```ts twoslash
+import { field, query, resolver, weave } from "@gqloom/core"
+import { asyncContextProvider } from "@gqloom/core/context"
+import { DrizzleWeaver, drizzleSilk } from "@gqloom/drizzle"
+import { useSelectedColumns } from "@gqloom/drizzle/context"
+import { ZodWeaver, asField } from "@gqloom/zod"
+import { and, asc, desc, eq, ilike, or, type SQL } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+import { GraphQLID, GraphQLNonNull } from "graphql"
+import * as z from "zod"
+
+const IntID = z.int().register(asField, { type: new GraphQLNonNull(GraphQLID) })
+
+const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    email: t.text().notNull(),
+    firstName: t.text().notNull(),
+    lastName: t.text().notNull(),
+    passwordHash: t.text().notNull(),
+  }),
+  { name: "User" }
+)
+
+// Variant: separate silk with the original SDL type name "Viewer"
+const Viewer = z
+  .object({
+    id: IntID,
+    email: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+  })
+  .meta({ title: "Viewer" })
+
+const viewerFields = resolver.of(Viewer, {
+  firstName: field.hidden,
+  lastName: field.hidden,
+  fullName: field(z.string())
+    .derivedFrom("firstName", "lastName")
+    .resolve((u) => `${u.firstName} ${u.lastName}`),
+})
+
+// Generated filter & order inputs: match exact names from before.graphql
+const OrderBy = z.enum(["asc", "desc"]).meta({ title: "OrderBy" })
+
+const StringFilter = z
+  .object({
+    equals: z.string().nullish(),
+    contains: z.string().nullish(),
+  })
+  .meta({ title: "StringFilter" })
+
+const UserFilter = z
+  .object({
+    email: StringFilter.nullish(),
+    get AND() {
+      return z.array(UserFilter).nullish()
+    },
+    get OR() {
+      return z.array(UserFilter).nullish()
+    },
+  })
+  .meta({ title: "UserFilter" })
+
+const UserOrderBy = z
+  .object({ email: OrderBy.nullish() })
+  .meta({ title: "UserOrderBy" })
+
+function toUserWhere(filter?: z.infer<typeof UserFilter> | null): SQL | undefined {
+  if (!filter) return undefined
+  const parts: (SQL | undefined)[] = []
+  if (filter.email?.equals != null) parts.push(eq(users.email, filter.email.equals))
+  if (filter.email?.contains != null) {
+    parts.push(ilike(users.email, `%${filter.email.contains}%`))
+  }
+  if (filter.AND?.length) parts.push(and(...filter.AND.map(toUserWhere)))
+  if (filter.OR?.length) parts.push(or(...filter.OR.map(toUserWhere)))
+  return and(...parts)
+}
+
+const userResolver = resolver.of(users, {
+  passwordHash: field.hidden,
+  viewer: query(Viewer.nullish()).resolve(() => {
+    const columns = useSelectedColumns(users)
+    void columns
+    return { id: 1, email: "ada@example.com", firstName: "Ada", lastName: "Lovelace" }
+  }),
+  users: query(users.$list())
+    .input({
+      where: UserFilter.nullish(),
+      orderBy: z.array(UserOrderBy).nullish(),
+    })
+    .resolve(({ where, orderBy }) => {
+      void toUserWhere(where)
+      void orderBy?.map((o) =>
+        o.email === "desc" ? desc(users.email) : asc(users.email)
+      )
+      return []
+    }),
+})
+
+export const schema = weave(
+  ZodWeaver,
+  DrizzleWeaver,
+  asyncContextProvider,
+  userResolver,
+  viewerFields
+)
+```
+
+Note two details when preserving Pothos filter/order inputs:
+
+- Keep `.meta({ title })` directly on the `z.object(...)` (or inside `z.lazy(() => z.object(...).meta({ title }))`, not outside `z.lazy`); otherwise GQLoom auto-aliases the input type name from the query and field names.
+- Match operator semantics during request replay—for example, `ilike` vs `like` in Drizzle or `mode: "insensitive"` in Prisma—so filtered query results match Pothos as well as the SDL.
 
 ## Gotchas
 
@@ -591,7 +1056,9 @@ Each item shows the wrong result that was observed and the fix.
   })
   ```
 
-- Interface-typed fields. `query(Node)` where `Node` is also used in `asObjectType({ interfaces: [Node] })` fails with `Schema must contain uniquely named types but contains multiple types named "Node"`. Return a union of the implementors (`z.discriminatedUnion("__typename", [Dog, Cat])`) and tell clients to use inline fragments; the SDL changes, so treat it as a contract change.
+- Interface-typed fields. `query(Node)` where `Node` is a `z.object` also used in `asObjectType({ interfaces: [Node] })` fails with `Schema must contain uniquely named types but contains multiple types named "Node"`. To return a GraphQL interface without changing the SDL (such as Relay `Node` or `Error`), wrap `new GraphQLInterfaceType({ ... })` with `silk()` and pass any unreferenced implementors to `weave(...)`. Only use `z.discriminatedUnion("__typename", [Dog, Cat])` if you intentionally want to replace the interface with a union (a contract change requiring clients to use inline fragments).
+
+- Putting `.meta({ title })` outside `z.lazy(...)` on recursive input types causes GQLoom to ignore the title and auto-alias the type from the operation and field names (for example `FilterPostsWhereInput` instead of `PostWhereInput`). Put `.meta({ title })` on the `z.object(...)` inside `z.lazy`, or use Zod v4 getter syntax (`get AND() { ... }`).
 
 - Validation: GQLoom validates arguments against the Zod schema before `resolve`. A failure rejects the request with `extensions.issues` (for example `{"message":"Invalid email address","extensions":{"issues":[...]}}`). Update clients that parse the error shape of `@pothos/plugin-zod` or `@pothos/plugin-validation`.
 
@@ -604,7 +1071,7 @@ Each item shows the wrong result that was observed and the fix.
 
 ## Verification
 
-The goal of migration is an unchanged contract and unchanged behavior.
+The goal of migration is an unchanged contract and unchanged behavior (with any unavoidable contract changes—such as dropping an error union for `GraphQLError` or moving a smart subscription to `Subscription`—explicitly documented).
 
 1. Before any change, print the Pothos SDL:
 
@@ -622,7 +1089,7 @@ The goal of migration is an unchanged contract and unchanged behavior.
    diff before.graphql after.graphql
    ```
 
-   The output must be empty. Fix the schema, not the file.
+   The output must be empty (or show only the intentional contract changes you documented). Fix the schema, not the file.
 
 3. Replay requests against both schemas and compare the JSON. The same four requests are used for the reference port:
 
@@ -904,9 +1371,11 @@ After every module passes the SDL diff and request replay:
 
    ```sh
    npm uninstall @pothos/core @pothos/plugin-prisma @pothos/plugin-drizzle \
-     @pothos/plugin-scope-auth @pothos/plugin-dataloader @pothos/plugin-relay \
-     @pothos/plugin-zod @pothos/plugin-validation @pothos/plugin-with-input \
-     @pothos/plugin-simple-objects @pothos/plugin-complexity dataloader
+     @pothos/plugin-prisma-utils @pothos/plugin-scope-auth @pothos/plugin-dataloader \
+     @pothos/plugin-relay @pothos/plugin-errors @pothos/plugin-sub-graph \
+     @pothos/plugin-smart-subscriptions @pothos/plugin-zod @pothos/plugin-validation \
+     @pothos/plugin-with-input @pothos/plugin-simple-objects @pothos/plugin-complexity \
+     @pothos/plugin-federation dataloader
    ```
 
    Keep `dataloader` only if other code imports it. Run the equivalent `pnpm remove`, `yarn remove`, or `bun remove`.
