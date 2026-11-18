@@ -55,7 +55,7 @@ GQLoom 则秉持**以运行时类型为中心的编织（Weaving）理念**。�
 | `t.arg.*` / `args` | `.input({ ... })` | 参数合并为一个对象 |
 | `builder.enumType` | `z.enum([...]).meta({ title })` | |
 | `builder.unionType` + `resolveType` | `z.discriminatedUnion("__typename", [...]).meta({ title })` | 或 `z.union` 配合 `asUnionType` / `resolveType` |
-| `builder.interfaceType` + `interfaces: [I]` | `asObjectType({ interfaces: [I] })` | 禁止直接返回接口 Silk（见[陷阱](#陷阱)） |
+| `builder.interfaceType` + `interfaces: [I]` | `silk(new GraphQLInterfaceType(...))` + `asObjectType({ interfaces: [I] })` | 操作需要返回接口本身时用 `silk()` 包装 `GraphQLInterfaceType`；未直接引用的实现类型传入 `weave()` |
 | `builder.scalarType` / `addScalarType` | `ZodWeaver.config({ presetGraphQLType })` 或 `asField({ type })` | `Date`（`z.ZodDate`）在 `presetGraphQLType` 中全局映射 |
 | `context` 参数 | [`useContext<Ctx>()`](../context.md) | 必须传入 `asyncContextProvider` |
 | `info` 参数 | `useResolverPayload().info` | |
@@ -67,7 +67,11 @@ GQLoom 则秉持**以运行时类型为中心的编织（Weaving）理念**。�
 | `@pothos/plugin-simple-objects`（`builder.simpleObject`） | `z.object` | |
 | `@pothos/plugin-with-input`（`t.fieldWithInput`） | `.input({ input: NamedInputSilk })` | 显式命名输入 Silk |
 | `@pothos/plugin-prisma` / `@pothos/plugin-drizzle` | 解析器工厂与 `relationField` | 见 [Prisma 与 Drizzle 插件](#prisma-与-drizzle-插件) |
-| `@pothos/plugin-relay`、`-errors`、`-sub-graph`、`-smart-subscriptions` | 停止，该模块保留 Pothos | 见[何时迁移与何时停止](#何时迁移与何时停止) |
+| `@pothos/plugin-relay`（`builder.node`、`t.connection`） | 用 `silk(new GraphQLInterfaceType(...))` 定义 `Node`；用 Zod Silk 定义 `PageInfo`、`*Edge`、`*Connection` | 保持 SDL 与 ID/游标编码完全一致；见 [Relay](#relay) |
+| `@pothos/plugin-errors`（`errors: { types }`） | 结果联合类型（`z.discriminatedUnion` / `z.union`）或带 `extensions` 的 `GraphQLError` | 按 `before.graphql` 是否已有联合类型选择；见[错误处理](#错误处理) |
+| `@pothos/plugin-sub-graph`（`subGraphs`） | 按受众分别调用 `weave()` | 每个 `weave()` 只传入该受众所需的解析器；见[子图](#子图) |
+| `@pothos/plugin-smart-subscriptions`（`smartSubscriptions`） | `subscription()` + pubsub（`createPubSub`） | 在 mutation 中显式发布事件；见[智能订阅](#智能订阅) |
+| `variant`、`@pothos/plugin-prisma-utils` / Drizzle 过滤与排序输入 | 独立的命名 Silk（`.meta({ title })`） | 保留原 SDL 类型名称；见[变体与生成的输入](#变体与生成的输入) |
 
 常用字段选项映射：
 
@@ -82,7 +86,7 @@ GQLoom 则秉持**以运行时类型为中心的编织（Weaving）理念**。�
 
 只读这一页的模型也必须遵守下列规则。每条规则在后文都有对应代码。
 
-1. 必须在改动代码前保存 Pothos 的 SDL：把 `printSchema(lexicographicSortSchema(builder.toSchema()))` 写入 `before.graphql`。只有当 GQLoom 的 SDL `diff` 为空，且重放的请求返回相同 JSON 时，迁移才算完成。
+1. 必须在改动代码前保存 Pothos 的 SDL：把 `printSchema(lexicographicSortSchema(builder.toSchema()))` 写入 `before.graphql`。只有当所有模块都已完成迁移、GQLoom 的 SDL `diff` 为空（或仅包含已明确记录的契约变更），且重放的请求返回预期 JSON 时，迁移才算完成。
 2. 必须从打印出的 SDL 抄可空性，不要凭记忆。Pothos 4 在 builder 未设置 `defaultFieldNullability: false` 时输出可空字段、可选参数；Pothos 3 输出非空字段。每个可空输出与每个可选输入都写成 `.nullish()`（统一写法；`.nullable()` 会让 TypeScript 拒绝返回 `undefined` 的解析函数），其余使用不带修饰的 Zod 类型。
 3. 必须把每个 Pothos 对象类型改写为一个 `z.object({ ... }).meta({ title: "Name" })`。不要照搬 `objectRef`、`implement`、`builder`。
 4. 必须用 `resolver.of(Silk, { name: field(type).resolve((parent) => ...) })` 定义每个计算字段或关联字段。parent 是 `resolve` 的第一个参数；没有 `t` 回调，也没有 `ctx` 参数。
@@ -94,29 +98,15 @@ GQLoom 则秉持**以运行时类型为中心的编织（Weaving）理念**。�
 10. 必须把每个 `authScopes` 改写为 `Middleware`。操作使用 `.use(guard)`；对象的属性使用 `resolver.of` 中的 `field(...).use(guard).resolve(...)`。加在 query 上的守卫不会保护其返回对象的字段。
 11. 必须把 `builder.addScalarType` 与 `Date` 映射到 `ZodWeaver.config({ presetGraphQLType })`。枚举写成 `z.enum([...]).meta({ title })`。联合成员是带 `__typename` 字面量的 `z.object`，用 `z.discriminatedUnion("__typename", [...]).meta({ title })` 组合。
 12. 必须用 `field(...).load(...)` 或解析器工厂的 `relationField()` 替代 N+1 写法（`loadableObject`、`t.loadable`、Prisma/Drizzle 关联插件）。测试中执行时要传入 `contextValue: {}`，否则批处理不会生效。
-13. 必须用 `weave(ZodWeaver, config, ...resolvers)` 替代 `builder.toSchema()`（仅在规则 9 适用时才加入 `asyncContextProvider`）。没有任何解析器可达的 Silk 不会出现在 SDL 中。
-14. 禁止从 query 或字段返回接口 Silk。在实现类型上声明 `asObjectType({ interfaces: [Iface] })`，并返回联合类型。
-15. 禁止凭猜测手工翻译 Relay（`builder.node`、`t.connection`）、`@pothos/plugin-errors`、`@pothos/plugin-sub-graph`、`@pothos/plugin-smart-subscriptions`。应当停下，该模块继续使用 Pothos。
-16. 在每个模块都通过规则 1 之前，禁止卸载任何 `@pothos/*` 包，也禁止在同一文件中混用 `builder` 与 GQLoom 解析器。
-
-## 何时迁移与何时停止
-
-适合迁移的情形：
-
-- Schema 主要是普通对象、枚举、联合、输入与简单解析函数，`t.exposeX` 与 `objectRef` 的样板代码是主要成本；
-- 项目已经为每个类型维护了 Zod 或 Valibot Schema、Prisma 模型或 Drizzle 表，Pothos 成了第三份声明；
-- 只是为了校验参数才使用 `@pothos/plugin-zod` 或 `@pothos/plugin-validation`；
-- 使用 `@pothos/plugin-scope-auth` 做中间件即可表达的角色检查。
-
-出现下列依赖时，请先评估架构，不要直接迁移：
-
-- Relay：`builder.node`、`t.connection`、`prismaConnection`、`drizzleConnection`、全局 ID。GQLoom 没有 Relay 辅助工具，需要手写 `Connection`、`Edge`、`PageInfo` 类型与游标逻辑，且 SDL 会不同。
-- `@pothos/plugin-errors`、`@pothos/plugin-sub-graph`、`@pothos/plugin-smart-subscriptions` 以及 Pothos 的“变体”（`variant`、`Viewer` 风格的 Prisma/Drizzle 变体）。GQLoom 没有对应能力。
-- 声明类型为 GraphQL 接口的字段（例如 `node(id): Node`）。GQLoom 无法从字段返回接口 Silk（见[陷阱](#陷阱)）；改用联合会改变 SDL。
-- `@pothos/plugin-prisma-utils` 或 `@pothos/plugin-drizzle` 生成的过滤与排序输入。GQLoom 解析器工厂生成的输入类型名不同，在客户端迁移之前请保持这些操作手写。
-- Pothos 的 Prisma/Drizzle 插件在嵌套选择集上做的查询规划（单个 `include` 树）。GQLoom 按关联字段分批加载。请在迁移前后对比查询次数。
-
-按模块逐步迁移。迁移期间保留 `@pothos/core`。两个 `GraphQLSchema` 实例可以共存，并通过 [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging) 合并，或分别挂载到不同的 HTTP 路由。
+13. 必须用 `weave(ZodWeaver, config, ...resolvers)` 替代 `builder.toSchema()`（仅在规则 9 适用时才加入 `asyncContextProvider`）。没有任何解析器可达的 Silk 不会出现在 SDL 中；未直接被操作引用的接口或联合实现类型需直接传给 `weave()`。
+14. 当 query 或字段需要返回接口本身（例如 Relay `Node` 或 `Error`）时，必须用 `silk()` 包装 `new GraphQLInterfaceType({ ... })`，并在实现类型中通过 `asObjectType({ interfaces: [Iface] })` 引用它。禁止把用 `z.object` 定义的接口 Silk 直接传给 `query()` 或 `field()` 并同时在 `asObjectType({ interfaces: [Iface] })` 中引用它，否则 `weave()` 会因重名类型报错。
+15. 必须把所有 Pothos 模块与插件彻底迁移到 GQLoom，绝不遗留任何 Pothos 模块：
+    - Relay：用 `silk(new GraphQLInterfaceType(...))` 定义 `Node`，用 Zod Silk 定义 `PageInfo`、`*Edge`、`*Connection`，保持 SDL 与 `before.graphql` 一致。
+    - Errors：如果 `before.graphql` 含有结果联合类型，就编织为结果联合（`z.discriminatedUnion` / `z.union`）；否则抛出带 `extensions` 的 `GraphQLError`（若主动去掉联合类型，需写明契约变更）。
+    - Sub-graphs：为每个受众单独调用一次 `weave()`，只传入该受众需要的解析器。
+    - Smart Subscriptions：改用普通 `subscription()` + pubsub，并在 mutation 中显式发布事件。
+    - 变体与生成的过滤/排序输入：分别定义独立 Silk，并保留原有的 SDL 类型名称，让客户端无感知。
+16. 在每个模块都完成迁移并通过规则 1 之前，禁止卸载任何 `@pothos/*` 包，也禁止在同一文件中混用 `builder` 与 GQLoom 解析器。
 
 ## 关键迁移实践
 
@@ -536,7 +526,482 @@ export const postFields = resolver.of(Post, {
 
 在示例数据上（5 篇文章，查询 `posts { id author { id } }`），传入上下文对象时批处理函数只执行 1 次，不传上下文对象时执行 5 次：批处理以请求上下文对象为键。Yoga 等服务端总会提供上下文对象；在单元测试中调用 `graphql()` 时请传入 `contextValue: {}`。
 
-迁移前后请自行核对查询次数：开启 `log: ["query"]`（Prisma）或 `logger: true`（Drizzle），对比同一请求的语句条数。使用 ORM 插件时，`relationField` 替代 `t.relation`；不要假设它会生成同样的单条联表查询。
+迁移前后请自行核对查询次数：开启 `log: ["query"]`（Prisma）或 `logger: true`（Drizzle），对比同一请求的语句条数。使用 ORM 插件时，`relationField` 替代 `t.relation`；不要假设它会生成同样的单条联表查询。若热点路径需要单条联表查询或 `include` / `with` 树而非逐字段批处理，可在 `resolver` 中显式使用 Prisma 的 `include`（或 `useSelectedFields`）与 Drizzle 的 `db.query.*.findMany({ with: ... })`（或 `useSelectedColumns`）编写该查询。
+
+### Relay
+
+`@pothos/plugin-relay` 会生成 `Node` 接口、`node`/`nodes` 查询、全局 ID、`PageInfo`、`*Edge` 与 `*Connection` 类型。用 GQLoom 的 Silk 对每一部分进行建模，使 `after.graphql` 与 `before.graphql` 完全一致：
+
+- 用 `silk(new GraphQLInterfaceType(...))` 定义 `Node`（当有 query 或字段返回 `Node` 时，切勿用 `z.object` 定义接口；见规则 14）。
+- 通过 `.register(asObjectType, { interfaces: [Node] })` 让节点类型实现 `Node`，在 `resolver.of` 中覆写 `id` 以返回编码后的全局 ID（保留 Pothos 的 `TypeName:id` base64 格式），并将未被其他操作直接引用的实现类型传入 `weave(...)`。
+- 将 `PageInfo`、`*Edge`、`*Connection` 定义为 Zod 对象 Silk，使 `.meta({ title })` 名称与字段可空性与 `before.graphql` 一一对应（`[UserEdge]!` 对应 `z.array(Edge.nullish())`，`[UserEdge]` 对应 `z.array(Edge.nullish()).nullish()`，`[UserEdge!]!` 对应 `z.array(Edge)`）。
+
+```ts
+// Pothos (@pothos/plugin-relay)
+builder.node(User, {
+  id: { resolve: (user) => user.id },
+  loadOne: (id) => usersDb.get(id),
+  fields: (t) => ({ name: t.exposeString("name") }),
+})
+
+builder.queryType({
+  fields: (t) => ({
+    users: t.connection({
+      type: User,
+      resolve: (_root, args) => resolveArrayConnection({ args }, [...usersDb.values()]),
+    }),
+  }),
+})
+```
+
+```ts twoslash
+import { field, query, resolver, silk, weave } from "@gqloom/core"
+import { ZodWeaver, asField, asObjectType } from "@gqloom/zod"
+import {
+  GraphQLID,
+  GraphQLInterfaceType,
+  GraphQLList,
+  GraphQLNonNull,
+} from "graphql"
+import * as z from "zod"
+
+const ID = z.string().register(asField, { type: new GraphQLNonNull(GraphQLID) })
+
+function encodeGlobalId(type: string, id: string) {
+  return Buffer.from(`${type}:${id}`).toString("base64")
+}
+
+function decodeGlobalId(globalId: string) {
+  const decoded = Buffer.from(globalId, "base64").toString("utf8")
+  const sep = decoded.indexOf(":")
+  if (sep === -1) throw new Error(`Invalid global ID: ${globalId}`)
+  return { type: decoded.slice(0, sep), id: decoded.slice(sep + 1) }
+}
+
+interface INode {
+  id: string
+}
+
+const NodeInterface = new GraphQLInterfaceType({
+  name: "Node",
+  fields: () => ({ id: { type: new GraphQLNonNull(GraphQLID) } }),
+  resolveType: (value: { __typename?: string }) => value.__typename,
+})
+
+const Node = silk<INode>(NodeInterface)
+const NullableNodeList = silk<(INode | null)[]>(
+  new GraphQLNonNull(new GraphQLList(NodeInterface))
+)
+
+const User = z
+  .object({
+    __typename: z.literal("User").nullish(),
+    id: ID,
+    name: z.string(),
+  })
+  // Zod v4 registry 的 $replace 会去掉 GraphQLInterfaceType 的私有成员
+  .register(asObjectType, { interfaces: [Node as never] })
+
+const PageInfo = z
+  .object({
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+    startCursor: z.string().nullish(),
+    endCursor: z.string().nullish(),
+  })
+  .meta({ title: "PageInfo" })
+
+function createConnectionSilks<TNode extends z.ZodType>(
+  namePrefix: string,
+  nodeSilk: TNode
+) {
+  const Edge = z
+    .object({ cursor: z.string(), node: nodeSilk })
+    .meta({ title: `${namePrefix}Edge` })
+  const Connection = z
+    .object({
+      pageInfo: PageInfo,
+      edges: z.array(Edge.nullish()),
+    })
+    .meta({ title: `${namePrefix}Connection` })
+  return { Edge, Connection }
+}
+
+const { Connection: UserConnection } = createConnectionSilks("User", User)
+
+const usersDb = new Map<string, { id: string; name: string }>([
+  ["1", { id: "1", name: "Ada" }],
+])
+
+function resolveNode(globalId: string) {
+  const { type, id } = decodeGlobalId(globalId)
+  if (type === "User") {
+    const user = usersDb.get(id)
+    return user ? { ...user, __typename: "User" as const } : null
+  }
+  return null
+}
+
+function paginateSlice<T>(
+  items: T[],
+  args: {
+    first?: number | null
+    after?: string | null
+    last?: number | null
+    before?: string | null
+  }
+) {
+  const decodeCursor = (c: string) =>
+    Number(Buffer.from(c, "base64").toString("utf8").replace("cursor:", ""))
+  const encodeCursor = (idx: number) =>
+    Buffer.from(`cursor:${idx}`).toString("base64")
+
+  const start = args.after ? Math.max(0, decodeCursor(args.after) + 1) : 0
+  const end = args.before
+    ? Math.min(items.length, decodeCursor(args.before))
+    : items.length
+  const window = items.slice(start, end)
+  const sliced =
+    args.first != null
+      ? window.slice(0, args.first)
+      : args.last != null
+        ? window.slice(Math.max(0, window.length - args.last))
+        : window
+
+  const edges = sliced.map((node, i) => ({
+    cursor: encodeCursor(start + i),
+    node,
+  }))
+  return {
+    edges,
+    pageInfo: {
+      hasPreviousPage: start > 0,
+      hasNextPage: start + sliced.length < end,
+      startCursor: edges[0]?.cursor ?? null,
+      endCursor: edges.at(-1)?.cursor ?? null,
+    },
+  }
+}
+
+const userFields = resolver.of(User, {
+  id: field(ID).resolve((user) => encodeGlobalId("User", user.id)),
+})
+
+const relayQueries = resolver({
+  node: query(silk.nullable(Node))
+    .input({ id: ID })
+    .resolve(({ id }) => resolveNode(id)),
+  nodes: query(NullableNodeList)
+    .input({ ids: z.array(ID) })
+    .resolve(({ ids }) => ids.map((id) => resolveNode(id))),
+  users: query(UserConnection)
+    .input({
+      first: z.int().nullish(),
+      after: z.string().nullish(),
+      last: z.int().nullish(),
+      before: z.string().nullish(),
+    })
+    .resolve((args) => paginateSlice([...usersDb.values()], args)),
+})
+
+export const schema = weave(ZodWeaver, relayQueries, userFields, User)
+```
+
+对象上的嵌套连接字段（`t.connection` / `t.relatedConnection`）可以在 `resolver.of(User, { ... })` 中用 `field(PostConnection).input({ ... }).resolve(...)`（或 `.load(...)` 进行批处理）定义。如果 `before.graphql` 中游标使用了 `ID`（`cursorType: "ID"`），请把 `cursor`、`startCursor`、`endCursor`、`after`、`before` 上的 `z.string()` 替换为 `NullableID` / `ID`。若配合 Drizzle 或 Prisma 的按列裁剪功能使用上面的 `id` 覆写，请在 `id: field(ID)` 上链式调用 `.derivedFrom("id")`，确保主键始终被查询出来。
+
+### 错误处理
+
+先查看 `before.graphql` 再二选一：
+
+1. **原 SDL 包含结果联合类型**（如 `union MutationCreatePostResult = BaseError | MutationCreatePostSuccess` 或 `directResult: true` 联合类型）：用 `silk(new GraphQLInterfaceType(...))` 定义 `Error` 接口，并用 `z.discriminatedUnion`（或 `z.union` + `asUnionType`）定义结果联合类型，保持 SDL 完全不变。
+2. **原 SDL 不含结果联合类型**（或明确决定改用标准 GraphQL 错误）：在解析器中直接抛出 `new GraphQLError(message, { extensions: { code } })`，或在传入 `weave` 的全局中间件中把领域异常映射为 `GraphQLError`。
+
+```ts twoslash
+import { mutation, query, resolver, silk, weave, type Middleware } from "@gqloom/core"
+import { ZodWeaver, asField, asObjectType } from "@gqloom/zod"
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLInterfaceType,
+  GraphQLNonNull,
+  GraphQLString,
+} from "graphql"
+import * as z from "zod"
+
+const ID = z.string().register(asField, { type: new GraphQLNonNull(GraphQLID) })
+const Post = z.object({ id: ID, title: z.string() }).meta({ title: "Post" })
+
+// 方案 A：before.graphql 中已有结果联合类型（SDL 不变）
+const ErrorInterface = silk<{ message: string }>(
+  new GraphQLInterfaceType({
+    name: "Error",
+    fields: () => ({ message: { type: new GraphQLNonNull(GraphQLString) } }),
+    resolveType: (value: { __typename?: string }) => value.__typename,
+  })
+)
+
+const BaseError = z
+  .object({ __typename: z.literal("BaseError"), message: z.string() })
+  // Zod v4 registry 的 $replace 会去掉 GraphQLInterfaceType 的私有成员
+  .register(asObjectType, { interfaces: [ErrorInterface as never] })
+
+const MutationCreatePostSuccess = z
+  .object({
+    __typename: z.literal("MutationCreatePostSuccess"),
+    data: Post,
+  })
+  .meta({ title: "MutationCreatePostSuccess" })
+
+const MutationCreatePostResult = z
+  .discriminatedUnion("__typename", [BaseError, MutationCreatePostSuccess])
+  .meta({ title: "MutationCreatePostResult" })
+
+// 方案 B：SDL 中无联合类型 -> 抛出带 extensions 的 GraphQLError
+class NotFoundError extends Error {
+  public readonly code = "NOT_FOUND"
+}
+
+const mapDomainErrors: Middleware = async (next) => {
+  try {
+    return await next()
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      throw new GraphQLError(err.message, { extensions: { code: err.code } })
+    }
+    throw err
+  }
+}
+
+const postResolver = resolver({
+  post: query(Post).input({ id: ID }).resolve(() => {
+    throw new NotFoundError("Post not found")
+  }),
+  createPost: mutation(MutationCreatePostResult)
+    .input({ title: z.string() })
+    .resolve(({ title }) => {
+      if (!title.trim()) {
+        return { __typename: "BaseError", message: "Title is required" }
+      }
+      return {
+        __typename: "MutationCreatePostSuccess",
+        data: { id: "1", title },
+      }
+    }),
+})
+
+export const schema = weave(ZodWeaver, mapDomainErrors, postResolver)
+```
+
+对于 Pothos 的 `directResult: true` 联合类型（如 `union CreatePostResult = BaseError | Post`），使用 `z.union([BaseError, Post]).register(asUnionType, { name: "CreatePostResult", resolveType: (v) => ("message" in v ? "BaseError" : "Post") })`。
+
+若从原有的错误联合类型切换为抛出 `GraphQLError`，需同步记录以下契约变更：SDL 中的 `interface Error`、`*Error`、`*Success` 与 `union *Result` 会被移除，操作返回值直接变为 `Post!`（或 `Post`）；运行时的错误信息不再出现在 `data.<op>`（`{ __typename: "BaseError", message }`），而是进入顶层 `errors` 数组（`errors[0].extensions.code`），同时 `data.<op>` 为 `null`（若字段非空则 `data` 为 `null`）。客户端需要移除查询中的 `... on *Success { data { ... } }` 与 `... on Error { message }` 片段，直接选择返回类型字段，并改从 `result.errors` 处理异常。
+
+### 子图
+
+`@pothos/plugin-sub-graph` 通过在共享 builder 上标注 `subGraphs` 并调用 `builder.toSchema({ subGraph })` 生成不同受众的 Schema。在 GQLoom 中，为每个受众分别调用一次 `weave()`，只传入该受众所需的解析器与 Silk：
+
+```ts twoslash
+import { field, query, resolver, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import * as z from "zod"
+
+const User = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    internalNotes: z.string(),
+  })
+  .meta({ title: "User" })
+
+// 仅在公开子图中隐藏内部字段，不影响其他 weave()
+const publicUserFields = resolver.of(User, {
+  internalNotes: field.hidden,
+})
+
+const publicQueries = resolver({
+  user: query(User.nullish()).resolve(() => null),
+})
+
+const internalQueries = resolver({
+  user: query(User.nullish()).resolve(() => null),
+  auditLog: query(z.array(z.string())).resolve(() => []),
+})
+
+export const publicSchema = weave(ZodWeaver, publicQueries, publicUserFields)
+export const internalSchema = weave(ZodWeaver, internalQueries)
+```
+
+每次 `weave()` 都在独立隔离的上下文中执行，因此 `publicUserFields` 中的 `field.hidden` 只会从 `publicSchema` 中隐藏 `internalNotes`，不会影响 `internalSchema`。仅被 `internalQueries` 引用的类型也不会出现在 `publicSchema` 中。只要某个子图的解析器或中间件调用了 `useContext()`，别忘了在该子图的 `weave()` 中传入 `asyncContextProvider`。最后分别对每个受众的 SDL 做 diff（如 `before.public.graphql` 对比 `after.public.graphql`）。
+
+### 智能订阅
+
+`@pothos/plugin-smart-subscriptions` 通过主题注册把实时刷新逻辑挂在 Query 与对象字段上。在 GQLoom 中，将其替换为普通的 `subscription()` 操作与 pubsub（如 `graphql-yoga` 的 `createPubSub`，或在多实例部署中使用 Redis pubsub），并在 mutation 中显式调用 `pubSub.publish(...)`：
+
+```ts twoslash
+import { mutation, query, resolver, subscription, weave } from "@gqloom/core"
+import { ZodWeaver } from "@gqloom/zod"
+import { createPubSub } from "graphql-yoga"
+import * as z from "zod"
+
+const Post = z.object({ id: z.string(), title: z.string() }).meta({ title: "Post" })
+type IPost = z.infer<typeof Post>
+
+const pubSub = createPubSub<{
+  postsUpdated: []
+  postUpdated: [postId: string, post: IPost]
+}>()
+
+const postsStore: IPost[] = []
+
+export const postResolver = resolver({
+  posts: query(z.array(Post)).resolve(() => postsStore),
+
+  createPost: mutation(Post)
+    .input({ title: z.string() })
+    .resolve(({ title }) => {
+      const post = { id: String(postsStore.length + 1), title }
+      postsStore.push(post)
+      pubSub.publish("postsUpdated")
+      pubSub.publish("postUpdated", post.id, post)
+      return post
+    }),
+
+  watchPosts: subscription(z.array(Post))
+    .subscribe(() => pubSub.subscribe("postsUpdated"))
+    .resolve(() => postsStore),
+
+  watchPost: subscription(Post)
+    .input({ id: z.string() })
+    .subscribe(({ id }) => pubSub.subscribe("postUpdated", id))
+    .resolve((post) => post),
+})
+
+export const schema = weave(ZodWeaver, postResolver)
+```
+
+需要注意的契约与行为差异：
+
+- 如果 `before.graphql` 已经把对应操作放在 `type Subscription` 下，保持字段名、参数与返回 Silk 一致即可让 SDL 完全相同。
+- 如果原先依赖 `@pothos/plugin-smart-subscriptions` 将实时订阅挂在 `type Query` 上，或依赖子类型变更自动触发父订阅重算（例如修改了嵌套的 `Comment` 后自动重新执行 `posts` 订阅），GQLoom 不会隐式把 Query 字段转为订阅，也不会自动追踪嵌套选择集依赖。需把实时操作显式定义在 `Subscription` 上（客户端改用 `subscription { ... }`），并在每一个会修改相关数据的 mutation（或领域服务）中显式发布对应的父列表和单条记录主题。
+
+### 变体与生成的输入
+
+一个 ORM Silk 只对应一个 GraphQL 对象类型名（如 `User` 或 `users`），而 GQLoom 的解析器工厂会生成自己的输入类型名（如 `UserWhereInput`、`UsersFilters`、`UsersOrderBy`）。要迁移 Pothos 的 `variant` 变体以及 `@pothos/plugin-prisma-utils` / `@pothos/plugin-drizzle` 生成的过滤与排序输入且保持 SDL 类型名不变，需要分别定义独立 Silk 并沿用原 SDL 名称：
+
+```ts twoslash
+import { field, query, resolver, weave } from "@gqloom/core"
+import { asyncContextProvider } from "@gqloom/core/context"
+import { DrizzleWeaver, drizzleSilk } from "@gqloom/drizzle"
+import { useSelectedColumns } from "@gqloom/drizzle/context"
+import { ZodWeaver, asField } from "@gqloom/zod"
+import { and, asc, desc, eq, ilike, or, type SQL } from "drizzle-orm"
+import * as t from "drizzle-orm/sqlite-core"
+import { GraphQLID, GraphQLNonNull } from "graphql"
+import * as z from "zod"
+
+const IntID = z.int().register(asField, { type: new GraphQLNonNull(GraphQLID) })
+
+const users = drizzleSilk(
+  t.sqliteTable("users", {
+    id: t.int().primaryKey({ autoIncrement: true }),
+    email: t.text().notNull(),
+    firstName: t.text().notNull(),
+    lastName: t.text().notNull(),
+    passwordHash: t.text().notNull(),
+  }),
+  { name: "User" }
+)
+
+// 变体：使用原 SDL 类型名 "Viewer" 定义独立 Silk
+const Viewer = z
+  .object({
+    id: IntID,
+    email: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+  })
+  .meta({ title: "Viewer" })
+
+const viewerFields = resolver.of(Viewer, {
+  firstName: field.hidden,
+  lastName: field.hidden,
+  fullName: field(z.string())
+    .derivedFrom("firstName", "lastName")
+    .resolve((u) => `${u.firstName} ${u.lastName}`),
+})
+
+// 生成的过滤与排序输入：严格沿用 before.graphql 中的名称
+const OrderBy = z.enum(["asc", "desc"]).meta({ title: "OrderBy" })
+
+const StringFilter = z
+  .object({
+    equals: z.string().nullish(),
+    contains: z.string().nullish(),
+  })
+  .meta({ title: "StringFilter" })
+
+const UserFilter = z
+  .object({
+    email: StringFilter.nullish(),
+    get AND() {
+      return z.array(UserFilter).nullish()
+    },
+    get OR() {
+      return z.array(UserFilter).nullish()
+    },
+  })
+  .meta({ title: "UserFilter" })
+
+const UserOrderBy = z
+  .object({ email: OrderBy.nullish() })
+  .meta({ title: "UserOrderBy" })
+
+function toUserWhere(filter?: z.infer<typeof UserFilter> | null): SQL | undefined {
+  if (!filter) return undefined
+  const parts: (SQL | undefined)[] = []
+  if (filter.email?.equals != null) parts.push(eq(users.email, filter.email.equals))
+  if (filter.email?.contains != null) {
+    parts.push(ilike(users.email, `%${filter.email.contains}%`))
+  }
+  if (filter.AND?.length) parts.push(and(...filter.AND.map(toUserWhere)))
+  if (filter.OR?.length) parts.push(or(...filter.OR.map(toUserWhere)))
+  return and(...parts)
+}
+
+const userResolver = resolver.of(users, {
+  passwordHash: field.hidden,
+  viewer: query(Viewer.nullish()).resolve(() => {
+    const columns = useSelectedColumns(users)
+    void columns
+    return { id: 1, email: "ada@example.com", firstName: "Ada", lastName: "Lovelace" }
+  }),
+  users: query(users.$list())
+    .input({
+      where: UserFilter.nullish(),
+      orderBy: z.array(UserOrderBy).nullish(),
+    })
+    .resolve(({ where, orderBy }) => {
+      void toUserWhere(where)
+      void orderBy?.map((o) =>
+        o.email === "desc" ? desc(users.email) : asc(users.email)
+      )
+      return []
+    }),
+})
+
+export const schema = weave(
+  ZodWeaver,
+  DrizzleWeaver,
+  asyncContextProvider,
+  userResolver,
+  viewerFields
+)
+```
+
+保留 Pothos 过滤与排序输入时需注意两点：
+
+- 务必把 `.meta({ title })` 直接写在 `z.object(...)` 上（或写在 `z.lazy(() => z.object(...).meta({ title }))` 内部，不要写在 `z.lazy` 外层），否则 GQLoom 会忽略标题并根据操作名与字段名自动生成别名。
+- 请求重放时核对操作符语义（例如 Drizzle 中的 `ilike` 与 `like`，或 Prisma 中的 `mode: "insensitive"`），确保过滤后的查询结果与 Pothos 一致。
 
 ## 陷阱
 
@@ -591,7 +1056,9 @@ export const postFields = resolver.of(Post, {
   })
   ```
 
-- 接口类型的字段。如果 `query(Node)` 中的 `Node` 同时用于 `asObjectType({ interfaces: [Node] })`，会失败并报 `Schema must contain uniquely named types but contains multiple types named "Node"`。请返回实现类型的联合（`z.discriminatedUnion("__typename", [Dog, Cat])`），并让客户端使用内联片段；SDL 会改变，应视为契约变更。
+- 接口类型的字段。如果 `query(Node)` 中的 `Node` 是同时用于 `asObjectType({ interfaces: [Node] })` 的 `z.object`，会失败并报 `Schema must contain uniquely named types but contains multiple types named "Node"`。若要在保持 SDL 不变的前提下返回 GraphQL 接口（如 Relay `Node` 或 `Error`），请用 `silk()` 包装 `new GraphQLInterfaceType({ ... })`，并把未直接引用的实现类型传入 `weave(...)`。只有当你有意把接口改造成联合类型时，才使用 `z.discriminatedUnion("__typename", [Dog, Cat])`（属于契约变更，客户端需改用内联片段）。
+
+- 在递归输入类型上把 `.meta({ title })` 写在 `z.lazy(...)` 外层会导致 GQLoom 忽略该名称，转而按操作名和字段名自动拼接别名（例如生成 `FilterPostsWhereInput` 而非 `PostWhereInput`）。请把 `.meta({ title })` 写在 `z.lazy` 内部的 `z.object(...)` 上，或直接使用 Zod v4 的 getter 写法（`get AND() { ... }`）。
 
 - 校验：GQLoom 在 `resolve` 之前按 Zod Schema 校验参数。失败时请求被拒绝，并返回 `extensions.issues`（例如 `{"message":"Invalid email address","extensions":{"issues":[...]}}`）。请更新解析 `@pothos/plugin-zod` 或 `@pothos/plugin-validation` 错误格式的客户端。
 
@@ -604,7 +1071,7 @@ export const postFields = resolver.of(Post, {
 
 ## 验证
 
-迁移的目标是契约不变、行为不变。
+迁移的目标是契约不变、行为不变（若有不可避免的契约变更，例如将错误联合类型替换为 `GraphQLError` 或把智能订阅迁移至 `Subscription`，需明确记录变更与客户端适配方式）。
 
 1. 在改动之前，打印 Pothos 的 SDL：
 
@@ -622,7 +1089,7 @@ export const postFields = resolver.of(Post, {
    diff before.graphql after.graphql
    ```
 
-   输出必须为空。应当修改 Schema，而不是修改文件。
+   输出必须为空（或仅包含你已明确记录的预期契约变更）。应当修改 Schema，而不是修改文件。
 
 3. 对两份 Schema 重放请求并比较 JSON。参考移植使用的是同样的四条请求：
 
@@ -904,9 +1371,11 @@ export const schema = builder.toSchema()
 
    ```sh
    npm uninstall @pothos/core @pothos/plugin-prisma @pothos/plugin-drizzle \
-     @pothos/plugin-scope-auth @pothos/plugin-dataloader @pothos/plugin-relay \
-     @pothos/plugin-zod @pothos/plugin-validation @pothos/plugin-with-input \
-     @pothos/plugin-simple-objects @pothos/plugin-complexity dataloader
+     @pothos/plugin-prisma-utils @pothos/plugin-scope-auth @pothos/plugin-dataloader \
+     @pothos/plugin-relay @pothos/plugin-errors @pothos/plugin-sub-graph \
+     @pothos/plugin-smart-subscriptions @pothos/plugin-zod @pothos/plugin-validation \
+     @pothos/plugin-with-input @pothos/plugin-simple-objects @pothos/plugin-complexity \
+     @pothos/plugin-federation dataloader
    ```
 
    只有在其他代码仍导入 `dataloader` 时才保留它。使用 `pnpm remove`、`yarn remove` 或 `bun remove` 执行等价操作。
