@@ -2,17 +2,25 @@
 
 ## Why GQLoom
 
-Both Pothos and GQLoom run purely at runtime in native TypeScript without decorators, yet they start from fundamentally different philosophies about how application data, business logic, and GraphQL schemas fit together.
+Both Pothos and GQLoom run natively in TypeScript without decorators, yet they start from fundamentally different philosophies.
 
-Pothos is built around a **GraphQL-first Builder philosophy**. In its mental model, your internal data ("backing models") and your external GraphQL contract are two separate schemas. You anchor the codebase on a shared builder instance, wrap field definitions in callbacks to explicitly project internal types onto GraphQL, and extend that builder through plugins that augment global TypeScript types for validation, authorization, batching, or database access.
+Pothos takes a **GraphQL-first Builder** approach. It treats your internal data and your GraphQL API as two separate schemas, anchored on a shared builder where fields are defined inside callbacks and features are added through plugins.
 
-GQLoom starts from a **runtime-type-first Weaving philosophy**. Your application already expresses its data shapes and invariants through validation schemas and ORM models—those definitions should serve as the single source of truth, and the GraphQL schema should be *woven* directly from them rather than rewritten in a builder DSL. That shift yields three fundamental design advantages:
+GQLoom takes a **runtime-type-first Weaving** approach. Your validation schemas and ORM models already define your data and rules—so GQLoom weaves the GraphQL schema directly from them, keeping data, logic, and assembly cleanly separated.
 
-- **One source of truth instead of parallel layers**: Pothos treats internal models, GraphQL projections, and validation constraints as distinct layers that must be kept in sync by manually exposing fields and attaching validation rules separately. GQLoom treats existing runtime schemas (including libraries built on open standards like Standard Schema) and ORM models as the GraphQL types themselves. A single definition drives static TypeScript types, runtime input validation, and the GraphQL contract—keeping domain models decoupled from GraphQL so they stay reusable across forms, databases, and other protocols, while resolvers simply add derived or relational fields and hide private ones.
-- **Decentralized composition instead of a centralized Builder**: Pothos's Builder pattern binds every module to a shared, mutable builder holding global type state. Wrapping fields in callbacks lets Pothos inject that context and defer evaluation, yet it introduces structural friction: fields cannot be exported as plain, self-contained values to compose freely, and modules rely on import-time registration side effects. Breaking circular inference or extracting shared helpers often means splitting declarations from implementations or threading complex builder generics. GQLoom has no central builder and no import side effects—data definitions, resolvers, and schema assembly are cleanly separated. Domain modules export ordinary, self-contained resolver objects that are explicitly woven together at the entry point, and the same validated, middleware-protected logic can also be invoked directly outside GraphQL in unit tests, background jobs, or queues.
-- **Cohesive core primitives and open standards instead of fragmented plugins**: Pothos keeps its core minimal and relies on plugins that augment global builder types and wrap resolver lifecycles for everyday backend needs. That adds coordination overhead—selecting and ordering plugins, managing shared request state across them, learning separate plugin options, and untangling complex generic errors when plugins interact. GQLoom builds universal, orthogonal concerns directly into a small set of consistent primitives: open-standard validation schemas work natively without wrapper plugins, cross-cutting logic shares one composable middleware pipeline, request context is read on demand instead of threaded through every resolver signature, batch loading for related data lives directly on field resolution rather than introducing separate loadable-object abstractions, and ORM models are reused directly without a parallel builder dialect.
+- **One source of truth instead of parallel layers**
 
-Pothos's model makes sense when you deliberately want a strict separation between internal backing types and your GraphQL API, or rely heavily on builder-level schema transforms. When you want one source of truth across types, validation, and data models, plain modular composition free of builder indirection, and a cohesive runtime design that stays close to ordinary TypeScript, GQLoom offers a fundamentally simpler foundation.
+  Pothos separates internal models, GraphQL definitions, and validation rules into distinct layers you have to keep in sync. GQLoom starts from the schemas and ORM models you already have: one definition drives your TypeScript types, input validation, and GraphQL contract, while keeping your domain models decoupled from GraphQL.
+
+- **Independent modules instead of a central Builder**
+
+  Pothos's Builder pattern ties every file to one shared builder and wraps fields in callbacks. Modules rely on import-time registration and are harder to compose freely or run outside GraphQL. GQLoom has no shared builder: domain modules are plain, self-contained objects assembled explicitly at the entry point, and the same logic can also run directly in tests or non-GraphQL entry points.
+
+- **Unified design instead of plugin sprawl**
+
+  Pothos keeps its core narrow and splits everyday needs—validation, auth, batching, ORM integration—across plugins, each with its own options and coordination overhead. GQLoom connects directly to existing validation and ORM tools while building common cross-cutting concerns into one consistent core model.
+
+If you intentionally want a strict wall between internal models and your GraphQL API, or depend on Pothos's builder plugins, Pothos remains a solid choice. When you want a single source of truth, independent modules, and less ceremony overall, GQLoom offers a simpler foundation.
 
 ## Overview and mental model
 
