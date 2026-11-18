@@ -2,25 +2,29 @@
 
 ## Why GQLoom
 
-Both Nexus and GQLoom bring code-first GraphQL development to TypeScript without decorators, yet they are built on very different ideas.
+Both Nexus and GQLoom take a decorator-free, code-first approach to GraphQL in TypeScript, yet they rest on fundamentally different foundations.
 
-Nexus puts the GraphQL schema layer first. You define API types and fields inside code DSL blocks, then rely on generated type declarations and source-type mappings to connect that GraphQL layer back to your data models, context, and resolvers.
+Nexus relies on **codegen-driven type safety**. You define your GraphQL types inside a code DSL, then depend on generated type declaration files and mapping configuration to sync those types back to your data models and context.
 
-GQLoom starts from the runtime schemas and ORM models your codebase already relies on. It weaves the GraphQL schema directly from them using pure TypeScript inference—keeping your data, business logic, and schema assembly cleanly separated.
+GQLoom takes a **runtime-type-first Weaving** approach. The validation schemas and ORM models already in your codebase serve as the single source of truth, and your GraphQL schema is woven directly from them—with zero codegen, zero bridging config, and clean separation between data, logic, and assembly.
 
-- **Native TypeScript inference, zero codegen**
+- **Zero codegen, instant TypeScript inference**
 
-  Nexus achieves type safety by generating ambient declaration files whenever your schema changes and maintaining source-type mappings to bridge models and API types. GQLoom needs no generated type artifacts, background watch step, or string-matched type registry: TypeScript infers types directly from your schemas and resolvers as you edit, so your editor and build stay in sync immediately.
+  Nexus depends on regenerating declaration files to keep types accurate, which adds a build step and breaks down whenever generated artifacts or mappings drift out of sync. GQLoom relies purely on native TypeScript inference with no generated files or background watchers—edit a schema or resolver, and your IDE feedback and type-checks update immediately.
 
-- **One source of truth across types, validation, and GraphQL**
+- **One source of truth for types, validation, and GraphQL**
 
-  With Nexus, GraphQL type definitions, backing models, and input validation live apart and have to be aligned by hand. GQLoom turns your existing validation schemas and ORM models directly into GraphQL types—one definition drives static TypeScript types, automatic input validation, and the API contract together.
+  Nexus only describes the GraphQL layer; it offers no built-in input validation and cannot reuse your validation schemas or ORM models directly, leaving parallel layers to maintain by hand. GQLoom weaves GraphQL directly from the schemas and models you already write—one definition drives static types, automatic input validation, and your API contract together.
 
-- **Plain, composable modules with built-in essentials**
+- **Modern ecosystem and batteries included**
 
-  Instead of locking fields inside DSL callbacks coupled to a global schema registry, GQLoom keeps domain definitions and resolvers as plain TypeScript objects and functions assembled explicitly at the entry point. The same logic is easy to test or reuse outside GraphQL, while everyday needs like middleware, request context, and batching share one consistent core model.
+  Where the Nexus ecosystem has largely stagnated and requires custom glue for validation, batching, and modern ORMs, GQLoom is actively built for modern TypeScript stacks. It integrates natively with modern validators and ORMs while providing resolver factories, built-in N+1 batching, middleware, context, and subscriptions under one cohesive model—working cleanly across traditional servers and edge runtimes alike.
 
-When you are ready to leave codegen, parallel model layers, and DSL callbacks behind, every Nexus capability—including interfaces, Relay connections, field authorization, and custom plugins—has a direct GQLoom replacement, leaving you with a cleaner, single-source-of-truth TypeScript codebase with zero leftover debt.
+- **Decoupled modules that are easy to test and reuse**
+
+  Nexus locks fields inside schema-coupled callbacks backed by a central type registry, tying business logic tightly to GraphQL. In GQLoom, schemas and resolvers are plain, self-contained TypeScript objects assembled explicitly at the entry point—so domain logic is straightforward to unit-test or reuse outside GraphQL.
+
+Moving to GQLoom simplifies your architecture without leaving capabilities behind: every Nexus pattern has a direct migration path, leaving you with a zero-codegen, single-source-of-truth TypeScript codebase.
 
 ## Overview and mental model
 
