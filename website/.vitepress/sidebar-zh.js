@@ -130,6 +130,10 @@ export default [
         text: "从 TypeGraphQL 迁移",
         link: "/zh/docs/migrations/from-typegraphql",
       },
+      {
+        text: "从 Pothos 迁移",
+        link: "/zh/docs/migrations/from-pothos",
+      },
     ],
   },
 ]

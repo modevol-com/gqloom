@@ -130,6 +130,10 @@ export default [
         text: "From TypeGraphQL",
         link: "/docs/migrations/from-typegraphql",
       },
+      {
+        text: "From Pothos",
+        link: "/docs/migrations/from-pothos",
+      },
     ],
   },
 ]
