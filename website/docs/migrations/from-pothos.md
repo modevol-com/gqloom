@@ -2,9 +2,9 @@
 
 ## Why GQLoom
 
-Pothos builds a GraphQL schema through a `SchemaBuilder` instance: every type is declared on the builder (`objectRef` + `implement`, `t.exposeX('field')`), and the backing TypeScript type is passed to the builder as a generic. GQLoom weaves runtime schemas (such as Zod, Valibot, or Yup) and ORM models (such as Prisma, Drizzle, or MikroORM) into a GraphQL schema, with no builder instance.
+Pothos builds a GraphQL schema through a `SchemaBuilder` instance. Every type is declared on the builder (`objectRef` + `implement`, `t.exposeX('field')`), and the backing TypeScript type is passed in as a generic. GQLoom weaves runtime schemas (such as Zod, Valibot, or Yup) and ORM models (such as Prisma, Drizzle, or MikroORM) into a GraphQL schema. It has no builder instance.
 
-The numbers below come from porting the official Pothos [`examples/simple-interfaces`](https://github.com/hayes/pothos/tree/main/examples/simple-interfaces) (`@pothos/core` 4.18.0, `graphql` 16.14.2) to GQLoom. The full port is in the [reference implementation](#reference-implementation).
+The numbers below come from porting the official Pothos [`examples/simple-interfaces`](https://github.com/hayes/pothos/tree/main/examples/simple-interfaces) (`@pothos/core` 4.18.0, `graphql` 16.14.2) to GQLoom. The port is in the [reference implementation](#reference-implementation).
 
 | Measured on the same example | Pothos | GQLoom (Zod) |
 | --- | --- | --- |
@@ -17,58 +17,48 @@ The numbers below come from porting the official Pothos [`examples/simple-interf
 | Replay of 4 queries (3 data queries, 1 validation error) | n/a | identical JSON, including the error text |
 | Runtime packages in `package.json` | `@pothos/core` | `@gqloom/core`, `@gqloom/zod`, `zod` |
 
-The port keeps the `IPost` interface in `data.ts` so that `data.ts` stays unchanged; deleting it in favor of `z.infer<typeof Post>` is optional.
+The port keeps the `IPost` interface so `data.ts` stays unchanged. You can delete it in favor of `z.infer<typeof Post>`.
 
-What the table does not claim: the port is not meaningfully shorter on a schema this small, and it adds `zod`. The gain shows up when you remove plugins. After a full migration you can uninstall `@pothos/core` and every `@pothos/plugin-*` package, drop the `PrismaTypes` generic and the `prisma-pothos-types` generator, and stop maintaining a second declaration of each model next to the Prisma schema or Drizzle table.
+On a schema this small the port is not shorter, and it adds `zod`. The savings come from removing plugins. After a full migration you can uninstall `@pothos/core` and every `@pothos/plugin-*` package, drop the `PrismaTypes` generic and the `prisma-pothos-types` generator, and stop keeping a second declaration of each model next to the Prisma schema or Drizzle table.
 
-- One runtime schema or ORM model is the single source of truth. TypeScript types are inferred from it, GraphQL types are woven from it, and the schema itself validates inputs (no `@pothos/plugin-zod` or `@pothos/plugin-validation`).
-- Prisma, Drizzle, and MikroORM models are used directly as silks. Resolver factories generate CRUD operations and relation fields.
-- `field().load()` batches relation loads. It replaces `@pothos/plugin-dataloader` without a `loadableObject` declaration.
-- Middleware and `useContext()` replace `@pothos/plugin-scope-auth` and the `context` argument of every resolver.
+- One runtime schema or ORM model is the source of truth. TypeScript types are inferred from it, GraphQL types are woven from it, and it validates inputs, so `@pothos/plugin-zod` and `@pothos/plugin-validation` are not needed.
+- Prisma, Drizzle, and MikroORM models work as silks directly. Resolver factories generate CRUD operations and relation fields.
+- `field().load()` batches relation loads in place of `@pothos/plugin-dataloader`. There is no `loadableObject` declaration.
+- Middleware and `useContext()` replace `@pothos/plugin-scope-auth` and the `context` argument of each resolver.
 
-## Rules
+## Overview and mental model
 
-A model that only reads this page must follow these rules. Each rule is repeated with its snippet later on.
+In Pothos the builder is the schema: you register types on it and pass the backing TypeScript type as a generic. In GQLoom the Zod object (or ORM model) is the type, and `weave` collects the resolvers into a schema at the end.
 
-1. MUST save the Pothos SDL before touching code: `printSchema(lexicographicSortSchema(builder.toSchema()))` written to `before.graphql`. The migration is done only when the GQLoom SDL has an empty `diff` and replayed requests return the same JSON.
-2. MUST copy nullability from the printed SDL, never from memory. Pothos 4 prints nullable outputs and optional args unless the builder sets `defaultFieldNullability: false`; Pothos 3 printed non-null outputs. Port every nullable output and every optional input as `.nullish()` (one spelling; `.nullable()` makes TypeScript reject a resolver that returns `undefined`). Everything else is the bare Zod type.
-3. MUST turn each Pothos object type into one `z.object({ ... }).meta({ title: "Name" })`. Do not copy `objectRef`, `implement`, or `builder`.
-4. MUST define every computed or relational field with `resolver.of(Silk, { name: field(type).resolve((parent) => ...) })`. The parent is the first argument of `resolve`; there is no `t` callback and no `ctx` argument.
-5. MUST define every root field with `resolver({ name: query(...) | mutation(...) | subscription(...) })`. Arguments go through `.input({ ... })` only.
-6. MUST hide every property of the Zod object (or ORM model) that Pothos did not expose with `t.expose*`, using `name: field.hidden` inside `resolver.of`. A Zod object exposes every property.
-7. MUST declare input objects as separate silks with their own `.meta({ title })`. MUST NOT use an object silk as an input.
-8. MUST define two ID helpers once: `NullableID` (`asField({ type: GraphQLID })`, prints `ID`) and `ID` (`asField({ type: new GraphQLNonNull(GraphQLID) })`, prints `ID!`). `z.string()` prints `String`, and `.nullish()` does not undo `GraphQLNonNull`.
-9. MUST pass `asyncContextProvider` to `weave` whenever any resolver or middleware calls `useContext<Context>()`; without it `useContext()` throws. If nothing calls `useContext()`, leave it out.
-10. MUST turn each `authScopes` into a `Middleware`. On operations use `.use(guard)`; on a property of an object use `field(...).use(guard).resolve(...)` inside `resolver.of`. A guard on a query does not protect fields of the object it returns.
-11. MUST map `builder.addScalarType` and `Date` to `ZodWeaver.config({ presetGraphQLType })`. Enums are `z.enum([...]).meta({ title })`. Union members are `z.object` with a `__typename` literal, combined by `z.discriminatedUnion("__typename", [...]).meta({ title })`.
-12. MUST replace N+1 patterns (`loadableObject`, `t.loadable`, Prisma/Drizzle relation plugins) with `field(...).load(...)` or the resolver factory's `relationField()`. In tests, execute with `contextValue: {}` or batching is disabled.
-13. MUST replace `builder.toSchema()` with `weave(ZodWeaver, config, ...resolvers)` (add `asyncContextProvider` only when rule 9 applies). A silk that no resolver can reach is not in the SDL.
-14. MUST NOT return an interface silk from a query or field. Declare `asObjectType({ interfaces: [Iface] })` on the implementors and return a union.
-15. MUST NOT hand-translate Relay (`builder.node`, `t.connection`), `@pothos/plugin-errors`, `@pothos/plugin-sub-graph`, or `@pothos/plugin-smart-subscriptions`. Stop and keep Pothos for that module.
-16. MUST NOT uninstall any `@pothos/*` package or mix `builder` and GQLoom resolvers in one file until rule 1 passes for every module.
+| | Pothos | GQLoom |
+| --- | --- | --- |
+| Types | `objectRef` + `implement`, backing type as a generic | Zod / Valibot / ORM model (silk) |
+| Exposed fields | Only those listed with `t.expose*` | Every property of the object; hide with `field.hidden` |
+| Computed and relation fields | `t.field({ resolve })` inside the type | `resolver.of(Silk, { ... })` |
+| Root operations | `builder.queryType`, `mutationType`, `subscriptionType` | `resolver({ ... })` with `query` / `mutation` / `subscription` |
+| Schema | `builder.toSchema()` | `weave(ZodWeaver, ...resolvers)` |
+| Nullability | Set by the builder (Pothos 4: nullable unless `defaultFieldNullability: false`) | Set by the Zod type (non-null unless `.nullish()`) |
+| Validation | `@pothos/plugin-zod`, `@pothos/plugin-validation` | The schema itself |
+| Auth / context | `authScopes`, `context` argument | `Middleware`, `useContext()` |
+| N+1 | `@pothos/plugin-dataloader` | `field().load()` |
 
-## When to migrate, when to stop
+Where Pothos habits break:
 
-Migrate when:
+- Nullability is the other way round. Pothos 4 prints nullable outputs and optional args by default, while a bare Zod type is non-null. Copy nullability from the printed SDL and write `.nullish()` for each nullable output and optional input (rule 2).
+- A Zod object exposes every property. Foreign keys and password hashes that Pothos never exposed need `field.hidden`.
+- Silks hold plain properties only. GQLoom has no circular reference between silks, so relation fields go in `resolver.of`.
+- Input types and object types are separate silks, each with its own title.
+- `useContext()` throws unless `weave` receives `asyncContextProvider`.
 
-- the schema is plain objects, enums, unions, inputs, and simple resolvers, and the `t.exposeX` and `objectRef` ceremony is the main cost;
-- you already keep a Zod or Valibot schema, a Prisma model, or a Drizzle table for each type and Pothos is a third declaration;
-- you use `@pothos/plugin-zod` or `@pothos/plugin-validation` only to validate arguments;
-- you use `@pothos/plugin-scope-auth` for role checks that a middleware can express.
+Migration recommendations:
 
-Stop and evaluate the architecture first when you depend on:
+- The examples use Zod (`@gqloom/zod`). If you already have Valibot schemas or Prisma, Drizzle, or MikroORM models, weave those directly instead of declaring each type a third time.
+- Migrate module by module and keep `@pothos/core` installed meanwhile. Both `GraphQLSchema` instances can coexist: combine them with [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging), or mount them on separate HTTP endpoints.
+- Print the Pothos SDL before you change anything and diff it after every module (see [Verification](#verification)).
 
-- Relay: `builder.node`, `t.connection`, `prismaConnection`, `drizzleConnection`, global IDs. GQLoom has no Relay helpers; you would hand-write the `Connection`, `Edge`, `PageInfo` types and cursor logic, and the SDL will differ.
-- `@pothos/plugin-errors`, `@pothos/plugin-sub-graph`, `@pothos/plugin-smart-subscriptions`, and Pothos "variants" (`variant`, `Viewer` style prisma/drizzle variants). They have no GQLoom equivalent.
-- Fields whose declared type is a GraphQL interface (for example `node(id): Node`). GQLoom cannot return an interface silk from a field (see [gotchas](#gotchas)); a union changes the SDL.
-- `@pothos/plugin-prisma-utils` or `@pothos/plugin-drizzle` generated filter and order inputs. The GQLoom resolver factories generate different input type names, so keep those operations hand-written until clients move.
-- Query planning that the Pothos Prisma or Drizzle plugin does across nested selections (a single `include` tree). GQLoom batches per relation field. Measure query counts before and after.
+## Concept map (executable Pothos → GQLoom)
 
-Migrate module by module. Keep `@pothos/core` installed during the migration. Both `GraphQLSchema` instances can coexist and be combined with [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging), or mounted on separate HTTP endpoints.
-
-## Concept map
-
-The builder below sets `defaultFieldNullability: false`, so unmarked Pothos fields are non-null, like Zod. The block after it is the same schema in GQLoom. `printSchema(lexicographicSortSchema(schema))` of both builds was compared with `diff`: identical (59 lines of SDL).
+The builder below sets `defaultFieldNullability: false`, so unmarked Pothos fields are non-null, like Zod. The second block is the same schema in GQLoom. Both were built, and `printSchema(lexicographicSortSchema(schema))` of each was compared with `diff`: identical (59 lines of SDL).
 
 ::: code-group
 
@@ -332,7 +322,7 @@ type Subscription {
 }
 ```
 
-Lookup table for what the code block above does not show:
+The table covers what the code above does not show:
 
 | Pothos | GQLoom |
 | --- | --- |
@@ -365,7 +355,45 @@ Lookup table for what the code block above does not show:
 | `@pothos/plugin-simple-objects` (`builder.simpleObject`) | `z.object` |
 | `@pothos/plugin-with-input` (`t.fieldWithInput`) | `.input({ input: NamedInputSilk })`, name the input type yourself |
 | `@pothos/plugin-prisma`, `@pothos/plugin-drizzle` | resolver factories and `relationField` (see below) |
-| `@pothos/plugin-relay`, `-errors`, `-sub-graph`, `-smart-subscriptions` | stop (see [When to stop](#when-to-migrate-when-to-stop)) |
+| `@pothos/plugin-relay`, `-errors`, `-sub-graph`, `-smart-subscriptions` | stop (see [When to migrate, when to stop](#when-to-migrate-when-to-stop)) |
+
+## Rules
+
+Follow these rules if this page is all you have. Each one has its snippet further down.
+
+1. MUST save the Pothos SDL before touching code: `printSchema(lexicographicSortSchema(builder.toSchema()))` written to `before.graphql`. The migration is done only when the GQLoom SDL has an empty `diff` and replayed requests return the same JSON.
+2. MUST copy nullability from the printed SDL, never from memory. Pothos 4 prints nullable outputs and optional args unless the builder sets `defaultFieldNullability: false`; Pothos 3 printed non-null outputs. Port every nullable output and every optional input as `.nullish()` (one spelling; `.nullable()` makes TypeScript reject a resolver that returns `undefined`). Everything else is the bare Zod type.
+3. MUST turn each Pothos object type into one `z.object({ ... }).meta({ title: "Name" })`. Do not copy `objectRef`, `implement`, or `builder`.
+4. MUST define every computed or relational field with `resolver.of(Silk, { name: field(type).resolve((parent) => ...) })`. The parent is the first argument of `resolve`; there is no `t` callback and no `ctx` argument.
+5. MUST define every root field with `resolver({ name: query(...) | mutation(...) | subscription(...) })`. Arguments go through `.input({ ... })` only.
+6. MUST hide every property of the Zod object (or ORM model) that Pothos did not expose with `t.expose*`, using `name: field.hidden` inside `resolver.of`. A Zod object exposes every property.
+7. MUST declare input objects as separate silks with their own `.meta({ title })`. MUST NOT use an object silk as an input.
+8. MUST define two ID helpers once: `NullableID` (`asField({ type: GraphQLID })`, prints `ID`) and `ID` (`asField({ type: new GraphQLNonNull(GraphQLID) })`, prints `ID!`). `z.string()` prints `String`, and `.nullish()` does not undo `GraphQLNonNull`.
+9. MUST pass `asyncContextProvider` to `weave` whenever any resolver or middleware calls `useContext<Context>()`; without it `useContext()` throws. If nothing calls `useContext()`, leave it out.
+10. MUST turn each `authScopes` into a `Middleware`. On operations use `.use(guard)`; on a property of an object use `field(...).use(guard).resolve(...)` inside `resolver.of`. A guard on a query does not protect fields of the object it returns.
+11. MUST map `builder.addScalarType` and `Date` to `ZodWeaver.config({ presetGraphQLType })`. Enums are `z.enum([...]).meta({ title })`. Union members are `z.object` with a `__typename` literal, combined by `z.discriminatedUnion("__typename", [...]).meta({ title })`.
+12. MUST replace N+1 patterns (`loadableObject`, `t.loadable`, Prisma/Drizzle relation plugins) with `field(...).load(...)` or the resolver factory's `relationField()`. In tests, execute with `contextValue: {}` or batching is disabled.
+13. MUST replace `builder.toSchema()` with `weave(ZodWeaver, config, ...resolvers)` (add `asyncContextProvider` only when rule 9 applies). A silk that no resolver can reach is not in the SDL.
+14. MUST NOT return an interface silk from a query or field. Declare `asObjectType({ interfaces: [Iface] })` on the implementors and return a union.
+15. MUST NOT hand-translate Relay (`builder.node`, `t.connection`), `@pothos/plugin-errors`, `@pothos/plugin-sub-graph`, or `@pothos/plugin-smart-subscriptions`. Stop and keep Pothos for that module.
+16. MUST NOT uninstall any `@pothos/*` package or mix `builder` and GQLoom resolvers in one file until rule 1 passes for every module.
+
+## When to migrate, when to stop
+
+Migrate when:
+
+- the schema is plain objects, enums, unions, inputs, and simple resolvers, and the `t.exposeX` and `objectRef` ceremony is the main cost;
+- you already keep a Zod or Valibot schema, a Prisma model, or a Drizzle table for each type and Pothos is a third declaration;
+- you use `@pothos/plugin-zod` or `@pothos/plugin-validation` only to validate arguments;
+- you use `@pothos/plugin-scope-auth` for role checks that a middleware can express.
+
+Stop and look at the architecture first if you depend on:
+
+- Relay: `builder.node`, `t.connection`, `prismaConnection`, `drizzleConnection`, global IDs. GQLoom has no Relay helpers. You would hand-write the `Connection`, `Edge`, `PageInfo` types and cursor logic, and the SDL will differ.
+- `@pothos/plugin-errors`, `@pothos/plugin-sub-graph`, `@pothos/plugin-smart-subscriptions`, and Pothos "variants" (`variant`, `Viewer` style prisma/drizzle variants). GQLoom has no equivalent for them.
+- Fields whose declared type is a GraphQL interface (for example `node(id): Node`). GQLoom cannot return an interface silk from a field (see [Gotchas](#gotchas)), and a union changes the SDL.
+- `@pothos/plugin-prisma-utils` or `@pothos/plugin-drizzle` generated filter and order inputs. The GQLoom resolver factories generate different input type names, so keep those operations hand-written until clients move.
+- Query planning that the Pothos Prisma or Drizzle plugin does across nested selections (a single `include` tree). GQLoom batches per relation field. Measure query counts before and after.
 
 ## Migration practices
 
@@ -789,7 +817,7 @@ Check query counts yourself before and after: enable `log: ["query"]` (Prisma) o
 
 ## Gotchas
 
-Each item shows the wrong result that was observed and the fix.
+Each item shows the wrong result that was observed, then the fix.
 
 - Nullability: the Pothos 4 SDL has `title: String`. Writing `title: z.string()` prints `String!`, which changes how errors propagate. Writing `z.string().nullable()` prints `String` but fails type-checking when a resolver returns `undefined` (`Map.get(...)`): `Type 'IUser | undefined' is not assignable to type 'MayPromise<... | null>'`.
 
@@ -853,7 +881,7 @@ Each item shows the wrong result that was observed and the fix.
 
 ## Verification
 
-The goal of migration is an unchanged contract and unchanged behavior.
+The migration must leave the SDL and the responses unchanged.
 
 1. Before any change, print the Pothos SDL:
 
@@ -1136,14 +1164,14 @@ export const schema = builder.toSchema()
 
 :::
 
-Differences you must know about:
+Differences from the Pothos version:
 
 - Pothos lists `t.exposeID("id")`, `t.exposeString("title")`, and so on. The Zod objects list the same properties once, and `authorId` / `postId` stay private through `field.hidden`.
 - Pothos `User.implement`, `Post.implement`, and `Comment.implement` reference each other through refs. GQLoom has no circular reference: relation fields live in `resolver.of` and refer to silks that only hold scalar properties.
 - The Pothos resolvers return `Users.get(...)`, a possibly-undefined value, for nullable fields. The ported resolvers do the same, which is why outputs use `.nullish()`: it accepts `undefined` from the resolver and GraphQL prints `null`.
 - `post.id`, `user.id`, `comment.id` print `ID`, as in Pothos 4, because `NullableID` is `GraphQLID` without `NonNull`. Query arguments print `ID!` because they use `ID`.
 
-Verification of this port: `diff` of `printSchema(lexicographicSortSchema(schema))` is empty, and the following requests return identical JSON on both schemas using the same seeded data: `{ post(id: "2") { id title author { fullName posts { id } } comments { comment post { id } } } }`, `{ posts(take: 2, skip: 1) { id } user(id: "3") { fullName comments { id } } }`, `{ post(id: "999") { id } }`, and `{ post { id } }` (missing required argument).
+For this port, the `diff` of `printSchema(lexicographicSortSchema(schema))` is empty, and these requests return identical JSON on both schemas with the same seeded data: `{ post(id: "2") { id title author { fullName posts { id } } comments { comment post { id } } } }`, `{ posts(take: 2, skip: 1) { id } user(id: "3") { fullName comments { id } } }`, `{ post(id: "999") { id } }`, and `{ post { id } }` (missing required argument).
 
 ## Cleanup
 

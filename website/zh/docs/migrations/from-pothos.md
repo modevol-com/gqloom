@@ -2,9 +2,9 @@
 
 ## 为什么迁到 GQLoom
 
-Pothos 通过 `SchemaBuilder` 实例构建 GraphQL Schema：每个类型都要在 builder 上声明（`objectRef` + `implement`、`t.exposeX('field')`），并把底层 TypeScript 类型作为泛型传给 builder。GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema，不需要 builder 实例。
+Pothos 通过 `SchemaBuilder` 实例构建 GraphQL Schema。每个类型都要在 builder 上声明（`objectRef` + `implement`、`t.exposeX('field')`），底层 TypeScript 类型作为泛型传入。GQLoom 把运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）直接编织为 GraphQL Schema，没有 builder 实例。
 
-下表数据来自把 Pothos 官方 [`examples/simple-interfaces`](https://github.com/hayes/pothos/tree/main/examples/simple-interfaces)（`@pothos/core` 4.18.0，`graphql` 16.14.2）移植到 GQLoom 的实测结果。完整移植见[参考实现](#参考实现)。
+下表数据来自把 Pothos 官方 [`examples/simple-interfaces`](https://github.com/hayes/pothos/tree/main/examples/simple-interfaces)（`@pothos/core` 4.18.0，`graphql` 16.14.2）移植到 GQLoom 的实测结果。移植代码见[参考实现](#参考实现)。
 
 | 同一示例的实测对比 | Pothos | GQLoom（Zod） |
 | --- | --- | --- |
@@ -17,58 +17,48 @@ Pothos 通过 `SchemaBuilder` 实例构建 GraphQL Schema：每个类型都要�
 | 重放 4 条请求（3 条数据查询、1 条校验错误） | 不适用 | JSON 完全一致，包括错误文本 |
 | `package.json` 中的运行时依赖 | `@pothos/core` | `@gqloom/core`、`@gqloom/zod`、`zod` |
 
-移植保留了 `data.ts` 中的 `IPost` 接口，这样 `data.ts` 无需改动；改用 `z.infer<typeof Post>` 并删除接口是可选的。
+移植保留了 `IPost` 接口，所以 `data.ts` 不用改。你也可以改用 `z.infer<typeof Post>` 并删掉它。
 
-这张表没有声称的事情：在这么小的 Schema 上，移植后的代码并没有明显更短，并且多了 `zod` 依赖。收益体现在移除插件之后。完整迁移后可以卸载 `@pothos/core` 与所有 `@pothos/plugin-*` 包，去掉 `PrismaTypes` 泛型与 `prisma-pothos-types` 生成器，也不再需要在 Prisma Schema 或 Drizzle 表旁边再维护一份模型声明。
+在这么小的 Schema 上，移植后的代码并不更短，还多了 `zod` 依赖。省下的东西要在移除插件之后才出现：完整迁移后可以卸载 `@pothos/core` 与所有 `@pothos/plugin-*` 包，去掉 `PrismaTypes` 泛型与 `prisma-pothos-types` 生成器，也不用在 Prisma Schema 或 Drizzle 表旁边再维护一份模型声明。
 
-- 一份运行时 Schema 或 ORM 模型作为唯一事实源。TypeScript 类型由其推导，GraphQL 类型由其编织，输入校验由 Schema 自身完成（不再需要 `@pothos/plugin-zod` 或 `@pothos/plugin-validation`）。
-- Prisma、Drizzle、MikroORM 模型可直接作为丝线（Silk）使用，解析器工厂生成 CRUD 操作与关联字段。
-- `field().load()` 批量加载关联数据，替代 `@pothos/plugin-dataloader`，无需 `loadableObject` 声明。
+- 一份运行时 Schema 或 ORM 模型就是事实源。TypeScript 类型由它推导，GraphQL 类型由它编织，输入校验也由它完成，所以不再需要 `@pothos/plugin-zod` 或 `@pothos/plugin-validation`。
+- Prisma、Drizzle、MikroORM 模型可以直接当作丝线（Silk）使用，解析器工厂生成 CRUD 操作与关联字段。
+- `field().load()` 批量加载关联数据，替代 `@pothos/plugin-dataloader`，不需要 `loadableObject` 声明。
 - 中间件与 `useContext()` 替代 `@pothos/plugin-scope-auth` 以及每个解析函数的 `context` 参数。
 
-## 规则
+## 概述与心智转变
 
-只读这一页的模型也必须遵守下列规则。每条规则在后文都有对应代码。
+在 Pothos 里，builder 就是 Schema：类型注册在 builder 上，底层 TypeScript 类型作为泛型传入。在 GQLoom 里，Zod 对象（或 ORM 模型）本身就是类型，最后由 `weave` 把解析器收集成 Schema。
 
-1. 必须在改动代码前保存 Pothos 的 SDL：把 `printSchema(lexicographicSortSchema(builder.toSchema()))` 写入 `before.graphql`。只有当 GQLoom 的 SDL `diff` 为空，且重放的请求返回相同 JSON 时，迁移才算完成。
-2. 必须从打印出的 SDL 抄可空性，不要凭记忆。Pothos 4 在 builder 未设置 `defaultFieldNullability: false` 时输出可空字段、可选参数；Pothos 3 输出非空字段。每个可空输出与每个可选输入都写成 `.nullish()`（统一写法；`.nullable()` 会让 TypeScript 拒绝返回 `undefined` 的解析函数），其余使用不带修饰的 Zod 类型。
-3. 必须把每个 Pothos 对象类型改写为一个 `z.object({ ... }).meta({ title: "Name" })`。不要照搬 `objectRef`、`implement`、`builder`。
-4. 必须用 `resolver.of(Silk, { name: field(type).resolve((parent) => ...) })` 定义每个计算字段或关联字段。parent 是 `resolve` 的第一个参数；没有 `t` 回调，也没有 `ctx` 参数。
-5. 必须用 `resolver({ name: query(...) | mutation(...) | subscription(...) })` 定义每个根字段。参数只能通过 `.input({ ... })` 传入。
-6. 必须用 `resolver.of` 中的 `name: field.hidden` 隐藏 Pothos 没有用 `t.expose*` 暴露的每个属性。Zod 对象会暴露全部属性。
-7. 必须把输入对象声明为独立的 Silk，并各自使用 `.meta({ title })`。禁止把对象 Silk 当作输入。
-8. 必须一次性定义两个 ID 辅助常量：`NullableID`（`asField({ type: GraphQLID })`，输出 `ID`）与 `ID`（`asField({ type: new GraphQLNonNull(GraphQLID) })`，输出 `ID!`）。`z.string()` 输出 `String`，`.nullish()` 不会撤销 `GraphQLNonNull`。
-9. 只要有任何解析函数或中间件调用 `useContext<Context>()`，就必须把 `asyncContextProvider` 传给 `weave`；缺少它时 `useContext()` 会抛错。如果没有任何地方调用 `useContext()`，则不要传。
-10. 必须把每个 `authScopes` 改写为 `Middleware`。操作使用 `.use(guard)`；对象的属性使用 `resolver.of` 中的 `field(...).use(guard).resolve(...)`。加在 query 上的守卫不会保护其返回对象的字段。
-11. 必须把 `builder.addScalarType` 与 `Date` 映射到 `ZodWeaver.config({ presetGraphQLType })`。枚举写成 `z.enum([...]).meta({ title })`。联合成员是带 `__typename` 字面量的 `z.object`，用 `z.discriminatedUnion("__typename", [...]).meta({ title })` 组合。
-12. 必须用 `field(...).load(...)` 或解析器工厂的 `relationField()` 替代 N+1 写法（`loadableObject`、`t.loadable`、Prisma/Drizzle 关联插件）。测试中执行时要传入 `contextValue: {}`，否则批处理不会生效。
-13. 必须用 `weave(ZodWeaver, config, ...resolvers)` 替代 `builder.toSchema()`（仅在规则 9 适用时才加入 `asyncContextProvider`）。没有任何解析器可达的 Silk 不会出现在 SDL 中。
-14. 禁止从 query 或字段返回接口 Silk。在实现类型上声明 `asObjectType({ interfaces: [Iface] })`，并返回联合类型。
-15. 禁止凭猜测手工翻译 Relay（`builder.node`、`t.connection`）、`@pothos/plugin-errors`、`@pothos/plugin-sub-graph`、`@pothos/plugin-smart-subscriptions`。应当停下，该模块继续使用 Pothos。
-16. 在每个模块都通过规则 1 之前，禁止卸载任何 `@pothos/*` 包，也禁止在同一文件中混用 `builder` 与 GQLoom 解析器。
+| | Pothos | GQLoom |
+| --- | --- | --- |
+| 类型 | `objectRef` + `implement`，底层类型作为泛型 | Zod / Valibot / ORM 模型（Silk） |
+| 暴露的字段 | 只有用 `t.expose*` 列出的 | 对象的全部属性；用 `field.hidden` 隐藏 |
+| 计算字段与关联字段 | 类型内部的 `t.field({ resolve })` | `resolver.of(Silk, { ... })` |
+| 根操作 | `builder.queryType`、`mutationType`、`subscriptionType` | `resolver({ ... })` 中的 `query` / `mutation` / `subscription` |
+| Schema | `builder.toSchema()` | `weave(ZodWeaver, ...resolvers)` |
+| 可空性 | 由 builder 决定（Pothos 4：除非 `defaultFieldNullability: false`，否则可空） | 由 Zod 类型决定（除非 `.nullish()`，否则非空） |
+| 校验 | `@pothos/plugin-zod`、`@pothos/plugin-validation` | Schema 本身 |
+| 鉴权 / 上下文 | `authScopes`、`context` 参数 | `Middleware`、`useContext()` |
+| N+1 | `@pothos/plugin-dataloader` | `field().load()` |
 
-## 何时迁移与何时停止
+Pothos 习惯会在这几处出错：
 
-适合迁移的情形：
+- 可空性正好相反。Pothos 4 默认输出可空字段与可选参数，而不带修饰的 Zod 类型是非空的。可空性以打印出的 SDL 为准，每个可空输出与可选输入都写 `.nullish()`（规则 2）。
+- Zod 对象会暴露全部属性。Pothos 从未暴露的外键、密码哈希需要用 `field.hidden` 隐藏。
+- Silk 只放普通属性。GQLoom 的 Silk 之间没有循环引用，关联字段写在 `resolver.of` 中。
+- 输入类型与对象类型是不同的 Silk，各自带 title。
+- 不给 `weave` 传 `asyncContextProvider`，`useContext()` 就会抛错。
 
-- Schema 主要是普通对象、枚举、联合、输入与简单解析函数，`t.exposeX` 与 `objectRef` 的样板代码是主要成本；
-- 项目已经为每个类型维护了 Zod 或 Valibot Schema、Prisma 模型或 Drizzle 表，Pothos 成了第三份声明；
-- 只是为了校验参数才使用 `@pothos/plugin-zod` 或 `@pothos/plugin-validation`；
-- 使用 `@pothos/plugin-scope-auth` 做中间件即可表达的角色检查。
+迁移建议：
 
-出现下列依赖时，请先评估架构，不要直接迁移：
+- 示例使用 Zod（`@gqloom/zod`）。如果项目里已有 Valibot Schema，或 Prisma、Drizzle、MikroORM 模型，直接编织它们，不要为同一个类型再声明第三份。
+- 按模块逐步迁移，期间保留 `@pothos/core`。两个 `GraphQLSchema` 实例可以共存：用 [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging) 合并，或分别挂载到不同的 HTTP 路由。
+- 改动之前先打印 Pothos 的 SDL，每迁移一个模块就 diff 一次（见[验证](#验证)）。
 
-- Relay：`builder.node`、`t.connection`、`prismaConnection`、`drizzleConnection`、全局 ID。GQLoom 没有 Relay 辅助工具，需要手写 `Connection`、`Edge`、`PageInfo` 类型与游标逻辑，且 SDL 会不同。
-- `@pothos/plugin-errors`、`@pothos/plugin-sub-graph`、`@pothos/plugin-smart-subscriptions` 以及 Pothos 的“变体”（`variant`、`Viewer` 风格的 Prisma/Drizzle 变体）。GQLoom 没有对应能力。
-- 声明类型为 GraphQL 接口的字段（例如 `node(id): Node`）。GQLoom 无法从字段返回接口 Silk（见[陷阱](#陷阱)）；改用联合会改变 SDL。
-- `@pothos/plugin-prisma-utils` 或 `@pothos/plugin-drizzle` 生成的过滤与排序输入。GQLoom 解析器工厂生成的输入类型名不同，在客户端迁移之前请保持这些操作手写。
-- Pothos 的 Prisma/Drizzle 插件在嵌套选择集上做的查询规划（单个 `include` 树）。GQLoom 按关联字段分批加载。请在迁移前后对比查询次数。
+## 核心概念与映射表（可运行的 Pothos → GQLoom）
 
-按模块逐步迁移。迁移期间保留 `@pothos/core`。两个 `GraphQLSchema` 实例可以共存，并通过 [`mergeSchemas`](https://the-guild.dev/graphql/tools/docs/schema-merging) 合并，或分别挂载到不同的 HTTP 路由。
-
-## 核心概念与映射表
-
-下面的 builder 设置了 `defaultFieldNullability: false`，所以未标注的 Pothos 字段为非空，与 Zod 一致。其后的代码块是同一份 Schema 的 GQLoom 版本。两边构建结果的 `printSchema(lexicographicSortSchema(schema))` 用 `diff` 比较过：完全一致（59 行 SDL）。
+下面的 builder 设置了 `defaultFieldNullability: false`，所以未标注的 Pothos 字段为非空，与 Zod 一致。第二个代码块是同一份 Schema 的 GQLoom 版本。两边都构建过，并用 `diff` 比较了各自的 `printSchema(lexicographicSortSchema(schema))`：完全一致（59 行 SDL）。
 
 ::: code-group
 
@@ -332,7 +322,7 @@ type Subscription {
 }
 ```
 
-上面的代码没有覆盖到的映射：
+上面的代码没有覆盖到的映射见下表：
 
 | Pothos | GQLoom |
 | --- | --- |
@@ -366,6 +356,44 @@ type Subscription {
 | `@pothos/plugin-with-input`（`t.fieldWithInput`） | `.input({ input: NamedInputSilk })`，自行命名输入类型 |
 | `@pothos/plugin-prisma`、`@pothos/plugin-drizzle` | 解析器工厂与 `relationField`（见下文） |
 | `@pothos/plugin-relay`、`-errors`、`-sub-graph`、`-smart-subscriptions` | 停止（见[何时迁移与何时停止](#何时迁移与何时停止)） |
+
+## 规则
+
+如果手头只有这一页，请遵守下列规则。每条在后文都有对应代码。
+
+1. 必须在改动代码前保存 Pothos 的 SDL：把 `printSchema(lexicographicSortSchema(builder.toSchema()))` 写入 `before.graphql`。只有当 GQLoom 的 SDL `diff` 为空，且重放的请求返回相同 JSON 时，迁移才算完成。
+2. 必须从打印出的 SDL 抄可空性，不要凭记忆。Pothos 4 在 builder 未设置 `defaultFieldNullability: false` 时输出可空字段、可选参数；Pothos 3 输出非空字段。每个可空输出与每个可选输入都写成 `.nullish()`（统一写法；`.nullable()` 会让 TypeScript 拒绝返回 `undefined` 的解析函数），其余使用不带修饰的 Zod 类型。
+3. 必须把每个 Pothos 对象类型改写为一个 `z.object({ ... }).meta({ title: "Name" })`。不要照搬 `objectRef`、`implement`、`builder`。
+4. 必须用 `resolver.of(Silk, { name: field(type).resolve((parent) => ...) })` 定义每个计算字段或关联字段。parent 是 `resolve` 的第一个参数；没有 `t` 回调，也没有 `ctx` 参数。
+5. 必须用 `resolver({ name: query(...) | mutation(...) | subscription(...) })` 定义每个根字段。参数只能通过 `.input({ ... })` 传入。
+6. 必须用 `resolver.of` 中的 `name: field.hidden` 隐藏 Pothos 没有用 `t.expose*` 暴露的每个属性。Zod 对象会暴露全部属性。
+7. 必须把输入对象声明为独立的 Silk，并各自使用 `.meta({ title })`。禁止把对象 Silk 当作输入。
+8. 必须一次性定义两个 ID 辅助常量：`NullableID`（`asField({ type: GraphQLID })`，输出 `ID`）与 `ID`（`asField({ type: new GraphQLNonNull(GraphQLID) })`，输出 `ID!`）。`z.string()` 输出 `String`，`.nullish()` 不会撤销 `GraphQLNonNull`。
+9. 只要有任何解析函数或中间件调用 `useContext<Context>()`，就必须把 `asyncContextProvider` 传给 `weave`；缺少它时 `useContext()` 会抛错。如果没有任何地方调用 `useContext()`，则不要传。
+10. 必须把每个 `authScopes` 改写为 `Middleware`。操作使用 `.use(guard)`；对象的属性使用 `resolver.of` 中的 `field(...).use(guard).resolve(...)`。加在 query 上的守卫不会保护其返回对象的字段。
+11. 必须把 `builder.addScalarType` 与 `Date` 映射到 `ZodWeaver.config({ presetGraphQLType })`。枚举写成 `z.enum([...]).meta({ title })`。联合成员是带 `__typename` 字面量的 `z.object`，用 `z.discriminatedUnion("__typename", [...]).meta({ title })` 组合。
+12. 必须用 `field(...).load(...)` 或解析器工厂的 `relationField()` 替代 N+1 写法（`loadableObject`、`t.loadable`、Prisma/Drizzle 关联插件）。测试中执行时要传入 `contextValue: {}`，否则批处理不会生效。
+13. 必须用 `weave(ZodWeaver, config, ...resolvers)` 替代 `builder.toSchema()`（仅在规则 9 适用时才加入 `asyncContextProvider`）。没有任何解析器可达的 Silk 不会出现在 SDL 中。
+14. 禁止从 query 或字段返回接口 Silk。在实现类型上声明 `asObjectType({ interfaces: [Iface] })`，并返回联合类型。
+15. 禁止凭猜测手工翻译 Relay（`builder.node`、`t.connection`）、`@pothos/plugin-errors`、`@pothos/plugin-sub-graph`、`@pothos/plugin-smart-subscriptions`。应当停下，该模块继续使用 Pothos。
+16. 在每个模块都通过规则 1 之前，禁止卸载任何 `@pothos/*` 包，也禁止在同一文件中混用 `builder` 与 GQLoom 解析器。
+
+## 何时迁移与何时停止
+
+适合迁移的情形：
+
+- Schema 主要是普通对象、枚举、联合、输入与简单解析函数，`t.exposeX` 与 `objectRef` 的样板代码是主要成本；
+- 项目已经为每个类型维护了 Zod 或 Valibot Schema、Prisma 模型或 Drizzle 表，Pothos 成了第三份声明；
+- 只是为了校验参数才使用 `@pothos/plugin-zod` 或 `@pothos/plugin-validation`；
+- 使用 `@pothos/plugin-scope-auth` 做中间件即可表达的角色检查。
+
+如果依赖下列能力，先看架构，不要直接迁移：
+
+- Relay：`builder.node`、`t.connection`、`prismaConnection`、`drizzleConnection`、全局 ID。GQLoom 没有 Relay 辅助工具，你得手写 `Connection`、`Edge`、`PageInfo` 类型与游标逻辑，且 SDL 会不同。
+- `@pothos/plugin-errors`、`@pothos/plugin-sub-graph`、`@pothos/plugin-smart-subscriptions` 以及 Pothos 的“变体”（`variant`、`Viewer` 风格的 Prisma/Drizzle 变体）。GQLoom 没有对应的能力。
+- 声明类型为 GraphQL 接口的字段（例如 `node(id): Node`）。GQLoom 无法从字段返回接口 Silk（见[陷阱](#陷阱)）；改用联合会改变 SDL。
+- `@pothos/plugin-prisma-utils` 或 `@pothos/plugin-drizzle` 生成的过滤与排序输入。GQLoom 解析器工厂生成的输入类型名不同，在客户端迁移之前请保持这些操作手写。
+- Pothos 的 Prisma/Drizzle 插件在嵌套选择集上做的查询规划（单个 `include` 树）。GQLoom 按关联字段分批加载。请在迁移前后对比查询次数。
 
 ## 关键迁移实践
 
@@ -789,7 +817,7 @@ export const postFields = resolver.of(Post, {
 
 ## 陷阱
 
-每一项都给出实际观察到的错误结果与修正方式。
+每一项先给出实际观察到的错误结果，再给出修正方式。
 
 - 可空性：Pothos 4 的 SDL 是 `title: String`。写成 `title: z.string()` 会输出 `String!`，改变错误的传播方式。写成 `z.string().nullable()` 虽然输出 `String`，但当解析函数返回 `undefined`（如 `Map.get(...)`）时无法通过类型检查：`Type 'IUser | undefined' is not assignable to type 'MayPromise<... | null>'`。
 
@@ -853,7 +881,7 @@ export const postFields = resolver.of(Post, {
 
 ## 验证
 
-迁移的目标是契约不变、行为不变。
+迁移后 SDL 与响应都必须保持不变。
 
 1. 在改动之前，打印 Pothos 的 SDL：
 
@@ -1136,14 +1164,14 @@ export const schema = builder.toSchema()
 
 :::
 
-需要了解的差异：
+与 Pothos 版本的差异：
 
 - Pothos 逐个列出 `t.exposeID("id")`、`t.exposeString("title")` 等。Zod 对象只需列出一次相同的属性，`authorId` / `postId` 通过 `field.hidden` 保持私有。
 - Pothos 的 `User.implement`、`Post.implement`、`Comment.implement` 通过引用相互指向。GQLoom 没有循环引用：关联字段位于 `resolver.of` 中，并引用只包含标量属性的 Silk。
 - Pothos 对可空字段返回 `Users.get(...)`，即可能为 undefined 的值。移植后的解析函数做法相同，这正是输出使用 `.nullish()` 的原因：它接受解析函数返回的 `undefined`，GraphQL 输出 `null`。
 - 与 Pothos 4 一样，`post.id`、`user.id`、`comment.id` 输出 `ID`，因为 `NullableID` 是不带 `NonNull` 的 `GraphQLID`。查询参数使用 `ID`，因此输出 `ID!`。
 
-本次移植的验证：`printSchema(lexicographicSortSchema(schema))` 的 `diff` 为空；使用相同的种子数据，下列请求在两份 Schema 上返回完全相同的 JSON：`{ post(id: "2") { id title author { fullName posts { id } } comments { comment post { id } } } }`、`{ posts(take: 2, skip: 1) { id } user(id: "3") { fullName comments { id } } }`、`{ post(id: "999") { id } }` 以及 `{ post { id } }`（缺少必填参数）。
+这次移植的检查结果：`printSchema(lexicographicSortSchema(schema))` 的 `diff` 为空；使用相同的种子数据，下列请求在两份 Schema 上返回完全相同的 JSON：`{ post(id: "2") { id title author { fullName posts { id } } comments { comment post { id } } } }`、`{ posts(take: 2, skip: 1) { id } user(id: "3") { fullName comments { id } } }`、`{ post(id: "999") { id } }` 以及 `{ post { id } }`（缺少必填参数）。
 
 ## 清理
 
