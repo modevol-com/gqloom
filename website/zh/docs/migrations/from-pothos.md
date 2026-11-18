@@ -2,11 +2,12 @@
 
 ## 为什么迁到 GQLoom
 
-Pothos 通过共享的 `SchemaBuilder` 实例和 `t` 回调注册所有类型、字段与插件。GQLoom 把数据定义和业务逻辑拆开：运行时 Schema 与 ORM 模型直接充当丝线（Silk），解析器承载操作与字段逻辑，最后由 `weave()` 编织出 `GraphQLSchema`。
+在 Pothos 里，类型要先向 builder 声明：创建 `objectRef`，再 `implement`，每个字段都通过 `t` 描述。TypeScript 类型和 GraphQL Schema 成了两份要同步的描述，校验、鉴权、Prisma 这些能力又各自以插件的形式，在 `t` 上多出一套选项。
 
-- 用一份定义代替 `t.expose*`：Zod、Valibot 或 Yup Schema 本身就包含 TypeScript 类型、GraphQL 结构与输入校验，不用再单独维护 `objectRef` 映射或接入校验插件。
-- 不依赖共享 builder 的独立模块：`resolver()` 与 `resolver.of()` 都是直接传给 `weave()` 的普通对象，模块间无需引用同一个 `builder`、嵌套 `t` 回调，也不用为了避开循环引用而把 `objectRef` 和 `implement` 拆开写。
-- 原生 ORM 丝线与字段级批处理：Prisma、Drizzle、MikroORM 模型可直接配合 `resolver.of()` 和解析器工厂（`PrismaResolverFactory`、`drizzleResolverFactory`）使用，省去 `prismaObject` 与 `PrismaTypes` 配置；关联批处理通过字段上的 `field().load()` 完成，无需额外声明 `loadableObject`。
+GQLoom 从你多半已经有的类型出发。Zod、Valibot、Yup 的 Schema，或者 Prisma、Drizzle、MikroORM 的模型，本身就是 GraphQL 类型。解析器负责给它加上查询和字段，最后由 `weave()` 汇总成 `GraphQLSchema`。
+
+- 更熟悉的 Schema 类型。`z.object` 就是对象类型，`z.enum` 就是枚举，`.nullish()` 表示可空。不用再另学一套 `t.string`、`t.exposeString`。
+- 更直观的心智模型。数据是 Schema，行为是解析器，Schema 在调用 `weave()` 的地方生成。不用到处引入共享的 builder，不用理顺 `objectRef` 的先后顺序，也不用去找某个能力属于哪个插件。
 
 ## 概述与心智转变
 

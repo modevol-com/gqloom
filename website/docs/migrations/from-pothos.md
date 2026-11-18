@@ -2,11 +2,12 @@
 
 ## Why GQLoom
 
-Pothos registers every type, field, and plugin onto a shared `SchemaBuilder` instance through `t` callbacks. GQLoom splits data from behavior: runtime schemas and ORM models act as silks, resolvers hold operations and field logic, and `weave()` builds the `GraphQLSchema`.
+In Pothos, a type is something you declare to the builder: create an `objectRef`, `implement` it, and describe each field through `t`. Your TypeScript types and your GraphQL schema end up as two descriptions you keep in sync, and features like validation, auth, or Prisma each arrive as a plugin with its own options on `t`.
 
-- One definition instead of `t.expose*`: a Zod, Valibot, or Yup schema already carries your TypeScript type, GraphQL shape, and input validation, with no separate `objectRef` mapping or validation plugin.
-- Plain modules with no shared builder: `resolver()` and `resolver.of()` are standalone objects passed to `weave()`, so modules don't import a central `builder`, nest `t` callbacks, or split `objectRef` and `implement` to break circular references.
-- Direct ORM silks and field-level batching: Prisma, Drizzle, and MikroORM models work straight in `resolver.of()` and resolver factories (`PrismaResolverFactory`, `drizzleResolverFactory`) without `prismaObject` or `PrismaTypes` wiring, and `field().load()` attaches DataLoader batching to the field instead of declaring a `loadableObject`.
+GQLoom starts from a type you probably already have. A Zod, Valibot, or Yup schema, or a Prisma, Drizzle, or MikroORM model, is the GraphQL type. Resolvers add queries and fields to it, and `weave()` collects them into a `GraphQLSchema`.
+
+- Schema types you already know. `z.object` is an object type, `z.enum` is an enum, and `.nullish()` marks nullability. There is no second vocabulary of `t.string` and `t.exposeString` to learn.
+- A simpler mental model. Data is a schema, behavior is a resolver, and the schema is built where you call `weave()`. No shared builder to import everywhere, no `objectRef` ordering to untangle, and no hunting for which plugin owns a feature.
 
 ## Overview and mental model
 
