@@ -2,12 +2,11 @@
 
 ## 为什么迁到 GQLoom
 
-Pothos 通过 `SchemaBuilder` 实例（`objectRef`、`implement`、`t.expose*`）构建 GraphQL Schema。GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema，无需 builder 实例。
+Pothos 通过 `SchemaBuilder` 实例（`objectRef`、`implement`、`t.expose*`）构建 GraphQL Schema。GQLoom 直接将 Zod、Valibot、Yup 或 Prisma、Drizzle、MikroORM 等现成的 Schema 与模型编织为 GraphQL Schema，不需要 builder 实例。
 
-- 一份运行时 Schema 或 ORM 模型作为唯一事实源。TypeScript 类型由其推导，GraphQL 类型由其编织，输入校验由 Schema 自身完成，不再需要 `@pothos/plugin-zod` 或 `@pothos/plugin-validation`。
-- 更少的样板代码：无需编写 `SchemaBuilder` 泛型、`objectRef` + `implement` 块以及为每个属性手写以字符串为键的 `t.expose*` 声明。
-- 直接将 Prisma、Drizzle 与 MikroORM 模型作为丝线（Silk）使用，通过解析器工厂生成 CRUD 操作与关联字段，无需在 ORM Schema 旁边再维护一份平行声明。
-- `field().load()` 批量处理关联查询的 N+1 问题，替代 `@pothos/plugin-dataloader`，无需 `loadableObject` 声明。
+- 更熟悉的 Schema 类型：用 Zod、Valibot 或现有的 Prisma、Drizzle、MikroORM 模型定义类型，而不必使用 `objectRef`、`t.expose*`、`t.arg.*` 这套 builder API。同一份定义同时提供 TypeScript 类型、GraphQL 类型与输入校验，不需要 `@pothos/plugin-zod`、`@pothos/plugin-validation`，也不用再在 ORM 旁边维护平行的模型声明。
+- 更直觉的心智模型：Schema 只描述数据结构，`resolver` 与 `resolver.of` 负责查询、变更与字段逻辑。写好的解析器直接传给 `weave()` 即可，不需要中心化的 `SchemaBuilder`、`t` 回调或用来规避循环引用的 `objectRef`。
+- 更简单的关联与批处理：ORM 模型可直接作为丝线（Silk），由解析器工厂生成 CRUD 与关联字段；N+1 批处理通过字段上的 `field().load()` 完成，无需额外配置 `loadableObject`。
 
 ## 概述与心智转变
 

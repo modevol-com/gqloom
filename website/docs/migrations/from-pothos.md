@@ -2,12 +2,11 @@
 
 ## Why GQLoom
 
-Pothos builds a GraphQL schema through a `SchemaBuilder` instance (`objectRef`, `implement`, `t.expose*`). GQLoom weaves runtime schemas (such as Zod, Valibot, or Yup) and ORM models (such as Prisma, Drizzle, or MikroORM) into GraphQL schemas with no builder instance.
+Pothos builds a GraphQL schema through a `SchemaBuilder` instance (`objectRef`, `implement`, `t.expose*`). GQLoom weaves schemas and models you already use—Zod, Valibot, Yup, or Prisma, Drizzle, and MikroORM—into GraphQL schemas with no builder instance.
 
-- One runtime schema or ORM model is the single source of truth. TypeScript types are inferred from it, GraphQL types are woven from it, and inputs are validated by the schema itself without `@pothos/plugin-zod` or `@pothos/plugin-validation`.
-- Less boilerplate: you drop the `SchemaBuilder` generic, `objectRef` + `implement` blocks, and string-keyed `t.expose*` declarations for every property.
-- Direct reuse of Prisma, Drizzle, and MikroORM models as silks, with resolver factories generating CRUD operations and relation fields instead of maintaining a parallel model layer next to your ORM schema.
-- `field().load()` batches relational N+1 queries without `@pothos/plugin-dataloader` or `loadableObject` declarations.
+- More familiar schema types: write types with Zod, Valibot, or your Prisma, Drizzle, and MikroORM models instead of Pothos's `objectRef`, `t.expose*`, and `t.arg.*` APIs. That single definition provides TypeScript types, GraphQL types, and input validation without `@pothos/plugin-zod`, `@pothos/plugin-validation`, or a parallel model declaration next to your ORM.
+- More intuitive mental model: schemas hold data shapes, while `resolver` and `resolver.of` hold queries, mutations, and field logic. You pass resolvers straight to `weave()` instead of routing everything through a central `SchemaBuilder`, `t` callbacks, or `objectRef` indirection.
+- Simpler relations and batching: ORM models work directly as silks with resolver factories for CRUD and relation fields, and `field().load()` batches N+1 queries right on the field instead of setting up `loadableObject` types.
 
 ## Overview and mental model
 
