@@ -2,14 +2,12 @@
 
 ## 为什么迁到 GQLoom
 
-Pothos 通过 `SchemaBuilder` 实例（`objectRef`、`implement`、`t.expose*`）构建 GraphQL Schema，并把底层 TypeScript 类型作为泛型传给 builder。GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema，无需 builder 实例。
+Pothos 通过 `SchemaBuilder` 实例（`objectRef`、`implement`、`t.expose*`）构建 GraphQL Schema。GQLoom 直接将运行时 Schema（如 Zod、Valibot、Yup）或 ORM 模型（如 Prisma、Drizzle、MikroORM）编织为 GraphQL Schema，无需 builder 实例。
 
 - 一份运行时 Schema 或 ORM 模型作为唯一事实源。TypeScript 类型由其推导，GraphQL 类型由其编织，输入校验由 Schema 自身完成，不再需要 `@pothos/plugin-zod` 或 `@pothos/plugin-validation`。
 - 更少的样板代码：无需编写 `SchemaBuilder` 泛型、`objectRef` + `implement` 块以及为每个属性手写以字符串为键的 `t.expose*` 声明。
-- 完整迁移后可以卸载 `@pothos/core` 与所有 `@pothos/plugin-*` 包，并移除 `PrismaTypes` 泛型与 `prisma-pothos-types` 生成器。
 - 直接将 Prisma、Drizzle 与 MikroORM 模型作为丝线（Silk）使用，通过解析器工厂生成 CRUD 操作与关联字段，无需在 ORM Schema 旁边再维护一份平行声明。
 - `field().load()` 批量处理关联查询的 N+1 问题，替代 `@pothos/plugin-dataloader`，无需 `loadableObject` 声明。
-- 中间件与 `useContext()` 替代 `@pothos/plugin-scope-auth`（`authScopes`）以及每个解析函数的 `context` 参数。
 
 ## 概述与心智转变
 

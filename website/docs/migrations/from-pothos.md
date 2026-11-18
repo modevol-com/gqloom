@@ -2,14 +2,12 @@
 
 ## Why GQLoom
 
-Pothos builds a GraphQL schema through a `SchemaBuilder` instance (`objectRef`, `implement`, `t.expose*`), with backing TypeScript types passed as a generic. GQLoom weaves runtime schemas (such as Zod, Valibot, or Yup) and ORM models (such as Prisma, Drizzle, or MikroORM) into GraphQL schemas with no builder instance.
+Pothos builds a GraphQL schema through a `SchemaBuilder` instance (`objectRef`, `implement`, `t.expose*`). GQLoom weaves runtime schemas (such as Zod, Valibot, or Yup) and ORM models (such as Prisma, Drizzle, or MikroORM) into GraphQL schemas with no builder instance.
 
 - One runtime schema or ORM model is the single source of truth. TypeScript types are inferred from it, GraphQL types are woven from it, and inputs are validated by the schema itself without `@pothos/plugin-zod` or `@pothos/plugin-validation`.
 - Less boilerplate: you drop the `SchemaBuilder` generic, `objectRef` + `implement` blocks, and string-keyed `t.expose*` declarations for every property.
-- After a full migration, you can uninstall `@pothos/core` and every `@pothos/plugin-*` package, and drop the `PrismaTypes` generic and `prisma-pothos-types` generator.
 - Direct reuse of Prisma, Drizzle, and MikroORM models as silks, with resolver factories generating CRUD operations and relation fields instead of maintaining a parallel model layer next to your ORM schema.
 - `field().load()` batches relational N+1 queries without `@pothos/plugin-dataloader` or `loadableObject` declarations.
-- Middleware and `useContext()` replace `@pothos/plugin-scope-auth` (`authScopes`) and the `context` argument on every resolver.
 
 ## Overview and mental model
 
