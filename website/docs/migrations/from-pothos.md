@@ -2,11 +2,11 @@
 
 ## Why GQLoom
 
-Pothos builds a GraphQL schema through a `SchemaBuilder` instance (`objectRef`, `implement`, `t.expose*`). GQLoom weaves schemas and models you already use—Zod, Valibot, Yup, or Prisma, Drizzle, and MikroORM—into GraphQL schemas with no builder instance.
+Pothos registers every type, field, and plugin onto a shared `SchemaBuilder` instance through `t` callbacks. GQLoom splits data from behavior: runtime schemas and ORM models act as silks, resolvers hold operations and field logic, and `weave()` builds the `GraphQLSchema`.
 
-- More familiar schema types: write types with Zod, Valibot, or your Prisma, Drizzle, and MikroORM models instead of Pothos's `objectRef`, `t.expose*`, and `t.arg.*` APIs. That single definition provides TypeScript types, GraphQL types, and input validation without `@pothos/plugin-zod`, `@pothos/plugin-validation`, or a parallel model declaration next to your ORM.
-- More intuitive mental model: schemas hold data shapes, while `resolver` and `resolver.of` hold queries, mutations, and field logic. You pass resolvers straight to `weave()` instead of routing everything through a central `SchemaBuilder`, `t` callbacks, or `objectRef` indirection.
-- Simpler relations and batching: ORM models work directly as silks with resolver factories for CRUD and relation fields, and `field().load()` batches N+1 queries right on the field instead of setting up `loadableObject` types.
+- One definition instead of `t.expose*`: a Zod, Valibot, or Yup schema already carries your TypeScript type, GraphQL shape, and input validation, with no separate `objectRef` mapping or validation plugin.
+- Plain modules with no shared builder: `resolver()` and `resolver.of()` are standalone objects passed to `weave()`, so modules don't import a central `builder`, nest `t` callbacks, or split `objectRef` and `implement` to break circular references.
+- Direct ORM silks and field-level batching: Prisma, Drizzle, and MikroORM models work straight in `resolver.of()` and resolver factories (`PrismaResolverFactory`, `drizzleResolverFactory`) without `prismaObject` or `PrismaTypes` wiring, and `field().load()` attaches DataLoader batching to the field instead of declaring a `loadableObject`.
 
 ## Overview and mental model
 
