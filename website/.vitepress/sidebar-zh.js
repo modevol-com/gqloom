@@ -134,6 +134,10 @@ export default [
         text: "从 Pothos 迁移",
         link: "/zh/docs/migrations/from-pothos",
       },
+      {
+        text: "从 Nexus 迁移",
+        link: "/zh/docs/migrations/from-nexus",
+      },
     ],
   },
 ]

@@ -134,6 +134,10 @@ export default [
         text: "From Pothos",
         link: "/docs/migrations/from-pothos",
       },
+      {
+        text: "From Nexus",
+        link: "/docs/migrations/from-nexus",
+      },
     ],
   },
 ]
